@@ -17,9 +17,13 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
 		cb_call
   	end
 
-  	function optim_f(θ)
-		x = prob.f(prob.u0,θ)
-		x[1]
+	function optim_f(θ)
+		if prob.u0 !== nothing
+			x = prob.f(prob.u0,θ)
+		else
+			x = prob.f(θ)
+		end
+		x
   	end
 
   	Optim.optimize(optim_f, prob.p, opt, Optim.Options(;extended_trace=true,callback = _cb, kwargs...))

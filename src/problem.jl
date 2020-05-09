@@ -6,7 +6,7 @@ struct OptimizationProblem{F,U,P,B} <: AbstractOptimizationProblem
     p::P
     lb::B
     ub::B
-    function OptimizationProblem(f, u0, p; lb = nothing, ub = nothing)
+    function OptimizationProblem(f, p, u0=nothing,; lb = nothing, ub = nothing)
         new{typeof(f), typeof(u0), typeof(p), typeof(lb)}(f, u0, p, lb, ub)
     end
 end
