@@ -1,5 +1,11 @@
 module GalacticOptim
 
-greet() = print("Hello World!")
+using DiffEqBase, Optim
+
+include("problem.jl")
+include("solve.jl")
+
+export OptimizationProblem
+export solve
 
 end # module
