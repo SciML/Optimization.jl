@@ -1,11 +1,12 @@
 module GalacticOptim
 
-using DiffEqBase, Optim
+using DiffEqBase, Optim, ForwardDiff
 
 include("problem.jl")
 include("solve.jl")
+include("function.jl")
 
-export OptimizationProblem
+export OptimizationProblem, OptimizationFunction
 export solve
 
 end # module
