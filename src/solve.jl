@@ -20,21 +20,13 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
 	
 	if prob.f isa OptimizationFunction
 		_loss = function(θ)
-			if prob.p isa DiffEqBase.NullParameters
-				x = prob.f.f(θ)
-			else
-				x = prob.f.f(θ, prob.p)
-			end
+			x = prob.f.f(θ, prob.p)
 		end
 		optim_f = TwiceDifferentiable(_loss, prob.f.grad, prob.f.hess, prob.x)
 	else
-		!(opt isa Optim.ZerothOrderOptimizer) && error("Use OptimizationFunction to pass the gradient or automatically generate the gradient")
+		!(opt isa Optim.ZerothOrderOptimizer) && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 		_loss = function(θ)
-			if prob.p isa DiffEqBase.NullParameters
-				x = prob.f(θ)
-			else
-				x = prob.f(θ, prob.p)
-			end
+			x = prob.f(θ, prob.p)
 		end
 		optim_f = _loss
 	end

@@ -9,11 +9,11 @@ prob = OptimizationProblem(rosenbrock,x0,p=p)
 sol = solve(prob,SimulatedAnnealing())
 @test 10*sol.minimum < l1
 
-rosenbrock(x) =  (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+rosenbrock(x,p=nothing) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 
-l1 = rosenbrock(p)
+l1 = rosenbrock(x0)
 prob = OptimizationProblem(rosenbrock,x0)
-sol = solve(prob,SimulatedAnnealing()) 
+sol = solve(prob,NelderMead()) 
 @test 10*sol.minimum < l1
 
 
