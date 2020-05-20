@@ -17,12 +17,20 @@ sol = solve(prob,NelderMead())
 @test 10*sol.minimum < l1
 
 
-optprob = OptimizationFunction(rosenbrock)
+optprob = OptimizationFunction(rosenbrock,x0)
+
 prob = OptimizationProblem(optprob,x0)
 sol = solve(prob,BFGS())
 @test 10*sol.minimum < l1
 
-optprob = OptimizationFunction(rosenbrock)
 prob = OptimizationProblem(optprob,x0)
 sol = solve(prob,Newton())
+@test 10*sol.minimum < l1
+
+prob = OptimizationProblem(optprob,x0)
+sol = solve(prob,Optim.KrylovTrustRegion())
+@test 10*sol.minimum < l1
+
+prob = OptimizationProblem(optprob,x0,lb=[-1.0,-1.0],ub=[0.8,0.8])
+sol = solve(prob,Fminbox())
 @test 10*sol.minimum < l1

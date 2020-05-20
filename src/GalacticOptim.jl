@@ -1,6 +1,8 @@
 module GalacticOptim
 
-using DiffEqBase, Optim, ForwardDiff
+using DiffEqBase  
+using DiffResults, ForwardDiff
+using Optim
 
 include("problem.jl")
 include("solve.jl")
