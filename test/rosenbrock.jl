@@ -2,11 +2,15 @@ using GalacticOptim, Optim, Test
 
 rosenbrock(x,p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
-p  = [1.0,100.0]
+_p  = [1.0,100.0]
 
-l1 = rosenbrock(x0,p)
-prob = OptimizationProblem(rosenbrock,x0,p=p)
+l1 = rosenbrock(x0,_p)
+prob = OptimizationProblem(rosenbrock,x0,p=_p)
 sol = solve(prob,SimulatedAnnealing())
+@test 10*sol.minimum < l1
+
+prob = OptimizationProblem(rosenbrock,x0,p=_p,lb=[-1.0,-1.0],ub=[0.8,0.8])
+sol = solve(prob,SAMIN())
 @test 10*sol.minimum < l1
 
 rosenbrock(x,p=nothing) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
@@ -33,4 +37,8 @@ sol = solve(prob,Optim.KrylovTrustRegion())
 
 prob = OptimizationProblem(optprob,x0,lb=[-1.0,-1.0],ub=[0.8,0.8])
 sol = solve(prob,Fminbox())
+@test 10*sol.minimum < l1
+
+prob = OptimizationProblem(optprob,x0,lb=[-1.0,-1.0],ub=[0.8,0.8])
+sol = solve(prob,SAMIN())
 @test 10*sol.minimum < l1

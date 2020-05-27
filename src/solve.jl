@@ -17,7 +17,6 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
 		cb_call
   	end
 	
-	
 	if prob.f isa OptimizationFunction
 		_loss = function(θ)
 			x = prob.f.f(θ, prob.p)
@@ -55,19 +54,18 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
   	Optim.optimize(optim_f, prob.x, opt, Optim.Options(;extended_trace = true, callback = _cb, kwargs...))
 end
 
-function __solve(prob::OptimizationProblem, opt::Optim.AbstractConstrainedOptimizer;cb = (args...) -> (false), kwargs...)
+function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN};cb = (args...) -> (false), kwargs...)
 	local x
 
   	function _cb(trace)
-	  	cb_call = opt.method == NelderMead() ? cb(decompose_trace(trace).metadata["centroid"],x...) : cb(decompose_trace(trace).metadata["x"],x...)
+	  	cb_call = !(opt isa Optim.SAMIN) && opt.method == NelderMead() ? cb(decompose_trace(trace).metadata["centroid"],x...) : cb(decompose_trace(trace).metadata["x"],x...)
 	  	if !(typeof(cb_call) <: Bool)
 			error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
 	  	end
 	  	cb_call
 	end
   
-  
-  	if prob.f isa OptimizationFunction
+  	if prob.f isa OptimizationFunction && !(opt isa Optim.SAMIN)
 	  	_loss = function(θ)
 		  	x = prob.f.f(θ, prob.p)
 	  	end
@@ -84,8 +82,8 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractConstrainedOptimi
 		optim_f = OnceDifferentiable(_loss, prob.f.grad, fg!, prob.x)
   	else
 	  	!(opt isa Optim.ZerothOrderOptimizer) && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
-	  	_loss = function(θ)
-		  	x = prob.f(θ, prob.p)
+		_loss = function(θ)
+		  	x = prob.f isa OptimizationFunction ? prob.f.f(θ, prob.p) : prob.f(θ, prob.p)
 	  	end
 	  	optim_f = _loss
   	end
