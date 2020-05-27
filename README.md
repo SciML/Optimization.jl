@@ -1,6 +1,6 @@
 # GalacticOptim.jl
 
-[![Build Status](https://travis-ci.com/Vaibhavdixit02/GalacticOptim.jl.svg?branch=master)](https://travis-ci.com/Vaibhavdixit02/GalacticOptim.jl)
+[![Build Status](https://travis-ci.com/SciML/GalacticOptim.jl.svg?branch=master)](https://travis-ci.com/SciML/GalacticOptim.jl)
 
 GalacticOptim.jl is a package with a scope that is beyond your normal global optimization
 package. GalacticOptim.jl seeks to bring together all of the optimization packages
