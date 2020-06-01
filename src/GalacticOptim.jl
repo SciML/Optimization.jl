@@ -1,6 +1,6 @@
 module GalacticOptim
 
-using DiffEqBase  
+using DiffEqBase, Requires  
 using DiffResults, ForwardDiff
 using Optim
 
@@ -10,5 +10,7 @@ include("function.jl")
 
 export OptimizationProblem, OptimizationFunction
 export solve
+
+export BBO
 
 end # module

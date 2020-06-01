@@ -8,6 +8,7 @@ DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
 DiffResults = "163ba53b-c6d8-5494-b064-1a9d43ac40c5"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 
 [compat]
 julia = "1"

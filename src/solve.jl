@@ -90,3 +90,70 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
   
 	Optim.optimize(optim_f, prob.lb, prob.ub, prob.x, opt, Optim.Options(;extended_trace = true, callback = _cb, kwargs...))
 end
+
+function __init__()
+	@require BlackBoxOptim="a134a8b2-14d6-55f6-9291-3336d3ab0209" begin
+		struct BBO
+			method::Symbol         
+		end
+
+		BBO() = BBO(:adaptive_de_rand_1_bin)
+
+		function __solve(prob::OptimizationProblem, opt::BBO;cb = (args...) -> (false), maxiters = 1000, kwargs...)
+			local x, _loss
+		  
+			function _cb(trace)
+			  cb_call = cb(decompose_trace(trace),x...)
+			  if !(typeof(cb_call) <: Bool)
+				error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
+			  end
+			  if cb_call == true
+				BlackBoxOptim.shutdown_optimizer!(trace) #doesn't work
+			  end
+			  cb_call
+			end
+
+			if prob.f isa OptimizationFunction 
+				_loss = function(θ)
+					x = prob.f.f(θ, prob.p)
+				end
+			else 
+				_loss = function(θ)
+					x = prob.f(θ, prob.p)
+				end
+			end
+
+			bboptre = BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], MaxSteps = maxiters, CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...)
+		  
+			Optim.MultivariateOptimizationResults(opt.method,
+												  [NaN],# initial_x,
+												  BlackBoxOptim.best_candidate(bboptre), #pick_best_x(f_incr_pick, state),
+												  BlackBoxOptim.best_fitness(bboptre), # pick_best_f(f_incr_pick, state, d),
+												  bboptre.iterations, #iteration,
+												  bboptre.iterations >= maxiters, #iteration == options.iterations,
+												  false, # x_converged,
+												  0.0,#T(options.x_tol),
+												  0.0,#T(options.x_tol),
+												  NaN,# x_abschange(state),
+												  NaN,# x_abschange(state),
+												  false,# f_converged,
+												  0.0,#T(options.f_tol),
+												  0.0,#T(options.f_tol),
+												  NaN,#f_abschange(d, state),
+												  NaN,#f_abschange(d, state),
+												  false,#g_converged,
+												  0.0,#T(options.g_tol),
+												  NaN,#g_residual(d),
+												  false, #f_increased,
+												  nothing,
+												  maxiters,
+												  maxiters,
+												  0,
+												  true,
+												  NaN,
+												  bboptre.elapsed_time)
+		end
+	end
+
+end
+  

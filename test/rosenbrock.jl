@@ -42,3 +42,8 @@ sol = solve(prob,Fminbox())
 prob = OptimizationProblem(optprob,x0,lb=[-1.0,-1.0],ub=[0.8,0.8])
 sol = solve(prob,SAMIN())
 @test 10*sol.minimum < l1
+
+using BlackBoxOptim
+
+sol = solve(prob,BBO())
+@test 10*sol.minimum < l1
