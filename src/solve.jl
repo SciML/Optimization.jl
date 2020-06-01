@@ -6,7 +6,7 @@ end
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace) = trace
 
-function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (args...) -> (false), kwargs...)
+function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (args...) -> (false), maxiters = 1000, kwargs...)
   	local x
 
 	function _cb(trace)
@@ -23,7 +23,7 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
 		end
 		fg! = let res = DiffResults.GradientResult(prob.x)
 			function (G,θ)
-				if G != nothing
+				if G !== nothing
 					prob.f.grad(res, θ)
 					G .= DiffResults.gradient(res)
 				end
@@ -51,10 +51,10 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
 		optim_f = _loss
 	end
 	
-  	Optim.optimize(optim_f, prob.x, opt, Optim.Options(;extended_trace = true, callback = _cb, kwargs...))
+  	Optim.optimize(optim_f, prob.x, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
 end
 
-function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN};cb = (args...) -> (false), kwargs...)
+function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN};cb = (args...) -> (false), maxiters = 1000, kwargs...)
 	local x
 
   	function _cb(trace)
@@ -71,7 +71,7 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 	  	end
 	  	fg! = let res = DiffResults.GradientResult(prob.x)
 		  	function (G,θ)
-			  	if G != nothing
+			  	if G !== nothing
 				  	prob.f.grad(res, θ)
 				  	G .= DiffResults.gradient(res)
 			  	end
@@ -88,18 +88,20 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 	  	optim_f = _loss
   	end
   
-	Optim.optimize(optim_f, prob.lb, prob.ub, prob.x, opt, Optim.Options(;extended_trace = true, callback = _cb, kwargs...))
+	Optim.optimize(optim_f, prob.lb, prob.ub, prob.x, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
 end
 
 function __init__()
 	@require BlackBoxOptim="a134a8b2-14d6-55f6-9291-3336d3ab0209" begin
+		decompose_trace(opt::BlackBoxOptim.OptRunController) = BlackBoxOptim.best_candidate(opt)
+
 		struct BBO
 			method::Symbol         
 		end
 
 		BBO() = BBO(:adaptive_de_rand_1_bin)
 
-		function __solve(prob::OptimizationProblem, opt::BBO;cb = (args...) -> (false), maxiters = 1000, kwargs...)
+		function __solve(prob::OptimizationProblem, opt::BBO; cb = (args...) -> (false), maxiters = 1000, kwargs...)
 			local x, _loss
 		  
 			function _cb(trace)
@@ -155,5 +157,67 @@ function __init__()
 		end
 	end
 
+	@require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" begin
+		function __solve(prob::OptimizationProblem, opt::NLopt.Opt; cb = (args...) -> (false), maxiters = 1000, kwargs...)	
+			local x
+
+			if prob.f isa OptimizationFunction 
+				_loss = function(θ)
+					x = prob.f.f(θ, prob.p)
+				end
+				fg! = let res = DiffResults.GradientResult(prob.x)
+					function (G,θ)
+						if length(G) > 0
+							prob.f.grad(res, θ)
+							G .= DiffResults.gradient(res)
+						end
+			
+						return _loss(θ)
+					end
+				end
+				NLopt.min_objective!(opt, fg!)
+			else 
+				_loss = function(θ)
+					x = prob.f(θ, prob.p)
+				end
+				NLopt.min_objective!(opt, _loss)
+			end
+
+            
+            NLopt.maxeval!(opt, maxiters)
+
+            t0= time()
+            (minf,minx,ret) = NLopt.optimize(opt, prob.x)
+            _time = time()
+
+            Optim.MultivariateOptimizationResults(opt,
+                                                    θ,# initial_x,
+                                                    minx, #pick_best_x(f_incr_pick, state),
+                                                    minf, # pick_best_f(f_incr_pick, state, d),
+                                                    maxiters, #iteration,
+                                                    maxeval >= maxeval, #iteration == options.iterations,
+                                                    false, # x_converged,
+                                                    0.0,#T(options.x_tol),
+                                                    0.0,#T(options.x_tol),
+                                                    NaN,# x_abschange(state),
+                                                    NaN,# x_abschange(state),
+                                                    false,# f_converged,
+                                                    0.0,#T(options.f_tol),
+                                                    0.0,#T(options.f_tol),
+                                                    NaN,#f_abschange(d, state),
+                                                    NaN,#f_abschange(d, state),
+                                                    false,#g_converged,
+                                                    0.0,#T(options.g_tol),
+                                                    NaN,#g_residual(d),
+                                                    false, #f_increased,
+                                                    nothing,
+                                                    maxeval,
+                                                    maxeval,
+                                                    0,
+                                                    ret,
+                                                    NaN,
+													_time-t0,)
+		end	
+	end
 end
   
