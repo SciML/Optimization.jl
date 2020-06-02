@@ -43,7 +43,15 @@ prob = OptimizationProblem(optprob,x0,lb=[-1.0,-1.0],ub=[0.8,0.8])
 sol = solve(prob,SAMIN())
 @test 10*sol.minimum < l1
 
-using BlackBoxOptim
+using NLopt
+prob = OptimizationProblem(optprob,x0)
+sol = solve(prob,Opt(:LN_BOBYQA, 2))
+@test 10*sol.minimum < l1
 
+sol = solve(prob,Opt(:LD_LBFGS, 2))
+@test 10*sol.minimum < l1
+
+using BlackBoxOptim
+prob = GalacticOptim.OptimizationProblem(optprob,x0,lb=[-1.0,-1.0],ub=[0.8,0.8])
 sol = solve(prob,BBO())
 @test 10*sol.minimum < l1

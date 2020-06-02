@@ -166,12 +166,12 @@ function __init__()
 					x = prob.f.f(θ, prob.p)
 				end
 				fg! = let res = DiffResults.GradientResult(prob.x)
-					function (G,θ)
+					function (θ,G)
 						if length(G) > 0
 							prob.f.grad(res, θ)
 							G .= DiffResults.gradient(res)
 						end
-			
+
 						return _loss(θ)
 					end
 				end
@@ -191,11 +191,11 @@ function __init__()
             _time = time()
 
             Optim.MultivariateOptimizationResults(opt,
-                                                    θ,# initial_x,
+                                                    prob.x,# initial_x,
                                                     minx, #pick_best_x(f_incr_pick, state),
                                                     minf, # pick_best_f(f_incr_pick, state, d),
                                                     maxiters, #iteration,
-                                                    maxeval >= maxeval, #iteration == options.iterations,
+													maxiters >= opt.numevals, #iteration == options.iterations,
                                                     false, # x_converged,
                                                     0.0,#T(options.x_tol),
                                                     0.0,#T(options.x_tol),
@@ -211,8 +211,8 @@ function __init__()
                                                     NaN,#g_residual(d),
                                                     false, #f_increased,
                                                     nothing,
-                                                    maxeval,
-                                                    maxeval,
+                                                    maxiters,
+                                                    maxiters,
                                                     0,
                                                     ret,
                                                     NaN,
