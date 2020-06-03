@@ -51,6 +51,10 @@ sol = solve(prob,Opt(:LN_BOBYQA, 2))
 sol = solve(prob,Opt(:LD_LBFGS, 2))
 @test 10*sol.minimum < l1
 
+prob = OptimizationProblem(optprob,x0,lb=[-1.0,-1.0],ub=[0.8,0.8])
+sol = solve(prob,Opt(:G_MLSL_LDS, 2), nstart=5, localopt = Opt(:LD_LBFGS, 2))
+@test 10*sol.minimum < l1
+
 using BlackBoxOptim
 prob = GalacticOptim.OptimizationProblem(optprob,x0,lb=[-1.0,-1.0],ub=[0.8,0.8])
 sol = solve(prob,BBO())

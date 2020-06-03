@@ -158,7 +158,7 @@ function __init__()
 	end
 
 	@require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" begin
-		function __solve(prob::OptimizationProblem, opt::NLopt.Opt; cb = (args...) -> (false), maxiters = 1000, kwargs...)	
+		function __solve(prob::OptimizationProblem, opt::NLopt.Opt; cb = (args...) -> (false), maxiters = 1000, nstart = 1, localopt = nothing, kwargs...)	
 			local x
 
 			if prob.f isa OptimizationFunction 
@@ -183,7 +183,18 @@ function __init__()
 				NLopt.min_objective!(opt, _loss)
 			end
 
-            
+			if prob.ub !== nothing
+				NLopt.upper_bounds!(opt, prob.ub)				
+			end
+			if prob.lb !== nothing
+				NLopt.lower_bounds!(opt, prob.lb)
+			end
+
+			if nstart > 1 && localopt !== nothing
+				NLopt.local_optimizer!(opt, localopt)
+				NLopt.maxeval!(opt, nstart * maxiters)
+			end
+
             NLopt.maxeval!(opt, maxiters)
 
             t0= time()
