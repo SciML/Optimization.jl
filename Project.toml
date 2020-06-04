@@ -17,8 +17,7 @@ julia = "1"
 BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
 MultistartOptimization = "3933049c-43be-478e-a8bb-6e0f7fd53575"
 NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
-QuadDIRECT = "dae52e8d-d666-5120-a592-9e15c33b8d7a"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["BlackBoxOptim", "MultistartOptimization", "NLopt", "QuadDIRECT", "Test"]
+test = ["BlackBoxOptim", "MultistartOptimization", "NLopt", "Test"]
