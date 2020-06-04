@@ -158,7 +158,7 @@ function __init__()
 	end
 
 	@require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" begin
-		function __solve(prob::OptimizationProblem, opt::NLopt.Opt; cb = (args...) -> (false), maxiters = 1000, nstart = 1, localopt = nothing, kwargs...)	
+		function __solve(prob::OptimizationProblem, opt::NLopt.Opt; maxiters = 1000, nstart = 1, local_method = nothing, kwargs...)	
 			local x
 
 			if prob.f isa OptimizationFunction 
@@ -190,8 +190,8 @@ function __init__()
 				NLopt.lower_bounds!(opt, prob.lb)
 			end
 
-			if nstart > 1 && localopt !== nothing
-				NLopt.local_optimizer!(opt, localopt)
+			if nstart > 1 && local_method !== nothing
+				NLopt.local_optimizer!(opt, local_method)
 				NLopt.maxeval!(opt, nstart * maxiters)
 			end
 
@@ -229,6 +229,114 @@ function __init__()
                                                     NaN,
 													_time-t0,)
 		end	
+	end
+
+	@require MultistartOptimization = "3933049c-43be-478e-a8bb-6e0f7fd53575" begin
+		function __solve(prob::OptimizationProblem, opt::MultistartOptimization.TikTak; local_method, local_maxiters = 1000, kwargs...)
+			local x, _loss
+		  
+			if prob.f isa OptimizationFunction 
+				_loss = function(θ)
+					x = prob.f.f(θ, prob.p)
+				end
+			else 
+				_loss = function(θ)
+					x = prob.f(θ, prob.p)
+				end
+			end
+
+			t0 = time()
+
+			P = MultistartOptimization.MinimizationProblem(_loss, prob.lb, prob.ub)
+			multistart_method = opt
+			local_method = MultistartOptimization.NLoptLocalMethod(local_method, maxeval = local_maxiters)
+			p = MultistartOptimization.multistart_minimization(multistart_method, local_method, P)
+  
+			t1 = time()
+		  
+			Optim.MultivariateOptimizationResults(opt,
+                                                [NaN],# initial_x,
+                                                p.location, #pick_best_x(f_incr_pick, state),
+                                                p.value, # pick_best_f(f_incr_pick, state, d),
+                                                0, #iteration,
+                                                false, #iteration == options.iterations,
+                                                false, # x_converged,
+                                                0.0,#T(options.x_tol),
+                                                0.0,#T(options.x_tol),
+                                                NaN,# x_abschange(state),
+                                                NaN,# x_abschange(state),
+                                                false,# f_converged,
+                                                0.0,#T(options.f_tol),
+                                                0.0,#T(options.f_tol),
+                                                NaN,#f_abschange(d, state),
+                                                NaN,#f_abschange(d, state),
+                                                false,#g_converged,
+                                                0.0,#T(options.g_tol),
+                                                NaN,#g_residual(d),
+                                                false, #f_increased,
+                                                nothing,
+                                                local_maxiters,
+                                                local_maxiters,
+                                                0,
+                                                true,
+                                                NaN,
+                                                t1 - t0)
+		end
+	end
+
+	@require QuadDIRECT = "dae52e8d-d666-5120-a592-9e15c33b8d7a" begin
+		export QuadDirect
+		
+        struct QuadDirect
+		end
+
+		function __solve(prob::OptimizationProblem, opt::QuadDirect; splits, maxiters = 1000, kwargs...)
+			local x, _loss
+		  
+			if prob.f isa OptimizationFunction 
+				_loss = function(θ)
+					x = prob.f.f(θ, prob.p)
+				end
+			else 
+				_loss = function(θ)
+					x = prob.f(θ, prob.p)
+				end
+			end
+
+			t0 = time()
+
+			root, x0 = QuadDIRECT.analyze(_loss, splits, prob.lb, prob.ub; maxevals = maxiters, kwargs...)
+			box = minimum(root)
+           	t1 = time()
+
+           	Optim.MultivariateOptimizationResults(opt,
+                                                [NaN],# initial_x,
+                                                QuadDIRECT.position(box, x0), #pick_best_x(f_incr_pick, state),
+                                                QuadDIRECT.value(box), # pick_best_f(f_incr_pick, state, d),
+                                                0, #iteration,
+                                                false, #iteration == options.iterations,
+                                                false, # x_converged,
+                                                0.0,#T(options.x_tol),
+                                                0.0,#T(options.x_tol),
+                                                NaN,# x_abschange(state),
+                                                NaN,# x_abschange(state),
+                                                false,# f_converged,
+                                                0.0,#T(options.f_tol),
+                                                0.0,#T(options.f_tol),
+                                                NaN,#f_abschange(d, state),
+                                                NaN,#f_abschange(d, state),
+                                                false,#g_converged,
+                                                0.0,#T(options.g_tol),
+                                                NaN,#g_residual(d),
+                                                false, #f_increased,
+                                                nothing,
+                                                maxiters,
+                                                maxiters,
+                                                0,
+                                                true,
+                                                NaN,
+                                                t1 - t0)
+		end
 	end
 end
   
