@@ -59,9 +59,9 @@ using MultistartOptimization
 sol = solve(prob, MultistartOptimization.TikTak(100), local_method = NLopt.LD_LBFGS)
 @test 10*sol.minimum < l1
 
-using QuadDIRECT
-sol = solve(prob, QuadDirect(); splits = ([-0.5, 0.0, 0.5],[-0.5, 0.0, 0.5]))
-@test 10*sol.minimum < l1
+# using QuadDIRECT
+# sol = solve(prob, QuadDirect(); splits = ([-0.5, 0.0, 0.5],[-0.5, 0.0, 0.5]))
+# @test 10*sol.minimum < l1
 
 using BlackBoxOptim
 prob = GalacticOptim.OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
