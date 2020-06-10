@@ -177,7 +177,7 @@ function __init__()
 				end
 				NLopt.min_objective!(opt, fg!)
 			else 
-				_loss = function(θ)
+				_loss = function(θ,G)
 					x = prob.f(θ, prob.p)
 				end
 				NLopt.min_objective!(opt, _loss)
