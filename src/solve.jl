@@ -12,7 +12,7 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
 	function _cb(trace)
 		cb_call = opt == NelderMead() ? cb(decompose_trace(trace).metadata["centroid"],x...) : cb(decompose_trace(trace).metadata["x"],x...)
 		if !(typeof(cb_call) <: Bool)
-			error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
+			error("The callback should return a boolean `halt` for whether to stop the optimization process.")
 		end
 		cb_call
   	end
@@ -60,7 +60,7 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
   	function _cb(trace)
 	  	cb_call = !(opt isa Optim.SAMIN) && opt.method == NelderMead() ? cb(decompose_trace(trace).metadata["centroid"],x...) : cb(decompose_trace(trace).metadata["x"],x...)
 	  	if !(typeof(cb_call) <: Bool)
-			error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
+			error("The callback should return a boolean `halt` for whether to stop the optimization process.")
 	  	end
 	  	cb_call
 	end
@@ -107,7 +107,7 @@ function __init__()
 			function _cb(trace)
 			  cb_call = cb(decompose_trace(trace),x...)
 			  if !(typeof(cb_call) <: Bool)
-				error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
+				error("The callback should return a boolean `halt` for whether to stop the optimization process.")
 			  end
 			  if cb_call == true
 				BlackBoxOptim.shutdown_optimizer!(trace) #doesn't work
@@ -336,6 +336,38 @@ function __init__()
                                                 true,
                                                 NaN,
                                                 t1 - t0)
+		end
+	end
+
+	@require Evolutionary="86b6b26d-c046-49b6-aa0b-5f0f74682bd6" begin
+		decompose_trace(trace::Evolutionary.OptimizationTrace) = last(trace)
+
+		function Evolutionary.trace!(record::Dict{String,Any}, objfun, state, population, method::Evolutionary.AbstractOptimizer, options)
+			record["x"] = population
+		end
+
+		function __solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer; cb = (args...) -> (false), maxiters = 1000, kwargs...)
+			local x, _loss
+		  
+			function _cb(trace)
+				cb_call = cb(decompose_trace(trace).metadata["x"],trace.value...)
+				if !(typeof(cb_call) <: Bool)
+					error("The callback should return a boolean `halt` for whether to stop the optimization process.")
+				end
+				cb_call
+			end
+
+			if prob.f isa OptimizationFunction 
+				_loss = function(θ)
+					x = prob.f.f(θ, prob.p)
+				end
+			else 
+				_loss = function(θ)
+					x = prob.f(θ, prob.p)
+				end
+			end
+
+			Evolutionary.optimize(_loss, prob.x, opt, Evolutionary.Options(;iterations = maxiters, callback = _cb, kwargs...))
 		end
 	end
 end
