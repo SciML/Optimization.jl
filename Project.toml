@@ -15,8 +15,9 @@ julia = "1"
 
 [extras]
 BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
+Evolutionary = "86b6b26d-c046-49b6-aa0b-5f0f74682bd6"
 NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["BlackBoxOptim", "NLopt", "Test"]
+test = ["BlackBoxOptim", "Evolutionary", "NLopt", "Test"]
