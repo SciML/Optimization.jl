@@ -55,17 +55,17 @@ prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
 sol = solve(prob, Opt(:G_MLSL_LDS, 2), nstart=5, local_method = Opt(:LD_LBFGS, 2))
 @test 10*sol.minimum < l1
 
-using MultistartOptimization
-sol = solve(prob, MultistartOptimization.TikTak(100), local_method = NLopt.LD_LBFGS)
-@test 10*sol.minimum < l1
+# using MultistartOptimization
+# sol = solve(prob, MultistartOptimization.TikTak(100), local_method = NLopt.LD_LBFGS)
+# @test 10*sol.minimum < l1
 
 # using QuadDIRECT
 # sol = solve(prob, QuadDirect(); splits = ([-0.5, 0.0, 0.5],[-0.5, 0.0, 0.5]))
 # @test 10*sol.minimum < l1
 
-using Evolutionary
-sol = solve(prob, CMAES(μ = 5, λ = 100))
-@test 10*sol.minimum < l1
+# using Evolutionary
+# sol = solve(prob, CMAES(μ = 5, λ = 100))
+# @test 10*sol.minimum < l1
 
 using BlackBoxOptim
 prob = GalacticOptim.OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
