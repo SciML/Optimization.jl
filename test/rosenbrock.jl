@@ -21,7 +21,7 @@ sol = solve(prob, NelderMead())
 @test 10*sol.minimum < l1
 
 
-optprob = OptimizationFunction(rosenbrock, x0)
+optprob = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoZygote())
 
 prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, BFGS())
