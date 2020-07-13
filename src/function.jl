@@ -17,7 +17,7 @@ struct OptimizationFunction{F,G,H,K} <: AbstractOptimizationFunction
 end
 
 function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(),kwargs...)
-    _f = θ -> f(θ,p)
+    _f = θ -> f(θ,p)[1]
     if grad === nothing
         grad = (res,θ) -> ForwardDiff.gradient!(res, _f, θ)
     end
@@ -29,7 +29,7 @@ function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing,hess=nothing
 end
 
 function OptimizationFunction(f, x, ::AutoZygote; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(),kwargs...)
-    _f = θ -> f(θ,p)
+    _f = θ -> f(θ,p)[1]
     if grad === nothing
         grad = (res,θ) -> res isa DiffResults.DiffResult ? DiffResults.gradient!(res, Zygote.gradient(_f, θ)[1]) : res .= Zygote.gradient(_f, θ)[1]
     end

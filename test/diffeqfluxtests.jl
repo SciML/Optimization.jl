@@ -33,31 +33,31 @@ end
 
 list_plots = []
 iter = 0
-callback = function (p, l)
-    global iter, list_plots
+callback = function (p, l, pred)
+  global iter, list_plots
 
-    if iter == 0
-        list_plots = []
-    end
-    iter += 1
+  if iter == 0
+    list_plots = []
+  end
+  iter += 1
 
-    display(l)
+  display(l)
 
-    # using `remake` to re-create our `prob` with current parameters `p`
-    remade_solution = solve(remake(prob_ode, p = p), Tsit5(), saveat = tsteps)
-    plt = plot(remade_solution, ylim = (0, 6))
+  # using `remake` to re-create our `prob` with current parameters `p`
+  remade_solution = solve(remake(prob_ode, p = p), Tsit5(), saveat = tsteps)
+  plt = plot(remade_solution, ylim = (0, 6))
 
-    push!(list_plots, plt)
-    display(plt)
+  push!(list_plots, plt)
+  display(plt)
 
-    # Tell sciml_train to not halt the optimization. If return true, then
-    # optimization stops.
-    return false
+  # Tell sciml_train to not halt the optimization. If return true, then
+  # optimization stops.
+  return false
 end
 
-optprob = OptimizationFunction( (p,x) -> loss_adjoint(p)[1], p, GalacticOptim.AutoForwardDiff())
+optprob = OptimizationFunction( (x,p) -> loss_adjoint(x), p, GalacticOptim.AutoForwardDiff())
 
-prob = OptimizationProblem(optprob, p)
+prob = GalacticOptim.OptimizationProblem(optprob, p)
 
 result_ode = GalacticOptim.solve(prob, 
                                     BFGS(initial_stepnorm = 0.0001),
@@ -99,7 +99,7 @@ end
 
 list_plots = []
 iter = 0
-callback = function (p, l)
+callback = function (p, l, pred; doplot = false)
   global list_plots, iter
 
   if iter == 0
@@ -109,15 +109,22 @@ callback = function (p, l)
 
   display(l)
 
+  # plot current prediction against data
+  plt = scatter(tsteps, ode_data[1,:], label = "data")
+  scatter!(plt, tsteps, pred[1,:], label = "prediction")
+  push!(list_plots, plt)
+  if doplot
+    display(plot(plt))
+  end
 
   return false
 end
 
-optprob = OptimizationFunction( (p,x) -> loss_neuralode(p)[1], prob_neuralode.p, GalacticOptim.AutoForwardDiff())
+optprob = OptimizationFunction( (p,x) -> loss_neuralode(p), prob_neuralode.p, GalacticOptim.AutoForwardDiff())
 
-prob = OptimizationProblem(optprob, prob_neuralode.p)
+prob = GalacticOptim.OptimizationProblem(optprob, prob_neuralode.p)
 
 result_neuralode = GalacticOptim.solve(prob, 
-                                BFGS(), cb = callback,
+                                LBFGS(), cb = callback,
                                 maxiters = 300)
 
