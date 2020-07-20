@@ -16,14 +16,16 @@ struct OptimizationFunction{F,G,H,K} <: AbstractOptimizationFunction
     kwargs::K
 end
 
-function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(),kwargs...)
+function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), chunksize = 1, kwargs...)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
-        grad = (res,θ) -> ForwardDiff.gradient!(res, _f, θ)
+        cfg = ForwardDiff.GradientConfig(_f, x, Chunk{chunksize}())
+        grad = (res,θ) -> ForwardDiff.gradient!(res, _f, θ, cfg)
     end
 
     if hess === nothing
-        hess = (res,θ) -> ForwardDiff.hessian!(res, _f, θ)
+        cfg = ForwardDiff.HessiantConfig(_f, x, Chunk{chunksize}())
+        hess = (res,θ) -> ForwardDiff.hessian!(res, _f, θ, cfg)
     end
     return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(kwargs)}(f,grad,hess,AutoForwardDiff(),kwargs)
 end
