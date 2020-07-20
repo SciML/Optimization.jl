@@ -19,13 +19,13 @@ end
 function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), chunksize = 1, kwargs...)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
-        cfg = ForwardDiff.GradientConfig(_f, x, Chunk{chunksize}())
-        grad = (res,θ) -> ForwardDiff.gradient!(res, _f, θ, cfg)
+        gradcfg = ForwardDiff.GradientConfig(_f, x, ForwardDiff.Chunk{chunksize}())
+        grad = (res,θ) -> ForwardDiff.gradient!(res, _f, θ, gradcfg)
     end
 
     if hess === nothing
-        cfg = ForwardDiff.HessiantConfig(_f, x, Chunk{chunksize}())
-        hess = (res,θ) -> ForwardDiff.hessian!(res, _f, θ, cfg)
+        hesscfg = ForwardDiff.HessianConfig(_f, x, ForwardDiff.Chunk{chunksize}())
+        hess = (res,θ) -> ForwardDiff.hessian!(res, _f, θ, hesscfg)
     end
     return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(kwargs)}(f,grad,hess,AutoForwardDiff(),kwargs)
 end
