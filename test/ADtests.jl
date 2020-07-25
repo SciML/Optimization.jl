@@ -31,14 +31,13 @@ optprob.hess(H2, x0)
 @test H1 == H2
 
 prob = OptimizationProblem(optprob, x0)
+
 sol = solve(prob, BFGS())
 @test 10*sol.minimum < l1
 
-prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, Newton())
 @test 10*sol.minimum < l1
 
-prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, Optim.KrylovTrustRegion())
 @test 10*sol.minimum < l1
 
