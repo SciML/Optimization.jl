@@ -47,7 +47,17 @@ function OptimizationFunction(f, x, ::AutoZygote; grad=nothing, hess=nothing, p=
     end
 
     if hess === nothing
-        hess = (res,θ) -> res isa DiffResults.DiffResult ? DiffResults.hessian!(res, Zygote.hessian(_f, θ)) : res .= Zygote.hessian(_f, θ)
+        hess = function (res,θ)
+            if res isa DiffResults.DiffResult 
+                DiffResults.hessian!(res, ForwardDiff.jacobian(θ) do θ
+                                                Zygote.gradient(_f,θ)[1]
+                                            end) 
+            else 
+                res .=  ForwardDiff.jacobian(θ) do θ
+                    Zygote.gradient(_f,θ)[1]
+                  end
+            end
+        end
     end
 
     if hv === nothing
