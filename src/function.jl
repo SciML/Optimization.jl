@@ -8,15 +8,16 @@ struct AutoZygote <: AbstractADType end
 struct AutoFiniteDiff <: AbstractADType end
 struct AutoModelingToolkit <: AbstractADType end
 
-struct OptimizationFunction{F,G,H,K} <: AbstractOptimizationFunction
+struct OptimizationFunction{F,G,H,HV,K} <: AbstractOptimizationFunction
     f::F
     grad::G
     hess::H
+    hv::HV
     adtype::AbstractADType
     kwargs::K
 end
 
-function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), chunksize = 1, kwargs...)
+function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), chunksize = 1, hv = nothing, kwargs...)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
         gradcfg = ForwardDiff.GradientConfig(_f, x, ForwardDiff.Chunk{chunksize}())
@@ -27,10 +28,19 @@ function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing,hess=nothing
         hesscfg = ForwardDiff.HessianConfig(_f, x, ForwardDiff.Chunk{chunksize}())
         hess = (res,θ) -> ForwardDiff.hessian!(res, _f, θ, hesscfg)
     end
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(kwargs)}(f,grad,hess,AutoForwardDiff(),kwargs)
+
+    if hv === nothing
+        hv = function (H,θ,v)
+            res = Array{typeof(x[1])}(undef, length(θ), length(θ)) #DiffResults.HessianResult(θ)
+            hess(res, θ)
+            H .= res*v
+        end
+    end
+
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(kwargs)}(f,grad,hess,hv,AutoForwardDiff(),kwargs)
 end
 
-function OptimizationFunction(f, x, ::AutoZygote; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(),kwargs...)
+function OptimizationFunction(f, x, ::AutoZygote; grad=nothing, hess=nothing, p=DiffEqBase.NullParameters(), hv = nothing, kwargs...)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
         grad = (res,θ) -> res isa DiffResults.DiffResult ? DiffResults.gradient!(res, Zygote.gradient(_f, θ)[1]) : res .= Zygote.gradient(_f, θ)[1]
@@ -39,5 +49,14 @@ function OptimizationFunction(f, x, ::AutoZygote; grad=nothing,hess=nothing, p=D
     if hess === nothing
         hess = (res,θ) -> res isa DiffResults.DiffResult ? DiffResults.hessian!(res, Zygote.hessian(_f, θ)) : res .= Zygote.hessian(_f, θ)
     end
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(kwargs)}(f,grad,hess,AutoZygote(),kwargs)
+
+    if hv === nothing
+        hv = function (H,θ,v)
+            _θ = ForwardDiff.Dual.(θ,v)
+            res = DiffResults.GradientResult(_θ)
+            grad(res,_θ)
+            H .= getindex.(ForwardDiff.partials.(DiffResults.gradient(res)),1)
+        end
+    end
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(kwargs)}(f,grad,hess,hv,AutoZygote(),kwargs)
 end

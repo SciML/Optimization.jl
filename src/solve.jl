@@ -33,13 +33,7 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
 			end
 		end
 		if opt isa Optim.KrylovTrustRegion
-			hv! = function (H,θ,v)
-				res = Array{typeof(x[1])}(undef, length(θ), length(θ)) #DiffResults.HessianResult(θ)
-				prob.f.hess(res, θ)
-			  	H .= res*v
-			end
-
-			optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, hv!, prob.x)
+			optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, prob.f.hv, prob.x)
 		else
 			optim_f = TwiceDifferentiable(_loss, prob.f.grad, fg!, prob.f.hess, prob.x)
 		end
