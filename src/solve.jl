@@ -20,6 +20,7 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
 	if prob.f isa OptimizationFunction
 		_loss = function(θ)
 			x = prob.f.f(θ, prob.p)
+			return x[1]
 		end
 		fg! = let res = DiffResults.GradientResult(prob.x)
 			function (G,θ)
@@ -32,14 +33,7 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
 			end
 		end
 		if opt isa Optim.KrylovTrustRegion
-			res = DiffResults.HessianResult(prob.x)
-
-			hv! = function (H,θ,v)
-			  prob.f.hess(res, θ)
-			  H .= DiffResults.hessian(res)*v
-			end
-
-			optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, hv!, prob.x)
+			optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, prob.f.hv, prob.x)
 		else
 			optim_f = TwiceDifferentiable(_loss, prob.f.grad, fg!, prob.f.hess, prob.x)
 		end
@@ -47,10 +41,11 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
 		!(opt isa Optim.ZerothOrderOptimizer) && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 		_loss = function(θ)
 			x = prob.f(θ, prob.p)
+			return x[1]
 		end
 		optim_f = _loss
 	end
-	
+
   	Optim.optimize(optim_f, prob.x, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
 end
 
@@ -67,7 +62,8 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
   
   	if prob.f isa OptimizationFunction && !(opt isa Optim.SAMIN)
 	  	_loss = function(θ)
-		  	x = prob.f.f(θ, prob.p)
+			x = prob.f.f(θ, prob.p)
+			return x[1]  
 	  	end
 	  	fg! = let res = DiffResults.GradientResult(prob.x)
 		  	function (G,θ)
@@ -83,7 +79,8 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
   	else
 	  	!(opt isa Optim.ZerothOrderOptimizer) && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 		_loss = function(θ)
-		  	x = prob.f isa OptimizationFunction ? prob.f.f(θ, prob.p) : prob.f(θ, prob.p)
+			x = prob.f isa OptimizationFunction ? prob.f.f(θ, prob.p) : prob.f(θ, prob.p)
+			return x[1]  
 	  	end
 	  	optim_f = _loss
   	end
@@ -118,10 +115,12 @@ function __init__()
 			if prob.f isa OptimizationFunction 
 				_loss = function(θ)
 					x = prob.f.f(θ, prob.p)
+					return x[1]
 				end
 			else 
 				_loss = function(θ)
 					x = prob.f(θ, prob.p)
+					return x[1]
 				end
 			end
 
@@ -164,6 +163,7 @@ function __init__()
 			if prob.f isa OptimizationFunction 
 				_loss = function(θ)
 					x = prob.f.f(θ, prob.p)
+					return x[1]
 				end
 				fg! = let res = DiffResults.GradientResult(prob.x)
 					function (θ,G)
@@ -179,6 +179,7 @@ function __init__()
 			else 
 				_loss = function(θ,G)
 					x = prob.f(θ, prob.p)
+					return x[1]
 				end
 				NLopt.min_objective!(opt, _loss)
 			end
@@ -238,10 +239,12 @@ function __init__()
 			if prob.f isa OptimizationFunction 
 				_loss = function(θ)
 					x = prob.f.f(θ, prob.p)
+					return x[1]
 				end
 			else 
 				_loss = function(θ)
 					x = prob.f(θ, prob.p)
+					return x[1]
 				end
 			end
 
@@ -296,10 +299,12 @@ function __init__()
 			if prob.f isa OptimizationFunction 
 				_loss = function(θ)
 					x = prob.f.f(θ, prob.p)
+					return x[1]
 				end
 			else 
 				_loss = function(θ)
 					x = prob.f(θ, prob.p)
+					return x[1]
 				end
 			end
 
@@ -360,10 +365,12 @@ function __init__()
 			if prob.f isa OptimizationFunction 
 				_loss = function(θ)
 					x = prob.f.f(θ, prob.p)
+					return x[1]
 				end
 			else 
 				_loss = function(θ)
 					x = prob.f(θ, prob.p)
+					return x[1]
 				end
 			end
 
