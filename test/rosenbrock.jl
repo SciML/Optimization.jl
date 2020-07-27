@@ -64,7 +64,7 @@ sol = solve(prob, Opt(:G_MLSL_LDS, 2), nstart=5, local_method = Opt(:LD_LBFGS, 2
 # @test 10*sol.minimum < l1
 
 using Evolutionary
-sol = solve(prob, CMAES(μ = 5, λ = 100),abstol=1e-15)
+sol = solve(prob, CMAES(μ =40 , λ = 100),abstol=1e-15)
 @test 10*sol.minimum < l1
 
 using BlackBoxOptim
