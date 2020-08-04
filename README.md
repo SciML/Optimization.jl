@@ -10,27 +10,34 @@ features, such as integrating with automatic differentiation, to make its usage
 fairly simple for most cases, while allowing all of the options in a single
 unified interface.
 
-#### Note: This package is currently in development and is not released. The README is currently a development roadmap.
+#### Note: This package is still in development. The README is currently both an active documentation and development roadmap.
 
 ## Examples
 
 ```julia
-using GalacticOptim
-rosenbrock(x,p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
-x0 = zeros(2)
-p  = [1.0,100.0]
+ using GalacticOptim, Optim
+ rosenbrock(x,p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+ x0 = zeros(2)
+ p  = [1.0,100.0]
 
-prob = OptimizationProblem(f,x0,p)
-sol = solve(prob,BFGS())
+ prob = OptimizationProblem(rosenbrock,x0,p=p)
+ sol = solve(prob,NelderMead())
 
-prob = OptimizationProblem(f,lower_bounds=[-1.0,-1.0],upper_bounds=[1.0,1.0])
-sol = solve(prob,BFGS())
 
-using BlackBoxOptim
-sol = solve(prob,BBO())
+ using BlackBoxOptim
+ prob = OptimizationProblem(rosenbrock, x0, p = p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+ sol = solve(prob,BBO())
+```
 
-using Flux
-sol = solve(prob,ADAM(0.01),maxiters = 100)
+```julia
+ f = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoForwardDiff(), p=p) 
+ prob = OptimizationProblem(f, x0, p = p)
+ sol = solve(prob,BFGS())
+``` 
+
+```julia
+ prob = OptimizationProblem(f, x0, p = p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+ sol = solve(prob, Fminbox(GradientDescent()))
 ```
 
 ### Automatic Differentiation Choices
@@ -48,27 +55,22 @@ choice.
 - `AutoFiniteDiff()`
 - `AutoModelingToolkit()`
 
-### Symbolic DSL Interface
-
-Provided by ModelingToolkit.jl
-
 ### API Documentation
 
 ```julia
-OptimizationFunction(f;
-                     grad = AutoForwardDiff(),
-                     hes = AutoForwardDiff(),
-                     eqconstraints = AutoForwardDiff(),
-                     neqconstraints = AutoForwardDiff(),
-                     eqconstraints_jac = AutoForwardDiff(),
-                     neqconstraints_jac = AutoForwardDiff(),
-                     colorvec,hessparsity,eqsparsity,neqsparsity)
+OptimizationFunction(f, x, AutoForwardDiff();
+                     p = DiffEqBase.NullParameters(),
+                     grad = nothing,
+                     hes = nothing,
+                     hv = nothing,
+                     chunksize = 1)
 ```
 
 ```julia
-OptimizationProblem(f,x0=nothing,p=nothing;
-                    lower_bounds=nothing,
-                    upper_bounds=nothing)
+OptimizationProblem(f, x;
+                    p = DiffEqBase.NullParameters(),
+                    lb = nothing,
+                    ub = nothing)
 ```
 
 ```julia
