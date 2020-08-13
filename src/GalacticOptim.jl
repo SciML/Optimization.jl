@@ -1,7 +1,7 @@
 module GalacticOptim
 
 using DiffEqBase, Requires  
-using DiffResults, ForwardDiff, Zygote
+using DiffResults, ForwardDiff, Zygote, ReverseDiff
 using Optim
 
 include("problem.jl")

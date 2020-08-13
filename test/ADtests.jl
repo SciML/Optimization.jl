@@ -1,4 +1,4 @@
-using GalacticOptim, Optim, Test
+using GalacticOptim, Optim, Test, ReverseDiff
 
 x0 = zeros(2)
 rosenbrock(x, p=nothing) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
@@ -42,6 +42,24 @@ sol = solve(prob, Optim.KrylovTrustRegion())
 @test 10*sol.minimum < l1
 
 optprob = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoZygote())
+optprob.grad(G2, x0)
+@test G1 == G2
+optprob.hess(H2, x0)
+@test H1 == H2
+
+prob = OptimizationProblem(optprob, x0)
+sol = solve(prob, BFGS())
+@test 10*sol.minimum < l1
+
+prob = OptimizationProblem(optprob, x0)
+sol = solve(prob, Newton())
+@test 10*sol.minimum < l1
+
+prob = OptimizationProblem(optprob, x0)
+sol = solve(prob, Optim.KrylovTrustRegion())
+@test 10*sol.minimum < l1
+
+optprob = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoReverseDiff())
 optprob.grad(G2, x0)
 @test G1 == G2
 optprob.hess(H2, x0)
