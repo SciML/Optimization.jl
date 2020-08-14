@@ -5,7 +5,7 @@ os:
   # - osx
 julia:
   - 1
-  - nightly
+#  - nightly
 notifications:
   email: false
 jobs:
