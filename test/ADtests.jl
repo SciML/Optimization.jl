@@ -1,4 +1,4 @@
-using GalacticOptim, Optim, Test, ReverseDiff
+using GalacticOptim, Optim, Test, ReverseDiff, Tracker
 
 x0 = zeros(2)
 rosenbrock(x, p=nothing) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
@@ -48,14 +48,13 @@ optprob.hess(H2, x0)
 @test H1 == H2
 
 prob = OptimizationProblem(optprob, x0)
+
 sol = solve(prob, BFGS())
 @test 10*sol.minimum < l1
 
-prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, Newton())
 @test 10*sol.minimum < l1
 
-prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, Optim.KrylovTrustRegion())
 @test 10*sol.minimum < l1
 
@@ -69,10 +68,23 @@ prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, BFGS())
 @test 10*sol.minimum < l1
 
-prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, Newton())
 @test 10*sol.minimum < l1
 
-prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, Optim.KrylovTrustRegion())
 @test 10*sol.minimum < l1
+
+optprob = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoTracker())
+optprob.grad(G2, x0)
+@test G1 == G2
+@test_throws ErrorException optprob.hess(H2, x0)
+ 
+
+prob = OptimizationProblem(optprob, x0)
+
+sol = solve(prob, BFGS())
+@test 10*sol.minimum < l1
+
+@test_throws ErrorException solve(prob, Newton())
+
+@test_throws ErrorException solve(prob, Optim.KrylovTrustRegion())

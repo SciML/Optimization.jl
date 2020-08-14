@@ -102,3 +102,22 @@ function OptimizationFunction(f, x, ::AutoReverseDiff; grad=nothing,hess=nothing
 
     return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(kwargs)}(f,grad,hess,hv,AutoReverseDiff(),kwargs)
 end
+
+
+function OptimizationFunction(f, x, ::AutoTracker; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), chunksize = 1, hv = nothing, kwargs...)
+    _f = θ -> f(θ,p)[1]
+    if grad === nothing
+        grad = (res,θ) -> res isa DiffResults.DiffResult ? DiffResults.gradient!(res, Tracker.data(Tracker.gradient(_f, θ)[1])) : res .= Tracker.data(Tracker.gradient(_f, θ)[1])
+    end
+
+    if hess === nothing
+        hess = (res, θ) -> error("Hessian based methods not supported with Tracker backend, pass in the `hess` kwarg")
+    end
+
+    if hv === nothing
+        hess = (res, θ) -> error("Hessian based methods not supported with Tracker backend, pass in the `hess` and `hv` kwargs")
+    end
+
+
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(kwargs)}(f,grad,hess,hv,AutoTracker(),kwargs)
+end
