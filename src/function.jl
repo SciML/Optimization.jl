@@ -70,3 +70,35 @@ function OptimizationFunction(f, x, ::AutoZygote; grad=nothing, hess=nothing, p=
     end
     return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(kwargs)}(f,grad,hess,hv,AutoZygote(),kwargs)
 end
+
+function OptimizationFunction(f, x, ::AutoReverseDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), chunksize = 1, hv = nothing, kwargs...)
+    _f = θ -> f(θ,p)[1]
+    if grad === nothing
+        grad = (res,θ) -> ReverseDiff.gradient!(res, _f, θ, ReverseDiff.GradientConfig(θ))
+    end
+
+    if hess === nothing
+        hess = function (res,θ)
+            if res isa DiffResults.DiffResult 
+                DiffResults.hessian!(res, ForwardDiff.jacobian(θ) do θ
+                                                ReverseDiff.gradient(_f,θ)[1]
+                                            end) 
+            else 
+                res .=  ForwardDiff.jacobian(θ) do θ
+                    ReverseDiff.gradient(_f,θ)
+                  end
+            end
+        end
+    end
+
+    if hv === nothing
+        hv = function (H,θ,v)
+            _θ = ForwardDiff.Dual.(θ,v)
+            res = DiffResults.GradientResult(_θ)
+            grad(res,_θ)
+            H .= getindex.(ForwardDiff.partials.(DiffResults.gradient(res)),1)
+        end
+    end
+
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(kwargs)}(f,grad,hess,hv,AutoReverseDiff(),kwargs)
+end
