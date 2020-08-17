@@ -161,8 +161,7 @@ function __init__()
 				end
 				fg! = function (θ,G)
 					if length(G) > 0
-						prob.f.grad(res, θ)
-						G .= DiffResults.gradient(res)
+						prob.f.grad(G, θ)
 					end
 					
 					return _loss(θ)
