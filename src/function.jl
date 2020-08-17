@@ -5,10 +5,7 @@ struct AutoForwardDiff <: AbstractADType end
 struct AutoReverseDiff <: AbstractADType end
 struct AutoTracker <: AbstractADType end
 struct AutoZygote <: AbstractADType end
-struct AutoFiniteDiff <: AbstractADType 
-    difftype::Symbol
-end
-AutoFiniteDiff() = AutoFiniteDiff(:central)
+struct AutoFiniteDiff <: AbstractADType end
 struct AutoModelingToolkit <: AbstractADType end
 
 struct OptimizationFunction{F,G,H,HV,K} <: AbstractOptimizationFunction
@@ -74,7 +71,7 @@ function OptimizationFunction(f, x, ::AutoZygote; grad=nothing, hess=nothing, p=
     return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(kwargs)}(f,grad,hess,hv,AutoZygote(),kwargs)
 end
 
-function OptimizationFunction(f, x, ::AutoReverseDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), chunksize = 1, hv = nothing, kwargs...)
+function OptimizationFunction(f, x, ::AutoReverseDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), hv = nothing, kwargs...)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
         grad = (res,θ) -> ReverseDiff.gradient!(res, _f, θ, ReverseDiff.GradientConfig(θ))
@@ -107,7 +104,7 @@ function OptimizationFunction(f, x, ::AutoReverseDiff; grad=nothing,hess=nothing
 end
 
 
-function OptimizationFunction(f, x, ::AutoTracker; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), chunksize = 1, hv = nothing, kwargs...)
+function OptimizationFunction(f, x, ::AutoTracker; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), hv = nothing, kwargs...)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
         grad = (res,θ) -> res isa DiffResults.DiffResult ? DiffResults.gradient!(res, Tracker.data(Tracker.gradient(_f, θ)[1])) : res .= Tracker.data(Tracker.gradient(_f, θ)[1])
@@ -125,14 +122,14 @@ function OptimizationFunction(f, x, ::AutoTracker; grad=nothing,hess=nothing, p=
     return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(kwargs)}(f,grad,hess,hv,AutoTracker(),kwargs)
 end
 
-function OptimizationFunction(f, x, adtype::AutoFiniteDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), chunksize = 1, hv = nothing, kwargs...)
+function OptimizationFunction(f, x, adtype::AutoFiniteDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), hv = nothing, fdtype = :forward, fdhtype = :hcentral, kwargs...)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
-        grad = (res,θ) -> FiniteDiff.finite_difference_gradient!(res, _f, θ, FiniteDiff.GradientCache(res, x, Val{adtype.difftype}))
+        grad = (res,θ) -> FiniteDiff.finite_difference_gradient!(res, _f, θ, FiniteDiff.GradientCache(res, x, Val{fdtype}))
     end
 
     if hess === nothing
-        hess = (res,θ) -> FiniteDiff.finite_difference_hessian!(res, _f, θ, FiniteDiff.HessianCache(x, Val{:hcentral}))
+        hess = (res,θ) -> FiniteDiff.finite_difference_hessian!(res, _f, θ, FiniteDiff.HessianCache(x, Val{fdhtype}))
     end
 
     if hv === nothing

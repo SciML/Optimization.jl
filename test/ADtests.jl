@@ -89,7 +89,7 @@ sol = solve(prob, BFGS())
 
 optprob = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoFiniteDiff())
 optprob.grad(G2, x0)
-@test G1 ≈ G2 rtol=1e-9
+@test G1 ≈ G2 rtol=1e-6
 optprob.hess(H2, x0)
 @test H1 ≈ H2 rtol=1e-6
 
