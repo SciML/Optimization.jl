@@ -5,7 +5,10 @@ struct AutoForwardDiff <: AbstractADType end
 struct AutoReverseDiff <: AbstractADType end
 struct AutoTracker <: AbstractADType end
 struct AutoZygote <: AbstractADType end
-struct AutoFiniteDiff <: AbstractADType end
+struct AutoFiniteDiff <: AbstractADType 
+    difftype::Symbol
+end
+AutoFiniteDiff() = AutoFiniteDiff(:central)
 struct AutoModelingToolkit <: AbstractADType end
 
 struct OptimizationFunction{F,G,H,HV,K} <: AbstractOptimizationFunction
@@ -120,4 +123,25 @@ function OptimizationFunction(f, x, ::AutoTracker; grad=nothing,hess=nothing, p=
 
 
     return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(kwargs)}(f,grad,hess,hv,AutoTracker(),kwargs)
+end
+
+function OptimizationFunction(f, x, adtype::AutoFiniteDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), chunksize = 1, hv = nothing, kwargs...)
+    _f = θ -> f(θ,p)[1]
+    if grad === nothing
+        grad = (res,θ) -> FiniteDiff.finite_difference_gradient!(res, _f, θ, FiniteDiff.GradientCache(res, x, Val{adtype.difftype}))
+    end
+
+    if hess === nothing
+        hess = (res,θ) -> FiniteDiff.finite_difference_hessian!(res, _f, θ, FiniteDiff.HessianCache(x, Val{:hcentral}))
+    end
+
+    if hv === nothing
+        hv = function (H,θ,v)
+            res = Array{typeof(x[1])}(undef, length(θ), length(θ)) #DiffResults.HessianResult(θ)
+            hess(res, θ)
+            H .= res*v
+        end
+    end
+
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(kwargs)}(f,grad,hess,hv,adtype,kwargs)
 end

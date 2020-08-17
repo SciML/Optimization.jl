@@ -87,4 +87,18 @@ sol = solve(prob, BFGS())
 
 @test_throws ErrorException solve(prob, Newton())
 
-@test_throws ErrorException solve(prob, Optim.KrylovTrustRegion())
+optprob = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoFiniteDiff())
+optprob.grad(G2, x0)
+@test G1 ≈ G2 rtol=1e-9
+optprob.hess(H2, x0)
+@test H1 ≈ H2 rtol=1e-6
+
+prob = OptimizationProblem(optprob, x0)
+sol = solve(prob, BFGS())
+@test 10*sol.minimum < l1
+
+sol = solve(prob, Newton())
+@test 10*sol.minimum < l1
+
+sol = solve(prob, Optim.KrylovTrustRegion())
+@test sol.minimum < l1 #the loss doesn't go below 5e-1 here

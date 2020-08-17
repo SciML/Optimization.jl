@@ -22,15 +22,12 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
 			x = prob.f.f(θ, prob.p)
 			return x[1]
 		end
-		fg! = let res = DiffResults.GradientResult(prob.x)
-			function (G,θ)
-				if G !== nothing
-					prob.f.grad(res, θ)
-					G .= DiffResults.gradient(res)
-				end
-	
-				return _loss(θ)
+		fg! = function (G,θ)
+			if G !== nothing
+				prob.f.grad(G, θ)
 			end
+
+			return _loss(θ)
 		end
 		if opt isa Optim.KrylovTrustRegion
 			optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, prob.f.hv, prob.x)
@@ -65,16 +62,13 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 			x = prob.f.f(θ, prob.p)
 			return x[1]  
 	  	end
-	  	fg! = let res = DiffResults.GradientResult(prob.x)
-		  	function (G,θ)
-			  	if G !== nothing
-				  	prob.f.grad(res, θ)
-				  	G .= DiffResults.gradient(res)
-			  	end
-  
-			  	return _loss(θ)
-		  	end
-	  	end
+	  	fg! = function (G,θ)
+			if G !== nothing
+			  	prob.f.grad(G, θ)
+			end
+
+			return _loss(θ)
+		end
 		optim_f = OnceDifferentiable(_loss, prob.f.grad, fg!, prob.x)
   	else
 	  	!(opt isa Optim.ZerothOrderOptimizer) && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
@@ -165,15 +159,13 @@ function __init__()
 					x = prob.f.f(θ, prob.p)
 					return x[1]
 				end
-				fg! = let res = DiffResults.GradientResult(prob.x)
-					function (θ,G)
-						if length(G) > 0
-							prob.f.grad(res, θ)
-							G .= DiffResults.gradient(res)
-						end
-
-						return _loss(θ)
+				fg! = function (θ,G)
+					if length(G) > 0
+						prob.f.grad(res, θ)
+						G .= DiffResults.gradient(res)
 					end
+					
+					return _loss(θ)
 				end
 				NLopt.min_objective!(opt, fg!)
 			else 
