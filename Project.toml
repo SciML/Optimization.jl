@@ -21,6 +21,7 @@ ForwardDiff = "0.10"
 Optim = "0.22"
 Requires = "1.0"
 ReverseDiff = "1.4"
+Tracker = "0.2"
 Zygote = "0.5"
 julia = "1.3"
 
