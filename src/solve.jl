@@ -3,6 +3,126 @@ function DiffEqBase.solve(prob::OptimizationProblem, opt, args...;kwargs...)
 	__solve(prob, opt, args...; kwargs...)
 end
 
+function update!(x::AbstractArray, x̄::AbstractArray{<:ForwardDiff.Dual})
+  x .-= x̄
+end
+
+function update!(x::AbstractArray, x̄)
+  x .-= getindex.(ForwardDiff.partials.(x̄),1)
+end
+
+function update!(opt, x, x̄)
+  x .-= Flux.Optimise.apply!(opt, x, x̄)
+end
+
+function update!(opt, x, x̄::AbstractArray{<:ForwardDiff.Dual})
+  x .-= Flux.Optimise.apply!(opt, x, getindex.(ForwardDiff.partials.(x̄),1))
+end
+
+function update!(opt, xs::Flux.Zygote.Params, gs)
+  for x in xs
+    gs[x] === nothing && continue
+    update!(opt, x, gs[x])
+  end
+end
+
+macro withprogress(progress, exprs...)
+  quote
+    if $progress
+      $DiffEqBase.maybe_with_logger($DiffEqBase.default_logger($Logging.current_logger())) do
+        $ProgressLogging.@withprogress $(exprs...)
+      end
+    else
+      $(exprs[end])
+    end
+  end |> esc
+end
+
+function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxiters = 1000, progress = true, save_best = true, kwargs...)
+
+	# Flux is silly and doesn't have an abstract type on its optimizers, so assume
+	# this is a Flux optimizer
+	θ = copy(prob.x)
+	ps = Flux.params(θ)
+  
+	t0 = time()
+  
+	local x, min_err, _loss
+	min_err = typemax(eltype(prob.x)) #dummy variables
+	min_opt = 1
+  
+		  
+	if prob.f isa OptimizationFunction 
+		_loss = function(θ)
+			x = prob.f.f(θ, prob.p)
+		end
+	else 
+		_loss = function(θ)
+			x = prob.f(θ, prob.p)
+		end
+	end
+
+	@withprogress progress name="Training" begin
+	  for i in 1:maxiters
+		gs = Flux.Zygote.gradient(ps) do
+		  x = _loss(θ)
+		  first(x)
+		end
+		cb_call = cb(θ,x...)
+		if !(typeof(cb_call) <: Bool)
+		  error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
+		elseif cb_call
+		  break
+		end
+		msg = @sprintf("loss: %.3g", x[1])
+		progress && ProgressLogging.@logprogress msg i/maxiters
+		update!(opt, ps, gs)
+  
+		if save_best
+		  if first(x) < first(min_err)  #found a better solution
+			min_opt = opt
+			min_err = x
+		  end
+		  if i == maxiters  #Last iteration, revert to best.
+			opt = min_opt
+			cb(θ,min_err...)
+		  end
+		end
+	  end
+	end
+  
+	_time = time()
+  
+	Optim.MultivariateOptimizationResults(opt,
+										  prob.x,# initial_x,
+										  θ, #pick_best_x(f_incr_pick, state),
+										  first(x), # pick_best_f(f_incr_pick, state, d),
+										  maxiters, #iteration,
+										  maxiters >= maxiters, #iteration == options.iterations,
+										  true, # x_converged,
+										  0.0,#T(options.x_tol),
+										  0.0,#T(options.x_tol),
+										  NaN,# x_abschange(state),
+										  NaN,# x_abschange(state),
+										  true,# f_converged,
+										  0.0,#T(options.f_tol),
+										  0.0,#T(options.f_tol),
+										  NaN,#f_abschange(d, state),
+										  NaN,#f_abschange(d, state),
+										  true,#g_converged,
+										  0.0,#T(options.g_tol),
+										  NaN,#g_residual(d),
+										  false, #f_increased,
+										  nothing,
+										  maxiters,
+										  maxiters,
+										  0,
+										  true,
+										  NaN,
+										  _time-t0)
+end
+  
+
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace) = trace
 

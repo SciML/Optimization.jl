@@ -1,4 +1,4 @@
-using GalacticOptim, Optim, Test
+using GalacticOptim, Optim, Flux, Test
 
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
@@ -27,12 +27,13 @@ prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, BFGS())
 @test 10*sol.minimum < l1
 
-prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, Newton())
 @test 10*sol.minimum < l1
 
-prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, Optim.KrylovTrustRegion())
+@test 10*sol.minimum < l1
+
+sol = solve(prob, ADAM())
 @test 10*sol.minimum < l1
 
 prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
