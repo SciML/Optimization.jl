@@ -37,7 +37,7 @@ sol = solve(prob, Newton())
 sol = solve(prob, Optim.KrylovTrustRegion())
 @test 10*sol.minimum < l1
 
-sol = solve(prob, ADAM())
+sol = solve(prob, ADAM(), progress = false)
 @test 10*sol.minimum < l1
 
 prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
