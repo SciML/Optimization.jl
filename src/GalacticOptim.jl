@@ -12,6 +12,6 @@ include("function.jl")
 export OptimizationProblem, OptimizationFunction
 export solve
 
-export BBO
+export BBO, CMAEvolutionStrategyOpt
 
 end # module
