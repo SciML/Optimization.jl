@@ -488,5 +488,63 @@ function __init__()
 			Evolutionary.optimize(_loss, prob.x, opt, Evolutionary.Options(;iterations = maxiters, callback = _cb, kwargs...))
 		end
 	end
+	@require CMAEvolutionStrategy="8d3b24bd-414e-49e0-94fb-163cc3a3e411" begin
+
+		struct CMAEvolutionStrategyOpt end
+
+		function __solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt; cb = (args...) -> (false), maxiters = 1000, kwargs...)
+			local x, _loss
+		  
+			function _cb(trace)
+				cb_call = cb(decompose_trace(trace).metadata["x"],trace.value...)
+				if !(typeof(cb_call) <: Bool)
+					error("The callback should return a boolean `halt` for whether to stop the optimization process.")
+				end
+				cb_call
+			end
+
+			if prob.f isa OptimizationFunction 
+				_loss = function(θ)
+					x = prob.f.f(θ, prob.p)
+					return x[1]
+				end
+			else 
+				_loss = function(θ)
+					x = prob.f(θ, prob.p)
+					return x[1]
+				end
+			end
+
+			result = CMAEvolutionStrategy.minimize(_loss, prob.x, 0.1; lower = prob.lb, upper = prob.ub, kwargs...)
+
+
+           	Optim.MultivariateOptimizationResults(opt,
+                                                prob.x,# initial_x,
+												result.logger.xbest[end], #pick_best_x(f_incr_pick, state),
+                                                result.logger.fbest[end], # pick_best_f(f_incr_pick, state, d),
+                                                0, #iteration,
+                                                false, #iteration == options.iterations,
+                                                false, # x_converged,
+                                                0.0,#T(options.x_tol),
+                                                0.0,#T(options.x_tol),
+                                                NaN,# x_abschange(state),
+                                                NaN,# x_abschange(state),
+                                                false,# f_converged,
+                                                0.0,#T(options.f_tol),
+                                                0.0,#T(options.f_tol),
+                                                NaN,#f_abschange(d, state),
+                                                NaN,#f_abschange(d, state),
+                                                false,#g_converged,
+                                                0.0,#T(options.g_tol),
+                                                NaN,#g_residual(d),
+                                                false, #f_increased,
+                                                nothing,
+                                                maxiters,
+                                                maxiters,
+                                                0,
+                                                true,
+                                                NaN,
+                                                result.logger.times[end] - result.logger.times[1])
+		end
+	end
 end
-  
