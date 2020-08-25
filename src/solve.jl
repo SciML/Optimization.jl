@@ -26,12 +26,33 @@ function update!(opt, xs::Flux.Zygote.Params, gs)
   end
 end
 
+maybe_with_logger(f, logger) = logger === nothing ? f() : Logging.with_logger(f, logger)
+
+  function default_logger(logger)
+   Logging.min_enabled_level(logger) ≤ ProgressLogging.ProgressLevel && return nothing
+
+    if Sys.iswindows() || (isdefined(Main, :IJulia) && Main.IJulia.inited)
+     progresslogger = ConsoleProgressMonitor.ProgressLogger()
+   else
+     progresslogger = TerminalLoggers.TerminalLogger()
+   end
+
+    logger1 = LoggingExtras.EarlyFilteredLogger(progresslogger) do log
+     log.level == ProgressLogging.ProgressLevel
+   end
+   logger2 = LoggingExtras.EarlyFilteredLogger(logger) do log
+     log.level != ProgressLogging.ProgressLevel
+   end
+
+    LoggingExtras.TeeLogger(logger1, logger2)
+end
+
 macro withprogress(progress, exprs...)
   quote
     if $progress
-      $DiffEqBase.maybe_with_logger($DiffEqBase.default_logger($Logging.current_logger())) do
-        $ProgressLogging.@withprogress $(exprs...)
-      end
+		$maybe_with_logger($default_logger($Logging.current_logger())) do
+        	$ProgressLogging.@withprogress $(exprs...)
+      	end
     else
       $(exprs[end])
     end
