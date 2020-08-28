@@ -88,7 +88,8 @@ function OptimizationFunction(f, x, ::AutoZygote; grad=nothing, hess=nothing, co
     return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoZygote(),cons,cons_j,cons_h,kwargs)
 end
 
-function OptimizationFunction(f, x, ::AutoReverseDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), hv = nothing, kwargs...)
+function OptimizationFunction(f, x, ::AutoReverseDiff; grad=nothing,hess=nothing, cons = nothing, cons_j = nothing, cons_h = nothing, 
+                                num_cons = 0, p=DiffEqBase.NullParameters(), hv = nothing, kwargs...)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
         grad = (res,θ) -> ReverseDiff.gradient!(res, _f, θ, ReverseDiff.GradientConfig(θ))
@@ -121,7 +122,8 @@ function OptimizationFunction(f, x, ::AutoReverseDiff; grad=nothing,hess=nothing
 end
 
 
-function OptimizationFunction(f, x, ::AutoTracker; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), hv = nothing, kwargs...)
+function OptimizationFunction(f, x, ::AutoTracker; grad=nothing,hess=nothing, cons = nothing, cons_j = nothing, cons_h = nothing, 
+                                num_cons = 0, p=DiffEqBase.NullParameters(), hv = nothing, kwargs...)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
         grad = (res,θ) -> res isa DiffResults.DiffResult ? DiffResults.gradient!(res, Tracker.data(Tracker.gradient(_f, θ)[1])) : res .= Tracker.data(Tracker.gradient(_f, θ)[1])
@@ -139,7 +141,8 @@ function OptimizationFunction(f, x, ::AutoTracker; grad=nothing,hess=nothing, p=
     return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoTracker(),cons,cons_j,cons_h,kwargs)
 end
 
-function OptimizationFunction(f, x, adtype::AutoFiniteDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), hv = nothing, fdtype = :forward, fdhtype = :hcentral, kwargs...)
+function OptimizationFunction(f, x, adtype::AutoFiniteDiff; grad=nothing,hess=nothing, cons = nothing, cons_j = nothing, cons_h = nothing, 
+                                num_cons = 0, p=DiffEqBase.NullParameters(), hv = nothing, fdtype = :forward, fdhtype = :hcentral, kwargs...)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
         grad = (res,θ) -> FiniteDiff.finite_difference_gradient!(res, _f, θ, FiniteDiff.GradientCache(res, x, Val{fdtype}))
