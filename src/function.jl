@@ -56,7 +56,8 @@ function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing, hess=nothin
     return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoForwardDiff(),cons,cons_j,cons_h,kwargs)
 end
 
-function OptimizationFunction(f, x, ::AutoZygote; grad=nothing, hess=nothing, p=DiffEqBase.NullParameters(), hv = nothing, kwargs...)
+function OptimizationFunction(f, x, ::AutoZygote; grad=nothing, hess=nothing, cons = nothing, cons_j = nothing, cons_h = nothing, 
+                                num_cons = 0, p=DiffEqBase.NullParameters(), hv = nothing, kwargs...)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
         grad = (res,θ) -> res isa DiffResults.DiffResult ? DiffResults.gradient!(res, Zygote.gradient(_f, θ)[1]) : res .= Zygote.gradient(_f, θ)[1]
@@ -84,7 +85,7 @@ function OptimizationFunction(f, x, ::AutoZygote; grad=nothing, hess=nothing, p=
             H .= getindex.(ForwardDiff.partials.(DiffResults.gradient(res)),1)
         end
     end
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(kwargs)}(f,grad,hess,hv,AutoZygote(),kwargs)
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoZygote(),cons,cons_j,cons_h,kwargs)
 end
 
 function OptimizationFunction(f, x, ::AutoReverseDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), hv = nothing, kwargs...)
@@ -116,7 +117,7 @@ function OptimizationFunction(f, x, ::AutoReverseDiff; grad=nothing,hess=nothing
         end
     end
 
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(kwargs)}(f,grad,hess,hv,AutoReverseDiff(),kwargs)
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoReverseDiff(),cons,cons_j,cons_h,kwargs)
 end
 
 
@@ -135,7 +136,7 @@ function OptimizationFunction(f, x, ::AutoTracker; grad=nothing,hess=nothing, p=
     end
 
 
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(kwargs)}(f,grad,hess,hv,AutoTracker(),kwargs)
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoTracker(),cons,cons_j,cons_h,kwargs)
 end
 
 function OptimizationFunction(f, x, adtype::AutoFiniteDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), hv = nothing, fdtype = :forward, fdhtype = :hcentral, kwargs...)
@@ -156,5 +157,5 @@ function OptimizationFunction(f, x, adtype::AutoFiniteDiff; grad=nothing,hess=no
         end
     end
 
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(kwargs)}(f,grad,hess,hv,adtype,kwargs)
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,adtype,cons,cons_j,cons_h,kwargs)
 end

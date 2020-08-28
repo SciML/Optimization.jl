@@ -49,7 +49,7 @@ sol = solve(prob, IPNewton())
 @test sol.minimum < l1
 
 optprob = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoZygote())
-
+prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, ADAM(), progress = false)
 @test 10*sol.minimum < l1
 
