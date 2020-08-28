@@ -26,33 +26,12 @@ function update!(opt, xs::Flux.Zygote.Params, gs)
   end
 end
 
-maybe_with_logger(f, logger) = logger === nothing ? f() : Logging.with_logger(f, logger)
-
-  function default_logger(logger)
-   Logging.min_enabled_level(logger) ≤ ProgressLogging.ProgressLevel && return nothing
-
-    if Sys.iswindows() || (isdefined(Main, :IJulia) && Main.IJulia.inited)
-     progresslogger = ConsoleProgressMonitor.ProgressLogger()
-   else
-     progresslogger = TerminalLoggers.TerminalLogger()
-   end
-
-    logger1 = LoggingExtras.EarlyFilteredLogger(progresslogger) do log
-     log.level == ProgressLogging.ProgressLevel
-   end
-   logger2 = LoggingExtras.EarlyFilteredLogger(logger) do log
-     log.level != ProgressLogging.ProgressLevel
-   end
-
-    LoggingExtras.TeeLogger(logger1, logger2)
-end
-
 macro withprogress(progress, exprs...)
   quote
     if $progress
-		$maybe_with_logger($default_logger($Logging.current_logger())) do
-        	$ProgressLogging.@withprogress $(exprs...)
-      	end
+      $DiffEqBase.maybe_with_logger($DiffEqBase.default_logger($Logging.current_logger())) do
+        $ProgressLogging.@withprogress $(exprs...)
+      end
     else
       $(exprs[end])
     end
@@ -223,6 +202,47 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 
 	Optim.optimize(optim_f, prob.lb, prob.ub, prob.x, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
 end
+
+
+function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer;cb = (args...) -> (false), maxiters = 1000, kwargs...)
+	local x
+
+  	function _cb(trace)
+	  cb_call = cb(decompose_trace(trace).metadata["x"],x...)
+	  if !(typeof(cb_call) <: Bool)
+		  error("The callback should return a boolean `halt` for whether to stop the optimization process.")
+	  end
+	  cb_call
+	end
+  
+  	if prob.f isa OptimizationFunction
+		_loss = function(θ)
+			x = prob.f.f(θ, prob.p)
+		  	return x[1]
+		end
+		fg! = function (G,θ)
+			if G !== nothing
+				prob.f.grad(G, θ)
+		  	end
+			return _loss(θ)
+		end
+		optim_f = TwiceDifferentiable(_loss, prob.f.grad, fg!, prob.f.hess, prob.x)
+
+		cons! = (res, θ) -> res .= prob.f.cons(θ);
+		cons_hl! = function (res, θ, λ)
+			prob.f.cons_h(res, θ)
+			for i in 1:length(λ)
+				res[i,i] += λ[i]*res[i,i] 
+			end
+		end
+		optim_fc = TwiceDifferentiableConstraints(cons!, prob.f.cons_j, cons_hl!, prob.lb, prob.ub, prob.lcons, prob.ucons)
+  	else
+	  	error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
+  	end
+
+	Optim.optimize(optim_f, optim_fc, prob.x, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
+end
+
 
 function __init__()
 	@require BlackBoxOptim="a134a8b2-14d6-55f6-9291-3336d3ab0209" begin

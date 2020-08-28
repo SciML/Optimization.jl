@@ -8,16 +8,20 @@ struct AutoZygote <: AbstractADType end
 struct AutoFiniteDiff <: AbstractADType end
 struct AutoModelingToolkit <: AbstractADType end
 
-struct OptimizationFunction{F,G,H,HV,K} <: AbstractOptimizationFunction
+struct OptimizationFunction{F,G,H,HV,C,CJ,CH,K} <: AbstractOptimizationFunction
     f::F
     grad::G
     hess::H
     hv::HV
     adtype::AbstractADType
+    cons::C
+    cons_j::CJ
+    cons_h::CH
     kwargs::K
 end
 
-function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing,hess=nothing, p=DiffEqBase.NullParameters(), chunksize = 1, hv = nothing, kwargs...)
+function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing, hess=nothing, cons = nothing, cons_j = nothing, cons_h = nothing, 
+                                num_cons = 0, p=DiffEqBase.NullParameters(), chunksize = 1, hv = nothing, kwargs...)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
         gradcfg = ForwardDiff.GradientConfig(_f, x, ForwardDiff.Chunk{chunksize}())
@@ -37,7 +41,19 @@ function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing,hess=nothing
         end
     end
 
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(kwargs)}(f,grad,hess,hv,AutoForwardDiff(),kwargs)
+    if cons !== nothing && cons_j === nothing
+        cjconfig = ForwardDiff.JacobianConfig(cons, x, ForwardDiff.Chunk{chunksize}())
+        cons_j = (res,θ) -> ForwardDiff.jacobian!(res, cons, θ, cjconfig)
+    end
+
+    if cons !== nothing && cons_h === nothing
+        cons_h = function (res, θ)
+            hess_config_cache = ForwardDiff.HessianConfig(cons, θ, ForwardDiff.Chunk{chunksize}())
+            ForwardDiff.hessian!(res, cons, θ, hess_config_cache)
+        end
+    end
+
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoForwardDiff(),cons,cons_j,cons_h,kwargs)
 end
 
 function OptimizationFunction(f, x, ::AutoZygote; grad=nothing, hess=nothing, p=DiffEqBase.NullParameters(), hv = nothing, kwargs...)

@@ -3,7 +3,7 @@ module GalacticOptim
 using DiffEqBase, Requires  
 using DiffResults, ForwardDiff, Zygote, ReverseDiff, Tracker, FiniteDiff
 using Optim, Flux
-using Logging, ProgressLogging, Printf, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
+using Logging, ProgressLogging, Printf
 
 include("problem.jl")
 include("solve.jl")
