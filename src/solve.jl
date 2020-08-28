@@ -356,10 +356,10 @@ function __init__()
 				NLopt.min_objective!(opt, _loss)
 			end
 
-			if prob.ub !== nothing
-				NLopt.upper_bounds!(opt, prob.ub)
+			if length(prob.ub) > 0
+				NLopt.upper_bounds!(opt, prob.ub)				
 			end
-			if prob.lb !== nothing
+			if length(prob.lb) > 0
 				NLopt.lower_bounds!(opt, prob.lb)
 			end
 
