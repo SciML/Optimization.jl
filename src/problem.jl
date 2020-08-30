@@ -17,19 +17,19 @@ end
 import MathOptInterface
 const MOI = MathOptInterface
 
-struct MOIOptimizationProblem <: MOI.ModelLike
+struct MOIOptimizationProblem <: MOI.AbstractNLPEvaluator
     prob::OptimizationProblem
 end
 
-MOI.eval_objective(moiproblem::MOIOptimizationProblem, x) = prob.f isa OptimizationFunction ? prob.f.f(x) : prob.f(x)
+MOI.eval_objective(moiproblem::MOIOptimizationProblem, x) = moiproblem.prob.f isa OptimizationFunction ? moiproblem.prob.f.f(x) : moiproblem.prob.f(x)
 
-MOI.eval_objective_gradient(moiproblem::MOIOptimizationProblem, G, x) = prob.f isa OptimizationFunction ? prob.f.grad(G, x) : error("Use OptimizationFunction to pass in gradient function")
+MOI.eval_objective_gradient(moiproblem::MOIOptimizationProblem, G, x) = moiproblem.prob.f isa OptimizationFunction ? moiproblem.prob.f.grad(G, x) : error("Use OptimizationFunction to pass in gradient function")
 
-MOI.eval_hessian_lagrangian(moiproblem::MOIOptimizationProblem, H, x, σ, μ) = prob.f isa OptimizationFunction ? σ.* prob.f.hess(H, x) : error("Use OptimizationFunction to pass in hessian function")
+MOI.eval_hessian_lagrangian(moiproblem::MOIOptimizationProblem, H, x, σ, μ) = moiproblem.prob.f isa OptimizationFunction ? σ.* moiproblem.prob.f.hess(H, x) : error("Use OptimizationFunction to pass in hessian function")
 
 function MOI.initialize(moiproblem::MOIOptimizationProblem, requested_features::Vector{Symbol})
     for feat in requested_features
-        if !(feat in MOI.features_available(d))
+        if !(feat in MOI.features_available(moiproblem))
             error("Unsupported feature $feat")
             # TODO: implement Jac-vec and Hess-vec products
             # for solvers that need them
@@ -38,7 +38,7 @@ function MOI.initialize(moiproblem::MOIOptimizationProblem, requested_features::
 end
 
 function MOI.features_available(moiproblem::MOIOptimizationProblem)
-    if prob.f isa OptimizationFunction
+    if moiproblem.prob.f isa OptimizationFunction
         return [:Grad, :Hess]
     else
         error("Use OptimizationFunction to pass in gradient and hessian")
