@@ -44,6 +44,10 @@ prob = OptimizationProblem(optprob, x0, lcons = [-5.0], ucons = [10.0])
 sol = solve(prob, IPNewton())
 @test 10*sol.minimum < l1
 
+using Ipopt
+sol = solve(prob, Ipopt.Optimizer)
+@test 10*sol.minimum < l1
+
 prob = OptimizationProblem(optprob, x0, lcons = [0.0], ucons = [0.0], lb = [-500.0,-500.0], ub=[-50.0,-50.0])
 sol = solve(prob, IPNewton())
 @test sol.minimum < l1
