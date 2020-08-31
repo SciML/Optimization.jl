@@ -635,7 +635,13 @@ end
 
 function __solve(prob::OptimizationProblem, opt::Union{Function, Type{<:MOI.AbstractOptimizer}, MOI.OptimizerWithAttributes})
     optimizer = MOI.instantiate(opt)
-    θ = MOI.add_variables(optimizer, length(prob.x)) 
+	θ = MOI.add_variables(optimizer, length(prob.x))
+	if length(prob.lb) > 0
+		for i in 1:length(prob.x)
+			MOI.add_constraint(optimizer, MOI.SingleVariable(θ[i]), MOI.GreaterThan(prob.lb[i]))
+			MOI.add_constraint(optimizer, MOI.SingleVariable(θ[i]), MOI.LessThan(prob.ub[i]))	
+		end
+	end
     MOI.set(optimizer, MOI.NLPBlock(), MOI.NLPBlockData(MOI.NLPBoundsPair.(prob.lcons, prob.ucons), make_moi_problem(prob), true)) 
 	MOI.optimize!(optimizer)
 	sol = MOI.get(optimizer, MOI.VariablePrimal(), θ)
