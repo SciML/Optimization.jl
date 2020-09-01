@@ -642,7 +642,36 @@ function __solve(prob::OptimizationProblem, opt::Union{Function, Type{<:MOI.Abst
 			MOI.add_constraint(optimizer, MOI.SingleVariable(θ[i]), MOI.LessThan(prob.ub[i]))	
 		end
 	end
-    MOI.set(optimizer, MOI.NLPBlock(), MOI.NLPBlockData(MOI.NLPBoundsPair.(prob.lcons, prob.ucons), make_moi_problem(prob), true)) 
+	for i in 1:length(prob.x)
+		MOI.set(optimizer, MOI.VariablePrimalStart(), θ[i], prob.x[i])
+	end
+	MOI.set(optimizer, MOI.NLPBlock(), MOI.NLPBlockData(MOI.NLPBoundsPair.(prob.lcons, prob.ucons), make_moi_problem(prob), true)) 
 	MOI.optimize!(optimizer)
-	sol = MOI.get(optimizer, MOI.VariablePrimal(), θ)
+	Optim.MultivariateOptimizationResults(opt,
+                                                prob.x,# initial_x,
+												MOI.get(optimizer, MOI.VariablePrimal(), θ), #pick_best_x(f_incr_pick, state),
+                                                MOI.get(optimizer, MOI.ObjectiveValue()), # pick_best_f(f_incr_pick, state, d),
+                                                0, #iteration,
+                                                false, #iteration == options.iterations,
+                                                false, # x_converged,
+                                                0.0,#T(options.x_tol),
+                                                0.0,#T(options.x_tol),
+                                                NaN,# x_abschange(state),
+                                                NaN,# x_abschange(state),
+                                                false,# f_converged,
+                                                0.0,#T(options.f_tol),
+                                                0.0,#T(options.f_tol),
+                                                NaN,#f_abschange(d, state),
+                                                NaN,#f_abschange(d, state),
+                                                false,#g_converged,
+                                                0.0,#T(options.g_tol),
+                                                NaN,#g_residual(d),
+                                                false, #f_increased,
+                                                nothing,
+                                                0,
+                                                0,
+                                                0,
+                                                true,
+                                                NaN,
+                                                MOI.get(optimizer, MOI.SolveTime()))
 end
