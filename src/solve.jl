@@ -140,7 +140,8 @@ function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxit
 										  0,
 										  true,
 										  NaN,
-										  _time-t0)
+										  _time-t0,
+										  NamedTuple())
 end
 
 
@@ -287,7 +288,8 @@ function __init__()
 												  0,
 												  true,
 												  NaN,
-												  bboptre.elapsed_time)
+												  bboptre.elapsed_time,
+												  NamedTuple())
 		end
 	end
 
@@ -360,7 +362,8 @@ function __init__()
                                                     0,
                                                     ret,
                                                     NaN,
-													_time-t0,)
+													_time-t0,
+													NamedTuple())
 		end
 	end
 
@@ -415,7 +418,8 @@ function __init__()
                                                 0,
                                                 true,
                                                 NaN,
-                                                t1 - t0)
+                                                t1 - t0,
+												NamedTuple())
 		end
 	end
 
@@ -472,7 +476,8 @@ function __init__()
                                                 0,
                                                 true,
                                                 NaN,
-                                                t1 - t0)
+                                                t1 - t0,
+												NamedTuple())
 		end
 	end
 
@@ -565,7 +570,8 @@ function __init__()
                                                 0,
                                                 true,
                                                 NaN,
-                                                result.logger.times[end] - result.logger.times[1])
+                                                result.logger.times[end] - result.logger.times[1],
+												NamedTuple())
 		end
 	end
 end
