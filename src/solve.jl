@@ -65,19 +65,19 @@ function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxit
 	# this is a Flux optimizer
 	θ = copy(prob.x)
 	ps = Flux.params(θ)
-  
+
 	t0 = time()
-  
+
 	local x, min_err, _loss
 	min_err = typemax(eltype(prob.x)) #dummy variables
 	min_opt = 1
-  
-		  
-	if prob.f isa OptimizationFunction 
+
+
+	if prob.f isa OptimizationFunction
 		_loss = function(θ)
 			x = prob.f.f(θ, prob.p)
 		end
-	else 
+	else
 		_loss = function(θ)
 			x = prob.f(θ, prob.p)
 		end
@@ -98,7 +98,7 @@ function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxit
 		msg = @sprintf("loss: %.3g", x[1])
 		progress && ProgressLogging.@logprogress msg i/maxiters
 		update!(opt, ps, gs)
-  
+
 		if save_best
 		  if first(x) < first(min_err)  #found a better solution
 			min_opt = opt
@@ -111,9 +111,9 @@ function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxit
 		end
 	  end
 	end
-  
+
 	_time = time()
-  
+
 	Optim.MultivariateOptimizationResults(opt,
 										  prob.x,# initial_x,
 										  θ, #pick_best_x(f_incr_pick, state),
@@ -140,9 +140,10 @@ function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxit
 										  0,
 										  true,
 										  NaN,
-										  _time-t0)
+										  _time-t0,
+										  NamedTuple())
 end
-  
+
 
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace) = trace
@@ -157,7 +158,7 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
 		end
 		cb_call
   	end
-	
+
 	if prob.f isa OptimizationFunction
 		_loss = function(θ)
 			x = prob.f.f(θ, prob.p)
@@ -197,11 +198,11 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 	  	end
 	  	cb_call
 	end
-  
+
   	if prob.f isa OptimizationFunction && !(opt isa Optim.SAMIN)
 	  	_loss = function(θ)
 			x = prob.f.f(θ, prob.p)
-			return x[1]  
+			return x[1]
 	  	end
 	  	fg! = function (G,θ)
 			if G !== nothing
@@ -212,14 +213,14 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 		end
 		optim_f = OnceDifferentiable(_loss, prob.f.grad, fg!, prob.x)
   	else
-	  	!(opt isa Optim.ZerothOrderOptimizer) && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
+	  	!(opt isa Optim.ZerothOrderOptimizer || opt isa Optim.SAMIN) && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 		_loss = function(θ)
 			x = prob.f isa OptimizationFunction ? prob.f.f(θ, prob.p) : prob.f(θ, prob.p)
-			return x[1]  
+			return x[1]
 	  	end
 	  	optim_f = _loss
   	end
-  
+
 	Optim.optimize(optim_f, prob.lb, prob.ub, prob.x, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
 end
 
@@ -228,14 +229,14 @@ function __init__()
 		decompose_trace(opt::BlackBoxOptim.OptRunController) = BlackBoxOptim.best_candidate(opt)
 
 		struct BBO
-			method::Symbol         
+			method::Symbol
 		end
 
 		BBO() = BBO(:adaptive_de_rand_1_bin)
 
 		function __solve(prob::OptimizationProblem, opt::BBO; cb = (args...) -> (false), maxiters = 1000, kwargs...)
 			local x, _loss
-		  
+
 			function _cb(trace)
 			  cb_call = cb(decompose_trace(trace),x...)
 			  if !(typeof(cb_call) <: Bool)
@@ -247,12 +248,12 @@ function __init__()
 			  cb_call
 			end
 
-			if prob.f isa OptimizationFunction 
+			if prob.f isa OptimizationFunction
 				_loss = function(θ)
 					x = prob.f.f(θ, prob.p)
 					return x[1]
 				end
-			else 
+			else
 				_loss = function(θ)
 					x = prob.f(θ, prob.p)
 					return x[1]
@@ -260,7 +261,7 @@ function __init__()
 			end
 
 			bboptre = BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], MaxSteps = maxiters, CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...)
-		  
+
 			Optim.MultivariateOptimizationResults(opt.method,
 												  [NaN],# initial_x,
 												  BlackBoxOptim.best_candidate(bboptre), #pick_best_x(f_incr_pick, state),
@@ -287,15 +288,16 @@ function __init__()
 												  0,
 												  true,
 												  NaN,
-												  bboptre.elapsed_time)
+												  bboptre.elapsed_time,
+												  NamedTuple())
 		end
 	end
 
 	@require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" begin
-		function __solve(prob::OptimizationProblem, opt::NLopt.Opt; maxiters = 1000, nstart = 1, local_method = nothing, kwargs...)	
+		function __solve(prob::OptimizationProblem, opt::NLopt.Opt; maxiters = 1000, nstart = 1, local_method = nothing, kwargs...)
 			local x
 
-			if prob.f isa OptimizationFunction 
+			if prob.f isa OptimizationFunction
 				_loss = function(θ)
 					x = prob.f.f(θ, prob.p)
 					return x[1]
@@ -304,11 +306,11 @@ function __init__()
 					if length(G) > 0
 						prob.f.grad(G, θ)
 					end
-					
+
 					return _loss(θ)
 				end
 				NLopt.min_objective!(opt, fg!)
-			else 
+			else
 				_loss = function(θ,G)
 					x = prob.f(θ, prob.p)
 					return x[1]
@@ -317,7 +319,7 @@ function __init__()
 			end
 
 			if prob.ub !== nothing
-				NLopt.upper_bounds!(opt, prob.ub)				
+				NLopt.upper_bounds!(opt, prob.ub)
 			end
 			if prob.lb !== nothing
 				NLopt.lower_bounds!(opt, prob.lb)
@@ -360,20 +362,21 @@ function __init__()
                                                     0,
                                                     ret,
                                                     NaN,
-													_time-t0,)
-		end	
+													_time-t0,
+													NamedTuple())
+		end
 	end
 
 	@require MultistartOptimization = "3933049c-43be-478e-a8bb-6e0f7fd53575" begin
 		function __solve(prob::OptimizationProblem, opt::MultistartOptimization.TikTak; local_method, local_maxiters = 1000, kwargs...)
 			local x, _loss
-		  
-			if prob.f isa OptimizationFunction 
+
+			if prob.f isa OptimizationFunction
 				_loss = function(θ)
 					x = prob.f.f(θ, prob.p)
 					return x[1]
 				end
-			else 
+			else
 				_loss = function(θ)
 					x = prob.f(θ, prob.p)
 					return x[1]
@@ -386,9 +389,9 @@ function __init__()
 			multistart_method = opt
 			local_method = MultistartOptimization.NLoptLocalMethod(local_method, maxeval = local_maxiters)
 			p = MultistartOptimization.multistart_minimization(multistart_method, local_method, P)
-  
+
 			t1 = time()
-		  
+
 			Optim.MultivariateOptimizationResults(opt,
                                                 [NaN],# initial_x,
                                                 p.location, #pick_best_x(f_incr_pick, state),
@@ -415,25 +418,26 @@ function __init__()
                                                 0,
                                                 true,
                                                 NaN,
-                                                t1 - t0)
+                                                t1 - t0,
+												NamedTuple())
 		end
 	end
 
 	@require QuadDIRECT = "dae52e8d-d666-5120-a592-9e15c33b8d7a" begin
 		export QuadDirect
-		
+
         struct QuadDirect
 		end
 
 		function __solve(prob::OptimizationProblem, opt::QuadDirect; splits, maxiters = 1000, kwargs...)
 			local x, _loss
-		  
-			if prob.f isa OptimizationFunction 
+
+			if prob.f isa OptimizationFunction
 				_loss = function(θ)
 					x = prob.f.f(θ, prob.p)
 					return x[1]
 				end
-			else 
+			else
 				_loss = function(θ)
 					x = prob.f(θ, prob.p)
 					return x[1]
@@ -472,7 +476,8 @@ function __init__()
                                                 0,
                                                 true,
                                                 NaN,
-                                                t1 - t0)
+                                                t1 - t0,
+												NamedTuple())
 		end
 	end
 
@@ -485,7 +490,7 @@ function __init__()
 
 		function __solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer; cb = (args...) -> (false), maxiters = 1000, kwargs...)
 			local x, _loss
-		  
+
 			function _cb(trace)
 				cb_call = cb(decompose_trace(trace).metadata["x"],trace.value...)
 				if !(typeof(cb_call) <: Bool)
@@ -494,12 +499,12 @@ function __init__()
 				cb_call
 			end
 
-			if prob.f isa OptimizationFunction 
+			if prob.f isa OptimizationFunction
 				_loss = function(θ)
 					x = prob.f.f(θ, prob.p)
 					return x[1]
 				end
-			else 
+			else
 				_loss = function(θ)
 					x = prob.f(θ, prob.p)
 					return x[1]
@@ -515,7 +520,7 @@ function __init__()
 
 		function __solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt; cb = (args...) -> (false), maxiters = 1000, kwargs...)
 			local x, _loss
-		  
+
 			function _cb(trace)
 				cb_call = cb(decompose_trace(trace).metadata["x"],trace.value...)
 				if !(typeof(cb_call) <: Bool)
@@ -524,12 +529,12 @@ function __init__()
 				cb_call
 			end
 
-			if prob.f isa OptimizationFunction 
+			if prob.f isa OptimizationFunction
 				_loss = function(θ)
 					x = prob.f.f(θ, prob.p)
 					return x[1]
 				end
-			else 
+			else
 				_loss = function(θ)
 					x = prob.f(θ, prob.p)
 					return x[1]
@@ -565,7 +570,8 @@ function __init__()
                                                 0,
                                                 true,
                                                 NaN,
-                                                result.logger.times[end] - result.logger.times[1])
+                                                result.logger.times[end] - result.logger.times[1],
+												NamedTuple())
 		end
 	end
 end

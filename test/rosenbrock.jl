@@ -21,7 +21,7 @@ rosenbrock(x, p=nothing) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 
 l1 = rosenbrock(x0)
 prob = OptimizationProblem(rosenbrock, x0)
-sol = solve(prob, NelderMead()) 
+sol = solve(prob, NelderMead())
 @test 10*sol.minimum < l1
 
 

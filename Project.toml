@@ -29,7 +29,7 @@ FiniteDiff = "2.5"
 Flux = "0.11"
 ForwardDiff = "0.10"
 LoggingExtras = "0.4"
-Optim = "0.22"
+Optim = "0.22, 1"
 ProgressLogging = "0.1"
 Requires = "1.0"
 ReverseDiff = "1.4"
@@ -43,7 +43,8 @@ BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
 CMAEvolutionStrategy = "8d3b24bd-414e-49e0-94fb-163cc3a3e411"
 Evolutionary = "86b6b26d-c046-49b6-aa0b-5f0f74682bd6"
 NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["BlackBoxOptim", "Evolutionary", "NLopt", "CMAEvolutionStrategy", "Test"]
+test = ["BlackBoxOptim", "Evolutionary", "NLopt", "CMAEvolutionStrategy", "SafeTestsets", "Test"]
