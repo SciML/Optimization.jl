@@ -1,7 +1,4 @@
-using GalacticOptim
-using Test
+using SafeTestsets
 
-@testset "GalacticOptim.jl" begin
-    include("rosenbrock.jl")
-    include("ADtests.jl")
-end
+@safetestset "Rosenbrock" begin include("rosenbrock.jl") end
+@safetestset "AD Tests" begin include("ADtests.jl") end
