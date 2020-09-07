@@ -48,6 +48,15 @@ prob = OptimizationProblem(optprob, x0, lcons = [0.0], ucons = [0.0], lb = [-500
 sol = solve(prob, IPNewton())
 @test sol.minimum < l1
 
+function con2_c(x)
+    [x[1]^2 + x[2]^2, x[2]*sin(x[1])-x[1]]
+end
+
+optprob = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoForwardDiff();cons= con2_c, num_cons = 2)
+prob = OptimizationProblem(optprob, x0, lcons = [-Inf,-Inf], ucons = [Inf,Inf])
+sol = solve(prob, IPNewton())
+@test 10*sol.minimum < l1
+
 optprob = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoZygote())
 prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, ADAM(), progress = false)

@@ -247,13 +247,32 @@ function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer;cb =
 		optim_f = TwiceDifferentiable(_loss, prob.f.grad, fg!, prob.f.hess, prob.x)
 
 		cons! = (res, θ) -> res .= prob.f.cons(θ);
-		cons_hl! = function (res, θ, λ)
-			prob.f.cons_h(res, θ)
-			for i in 1:length(λ)
-				res[i,i] += λ[i]*res[i,i] 
+
+		cons_j! = function(J, x)
+			if prob.f.num_cons > 1
+				res = [zeros(1,size(J,2)) for i in 1:size(J,1)]
+				prob.f.cons_j(res, x)
+				J = vcat(res...) 
+			else
+				prob.f.cons_j(J, x)
 			end
 		end
-		optim_fc = TwiceDifferentiableConstraints(cons!, prob.f.cons_j, cons_hl!, prob.lb, prob.ub, prob.lcons, prob.ucons)
+
+		cons_hl! = function (h, θ, λ)
+			if prob.f.num_cons > 1
+				res = [similar(h) for i in 1:length(λ)]
+				prob.f.cons_h(res, θ)
+				h .= zeros(size(h))
+				for i in 1:length(λ)
+					h += λ[i]*res[i] 
+				end
+			else
+				prob.f.cons_h(h, θ)
+				h += λ[1]*h
+			end
+			
+		end
+		optim_fc = TwiceDifferentiableConstraints(cons!, cons_j!, cons_hl!, prob.lb, prob.ub, prob.lcons, prob.ucons)
   	else
 	  	error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
   	end

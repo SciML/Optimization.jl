@@ -17,6 +17,7 @@ struct OptimizationFunction{F,G,H,HV,C,CJ,CH,K} <: AbstractOptimizationFunction
     cons::C
     cons_j::CJ
     cons_h::CH
+    num_cons::Int
     kwargs::K
 end
 
@@ -42,18 +43,36 @@ function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing, hess=nothin
     end
 
     if cons !== nothing && cons_j === nothing
-        cjconfig = ForwardDiff.JacobianConfig(cons, x, ForwardDiff.Chunk{chunksize}())
-        cons_j = (res,θ) -> ForwardDiff.jacobian!(res, cons, θ, cjconfig)
-    end
-
-    if cons !== nothing && cons_h === nothing
-        cons_h = function (res, θ)
-            hess_config_cache = ForwardDiff.HessianConfig(cons, θ, ForwardDiff.Chunk{chunksize}())
-            ForwardDiff.hessian!(res, cons, θ, hess_config_cache)
+        if num_cons == 1
+            cjconfig = ForwardDiff.JacobianConfig(cons, x, ForwardDiff.Chunk{chunksize}())
+            cons_j = (res,θ) -> ForwardDiff.jacobian!(res, cons, θ, cjconfig)
+        else
+            cons_j = function (res, θ)
+                for i in 1:num_cons
+                    cjconfig = ForwardDiff.JacobianConfig(x -> cons(x)[i], θ, ForwardDiff.Chunk{chunksize}())
+                    ForwardDiff.jacobian!(res[i], x -> cons(x)[i], θ, cjconfig, Val{false}())
+                end
+            end
         end
     end
 
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoForwardDiff(),cons,cons_j,cons_h,kwargs)
+    if cons !== nothing && cons_h === nothing
+        if num_cons == 1
+            cons_h = function (res, θ)
+                hess_config_cache = ForwardDiff.HessianConfig(cons, θ, ForwardDiff.Chunk{chunksize}())
+                ForwardDiff.hessian!(res, cons, θ, hess_config_cache)
+            end
+        else
+            cons_h = function (res, θ)
+                for i in 1:num_cons
+                    hess_config_cache = ForwardDiff.HessianConfig(x -> cons(x)[i], θ, ForwardDiff.Chunk{chunksize}())
+                    ForwardDiff.hessian!(res[i], x -> cons(x)[i], θ, hess_config_cache, Val{false}())
+                end
+            end 
+        end
+    end
+
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoForwardDiff(),cons,cons_j,cons_h,num_cons,kwargs)
 end
 
 function OptimizationFunction(f, x, ::AutoZygote; grad=nothing, hess=nothing, cons = nothing, cons_j = nothing, cons_h = nothing, 
