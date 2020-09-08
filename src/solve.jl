@@ -26,38 +26,35 @@ function update!(opt, xs::Flux.Zygote.Params, gs)
   end
 end
 
-maybe_with_logger(f, logger) = logger === nothing ? f() : Logging.with_logger(f, logger)
+maybe_with_logger(f, logger) = logger === nothing ? f() : Logging.with_logger(f, logger)		
 
-  function default_logger(logger)
-   Logging.min_enabled_level(logger) ≤ ProgressLogging.ProgressLevel && return nothing
-
-    if Sys.iswindows() || (isdefined(Main, :IJulia) && Main.IJulia.inited)
-     progresslogger = ConsoleProgressMonitor.ProgressLogger()
-   else
-     progresslogger = TerminalLoggers.TerminalLogger()
-   end
-
-    logger1 = LoggingExtras.EarlyFilteredLogger(progresslogger) do log
-     log.level == ProgressLogging.ProgressLevel
-   end
-   logger2 = LoggingExtras.EarlyFilteredLogger(logger) do log
-     log.level != ProgressLogging.ProgressLevel
-   end
-
-    LoggingExtras.TeeLogger(logger1, logger2)
+function default_logger(logger)		
+	Logging.min_enabled_level(logger) ≤ ProgressLogging.ProgressLevel && return nothing		
+	if Sys.iswindows() || (isdefined(Main, :IJulia) && Main.IJulia.inited)		
+  		progresslogger = ConsoleProgressMonitor.ProgressLogger()		
+	else		
+  		progresslogger = TerminalLoggers.TerminalLogger()		
+	end		
+	logger1 = LoggingExtras.EarlyFilteredLogger(progresslogger) do log		
+		log.level == ProgressLogging.ProgressLevel		
+	end		
+	logger2 = LoggingExtras.EarlyFilteredLogger(logger) do log		
+		log.level != ProgressLogging.ProgressLevel		
+	end		
+	LoggingExtras.TeeLogger(logger1, logger2)		
 end
 
 macro withprogress(progress, exprs...)
-  quote
-    if $progress
-		$maybe_with_logger($default_logger($Logging.current_logger())) do
-        	$ProgressLogging.@withprogress $(exprs...)
-      	end
-    else
-      $(exprs[end])
-    end
-  end |> esc
-end
+	quote
+	  if $progress
+		  $maybe_with_logger($default_logger($Logging.current_logger())) do
+			  $ProgressLogging.@withprogress $(exprs...)
+			end
+	  else
+		$(exprs[end])
+	  end
+	end |> esc
+  end
 
 function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxiters = 1000, progress = true, save_best = true, kwargs...)
 
@@ -224,6 +221,66 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 	Optim.optimize(optim_f, prob.lb, prob.ub, prob.x, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
 end
 
+
+function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer;cb = (args...) -> (false), maxiters = 1000, kwargs...)
+	local x
+
+  	function _cb(trace)
+	  cb_call = cb(decompose_trace(trace).metadata["x"],x...)
+	  if !(typeof(cb_call) <: Bool)
+		  error("The callback should return a boolean `halt` for whether to stop the optimization process.")
+	  end
+	  cb_call
+	end
+  
+  	if prob.f isa OptimizationFunction
+		_loss = function(θ)
+			x = prob.f.f(θ, prob.p)
+		  	return x[1]
+		end
+		fg! = function (G,θ)
+			if G !== nothing
+				prob.f.grad(G, θ)
+		  	end
+			return _loss(θ)
+		end
+		optim_f = TwiceDifferentiable(_loss, prob.f.grad, fg!, prob.f.hess, prob.x)
+
+		cons! = (res, θ) -> res .= prob.f.cons(θ);
+
+		cons_j! = function(J, x)
+			if prob.f.num_cons > 1
+				res = [zeros(1,size(J,2)) for i in 1:size(J,1)]
+				prob.f.cons_j(res, x)
+				J = vcat(res...) 
+			else
+				prob.f.cons_j(J, x)
+			end
+		end
+
+		cons_hl! = function (h, θ, λ)
+			if prob.f.num_cons > 1
+				res = [similar(h) for i in 1:length(λ)]
+				prob.f.cons_h(res, θ)
+				h .= zeros(size(h))
+				for i in 1:length(λ)
+					h += λ[i]*res[i] 
+				end
+			else
+				prob.f.cons_h(h, θ)
+				h += λ[1]*h
+			end
+			
+		end
+		optim_fc = TwiceDifferentiableConstraints(cons!, cons_j!, cons_hl!, prob.lb, prob.ub, prob.lcons, prob.ucons)
+  	else
+	  	error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
+  	end
+
+	Optim.optimize(optim_f, optim_fc, prob.x, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
+end
+
+
 function __init__()
 	@require BlackBoxOptim="a134a8b2-14d6-55f6-9291-3336d3ab0209" begin
 		decompose_trace(opt::BlackBoxOptim.OptRunController) = BlackBoxOptim.best_candidate(opt)
@@ -318,10 +375,10 @@ function __init__()
 				NLopt.min_objective!(opt, _loss)
 			end
 
-			if prob.ub !== nothing
-				NLopt.upper_bounds!(opt, prob.ub)
+			if length(prob.ub) > 0
+				NLopt.upper_bounds!(opt, prob.ub)				
 			end
-			if prob.lb !== nothing
+			if length(prob.lb) > 0
 				NLopt.lower_bounds!(opt, prob.lb)
 			end
 
