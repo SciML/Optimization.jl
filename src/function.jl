@@ -104,7 +104,7 @@ function OptimizationFunction(f, x, ::AutoZygote; grad=nothing, hess=nothing, co
             H .= getindex.(ForwardDiff.partials.(DiffResults.gradient(res)),1)
         end
     end
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoZygote(),cons,cons_j,cons_h,kwargs)
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoZygote(),cons,cons_j,cons_h,num_cons,kwargs)
 end
 
 function OptimizationFunction(f, x, ::AutoReverseDiff; grad=nothing,hess=nothing, cons = nothing, cons_j = nothing, cons_h = nothing, 
@@ -137,7 +137,7 @@ function OptimizationFunction(f, x, ::AutoReverseDiff; grad=nothing,hess=nothing
         end
     end
 
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoReverseDiff(),cons,cons_j,cons_h,kwargs)
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoReverseDiff(),cons,cons_j,cons_h,num_cons,kwargs)
 end
 
 
@@ -157,7 +157,7 @@ function OptimizationFunction(f, x, ::AutoTracker; grad=nothing,hess=nothing, co
     end
 
 
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoTracker(),cons,cons_j,cons_h,kwargs)
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoTracker(),cons,cons_j,cons_h,num_cons,kwargs)
 end
 
 function OptimizationFunction(f, x, adtype::AutoFiniteDiff; grad=nothing,hess=nothing, cons = nothing, cons_j = nothing, cons_h = nothing, 
@@ -179,5 +179,5 @@ function OptimizationFunction(f, x, adtype::AutoFiniteDiff; grad=nothing,hess=no
         end
     end
 
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,adtype,cons,cons_j,cons_h,kwargs)
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,adtype,cons,cons_j,cons_h,num_cons,kwargs)
 end
