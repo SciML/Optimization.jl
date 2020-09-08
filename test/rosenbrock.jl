@@ -52,6 +52,10 @@ prob = OptimizationProblem(optprob, x0, lcons = [0.0], ucons = [0.0], lb = [-500
 sol = solve(prob, IPNewton())
 @test sol.minimum < l1
 
+using Ipopt
+sol = solve(prob, Ipopt.Optimizer)
+@test sol.minimum < l1
+
 function con2_c(x)
     [x[1]^2 + x[2]^2, x[2]*sin(x[1])-x[1]]
 end
