@@ -1,6 +1,3 @@
-abstract type AbstractOptimizationFunction end
-abstract type AbstractADType end
-
 struct AutoForwardDiff <: AbstractADType end
 struct AutoReverseDiff <: AbstractADType end
 struct AutoTracker <: AbstractADType end
@@ -9,7 +6,7 @@ struct AutoFiniteDiff <: AbstractADType end
 struct AutoModelingToolkit <: AbstractADType end
 
 function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing, hess=nothing, cons = nothing, cons_j = nothing, cons_h = nothing,
-                                num_cons = 0, p=DiffEqBase.NullParameters(), chunksize = 1, hv = nothing, kwargs...)
+                                num_cons = 0, p=DiffEqBase.NullParameters(), chunksize = 1, hv = nothing)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
         gradcfg = ForwardDiff.GradientConfig(_f, x, ForwardDiff.Chunk{chunksize}())
@@ -59,11 +56,11 @@ function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing, hess=nothin
         end
     end
 
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoForwardDiff(),cons,cons_j,cons_h,num_cons,kwargs)
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f,grad,hess,hv,AutoForwardDiff(),cons,cons_j,cons_h,num_cons)
 end
 
 function OptimizationFunction(f, x, ::AutoZygote; grad=nothing, hess=nothing, cons = nothing, cons_j = nothing, cons_h = nothing,
-                                num_cons = 0, p=DiffEqBase.NullParameters(), hv = nothing, kwargs...)
+                                num_cons = 0, p=DiffEqBase.NullParameters(), hv = nothing)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
         grad = (res,θ) -> res isa DiffResults.DiffResult ? DiffResults.gradient!(res, Zygote.gradient(_f, θ)[1]) : res .= Zygote.gradient(_f, θ)[1]
@@ -91,11 +88,11 @@ function OptimizationFunction(f, x, ::AutoZygote; grad=nothing, hess=nothing, co
             H .= getindex.(ForwardDiff.partials.(DiffResults.gradient(res)),1)
         end
     end
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoZygote(),cons,cons_j,cons_h,num_cons,kwargs)
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f,grad,hess,hv,AutoZygote(),cons,cons_j,cons_h,num_cons)
 end
 
 function OptimizationFunction(f, x, ::AutoReverseDiff; grad=nothing,hess=nothing, cons = nothing, cons_j = nothing, cons_h = nothing,
-                                num_cons = 0, p=DiffEqBase.NullParameters(), hv = nothing, kwargs...)
+                                num_cons = 0, p=DiffEqBase.NullParameters(), hv = nothing)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
         grad = (res,θ) -> ReverseDiff.gradient!(res, _f, θ, ReverseDiff.GradientConfig(θ))
@@ -124,12 +121,12 @@ function OptimizationFunction(f, x, ::AutoReverseDiff; grad=nothing,hess=nothing
         end
     end
 
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoReverseDiff(),cons,cons_j,cons_h,num_cons,kwargs)
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f,grad,hess,hv,AutoReverseDiff(),cons,cons_j,cons_h,num_cons)
 end
 
 
 function OptimizationFunction(f, x, ::AutoTracker; grad=nothing,hess=nothing, cons = nothing, cons_j = nothing, cons_h = nothing,
-                                num_cons = 0, p=DiffEqBase.NullParameters(), hv = nothing, kwargs...)
+                                num_cons = 0, p=DiffEqBase.NullParameters(), hv = nothing)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
         grad = (res,θ) -> res isa DiffResults.DiffResult ? DiffResults.gradient!(res, Tracker.data(Tracker.gradient(_f, θ)[1])) : res .= Tracker.data(Tracker.gradient(_f, θ)[1])
@@ -144,11 +141,11 @@ function OptimizationFunction(f, x, ::AutoTracker; grad=nothing,hess=nothing, co
     end
 
 
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,AutoTracker(),cons,cons_j,cons_h,num_cons,kwargs)
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f,grad,hess,hv,AutoTracker(),cons,cons_j,cons_h,num_cons)
 end
 
 function OptimizationFunction(f, x, adtype::AutoFiniteDiff; grad=nothing,hess=nothing, cons = nothing, cons_j = nothing, cons_h = nothing,
-                                num_cons = 0, p=DiffEqBase.NullParameters(), hv = nothing, fdtype = :forward, fdhtype = :hcentral, kwargs...)
+                                num_cons = 0, p=DiffEqBase.NullParameters(), hv = nothing, fdtype = :forward, fdhtype = :hcentral)
     _f = θ -> f(θ,p)[1]
     if grad === nothing
         grad = (res,θ) -> FiniteDiff.finite_difference_gradient!(res, _f, θ, FiniteDiff.GradientCache(res, x, Val{fdtype}))
@@ -166,5 +163,5 @@ function OptimizationFunction(f, x, adtype::AutoFiniteDiff; grad=nothing,hess=no
         end
     end
 
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h),typeof(kwargs)}(f,grad,hess,hv,adtype,cons,cons_j,cons_h,num_cons,kwargs)
+    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f,grad,hess,hv,adtype,cons,cons_j,cons_h,num_cons)
 end
