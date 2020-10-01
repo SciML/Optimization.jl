@@ -3,7 +3,6 @@ struct AutoReverseDiff <: AbstractADType end
 struct AutoTracker <: AbstractADType end
 struct AutoZygote <: AbstractADType end
 struct AutoFiniteDiff <: AbstractADType end
-struct AutoModelingToolkit <: AbstractADType end
 
 function OptimizationFunction(f, x, ::AutoForwardDiff; grad=nothing, hess=nothing, cons = nothing, cons_j = nothing, cons_h = nothing,
                                 num_cons = 0, p=DiffEqBase.NullParameters(), chunksize = 1, hv = nothing)
