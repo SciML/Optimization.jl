@@ -78,7 +78,7 @@ optprob = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoTracker())
 optprob.grad(G2, x0)
 @test G1 == G2
 @test_throws ErrorException optprob.hess(H2, x0)
- 
+
 
 prob = OptimizationProblem(optprob, x0)
 

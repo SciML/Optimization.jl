@@ -69,21 +69,12 @@ function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxit
 	min_err = typemax(eltype(prob.u0)) #dummy variables
 	min_opt = 1
 
-
-	if prob.f isa OptimizationFunction
-		_loss = function(θ)
-			x = prob.f.f(θ, prob.p)
-		end
-	else
-		_loss = function(θ)
-			x = prob.f(θ, prob.p)
-		end
-	end
+	f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
 
 	@withprogress progress name="Training" begin
 	  for i in 1:maxiters
 		gs = Flux.Zygote.gradient(ps) do
-		  x = _loss(θ)
+		  x = prob.f(θ,prob.p)
 		  first(x)
 		end
 		cb_call = cb(θ,x...)
@@ -156,30 +147,26 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
 		cb_call
   	end
 
-	if prob.f isa OptimizationFunction
-		_loss = function(θ)
-			x = prob.f.f(θ, prob.p)
-			return x[1]
-		end
-		fg! = function (G,θ)
-			if G !== nothing
-				prob.f.grad(G, θ)
-			end
+	f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
 
-			return _loss(θ)
+	!(opt isa Optim.ZerothOrderOptimizer) && f.grad === nothing && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
+
+	_loss = function(θ)
+		x = f.f(θ, prob.p)
+		return first(x)
+	end
+
+	fg! = function (G,θ)
+		if G !== nothing
+			f.grad(G, θ)
 		end
-		if opt isa Optim.KrylovTrustRegion
-			optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, prob.f.hv, prob.u0)
-		else
-			optim_f = TwiceDifferentiable(_loss, prob.f.grad, fg!, prob.f.hess, prob.u0)
-		end
+		return _loss(θ)
+	end
+
+	if opt isa Optim.KrylovTrustRegion
+		optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, f.hv, prob.u0)
 	else
-		!(opt isa Optim.ZerothOrderOptimizer) && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
-		_loss = function(θ)
-			x = prob.f(θ, prob.p)
-			return x[1]
-		end
-		optim_f = _loss
+		optim_f = TwiceDifferentiable(_loss, f.grad, fg!, f.hess, prob.u0)
 	end
 
   	Optim.optimize(optim_f, prob.u0, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
@@ -196,27 +183,22 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 	  	cb_call
 	end
 
-  	if prob.f isa OptimizationFunction && !(opt isa Optim.SAMIN)
-	  	_loss = function(θ)
-			x = prob.f.f(θ, prob.p)
-			return x[1]
-	  	end
-	  	fg! = function (G,θ)
-			if G !== nothing
-			  	prob.f.grad(G, θ)
-			end
+	f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
 
-			return _loss(θ)
+	!(opt isa Optim.ZerothOrderOptimizer) && f.grad === nothing && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
+
+	_loss = function(θ)
+		x = f.f(θ, prob.p)
+		return first(x)
+	end
+	fg! = function (G,θ)
+		if G !== nothing
+			f.grad(G, θ)
 		end
-		optim_f = OnceDifferentiable(_loss, prob.f.grad, fg!, prob.u0)
-  	else
-	  	!(opt isa Optim.ZerothOrderOptimizer || opt isa Optim.SAMIN) && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
-		_loss = function(θ)
-			x = prob.f isa OptimizationFunction ? prob.f.f(θ, prob.p) : prob.f(θ, prob.p)
-			return x[1]
-	  	end
-	  	optim_f = _loss
-  	end
+
+		return _loss(θ)
+	end
+	optim_f = OnceDifferentiable(_loss, f.grad, fg!, prob.u0)
 
 	Optim.optimize(optim_f, prob.lb, prob.ub, prob.u0, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
 end
@@ -233,49 +215,52 @@ function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer;cb =
 	  cb_call
 	end
 
-  	if prob.f isa OptimizationFunction
-		_loss = function(θ)
-			x = prob.f.f(θ, prob.p)
-		  	return x[1]
-		end
-		fg! = function (G,θ)
-			if G !== nothing
-				prob.f.grad(G, θ)
-		  	end
-			return _loss(θ)
-		end
-		optim_f = TwiceDifferentiable(_loss, prob.f.grad, fg!, prob.f.hess, prob.u0)
+	f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
 
-		cons! = (res, θ) -> res .= prob.f.cons(θ);
+	f.cons_j ===nothing && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
-		cons_j! = function(J, x)
-			if prob.f.num_cons > 1
-				res = [zeros(1,size(J,2)) for i in 1:size(J,1)]
-				prob.f.cons_j(res, x)
-				J = vcat(res...)
-			else
-				prob.f.cons_j(J, x)
+	_loss = function(θ)
+		x = f.f(θ, prob.p)
+		return x[1]
+	end
+	fg! = function (G,θ)
+		if G !== nothing
+			f.grad(G, θ)
+		end
+		return _loss(θ)
+	end
+	optim_f = TwiceDifferentiable(_loss, f.grad, fg!, f.hess, prob.u0)
+
+	cons! = (res, θ) -> res .= f.cons(θ);
+
+	cons_j! = function(J, x)
+		if f.num_cons > 1
+			res = [zeros(1,size(J,2)) for i in 1:size(J,1)]
+			f.cons_j(res, x)
+			J = reduce(vcat,res)
+		else
+			f.cons_j(J, x)
+		end
+	end
+
+	cons_hl! = function (h, θ, λ)
+		if f.num_cons > 1
+			res = [similar(h) for i in 1:length(λ)]
+			f.cons_h(res, θ)
+			h .= zeros(size(h))
+			for i in 1:length(λ)
+				h += λ[i]*res[i]
 			end
+		else
+			f.cons_h(h, θ)
+			h += λ[1]*h
 		end
 
-		cons_hl! = function (h, θ, λ)
-			if prob.f.num_cons > 1
-				res = [similar(h) for i in 1:length(λ)]
-				prob.f.cons_h(res, θ)
-				h .= zeros(size(h))
-				for i in 1:length(λ)
-					h += λ[i]*res[i]
-				end
-			else
-				prob.f.cons_h(h, θ)
-				h += λ[1]*h
-			end
+	end
 
-		end
-		optim_fc = TwiceDifferentiableConstraints(cons!, cons_j!, cons_hl!, prob.lb, prob.ub, prob.lcons, prob.ucons)
-  	else
-	  	error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
-  	end
+	lb = prob.lb === nothing ? [] : prob.lb
+	ub = prob.ub === nothing ? [] : prob.ub
+	optim_fc = TwiceDifferentiableConstraints(cons!, cons_j!, cons_hl!, lb, ub, prob.lcons, prob.ucons)
 
 	Optim.optimize(optim_f, optim_fc, prob.u0, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
 end
@@ -305,16 +290,9 @@ function __init__()
 			  cb_call
 			end
 
-			if prob.f isa OptimizationFunction
-				_loss = function(θ)
-					x = prob.f.f(θ, prob.p)
-					return x[1]
-				end
-			else
-				_loss = function(θ)
-					x = prob.f(θ, prob.p)
-					return x[1]
-				end
+			_loss = function(θ)
+				x = prob.f(θ, prob.p)
+				return first(x)
 			end
 
 			bboptre = BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], MaxSteps = maxiters, CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...)
@@ -354,40 +332,36 @@ function __init__()
 		function __solve(prob::OptimizationProblem, opt::NLopt.Opt; maxiters = 1000, nstart = 1, local_method = nothing, kwargs...)
 			local x
 
-			if prob.f isa OptimizationFunction
-				_loss = function(θ)
-					x = prob.f.f(θ, prob.p)
-					return x[1]
-				end
-				fg! = function (θ,G)
-					if length(G) > 0
-						prob.f.grad(G, θ)
-					end
+			f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
 
-					return _loss(θ)
-				end
-				NLopt.min_objective!(opt, fg!)
-			else
-				_loss = function(θ,G)
-					x = prob.f(θ, prob.p)
-					return x[1]
-				end
-				NLopt.min_objective!(opt, _loss)
+			_loss = function(θ)
+				x = prob.f.f(θ, prob.p)
+				@show θ,x
+				return x[1]
 			end
 
-			if length(prob.ub) > 0
+			fg! = function (θ,G)
+				if length(G) > 0
+					prob.f.grad(G, θ)
+				end
+
+				return _loss(θ)
+			end
+			NLopt.min_objective!(opt, fg!)
+
+			if prob.ub !== nothing
 				NLopt.upper_bounds!(opt, prob.ub)
 			end
-			if length(prob.lb) > 0
+			if prob.lb !== nothing
 				NLopt.lower_bounds!(opt, prob.lb)
 			end
+
+			NLopt.maxeval!(opt, maxiters)
 
 			if nstart > 1 && local_method !== nothing
 				NLopt.local_optimizer!(opt, local_method)
 				NLopt.maxeval!(opt, nstart * maxiters)
 			end
-
-            NLopt.maxeval!(opt, maxiters)
 
             t0= time()
             (minf,minx,ret) = NLopt.optimize(opt, prob.u0)
@@ -428,16 +402,9 @@ function __init__()
 		function __solve(prob::OptimizationProblem, opt::MultistartOptimization.TikTak; local_method, local_maxiters = 1000, kwargs...)
 			local x, _loss
 
-			if prob.f isa OptimizationFunction
-				_loss = function(θ)
-					x = prob.f.f(θ, prob.p)
-					return x[1]
-				end
-			else
-				_loss = function(θ)
-					x = prob.f(θ, prob.p)
-					return x[1]
-				end
+			_loss = function(θ)
+				x = prob.f(θ, prob.p)
+				return first(x)
 			end
 
 			t0 = time()
@@ -489,16 +456,9 @@ function __init__()
 		function __solve(prob::OptimizationProblem, opt::QuadDirect; splits, maxiters = 1000, kwargs...)
 			local x, _loss
 
-			if prob.f isa OptimizationFunction
-				_loss = function(θ)
-					x = prob.f.f(θ, prob.p)
-					return x[1]
-				end
-			else
-				_loss = function(θ)
-					x = prob.f(θ, prob.p)
-					return x[1]
-				end
+			_loss = function(θ)
+				x = prob.f(θ, prob.p)
+				return first(x)
 			end
 
 			t0 = time()
@@ -556,16 +516,9 @@ function __init__()
 				cb_call
 			end
 
-			if prob.f isa OptimizationFunction
-				_loss = function(θ)
-					x = prob.f.f(θ, prob.p)
-					return x[1]
-				end
-			else
-				_loss = function(θ)
-					x = prob.f(θ, prob.p)
-					return x[1]
-				end
+			_loss = function(θ)
+				x = prob.f(θ, prob.p)
+				return first(x)
 			end
 
 			Evolutionary.optimize(_loss, prob.u0, opt, Evolutionary.Options(;iterations = maxiters, callback = _cb, kwargs...))
@@ -586,20 +539,12 @@ function __init__()
 				cb_call
 			end
 
-			if prob.f isa OptimizationFunction
-				_loss = function(θ)
-					x = prob.f.f(θ, prob.p)
-					return x[1]
-				end
-			else
-				_loss = function(θ)
-					x = prob.f(θ, prob.p)
-					return x[1]
-				end
+			_loss = function(θ)
+				x = prob.f(θ, prob.p)
+				return first(x)
 			end
 
 			result = CMAEvolutionStrategy.minimize(_loss, prob.u0, 0.1; lower = prob.lb, upper = prob.ub, kwargs...)
-
 
            	Optim.MultivariateOptimizationResults(opt,
                                                 prob.u0,# initial_x,
