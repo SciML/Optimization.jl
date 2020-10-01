@@ -57,7 +57,7 @@ function OptimizationFunction(f, x, ::AutoForwardDiff,p=DiffEqBase.NullParameter
         end
     end
 
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f,grad,hess,hv,AutoForwardDiff(),cons,cons_j,cons_h,num_cons)
+    return OptimizationFunction{false,AutoForwardDiff,typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f,AutoForwardDiff(),grad,hess,hv,cons,cons_j,cons_h,num_cons)
 end
 
 function OptimizationFunction(f, x, ::AutoZygote, p=DiffEqBase.NullParameters();
@@ -91,7 +91,7 @@ function OptimizationFunction(f, x, ::AutoZygote, p=DiffEqBase.NullParameters();
             H .= getindex.(ForwardDiff.partials.(DiffResults.gradient(res)),1)
         end
     end
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f,grad,hess,hv,AutoZygote(),cons,cons_j,cons_h,num_cons)
+    return OptimizationFunction{false,AutoZygote,typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f,AutoZygote(),grad,hess,hv,cons,cons_j,cons_h,num_cons)
 end
 
 function OptimizationFunction(f, x, ::AutoReverseDiff, p=DiffEqBase.NullParameters();
@@ -126,7 +126,7 @@ function OptimizationFunction(f, x, ::AutoReverseDiff, p=DiffEqBase.NullParamete
         end
     end
 
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f,grad,hess,hv,AutoReverseDiff(),cons,cons_j,cons_h,num_cons)
+    return OptimizationFunction{false,AutoReverseDiff,typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f,AutoReverseDiff(),grad,hess,hv,cons,cons_j,cons_h,num_cons)
 end
 
 
@@ -172,5 +172,5 @@ function OptimizationFunction(f, x, adtype::AutoFiniteDiff, p=DiffEqBase.NullPar
         end
     end
 
-    return OptimizationFunction{typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f,grad,hess,hv,adtype,cons,cons_j,cons_h,num_cons)
+    return OptimizationFunction{false,AutoFiniteDiff,typeof(f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f,adtype,grad,hess,hv,cons,cons_j,cons_h,num_cons)
 end
