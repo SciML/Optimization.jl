@@ -47,7 +47,7 @@ sol = solve(prob, IPNewton())
 @test 10*sol.minimum < l1
 
 prob = OptimizationProblem(optprob, x0, lcons = [-Inf], ucons = [Inf], lb = [-500.0,-500.0], ub=[-50.0,-50.0])
-@test_broken @test_nowarn sol = solve(prob, IPNewton())
+sol = solve(prob, IPNewton())
 @test sol.minimum < l1
 
 function con2_c(x,p)

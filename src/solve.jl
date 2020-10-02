@@ -336,7 +336,6 @@ function __init__()
 
 			_loss = function(θ)
 				x = prob.f.f(θ, prob.p)
-				@show θ,x
 				return x[1]
 			end
 
