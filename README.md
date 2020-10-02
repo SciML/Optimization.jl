@@ -20,20 +20,20 @@ unified interface.
  x0 = zeros(2)
  p  = [1.0,100.0]
 
- prob = OptimizationProblem(rosenbrock,x0,p=p)
+ prob = OptimizationProblem(rosenbrock,x0,p)
  sol = solve(prob,NelderMead())
 
 
  using BlackBoxOptim
- prob = OptimizationProblem(rosenbrock, x0, p = p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+ prob = OptimizationProblem(rosenbrock, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
  sol = solve(prob,BBO())
 ```
 
 ```julia
- f = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoForwardDiff(), p=p) 
- prob = OptimizationProblem(f, x0, p = p)
+ f = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoForwardDiff(), p)
+ prob = OptimizationProblem(f, x0, p)
  sol = solve(prob,BFGS())
-``` 
+```
 
 ```julia
  prob = OptimizationProblem(f, x0, p = p, lb = [-1.0,-1.0], ub = [1.0,1.0])
@@ -58,8 +58,7 @@ choice.
 ### API Documentation
 
 ```julia
-OptimizationFunction(f, x, AutoForwardDiff();
-                     p = DiffEqBase.NullParameters(),
+OptimizationFunction(f, x, AutoForwardDiff(), p = DiffEqBase.NullParameters();
                      grad = nothing,
                      hes = nothing,
                      hv = nothing,
@@ -67,8 +66,7 @@ OptimizationFunction(f, x, AutoForwardDiff();
 ```
 
 ```julia
-OptimizationProblem(f, x;
-                    p = DiffEqBase.NullParameters(),
+OptimizationProblem(f, x, p = DiffEqBase.NullParameters(),;
                     lb = nothing,
                     ub = nothing)
 ```
