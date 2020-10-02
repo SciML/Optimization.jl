@@ -24,7 +24,8 @@ H2 = Array{Float64}(undef, 2, 2)
 g!(G1, x0)
 h!(H1, x0)
 
-optprob = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoForwardDiff())
+optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
+optprob = GalacticOptim.instantiate_function(optf,x0,GalacticOptim.AutoForwardDiff(),nothing)
 optprob.grad(G2, x0)
 @test G1 == G2
 optprob.hess(H2, x0)
@@ -41,7 +42,8 @@ sol = solve(prob, Newton())
 sol = solve(prob, Optim.KrylovTrustRegion())
 @test 10*sol.minimum < l1
 
-optprob = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoZygote())
+optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoZygote())
+optprob = GalacticOptim.instantiate_function(optf,x0,GalacticOptim.AutoZygote(),nothing)
 optprob.grad(G2, x0)
 @test G1 == G2
 optprob.hess(H2, x0)
@@ -58,7 +60,8 @@ sol = solve(prob, Newton())
 sol = solve(prob, Optim.KrylovTrustRegion())
 @test 10*sol.minimum < l1
 
-optprob = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoReverseDiff())
+optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoReverseDiff())
+optprob = GalacticOptim.instantiate_function(optf,x0,GalacticOptim.AutoReverseDiff(),nothing)
 optprob.grad(G2, x0)
 @test G1 == G2
 optprob.hess(H2, x0)
@@ -74,7 +77,8 @@ sol = solve(prob, Newton())
 sol = solve(prob, Optim.KrylovTrustRegion())
 @test 10*sol.minimum < l1
 
-optprob = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoTracker())
+optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoTracker())
+optprob = GalacticOptim.instantiate_function(optf,x0,GalacticOptim.AutoTracker(),nothing)
 optprob.grad(G2, x0)
 @test G1 == G2
 @test_throws ErrorException optprob.hess(H2, x0)
@@ -87,7 +91,8 @@ sol = solve(prob, BFGS())
 
 @test_throws ErrorException solve(prob, Newton())
 
-optprob = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoFiniteDiff())
+optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoFiniteDiff())
+optprob = GalacticOptim.instantiate_function(optf,x0,GalacticOptim.AutoFiniteDiff(),nothing)
 optprob.grad(G2, x0)
 @test G1 ≈ G2 rtol=1e-6
 optprob.hess(H2, x0)

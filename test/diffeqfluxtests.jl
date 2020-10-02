@@ -55,13 +55,13 @@ callback = function (p, l, pred)
   return false
 end
 
-optprob = OptimizationFunction( (x,p) -> loss_adjoint(x), p, GalacticOptim.AutoForwardDiff())
+optprob = OptimizationFunction((x,p) -> loss_adjoint(x), GalacticOptim.AutoForwardDiff())
 
 prob = GalacticOptim.OptimizationProblem(optprob, p)
 
-result_ode = GalacticOptim.solve(prob, 
-                                    BFGS(initial_stepnorm = 0.0001),
-                                    cb = callback)
+result_ode = GalacticOptim.solve(prob,
+                                 BFGS(initial_stepnorm = 0.0001),
+                                 cb = callback)
 
 
 u0 = Float32[2.0; 0.0]
@@ -120,11 +120,17 @@ callback = function (p, l, pred; doplot = false)
   return false
 end
 
-optprob = OptimizationFunction( (p,x) -> loss_neuralode(p), prob_neuralode.p, GalacticOptim.AutoForwardDiff())
+optprob = OptimizationFunction( (p,x) -> loss_neuralode(p), GalacticOptim.AutoForwardDiff())
 
 prob = GalacticOptim.OptimizationProblem(optprob, prob_neuralode.p)
 
-result_neuralode = GalacticOptim.solve(prob, 
-                                LBFGS(), cb = callback,
+result_neuralode = GalacticOptim.solve(prob,
+                                ADAM(), cb = callback,
                                 maxiters = 300)
 
+prob2 = remake(prob,u0=result_neuralode.minimizer)
+result_neuralode2 = GalacticOptim.solve(prob2,
+                                        BFGS(initial_stepnorm=0.0001),
+                                        cb = callback,
+                                        maxiters = 100)
+@test result_neuralode2.minimum < 10

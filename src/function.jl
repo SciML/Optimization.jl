@@ -147,9 +147,11 @@ function instantiate_function(f, x, ::AutoZygote, p)
     return OptimizationFunction{false,AutoZygote,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,AutoZygote(),grad,hess,hv,nothing,nothing,nothing,0)
 end
 
-function OptimizationFunction(f, x, ::AutoReverseDiff, p=DiffEqBase.NullParameters())
+function instantiate_function(f, x, ::AutoReverseDiff, p=DiffEqBase.NullParameters())
     f.num_cons != 0 && error("AutoReverseDiff does not currently support constraints")
+
     _f = θ -> f.f(θ,p)[1]
+
     if f.grad === nothing
         grad = (res,θ) -> ReverseDiff.gradient!(res, _f, θ, ReverseDiff.GradientConfig(θ))
     else
@@ -188,9 +190,10 @@ function OptimizationFunction(f, x, ::AutoReverseDiff, p=DiffEqBase.NullParamete
 end
 
 
-function OptimizationFunction(f, x, ::AutoTracker, p)
+function instantiate_function(f, x, ::AutoTracker, p)
     f.num_cons != 0 && error("AutoTracker does not currently support constraints")
     _f = θ -> f.f(θ,p)[1]
+
     if f.grad === nothing
         grad = (res,θ) -> res isa DiffResults.DiffResult ? DiffResults.gradient!(res, Tracker.data(Tracker.gradient(_f, θ)[1])) : res .= Tracker.data(Tracker.gradient(_f, θ)[1])
     else
@@ -210,10 +213,10 @@ function OptimizationFunction(f, x, ::AutoTracker, p)
     end
 
 
-    return OptimizationFunction{false,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,grad,hess,hv,AutoTracker(),nothing,nothing,nothing,0)
+    return OptimizationFunction{false,AutoTracker,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,AutoTracker(),grad,hess,hv,nothing,nothing,nothing,0)
 end
 
-function OptimizationFunction(f, x, adtype::AutoFiniteDiff, p)
+function instantiate_function(f, x, adtype::AutoFiniteDiff, p)
 
     f.num_cons != 0 && error("AutoFiniteDiff does not currently support constraints")
     _f = θ -> f.f(θ,p)[1]
