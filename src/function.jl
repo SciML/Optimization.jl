@@ -22,12 +22,19 @@ function default_chunk_size(len)
     end
 end
 
-function instantiate_function(f, x, ::DiffEqBase.NoAD, p)
-    OptimizationFunction{false,DiffEqBase.NoAD,typeof(f.f),typeof(f.grad),
-                         typeof(f.hess),typeof(f.hv),typeof(f.cons),
-                         typeof(f.cons_j),typeof(f.cons_h)}(f.f,
-                         DiffEqBase.NoAD(),f.grad,f.hess,f.hv,f.cons,
-                         f.cons_j,f.cons_h,f.num_cons)
+function instantiate_function(f, x, ::AbstractADType, p)
+    grad   = f.grad   === nothing ? nothing : (G,x)->f.grad(G,x,p)
+    hess   = f.hess   === nothing ? nothing : (H,x)->f.hess(H,x,p)
+    hv     = f.hv     === nothing ? nothing : (H,x,v)->f.hv(H,x,v,p)
+    cons   = f.cons   === nothing ? nothing : (x)->f.cons(x,p)
+    cons_j = f.cons_j === nothing ? nothing : (res,x)->f.cons_j(res,x,p)
+    cons_h = f.cons_h === nothing ? nothing : (res,x)->f.cons_h(res,x,p)
+
+    OptimizationFunction{true,DiffEqBase.NoAD,typeof(f.f),typeof(grad),
+                         typeof(hess),typeof(hv),typeof(cons),
+                         typeof(cons_j),typeof(cons_h)}(f.f,
+                         DiffEqBase.NoAD(),grad,hess,hv,cons,
+                         cons_j,cons_h,f.num_cons)
 end
 
 function instantiate_function(f, x, ::AutoForwardDiff{_chunksize}, p) where _chunksize
@@ -104,7 +111,7 @@ function instantiate_function(f, x, ::AutoForwardDiff{_chunksize}, p) where _chu
         cons_h = f.cons_h
     end
 
-    return OptimizationFunction{false,AutoForwardDiff,typeof(f.f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f.f,AutoForwardDiff(),grad,hess,hv,cons,cons_j,cons_h,f.num_cons)
+    return OptimizationFunction{true,AutoForwardDiff,typeof(f.f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f.f,AutoForwardDiff(),grad,hess,hv,cons,cons_j,cons_h,f.num_cons)
 end
 
 function instantiate_function(f, x, ::AutoZygote, p)
