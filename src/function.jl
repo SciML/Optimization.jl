@@ -59,7 +59,7 @@ function instantiate_function(f, x, ::AutoForwardDiff{_chunksize}, p) where _chu
 
     if f.hv === nothing
         hv = function (H,θ,v)
-            res = false .* θ .* θ' #DiffResults.HessianResult(θ)
+            res = ArrayInterface.zeromatrix(θ)
             hess(res, θ)
             H .= res*v
         end
@@ -242,7 +242,7 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p)
 
     if f.hv === nothing
         hv = function (H,θ,v)
-            res = Array{typeof(x[1])}(undef, length(θ), length(θ)) #DiffResults.HessianResult(θ)
+            res = ArrayInterface.zeromatrix(θ)
             hess(res, θ)
             H .= res*v
         end
