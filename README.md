@@ -30,7 +30,7 @@ unified interface.
 ```
 
 ```julia
- f = OptimizationFunction(rosenbrock, x0, GalacticOptim.AutoForwardDiff(), p)
+ f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff(), p)
  prob = OptimizationProblem(f, x0, p)
  sol = solve(prob,BFGS())
 ```
@@ -58,7 +58,7 @@ choice.
 ### API Documentation
 
 ```julia
-OptimizationFunction(f, x, AutoForwardDiff(), p = DiffEqBase.NullParameters();
+OptimizationFunction(f, AutoForwardDiff(), p = DiffEqBase.NullParameters();
                      grad = nothing,
                      hes = nothing,
                      hv = nothing,
