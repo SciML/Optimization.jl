@@ -5,12 +5,12 @@
 GalacticOptim.jl is a package with a scope that is beyond your normal global optimization
 package. GalacticOptim.jl seeks to bring together all of the optimization packages
 it can find, local and global, into one unified Julia interface. This means, you
-learn one package and you learn them all! GalacticOptim.jl adds a few high level
+learn one package and you learn them all! GalacticOptim.jl adds a few high-level
 features, such as integrating with automatic differentiation, to make its usage
 fairly simple for most cases, while allowing all of the options in a single
 unified interface.
 
-#### Note: This package is still in development. The README is currently both an active documentation and development roadmap.
+#### Note: This package is still in development. The README is currently both an active documentation and a development roadmap.
 
 ## Examples
 
@@ -36,7 +36,7 @@ unified interface.
 ```
 
 ```julia
- prob = OptimizationProblem(f, x0, p = p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+ prob = OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
  sol = solve(prob, Fminbox(GradientDescent()))
 ```
 
