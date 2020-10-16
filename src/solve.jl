@@ -234,28 +234,15 @@ function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer;cb =
 	cons! = (res, θ) -> res .= f.cons(θ);
 
 	cons_j! = function(J, x)
-		if f.num_cons > 1
-			res = [zeros(1,size(J,2)) for i in 1:size(J,1)]
-			f.cons_j(res, x)
-			J = reduce(vcat,res)
-		else
-			f.cons_j(J, x)
-		end
+		f.cons_j(J, x)
 	end
 
 	cons_hl! = function (h, θ, λ)
-		if f.num_cons > 1
-			res = [similar(h) for i in 1:length(λ)]
-			f.cons_h(res, θ)
-			h .= zeros(size(h))
-			for i in 1:length(λ)
-				h += λ[i]*res[i]
-			end
-		else
-			f.cons_h(h, θ)
-			h += λ[1]*h
+		res = [similar(h) for i in 1:length(λ)]
+		f.cons_h(res, θ)
+		for i in 1:length(λ)
+			h .+= λ[i]*res[i]
 		end
-
 	end
 
 	lb = prob.lb === nothing ? [] : prob.lb

@@ -76,35 +76,19 @@ function instantiate_function(f, x, ::AutoForwardDiff{_chunksize}, p) where _chu
     end
 
     if cons !== nothing && f.cons_j === nothing
-        if f.num_cons == 1
-            cjconfig = ForwardDiff.JacobianConfig(cons, x, ForwardDiff.Chunk{chunksize}())
-            cons_j = (res,θ) -> ForwardDiff.jacobian!(res, cons, θ, cjconfig)
-        else
-            cons_j = function (res, θ)
-                for i in 1:f.num_cons
-                    consi = (x) -> cons(x)[i:i]
-                    cjconfig = ForwardDiff.JacobianConfig(consi, θ, ForwardDiff.Chunk{chunksize}())
-                    ForwardDiff.jacobian!(res[i], consi, θ, cjconfig)
-                end
-            end
+        cons_j = function (J, θ)
+            cjconfig = ForwardDiff.JacobianConfig(cons, θ, ForwardDiff.Chunk{chunksize}())
+            ForwardDiff.jacobian!(J, cons, θ, cjconfig)
         end
     else
         cons_j = f.cons_j
     end
 
     if cons !== nothing && f.cons_h === nothing
-        if f.num_cons == 1
-            firstcons = (args...) -> first(cons(args...))
-            cons_h = function (res, θ)
-                hess_config_cache = ForwardDiff.HessianConfig(firstcons, θ, ForwardDiff.Chunk{chunksize}())
-                ForwardDiff.hessian!(res, firstcons, θ, hess_config_cache)
-            end
-        else
-            cons_h = function (res, θ)
-                for i in 1:f.num_cons
-                    hess_config_cache = ForwardDiff.HessianConfig(x -> cons(x)[i], θ, ForwardDiff.Chunk{chunksize}())
-                    ForwardDiff.hessian!(res[i], (x) -> cons(x)[i], θ, hess_config_cache, Val{false}())
-                end
+        cons_h = function (res, θ)
+            for i in 1:f.num_cons
+                hess_config_cache = ForwardDiff.HessianConfig(x -> cons(x)[i], θ,ForwardDiff.Chunk{chunksize}())
+                ForwardDiff.hessian!(res[i], (x) -> cons(x)[i], θ, hess_config_cache,Val{false}())
             end
         end
     else
