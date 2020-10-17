@@ -59,6 +59,12 @@ prob = OptimizationProblem(optprob, x0, lcons = [-Inf,-Inf], ucons = [Inf,Inf])
 sol = solve(prob, IPNewton())
 @test 10*sol.minimum < l1
 
+cons_circ = (x,p) -> [x[1]^2 + x[2]^2]
+optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons= cons_circ)
+prob = OptimizationProblem(optprob, x0, lcons = [-Inf], ucons = [0.25^2])
+sol = solve(prob, IPNewton())
+@test sqrt(cons(sol.minimizer,nothing)[1]) ≈ 0.25 rtol = 1e-6
+
 optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoZygote())
 prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, ADAM(), progress = false)
