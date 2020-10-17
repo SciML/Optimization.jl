@@ -26,7 +26,7 @@ sol = solve(prob, NelderMead())
 @test 10*sol.minimum < l1
 
 cons= (x,p) -> [x[1]^2 + x[2]^2]
-optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons= cons, num_cons = 1)
+optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons= cons)
 
 prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, BFGS())
@@ -54,7 +54,7 @@ function con2_c(x,p)
     [x[1]^2 + x[2]^2, x[2]*sin(x[1])-x[1]]
 end
 
-optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons= con2_c, num_cons = 2)
+optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons= con2_c)
 prob = OptimizationProblem(optprob, x0, lcons = [-Inf,-Inf], ucons = [Inf,Inf])
 sol = solve(prob, IPNewton())
 @test 10*sol.minimum < l1
