@@ -215,7 +215,7 @@ function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer;cb =
 	  cb_call
 	end
 
-	f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
+	f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p,prob.ucons === nothing ? 0 : length(prob.ucons))
 
 	f.cons_j ===nothing && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
