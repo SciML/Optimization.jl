@@ -101,9 +101,9 @@ end
 function instantiate_function(f, x, ::AutoZygote, p, num_cons = 0)
     num_cons != 0 && error("AutoZygote does not currently support constraints")
 
-    _f = θ -> f(θ,p)[1]
+    _f = (θ, args...) -> f(θ,p,args...)[1]
     if f.grad === nothing
-        grad = (res,θ) -> res isa DiffResults.DiffResult ? DiffResults.gradient!(res, Zygote.gradient(_f, θ)[1]) : res .= Zygote.gradient(_f, θ)[1]
+        grad = (res,θ,args...) -> res isa DiffResults.DiffResult ? DiffResults.gradient!(res, Zygote.gradient(x -> _f(x, args...), θ)[1]) : res .= Zygote.gradient(x -> _f(x, args...), θ)[1]
     else
         grad = f.grad
     end

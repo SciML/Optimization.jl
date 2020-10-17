@@ -1,4 +1,13 @@
 
+struct NullData end
+const DEFAULT_DATA = Iterators.cycle((NullData(),))
+Base.iterate(::NullData, i=1) = nothing
+Base.length(::NullData) = 0
+
+get_maxiters(data) = Iterators.IteratorSize(typeof(DEFAULT_DATA)) isa Iterators.IsInfinite ||
+                     Iterators.IteratorSize(typeof(DEFAULT_DATA)) isa Iterators.SizeUnknown ?
+                     typemax(Int) : length(data)
+
 function DiffEqBase.solve(prob::OptimizationProblem, opt, args...;kwargs...)
 	__solve(prob, opt, args...; kwargs...)
 end
@@ -56,8 +65,7 @@ macro withprogress(progress, exprs...)
 	end |> esc
   end
 
-function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxiters::Number = 1000, progress = true, save_best = true, kwargs...)
-	
+function __solve(prob::OptimizationProblem, opt, _data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, progress = true, save_best = true, kwargs...)
 	if maxiters <= 0.0
 		error("The number of maxiters has to be a non-negative and non-zero number.")
 	else
@@ -69,6 +77,16 @@ function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxit
 	θ = copy(prob.u0)
 	ps = Flux.params(θ)
 
+	if _data == DEFAULT_DATA && maxiters == typemax(Int)
+		error("For Flux optimizers, either a data iterator must be provided or the `maxiters` keyword argument must be set.")
+	  elseif _data == DEFAULT_DATA && maxiters != typemax(Int)
+		data = Iterators.repeated((), maxiters)
+	  elseif maxiters != typemax(Int)
+		data = take(_data, maxiters)
+	  else
+		data = _data
+	end
+
 	t0 = time()
 
 	local x, min_err, _loss
@@ -78,11 +96,10 @@ function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxit
 	f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
 
 	@withprogress progress name="Training" begin
-	  for i in 1:maxiters
-		gs = Flux.Zygote.gradient(ps) do
-		  x = prob.f(θ,prob.p)
-		  first(x)
-		end
+	  for (i,d) in enumerate(data)
+		gs = DiffResults.GradientResult(θ)
+		f.grad(gs, θ, d...) 
+
 		cb_call = cb(θ,x...)
 		if !(typeof(cb_call) <: Bool)
 		  error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")

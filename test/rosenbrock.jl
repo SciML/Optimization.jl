@@ -29,6 +29,10 @@ cons= (x,p) -> [x[1]^2 + x[2]^2]
 optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons= cons)
 
 prob = OptimizationProblem(optprob, x0)
+
+sol = solve(prob, ADAM(0.1))
+@test 10*sol.minimum < l1
+
 sol = solve(prob, BFGS())
 @test 10*sol.minimum < l1
 
