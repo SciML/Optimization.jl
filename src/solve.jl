@@ -29,10 +29,7 @@ function update!(opt, x, x̄::AbstractArray{<:ForwardDiff.Dual})
 end
 
 function update!(opt, xs::Flux.Zygote.Params, gs)
-  for x in xs
-    gs[x] === nothing && continue
-    update!(opt, x, gs[x])
-  end
+	update!(opt, xs[1], gs)
 end
 
 maybe_with_logger(f, logger) = logger === nothing ? f() : Logging.with_logger(f, logger)
@@ -99,8 +96,8 @@ function __solve(prob::OptimizationProblem, opt, _data = DEFAULT_DATA;cb = (args
 	  for (i,d) in enumerate(data)
 		gs = DiffResults.GradientResult(θ)
 		f.grad(gs, θ, d...) 
-
-		cb_call = cb(θ,x...)
+		x = f.f(θ, prob.p, d...)
+		cb_call = cb(θ, x...)
 		if !(typeof(cb_call) <: Bool)
 		  error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
 		elseif cb_call
@@ -108,7 +105,7 @@ function __solve(prob::OptimizationProblem, opt, _data = DEFAULT_DATA;cb = (args
 		end
 		msg = @sprintf("loss: %.3g", x[1])
 		progress && ProgressLogging.@logprogress msg i/maxiters
-		update!(opt, ps, gs)
+		update!(opt, ps, DiffResults.gradient(gs))
 
 		if save_best
 		  if first(x) < first(min_err)  #found a better solution
@@ -128,7 +125,7 @@ function __solve(prob::OptimizationProblem, opt, _data = DEFAULT_DATA;cb = (args
 	Optim.MultivariateOptimizationResults(opt,
 										  prob.u0,# initial_x,
 										  θ, #pick_best_x(f_incr_pick, state),
-										  first(x), # pick_best_f(f_incr_pick, state, d),
+										  first(min_err), # pick_best_f(f_incr_pick, state, d),
 										  maxiters, #iteration,
 										  maxiters >= maxiters, #iteration == options.iterations,
 										  true, # x_converged,

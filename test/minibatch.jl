@@ -39,7 +39,6 @@ pp = initial_params(ann)
 prob = ODEProblem{false}(dudt_, u0, tspan, pp)
 
 function predict_adjoint(fullp, time_batch)
-    println(Array(solve(prob, Tsit5(), p = fullp, saveat = time_batch)))
     Array(solve(prob, Tsit5(), p = fullp, saveat = time_batch))
 end
 
