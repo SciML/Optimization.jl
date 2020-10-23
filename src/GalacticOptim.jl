@@ -4,7 +4,7 @@ using Reexport
 @reexport using DiffEqBase
 using Requires
 using DiffResults, ForwardDiff, Zygote, ReverseDiff, Tracker, FiniteDiff
-using Optim, Flux
+@reexport using Optim, Flux
 using Logging, ProgressLogging, Printf, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
 using ArrayInterface, Base.Iterators
 
