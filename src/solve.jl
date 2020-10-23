@@ -56,7 +56,13 @@ macro withprogress(progress, exprs...)
 	end |> esc
   end
 
-function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxiters = 1000, progress = true, save_best = true, kwargs...)
+function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxiters::Number = 1000, progress = true, save_best = true, kwargs...)
+	
+	if maxiters <= 0.0
+		error("The number of maxiters has to be a non-negative and non-zero number.")
+	else
+		maxiters = convert(Int, maxiters)
+	end
 
 	# Flux is silly and doesn't have an abstract type on its optimizers, so assume
 	# this is a Flux optimizer
@@ -136,7 +142,7 @@ end
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace) = trace
 
-function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (args...) -> (false), maxiters = 1000, kwargs...)
+function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
   	local x
 
 	function _cb(trace)
@@ -146,6 +152,12 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
 		end
 		cb_call
   	end
+
+	if maxiters <= 0.0
+		error("The number of maxiters has to be a non-negative and non-zero number.")
+	else
+		maxiters = convert(Int, maxiters)
+	end
 
 	f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
 
@@ -172,7 +184,7 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
   	Optim.optimize(optim_f, prob.u0, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
 end
 
-function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN};cb = (args...) -> (false), maxiters = 1000, kwargs...)
+function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN};cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 	local x
 
   	function _cb(trace)
@@ -181,6 +193,12 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 			error("The callback should return a boolean `halt` for whether to stop the optimization process.")
 	  	end
 	  	cb_call
+	end
+
+	if maxiters <= 0.0
+		error("The number of maxiters has to be a non-negative and non-zero number.")
+	else
+		maxiters = convert(Int, maxiters)
 	end
 
 	f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
@@ -204,7 +222,7 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 end
 
 
-function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer;cb = (args...) -> (false), maxiters = 1000, kwargs...)
+function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 	local x
 
   	function _cb(trace)
@@ -215,7 +233,13 @@ function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer;cb =
 	  cb_call
 	end
 
-	f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
+	if maxiters <= 0.0
+		error("The number of maxiters has to be a non-negative and non-zero number.")
+	else
+		maxiters = convert(Int, maxiters)
+	end
+
+	f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p,prob.ucons === nothing ? 0 : length(prob.ucons))
 
 	f.cons_j ===nothing && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
@@ -234,28 +258,15 @@ function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer;cb =
 	cons! = (res, θ) -> res .= f.cons(θ);
 
 	cons_j! = function(J, x)
-		if f.num_cons > 1
-			res = [zeros(1,size(J,2)) for i in 1:size(J,1)]
-			f.cons_j(res, x)
-			J = reduce(vcat,res)
-		else
-			f.cons_j(J, x)
-		end
+		f.cons_j(J, x)
 	end
 
 	cons_hl! = function (h, θ, λ)
-		if f.num_cons > 1
-			res = [similar(h) for i in 1:length(λ)]
-			f.cons_h(res, θ)
-			h .= zeros(size(h))
-			for i in 1:length(λ)
-				h += λ[i]*res[i]
-			end
-		else
-			f.cons_h(h, θ)
-			h += λ[1]*h
+		res = [similar(h) for i in 1:length(λ)]
+		f.cons_h(res, θ)
+		for i in 1:length(λ)
+			h .+= λ[i]*res[i]
 		end
-
 	end
 
 	lb = prob.lb === nothing ? [] : prob.lb
@@ -276,7 +287,7 @@ function __init__()
 
 		BBO() = BBO(:adaptive_de_rand_1_bin)
 
-		function __solve(prob::OptimizationProblem, opt::BBO; cb = (args...) -> (false), maxiters = 1000, kwargs...)
+		function __solve(prob::OptimizationProblem, opt::BBO; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 			local x, _loss
 
 			function _cb(trace)
@@ -288,6 +299,12 @@ function __init__()
 				BlackBoxOptim.shutdown_optimizer!(trace) #doesn't work
 			  end
 			  cb_call
+			end
+
+			if maxiters <= 0.0
+				error("The number of maxiters has to be a non-negative and non-zero number.")
+			else
+				maxiters = convert(Int, maxiters)
 			end
 
 			_loss = function(θ)
@@ -329,8 +346,14 @@ function __init__()
 	end
 
 	@require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" begin
-		function __solve(prob::OptimizationProblem, opt::NLopt.Opt; maxiters = 1000, nstart = 1, local_method = nothing, kwargs...)
+		function __solve(prob::OptimizationProblem, opt::NLopt.Opt; maxiters::Number = 1000, nstart = 1, local_method = nothing, kwargs...)
 			local x
+
+			if maxiters <= 0.0
+				error("The number of maxiters has to be a non-negative and non-zero number.")
+			else
+				maxiters = convert(Int, maxiters)
+			end
 
 			f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
 
@@ -398,8 +421,14 @@ function __init__()
 	end
 
 	@require MultistartOptimization = "3933049c-43be-478e-a8bb-6e0f7fd53575" begin
-		function __solve(prob::OptimizationProblem, opt::MultistartOptimization.TikTak; local_method, local_maxiters = 1000, kwargs...)
+		function __solve(prob::OptimizationProblem, opt::MultistartOptimization.TikTak; local_method, local_maxiters::Number = 1000, kwargs...)
 			local x, _loss
+
+			if local_maxiters <= 0.0
+				error("The number of local_maxiters has to be a non-negative and non-zero number.")
+			else
+				local_maxiters = convert(Int, local_maxiters)
+			end
 
 			_loss = function(θ)
 				x = prob.f(θ, prob.p)
@@ -452,8 +481,14 @@ function __init__()
         struct QuadDirect
 		end
 
-		function __solve(prob::OptimizationProblem, opt::QuadDirect; splits, maxiters = 1000, kwargs...)
+		function __solve(prob::OptimizationProblem, opt::QuadDirect; splits, maxiters::Number = 1000, kwargs...)
 			local x, _loss
+
+			if maxiters <= 0.0
+				error("The number of maxiters has to be a non-negative and non-zero number.")
+			else
+				maxiters = convert(Int, maxiters)
+			end
 
 			_loss = function(θ)
 				x = prob.f(θ, prob.p)
@@ -504,7 +539,7 @@ function __init__()
 			record["x"] = population
 		end
 
-		function __solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer; cb = (args...) -> (false), maxiters = 1000, kwargs...)
+		function __solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 			local x, _loss
 
 			function _cb(trace)
@@ -513,6 +548,12 @@ function __init__()
 					error("The callback should return a boolean `halt` for whether to stop the optimization process.")
 				end
 				cb_call
+			end
+
+			if maxiters <= 0.0
+				error("The number of maxiters has to be a non-negative and non-zero number.")
+			else
+				maxiters = convert(Int, maxiters)
 			end
 
 			_loss = function(θ)
@@ -527,7 +568,7 @@ function __init__()
 
 		struct CMAEvolutionStrategyOpt end
 
-		function __solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt; cb = (args...) -> (false), maxiters = 1000, kwargs...)
+		function __solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 			local x, _loss
 
 			function _cb(trace)
@@ -536,6 +577,12 @@ function __init__()
 					error("The callback should return a boolean `halt` for whether to stop the optimization process.")
 				end
 				cb_call
+			end
+
+			if maxiters <= 0.0
+				error("The number of maxiters has to be a non-negative and non-zero number.")
+			else
+				maxiters = convert(Int, maxiters)
 			end
 
 			_loss = function(θ)

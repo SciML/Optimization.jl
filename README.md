@@ -57,7 +57,7 @@ is given below:
    Algorithm:     Nelder-Mead
 
 * Convergence measures
-   √(Σ(yᵢ-ȳ)²)/n ≤ 1.0e-08
+   √(Σ(yᵢ-ȳ)²)/n ≤ 1.0e-08
 
 * Work counters
    Seconds run:   0  (vs limit Inf)
