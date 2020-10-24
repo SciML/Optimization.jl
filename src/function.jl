@@ -209,7 +209,7 @@ end
 
 function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
     num_cons != 0 && error("AutoFiniteDiff does not currently support constraints")
-    _f = θ -> first(f.f(θ, p, args...))
+    _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
         grad = (res, θ, args...) -> FiniteDiff.finite_difference_gradient!(res,x ->_f(x, args...), θ, FiniteDiff.GradientCache(res, x, adtype.fdtype))
