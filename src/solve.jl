@@ -1,4 +1,13 @@
 
+struct NullData end
+const DEFAULT_DATA = Iterators.cycle((NullData(),))
+Base.iterate(::NullData, i=1) = nothing
+Base.length(::NullData) = 0
+
+get_maxiters(data) = Iterators.IteratorSize(typeof(DEFAULT_DATA)) isa Iterators.IsInfinite ||
+                     Iterators.IteratorSize(typeof(DEFAULT_DATA)) isa Iterators.SizeUnknown ?
+                     typemax(Int) : length(data)
+
 function DiffEqBase.solve(prob::OptimizationProblem, opt, args...;kwargs...)
 	__solve(prob, opt, args...; kwargs...)
 end
@@ -20,10 +29,7 @@ function update!(opt, x, x̄::AbstractArray{<:ForwardDiff.Dual})
 end
 
 function update!(opt, xs::Flux.Zygote.Params, gs)
-  for x in xs
-    gs[x] === nothing && continue
-    update!(opt, x, gs[x])
-  end
+	update!(opt, xs[1], gs)
 end
 
 maybe_with_logger(f, logger) = logger === nothing ? f() : Logging.with_logger(f, logger)
@@ -56,8 +62,7 @@ macro withprogress(progress, exprs...)
 	end |> esc
   end
 
-function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxiters::Number = 1000, progress = true, save_best = true, kwargs...)
-	
+function __solve(prob::OptimizationProblem, opt, _data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, progress = true, save_best = true, kwargs...)
 	if maxiters <= 0.0
 		error("The number of maxiters has to be a non-negative and non-zero number.")
 	else
@@ -69,6 +74,16 @@ function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxit
 	θ = copy(prob.u0)
 	ps = Flux.params(θ)
 
+	if _data == DEFAULT_DATA && maxiters == typemax(Int)
+		error("For Flux optimizers, either a data iterator must be provided or the `maxiters` keyword argument must be set.")
+	  elseif _data == DEFAULT_DATA && maxiters != typemax(Int)
+		data = Iterators.repeated((), maxiters)
+	  elseif maxiters != typemax(Int)
+		data = take(_data, maxiters)
+	  else
+		data = _data
+	end
+
 	t0 = time()
 
 	local x, min_err, _loss
@@ -78,12 +93,11 @@ function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxit
 	f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
 
 	@withprogress progress name="Training" begin
-	  for i in 1:maxiters
-		gs = Flux.Zygote.gradient(ps) do
-		  x = prob.f(θ,prob.p)
-		  first(x)
-		end
-		cb_call = cb(θ,x...)
+	  for (i,d) in enumerate(data)
+		gs = DiffResults.GradientResult(θ)
+		f.grad(gs, θ, d...) 
+		x = f.f(θ, prob.p, d...)
+		cb_call = cb(θ, x...)
 		if !(typeof(cb_call) <: Bool)
 		  error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
 		elseif cb_call
@@ -91,7 +105,7 @@ function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxit
 		end
 		msg = @sprintf("loss: %.3g", x[1])
 		progress && ProgressLogging.@logprogress msg i/maxiters
-		update!(opt, ps, gs)
+		update!(opt, ps, DiffResults.gradient(gs))
 
 		if save_best
 		  if first(x) < first(min_err)  #found a better solution
@@ -111,7 +125,7 @@ function __solve(prob::OptimizationProblem, opt;cb = (args...) -> (false), maxit
 	Optim.MultivariateOptimizationResults(opt,
 										  prob.u0,# initial_x,
 										  θ, #pick_best_x(f_incr_pick, state),
-										  first(x), # pick_best_f(f_incr_pick, state, d),
+										  save_best ? first(min_err) : first(x), # pick_best_f(f_incr_pick, state, d),
 										  maxiters, #iteration,
 										  maxiters >= maxiters, #iteration == options.iterations,
 										  true, # x_converged,
@@ -142,14 +156,16 @@ end
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace) = trace
 
-function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
-  	local x
+function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+  	local x, cur, state
+	cur, state = iterate(data)
 
 	function _cb(trace)
 		cb_call = opt == NelderMead() ? cb(decompose_trace(trace).metadata["centroid"],x...) : cb(decompose_trace(trace).metadata["x"],x...)
 		if !(typeof(cb_call) <: Bool)
 			error("The callback should return a boolean `halt` for whether to stop the optimization process.")
 		end
+		cur, state = iterate(data, state)
 		cb_call
   	end
 
@@ -164,34 +180,36 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer;cb = (a
 	!(opt isa Optim.ZerothOrderOptimizer) && f.grad === nothing && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
 	_loss = function(θ)
-		x = f.f(θ, prob.p)
+		x = f.f(θ, prob.p, cur...)
 		return first(x)
 	end
 
 	fg! = function (G,θ)
 		if G !== nothing
-			f.grad(G, θ)
+			f.grad(G, θ, cur...)
 		end
 		return _loss(θ)
 	end
 
 	if opt isa Optim.KrylovTrustRegion
-		optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, f.hv, prob.u0)
+		optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, (H,θ,v) -> f.hv(H,θ,v,cur...), prob.u0)
 	else
-		optim_f = TwiceDifferentiable(_loss, f.grad, fg!, f.hess, prob.u0)
+		optim_f = TwiceDifferentiable(_loss, (G, θ) -> f.grad(G, θ, cur...), fg!, (H,θ) -> f.hess(H,θ,cur...), prob.u0)
 	end
 
   	Optim.optimize(optim_f, prob.u0, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
 end
 
-function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN};cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
-	local x
+function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN}, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+	local x, cur, state
+	cur, state = iterate(data)
 
   	function _cb(trace)
 	  	cb_call = !(opt isa Optim.SAMIN) && opt.method == NelderMead() ? cb(decompose_trace(trace).metadata["centroid"],x...) : cb(decompose_trace(trace).metadata["x"],x...)
 	  	if !(typeof(cb_call) <: Bool)
 			error("The callback should return a boolean `halt` for whether to stop the optimization process.")
-	  	end
+		end
+		cur, state = iterate(data, state)  
 	  	cb_call
 	end
 
@@ -206,12 +224,12 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 	!(opt isa Optim.ZerothOrderOptimizer) && f.grad === nothing && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
 	_loss = function(θ)
-		x = f.f(θ, prob.p)
+		x = f.f(θ, prob.p, cur...)
 		return first(x)
 	end
 	fg! = function (G,θ)
 		if G !== nothing
-			f.grad(G, θ)
+			f.grad(G, θ, cur...)
 		end
 
 		return _loss(θ)
@@ -222,14 +240,16 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 end
 
 
-function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
-	local x
+function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+	local x, cur, state
+	cur, state = iterate(data)
 
   	function _cb(trace)
 	  cb_call = cb(decompose_trace(trace).metadata["x"],x...)
 	  if !(typeof(cb_call) <: Bool)
 		  error("The callback should return a boolean `halt` for whether to stop the optimization process.")
 	  end
+	  cur, state = iterate(data, state)
 	  cb_call
 	end
 
@@ -244,16 +264,16 @@ function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer;cb =
 	f.cons_j ===nothing && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
 	_loss = function(θ)
-		x = f.f(θ, prob.p)
+		x = f.f(θ, prob.p, cur...)
 		return x[1]
 	end
 	fg! = function (G,θ)
 		if G !== nothing
-			f.grad(G, θ)
+			f.grad(G, θ, cur...)
 		end
 		return _loss(θ)
 	end
-	optim_f = TwiceDifferentiable(_loss, f.grad, fg!, f.hess, prob.u0)
+	optim_f = TwiceDifferentiable(_loss, (G, θ) -> f.grad(G, θ, cur...), fg!, (H,θ) -> f.hess(H, θ, cur...), prob.u0)
 
 	cons! = (res, θ) -> res .= f.cons(θ);
 
@@ -287,8 +307,9 @@ function __init__()
 
 		BBO() = BBO(:adaptive_de_rand_1_bin)
 
-		function __solve(prob::OptimizationProblem, opt::BBO; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
-			local x, _loss
+		function __solve(prob::OptimizationProblem, opt::BBO, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+			local x, cur, state
+			cur, state = iterate(data)
 
 			function _cb(trace)
 			  cb_call = cb(decompose_trace(trace),x...)
@@ -298,6 +319,7 @@ function __init__()
 			  if cb_call == true
 				BlackBoxOptim.shutdown_optimizer!(trace) #doesn't work
 			  end
+			  cur, state = iterate(data, state)
 			  cb_call
 			end
 
@@ -308,7 +330,7 @@ function __init__()
 			end
 
 			_loss = function(θ)
-				x = prob.f(θ, prob.p)
+				x = prob.f(θ, prob.p, cur...)
 				return first(x)
 			end
 
@@ -539,14 +561,16 @@ function __init__()
 			record["x"] = population
 		end
 
-		function __solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
-			local x, _loss
+		function __solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+			local x, cur, state
+			cur, state = iterate(data)
 
 			function _cb(trace)
 				cb_call = cb(decompose_trace(trace).metadata["x"],trace.value...)
 				if !(typeof(cb_call) <: Bool)
 					error("The callback should return a boolean `halt` for whether to stop the optimization process.")
 				end
+				cur, state = iterate(data, state)
 				cb_call
 			end
 
@@ -557,7 +581,7 @@ function __init__()
 			end
 
 			_loss = function(θ)
-				x = prob.f(θ, prob.p)
+				x = prob.f(θ, prob.p, cur...)
 				return first(x)
 			end
 
@@ -568,14 +592,16 @@ function __init__()
 
 		struct CMAEvolutionStrategyOpt end
 
-		function __solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
-			local x, _loss
+		function __solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+			local x, cur, state
+			cur, state = iterate(data)
 
 			function _cb(trace)
 				cb_call = cb(decompose_trace(trace).metadata["x"],trace.value...)
 				if !(typeof(cb_call) <: Bool)
 					error("The callback should return a boolean `halt` for whether to stop the optimization process.")
 				end
+				cur, state = iterate(data, state)
 				cb_call
 			end
 
@@ -586,7 +612,7 @@ function __init__()
 			end
 
 			_loss = function(θ)
-				x = prob.f(θ, prob.p)
+				x = prob.f(θ, prob.p, cur...)
 				return first(x)
 			end
 
