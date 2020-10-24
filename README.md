@@ -12,6 +12,18 @@ unified interface.
 
 #### Note: This package is still in development. The README is currently both an active documentation and a development roadmap.
 
+## Installation
+
+Assuming that you already have Julia correctly installed, it suffices to import
+GalacticOptim.jl in the standard way:
+
+```julia
+import Pkg; Pkg.add("GalacticOptim")
+```
+The packages relevant to the basic functionality of GalacticOptim.jl will be imported
+accordingly and, in most cases, you do not have to worry about the manual
+installation of dependencies.
+
 ## Examples
 
 ```julia
@@ -29,16 +41,68 @@ unified interface.
  sol = solve(prob,BBO())
 ```
 
+Note that in order to use BlackBoxOptim.jl, you will have to import the package
+manually if you don't have it (however, it is not necessary with Optim.jl).
+
+A sample output of the first optimization task (with the `NelderMead()` algorithm)
+is given below:
+
+```julia
+* Status: success
+
+* Candidate solution
+   Final objective value:     3.525527e-09
+
+* Found with
+   Algorithm:     Nelder-Mead
+
+* Convergence measures
+   √(Σ(yᵢ-ȳ)²)/n ≤ 1.0e-08
+
+* Work counters
+   Seconds run:   0  (vs limit Inf)
+   Iterations:    60
+   f(x) calls:    118
+```
+We can also explore other methods in a similar way:
+
 ```julia
  f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
  prob = OptimizationProblem(f, x0, p)
  sol = solve(prob,BFGS())
+```
+For instance, the above optimization task may produce the following output:
+
+```julia
+* Status: success
+
+* Candidate solution
+   Final objective value:     7.645684e-21
+
+* Found with
+   Algorithm:     BFGS
+
+* Convergence measures
+   |x - x'|               = 3.48e-07 ≰ 0.0e+00
+   |x - x'|/|x'|          = 3.48e-07 ≰ 0.0e+00
+   |f(x) - f(x')|         = 6.91e-14 ≰ 0.0e+00
+   |f(x) - f(x')|/|f(x')| = 9.03e+06 ≰ 0.0e+00
+   |g(x)|                 = 2.32e-09 ≤ 1.0e-08
+
+* Work counters
+   Seconds run:   0  (vs limit Inf)
+   Iterations:    16
+   f(x) calls:    53
+   ∇f(x) calls:   53
 ```
 
 ```julia
  prob = OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
  sol = solve(prob, Fminbox(GradientDescent()))
 ```
+The examples clearly demonstrate that GalacticOptim.jl provides an intuitive
+way of specifying optimization tasks and offers a relatively
+easy access to a wide range of optimization algorithms.
 
 ### Automatic Differentiation Choices
 
@@ -77,8 +141,8 @@ solve(prob,alg;kwargs...)
 
 Keyword arguments:
 
-  - `maxiters`
-  - `abstol`
-  - `reltol`
+  - `maxiters` (the maximum number of iterations)
+  - `abstol` (absolute tolerance)
+  - `reltol` (relative tolerance)
 
 Output Struct:
