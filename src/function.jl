@@ -22,7 +22,7 @@ function default_chunk_size(len)
     end
 end
 
-function instantiate_function(f, x, ::AbstractADType, p)
+function instantiate_function(f, x, ::AbstractADType, p, num_cons = 0)
     grad   = f.grad   === nothing ? nothing : (G,x)->f.grad(G,x,p)
     hess   = f.hess   === nothing ? nothing : (H,x)->f.hess(H,x,p)
     hv     = f.hv     === nothing ? nothing : (H,x,v)->f.hv(H,x,v,p)
@@ -34,10 +34,10 @@ function instantiate_function(f, x, ::AbstractADType, p)
                          typeof(hess),typeof(hv),typeof(cons),
                          typeof(cons_j),typeof(cons_h)}(f.f,
                          DiffEqBase.NoAD(),grad,hess,hv,cons,
-                         cons_j,cons_h,f.num_cons)
+                         cons_j,cons_h)
 end
 
-function instantiate_function(f, x, ::AutoForwardDiff{_chunksize}, p) where _chunksize
+function instantiate_function(f, x, ::AutoForwardDiff{_chunksize}, p, num_cons = 0) where _chunksize
 
     chunksize = _chunksize === nothing ? default_chunk_size(length(x)) : _chunksize
 
@@ -76,46 +76,30 @@ function instantiate_function(f, x, ::AutoForwardDiff{_chunksize}, p) where _chu
     end
 
     if cons !== nothing && f.cons_j === nothing
-        if f.num_cons == 1
-            cjconfig = ForwardDiff.JacobianConfig(cons, x, ForwardDiff.Chunk{chunksize}())
-            cons_j = (res,θ) -> ForwardDiff.jacobian!(res, cons, θ, cjconfig)
-        else
-            cons_j = function (res, θ)
-                for i in 1:f.num_cons
-                    consi = (x) -> cons(x)[i:i]
-                    cjconfig = ForwardDiff.JacobianConfig(consi, θ, ForwardDiff.Chunk{chunksize}())
-                    ForwardDiff.jacobian!(res[i], consi, θ, cjconfig)
-                end
-            end
+        cons_j = function (J, θ)
+            cjconfig = ForwardDiff.JacobianConfig(cons, θ, ForwardDiff.Chunk{chunksize}())
+            ForwardDiff.jacobian!(J, cons, θ, cjconfig)
         end
     else
         cons_j = f.cons_j
     end
 
     if cons !== nothing && f.cons_h === nothing
-        if f.num_cons == 1
-            firstcons = (args...) -> first(cons(args...))
-            cons_h = function (res, θ)
-                hess_config_cache = ForwardDiff.HessianConfig(firstcons, θ, ForwardDiff.Chunk{chunksize}())
-                ForwardDiff.hessian!(res, firstcons, θ, hess_config_cache)
-            end
-        else
-            cons_h = function (res, θ)
-                for i in 1:f.num_cons
-                    hess_config_cache = ForwardDiff.HessianConfig(x -> cons(x)[i], θ, ForwardDiff.Chunk{chunksize}())
-                    ForwardDiff.hessian!(res[i], (x) -> cons(x)[i], θ, hess_config_cache, Val{false}())
-                end
+        cons_h = function (res, θ)
+            for i in 1:num_cons
+                hess_config_cache = ForwardDiff.HessianConfig(x -> cons(x)[i], θ,ForwardDiff.Chunk{chunksize}())
+                ForwardDiff.hessian!(res[i], (x) -> cons(x)[i], θ, hess_config_cache,Val{false}())
             end
         end
     else
         cons_h = f.cons_h
     end
 
-    return OptimizationFunction{true,AutoForwardDiff,typeof(f.f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f.f,AutoForwardDiff(),grad,hess,hv,cons,cons_j,cons_h,f.num_cons)
+    return OptimizationFunction{true,AutoForwardDiff,typeof(f.f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f.f,AutoForwardDiff(),grad,hess,hv,cons,cons_j,cons_h)
 end
 
-function instantiate_function(f, x, ::AutoZygote, p)
-    f.num_cons != 0 && error("AutoZygote does not currently support constraints")
+function instantiate_function(f, x, ::AutoZygote, p, num_cons = 0)
+    num_cons != 0 && error("AutoZygote does not currently support constraints")
 
     _f = θ -> f(θ,p)[1]
     if f.grad === nothing
@@ -151,11 +135,11 @@ function instantiate_function(f, x, ::AutoZygote, p)
         hv = f.hv
     end
 
-    return OptimizationFunction{false,AutoZygote,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,AutoZygote(),grad,hess,hv,nothing,nothing,nothing,0)
+    return OptimizationFunction{false,AutoZygote,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,AutoZygote(),grad,hess,hv,nothing,nothing,nothing)
 end
 
-function instantiate_function(f, x, ::AutoReverseDiff, p=DiffEqBase.NullParameters())
-    f.num_cons != 0 && error("AutoReverseDiff does not currently support constraints")
+function instantiate_function(f, x, ::AutoReverseDiff, p=DiffEqBase.NullParameters(), num_cons = 0)
+    num_cons != 0 && error("AutoReverseDiff does not currently support constraints")
 
     _f = θ -> f.f(θ,p)[1]
 
@@ -193,12 +177,12 @@ function instantiate_function(f, x, ::AutoReverseDiff, p=DiffEqBase.NullParamete
         hv = f.hv
     end
 
-    return OptimizationFunction{false,AutoReverseDiff,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,AutoReverseDiff(),grad,hess,hv,nothing,nothing,nothing,0)
+    return OptimizationFunction{false,AutoReverseDiff,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,AutoReverseDiff(),grad,hess,hv,nothing,nothing,nothing)
 end
 
 
-function instantiate_function(f, x, ::AutoTracker, p)
-    f.num_cons != 0 && error("AutoTracker does not currently support constraints")
+function instantiate_function(f, x, ::AutoTracker, p, num_cons = 0)
+    num_cons != 0 && error("AutoTracker does not currently support constraints")
     _f = θ -> f.f(θ,p)[1]
 
     if f.grad === nothing
@@ -220,12 +204,11 @@ function instantiate_function(f, x, ::AutoTracker, p)
     end
 
 
-    return OptimizationFunction{false,AutoTracker,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,AutoTracker(),grad,hess,hv,nothing,nothing,nothing,0)
+    return OptimizationFunction{false,AutoTracker,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,AutoTracker(),grad,hess,hv,nothing,nothing,nothing)
 end
 
-function instantiate_function(f, x, adtype::AutoFiniteDiff, p)
-
-    f.num_cons != 0 && error("AutoFiniteDiff does not currently support constraints")
+function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
+    num_cons != 0 && error("AutoFiniteDiff does not currently support constraints")
     _f = θ -> f.f(θ,p)[1]
 
     if f.grad === nothing
@@ -250,5 +233,5 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p)
         hv = f.hv
     end
 
-    return OptimizationFunction{false,AutoFiniteDiff,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,adtype,grad,hess,hv,nothing,nothing,nothing,0)
+    return OptimizationFunction{false,AutoFiniteDiff,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,adtype,grad,hess,hv,nothing,nothing,nothing)
 end

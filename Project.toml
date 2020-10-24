@@ -1,7 +1,7 @@
 name = "GalacticOptim"
 uuid = "a75be94c-b780-496d-a8a9-0878b188d577"
 authors = ["Vaibhavdixit02 <vaibhavyashdixit@gmail.com>"]
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
@@ -26,7 +26,7 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 [compat]
 ArrayInterface = "2.13"
 ConsoleProgressMonitor = "0.1"
-DiffEqBase = "6.41"
+DiffEqBase = "6.48.1"
 DiffResults = "1.0"
 FiniteDiff = "2.5"
 Flux = "0.11"
