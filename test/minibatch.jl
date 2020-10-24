@@ -57,4 +57,4 @@ optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, bat
 optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
 res1 = GalacticOptim.solve(optprob, ADAM(0.05), ncycle(train_loader, numEpochs), cb = cb, maxiters = numEpochs)
-cb(res1.minimizer,loss_adjoint(res1.minimizer, ode_data, t)...;doplot=true)
+cb(res1.minimizer, loss_adjoint(res1.minimizer, ode_data, t)...; doplot=true)
