@@ -212,13 +212,13 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
-        grad = (res, θ, args...) -> FiniteDiff.finite_difference_gradient!(res,x ->_f(x, args...), θ, FiniteDiff.GradientCache(res, x, adtype.fdtype))
+        grad = (res, θ, args...) -> FiniteDiff.finite_difference_gradient!(res, x ->_f(x, args...), θ, FiniteDiff.GradientCache(res, x, adtype.fdtype))
     else
         grad = f.grad
     end
 
     if f.hess === nothing
-        hess = (res, θ, args...) -> FiniteDiff.finite_difference_hessian!(res,x ->_f(x, args...), θ, FiniteDiff.HessianCache(x, adtype.fdhtype))
+        hess = (res, θ, args...) -> FiniteDiff.finite_difference_hessian!(res, x ->_f(x, args...), θ, FiniteDiff.HessianCache(x, adtype.fdhtype))
     else
         hess = f.hess
     end

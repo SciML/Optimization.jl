@@ -94,7 +94,7 @@ function __solve(prob::OptimizationProblem, opt, _data = DEFAULT_DATA;cb = (args
 
 	@withprogress progress name="Training" begin
 	  for (i,d) in enumerate(data)
-		gs = DiffResults.GradientResult(θ)
+		gs = prob.f.adtype isa AutoFiniteDiff ? Array{Number}(undef,length(θ)) : DiffResults.GradientResult(θ)
 		f.grad(gs, θ, d...) 
 		x = f.f(θ, prob.p, d...)
 		cb_call = cb(θ, x...)
@@ -105,7 +105,7 @@ function __solve(prob::OptimizationProblem, opt, _data = DEFAULT_DATA;cb = (args
 		end
 		msg = @sprintf("loss: %.3g", x[1])
 		progress && ProgressLogging.@logprogress msg i/maxiters
-		update!(opt, ps, DiffResults.gradient(gs))
+		update!(opt, ps, prob.f.adtype isa AutoFiniteDiff ? gs : DiffResults.gradient(gs))
 
 		if save_best
 		  if first(x) < first(min_err)  #found a better solution
