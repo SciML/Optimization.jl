@@ -20,9 +20,20 @@ GalacticOptim.jl in the standard way:
 ```julia
 import Pkg; Pkg.add("GalacticOptim")
 ```
-The packages relevant to the basic functionality of GalacticOptim.jl will be imported
+The packages relevant to the core functionality of GalacticOptim.jl will be imported
 accordingly and, in most cases, you do not have to worry about the manual
-installation of dependencies.
+installation of dependencies. Below is the list of packages that need to be
+installed explicitly if you intend to use the specific optimization algorithms
+offered by them:
+
+- [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) (solver: `BBO()`)
+- [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) (usage via the NLopt API;
+see also the available [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/))
+- [MultistartOptimization.jl](https://github.com/tpapp/MultistartOptimization.jl)
+(see also [this documentation](https://juliahub.com/docs/MultistartOptimization/cVZvi/0.1.0/))
+- [QuadDIRECT.jl](https://github.com/timholy/QuadDIRECT.jl)
+- [Evolutionary.jl](https://github.com/wildart/Evolutionary.jl) (see also [this documentation](https://wildart.github.io/Evolutionary.jl/dev/))
+- [CMAEvolutionStrategy.jl](https://github.com/jbrea/CMAEvolutionStrategy.jl)
 
 ## Examples
 
@@ -41,10 +52,18 @@ installation of dependencies.
  sol = solve(prob,BBO())
 ```
 
-Note that in order to use BlackBoxOptim.jl, you will have to import the package
-manually if you don't have it (however, it is not necessary with Optim.jl).
+Note that Optim.jl is a core dependency of GalaticOptim.jl. However, BlackBoxOptim.jl
+is not and must already be installed (see the list above).
 
-A sample output of the first optimization task (with the `NelderMead()` algorithm)
+*Warning:* The output of the second optimization task (`BBO()`) is
+currently misleading in the sense that it returns `Status: failure
+(reached maximum number of iterations)`. However, convergence is actually
+reached and the confusing message stems from the reliance on the Optim.jl output
+ struct (where the situation of reaching the maximum number of iterations is
+rightly regarded as a failure). The improved output struct will soon be
+implemented.
+
+The output of the first optimization task (with the `NelderMead()` algorithm)
 is given below:
 
 ```julia
@@ -71,7 +90,7 @@ We can also explore other methods in a similar way:
  prob = OptimizationProblem(f, x0, p)
  sol = solve(prob,BFGS())
 ```
-For instance, the above optimization task may produce the following output:
+For instance, the above optimization task produces the following output:
 
 ```julia
 * Status: success
