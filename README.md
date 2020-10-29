@@ -56,7 +56,7 @@ Note that Optim.jl is a core dependency of GalaticOptim.jl. However, BlackBoxOpt
 is not and must already be installed (see the list above).
 
 *Warning:* The output of the second optimization task (`BBO()`) is
-currently misleading in the sense that it returns `* Status: failure
+currently misleading in the sense that it returns `Status: failure
 (reached maximum number of iterations)`. However, convergence is actually
 reached and the confusing message stems from the reliance on the Optim.jl output
  struct (where the situation of reaching the maximum number of iterations is
