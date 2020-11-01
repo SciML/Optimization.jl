@@ -1,4 +1,4 @@
-using DifferentialEquations, Flux, Optim, DiffEqFlux, Plots, GalacticOptim
+using DiffEqFlux, Plots, GalacticOptim, OrdinaryDiffEq
 
 function newtons_cooling(du, u, p, t)
     temp = u[1]
@@ -56,5 +56,5 @@ numEpochs = 300
 optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, batch, time_batch), GalacticOptim.AutoZygote())
 optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
-res1 = GalacticOptim.solve(optprob, ADAM(0.05), ncycle(train_loader, numEpochs), cb = cb, maxiters = numEpochs)
+@test_nowarn res1 = GalacticOptim.solve(optprob, ADAM(0.05), ncycle(train_loader, numEpochs), cb = cb, maxiters = numEpochs)
 cb(res1.minimizer, loss_adjoint(res1.minimizer, ode_data, t)...; doplot=true)
