@@ -74,14 +74,11 @@ function __solve(prob::OptimizationProblem, opt, _data = DEFAULT_DATA;cb = (args
 	θ = copy(prob.u0)
 	ps = Flux.params(θ)
 
-	if _data == DEFAULT_DATA && maxiters == typemax(Int)
-		error("For Flux optimizers, either a data iterator must be provided or the `maxiters` keyword argument must be set.")
-	  elseif _data == DEFAULT_DATA && maxiters != typemax(Int)
+	if _data == DEFAULT_DATA
 		data = Iterators.repeated((), maxiters)
-	  elseif maxiters != typemax(Int)
-		data = take(_data, maxiters)
-	  else
+	else
 		data = _data
+		maxiters = length(data)
 	end
 
 	t0 = time()
@@ -156,8 +153,16 @@ end
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace) = trace
 
-function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer, _data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
   	local x, cur, state
+
+	if _data == DEFAULT_DATA
+		data = Iterators.repeated((), maxiters)
+	else
+		data = _data
+		maxiters = length(data)
+	end
+
 	cur, state = iterate(data)
 
 	function _cb(trace)
@@ -200,8 +205,16 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer, data =
   	Optim.optimize(optim_f, prob.u0, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
 end
 
-function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN}, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN}, _data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 	local x, cur, state
+
+	if _data == DEFAULT_DATA
+		data = Iterators.repeated((), maxiters)
+	else
+		data = _data
+		maxiters = length(data)
+	end
+
 	cur, state = iterate(data)
 
   	function _cb(trace)
@@ -240,8 +253,16 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 end
 
 
-function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer, _data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 	local x, cur, state
+
+	if _data == DEFAULT_DATA
+		data = Iterators.repeated((), maxiters)
+	else
+		data = _data
+		maxiters = length(data)
+	end
+
 	cur, state = iterate(data)
 
   	function _cb(trace)
@@ -307,8 +328,16 @@ function __init__()
 
 		BBO() = BBO(:adaptive_de_rand_1_bin)
 
-		function __solve(prob::OptimizationProblem, opt::BBO, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+		function __solve(prob::OptimizationProblem, opt::BBO, _data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 			local x, cur, state
+
+			if _data == DEFAULT_DATA
+				data = Iterators.repeated((), maxiters)
+			else
+				data = _data
+				maxiters = length(data)
+			end
+
 			cur, state = iterate(data)
 
 			function _cb(trace)
@@ -563,6 +592,14 @@ function __init__()
 
 		function __solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 			local x, cur, state
+
+			if _data == DEFAULT_DATA
+				data = Iterators.repeated((), maxiters)
+			else
+				data = _data
+				maxiters = length(data)
+			end
+
 			cur, state = iterate(data)
 
 			function _cb(trace)
@@ -594,6 +631,14 @@ function __init__()
 
 		function __solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 			local x, cur, state
+
+			if _data == DEFAULT_DATA
+				data = Iterators.repeated((), maxiters)
+			else
+				data = _data
+				maxiters = length(data)
+			end
+
 			cur, state = iterate(data)
 
 			function _cb(trace)
