@@ -76,6 +76,8 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;cb = (args.
 
 	if data != DEFAULT_DATA
 		maxiters = length(data)
+	else 
+		data = take(data, maxiters)
 	end
 
 	t0 = time()
