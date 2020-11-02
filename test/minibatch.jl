@@ -52,8 +52,10 @@ k = 10
 train_loader = Flux.Data.DataLoader(ode_data, t, batchsize = k)
 
 numEpochs = 300
+l1 = loss_adjoint(pp, train_loader.data[1], train_loader.data[2])[1]
 
 optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, batch, time_batch), GalacticOptim.AutoZygote())
 optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
-@test_nowarn res1 = GalacticOptim.solve(optprob, ADAM(0.05), ncycle(train_loader, numEpochs), cb = cb, maxiters = numEpochs)
+res1 = GalacticOptim.solve(optprob, ADAM(0.05), ncycle(train_loader, numEpochs), cb = cb, maxiters = numEpochs)
+@test 10res1.minimum < l1
