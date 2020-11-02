@@ -62,7 +62,7 @@ macro withprogress(progress, exprs...)
 	end |> esc
   end
 
-function __solve(prob::OptimizationProblem, opt, _data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, progress = true, save_best = true, kwargs...)
+function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, progress = true, save_best = true, kwargs...)
 	if maxiters <= 0.0
 		error("The number of maxiters has to be a non-negative and non-zero number.")
 	else
@@ -74,14 +74,10 @@ function __solve(prob::OptimizationProblem, opt, _data = DEFAULT_DATA;cb = (args
 	θ = copy(prob.u0)
 	ps = Flux.params(θ)
 
-	if _data == DEFAULT_DATA && maxiters == typemax(Int)
-		error("For Flux optimizers, either a data iterator must be provided or the `maxiters` keyword argument must be set.")
-	  elseif _data == DEFAULT_DATA && maxiters != typemax(Int)
-		data = Iterators.repeated((), maxiters)
-	  elseif maxiters != typemax(Int)
-		data = take(_data, maxiters)
-	  else
-		data = _data
+	if data != DEFAULT_DATA
+		maxiters = length(data)
+	else 
+		data = take(data, maxiters)
 	end
 
 	t0 = time()
@@ -158,6 +154,11 @@ decompose_trace(trace) = trace
 
 function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
   	local x, cur, state
+
+	if data != DEFAULT_DATA
+		maxiters = length(data)
+	end
+
 	cur, state = iterate(data)
 
 	function _cb(trace)
@@ -202,6 +203,11 @@ end
 
 function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN}, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 	local x, cur, state
+
+	if data != DEFAULT_DATA
+		maxiters = length(data)
+	end
+
 	cur, state = iterate(data)
 
   	function _cb(trace)
@@ -242,6 +248,11 @@ end
 
 function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 	local x, cur, state
+
+	if data != DEFAULT_DATA
+		maxiters = length(data)
+	end
+
 	cur, state = iterate(data)
 
   	function _cb(trace)
@@ -309,6 +320,11 @@ function __init__()
 
 		function __solve(prob::OptimizationProblem, opt::BBO, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 			local x, cur, state
+
+			if data != DEFAULT_DATA
+				maxiters = length(data)
+			end
+
 			cur, state = iterate(data)
 
 			function _cb(trace)
@@ -563,6 +579,11 @@ function __init__()
 
 		function __solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 			local x, cur, state
+
+			if data != DEFAULT_DATA
+				maxiters = length(data)
+			end
+
 			cur, state = iterate(data)
 
 			function _cb(trace)
@@ -594,6 +615,11 @@ function __init__()
 
 		function __solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 			local x, cur, state
+
+			if data != DEFAULT_DATA
+				maxiters = length(data)
+			end
+
 			cur, state = iterate(data)
 
 			function _cb(trace)
