@@ -6,3 +6,5 @@ println("AD Tests")
 @safetestset "AD Tests" begin include("ADtests.jl") end
 println("Mini batching Tests")
 @safetestset "Mini batching" begin include("minibatch.jl") end
+println("DiffEqFlux Tests")
+@safetestset "DiffEqFlux" begin include("diffeqfluxtests.jl") end
