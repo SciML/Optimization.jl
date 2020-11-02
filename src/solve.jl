@@ -62,7 +62,7 @@ macro withprogress(progress, exprs...)
 	end |> esc
   end
 
-function __solve(prob::OptimizationProblem, opt, _data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, progress = true, save_best = true, kwargs...)
+function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, progress = true, save_best = true, kwargs...)
 	if maxiters <= 0.0
 		error("The number of maxiters has to be a non-negative and non-zero number.")
 	else
@@ -74,10 +74,7 @@ function __solve(prob::OptimizationProblem, opt, _data = DEFAULT_DATA;cb = (args
 	θ = copy(prob.u0)
 	ps = Flux.params(θ)
 
-	if _data == DEFAULT_DATA
-		data = Iterators.repeated((), maxiters)
-	else
-		data = _data
+	if data != DEFAULT_DATA
 		maxiters = length(data)
 	end
 
@@ -153,13 +150,10 @@ end
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace) = trace
 
-function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer, _data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
   	local x, cur, state
 
-	if _data == DEFAULT_DATA
-		data = Iterators.repeated((), maxiters)
-	else
-		data = _data
+	if data != DEFAULT_DATA
 		maxiters = length(data)
 	end
 
@@ -205,13 +199,10 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer, _data 
   	Optim.optimize(optim_f, prob.u0, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
 end
 
-function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN}, _data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN}, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 	local x, cur, state
 
-	if _data == DEFAULT_DATA
-		data = Iterators.repeated((), maxiters)
-	else
-		data = _data
+	if data != DEFAULT_DATA
 		maxiters = length(data)
 	end
 
@@ -253,13 +244,10 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 end
 
 
-function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer, _data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 	local x, cur, state
 
-	if _data == DEFAULT_DATA
-		data = Iterators.repeated((), maxiters)
-	else
-		data = _data
+	if data != DEFAULT_DATA
 		maxiters = length(data)
 	end
 
@@ -328,13 +316,10 @@ function __init__()
 
 		BBO() = BBO(:adaptive_de_rand_1_bin)
 
-		function __solve(prob::OptimizationProblem, opt::BBO, _data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+		function __solve(prob::OptimizationProblem, opt::BBO, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 			local x, cur, state
 
-			if _data == DEFAULT_DATA
-				data = Iterators.repeated((), maxiters)
-			else
-				data = _data
+			if data != DEFAULT_DATA
 				maxiters = length(data)
 			end
 
@@ -593,10 +578,7 @@ function __init__()
 		function __solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 			local x, cur, state
 
-			if _data == DEFAULT_DATA
-				data = Iterators.repeated((), maxiters)
-			else
-				data = _data
+			if data != DEFAULT_DATA
 				maxiters = length(data)
 			end
 
@@ -632,10 +614,7 @@ function __init__()
 		function __solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
 			local x, cur, state
 
-			if _data == DEFAULT_DATA
-				data = Iterators.repeated((), maxiters)
-			else
-				data = _data
+			if data != DEFAULT_DATA
 				maxiters = length(data)
 			end
 
