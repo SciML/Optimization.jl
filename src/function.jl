@@ -37,7 +37,7 @@ function instantiate_function(f, x, ::AbstractADType, p, num_cons = 0)
                          cons_j,cons_h)
 end
 
-function instantiate_function(f, x, ::AutoForwardDiff{_chunksize}, p, num_cons = 0) where _chunksize
+function instantiate_function(f::OptimizationFunction{true}, x, ::AutoForwardDiff{_chunksize}, p, num_cons = 0) where _chunksize
 
     chunksize = _chunksize === nothing ? default_chunk_size(length(x)) : _chunksize
 
