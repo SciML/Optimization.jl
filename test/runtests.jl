@@ -21,5 +21,6 @@ end
 if !is_APPVEYOR && GROUP == "Downstream"
     activate_downstream_env()
     Pkg.test("DiffEqFlux")
+    @safetestset "DiffEqFlux GPU" begin include("gpu_neural_ode.jl") end
 end
 end

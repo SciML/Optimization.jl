@@ -1,2 +1,4 @@
 [deps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 DiffEqFlux = "aae7a2af-3d4f-5e19-a356-7da93b79d9d0"
+OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
