@@ -96,7 +96,7 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
 	@withprogress progress name="Training" begin
 	  for (i,d) in enumerate(data)
 	    gs = Flux.Zygote.gradient(ps) do
-  		  x = prob.f(θ,prob.p)
+  		  x = prob.f(θ,prob.p, d...)
   		  first(x)
   		end
 		x = f.f(θ, prob.p, d...)
