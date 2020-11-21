@@ -1,0 +1,2 @@
+[deps]
+DiffEqFlux = "aae7a2af-3d4f-5e19-a356-7da93b79d9d0"

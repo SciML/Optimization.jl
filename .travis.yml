@@ -10,6 +10,9 @@ os:
 julia:
   - 1
 #  - nightly
+env:
+  - GROUP=Core
+  - GROUP=Downstream
 notifications:
   email: false
 jobs:

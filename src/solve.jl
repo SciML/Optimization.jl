@@ -12,6 +12,7 @@ function DiffEqBase.solve(prob::OptimizationProblem, opt, args...;kwargs...)
 	__solve(prob, opt, args...; kwargs...)
 end
 
+#=
 function update!(x::AbstractArray, x̄::AbstractArray{<:ForwardDiff.Dual})
   x .-= x̄
 end
@@ -31,6 +32,7 @@ end
 function update!(opt, xs::Flux.Zygote.Params, gs)
 	update!(opt, xs[1], gs)
 end
+=#
 
 maybe_with_logger(f, logger) = logger === nothing ? f() : Logging.with_logger(f, logger)
 
@@ -62,7 +64,10 @@ macro withprogress(progress, exprs...)
 	end |> esc
   end
 
-function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, progress = true, save_best = true, kwargs...)
+function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
+				 cb = (args...) -> (false), maxiters::Number = 1000,
+				 progress = true, save_best = true, kwargs...)
+
 	if maxiters <= 0.0
 		error("The number of maxiters has to be a non-negative and non-zero number.")
 	else
@@ -76,7 +81,7 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;cb = (args.
 
 	if data != DEFAULT_DATA
 		maxiters = length(data)
-	else 
+	else
 		data = take(data, maxiters)
 	end
 
@@ -90,8 +95,10 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;cb = (args.
 
 	@withprogress progress name="Training" begin
 	  for (i,d) in enumerate(data)
-		gs = prob.f.adtype isa AutoFiniteDiff ? Array{Number}(undef,length(θ)) : DiffResults.GradientResult(θ)
-		f.grad(gs, θ, d...) 
+	    gs = Flux.Zygote.gradient(ps) do
+  		  x = prob.f(θ,prob.p)
+  		  first(x)
+  		end
 		x = f.f(θ, prob.p, d...)
 		cb_call = cb(θ, x...)
 		if !(typeof(cb_call) <: Bool)
@@ -101,7 +108,7 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;cb = (args.
 		end
 		msg = @sprintf("loss: %.3g", x[1])
 		progress && ProgressLogging.@logprogress msg i/maxiters
-		update!(opt, ps, prob.f.adtype isa AutoFiniteDiff ? gs : DiffResults.gradient(gs))
+		Flux.update!(opt, ps, gs)
 
 		if save_best
 		  if first(x) < first(min_err)  #found a better solution
@@ -215,7 +222,7 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 	  	if !(typeof(cb_call) <: Bool)
 			error("The callback should return a boolean `halt` for whether to stop the optimization process.")
 		end
-		cur, state = iterate(data, state)  
+		cur, state = iterate(data, state)
 	  	cb_call
 	end
 
