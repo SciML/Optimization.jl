@@ -37,30 +37,30 @@ function instantiate_function(f, x, ::AbstractADType, p, num_cons = 0)
                          cons_j,cons_h)
 end
 
-function instantiate_function(f, x, ::AutoForwardDiff{_chunksize}, p, num_cons = 0) where _chunksize
+function instantiate_function(f::OptimizationFunction{true}, x, ::AutoForwardDiff{_chunksize}, p, num_cons = 0) where _chunksize
 
     chunksize = _chunksize === nothing ? default_chunk_size(length(x)) : _chunksize
 
-    _f = θ -> first(f.f(θ,p))
+    _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
-        gradcfg = ForwardDiff.GradientConfig(_f, x, ForwardDiff.Chunk{chunksize}())
-        grad = (res,θ) -> ForwardDiff.gradient!(res, _f, θ, gradcfg)
+        gradcfg = (args...) -> ForwardDiff.GradientConfig(x -> _f(x, args...), x, ForwardDiff.Chunk{chunksize}())
+        grad = (res, θ, args...) -> ForwardDiff.gradient!(res, x -> _f(x, args...), θ, gradcfg(args...), Val{false}())
     else
         grad = f.grad
     end
 
     if f.hess === nothing
-        hesscfg = ForwardDiff.HessianConfig(_f, x, ForwardDiff.Chunk{chunksize}())
-        hess = (res,θ) -> ForwardDiff.hessian!(res, _f, θ, hesscfg)
+        hesscfg = (args...) -> ForwardDiff.HessianConfig(x -> _f(x, args...), x, ForwardDiff.Chunk{chunksize}())
+        hess = (res, θ, args...) -> ForwardDiff.hessian!(res, x -> _f(x, args...), θ, hesscfg(args...), Val{false}())
     else
         hess = f.hess
     end
 
     if f.hv === nothing
-        hv = function (H,θ,v)
+        hv = function (H,θ,v, args...)
             res = ArrayInterface.zeromatrix(θ)
-            hess(res, θ)
+            hess(res, θ, args...)
             H .= res*v
         end
     else
@@ -101,23 +101,23 @@ end
 function instantiate_function(f, x, ::AutoZygote, p, num_cons = 0)
     num_cons != 0 && error("AutoZygote does not currently support constraints")
 
-    _f = θ -> f(θ,p)[1]
+    _f = (θ, args...) -> f(θ,p,args...)[1]
     if f.grad === nothing
-        grad = (res,θ) -> res isa DiffResults.DiffResult ? DiffResults.gradient!(res, Zygote.gradient(_f, θ)[1]) : res .= Zygote.gradient(_f, θ)[1]
+        grad = (res, θ, args...) -> res isa DiffResults.DiffResult ? DiffResults.gradient!(res, Zygote.gradient(x -> _f(x, args...), θ)[1]) : res .= Zygote.gradient(x -> _f(x, args...), θ)[1]
     else
         grad = f.grad
     end
 
     if f.hess === nothing
-        hess = function (res,θ)
+        hess = function (res, θ, args...)
             if res isa DiffResults.DiffResult
                 DiffResults.hessian!(res, ForwardDiff.jacobian(θ) do θ
-                                                Zygote.gradient(_f,θ)[1]
+                                                Zygote.gradient(x -> _f(x, args...), θ)[1]
                                             end)
             else
                 res .=  ForwardDiff.jacobian(θ) do θ
-                    Zygote.gradient(_f,θ)[1]
-                  end
+                    Zygote.gradient(x ->_f(x, args...), θ)[1]
+                end
             end
         end
     else
@@ -125,10 +125,10 @@ function instantiate_function(f, x, ::AutoZygote, p, num_cons = 0)
     end
 
     if f.hv === nothing
-        hv = function (H,θ,v)
-            _θ = ForwardDiff.Dual.(θ,v)
+        hv = function (H, θ, v, args...)
+            _θ = ForwardDiff.Dual.(θ, v)
             res = DiffResults.GradientResult(_θ)
-            grad(res,_θ)
+            grad(res, _θ, args...)
             H .= getindex.(ForwardDiff.partials.(DiffResults.gradient(res)),1)
         end
     else
@@ -141,23 +141,23 @@ end
 function instantiate_function(f, x, ::AutoReverseDiff, p=DiffEqBase.NullParameters(), num_cons = 0)
     num_cons != 0 && error("AutoReverseDiff does not currently support constraints")
 
-    _f = θ -> f.f(θ,p)[1]
+    _f = (θ, args...) -> first(f.f(θ,p, args...))
 
     if f.grad === nothing
-        grad = (res,θ) -> ReverseDiff.gradient!(res, _f, θ, ReverseDiff.GradientConfig(θ))
+        grad = (res, θ, args...) -> ReverseDiff.gradient!(res, x -> _f(x, args...), θ, ReverseDiff.GradientConfig(θ))
     else
         grad = f.grad
     end
 
     if f.hess === nothing
-        hess = function (res,θ)
+        hess = function (res, θ, args...)
             if res isa DiffResults.DiffResult
                 DiffResults.hessian!(res, ForwardDiff.jacobian(θ) do θ
-                                                ReverseDiff.gradient(_f,θ)[1]
+                                                ReverseDiff.gradient(x -> _f(x, args...), θ)[1]
                                             end)
             else
                 res .=  ForwardDiff.jacobian(θ) do θ
-                    ReverseDiff.gradient(_f,θ)
+                    ReverseDiff.gradient(x ->_f(x, args...), θ)
                   end
             end
         end
@@ -167,10 +167,10 @@ function instantiate_function(f, x, ::AutoReverseDiff, p=DiffEqBase.NullParamete
 
 
     if f.hv === nothing
-        hv = function (H,θ,v)
+        hv = function (H,θ,v, args...)
             _θ = ForwardDiff.Dual.(θ,v)
             res = DiffResults.GradientResult(_θ)
-            grad(res,_θ)
+            grad(res, _θ, args...)
             H .= getindex.(ForwardDiff.partials.(DiffResults.gradient(res)),1)
         end
     else
@@ -183,22 +183,22 @@ end
 
 function instantiate_function(f, x, ::AutoTracker, p, num_cons = 0)
     num_cons != 0 && error("AutoTracker does not currently support constraints")
-    _f = θ -> f.f(θ,p)[1]
+    _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
-        grad = (res,θ) -> res isa DiffResults.DiffResult ? DiffResults.gradient!(res, Tracker.data(Tracker.gradient(_f, θ)[1])) : res .= Tracker.data(Tracker.gradient(_f, θ)[1])
+        grad = (res, θ, args...) -> res isa DiffResults.DiffResult ? DiffResults.gradient!(res, Tracker.data(Tracker.gradient(x -> _f(x, args...), θ)[1])) : res .= Tracker.data(Tracker.gradient(x -> _f(x, args...), θ)[1])
     else
         grad = f.grad
     end
 
     if f.hess === nothing
-        hess = (res, θ) -> error("Hessian based methods not supported with Tracker backend, pass in the `hess` kwarg")
+        hess = (res, θ, args...) -> error("Hessian based methods not supported with Tracker backend, pass in the `hess` kwarg")
     else
         hess = f.hess
     end
 
     if f.hv === nothing
-        hv = (res, θ) -> error("Hessian based methods not supported with Tracker backend, pass in the `hess` and `hv` kwargs")
+        hv = (res, θ, args...) -> error("Hessian based methods not supported with Tracker backend, pass in the `hess` and `hv` kwargs")
     else
         hv = f.hv
     end
@@ -209,24 +209,24 @@ end
 
 function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
     num_cons != 0 && error("AutoFiniteDiff does not currently support constraints")
-    _f = θ -> f.f(θ,p)[1]
+    _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
-        grad = (res,θ) -> FiniteDiff.finite_difference_gradient!(res, _f, θ, FiniteDiff.GradientCache(res, x, adtype.fdtype))
+        grad = (res, θ, args...) -> FiniteDiff.finite_difference_gradient!(res, x ->_f(x, args...), θ, FiniteDiff.GradientCache(res, x, adtype.fdtype))
     else
         grad = f.grad
     end
 
     if f.hess === nothing
-        hess = (res,θ) -> FiniteDiff.finite_difference_hessian!(res, _f, θ, FiniteDiff.HessianCache(x, adtype.fdhtype))
+        hess = (res, θ, args...) -> FiniteDiff.finite_difference_hessian!(res, x ->_f(x, args...), θ, FiniteDiff.HessianCache(x, adtype.fdhtype))
     else
         hess = f.hess
     end
 
     if f.hv === nothing
-        hv = function (H,θ,v)
+        hv = function (H, θ, v, args...)
             res = ArrayInterface.zeromatrix(θ)
-            hess(res, θ)
+            hess(res, θ, args...)
             H .= res*v
         end
     else

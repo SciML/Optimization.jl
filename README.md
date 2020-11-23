@@ -1,6 +1,8 @@
 # GalacticOptim.jl
 
 [![Build Status](https://travis-ci.com/SciML/GalacticOptim.jl.svg?branch=master)](https://travis-ci.com/SciML/GalacticOptim.jl)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](http://galacticoptim.sciml.ai/stable/)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](http://galacticoptim.sciml.ai/dev/)
 
 GalacticOptim.jl is a package with a scope that is beyond your normal global optimization
 package. GalacticOptim.jl seeks to bring together all of the optimization packages
@@ -34,6 +36,13 @@ see also the available [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt
 - [QuadDIRECT.jl](https://github.com/timholy/QuadDIRECT.jl)
 - [Evolutionary.jl](https://github.com/wildart/Evolutionary.jl) (see also [this documentation](https://wildart.github.io/Evolutionary.jl/dev/))
 - [CMAEvolutionStrategy.jl](https://github.com/jbrea/CMAEvolutionStrategy.jl)
+
+## Tutorials and Documentation
+
+For information on using the package,
+[see the stable documentation](https://galacticoptim.sciml.ai/stable/). Use the
+[in-development documentation](https://galacticoptim.sciml.ai/dev/) for the version of
+the documentation, which contains the unreleased features.
 
 ## Examples
 
