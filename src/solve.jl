@@ -391,7 +391,7 @@ function __init__()
 	end
 
 	@require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" begin
-		function __solve(prob::OptimizationProblem, opt::NLopt.Opt; maxiters::Number = 1000, nstart = 1, local_method = nothing, kwargs...)
+		function __solve(prob::OptimizationProblem, optAlg::Symbol; maxiters::Number = 1000, nstart = 1, local_method = nothing, kwargs...)
 			local x
 
 			if maxiters <= 0.0
@@ -414,6 +414,9 @@ function __init__()
 
 				return _loss(θ)
 			end
+			
+			opt = NLopt.Opt(optAlg, length(prob.p)) #create an Opt object
+			
 			NLopt.min_objective!(opt, fg!)
 
 			if prob.ub !== nothing
