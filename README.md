@@ -1,6 +1,6 @@
 # GalacticOptim.jl
 
-[![Build Status](https://travis-ci.com/SciML/GalacticOptim.jl.svg?branch=master)](https://travis-ci.com/SciML/GalacticOptim.jl)
+[![Build Status](https://github.com/SciML/GalacticOptim.jl/workflows/CI/badge.svg)](https://github.com/SciML/GalacticOptim.jl/actions?query=workflow%3ACI)
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](http://galacticoptim.sciml.ai/stable/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](http://galacticoptim.sciml.ai/dev/)
 
