@@ -321,11 +321,13 @@ function __init__()
 
         struct BBO
             method::Symbol
+            BBO(method) = new(method)
         end
 
         BBO() = BBO(:adaptive_de_rand_1_bin_radiuslimited) # the recommended optimizer as default
 
-        function __solve(prob::OptimizationProblem, opt::BBO, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, method = nothing, kwargs...)
+
+        function __solve(prob::OptimizationProblem, opt::BBO, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
             local x, cur, state
 
             if data != DEFAULT_DATA
@@ -357,13 +359,10 @@ function __init__()
                 return first(x)
             end
 
-            if method !== nothing
-                bboptre = BlackBoxOptim.bboptimize(_loss;Method = method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], MaxSteps = maxiters, CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...)
-            else
-                bboptre = BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], MaxSteps = maxiters, CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...)
-            end
+            bboptre = BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], MaxSteps = maxiters, CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...)
 
-            Optim.MultivariateOptimizationResults(bboptre.method,
+
+            Optim.MultivariateOptimizationResults(opt.method,
                                                   [NaN],# initial_x,
                                                   BlackBoxOptim.best_candidate(bboptre), #pick_best_x(f_incr_pick, state),
                                                   BlackBoxOptim.best_fitness(bboptre), # pick_best_f(f_incr_pick, state, d),
