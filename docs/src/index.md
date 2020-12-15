@@ -8,7 +8,7 @@ features, such as integrating with automatic differentiation, to make its usage
 fairly simple for most cases, while allowing all of the options in a single
 unified interface.
 
-#### Note: This package is still in development. This guide is currently both an active documentation and a development roadmap.
+##### Note: The package is still in active development.
 
 ## Installation
 
