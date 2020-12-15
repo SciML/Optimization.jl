@@ -1,4 +1,3 @@
-
 struct NullData end
 const DEFAULT_DATA = Iterators.cycle((NullData(),))
 Base.iterate(::NullData, i=1) = nothing
@@ -66,7 +65,7 @@ macro withprogress(progress, exprs...)
 
 function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
                  cb = (args...) -> (false), maxiters::Number = 1000,
-                 progress = true, save_best = true, kwargs...)
+                 progress = false, save_best = true, kwargs...)
 
     if maxiters <= 0.0
         error("The number of maxiters has to be a non-negative and non-zero number.")
@@ -159,7 +158,10 @@ end
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace) = trace
 
-function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
+                 data = DEFAULT_DATA;cb = (args...) -> (false),
+                 progress = false,
+                 maxiters::Number = 1000, kwargs...)
       local x, cur, state
 
     if data != DEFAULT_DATA
@@ -208,7 +210,11 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer, data =
       Optim.optimize(optim_f, prob.u0, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
 end
 
-function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN}, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN},
+                 data = DEFAULT_DATA;cb = (args...) -> (false),
+                 progress = false,
+                 maxiters::Number = 1000, kwargs...)
+
     local x, cur, state
 
     if data != DEFAULT_DATA
@@ -253,7 +259,11 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 end
 
 
-function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer, data = DEFAULT_DATA;cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
+                 data = DEFAULT_DATA;cb = (args...) -> (false),
+                 progress = false,
+                 maxiters::Number = 1000, kwargs...)
+
     local x, cur, state
 
     if data != DEFAULT_DATA
@@ -327,7 +337,10 @@ function __init__()
         BBO() = BBO(:adaptive_de_rand_1_bin_radiuslimited) # the recommended optimizer as default
 
 
-        function __solve(prob::OptimizationProblem, opt::BBO, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+        function __solve(prob::OptimizationProblem, opt::BBO, data = DEFAULT_DATA;
+                         cb = (args...) -> (false), maxiters::Number = 1000,
+                         progress = false, kwargs...)
+
             local x, cur, state
 
             if data != DEFAULT_DATA
@@ -394,7 +407,10 @@ function __init__()
     end
 
     @require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" begin
-        function __solve(prob::OptimizationProblem, opt::NLopt.Opt; maxiters::Number = 1000, nstart = 1, local_method = nothing, kwargs...)
+        function __solve(prob::OptimizationProblem, opt::NLopt.Opt;
+                         maxiters::Number = 1000, nstart = 1,
+                         local_method = nothing,
+                         progress = false, kwargs...)
             local x
 
             if maxiters <= 0.0
@@ -470,7 +486,9 @@ function __init__()
     end
 
     @require MultistartOptimization = "3933049c-43be-478e-a8bb-6e0f7fd53575" begin
-        function __solve(prob::OptimizationProblem, opt::MultistartOptimization.TikTak; local_method, local_maxiters::Number = 1000, kwargs...)
+        function __solve(prob::OptimizationProblem, opt::MultistartOptimization.TikTak;
+                         local_method, local_maxiters::Number = 1000,
+                         progress = false, kwargs...)
             local x, _loss
 
             if local_maxiters <= 0.0
@@ -531,6 +549,7 @@ function __init__()
         end
 
         function __solve(prob::OptimizationProblem, opt::QuadDirect; splits = nothing, maxiters::Number = 1000, kwargs...)
+
             local x, _loss
 
             if maxiters <= 0.0
@@ -592,7 +611,9 @@ function __init__()
             record["x"] = population
         end
 
-        function __solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+        function __solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer, data = DEFAULT_DATA;
+                         cb = (args...) -> (false), maxiters::Number = 1000,
+                         progress = false, kwargs...)
             local x, cur, state
 
             if data != DEFAULT_DATA
@@ -628,7 +649,9 @@ function __init__()
 
         struct CMAEvolutionStrategyOpt end
 
-        function __solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt, data = DEFAULT_DATA; cb = (args...) -> (false), maxiters::Number = 1000, kwargs...)
+        function __solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt, data = DEFAULT_DATA;
+                         cb = (args...) -> (false), maxiters::Number = 1000,
+                         progress = false, kwargs...)
             local x, cur, state
 
             if data != DEFAULT_DATA
