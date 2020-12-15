@@ -539,6 +539,10 @@ function __init__()
                 maxiters = convert(Int, maxiters)
             end
 
+            if splits == nothing
+                error("You must provide the initial locations at which to evaluate the function in `splits` (a list of 3-vectors with values in strictly increasing order and within the specified bounds).")
+            end
+
             _loss = function(θ)
                 x = prob.f(θ, prob.p)
                 return first(x)

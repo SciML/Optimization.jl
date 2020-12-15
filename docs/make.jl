@@ -13,6 +13,7 @@ makedocs(
     pages=[
         "GalacticOptim.jl: Unified Global Optimization Package" => "index.md",
         "Usage" => "usage.md",
+        "Available optimizers" => "optimizers.md",
         "Examples" => "examples.md"
     ]
 )
