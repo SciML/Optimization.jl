@@ -22,7 +22,7 @@ Note that the default value of the maximum number of iterations is `1000`. It ca
 - [`QuadDIRECT`](https://github.com/timholy/QuadDIRECT.jl): **QuadDIRECT algorithm (inspired by DIRECT and MCS)**
     * `solve(problem, QuadDirect(), splits)`
     * `splits` is a list of 3-vectors with initial locations at which to evaluate the function (the values must be in strictly increasing order and lie within the specified bounds), for instance:
-    ```
+    ```julia
     prob = GalacticOptim.OptimizationProblem(f, x0, p, lb=[-3, -2], ub=[3, 2])
     solve(prob, QuadDirect(), splits = ([-2, 0, 2], [-1, 0, 1]))
     ```
@@ -141,7 +141,7 @@ Note that the default value of the maximum number of iterations is `1000`. It ca
     * `P` is an optional preconditioner (for more information, see [this source](https://julianlsolvers.github.io/Optim.jl/v0.9.3/algo/precondition/))
     * `precondpred` is used to update `P` as the state variable `x` changes
     * defaults to:
-    ```
+    ```julia
     alphaguess = LineSearches.InitialHagerZhang(),
     linesearch = LineSearches.HagerZhang(),
     eta = 0.4,
@@ -169,7 +169,7 @@ Note that the default value of the maximum number of iterations is `1000`. It ca
     * `P` is an optional preconditioner (for more information, see [this source](https://julianlsolvers.github.io/Optim.jl/v0.9.3/algo/precondition/))
     * `precondpred` is used to update `P` as the state variable `x` changes
     * defaults to:
-    ```
+    ```julia
     alphaguess = LineSearches.InitialPrevious(),
     linesearch = LineSearches.HagerZhang(),
     P = nothing,
@@ -238,7 +238,7 @@ Note that the default value of the maximum number of iterations is `1000`. It ca
 
     * `solve(problem, SAMIN(nt, ns, rt, neps, f_tol, x_tol, coverage_ok, verbosity))`
     * defaults to:
-    ```
+    ```julia
     SAMIN(; nt::Int = 5  # reduce temperature every nt*ns*dim(x_init) evaluations
             ns::Int = 5  # adjust bounds every ns*dim(x_init) evaluations
             rt::T = 0.9  # geometric temperature reduction factor: when temp changes, new temp is t=rt*t
