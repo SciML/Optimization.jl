@@ -64,7 +64,7 @@ macro withprogress(progress, exprs...)
   end
 
 function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
-                 cb = (args...) -> (false), maxiters::Number = 1000,
+                 maxiters::Number, cb = (args...) -> (false),
                  progress = false, save_best = true, kwargs...)
 
     if maxiters <= 0.0
@@ -159,10 +159,12 @@ decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace) = trace
 
 function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
-                 data = DEFAULT_DATA;cb = (args...) -> (false),
+                 data = DEFAULT_DATA;
+                 maxiters = nothing,
+                 cb = (args...) -> (false),
                  progress = false,
-                 maxiters::Number = 1000, kwargs...)
-      local x, cur, state
+                 kwargs...)
+    local x, cur, state
 
     if data != DEFAULT_DATA
         maxiters = length(data)
@@ -179,9 +181,9 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
         cb_call
       end
 
-    if maxiters <= 0.0
+    if !(isnothing(maxiters)) && maxiters <= 0.0
         error("The number of maxiters has to be a non-negative and non-zero number.")
-    else
+    elseif !(isnothing(maxiters))
         maxiters = convert(Int, maxiters)
     end
 
@@ -207,13 +209,16 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
         optim_f = TwiceDifferentiable(_loss, (G, θ) -> f.grad(G, θ, cur...), fg!, (H,θ) -> f.hess(H,θ,cur...), prob.u0)
     end
 
-      Optim.optimize(optim_f, prob.u0, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
+    Optim.optimize(optim_f, prob.u0, opt, !(isnothing(maxiters)) ? Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...)
+                                                                    : Optim.Options(;extended_trace = true, callback = _cb, kwargs...))
 end
 
 function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN},
-                 data = DEFAULT_DATA;cb = (args...) -> (false),
+                 data = DEFAULT_DATA;
+                 maxiters = nothing,
+                 cb = (args...) -> (false),
                  progress = false,
-                 maxiters::Number = 1000, kwargs...)
+                 kwargs...)
 
     local x, cur, state
 
@@ -232,9 +237,9 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
           cb_call
     end
 
-    if maxiters <= 0.0
+    if !(isnothing(maxiters)) && maxiters <= 0.0
         error("The number of maxiters has to be a non-negative and non-zero number.")
-    else
+    elseif !(isnothing(maxiters))
         maxiters = convert(Int, maxiters)
     end
 
@@ -255,14 +260,17 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
     end
     optim_f = OnceDifferentiable(_loss, f.grad, fg!, prob.u0)
 
-    Optim.optimize(optim_f, prob.lb, prob.ub, prob.u0, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
+    Optim.optimize(optim_f, prob.lb, prob.ub, prob.u0, opt, !(isnothing(maxiters)) ? Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...)
+                                                                                    : Optim.Options(;extended_trace = true, callback = _cb, kwargs...))
 end
 
 
 function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
-                 data = DEFAULT_DATA;cb = (args...) -> (false),
+                 data = DEFAULT_DATA;
+                 maxiters = nothing,
+                 cb = (args...) -> (false),
                  progress = false,
-                 maxiters::Number = 1000, kwargs...)
+                 kwargs...)
 
     local x, cur, state
 
@@ -281,9 +289,9 @@ function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
       cb_call
     end
 
-    if maxiters <= 0.0
+    if !(isnothing(maxiters)) && maxiters <= 0.0
         error("The number of maxiters has to be a non-negative and non-zero number.")
-    else
+    elseif !(isnothing(maxiters))
         maxiters = convert(Int, maxiters)
     end
 
@@ -321,7 +329,8 @@ function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
     ub = prob.ub === nothing ? [] : prob.ub
     optim_fc = TwiceDifferentiableConstraints(cons!, cons_j!, cons_hl!, lb, ub, prob.lcons, prob.ucons)
 
-    Optim.optimize(optim_f, optim_fc, prob.u0, opt, Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...))
+    Optim.optimize(optim_f, optim_fc, prob.u0, opt, !(isnothing(maxiters)) ? Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...)
+                                                                            : Optim.Options(;extended_trace = true, callback = _cb, kwargs...))
 end
 
 
@@ -338,7 +347,7 @@ function __init__()
 
 
         function __solve(prob::OptimizationProblem, opt::BBO, data = DEFAULT_DATA;
-                         cb = (args...) -> (false), maxiters::Number = 1000,
+                         cb = (args...) -> (false), maxiters = nothing,
                          progress = false, kwargs...)
 
             local x, cur, state
@@ -361,9 +370,9 @@ function __init__()
               cb_call
             end
 
-            if maxiters <= 0.0
+            if !(isnothing(maxiters)) && maxiters <= 0.0
                 error("The number of maxiters has to be a non-negative and non-zero number.")
-            else
+            elseif !(isnothing(maxiters))
                 maxiters = convert(Int, maxiters)
             end
 
@@ -372,7 +381,7 @@ function __init__()
                 return first(x)
             end
 
-            bboptre = BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], MaxSteps = maxiters, CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...)
+            bboptre = !(isnothing(maxiters)) ? BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], MaxSteps = maxiters, CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...) : BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...)
 
 
             Optim.MultivariateOptimizationResults(opt.method,
@@ -380,7 +389,7 @@ function __init__()
                                                   BlackBoxOptim.best_candidate(bboptre), #pick_best_x(f_incr_pick, state),
                                                   BlackBoxOptim.best_fitness(bboptre), # pick_best_f(f_incr_pick, state, d),
                                                   bboptre.iterations, #iteration,
-                                                  bboptre.iterations >= maxiters, #iteration == options.iterations,
+                                                  !(isnothing(maxiters)) ? bboptre.iterations >= maxiters : true, #iteration == options.iterations,
                                                   false, # x_converged,
                                                   0.0,#T(options.x_tol),
                                                   0.0,#T(options.x_tol),
@@ -396,8 +405,8 @@ function __init__()
                                                   NaN,#g_residual(d),
                                                   false, #f_increased,
                                                   nothing,
-                                                  maxiters,
-                                                  maxiters,
+                                                  bboptre.f_calls,
+                                                  0,
                                                   0,
                                                   true,
                                                   NaN,
@@ -408,14 +417,14 @@ function __init__()
 
     @require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" begin
         function __solve(prob::OptimizationProblem, opt::NLopt.Opt;
-                         maxiters::Number = 1000, nstart = 1,
+                         maxiters = nothing, nstart = 1,
                          local_method = nothing,
                          progress = false, kwargs...)
             local x
 
-            if maxiters <= 0.0
+            if !(isnothing(maxiters)) && maxiters <= 0.0
                 error("The number of maxiters has to be a non-negative and non-zero number.")
-            else
+            elseif !(isnothing(maxiters))
                 maxiters = convert(Int, maxiters)
             end
 
@@ -442,12 +451,14 @@ function __init__()
             if prob.lb !== nothing
                 NLopt.lower_bounds!(opt, prob.lb)
             end
-
-            NLopt.maxeval!(opt, maxiters)
-
+            if !(isnothing(maxiters))
+                NLopt.maxeval!(opt, maxiters)
+            end
             if nstart > 1 && local_method !== nothing
                 NLopt.local_optimizer!(opt, local_method)
-                NLopt.maxeval!(opt, nstart * maxiters)
+                if !(isnothing(maxiters))
+                    NLopt.maxeval!(opt, nstart * maxiters)
+                end
             end
 
             t0= time()
@@ -458,8 +469,8 @@ function __init__()
                                                     prob.u0,# initial_x,
                                                     minx, #pick_best_x(f_incr_pick, state),
                                                     minf, # pick_best_f(f_incr_pick, state, d),
-                                                    maxiters, #iteration,
-                                                    maxiters >= opt.numevals, #iteration == options.iterations,
+                                                    Int(opt.numevals), #iteration,
+                                                    !(isnothing(maxiters)) ? opt.numevals >= maxiters : true, #iteration == options.iterations,
                                                     false, # x_converged,
                                                     0.0,#T(options.x_tol),
                                                     0.0,#T(options.x_tol),
@@ -475,8 +486,8 @@ function __init__()
                                                     NaN,#g_residual(d),
                                                     false, #f_increased,
                                                     nothing,
-                                                    maxiters,
-                                                    maxiters,
+                                                    Int(opt.numevals),
+                                                    0,
                                                     0,
                                                     ret,
                                                     NaN,
@@ -487,13 +498,13 @@ function __init__()
 
     @require MultistartOptimization = "3933049c-43be-478e-a8bb-6e0f7fd53575" begin
         function __solve(prob::OptimizationProblem, opt::MultistartOptimization.TikTak;
-                         local_method, local_maxiters::Number = 1000,
+                         local_method, local_maxiters = nothing,
                          progress = false, kwargs...)
             local x, _loss
 
-            if local_maxiters <= 0.0
+            if !(isnothing(local_maxiters)) && local_maxiters <= 0.0
                 error("The number of local_maxiters has to be a non-negative and non-zero number.")
-            else
+            else !(isnothing(local_maxiters))
                 local_maxiters = convert(Int, local_maxiters)
             end
 
@@ -506,7 +517,11 @@ function __init__()
 
             P = MultistartOptimization.MinimizationProblem(_loss, prob.lb, prob.ub)
             multistart_method = opt
-            local_method = MultistartOptimization.NLoptLocalMethod(local_method, maxeval = local_maxiters)
+            if !(isnothing(local_maxiters))
+                local_method = MultistartOptimization.NLoptLocalMethod(local_method, maxeval = local_maxiters)
+            else
+                local_method = MultistartOptimization.NLoptLocalMethod(local_method)
+            end
             p = MultistartOptimization.multistart_minimization(multistart_method, local_method, P)
 
             t1 = time()
@@ -532,8 +547,8 @@ function __init__()
                                                 NaN,#g_residual(d),
                                                 false, #f_increased,
                                                 nothing,
-                                                local_maxiters,
-                                                local_maxiters,
+                                                0,
+                                                0,
                                                 0,
                                                 true,
                                                 NaN,
@@ -548,13 +563,13 @@ function __init__()
         struct QuadDirect
         end
 
-        function __solve(prob::OptimizationProblem, opt::QuadDirect; splits = nothing, maxiters::Number = 1000, kwargs...)
+        function __solve(prob::OptimizationProblem, opt::QuadDirect; splits = nothing, maxiters = nothing, kwargs...)
 
             local x, _loss
 
-            if maxiters <= 0.0
+            if !(isnothing(maxiters)) && maxiters <= 0.0
                 error("The number of maxiters has to be a non-negative and non-zero number.")
-            else
+            elseif !(isnothing(maxiters))
                 maxiters = convert(Int, maxiters)
             end
 
@@ -569,38 +584,38 @@ function __init__()
 
             t0 = time()
 
-            root, x0 = QuadDIRECT.analyze(_loss, splits, prob.lb, prob.ub; maxevals = maxiters, kwargs...)
+            root, x0 = !(isnothing(maxiters)) ? QuadDIRECT.analyze(_loss, splits, prob.lb, prob.ub; maxevals = maxiters, kwargs...) : QuadDIRECT.analyze(_loss, splits, prob.lb, prob.ub; kwargs...)
             box = minimum(root)
-               t1 = time()
+            t1 = time()
 
-               Optim.MultivariateOptimizationResults(opt,
-                                                [NaN],# initial_x,
-                                                QuadDIRECT.position(box, x0), #pick_best_x(f_incr_pick, state),
-                                                QuadDIRECT.value(box), # pick_best_f(f_incr_pick, state, d),
-                                                0, #iteration,
-                                                false, #iteration == options.iterations,
-                                                false, # x_converged,
-                                                0.0,#T(options.x_tol),
-                                                0.0,#T(options.x_tol),
-                                                NaN,# x_abschange(state),
-                                                NaN,# x_abschange(state),
-                                                false,# f_converged,
-                                                0.0,#T(options.f_tol),
-                                                0.0,#T(options.f_tol),
-                                                NaN,#f_abschange(d, state),
-                                                NaN,#f_abschange(d, state),
-                                                false,#g_converged,
-                                                0.0,#T(options.g_tol),
-                                                NaN,#g_residual(d),
-                                                false, #f_increased,
-                                                nothing,
-                                                maxiters,
-                                                maxiters,
-                                                0,
-                                                true,
-                                                NaN,
-                                                t1 - t0,
-                                                NamedTuple())
+            Optim.MultivariateOptimizationResults(opt,
+                                             [NaN],# initial_x,
+                                             QuadDIRECT.position(box, x0), #pick_best_x(f_incr_pick, state),
+                                             QuadDIRECT.value(box), # pick_best_f(f_incr_pick, state, d),
+                                             0, #iteration,
+                                             false, #iteration == options.iterations,
+                                             false, # x_converged,
+                                             0.0,#T(options.x_tol),
+                                             0.0,#T(options.x_tol),
+                                             NaN,# x_abschange(state),
+                                             NaN,# x_abschange(state),
+                                             false,# f_converged,
+                                             0.0,#T(options.f_tol),
+                                             0.0,#T(options.f_tol),
+                                             NaN,#f_abschange(d, state),
+                                             NaN,#f_abschange(d, state),
+                                             false,#g_converged,
+                                             0.0,#T(options.g_tol),
+                                             NaN,#g_residual(d),
+                                             false, #f_increased,
+                                             nothing,
+                                             0,
+                                             0,
+                                             0,
+                                             true,
+                                             NaN,
+                                             t1 - t0,
+                                             NamedTuple())
         end
     end
 
@@ -612,7 +627,7 @@ function __init__()
         end
 
         function __solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer, data = DEFAULT_DATA;
-                         cb = (args...) -> (false), maxiters::Number = 1000,
+                         cb = (args...) -> (false), maxiters = nothing,
                          progress = false, kwargs...)
             local x, cur, state
 
@@ -631,9 +646,9 @@ function __init__()
                 cb_call
             end
 
-            if maxiters <= 0.0
+            if !(isnothing(maxiters)) && maxiters <= 0.0
                 error("The number of maxiters has to be a non-negative and non-zero number.")
-            else
+            elseif !(isnothing(maxiters))
                 maxiters = convert(Int, maxiters)
             end
 
@@ -642,7 +657,8 @@ function __init__()
                 return first(x)
             end
 
-            Evolutionary.optimize(_loss, prob.u0, opt, Evolutionary.Options(;iterations = maxiters, callback = _cb, kwargs...))
+            Evolutionary.optimize(_loss, prob.u0, opt, !isnothing(maxiters) ? Evolutionary.Options(;iterations = maxiters, callback = _cb, kwargs...)
+                                                                                : Evolutionary.Options(;callback = _cb, kwargs...))
         end
     end
     @require CMAEvolutionStrategy="8d3b24bd-414e-49e0-94fb-163cc3a3e411" begin
@@ -650,7 +666,7 @@ function __init__()
         struct CMAEvolutionStrategyOpt end
 
         function __solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt, data = DEFAULT_DATA;
-                         cb = (args...) -> (false), maxiters::Number = 1000,
+                         cb = (args...) -> (false),
                          progress = false, kwargs...)
             local x, cur, state
 
@@ -667,12 +683,6 @@ function __init__()
                 end
                 cur, state = iterate(data, state)
                 cb_call
-            end
-
-            if maxiters <= 0.0
-                error("The number of maxiters has to be a non-negative and non-zero number.")
-            else
-                maxiters = convert(Int, maxiters)
             end
 
             _loss = function(θ)
@@ -682,7 +692,7 @@ function __init__()
 
             result = CMAEvolutionStrategy.minimize(_loss, prob.u0, 0.1; lower = prob.lb, upper = prob.ub, kwargs...)
 
-               Optim.MultivariateOptimizationResults(opt,
+            Optim.MultivariateOptimizationResults(opt,
                                                 prob.u0,# initial_x,
                                                 result.logger.xbest[end], #pick_best_x(f_incr_pick, state),
                                                 result.logger.fbest[end], # pick_best_f(f_incr_pick, state, d),
@@ -703,8 +713,8 @@ function __init__()
                                                 NaN,#g_residual(d),
                                                 false, #f_increased,
                                                 nothing,
-                                                maxiters,
-                                                maxiters,
+                                                0,
+                                                0,
                                                 0,
                                                 true,
                                                 NaN,

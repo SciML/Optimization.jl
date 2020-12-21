@@ -108,5 +108,5 @@ sol = solve(prob, Newton())
 sol = solve(prob, Optim.KrylovTrustRegion())
 @test sol.minimum < l1 #the loss doesn't go below 5e-1 here
 
-sol = solve(prob, ADAM(0.1))
+sol = solve(prob, ADAM(0.1), maxiters = 1000)
 @test 10*sol.minimum < l1
