@@ -30,7 +30,7 @@ optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons=
 
 prob = OptimizationProblem(optprob, x0)
 
-sol = solve(prob, ADAM(0.1))
+sol = solve(prob, ADAM(0.1), maxiters = 1000)
 @test 10*sol.minimum < l1
 
 sol = solve(prob, BFGS())
@@ -71,7 +71,7 @@ sol = solve(prob, IPNewton())
 
 optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoZygote())
 prob = OptimizationProblem(optprob, x0)
-sol = solve(prob, ADAM(), progress = false)
+sol = solve(prob, ADAM(), maxiters = 1000, progress = false)
 @test 10*sol.minimum < l1
 
 prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
