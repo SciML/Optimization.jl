@@ -2,7 +2,7 @@
 
 The first entries give the original name and package of the optimizers (and are linked to their source documentation). The comments in the next line describe the usage of the optimizers in GalacticOptim.jl and list the default values of the constructors.
 
-Note that the default value of the maximum number of iterations is `1000`. It can be changed by doing: `solve(problem, optimizer, maxiters = 2000)`.
+It can be changed by doing: `solve(problem, optimizer, maxiters = 2000)`.
 
 ## Global optimizers
 
