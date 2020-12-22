@@ -1,4 +1,4 @@
-using OrdinaryDiffEq, DiffEqFlux, GalacticOptim, Optim, Plots, Flux
+using OrdinaryDiffEq, DiffEqFlux, GalacticOptim, Optim, Flux
 
 function lotka_volterra!(du, u, p, t)
   x, y = u
@@ -31,25 +31,16 @@ function loss_adjoint(p)
     return loss, prediction
 end
 
-list_plots = []
 iter = 0
 callback = function (p, l, pred)
-  global iter, list_plots
-
-  if iter == 0
-    list_plots = []
-  end
+  global iter
   iter += 1
 
   display(l)
 
   # using `remake` to re-create our `prob` with current parameters `p`
   remade_solution = solve(remake(prob_ode, p = p), Tsit5(), saveat = tsteps)
-  plt = plot(remade_solution, ylim = (0, 6))
-
-  push!(list_plots, plt)
-  display(plt)
-
+  
   # Tell sciml_train to not halt the optimization. If return true, then
   # optimization stops.
   return false
@@ -97,26 +88,12 @@ function loss_neuralode(p)
     return loss, pred
 end
 
-list_plots = []
 iter = 0
-callback = function (p, l, pred; doplot = false)
-  global list_plots, iter
-
-  if iter == 0
-    list_plots = []
-  end
+callback = function (p, l, pred)
+  global iter
   iter += 1
 
   display(l)
-
-  # plot current prediction against data
-  plt = scatter(tsteps, ode_data[1,:], label = "data")
-  scatter!(plt, tsteps, pred[1,:], label = "prediction")
-  push!(list_plots, plt)
-  if doplot
-    display(plot(plt))
-  end
-
   return false
 end
 
