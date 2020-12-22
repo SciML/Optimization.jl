@@ -431,13 +431,13 @@ function __init__()
             f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
 
             _loss = function(θ)
-                x = prob.f.f(θ, prob.p)
+                x = f.f(θ, prob.p)
                 return x[1]
             end
 
             fg! = function (θ,G)
                 if length(G) > 0
-                    prob.f.grad(G, θ)
+                    f.grad(G, θ)
                 end
 
                 return _loss(θ)

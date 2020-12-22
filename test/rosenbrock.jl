@@ -50,7 +50,7 @@ prob = OptimizationProblem(optprob, x0, lcons = [-5.0], ucons = [10.0])
 sol = solve(prob, IPNewton())
 @test 10*sol.minimum < l1
 
-prob = OptimizationProblem(optprob, x0, lcons = [-Inf], ucons = [Inf], lb = [-500.0,-500.0], ub=[-50.0,-50.0])
+prob = OptimizationProblem(optprob, x0, lcons = [-Inf], ucons = [Inf], lb = [-500.0,-500.0], ub=[50.0,50.0])
 sol = solve(prob, IPNewton())
 @test sol.minimum < l1
 
@@ -95,7 +95,7 @@ sol = solve(prob, Opt(:LD_LBFGS, 2))
 @test 10*sol.minimum < l1
 
 sol = solve(prob, Opt(:G_MLSL_LDS, 2), nstart=2, local_method = Opt(:LD_LBFGS, 2), maxiters=10000)
-@test_broken 10*sol.minimum < l1
+@test 10*sol.minimum < l1
 
 # using MultistartOptimization
 # sol = solve(prob, MultistartOptimization.TikTak(100), local_method = NLopt.LD_LBFGS)
