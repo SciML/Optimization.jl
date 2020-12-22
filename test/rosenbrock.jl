@@ -95,7 +95,7 @@ sol = solve(prob, Opt(:LD_LBFGS, 2))
 @test 10*sol.minimum < l1
 
 sol = solve(prob, Opt(:G_MLSL_LDS, 2), nstart=2, local_method = Opt(:LD_LBFGS, 2), maxiters=10000)
-@test_broken 10*sol.minimum < l1
+@test 10*sol.minimum < l1
 
 # using MultistartOptimization
 # sol = solve(prob, MultistartOptimization.TikTak(100), local_method = NLopt.LD_LBFGS)
