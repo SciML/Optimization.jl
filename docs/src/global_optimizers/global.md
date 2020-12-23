@@ -44,4 +44,6 @@ Recommend `BBO()`.
 
 - [`Evolutionary.CMAES`](https://wildart.github.io/Evolutionary.jl/stable/cmaes/): **Covariance Matrix Adaptation Evolution Strategy algorithm**
 
+## CMAEvolutionStrategy.jl
+
 - [`CMAEvolutionStrategy`](https://github.com/jbrea/CMAEvolutionStrategy.jl): **Covariance Matrix Adaptation Evolution Strategy algorithm**
