@@ -1,4 +1,9 @@
-# Examples
+# Introduction to GalacticOptim.jl
+
+In this tutorial we introduce the basics of GalcticOptim.jl by showing
+how to easily mix local optimizers from Optim.jl and global optimizers
+from BlackBoxOptim.jl on the Rosenbrock equation. The simplest copy-pasteable
+code to get started is the following:
 
 ```julia
  using GalacticOptim, Optim

@@ -24,11 +24,14 @@ installation of dependencies. Below is the list of packages that need to be
 installed explicitly if you intend to use the specific optimization algorithms
 offered by them:
 
-- [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) (solver: `BBO()`)
-- [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) (usage via the NLopt API;
-see also the available [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/))
+- [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl)
+- [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)
 - [MultistartOptimization.jl](https://github.com/tpapp/MultistartOptimization.jl)
-(see also [this documentation](https://juliahub.com/docs/MultistartOptimization/cVZvi/0.1.0/))
 - [QuadDIRECT.jl](https://github.com/timholy/QuadDIRECT.jl)
-- [Evolutionary.jl](https://github.com/wildart/Evolutionary.jl) (see also [this documentation](https://wildart.github.io/Evolutionary.jl/dev/))
+- [Evolutionary.jl](https://wildart.github.io/Evolutionary.jl/dev/)
 - [CMAEvolutionStrategy.jl](https://github.com/jbrea/CMAEvolutionStrategy.jl)
+
+The following optimization packages are included by default:
+
+- [Flux.jl](https://fluxml.ai/)
+- [Optim.jl](https://julianlsolvers.github.io/Optim.jl/stable/)

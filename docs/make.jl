@@ -12,9 +12,23 @@ makedocs(
 
     pages=[
         "GalacticOptim.jl: Unified Global Optimization Package" => "index.md",
-        "Usage" => "usage.md",
-        "Available optimizers" => "optimizers.md",
-        "Examples" => "examples.md"
+        "Tutorials" => [
+            "Introduction to GalacticOptim.jl" => "intro.md"
+        ],
+        "Basics" => [
+            "OptimizationProblem" => "problem.md",
+            "Solver Options" => "solve.md"
+        ],
+        "Local Optimizers" => [
+            "local_gradient.md",
+            "local_derivative_free.md",
+            "local_hessian.md",
+            "local_hessian_free.md",
+        ],
+        "Global Optimizers" => [
+            "global.md",
+            "global_constrained.md"
+        ]
     ]
 )
 
