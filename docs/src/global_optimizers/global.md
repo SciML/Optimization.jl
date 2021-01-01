@@ -36,7 +36,7 @@ Recommend `BBO()`.
     ```
     * also note that `QuadDIRECT` should (for now) be installed by doing: `] add https://github.com/timholy/QuadDIRECT.jl.git`
 
-## Evoluationary.jl
+## Evolutionary.jl
 
 - [`Evolutionary.GA`](https://wildart.github.io/Evolutionary.jl/stable/ga/): **Genetic Algorithm optimizer**
 
