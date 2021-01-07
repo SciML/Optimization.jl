@@ -541,14 +541,13 @@ function __init__()
             root, x0 = !(isnothing(maxiters)) ? QuadDIRECT.analyze(_loss, splits, prob.lb, prob.ub; maxevals = maxiters, kwargs...) : QuadDIRECT.analyze(_loss, splits, prob.lb, prob.ub; kwargs...)
             box = minimum(root)
             t1 = time()
-            #println(box.qnconverged)
 
             GalacticOptimizationResults(opt,
                             [NaN],# initial_x,
                             QuadDIRECT.position(box, x0), #pick_best_x(f_incr_pick, state),
                             QuadDIRECT.value(box), # pick_best_f(f_incr_pick, state, d),
                             !(isnothing(maxiters)) ? maxiters : 0,
-                            box.qnconverged,
+                            box.qnconverged, #not sure if that's correct
                             true,
                             t1 - t0,
                             NamedTuple())
