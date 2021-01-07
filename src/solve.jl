@@ -1,3 +1,32 @@
+abstract type OptimizationResults end #experimental; comments welcome
+mutable struct GalacticOptimizationResults{O, Tx, Tf, Tls, Tsb} <: OptimizationResults
+    method::O
+    initial_x::Tx
+    minimizer::Tx
+    minimum::Tf
+    iterations::Int
+    iteration_converged::Bool
+    ls_success::Tls
+    time_run::Float64
+    stopped_by::Tsb
+end
+
+function Base.show(io::IO, r::GalacticOptimizationResults)
+    take = Iterators.take
+    failure_string = "failure"
+    if isa(r.ls_success, Bool) && !r.ls_success
+        failure_string *= " (line search failed)"
+    end
+
+    @printf io " * Status test: %s\n\n" r.iteration_converged ? "success" : failure_string
+    @printf io " * Candidate solution\n"
+    @printf io "    Final objective value:     %e\n" r.minimum
+    @printf io "\n"
+    @printf io " * Found with\n"
+    @printf io "    Algorithm:     %s\n" r.method
+    return
+end
+
 struct NullData end
 const DEFAULT_DATA = Iterators.cycle((NullData(),))
 Base.iterate(::NullData, i=1) = nothing
@@ -124,34 +153,15 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
 
     _time = time()
 
-    Optim.MultivariateOptimizationResults(opt,
-                                          prob.u0,# initial_x,
-                                          θ, #pick_best_x(f_incr_pick, state),
-                                          save_best ? first(min_err) : first(x), # pick_best_f(f_incr_pick, state, d),
-                                          maxiters, #iteration,
-                                          maxiters >= maxiters, #iteration == options.iterations,
-                                          true, # x_converged,
-                                          0.0,#T(options.x_tol),
-                                          0.0,#T(options.x_tol),
-                                          NaN,# x_abschange(state),
-                                          NaN,# x_abschange(state),
-                                          true,# f_converged,
-                                          0.0,#T(options.f_tol),
-                                          0.0,#T(options.f_tol),
-                                          NaN,#f_abschange(d, state),
-                                          NaN,#f_abschange(d, state),
-                                          true,#g_converged,
-                                          0.0,#T(options.g_tol),
-                                          NaN,#g_residual(d),
-                                          false, #f_increased,
-                                          nothing,
-                                          maxiters,
-                                          maxiters,
-                                          0,
-                                          true,
-                                          NaN,
-                                          _time-t0,
-                                          NamedTuple())
+    GalacticOptimizationResults(opt,
+                                prob.u0,# initial_x,
+                                θ, #pick_best_x(f_incr_pick, state),
+                                save_best ? first(min_err) : first(x), # pick_best_f(f_incr_pick, state, d),
+                                maxiters, #iteration,
+                                maxiters >= maxiters, #iteration == options.iterations,
+                                true,
+                                _time-t0,
+                                NamedTuple())
 end
 
 
@@ -384,34 +394,16 @@ function __init__()
             bboptre = !(isnothing(maxiters)) ? BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], MaxSteps = maxiters, CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...) : BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...)
 
 
-            Optim.MultivariateOptimizationResults(opt.method,
-                                                  [NaN],# initial_x,
-                                                  BlackBoxOptim.best_candidate(bboptre), #pick_best_x(f_incr_pick, state),
-                                                  BlackBoxOptim.best_fitness(bboptre), # pick_best_f(f_incr_pick, state, d),
-                                                  bboptre.iterations, #iteration,
-                                                  !(isnothing(maxiters)) ? bboptre.iterations >= maxiters : true, #iteration == options.iterations,
-                                                  false, # x_converged,
-                                                  0.0,#T(options.x_tol),
-                                                  0.0,#T(options.x_tol),
-                                                  NaN,# x_abschange(state),
-                                                  NaN,# x_abschange(state),
-                                                  false,# f_converged,
-                                                  0.0,#T(options.f_tol),
-                                                  0.0,#T(options.f_tol),
-                                                  NaN,#f_abschange(d, state),
-                                                  NaN,#f_abschange(d, state),
-                                                  false,#g_converged,
-                                                  0.0,#T(options.g_tol),
-                                                  NaN,#g_residual(d),
-                                                  false, #f_increased,
-                                                  nothing,
-                                                  bboptre.f_calls,
-                                                  0,
-                                                  0,
-                                                  true,
-                                                  NaN,
-                                                  bboptre.elapsed_time,
-                                                  NamedTuple())
+            GalacticOptimizationResults(opt.method,
+                            [NaN],# initial_x,
+                            BlackBoxOptim.best_candidate(bboptre), #pick_best_x(f_incr_pick, state),
+                            BlackBoxOptim.best_fitness(bboptre), # pick_best_f(f_incr_pick, state, d),
+                            bboptre.iterations, #iteration,
+                            !(isnothing(maxiters)) ? bboptre.iterations >= maxiters : true, #iteration == options.iterations,
+                            true,
+                            bboptre.elapsed_time,
+                            NamedTuple())
+
         end
     end
 
@@ -465,34 +457,15 @@ function __init__()
             (minf,minx,ret) = NLopt.optimize(opt, prob.u0)
             _time = time()
 
-            Optim.MultivariateOptimizationResults(opt,
-                                                    prob.u0,# initial_x,
-                                                    minx, #pick_best_x(f_incr_pick, state),
-                                                    minf, # pick_best_f(f_incr_pick, state, d),
-                                                    Int(opt.numevals), #iteration,
-                                                    !(isnothing(maxiters)) ? opt.numevals >= maxiters : true, #iteration == options.iterations,
-                                                    false, # x_converged,
-                                                    0.0,#T(options.x_tol),
-                                                    0.0,#T(options.x_tol),
-                                                    NaN,# x_abschange(state),
-                                                    NaN,# x_abschange(state),
-                                                    false,# f_converged,
-                                                    0.0,#T(options.f_tol),
-                                                    0.0,#T(options.f_tol),
-                                                    NaN,#f_abschange(d, state),
-                                                    NaN,#f_abschange(d, state),
-                                                    false,#g_converged,
-                                                    0.0,#T(options.g_tol),
-                                                    NaN,#g_residual(d),
-                                                    false, #f_increased,
-                                                    nothing,
-                                                    Int(opt.numevals),
-                                                    0,
-                                                    0,
-                                                    ret,
-                                                    NaN,
-                                                    _time-t0,
-                                                    NamedTuple())
+            GalacticOptimizationResults(opt.algorithm,
+                            prob.u0,# initial_x,
+                            minx, #pick_best_x(f_incr_pick, state),
+                            minf, # pick_best_f(f_incr_pick, state, d),
+                            Int(opt.numevals), #iteration,
+                            !(isnothing(maxiters)) ? opt.numevals >= maxiters : true, #iteration == options.iterations,
+                            ret,
+                            _time-t0,
+                            NamedTuple())
         end
     end
 
@@ -526,34 +499,15 @@ function __init__()
 
             t1 = time()
 
-            Optim.MultivariateOptimizationResults(opt,
-                                                [NaN],# initial_x,
-                                                p.location, #pick_best_x(f_incr_pick, state),
-                                                p.value, # pick_best_f(f_incr_pick, state, d),
-                                                0, #iteration,
-                                                false, #iteration == options.iterations,
-                                                false, # x_converged,
-                                                0.0,#T(options.x_tol),
-                                                0.0,#T(options.x_tol),
-                                                NaN,# x_abschange(state),
-                                                NaN,# x_abschange(state),
-                                                false,# f_converged,
-                                                0.0,#T(options.f_tol),
-                                                0.0,#T(options.f_tol),
-                                                NaN,#f_abschange(d, state),
-                                                NaN,#f_abschange(d, state),
-                                                false,#g_converged,
-                                                0.0,#T(options.g_tol),
-                                                NaN,#g_residual(d),
-                                                false, #f_increased,
-                                                nothing,
-                                                0,
-                                                0,
-                                                0,
-                                                true,
-                                                NaN,
-                                                t1 - t0,
-                                                NamedTuple())
+            GalacticOptimizationResults(opt,
+                                    [NaN],# initial_x,
+                                    p.location, #pick_best_x(f_incr_pick, state),
+                                    p.value, # pick_best_f(f_incr_pick, state, d),
+                                    local_maxiters,
+                                    local_maxiters>=opt.maxeval, #not sure if that's correct
+                                    true,
+                                    t1 - t0,
+                                    NamedTuple())
         end
     end
 
@@ -588,34 +542,15 @@ function __init__()
             box = minimum(root)
             t1 = time()
 
-            Optim.MultivariateOptimizationResults(opt,
-                                             [NaN],# initial_x,
-                                             QuadDIRECT.position(box, x0), #pick_best_x(f_incr_pick, state),
-                                             QuadDIRECT.value(box), # pick_best_f(f_incr_pick, state, d),
-                                             0, #iteration,
-                                             false, #iteration == options.iterations,
-                                             false, # x_converged,
-                                             0.0,#T(options.x_tol),
-                                             0.0,#T(options.x_tol),
-                                             NaN,# x_abschange(state),
-                                             NaN,# x_abschange(state),
-                                             false,# f_converged,
-                                             0.0,#T(options.f_tol),
-                                             0.0,#T(options.f_tol),
-                                             NaN,#f_abschange(d, state),
-                                             NaN,#f_abschange(d, state),
-                                             false,#g_converged,
-                                             0.0,#T(options.g_tol),
-                                             NaN,#g_residual(d),
-                                             false, #f_increased,
-                                             nothing,
-                                             0,
-                                             0,
-                                             0,
-                                             true,
-                                             NaN,
-                                             t1 - t0,
-                                             NamedTuple())
+            GalacticOptimizationResults(opt,
+                            [NaN],# initial_x,
+                            QuadDIRECT.position(box, x0), #pick_best_x(f_incr_pick, state),
+                            QuadDIRECT.value(box), # pick_best_f(f_incr_pick, state, d),
+                            maxiters,
+                            box.qnconverged, #not sure if it does what I think it does - comments welcome
+                            true,
+                            t1 - t0,
+                            NamedTuple())
         end
     end
 
@@ -691,35 +626,24 @@ function __init__()
             end
 
             result = CMAEvolutionStrategy.minimize(_loss, prob.u0, 0.1; lower = prob.lb, upper = prob.ub, kwargs...)
+            CMAEvolutionStrategy.print_header(result)
+            CMAEvolutionStrategy.print_result(result)
+            println("\n")
+            criterion = true
 
-            Optim.MultivariateOptimizationResults(opt,
-                                                prob.u0,# initial_x,
-                                                result.logger.xbest[end], #pick_best_x(f_incr_pick, state),
-                                                result.logger.fbest[end], # pick_best_f(f_incr_pick, state, d),
-                                                0, #iteration,
-                                                false, #iteration == options.iterations,
-                                                false, # x_converged,
-                                                0.0,#T(options.x_tol),
-                                                0.0,#T(options.x_tol),
-                                                NaN,# x_abschange(state),
-                                                NaN,# x_abschange(state),
-                                                false,# f_converged,
-                                                0.0,#T(options.f_tol),
-                                                0.0,#T(options.f_tol),
-                                                NaN,#f_abschange(d, state),
-                                                NaN,#f_abschange(d, state),
-                                                false,#g_converged,
-                                                0.0,#T(options.g_tol),
-                                                NaN,#g_residual(d),
-                                                false, #f_increased,
-                                                nothing,
-                                                0,
-                                                0,
-                                                0,
-                                                true,
-                                                NaN,
-                                                result.logger.times[end] - result.logger.times[1],
-                                                NamedTuple())
+            if (result.stop.reason === :maxtime) #this is an arbitrary choice of convergence (based on the stop.reason values)
+                criterion = false
+            end
+
+            GalacticOptimizationResults(opt,
+                            prob.u0,# initial_x,
+                            result.logger.xbest[end], #pick_best_x(f_incr_pick, state),
+                            result.logger.fbest[end], # pick_best_f(f_incr_pick, state, d),
+                            maxiters,
+                            criterion,
+                            true,
+                            result.logger.times[end] - result.logger.times[1],
+                            NamedTuple())                    
         end
     end
 end
