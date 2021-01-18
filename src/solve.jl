@@ -11,7 +11,7 @@ mutable struct OptimizationSolution{O, Tx, Tf, Tls, Tsb} <: AbstractOptimization
     stopped_by::Tsb
 end
 
-function Base.show(io::IO, r::OptimizationSolution)
+function Base.show(io::IO, r::AbstractOptimizationSolution)
     take = Iterators.take
     failure_string = "failure"
     if isa(r.ls_success, Bool) && !r.ls_success
