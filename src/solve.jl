@@ -1,5 +1,5 @@
-abstract type OptimizationResults end #experimental; comments welcome
-mutable struct GalacticOptimizationResults{O, Tx, Tf, Tls, Tsb} <: OptimizationResults
+abstract type OptimizationSolution end #experimental; comments welcome
+mutable struct OptimizationSolution{O, Tx, Tf, Tls, Tsb} <: OptimizationSolution
     method::O
     initial_x::Tx
     minimizer::Tx
@@ -11,14 +11,14 @@ mutable struct GalacticOptimizationResults{O, Tx, Tf, Tls, Tsb} <: OptimizationR
     stopped_by::Tsb
 end
 
-function Base.show(io::IO, r::GalacticOptimizationResults)
+function Base.show(io::IO, r::OptimizationSolution)
     take = Iterators.take
     failure_string = "failure"
     if isa(r.ls_success, Bool) && !r.ls_success
         failure_string *= " (line search failed)"
     end
 
-    @printf io " * Status test: %s\n\n" r.iteration_converged ? "success" : failure_string
+    @printf io " * Status: %s\n\n" r.iteration_converged ? "success" : failure_string
     @printf io " * Candidate solution\n"
     @printf io "    Final objective value:     %e\n" r.minimum
     @printf io "\n"
@@ -153,15 +153,15 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
 
     _time = time()
 
-    GalacticOptimizationResults(opt,
-                                prob.u0,# initial_x,
-                                θ, #pick_best_x(f_incr_pick, state),
-                                save_best ? first(min_err) : first(x), # pick_best_f(f_incr_pick, state, d),
-                                maxiters, #iteration,
-                                maxiters >= maxiters, #iteration == options.iterations,
-                                true,
-                                _time-t0,
-                                NamedTuple())
+    OptimizationSolution(opt,
+                        prob.u0,# initial_x,
+                        θ, #pick_best_x(f_incr_pick, state),
+                        save_best ? first(min_err) : first(x), # pick_best_f(f_incr_pick, state, d),
+                        maxiters, #iteration,
+                        maxiters >= maxiters, #iteration == options.iterations,
+                        true,
+                        _time-t0,
+                        NamedTuple())
 end
 
 
@@ -394,15 +394,15 @@ function __init__()
             bboptre = !(isnothing(maxiters)) ? BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], MaxSteps = maxiters, CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...) : BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...)
 
 
-            GalacticOptimizationResults(opt.method,
-                            [NaN],# initial_x,
-                            BlackBoxOptim.best_candidate(bboptre), #pick_best_x(f_incr_pick, state),
-                            BlackBoxOptim.best_fitness(bboptre), # pick_best_f(f_incr_pick, state, d),
-                            bboptre.iterations, #iteration,
-                            !(isnothing(maxiters)) ? bboptre.iterations >= maxiters : true, #iteration == options.iterations,
-                            true,
-                            bboptre.elapsed_time,
-                            NamedTuple())
+            OptimizationSolution(opt.method,
+                                [NaN],# initial_x,
+                                BlackBoxOptim.best_candidate(bboptre), #pick_best_x(f_incr_pick, state),
+                                BlackBoxOptim.best_fitness(bboptre), # pick_best_f(f_incr_pick, state, d),
+                                bboptre.iterations, #iteration,
+                                !(isnothing(maxiters)) ? bboptre.iterations >= maxiters : true, #iteration == options.iterations,
+                                true,
+                                bboptre.elapsed_time,
+                                NamedTuple())
 
         end
     end
@@ -457,15 +457,15 @@ function __init__()
             (minf,minx,ret) = NLopt.optimize(opt, prob.u0)
             _time = time()
 
-            GalacticOptimizationResults(opt.algorithm,
-                            prob.u0,# initial_x,
-                            minx, #pick_best_x(f_incr_pick, state),
-                            minf, # pick_best_f(f_incr_pick, state, d),
-                            Int(opt.numevals), #iteration,
-                            !(isnothing(maxiters)) ? opt.numevals >= maxiters : true, #iteration == options.iterations,
-                            ret,
-                            _time-t0,
-                            NamedTuple())
+            OptimizationSolution(opt.algorithm,
+                                prob.u0,# initial_x,
+                                minx, #pick_best_x(f_incr_pick, state),
+                                minf, # pick_best_f(f_incr_pick, state, d),
+                                Int(opt.numevals), #iteration,
+                                !(isnothing(maxiters)) ? opt.numevals >= maxiters : true, #iteration == options.iterations,
+                                ret,
+                                _time-t0,
+                                NamedTuple())
         end
     end
 
@@ -499,15 +499,15 @@ function __init__()
 
             t1 = time()
 
-            GalacticOptimizationResults(opt,
-                                    [NaN],# initial_x,
-                                    p.location, #pick_best_x(f_incr_pick, state),
-                                    p.value, # pick_best_f(f_incr_pick, state, d),
-                                    local_maxiters,
-                                    local_maxiters>=opt.maxeval, #not sure if that's correct
-                                    true,
-                                    t1 - t0,
-                                    NamedTuple())
+            OptimizationSolution(opt,
+                                [NaN],# initial_x,
+                                p.location, #pick_best_x(f_incr_pick, state),
+                                p.value, # pick_best_f(f_incr_pick, state, d),
+                                local_maxiters,
+                                local_maxiters>=opt.maxeval, #not sure if that's correct
+                                true,
+                                t1 - t0,
+                                NamedTuple())
         end
     end
 
@@ -542,15 +542,15 @@ function __init__()
             box = minimum(root)
             t1 = time()
 
-            GalacticOptimizationResults(opt,
-                            [NaN],# initial_x,
-                            QuadDIRECT.position(box, x0), #pick_best_x(f_incr_pick, state),
-                            QuadDIRECT.value(box), # pick_best_f(f_incr_pick, state, d),
-                            !(isnothing(maxiters)) ? maxiters : 0,
-                            box.qnconverged, #not sure if that's correct
-                            true,
-                            t1 - t0,
-                            NamedTuple())
+            OptimizationSolution(opt,
+                                [NaN],# initial_x,
+                                QuadDIRECT.position(box, x0), #pick_best_x(f_incr_pick, state),
+                                QuadDIRECT.value(box), # pick_best_f(f_incr_pick, state, d),
+                                !(isnothing(maxiters)) ? maxiters : 0,
+                                box.qnconverged, #not sure if that's correct
+                                true,
+                                t1 - t0,
+                                NamedTuple())
         end
     end
 
@@ -635,15 +635,15 @@ function __init__()
                 criterion = false
             end
 
-            GalacticOptimizationResults(opt,
-                            prob.u0,# initial_x,
-                            result.logger.xbest[end], #pick_best_x(f_incr_pick, state),
-                            result.logger.fbest[end], # pick_best_f(f_incr_pick, state, d),
-                            maxiters,
-                            criterion,
-                            true,
-                            result.logger.times[end] - result.logger.times[1],
-                            NamedTuple())
+            OptimizationSolution(opt,
+                                prob.u0,# initial_x,
+                                result.logger.xbest[end], #pick_best_x(f_incr_pick, state),
+                                result.logger.fbest[end], # pick_best_f(f_incr_pick, state, d),
+                                maxiters,
+                                criterion,
+                                true,
+                                result.logger.times[end] - result.logger.times[1],
+                                NamedTuple())
         end
     end
 end
