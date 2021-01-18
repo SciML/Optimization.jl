@@ -1,5 +1,5 @@
-abstract type OptimizationSolution end #experimental; comments welcome
-mutable struct OptimizationSolution{O, Tx, Tf, Tls, Tsb} <: OptimizationSolution
+abstract type AbstractOptimizationSolution end #experimental; comments welcome
+mutable struct OptimizationSolution{O, Tx, Tf, Tls, Tsb} <: AbstractOptimizationSolution
     method::O
     initial_x::Tx
     minimizer::Tx
