@@ -601,7 +601,7 @@ function __init__()
         struct CMAEvolutionStrategyOpt end
 
         function __solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt, data = DEFAULT_DATA;
-                         cb = (args...) -> (false),
+                         cb = (args...) -> (false), maxiters = nothing,
                          progress = false, kwargs...)
             local x, cur, state
 
@@ -625,7 +625,14 @@ function __init__()
                 return first(x)
             end
 
-            result = CMAEvolutionStrategy.minimize(_loss, prob.u0, 0.1; lower = prob.lb, upper = prob.ub, kwargs...)
+
+            if !(isnothing(maxiters)) && maxiters <= 0.0
+                error("The number of maxiters has to be a non-negative and non-zero number.")
+            elseif !(isnothing(maxiters))
+                maxiters = convert(Int, maxiters)
+            end
+
+            result = CMAEvolutionStrategy.minimize(_loss, prob.u0, 0.1; lower = prob.lb, upper = prob.ub, maxiter = maxiters, kwargs...)
             CMAEvolutionStrategy.print_header(result)
             CMAEvolutionStrategy.print_result(result)
             println("\n")
@@ -639,7 +646,7 @@ function __init__()
                                 prob.u0,# initial_x,
                                 result.logger.xbest[end], #pick_best_x(f_incr_pick, state),
                                 result.logger.fbest[end], # pick_best_f(f_incr_pick, state, d),
-                                maxiters,
+                                length(result.logger.fbest),
                                 criterion,
                                 true,
                                 result.logger.times[end] - result.logger.times[1],
