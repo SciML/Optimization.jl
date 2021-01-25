@@ -453,7 +453,7 @@ function __init__()
                 end
             end
 
-            t0= time()
+            t0 = time()
             (minf,minx,ret) = NLopt.optimize(opt, prob.u0)
             _time = time()
 
@@ -592,8 +592,20 @@ function __init__()
                 return first(x)
             end
 
-            Evolutionary.optimize(_loss, prob.u0, opt, !isnothing(maxiters) ? Evolutionary.Options(;iterations = maxiters, callback = _cb, kwargs...)
+            t0 = time()
+
+            result = Evolutionary.optimize(_loss, prob.u0, opt, !isnothing(maxiters) ? Evolutionary.Options(;iterations = maxiters, callback = _cb, kwargs...)
                                                                                 : Evolutionary.Options(;callback = _cb, kwargs...))
+            t1 = time()
+
+            OptimizationSolution(summary(result),
+                                 prob.u0, #initial_x
+                                 minimizer(result), #pick_best_x
+                                 minimum(result), #pick_best_f
+                                 iterations(result), #iteration
+                                 converged(result), #convergence status
+                                 t1 - t0,
+                                 NamedTuple())
         end
     end
     @require CMAEvolutionStrategy="8d3b24bd-414e-49e0-94fb-163cc3a3e411" begin
