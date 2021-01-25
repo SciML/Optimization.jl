@@ -600,10 +600,10 @@ function __init__()
 
             OptimizationSolution(summary(result),
                                  prob.u0, #initial_x
-                                 minimizer(result), #pick_best_x
+                                 Evolutionary.minimizer(result), #pick_best_x
                                  minimum(result), #pick_best_f
-                                 iterations(result), #iteration
-                                 converged(result), #convergence status
+                                 Evolutionary.iterations(result), #iteration
+                                 Evolutionary.converged(result), #convergence status
                                  t1 - t0,
                                  NamedTuple())
         end
