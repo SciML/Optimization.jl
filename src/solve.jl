@@ -604,6 +604,7 @@ function __init__()
                                  minimum(result), #pick_best_f
                                  Evolutionary.iterations(result), #iteration
                                  Evolutionary.converged(result), #convergence status
+                                 true,
                                  t1 - t0,
                                  NamedTuple())
         end
