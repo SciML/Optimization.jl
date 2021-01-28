@@ -24,7 +24,7 @@ Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
-ArrayInterface = "2.13"
+ArrayInterface = "2.13, 3.0"
 ConsoleProgressMonitor = "0.1"
 DiffEqBase = "6.48.1"
 DiffResults = "1.0"
@@ -56,4 +56,4 @@ SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["BlackBoxOptim", "Evolutionary", "DiffEqFlux", "IterTools", "OrdinaryDiffEq", "NLopt", "CMAEvolutionStrategy", "Pkg", "Random","SafeTestsets", "Test"]
+test = ["BlackBoxOptim", "Evolutionary", "DiffEqFlux", "IterTools", "OrdinaryDiffEq", "NLopt", "CMAEvolutionStrategy", "Pkg", "Random", "SafeTestsets", "Test"]
