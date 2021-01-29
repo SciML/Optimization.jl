@@ -13,24 +13,28 @@ makedocs(
     pages=[
         "GalacticOptim.jl: Unified Global Optimization Package" => "index.md",
 
-        "Basics" => [
-            "Introduction to GalacticOptim.jl" => "basics/intro.md",
-            "OptimizationProblem" => "basics/problem.md",
-            "Solver Options" => "basics/solve.md"
+        "Tutorials" => [
+            "Introduction to GalacticOptim.jl" => "tutorials/intro.md",
+            "Rosenbrock function" => "tutorials/rosenbrock.md",
+            "Minibatch" => "tutorials/minibatch.md"
         ],
+
+        "API" => [
+            "OptimizationProblem" => "API/optimization_problem.md",
+            "OptimizationFunction" => "API/optimization_function.md",
+            "solve" => "API/solve.md"
+        ],
+
+        "Global Optimizers" => [
+            "global_optimizers/global.md",
+            "global_optimizers/global_constrained.md"
+        ],
+
         "Local Optimizers" => [
             "local_optimizers/local_gradient.md",
             "local_optimizers/local_derivative_free.md",
             "local_optimizers/local_hessian.md",
             "local_optimizers/local_hessian_free.md"
-        ],
-        "Global Optimizers" => [
-            "global_optimizers/global.md",
-            "global_optimizers/global_constrained.md"
-        ],
-        "Tutorials" => [
-            "Rosenbrock function" => "tutorials/rosenbrock.md",
-            "Minibatch" => "tutorials/minibatch.md"
         ]
     ]
 )
