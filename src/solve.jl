@@ -20,7 +20,9 @@ function Base.show(io::IO, r::AbstractOptimizationSolution)
 
     @printf io " * Status: %s\n\n" r.iteration_converged ? "success" : failure_string
     @printf io " * Candidate solution\n"
-    @printf io "    Final objective value:     %e\n" r.minimum
+    fmt = "    Final objective value:     %e "*repeat(", %e ",length(r.minimum)-1)*"\n"
+    @eval @printf($io, $fmt, $r.minimum...)
+    #@printf io "    Final objective value:     %e\n" r.minimum
     @printf io "\n"
     @printf io " * Found with\n"
     @printf io "    Algorithm:     %s\n" r.method
@@ -36,7 +38,11 @@ get_maxiters(data) = Iterators.IteratorSize(typeof(DEFAULT_DATA)) isa Iterators.
                      Iterators.IteratorSize(typeof(DEFAULT_DATA)) isa Iterators.SizeUnknown ?
                      typemax(Int) : length(data)
 
-function DiffEqBase.solve(prob::OptimizationProblem, opt, args...;kwargs...)
+struct EnsembleOptimizationProblem
+    prob::Array{T, 1} where T<:OptimizationProblem
+end
+
+function DiffEqBase.solve(prob::Union{OptimizationProblem,EnsembleOptimizationProblem}, opt, args...;kwargs...)
     __solve(prob, opt, args...; kwargs...)
 end
 
@@ -403,6 +409,71 @@ function __init__()
                                 true,
                                 bboptre.elapsed_time,
                                 NamedTuple())
+
+        end
+
+        function __solve(prob::EnsembleOptimizationProblem, opt::BBO, data = DEFAULT_DATA;
+                         cb = (args...) -> (false), maxiters = nothing,
+                         progress = false, FitnessScheme=nothing, kwargs...)
+
+            local x, cur, state
+
+            if data != DEFAULT_DATA
+                maxiters = length(data)
+            end
+
+            cur, state = iterate(data)
+
+            function _cb(trace)
+                cb_call = cb(decompose_trace(trace),x...)
+                if !(typeof(cb_call) <: Bool)
+                    error("The callback should return a boolean `halt` for whether to stop the optimization process.")
+                end
+                if cb_call == true
+                    BlackBoxOptim.shutdown_optimizer!(trace) #doesn't work
+                end
+                cur, state = iterate(data, state)
+                cb_call
+            end
+
+            if !(isnothing(maxiters)) && maxiters <= 0.0
+                error("The number of maxiters has to be a non-negative and non-zero number.")
+            elseif !(isnothing(maxiters))
+                maxiters = convert(Int, maxiters)
+            end
+
+            if !(opt.method == :borg_moea)
+                error("Multi-Objective optimisation is only possible with BorgMOEA algorithm(:borg_moea).")
+            end
+
+            _loss = function(θ)
+                x = ntuple(i->first(prob.prob[i].f(θ, prob.prob[i].p, cur...)),length(prob.prob))   
+                return x
+            end
+
+            if any([prob.prob[1].lb != i.lb || prob.prob[1].ub != i.ub for i in prob.prob[2:end]])
+                error("Lower or upper bounds are not consistent between OptimizationProblem.")
+            else
+                multi_bounds = (lb=prob.prob[1].lb,ub=prob.prob[1].ub)
+            end
+
+            if isnothing(FitnessScheme)
+                println("Warning: No FitnessScheme was defined, using default scheme: FitnessScheme=ParetoFitnessScheme{length(prob.prob)}(is_minimizing=true).")
+                FitnessScheme=BlackBoxOptim.ParetoFitnessScheme{length(prob.prob)}(is_minimizing=true)
+            end
+
+            bboptre = !(isnothing(maxiters)) ? BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(multi_bounds.lb[i], multi_bounds.ub[i]) for i in 1:length(multi_bounds.lb)], MaxSteps = maxiters, CallbackFunction = _cb, CallbackInterval = 0.0, FitnessScheme=FitnessScheme, kwargs...) : BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(multi_bounds.lb[i], multi_bounds.ub[i]) for i in 1:length(multi_bounds.lb)], CallbackFunction = _cb, CallbackInterval = 0.0, FitnessScheme=FitnessScheme, kwargs...)
+
+
+            OptimizationSolution(opt.method,
+                            [NaN],# initial_x,
+                            BlackBoxOptim.best_candidate(bboptre), #pick_best_x(f_incr_pick, state),
+                            BlackBoxOptim.best_fitness(bboptre), # pick_best_f(f_incr_pick, state, d),
+                            bboptre.iterations, #iteration,
+                            !(isnothing(maxiters)) ? bboptre.iterations >= maxiters : true, #iteration == options.iterations,
+                            true,
+                            bboptre.elapsed_time,
+                            NamedTuple())
 
         end
     end
