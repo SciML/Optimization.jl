@@ -114,3 +114,7 @@ using BlackBoxOptim
 prob = GalacticOptim.OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
 sol = solve(prob, BBO())
 @test 10*sol.minimum < l1
+
+prob_multi = EnsembleOptimizationProblem([prob, prob])
+sol_multi = solve(prob_multi, BBO(:borg_moea), FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true), ϵ=0.05, MaxSteps=500000)
+@test 10*sum(sol_multi.minimum) < l1
