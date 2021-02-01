@@ -1,4 +1,4 @@
-# Introduction to GalacticOptim.jl
+# Basic usage
 
 In this tutorial we introduce the basics of GalcticOptim.jl by showing
 how to easily mix local optimizers from Optim.jl and global optimizers

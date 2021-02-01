@@ -14,7 +14,7 @@ makedocs(
         "GalacticOptim.jl: Unified Global Optimization Package" => "index.md",
 
         "Tutorials" => [
-            "Introduction to GalacticOptim.jl" => "tutorials/intro.md",
+            "Basic usage" => "tutorials/intro.md",
             "Rosenbrock function" => "tutorials/rosenbrock.md",
             "Minibatch" => "tutorials/minibatch.md"
         ],
