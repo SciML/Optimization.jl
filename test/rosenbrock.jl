@@ -118,3 +118,12 @@ sol = solve(prob, BBO())
 prob_multi = EnsembleOptimizationProblem([prob, prob])
 sol_multi = solve(prob_multi, BBO(:borg_moea), FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true), ϵ=0.05, MaxSteps=500000)
 @test 10*sum(sol_multi.minimum) < l1
+
+using ModelingToolkit
+rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+x0 = zeros(2)
+_p = [1.0, 100.0]
+
+f = OptimizationFunction(rosenbrock,ModelingToolkit.AutoModelingToolkit(),x0,_p,grad=true,hess=true)
+prob = OptimizationProblem(f,x0,_p)
+sol = solve(prob,Optim.Newton())
