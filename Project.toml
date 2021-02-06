@@ -45,7 +45,6 @@ Zygote = "0.5, 0.6"
 julia = "1.5"
 
 [extras]
-BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
 CMAEvolutionStrategy = "8d3b24bd-414e-49e0-94fb-163cc3a3e411"
 DiffEqFlux = "aae7a2af-3d4f-5e19-a356-7da93b79d9d0"
 Evolutionary = "86b6b26d-c046-49b6-aa0b-5f0f74682bd6"
@@ -58,4 +57,4 @@ SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["BlackBoxOptim", "Evolutionary", "DiffEqFlux", "IterTools", "OrdinaryDiffEq", "NLopt", "CMAEvolutionStrategy", "Pkg", "Random", "SafeTestsets", "Test"]
+test = ["Evolutionary", "DiffEqFlux", "IterTools", "OrdinaryDiffEq", "NLopt", "CMAEvolutionStrategy", "Pkg", "Random", "SafeTestsets", "Test"]
