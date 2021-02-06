@@ -12,7 +12,8 @@ using ForwardDiff: DEFAULT_CHUNK_THRESHOLD
 import DiffEqBase: OptimizationProblem, OptimizationFunction, AbstractADType
 
 import ModelingToolkit
-export ModelingToolkit.AutoModelingToolkit
+import ModelingToolkit: AutoModelingToolkit
+export AutoModelingToolkit
 
 include("solve.jl")
 include("function.jl")
