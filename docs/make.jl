@@ -22,7 +22,8 @@ makedocs(
         "API" => [
             "OptimizationProblem" => "API/optimization_problem.md",
             "OptimizationFunction" => "API/optimization_function.md",
-            "solve" => "API/solve.md"
+            "solve" => "API/solve.md",
+            "ModelingToolkit Integration" => "API/modelingtoolkit.md"
         ],
 
         "Local Optimizers" => [
@@ -31,7 +32,7 @@ makedocs(
             "local_optimizers/local_hessian.md",
             "local_optimizers/local_hessian_free.md"
         ],
-        
+
         "Global Optimizers" => [
             "global_optimizers/global.md",
             "global_optimizers/global_constrained.md"
