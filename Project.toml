@@ -1,7 +1,7 @@
 name = "GalacticOptim"
 uuid = "a75be94c-b780-496d-a8a9-0878b188d577"
 authors = ["Vaibhavdixit02 <vaibhavyashdixit@gmail.com>"]
-version = "0.4.8"
+version = "0.4.7"
 
 [deps]
 ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
@@ -33,7 +33,7 @@ FiniteDiff = "2.5"
 Flux = "0.11"
 ForwardDiff = "0.10"
 LoggingExtras = "0.4"
-ModelingToolkit = "5.2.1"
+ModelingToolkit = "5.2"
 Optim = "1"
 ProgressLogging = "0.1"
 Reexport = "0.2, 1.0"
