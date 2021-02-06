@@ -16,7 +16,8 @@ makedocs(
         "Tutorials" => [
             "Basic usage" => "tutorials/intro.md",
             "Rosenbrock function" => "tutorials/rosenbrock.md",
-            "Minibatch" => "tutorials/minibatch.md"
+            "Minibatch" => "tutorials/minibatch.md",
+            "Symbolic Modeling" => "tutorials/symbolic.md"
         ],
 
         "API" => [
