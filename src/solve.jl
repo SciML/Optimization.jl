@@ -1,31 +1,39 @@
-abstract type AbstractOptimizationSolution end #experimental; comments welcome
-mutable struct OptimizationSolution{O, Tx, Tf, Tls, Tsb} <: AbstractOptimizationSolution
-    method::O
-    initial_x::Tx
-    minimizer::Tx
+abstract type AbstractOptimizationSolution{T, N} <: AbstractNoTimeSolution{T, N} end
+
+struct OptimizationSolution{T, N, uType, P, A, Tf} <: AbstractOptimizationSolution{T, N}
+    u::uType # minimizer
+    prob::P # optimization problem
+    alg::A # algorithm
     minimum::Tf
-    iterations::Int
-    iteration_converged::Bool
-    ls_success::Tls
-    time_run::Float64
-    stopped_by::Tsb
+    initial_x::Array{Float64,1}
+    retcode::Symbol
+    original::String # original output of the optimizer
 end
 
-function Base.show(io::IO, r::AbstractOptimizationSolution)
-    take = Iterators.take
-    failure_string = "failure"
-    if isa(r.ls_success, Bool) && !r.ls_success
-        failure_string *= " (line search failed)"
-    end
+function build_solution(prob::AbstractNonlinearProblem,
+                        alg, u, minimum;
+                        initial_x = prob.u0,
+                        retcode = :Default,
+                        original = nothing,
+                        kwargs...)
 
-    @printf io " * Status: %s\n\n" r.iteration_converged ? "success" : failure_string
+    T = eltype(eltype(u))
+    N = ndims(u)
+
+    OptimizationSolution{T, N, typeof(u), typeof(prob), typeof(alg),
+                         typeof(minimum)}
+                         (u, prob, alg, minimum, initial_x,
+                          retcode, original)
+end
+
+function Base.show(io::IO, A::AbstractNoTimeSolution)
+
+    @printf io "\n * Status: %s\n\n" A.retcode === :Success ? "success" : "failure"
     @printf io " * Candidate solution\n"
-    fmt = "    Final objective value:     %e "*repeat(", %e ",length(r.minimum)-1)*"\n"
-    @eval @printf($io, $fmt, $r.minimum...)
-    #@printf io "    Final objective value:     %e\n" r.minimum
+    @printf io "    Final objective value:     %e\n" A.minimum
     @printf io "\n"
     @printf io " * Found with\n"
-    @printf io "    Algorithm:     %s\n" r.method
+    @printf io "    Algorithm:     %s\n" A.alg
     return
 end
 
@@ -159,15 +167,7 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
 
     _time = time()
 
-    OptimizationSolution(opt,
-                        prob.u0,# initial_x,
-                        θ, #pick_best_x(f_incr_pick, state),
-                        save_best ? first(min_err) : first(x), # pick_best_f(f_incr_pick, state, d),
-                        maxiters, #iteration,
-                        maxiters >= maxiters, #iteration == options.iterations,
-                        true,
-                        _time-t0,
-                        NamedTuple())
+    # here should be build_solution to create the output message
 end
 
 
@@ -447,7 +447,7 @@ function __init__()
             end
 
             _loss = function(θ)
-                x = ntuple(i->first(prob.prob[i].f(θ, prob.prob[i].p, cur...)),length(prob.prob))   
+                x = ntuple(i->first(prob.prob[i].f(θ, prob.prob[i].p, cur...)),length(prob.prob))
                 return x
             end
 
