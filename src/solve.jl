@@ -120,7 +120,7 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
 
     _time = time()
 
-    build_solution(prob, opt, θ, x[1])
+    SciMLBase.build_solution(prob, opt, θ, x[1])
     # here should be build_solution to create the output message
 end
 
@@ -187,7 +187,8 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
                                                kwargs...) :
                                 Optim.Options(;extended_trace = true,
                                                callback = _cb, kwargs...))
-    build_solution(prob, opt, original.minimizer, original.minimum; original=original)
+    SciMLBase.build_solution(prob, opt, original.minimizer,
+                             original.minimum; original=original)
 end
 
 function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN},
@@ -237,8 +238,14 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
     end
     optim_f = OnceDifferentiable(_loss, f.grad, fg!, prob.u0)
 
-    Optim.optimize(optim_f, prob.lb, prob.ub, prob.u0, opt, !(isnothing(maxiters)) ? Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...)
-                                                                                    : Optim.Options(;extended_trace = true, callback = _cb, kwargs...))
+    original = Optim.optimize(optim_f, prob.lb, prob.ub, prob.u0, opt,
+                              !(isnothing(maxiters)) ? Optim.Options(;
+                              extended_trace = true, callback = _cb,
+                              iterations = maxiters, kwargs...) :
+                              Optim.Options(;extended_trace = true,
+                              callback = _cb, kwargs...))
+    SciMLBase.build_solution(prob, opt, original.minimizer,
+                             original.minimum; original=original)
 end
 
 
@@ -306,8 +313,14 @@ function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
     ub = prob.ub === nothing ? [] : prob.ub
     optim_fc = TwiceDifferentiableConstraints(cons!, cons_j!, cons_hl!, lb, ub, prob.lcons, prob.ucons)
 
-    Optim.optimize(optim_f, optim_fc, prob.u0, opt, !(isnothing(maxiters)) ? Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...)
-                                                                            : Optim.Options(;extended_trace = true, callback = _cb, kwargs...))
+    original = Optim.optimize(optim_f, optim_fc, prob.u0, opt,
+                              !(isnothing(maxiters)) ? Optim.Options(;
+                                extended_trace = true, callback = _cb,
+                                iterations = maxiters, kwargs...) :
+                                Optim.Options(;extended_trace = true,
+                                callback = _cb, kwargs...))
+    SciMLBase.build_solution(prob, opt, original.minimizer,
+                             original.minimum; original=original)
 end
 
 
@@ -360,17 +373,8 @@ function __init__()
 
             bboptre = !(isnothing(maxiters)) ? BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], MaxSteps = maxiters, CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...) : BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...)
 
-
-            OptimizationSolution(opt.method,
-                                [NaN],# initial_x,
-                                BlackBoxOptim.best_candidate(bboptre), #pick_best_x(f_incr_pick, state),
-                                BlackBoxOptim.best_fitness(bboptre), # pick_best_f(f_incr_pick, state, d),
-                                bboptre.iterations, #iteration,
-                                !(isnothing(maxiters)) ? bboptre.iterations >= maxiters : true, #iteration == options.iterations,
-                                true,
-                                bboptre.elapsed_time,
-                                NamedTuple())
-
+            SciMLBase.build_solution(prob, opt, BlackBoxOptim.best_candidate(bboptre),
+                                     BlackBoxOptim.best_fitness(bboptre); original=bboptre)
         end
 
         function __solve(prob::EnsembleOptimizationProblem, opt::BBO, data = DEFAULT_DATA;
@@ -425,17 +429,8 @@ function __init__()
 
             bboptre = !(isnothing(maxiters)) ? BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(multi_bounds.lb[i], multi_bounds.ub[i]) for i in 1:length(multi_bounds.lb)], MaxSteps = maxiters, CallbackFunction = _cb, CallbackInterval = 0.0, FitnessScheme=FitnessScheme, kwargs...) : BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(multi_bounds.lb[i], multi_bounds.ub[i]) for i in 1:length(multi_bounds.lb)], CallbackFunction = _cb, CallbackInterval = 0.0, FitnessScheme=FitnessScheme, kwargs...)
 
-
-            OptimizationSolution(opt.method,
-                            [NaN],# initial_x,
-                            BlackBoxOptim.best_candidate(bboptre), #pick_best_x(f_incr_pick, state),
-                            BlackBoxOptim.best_fitness(bboptre), # pick_best_f(f_incr_pick, state, d),
-                            bboptre.iterations, #iteration,
-                            !(isnothing(maxiters)) ? bboptre.iterations >= maxiters : true, #iteration == options.iterations,
-                            true,
-                            bboptre.elapsed_time,
-                            NamedTuple())
-
+            SciMLBase.build_solution(prob, opt, BlackBoxOptim.best_candidate(bboptre),
+                                     BlackBoxOptim.best_fitness(bboptre); original=bboptre)
         end
     end
 
@@ -489,15 +484,7 @@ function __init__()
             (minf,minx,ret) = NLopt.optimize(opt, prob.u0)
             _time = time()
 
-            OptimizationSolution(opt.algorithm,
-                                prob.u0,# initial_x,
-                                minx, #pick_best_x(f_incr_pick, state),
-                                minf, # pick_best_f(f_incr_pick, state, d),
-                                Int(opt.numevals), #iteration,
-                                !(isnothing(maxiters)) ? opt.numevals >= maxiters : true, #iteration == options.iterations,
-                                ret,
-                                _time-t0,
-                                NamedTuple())
+            SciMLBase.build_solution(prob, opt, minx, minf; original=nothing)
         end
     end
 
@@ -531,15 +518,7 @@ function __init__()
 
             t1 = time()
 
-            OptimizationSolution(opt,
-                                [NaN],# initial_x,
-                                p.location, #pick_best_x(f_incr_pick, state),
-                                p.value, # pick_best_f(f_incr_pick, state, d),
-                                local_maxiters,
-                                local_maxiters>=opt.maxeval, #not sure if that's correct
-                                true,
-                                t1 - t0,
-                                NamedTuple())
+            SciMLBase.build_solution(prob, opt, p.location, p.value; original=p)
         end
     end
 
@@ -574,15 +553,7 @@ function __init__()
             box = minimum(root)
             t1 = time()
 
-            OptimizationSolution(opt,
-                                [NaN],# initial_x,
-                                QuadDIRECT.position(box, x0), #pick_best_x(f_incr_pick, state),
-                                QuadDIRECT.value(box), # pick_best_f(f_incr_pick, state, d),
-                                !(isnothing(maxiters)) ? maxiters : 0,
-                                box.qnconverged, #not sure if that's correct
-                                true,
-                                t1 - t0,
-                                NamedTuple())
+            SciMLBase.build_solution(prob, opt, QuadDIRECT.position(box, x0), QuadDIRECT.value(box); original=root)
         end
     end
 
@@ -630,15 +601,7 @@ function __init__()
                                                                                 : Evolutionary.Options(;callback = _cb, kwargs...))
             t1 = time()
 
-            OptimizationSolution(summary(result),
-                                 prob.u0, #initial_x
-                                 Evolutionary.minimizer(result), #pick_best_x
-                                 minimum(result), #pick_best_f
-                                 Evolutionary.iterations(result), #iteration
-                                 Evolutionary.converged(result), #convergence status
-                                 true,
-                                 t1 - t0,
-                                 NamedTuple())
+            SciMLBase.build_solution(prob, opt, Evolutionary.minimizer(result), Evolutionary.minimum(result); original=result)
         end
     end
     @require CMAEvolutionStrategy="8d3b24bd-414e-49e0-94fb-163cc3a3e411" begin
@@ -687,15 +650,7 @@ function __init__()
                 criterion = false
             end
 
-            OptimizationSolution(opt,
-                                prob.u0,# initial_x,
-                                result.logger.xbest[end], #pick_best_x(f_incr_pick, state),
-                                result.logger.fbest[end], # pick_best_f(f_incr_pick, state, d),
-                                length(result.logger.fbest),
-                                criterion,
-                                true,
-                                result.logger.times[end] - result.logger.times[1],
-                                NamedTuple())
+            SciMLBase.build_solution(prob, opt, result.logger.xbest[end], result.logger.fbest[end]; original=result)
         end
     end
 end

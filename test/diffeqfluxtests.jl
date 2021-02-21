@@ -105,7 +105,7 @@ result_neuralode = GalacticOptim.solve(prob,
                                 ADAM(), cb = callback,
                                 maxiters = 300)
 
-prob2 = remake(prob,u0=result_neuralode.minimizer)
+prob2 = remake(prob,u0=result_neuralode.u)
 result_neuralode2 = GalacticOptim.solve(prob2,
                                         BFGS(initial_stepnorm=0.0001),
                                         cb = callback,
