@@ -1,42 +1,3 @@
-abstract type AbstractOptimizationSolution{T, N} <: AbstractNoTimeSolution{T, N} end
-
-struct OptimizationSolution{T, N, uType, P, A, Tf} <: AbstractOptimizationSolution{T, N}
-    u::uType # minimizer
-    prob::P # optimization problem
-    alg::A # algorithm
-    minimum::Tf
-    initial_x::Array{Float64,1}
-    retcode::Symbol
-    original::String # original output of the optimizer
-end
-
-function build_solution(prob::AbstractNonlinearProblem,
-                        alg, u, minimum;
-                        initial_x = prob.u0,
-                        retcode = :Default,
-                        original = nothing,
-                        kwargs...)
-
-    T = eltype(eltype(u))
-    N = ndims(u)
-
-    OptimizationSolution{T, N, typeof(u), typeof(prob), typeof(alg),
-                         typeof(minimum)}
-                         (u, prob, alg, minimum, initial_x,
-                          retcode, original)
-end
-
-function Base.show(io::IO, A::AbstractNoTimeSolution)
-
-    @printf io "\n * Status: %s\n\n" A.retcode === :Success ? "success" : "failure"
-    @printf io " * Candidate solution\n"
-    @printf io "    Final objective value:     %e\n" A.minimum
-    @printf io "\n"
-    @printf io " * Found with\n"
-    @printf io "    Algorithm:     %s\n" A.alg
-    return
-end
-
 struct NullData end
 const DEFAULT_DATA = Iterators.cycle((NullData(),))
 Base.iterate(::NullData, i=1) = nothing
@@ -45,14 +6,6 @@ Base.length(::NullData) = 0
 get_maxiters(data) = Iterators.IteratorSize(typeof(DEFAULT_DATA)) isa Iterators.IsInfinite ||
                      Iterators.IteratorSize(typeof(DEFAULT_DATA)) isa Iterators.SizeUnknown ?
                      typemax(Int) : length(data)
-
-struct EnsembleOptimizationProblem
-    prob::Array{T, 1} where T<:OptimizationProblem
-end
-
-function DiffEqBase.solve(prob::Union{OptimizationProblem,EnsembleOptimizationProblem}, opt, args...;kwargs...)
-    __solve(prob, opt, args...; kwargs...)
-end
 
 #=
 function update!(x::AbstractArray, x̄::AbstractArray{<:ForwardDiff.Dual})
@@ -167,6 +120,7 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
 
     _time = time()
 
+    build_solution(prob, opt, θ, x[1])
     # here should be build_solution to create the output message
 end
 
@@ -225,8 +179,15 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
         optim_f = TwiceDifferentiable(_loss, (G, θ) -> f.grad(G, θ, cur...), fg!, (H,θ) -> f.hess(H,θ,cur...), prob.u0)
     end
 
-    Optim.optimize(optim_f, prob.u0, opt, !(isnothing(maxiters)) ? Optim.Options(;extended_trace = true, callback = _cb, iterations = maxiters, kwargs...)
-                                                                    : Optim.Options(;extended_trace = true, callback = _cb, kwargs...))
+    original = Optim.optimize(optim_f, prob.u0, opt,
+                              !(isnothing(maxiters)) ?
+                                Optim.Options(;extended_trace = true,
+                                               callback = _cb,
+                                               iterations = maxiters,
+                                               kwargs...) :
+                                Optim.Options(;extended_trace = true,
+                                               callback = _cb, kwargs...))
+    build_solution(prob, opt, original.minimizer, original.minimum; original=original)
 end
 
 function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN},
