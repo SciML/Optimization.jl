@@ -2,6 +2,7 @@ module GalacticOptim
 
 using Reexport
 @reexport using DiffEqBase
+@reexport using SciMLBase
 using Requires
 using DiffResults, ForwardDiff, Zygote, ReverseDiff, Tracker, FiniteDiff
 @reexport using Optim, Flux
@@ -10,6 +11,7 @@ using ArrayInterface, Base.Iterators
 
 using ForwardDiff: DEFAULT_CHUNK_THRESHOLD
 import DiffEqBase: OptimizationProblem, OptimizationFunction, AbstractADType
+import SciMLBase: AbstractNoTimeSolution, build_solution, AbstractNonlinearProblem
 
 import ModelingToolkit
 import ModelingToolkit: AutoModelingToolkit
