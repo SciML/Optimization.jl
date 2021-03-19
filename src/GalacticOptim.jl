@@ -1,5 +1,9 @@
+"""
+$(DocStringExtensions.README)
+"""
 module GalacticOptim
 
+using DocStringExtensions
 using Reexport
 @reexport using DiffEqBase
 @reexport using SciMLBase
