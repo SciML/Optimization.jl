@@ -18,7 +18,7 @@ jobs:
         os: [ubuntu-latest]
         package:
           - {user: SciML, repo: DiffEqFlux.jl, group: DiffEqFlux}
-          - {user: SciML, repo: NeuarlPDE.jl, group: NNPDE}
+          - {user: SciML, repo: NeuralPDE.jl, group: NNPDE}
 
     steps:
       - uses: actions/checkout@v2
