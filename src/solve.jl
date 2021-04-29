@@ -377,6 +377,8 @@ function __init__()
                                      BlackBoxOptim.best_fitness(bboptre); original=bboptre)
         end
 
+```
+## Multiobjective optimization interface to BorgMOEA in BBO; requires a EnsembleOptimizationProblem implementation in SciMLBase first 
         function __solve(prob::EnsembleOptimizationProblem, opt::BBO, data = DEFAULT_DATA;
                          cb = (args...) -> (false), maxiters = nothing,
                          progress = false, FitnessScheme=nothing, kwargs...)
@@ -432,6 +434,7 @@ function __init__()
             SciMLBase.build_solution(prob, opt, BlackBoxOptim.best_candidate(bboptre),
                                      BlackBoxOptim.best_fitness(bboptre); original=bboptre)
         end
+```
     end
 
     @require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" begin
