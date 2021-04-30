@@ -376,65 +376,6 @@ function __init__()
             SciMLBase.build_solution(prob, opt, BlackBoxOptim.best_candidate(bboptre),
                                      BlackBoxOptim.best_fitness(bboptre); original=bboptre)
         end
-
-```
-## Multiobjective optimization interface to BorgMOEA in BBO; requires a EnsembleOptimizationProblem implementation in SciMLBase first 
-        function __solve(prob::EnsembleOptimizationProblem, opt::BBO, data = DEFAULT_DATA;
-                         cb = (args...) -> (false), maxiters = nothing,
-                         progress = false, FitnessScheme=nothing, kwargs...)
-
-            local x, cur, state
-
-            if data != DEFAULT_DATA
-                maxiters = length(data)
-            end
-
-            cur, state = iterate(data)
-
-            function _cb(trace)
-                cb_call = cb(decompose_trace(trace),x...)
-                if !(typeof(cb_call) <: Bool)
-                    error("The callback should return a boolean `halt` for whether to stop the optimization process.")
-                end
-                if cb_call == true
-                    BlackBoxOptim.shutdown_optimizer!(trace) #doesn't work
-                end
-                cur, state = iterate(data, state)
-                cb_call
-            end
-
-            if !(isnothing(maxiters)) && maxiters <= 0.0
-                error("The number of maxiters has to be a non-negative and non-zero number.")
-            elseif !(isnothing(maxiters))
-                maxiters = convert(Int, maxiters)
-            end
-
-            if !(opt.method == :borg_moea)
-                error("Multi-Objective optimisation is only possible with BorgMOEA algorithm(:borg_moea).")
-            end
-
-            _loss = function(θ)
-                x = ntuple(i->first(prob.prob[i].f(θ, prob.prob[i].p, cur...)),length(prob.prob))
-                return x
-            end
-
-            if any([prob.prob[1].lb != i.lb || prob.prob[1].ub != i.ub for i in prob.prob[2:end]])
-                error("Lower or upper bounds are not consistent between OptimizationProblem.")
-            else
-                multi_bounds = (lb=prob.prob[1].lb,ub=prob.prob[1].ub)
-            end
-
-            if isnothing(FitnessScheme)
-                println("Warning: No FitnessScheme was defined, using default scheme: FitnessScheme=ParetoFitnessScheme{length(prob.prob)}(is_minimizing=true).")
-                FitnessScheme=BlackBoxOptim.ParetoFitnessScheme{length(prob.prob)}(is_minimizing=true)
-            end
-
-            bboptre = !(isnothing(maxiters)) ? BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(multi_bounds.lb[i], multi_bounds.ub[i]) for i in 1:length(multi_bounds.lb)], MaxSteps = maxiters, CallbackFunction = _cb, CallbackInterval = 0.0, FitnessScheme=FitnessScheme, kwargs...) : BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(multi_bounds.lb[i], multi_bounds.ub[i]) for i in 1:length(multi_bounds.lb)], CallbackFunction = _cb, CallbackInterval = 0.0, FitnessScheme=FitnessScheme, kwargs...)
-
-            SciMLBase.build_solution(prob, opt, BlackBoxOptim.best_candidate(bboptre),
-                                     BlackBoxOptim.best_fitness(bboptre); original=bboptre)
-        end
-```
     end
 
     @require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" begin
