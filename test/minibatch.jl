@@ -10,8 +10,8 @@ function true_sol(du, u, p, t)
     true_p = [log(2)/8.0, 100.0]
     newtons_cooling(du, u, true_p, t)
 end
-         
-function dudt_(u,p,t)           
+
+function dudt_(u,p,t)
     ann(u, p).* u
 end
 
@@ -49,7 +49,7 @@ end
 
 
 k = 10
-train_loader = Flux.Data.DataLoader(ode_data, t, batchsize = k)
+train_loader = Flux.Data.DataLoader((ode_data, t), batchsize = k)
 
 numEpochs = 300
 l1 = loss_adjoint(pp, train_loader.data[1], train_loader.data[2])[1]
