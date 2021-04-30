@@ -23,7 +23,7 @@ export AutoModelingToolkit
 include("solve.jl")
 include("function.jl")
 
-export solve, EnsembleOptimizationProblem
+export solve
 
 export BBO, CMAEvolutionStrategyOpt
 
