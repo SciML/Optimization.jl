@@ -7,6 +7,7 @@ _p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
 l1 = rosenbrock(x0, _p)
 prob = OptimizationProblem(f, x0, _p)
+Random.seed!(1234)
 sol = solve(prob, SimulatedAnnealing())
 @test 10*sol.minimum < l1
 
@@ -79,8 +80,9 @@ prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
 sol = solve(prob, Fminbox())
 @test 10*sol.minimum < l1
 
+Random.seed!(1234)
 prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
-@test_broken @test_nowarn sol = solve(prob, SAMIN())
+sol = solve(prob, SAMIN())
 @test 10*sol.minimum < l1
 
 using NLopt
