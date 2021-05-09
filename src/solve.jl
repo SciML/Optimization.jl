@@ -60,25 +60,22 @@ macro withprogress(progress, exprs...)
   end
 
 function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
-                 maxiters::Number, cb = (args...) -> (false),
+                 maxiters::Number = 0, cb = (args...) -> (false),
                  progress = false, save_best = true, kwargs...)
 
-    if maxiters <= 0.0
-        error("The number of maxiters has to be a non-negative and non-zero number.")
+    if data != DEFAULT_DATA
+        maxiters = length(data)
     else
-        maxiters = convert(Int, maxiters)
+	  if maxiters <= 0.0
+		error("The number of maxiters has to be a non-negative and non-zero number.")
+	  end
+      data = take(data, maxiters)
     end
 
     # Flux is silly and doesn't have an abstract type on its optimizers, so assume
     # this is a Flux optimizer
     θ = copy(prob.u0)
     ps = Flux.params(θ)
-
-    if data != DEFAULT_DATA
-        maxiters = length(data)
-    else
-        data = take(data, maxiters)
-    end
 
     t0 = time()
 
