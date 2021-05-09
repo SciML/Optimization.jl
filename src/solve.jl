@@ -64,11 +64,11 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
                  progress = false, save_best = true, kwargs...)
 
     if data != DEFAULT_DATA
-        maxiters = length(data)
+      maxiters = length(data)
     else
-	  if maxiters <= 0.0
-		error("The number of maxiters has to be a non-negative and non-zero number.")
-	  end
+      if maxiters <= 0.0
+        error("The number of maxiters has to be a non-negative and non-zero number.")
+      end
       data = take(data, maxiters)
     end
 
