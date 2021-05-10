@@ -60,6 +60,6 @@ l1 = loss_adjoint(pp, train_loader.data[1], train_loader.data[2])[1]
 optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, batch, time_batch), GalacticOptim.AutoZygote())
 optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
-res1 = GalacticOptim.solve(optprob, ADAM(0.05), ncycle(train_loader, numEpochs), cb = cb, maxiters = numEpochs)
+res1 = GalacticOptim.solve(optprob, ADAM(0.05), ncycle(train_loader, numEpochs), cb = cb)
 @test 10res1.minimum < l1
 ```
