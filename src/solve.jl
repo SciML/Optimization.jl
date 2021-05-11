@@ -146,7 +146,7 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
         end
         cur, state = iterate(data, state)
         cb_call
-      end
+    end
 
     if !(isnothing(maxiters)) && maxiters <= 0.0
         error("The number of maxiters has to be a non-negative and non-zero number.")
@@ -203,13 +203,13 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 
     cur, state = iterate(data)
 
-      function _cb(trace)
-          cb_call = !(opt isa Optim.SAMIN) && opt.method == NelderMead() ? cb(decompose_trace(trace).metadata["centroid"],x...) : cb(decompose_trace(trace).metadata["x"],x...)
-          if !(typeof(cb_call) <: Bool)
+    function _cb(trace)
+        cb_call = !(opt isa Optim.SAMIN) && opt.method == NelderMead() ? cb(decompose_trace(trace).metadata["centroid"],x...) : cb(decompose_trace(trace).metadata["x"],x...)
+        if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
         cur, state = iterate(data, state)
-          cb_call
+        cb_call
     end
 
     if !(isnothing(maxiters)) && maxiters <= 0.0
@@ -233,7 +233,7 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 
         return _loss(θ)
     end
-    optim_f = OnceDifferentiable(_loss, f.grad, fg!, prob.u0)
+    optim_f = OnceDifferentiable(_loss, (G, θ) -> f.grad(G, θ, cur...), fg!, prob.u0)
 
     original = Optim.optimize(optim_f, prob.lb, prob.ub, prob.u0, opt,
                               !(isnothing(maxiters)) ? Optim.Options(;
