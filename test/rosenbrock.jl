@@ -1,4 +1,4 @@
-using GalacticOptim, Optim, Test, Random, Flux
+using GalacticOptim, Optim, Test, Random, Flux, ForwardDiff, Zygote
 
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
