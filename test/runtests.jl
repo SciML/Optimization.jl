@@ -1,4 +1,4 @@
-using SafeTestsets, Pkg, Optim
+using SafeTestsets, Pkg
 
 const GROUP = get(ENV, "GROUP", "All")
 const is_APPVEYOR = Sys.iswindows() && haskey(ENV,"APPVEYOR")
