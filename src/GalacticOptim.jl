@@ -7,15 +7,14 @@ using DocStringExtensions
 using Reexport
 @reexport using SciMLBase
 using Requires
-using DiffResults, ForwardDiff, Zygote, ReverseDiff, Tracker, FiniteDiff
+using DiffResults
 using Logging, ProgressLogging, Printf, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
 using ArrayInterface, Base.Iterators
 
-using ForwardDiff: DEFAULT_CHUNK_THRESHOLD
 import SciMLBase: OptimizationProblem, OptimizationFunction, AbstractADType, __solve
 
 include("solve/solve.jl")
-include("function.jl")
+include("function/function.jl")
 
 function __init__()
     # Optimization backends
@@ -27,6 +26,13 @@ function __init__()
     @require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" include("solve/nlopt.jl")
     @require Optim="429524aa-4258-5aef-a3af-852621145aeb" include("solve/optim.jl")
     @require QuadDIRECT="dae52e8d-d666-5120-a592-9e15c33b8d7a" include("solve/quaddirect.jl")
+
+    # AD backends
+    @require FiniteDiff="6a86dc24-6348-571c-b903-95158fe2bd41" include("function/finitediff.jl")
+    @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("function/forwarddiff.jl")
+    @require ReverseDiff="37e2e3b7-166d-5795-8a7a-e32c996b4267" include("function/reversediff.jl")
+    @require Tracker="9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c" include("function/tracker.jl")
+    @require Zygote="e88e6eb3-aa80-5325-afca-941959d7151f" include("function/zygote.jl")
 end
 
 export solve
