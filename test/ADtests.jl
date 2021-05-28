@@ -1,4 +1,5 @@
-using GalacticOptim, Optim, Test, ReverseDiff, Tracker
+using GalacticOptim, Optim, Test, Flux
+using ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker
 
 x0 = zeros(2)
 rosenbrock(x, p=nothing) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
@@ -33,10 +34,10 @@ optprob.hess(H2, x0)
 
 prob = OptimizationProblem(optprob, x0)
 
-sol = solve(prob, BFGS())
+sol = solve(prob, Optim.BFGS())
 @test 10*sol.minimum < l1
 
-sol = solve(prob, Newton())
+sol = solve(prob, Optim.Newton())
 @test 10*sol.minimum < l1
 
 sol = solve(prob, Optim.KrylovTrustRegion())
@@ -51,10 +52,10 @@ optprob.hess(H2, x0)
 
 prob = OptimizationProblem(optprob, x0)
 
-sol = solve(prob, BFGS())
+sol = solve(prob, Optim.BFGS())
 @test 10*sol.minimum < l1
 
-sol = solve(prob, Newton())
+sol = solve(prob, Optim.Newton())
 @test 10*sol.minimum < l1
 
 sol = solve(prob, Optim.KrylovTrustRegion())
@@ -68,10 +69,10 @@ optprob.hess(H2, x0)
 @test H1 == H2
 
 prob = OptimizationProblem(optprob, x0)
-sol = solve(prob, BFGS())
+sol = solve(prob, Optim.BFGS())
 @test 10*sol.minimum < l1
 
-sol = solve(prob, Newton())
+sol = solve(prob, Optim.Newton())
 @test 10*sol.minimum < l1
 
 sol = solve(prob, Optim.KrylovTrustRegion())
@@ -86,7 +87,7 @@ optprob.grad(G2, x0)
 
 prob = OptimizationProblem(optprob, x0)
 
-sol = solve(prob, BFGS())
+sol = solve(prob, Optim.BFGS())
 @test 10*sol.minimum < l1
 
 @test_throws ErrorException solve(prob, Newton())
@@ -99,14 +100,14 @@ optprob.hess(H2, x0)
 @test H1 ≈ H2 rtol=1e-6
 
 prob = OptimizationProblem(optprob, x0)
-sol = solve(prob, BFGS())
+sol = solve(prob, Optim.BFGS())
 @test 10*sol.minimum < l1
 
-sol = solve(prob, Newton())
+sol = solve(prob, Optim.Newton())
 @test 10*sol.minimum < l1
 
 sol = solve(prob, Optim.KrylovTrustRegion())
 @test sol.minimum < l1 #the loss doesn't go below 5e-1 here
 
-sol = solve(prob, ADAM(0.1), maxiters = 1000)
+sol = solve(prob, Flux.ADAM(0.1), maxiters = 1000)
 @test 10*sol.minimum < l1

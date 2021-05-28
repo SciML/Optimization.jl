@@ -1,4 +1,4 @@
-using GalacticOptim, Optim, Test, Random
+using GalacticOptim, Optim, Test, Random, Flux
 
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
@@ -24,7 +24,7 @@ rosenbrock(x, p=nothing) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 
 l1 = rosenbrock(x0)
 prob = OptimizationProblem(rosenbrock, x0)
-sol = solve(prob, NelderMead())
+sol = solve(prob, Optim.NelderMead())
 @test 10*sol.minimum < l1
 
 cons= (x,p) -> [x[1]^2 + x[2]^2]
@@ -32,13 +32,13 @@ optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons=
 
 prob = OptimizationProblem(optprob, x0)
 
-sol = solve(prob, ADAM(0.1), maxiters = 1000)
+sol = solve(prob, Flux.ADAM(0.1), maxiters = 1000)
 @test 10*sol.minimum < l1
 
-sol = solve(prob, BFGS())
+sol = solve(prob, Optim.BFGS())
 @test 10*sol.minimum < l1
 
-sol = solve(prob, Newton())
+sol = solve(prob, Optim.Newton())
 @test 10*sol.minimum < l1
 
 sol = solve(prob, Optim.KrylovTrustRegion())
@@ -73,16 +73,16 @@ sol = solve(prob, IPNewton())
 
 optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoZygote())
 prob = OptimizationProblem(optprob, x0)
-sol = solve(prob, ADAM(), maxiters = 1000, progress = false)
+sol = solve(prob, Flux.ADAM(), maxiters = 1000, progress = false)
 @test 10*sol.minimum < l1
 
 prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
-sol = solve(prob, Fminbox())
+sol = solve(prob, Optim.Fminbox())
 @test 10*sol.minimum < l1
 
 Random.seed!(1234)
 prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
-sol = solve(prob, SAMIN())
+sol = solve(prob, Optim.SAMIN())
 @test 10*sol.minimum < l1
 
 using NLopt
