@@ -30,10 +30,10 @@ function instantiate_function(f, x, ::AbstractADType, p, num_cons = 0)
     cons_j = f.cons_j === nothing ? nothing : (res,x)->f.cons_j(res,x,p)
     cons_h = f.cons_h === nothing ? nothing : (res,x)->f.cons_h(res,x,p)
 
-    OptimizationFunction{true,DiffEqBase.NoAD,typeof(f.f),typeof(grad),
+    OptimizationFunction{true,SciMLBase.NoAD,typeof(f.f),typeof(grad),
                          typeof(hess),typeof(hv),typeof(cons),
                          typeof(cons_j),typeof(cons_h)}(f.f,
-                         DiffEqBase.NoAD(),grad,hess,hv,cons,
+                         SciMLBase.NoAD(),grad,hess,hv,cons,
                          cons_j,cons_h)
 end
 
@@ -138,7 +138,7 @@ function instantiate_function(f, x, ::AutoZygote, p, num_cons = 0)
     return OptimizationFunction{false,AutoZygote,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,AutoZygote(),grad,hess,hv,nothing,nothing,nothing)
 end
 
-function instantiate_function(f, x, ::AutoReverseDiff, p=DiffEqBase.NullParameters(), num_cons = 0)
+function instantiate_function(f, x, ::AutoReverseDiff, p=SciMLBase.NullParameters(), num_cons = 0)
     num_cons != 0 && error("AutoReverseDiff does not currently support constraints")
 
     _f = (θ, args...) -> first(f.f(θ,p, args...))
