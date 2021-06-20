@@ -75,7 +75,7 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
     # Flux is silly and doesn't have an abstract type on its optimizers, so assume
     # this is a Flux optimizer
     θ = copy(prob.u0)
-    ps = Flux.params(θ)
+    G = copy(θ)
 
     t0 = time()
 
@@ -87,10 +87,7 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
 
     @withprogress progress name="Training" begin
       for (i,d) in enumerate(data)
-        gs = Flux.Zygote.gradient(ps) do
-            x = prob.f(θ,prob.p, d...)
-            first(x)
-          end
+        f.grad(G, θ, d...)
         x = f.f(θ, prob.p, d...)
         cb_call = cb(θ, x...)
         if !(typeof(cb_call) <: Bool)
@@ -100,7 +97,7 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
         end
         msg = @sprintf("loss: %.3g", x[1])
         progress && ProgressLogging.@logprogress msg i/maxiters
-        Flux.update!(opt, ps, gs)
+        Flux.update!(opt, θ, G)
 
         if save_best
           if first(x) < first(min_err)  #found a better solution
