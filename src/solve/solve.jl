@@ -7,28 +7,6 @@ get_maxiters(data) = Iterators.IteratorSize(typeof(DEFAULT_DATA)) isa Iterators.
                      Iterators.IteratorSize(typeof(DEFAULT_DATA)) isa Iterators.SizeUnknown ?
                      typemax(Int) : length(data)
 
-#=
-function update!(x::AbstractArray, x̄::AbstractArray{<:ForwardDiff.Dual})
-  x .-= x̄
-end
-
-function update!(x::AbstractArray, x̄)
-  x .-= getindex.(ForwardDiff.partials.(x̄),1)
-end
-
-function update!(opt, x, x̄)
-  x .-= Flux.Optimise.apply!(opt, x, x̄)
-end
-
-function update!(opt, x, x̄::AbstractArray{<:ForwardDiff.Dual})
-  x .-= Flux.Optimise.apply!(opt, x, getindex.(ForwardDiff.partials.(x̄),1))
-end
-
-function update!(opt, xs::Flux.Zygote.Params, gs)
-    update!(opt, xs[1], gs)
-end
-=#
-
 maybe_with_logger(f, logger) = logger === nothing ? f() : Logging.with_logger(f, logger)
 
 function default_logger(logger)

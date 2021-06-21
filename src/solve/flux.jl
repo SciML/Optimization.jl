@@ -1,4 +1,4 @@
-const AbstractFluxOptimiser = Union{Flux.Momentum, 
+const AbstractFluxOptimiser = Union{Flux.Momentum,
                                     Flux.Nesterov,
                                     Flux.RMSProp,
                                     Flux.ADAM,
@@ -12,7 +12,6 @@ const AbstractFluxOptimiser = Union{Flux.Momentum,
                                     Flux.AdaBelief,
                                     Flux.Optimiser}
 
- 
 function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
                  maxiters::Number = 0, cb = (args...) -> (false),
                  progress = false, save_best = true, kwargs...)
@@ -29,7 +28,7 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
     # Flux is silly and doesn't have an abstract type on its optimizers, so assume
     # this is a Flux optimizer
     θ = copy(prob.u0)
-    ps = Flux.params(θ)
+    G = copy(θ)
 
     t0 = time()
 
@@ -41,10 +40,7 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
 
     @withprogress progress name="Training" begin
       for (i,d) in enumerate(data)
-        gs = Flux.Zygote.gradient(ps) do
-            x = prob.f(θ,prob.p, d...)
-            first(x)
-          end
+        f.grad(G, θ, d...)
         x = f.f(θ, prob.p, d...)
         cb_call = cb(θ, x...)
         if !(typeof(cb_call) <: Bool)
@@ -54,7 +50,7 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
         end
         msg = @sprintf("loss: %.3g", x[1])
         progress && ProgressLogging.@logprogress msg i/maxiters
-        Flux.update!(opt, ps, gs)
+        Flux.update!(opt, θ, G)
 
         if save_best
           if first(x) < first(min_err)  #found a better solution
@@ -75,5 +71,22 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
     # here should be build_solution to create the output message
 end
 
+function Flux.update!(x::AbstractArray, x̄::AbstractArray{<:ForwardDiff.Dual})
+  x .-= x̄
+end
 
+function Flux.update!(x::AbstractArray, x̄)
+  x .-= getindex.(ForwardDiff.partials.(x̄),1)
+end
 
+function Flux.update!(opt, x, x̄)
+  x .-= Flux.Optimise.apply!(opt, x, x̄)
+end
+
+function Flux.update!(opt, x, x̄::AbstractArray{<:ForwardDiff.Dual})
+  x .-= Flux.Optimise.apply!(opt, x, getindex.(ForwardDiff.partials.(x̄),1))
+end
+
+function Flux.update!(opt, xs::Flux.Zygote.Params, gs)
+    update!(opt, xs[1], gs)
+end
