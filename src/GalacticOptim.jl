@@ -8,7 +8,8 @@ using Reexport
 @reexport using DiffEqBase
 @reexport using SciMLBase
 using Requires
-using DiffResults, ForwardDiff, Zygote, ReverseDiff, Tracker, FiniteDiff
+using DiffResults, ForwardDiff, Zygote, ReverseDiff, FiniteDiff
+import Tracker
 @reexport using Optim, Flux
 using Logging, ProgressLogging, Printf, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
 using ArrayInterface, Base.Iterators
