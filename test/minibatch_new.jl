@@ -1,4 +1,4 @@
-using DiffEqFlux, GalacticOptim, OrdinaryDiffEq, Flux
+using DiffEqFlux, GalacticOptim, OrdinaryDiffEq, Flux, Zygote
 
 function newtons_cooling(du, u, p, t)
     temp = u[1]
