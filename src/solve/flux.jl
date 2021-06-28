@@ -71,22 +71,24 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
     # here should be build_solution to create the output message
 end
 
-function Flux.update!(x::AbstractArray, x̄::AbstractArray{<:ForwardDiff.Dual})
-  x .-= x̄
-end
-
-function Flux.update!(x::AbstractArray, x̄)
-  x .-= getindex.(ForwardDiff.partials.(x̄),1)
-end
-
-function Flux.update!(opt, x, x̄)
-  x .-= Flux.Optimise.apply!(opt, x, x̄)
-end
-
-function Flux.update!(opt, x, x̄::AbstractArray{<:ForwardDiff.Dual})
-  x .-= Flux.Optimise.apply!(opt, x, getindex.(ForwardDiff.partials.(x̄),1))
-end
-
 function Flux.update!(opt, xs::Flux.Zygote.Params, gs)
     update!(opt, xs[1], gs)
+end
+
+@require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" begin
+  function Flux.update!(x::AbstractArray, x̄::AbstractArray{<:ForwardDiff.Dual})
+    x .-= x̄
+  end
+
+  function Flux.update!(x::AbstractArray, x̄)
+    x .-= getindex.(ForwardDiff.partials.(x̄),1)
+  end
+
+  function Flux.update!(opt, x, x̄)
+    x .-= Flux.Optimise.apply!(opt, x, x̄)
+  end
+
+  function Flux.update!(opt, x, x̄::AbstractArray{<:ForwardDiff.Dual})
+    x .-= Flux.Optimise.apply!(opt, x, getindex.(ForwardDiff.partials.(x̄),1))
+  end
 end
