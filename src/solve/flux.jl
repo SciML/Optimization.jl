@@ -72,7 +72,7 @@ function __solve(prob::OptimizationProblem, opt, data = DEFAULT_DATA;
 end
 
 function Flux.update!(opt, xs::Flux.Zygote.Params, gs)
-    update!(opt, xs[1], gs)
+    Flux.update!(opt, xs[1], gs)
 end
 
 @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" begin
