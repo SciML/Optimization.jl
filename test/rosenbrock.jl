@@ -52,8 +52,16 @@ prob = OptimizationProblem(optprob, x0, lcons = [-5.0], ucons = [10.0])
 sol = solve(prob, IPNewton())
 @test 10*sol.minimum < l1
 
+import Ipopt
+sol = solve(prob, Ipopt.Optimizer)
+@test 10*sol.minimum < l1
+
 prob = OptimizationProblem(optprob, x0, lcons = [-Inf], ucons = [Inf], lb = [-500.0,-500.0], ub=[50.0,50.0])
 sol = solve(prob, IPNewton())
+@test sol.minimum < l1
+
+import Ipopt
+sol = solve(prob, Ipopt.Optimizer)
 @test sol.minimum < l1
 
 function con2_c(x,p)
@@ -85,19 +93,28 @@ prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
 sol = solve(prob, Optim.SAMIN())
 @test 10*sol.minimum < l1
 
-using NLopt
+import NLopt
 prob = OptimizationProblem(optprob, x0)
-sol = solve(prob, Opt(:LN_BOBYQA, 2))
+sol = solve(prob, NLopt.Opt(:LN_BOBYQA, 2))
 @test 10*sol.minimum < l1
 
-sol = solve(prob, Opt(:LD_LBFGS, 2))
+sol = solve(prob, GalacticOptim.MOI.OptimizerWithAttributes(NLopt.Optimizer, "algorithm" => :LN_BOBYQA))
+@test 10*sol.minimum < l1
+
+sol = solve(prob, NLopt.Opt(:LD_LBFGS, 2))
+@test 10*sol.minimum < l1
+
+sol = solve(prob, GalacticOptim.MOI.OptimizerWithAttributes(NLopt.Optimizer, "algorithm" => :LD_LBFGS))
 @test 10*sol.minimum < l1
 
 prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
-sol = solve(prob, Opt(:LD_LBFGS, 2))
+sol = solve(prob, NLopt.Opt(:LD_LBFGS, 2))
 @test 10*sol.minimum < l1
 
-sol = solve(prob, Opt(:G_MLSL_LDS, 2), nstart=2, local_method = Opt(:LD_LBFGS, 2), maxiters=10000)
+sol = solve(prob, GalacticOptim.MOI.OptimizerWithAttributes(NLopt.Optimizer, "algorithm" => :LD_LBFGS))
+@test 10*sol.minimum < l1
+
+sol = solve(prob, NLopt.Opt(:G_MLSL_LDS, 2), nstart=2, local_method = NLopt.Opt(:LD_LBFGS, 2), maxiters=10000)
 @test 10*sol.minimum < l1
 
 # using MultistartOptimization
