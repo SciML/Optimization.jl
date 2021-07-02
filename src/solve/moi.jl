@@ -1,8 +1,8 @@
 import MathOptInterface
 const MOI = MathOptInterface
 
-struct MOIOptimizationProblem{T,uType} <: MOI.AbstractNLPEvaluator
-    f::OptimizationFunction
+struct MOIOptimizationProblem{T,F<:OptimizationFunction,uType} <: MOI.AbstractNLPEvaluator
+    f::F
     u0::uType
     J::Matrix{T}
     H::Matrix{T}
@@ -74,13 +74,7 @@ function MOI.initialize(moiproblem::MOIOptimizationProblem, requested_features::
     end
 end
 
-function MOI.features_available(moiproblem::MOIOptimizationProblem)
-    if moiproblem.f isa OptimizationFunction
-        return [:Grad, :Hess, :Jac]
-    else
-        error("Use OptimizationFunction to pass in gradient and hessian")
-    end
-end
+MOI.features_available(moiproblem::MOIOptimizationProblem) = [:Grad, :Hess, :Jac]
 
 function make_moi_problem(prob::OptimizationProblem)
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
