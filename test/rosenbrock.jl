@@ -87,16 +87,16 @@ sol = solve(prob, Optim.SAMIN())
 @test 10*sol.minimum < l1
 
 optprob = OptimizationFunction((x,p=nothing) -> -rosenbrock(x), GalacticOptim.AutoZygote())
-prob = OptimizationProblem(optprob, x0)
+prob = OptimizationProblem(optprob, x0; sense = GalacticOptim.MaxSense)
 
 import Ipopt
-sol = solve(prob, Ipopt.Optimizer; sense = GalacticOptim.MaxSense)
+sol = solve(prob, Ipopt.Optimizer)
 @test 10*sol.minimum < l1
 
 optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoZygote())
-prob = OptimizationProblem(optprob, x0)
+prob = OptimizationProblem(optprob, x0; sense = GalacticOptim.MinSense)
 
-sol = solve(prob, Ipopt.Optimizer; sense = GalacticOptim.MinSense)
+sol = solve(prob, Ipopt.Optimizer)
 @test 10*sol.minimum < l1
 
 import NLopt
