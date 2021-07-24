@@ -105,7 +105,7 @@ function __solve(prob::OptimizationProblem, opt::Union{Function, Type{<:MOI.Abst
 	for i in 1:num_variables
 		MOI.set(optimizer, MOI.VariablePrimalStart(), θ[i], prob.u0[i])
 	end
-    MOI.set(optimizer, MOI.ObjectiveSense(), MOI.MIN_SENSE)
+    MOI.set(optimizer, MOI.ObjectiveSense(), prob.sense === MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE)
     if prob.lcons === nothing
         @assert prob.ucons === nothing
         con_bounds = MOI.NLPBoundsPair[]
