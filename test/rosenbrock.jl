@@ -84,7 +84,7 @@ prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
 sol = solve(prob, Optim.SAMIN())
 @test 10*sol.minimum < l1
 
-optprob = OptimizationFunction((x,p) -> -rosenbrock(x), GalacticOptim.AutoZygote())
+optprob = OptimizationFunction((x,p) -> -rosenbrock(x,p), GalacticOptim.AutoZygote())
 prob = OptimizationProblem(optprob, x0; sense = GalacticOptim.MaxSense)
 
 import Ipopt
