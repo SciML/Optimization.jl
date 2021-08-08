@@ -1,15 +1,16 @@
 import MathOptInterface
 const MOI = MathOptInterface
 
-struct MOIOptimizationProblem{T,F<:OptimizationFunction,uType} <: MOI.AbstractNLPEvaluator
+struct MOIOptimizationProblem{T,F<:OptimizationFunction,uType,P} <: MOI.AbstractNLPEvaluator
     f::F
     u0::uType
+	p::P
     J::Matrix{T}
     H::Matrix{T}
     cons_H::Vector{Matrix{T}}
 end
 
-MOI.eval_objective(moiproblem::MOIOptimizationProblem, x) = moiproblem.f.f(x)
+MOI.eval_objective(moiproblem::MOIOptimizationProblem, x) = moiproblem.f(x, moiproblem.p)
 
 MOI.eval_constraint(moiproblem::MOIOptimizationProblem, g, x) = g .= moiproblem.f.cons(x)
 
@@ -81,11 +82,12 @@ function make_moi_problem(prob::OptimizationProblem)
     f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p,num_cons)
     T = eltype(prob.u0)
     n = length(prob.u0)
-    moiproblem = MOIOptimizationProblem(f,prob.u0,zeros(T,num_cons,n),zeros(T,n,n),Matrix{T}[zeros(T,n,n) for i in 1:num_cons])
+    moiproblem = MOIOptimizationProblem(f,prob.u0,prob.p,zeros(T,num_cons,n),zeros(T,n,n),Matrix{T}[zeros(T,n,n) for i in 1:num_cons])
     return moiproblem
 end
 
-function __solve(prob::OptimizationProblem, opt::Union{Function, Type{<:MOI.AbstractOptimizer}, MOI.OptimizerWithAttributes})
+function __solve(prob::OptimizationProblem, opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes})
+	opt = opt isa MOI.AbstractOptimizer ? typeof(opt) : opt
     optimizer = MOI.instantiate(opt)
     num_variables = length(prob.u0)
 	θ = MOI.add_variables(optimizer, num_variables)
