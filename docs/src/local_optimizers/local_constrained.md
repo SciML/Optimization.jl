@@ -52,6 +52,74 @@ The following special keyword arguments can be used with Optim.jl optimizers:
   `GalacticOptim.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "option_name" => option_value, ...)`
 - The full list of optimizer options can be found in the [Ipopt Documentation](https://coin-or.github.io/Ipopt/OPTIONS.html#OPTIONS_REF)
 
+## KNITRO.jl (MathOptInterface)
+
+- [`KNITRO.Optimizer`](https://github.com/jump-dev/KNITRO.jl)
+- KNITRO is a MathOptInterface optimizer, and thus its options are handled via
+  `GalacticOptim.MOI.OptimizerWithAttributes(KNITRO.Optimizer, "option_name" => option_value, ...)`
+- The full list of optimizer options can be found in the [KNITRO Documentation](https://www.artelys.com/docs/knitro//3_referenceManual/callableLibraryAPI.html)
+
+## AmplNLWriter.jl (MathOptInterface)
+
+- [`AmplNLWriter.Optimizer`](https://github.com/jump-dev/AmplNLWriter.jl)
+- AmplNLWriter is a MathOptInterface optimizer, and thus its options are handled via
+  `GalacticOptim.MOI.OptimizerWithAttributes(AmplNLWriter.Optimizer(algname), "option_name" => option_value, ...)`
+- Possible `algname`s are:
+    * `Bonmin_jll.amplexe`
+    * `Couenne_jll.amplexe`
+    * `Ipopt_jll.amplexe`
+    * `SHOT_jll.amplexe`
+
+To use one of the JLLs, they must be added first. For example: `Pkg.add("Bonmin_jll")`.
+
+## Juniper.jl (MathOptInterface)
+
+- [`Juniper.Optimizer`](https://github.com/lanl-ansi/Juniper.jl)
+- Juniper is a MathOptInterface optimizer, and thus its options are handled via
+  `GalacticOptim.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "option_name" => option_value, ...)`
+- Juniper requires the choice of a relaxation method `nl_solver` which must be
+  a MathOptInterface-based optimizer
+
+```julia
+using GalacticOptim, ForwardDiff
+rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+x0 = zeros(2)
+_p  = [1.0, 100.0]
+
+f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
+prob = OptimizationProblem(f, x0, _p)
+
+using Juniper, Ipopt
+optimizer = Juniper.Optimizer
+# Choose a relaxation method
+nl_solver = GalacticOptim.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "print_level"=>0)
+
+opt = GalacticOptim.MOI.OptimizerWithAttributes(optimizer, "nl_solver"=>nl_solver)
+sol = solve(prob, opt)
+```
+
+## BARON.jl (MathOptInterface)
+
+- [`BARON.Optimizer`](https://github.com/joehuchette/BARON.jl)
+- BARON is a MathOptInterface optimizer, and thus its options are handled via
+  `GalacticOptim.MOI.OptimizerWithAttributes(BARON.Optimizer, "option_name" => option_value, ...)`
+- The full list of optimizer options can be found in the [BARON Documentation](https://minlp.com/baron-solver)
+
 ## NLopt.jl
 
-A few
+NLopt.jl algorithms are chosen via `NLopt.Opt(:algname)`. Consult the
+[NLopt Documentation](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/)
+for more information on the algorithms. Possible algorithm names are:
+
+* `:LN_COBYLA`
+* `:LD_CCSAQ`
+* `:LD_SLSQP`
+* `:LD_LBFGS`
+* `:LD_TNEWTON_PRECOND_RESTART`
+* `:LD_TNEWTON_PRECOND`
+* `:LD_TNEWTON_RESTART`
+* `:LD_TNEWTON`
+* `:LD_VAR2`
+* `:LD_VAR1`
+* `:AUGLAG`
+* `:AUGLAG_EQ`

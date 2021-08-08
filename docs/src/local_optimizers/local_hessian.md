@@ -7,7 +7,8 @@ the Hessian in order to be appropriate.
 
 ## Recommended Methods
 
-`NewtonTrustRegion`
+`NewtonTrustRegion` is much more robust than `Newton` and thus is recommended
+in most cases.
 
 ## Optim.jl
 

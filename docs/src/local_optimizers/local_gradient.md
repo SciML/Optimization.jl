@@ -238,6 +238,9 @@ requires less memory than `BFGS` and thus can have better scaling.
         * `manifold = Flat()`
         * `scaleinvH0::Bool = true && (typeof(P) <: Nothing)`
 
+- [`Optim.NGMRES`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/ngmres/)
+- [`Optim.OACCEL`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/ngmres/)
+
 ### Optim Keyword Arguments
 
 The following special keyword arguments can be used with Optim.jl optimizers:
@@ -265,3 +268,7 @@ The following special keyword arguments can be used with Optim.jl optimizers:
 - The full list of optimizer options can be found in the [Ipopt Documentation](https://coin-or.github.io/Ipopt/OPTIONS.html#OPTIONS_REF)
 
 ## NLopt.jl
+
+NLopt.jl algorithms are chosen via `NLopt.Opt(:algname)`. Consult the
+[NLopt Documentation](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/)
+for more information on the algorithms. Possible algorithm names are:

@@ -4,10 +4,13 @@ Derivative-free optimizers are optimizers that can be used even in cases
 where no derivatives or automatic differentiation is specified. While
 they tend to be less efficient than derivative-based optimizers, they
 can be easily applied to cases where defining derivatives is difficult.
+Note that while these methods do not support general constraints, all support
+bounds constraints via `lb` and `ub` in the `OptimizationProblem`.
 
 ## Recommended Methods
 
-NLOpt COBYLA
+`Optim.NelderMead` is a classic go-to method. More benchmarking is necessary
+in this area.
 
 ## Optim.jl
 
@@ -31,6 +34,8 @@ NLOpt COBYLA
         * `T = default_temperature`
         * `p = kirkpatrick`
 
+- [`Optim.ParticleSwarm`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/particle_swarm/)
+
 ### Optim Keyword Arguments
 
 The following special keyword arguments can be used with Optim.jl optimizers:
@@ -51,3 +56,15 @@ The following special keyword arguments can be used with Optim.jl optimizers:
 * `time_limit`: A soft upper limit on the total run time. Defaults to `NaN` (unlimited).
 
 ## NLopt.jl
+
+NLopt.jl algorithms are chosen via `NLopt.Opt(:algname)`. Consult the
+[NLopt Documentation](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/)
+for more information on the algorithms. Possible algorithm names are:
+
+* `LN_BOBYQA`
+* `LN_NEWUOA_BOUND`
+* `LN_PRAXIS`
+* `LN_NELDERMEAD`
+* `LN_SBPLX`
+* `LD_MMA`
+* `LD_CCSAQ`

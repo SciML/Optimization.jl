@@ -23,4 +23,18 @@
     # copied verbatim from https://julianlsolvers.github.io/Optim.jl/stable/#algo/samin/#constructor
     ```
 
+## Alpine.jl (MathOptInterface)
+
+- [`Alpine.Optimizer`](https://github.com/lanl-ansi/Alpine.jl)
+- Alpine is a MathOptInterface optimizer, and thus its options are handled via
+  `GalacticOptim.MOI.OptimizerWithAttributes(Alpine.Optimizer, "option_name" => option_value, ...)`
+- The full list of optimizer options can be found in the [Alpine Documentation](https://github.com/lanl-ansi/Alpine.jl)
+
 ## NLopt.jl
+
+NLopt.jl algorithms are chosen via `NLopt.Opt(:algname)`. Consult the
+[NLopt Documentation](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/)
+for more information on the algorithms. Possible algorithm names are:
+
+* `:GN_AGS` (handles inequalities but not equalities)
+* `:GN_ISRES`

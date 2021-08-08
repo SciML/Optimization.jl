@@ -1,7 +1,8 @@
 # Global Unconstrained Optimizers
 
 These methods are performing global optimization on problems without
-constraint equations.
+constraint equations. Note that each of these optimizers do support bounds
+constraints set by `lb` and `ub` in the `OptimizationProblem` construction.
 
 ## Recommended Methods
 
@@ -47,3 +48,16 @@ Recommend `BBO()`.
 ## CMAEvolutionStrategy.jl
 
 - [`CMAEvolutionStrategy`](https://github.com/jbrea/CMAEvolutionStrategy.jl): **Covariance Matrix Adaptation Evolution Strategy algorithm**
+
+## NLopt.jl
+
+NLopt.jl algorithms are chosen via `NLopt.Opt(:algname)`. Consult the
+[NLopt Documentation](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/)
+for more information on the algorithms. Possible algorithm names are:
+
+* `:GN_DIRECT`
+* `:GN_DIRECT_L`
+* `:GN_CRS2_LM`
+* `:G_MLSL_LDS`
+* `:GD_STOGO`
+* `:GN_ESCH`
