@@ -20,9 +20,7 @@ using CMAEvolutionStrategy
 sol = solve(prob, CMAEvolutionStrategyOpt())
 @test 10*sol.minimum < l1
 
-rosenbrock(x, p=nothing) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
-
-l1 = rosenbrock(x0)
+rosenbrock(x, p) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 prob = OptimizationProblem(rosenbrock, x0)
 sol = solve(prob, Optim.NelderMead())
 @test 10*sol.minimum < l1
@@ -86,17 +84,20 @@ prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
 sol = solve(prob, Optim.SAMIN())
 @test 10*sol.minimum < l1
 
-optprob = OptimizationFunction((x,p=nothing) -> -rosenbrock(x), GalacticOptim.AutoZygote())
+optprob = OptimizationFunction((x,p) -> -rosenbrock(x,p), GalacticOptim.AutoZygote())
 prob = OptimizationProblem(optprob, x0; sense = GalacticOptim.MaxSense)
 
 import Ipopt
-sol = solve(prob, Ipopt.Optimizer)
+sol = solve(prob, Ipopt.Optimizer())
 @test 10*sol.minimum < l1
 
 optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoZygote())
-prob = OptimizationProblem(optprob, x0; sense = GalacticOptim.MinSense)
+prob = OptimizationProblem(optprob, x0, _p; sense = GalacticOptim.MinSense)
 
-sol = solve(prob, Ipopt.Optimizer)
+sol = solve(prob, Ipopt.Optimizer())
+@test 10*sol.minimum < l1
+
+sol = solve(prob, GalacticOptim.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "max_cpu_time" => 60.0))
 @test 10*sol.minimum < l1
 
 import NLopt
