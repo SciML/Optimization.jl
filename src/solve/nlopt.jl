@@ -43,6 +43,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::NLopt.Opt;
     for j in kwargs
         eval(Meta.parse("NLopt."*string(j.first)*"!"))(opt, j.second)
     end
+    prob.sense === MaxSense ? NLopt.max_objective!(opt, fg!) : NLopt.min_objective!(opt, fg!)
 
     if prob.ub !== nothing
         NLopt.upper_bounds!(opt, prob.ub)
