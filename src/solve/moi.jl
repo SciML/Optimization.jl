@@ -120,7 +120,7 @@ function __solve(prob::OptimizationProblem, opt::Union{MOI.AbstractOptimizer, MO
     if MOI.get(optimizer, MOI.ResultCount()) >= 1
         minimizer = MOI.get(optimizer, MOI.VariablePrimal(), θ)
         minimum = MOI.get(optimizer, MOI.ObjectiveValue())
-        ret = MOI.get(optimizer, MOI.TerminationStatus())
+        ret = Symbol(string(MOI.get(optimizer, MOI.TerminationStatus())))
     else
         minimizer = fill(NaN, num_variables)
         minimum = NaN
