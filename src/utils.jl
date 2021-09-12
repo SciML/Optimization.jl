@@ -38,3 +38,24 @@ macro withprogress(progress, exprs...)
 end
 
 decompose_trace(trace) = trace
+
+
+function _map_optimizer_args(prob::OptimizationProblem, opt; kwargs...)
+    __map_optimizer_args(prob, opt; kwargs...)
+end
+
+function _check_and_convert_maxiters(maxiters)
+    if !(isnothing(maxiters)) && maxiters <= 0.0
+        error("The number of maxiters has to be a non-negative and non-zero number.")
+    elseif !(isnothing(maxiters))
+        return convert(Int, maxiters)
+    end
+end
+
+function _check_and_convert_maxtime(maxtime)
+  if !(isnothing(maxtime)) && maxtime <= 0.0
+      error("The maximum time has to be a non-negative and non-zero number.")
+  elseif !(isnothing(maxtime))
+      return convert(Float32, maxtime)
+  end
+end

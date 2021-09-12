@@ -19,9 +19,7 @@ function __solve(prob::OptimizationProblem, opt::AbstractFluxOptimiser, data = D
     if data != DEFAULT_DATA
       maxiters = length(data)
     else
-      if maxiters <= 0.0
-        error("The number of maxiters has to be a non-negative and non-zero number.")
-      end
+      maxiters = _check_and_convert_maxiters(maxiters)
       data = take(data, maxiters)
     end
 
@@ -30,14 +28,13 @@ function __solve(prob::OptimizationProblem, opt::AbstractFluxOptimiser, data = D
     θ = copy(prob.u0)
     G = copy(θ)
 
-    t0 = time()
-
     local x, min_err, _loss
     min_err = typemax(eltype(prob.u0)) #dummy variables
     min_opt = 1
 
     f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
 
+    t0 = time()
     @withprogress progress name="Training" begin
       for (i,d) in enumerate(data)
         f.grad(G, θ, d...)
@@ -65,7 +62,7 @@ function __solve(prob::OptimizationProblem, opt::AbstractFluxOptimiser, data = D
       end
     end
 
-    _time = time()
+    t1 = time()
 
     SciMLBase.build_solution(prob, opt, θ, x[1])
     # here should be build_solution to create the output message

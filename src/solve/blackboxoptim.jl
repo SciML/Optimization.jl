@@ -1,5 +1,3 @@
-decompose_trace(opt::BlackBoxOptim.OptRunController) = BlackBoxOptim.best_candidate(opt)
-
 export BBO
 
 struct BBO
@@ -9,8 +7,45 @@ end
 
 BBO() = BBO(:adaptive_de_rand_1_bin_radiuslimited) # the recommended optimizer as default
 
+decompose_trace(opt::BlackBoxOptim.OptRunController) = BlackBoxOptim.best_candidate(opt)
+
+function __map_optimizer_args(prob::OptimizationProblem, opt::BBO;
+    cb=nothing,
+    maxiters::Union{Number, Nothing}=nothing,
+    maxtime::Union{Number, Nothing}=nothing,
+    abstol::Union{Number, Nothing}=nothing, 
+    reltol::Union{Number, Nothing}=nothing, 
+    kwargs...)
+    if !isnothing(abstol)
+        @warn "abstol is currently not used by $(opt)"
+    end
+    if !isnothing(reltol)
+        @warn "reltol is currently not used by $(opt)"
+    end
+
+    mapped_args = (; Method = opt.method,
+    SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)],
+    CallbackFunction = cb,
+    CallbackInterval = 0.0,
+    kwargs...)
+  
+    if !isnothing(maxiters)
+        mapped_args = (; mapped_args..., MaxSteps=maxiters)
+    end
+
+    if !isnothing(maxtime)
+        mapped_args = (; mapped_args..., MaxTime=maxtime)
+    end
+  
+    return mapped_args
+end
+
 function __solve(prob::OptimizationProblem, opt::BBO, data = DEFAULT_DATA;
-                 cb = (args...) -> (false), maxiters = nothing,
+                 cb = (args...) -> (false), 
+                 maxiters::Union{Number, Nothing} = nothing,
+                 maxtime::Union{Number, Nothing} = nothing,
+                 abstol::Union{Number, Nothing}=nothing,
+                 reltol::Union{Number, Nothing}=nothing,
                  progress = false, kwargs...)
 
     local x, cur, state
@@ -33,19 +68,25 @@ function __solve(prob::OptimizationProblem, opt::BBO, data = DEFAULT_DATA;
       cb_call
     end
 
-    if !(isnothing(maxiters)) && maxiters <= 0.0
-        error("The number of maxiters has to be a non-negative and non-zero number.")
-    elseif !(isnothing(maxiters))
-        maxiters = convert(Int, maxiters)
-    end
+    maxiters = _check_and_convert_maxiters(maxiters)
+    maxtime = _check_and_convert_maxtime(maxtime)
+
 
     _loss = function(θ)
         x = prob.f(θ, prob.p, cur...)
         return first(x)
     end
 
-    bboptre = !(isnothing(maxiters)) ? BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], MaxSteps = maxiters, CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...) : BlackBoxOptim.bboptimize(_loss;Method = opt.method, SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)], CallbackFunction = _cb, CallbackInterval = 0.0, kwargs...)
+    opt_args = _map_optimizer_args(prob, opt, cb=_cb, maxiters=maxiters, maxtime=maxtime,abstol=abstol, reltol=reltol; kwargs...)
 
-    SciMLBase.build_solution(prob, opt, BlackBoxOptim.best_candidate(bboptre),
-                             BlackBoxOptim.best_fitness(bboptre); original=bboptre)
+    opt_setup = BlackBoxOptim.bbsetup(_loss; opt_args...)
+
+    t0 = time()
+    opt_res = BlackBoxOptim.bboptimize(opt_setup)
+    t1 = time()
+    
+    opt_ret = Symbol(opt_res.stop_reason)
+
+    SciMLBase.build_solution(prob, opt, BlackBoxOptim.best_candidate(opt_res),
+                             BlackBoxOptim.best_fitness(opt_res); original=opt_res, retcode=opt_ret)
 end

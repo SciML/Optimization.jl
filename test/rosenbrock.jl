@@ -147,6 +147,7 @@ sol = solve(prob, NLO(:G_MLSL_LDS), local_method = NLO(:LD_LBFGS), local_maxiter
 # @test 10*sol.minimum < l1
 
 using Evolutionary
+prob = GalacticOptim.OptimizationProblem(optprob, x0)
 sol = solve(prob, CMAES(μ =40 , λ = 100),abstol=1e-15)
 @test 10*sol.minimum < l1
 
