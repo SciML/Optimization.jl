@@ -57,7 +57,7 @@ The following special keyword arguments can be used with Optim.jl optimizers:
 
 ## NLopt.jl
 
-NLopt.jl algorithms are chosen via `NLopt.Opt(:algname)`. Consult the
+NLopt.jl algorithms are chosen via `NLopt.Opt(:algname, nparameter)` or `NLO(:algname)` where `nparameter` is the number of parameters to be optimized . Consult the
 [NLopt Documentation](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/)
 for more information on the algorithms. Possible algorithm names are:
 
@@ -68,3 +68,27 @@ for more information on the algorithms. Possible algorithm names are:
 * `LN_SBPLX`
 * `LD_MMA`
 * `LD_CCSAQ`
+
+The following optimizer parameters can be set as `kwargs`:
+
+* `stopval`
+* `ftol_rel`
+* `ftol_abs`
+* `xtol_rel`
+* `xtol_abs`
+* `constrtol_abs`
+* `maxeval`
+* `maxtime`
+* `initial_step`
+* `population`
+* `vector_storage`
+
+Running an optimisation with `:GN_DIRECT` with setting the number iterations via the common argument `maxiters` and `NLopt.jl`-specific parameters such as the maximum time to perform the optimisation via `maxtime`:
+```julia
+rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+x0 = zeros(2)
+p  = [1.0, 100.0]
+f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
+prob = OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+sol = solve(prob, NLO(:LN_NELDERMEAD), maxiters=10000, maxtime=1000.0)
+```

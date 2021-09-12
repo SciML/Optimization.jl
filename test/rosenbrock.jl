@@ -121,7 +121,21 @@ sol = solve(prob, NLopt.Opt(:LD_LBFGS, 2))
 sol = solve(prob, GalacticOptim.MOI.OptimizerWithAttributes(NLopt.Optimizer, "algorithm" => :LD_LBFGS))
 @test 10*sol.minimum < l1
 
-sol = solve(prob, NLopt.Opt(:G_MLSL_LDS, 2), nstart=2, local_method = NLopt.Opt(:LD_LBFGS, 2), maxiters=10000)
+sol = solve(prob, NLopt.Opt(:G_MLSL_LDS, 2), local_method = NLopt.Opt(:LD_LBFGS, 2), maxiters=10000)
+@test 10*sol.minimum < l1
+
+prob = OptimizationProblem(optprob, x0)
+sol = solve(prob, NLO(:LN_BOBYQA))
+@test 10*sol.minimum < l1
+
+sol = solve(prob, NLO(:LD_LBFGS))
+@test 10*sol.minimum < l1
+
+prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
+sol = solve(prob, NLO(:LD_LBFGS))
+@test 10*sol.minimum < l1
+
+sol = solve(prob, NLO(:G_MLSL_LDS), local_method = NLO(:LD_LBFGS), local_maxiters=10000, maxiters=10000, population=10)
 @test 10*sol.minimum < l1
 
 # using MultistartOptimization

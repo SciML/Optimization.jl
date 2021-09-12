@@ -51,7 +51,7 @@ Recommend `BBO()`.
 
 ## NLopt.jl
 
-NLopt.jl algorithms are chosen via `NLopt.Opt(:algname)`. Consult the
+NLopt.jl algorithms are chosen via `NLopt.Opt(:algname, nstates)` or `NLO(:algname)` where `nstates` is the number of states to be optimized . Consult the
 [NLopt Documentation](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/)
 for more information on the algorithms. Possible algorithm names are:
 
@@ -61,3 +61,40 @@ for more information on the algorithms. Possible algorithm names are:
 * `:G_MLSL_LDS`
 * `:GD_STOGO`
 * `:GN_ESCH`
+
+The following optimizer parameters can be set as `kwargs`:
+
+* `stopval`
+* `ftol_rel`
+* `ftol_abs`
+* `xtol_rel`
+* `xtol_abs`
+* `constrtol_abs`
+* `maxeval`
+* `maxtime`
+* `initial_step`
+* `population`
+* `vector_storage`
+
+Running an optimisation with `:GN_DIRECT` with setting the number iterations via the common argument `maxiters` and `NLopt.jl`-specific parameters such as the maximum time to perform the optimisation via `maxtime`:
+```julia
+rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+x0 = zeros(2)
+p  = [1.0, 100.0]
+f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
+prob = OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+sol = solve(prob, NLO(:GN_DIRECT), maxiters=100000, maxtime=1000.0)
+```
+
+For algorithms such as `:G_MLSL` `:G_MLSL_LDS` also a local optimiser needs to be chosen which is done via `NLopt.Opt(:algname, nparameter)` or `NLO(:algname)` passed to the `local_method` argument of `solve`. The number iterations for the local optimiser are set via `local_maxiters` and the local optimiser parameters as listed above are set via a `NamedTuple` passed to the `local_options` argument of solve.
+
+Running an optimisation with `:G_MLSL_LDS` with setting the number iterations via the common argument `maxiters` and `NLopt.jl`-specific parameters such the number of local optimisation and maximum time to perform the optimisation via `population` and `maxtime` respectively and additionally setting the local optimizer to `:LN_NELDERMEAD`. The local optimizer maximum iterations are set via `local_maxiters`:
+
+```julia
+rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+x0 = zeros(2)
+p  = [1.0, 100.0]
+f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
+prob = OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+sol = solve(prob, NLO(:G_MLSL_LDS), local_method = NLO(:LN_NELDERMEAD), local_maxiters=10000, maxiters=10000, maxtime=1000.0, population=10)
+```
