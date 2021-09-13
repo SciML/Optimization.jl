@@ -17,13 +17,6 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::NLopt.Opt;
     local_options::Union{NamedTuple,Nothing} = nothing, 
     kwargs...)
 
-    if !isnothing(abstol)
-        @warn "abstol is currently not used by $(opt)"
-    end
-    if !isnothing(reltol)
-        @warn "reltol is currently not used by $(opt)"
-    end
-
     if local_method !== nothing
         if isa(local_method,NLopt.Opt)
             if ndims(local_method) != length(prob.u0)
@@ -70,6 +63,13 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::NLopt.Opt;
 
     if !(isnothing(maxtime))
         NLopt.maxtime!(opt, maxtime)
+    end
+
+    if !isnothing(abstol)
+        NLopt.ftol_abs!(opt, abstol)
+    end
+    if !isnothing(reltol)
+        NLopt.ftol_rel!(opt, reltol)
     end
 
     return nothing

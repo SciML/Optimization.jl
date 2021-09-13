@@ -8,9 +8,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::CMAEvolutionStrate
     abstol::Union{Number, Nothing}=nothing, 
     reltol::Union{Number, Nothing}=nothing, 
     kwargs...)
-    if !isnothing(abstol)
-        @warn "abstol is currently not used by $(opt)"
-    end
+
     if !isnothing(reltol)
         @warn "reltol is currently not used by $(opt)"
     end
@@ -25,6 +23,10 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::CMAEvolutionStrate
 
     if !isnothing(maxtime)
         mapped_args = (; mapped_args..., maxtime=maxtime)
+    end
+
+    if !isnothing(abstol)
+        mapped_args = (; mapped_args..., ftol=abstol)
     end
   
     return mapped_args

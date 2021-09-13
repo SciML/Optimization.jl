@@ -16,18 +16,19 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::BBO;
     abstol::Union{Number, Nothing}=nothing, 
     reltol::Union{Number, Nothing}=nothing, 
     kwargs...)
-    if !isnothing(abstol)
-        @warn "abstol is currently not used by $(opt)"
-    end
+
     if !isnothing(reltol)
         @warn "reltol is currently not used by $(opt)"
     end
 
     mapped_args = (; Method = opt.method,
-    SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)],
-    CallbackFunction = cb,
-    CallbackInterval = 0.0,
-    kwargs...)
+    SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)])
+
+    if !isnothing(cb)
+        mapped_args = (; mapped_args..., CallbackFunction = cb, CallbackInterval = 0.0)
+    end
+
+    mapped_args = (; mapped_args..., kwargs...)
   
     if !isnothing(maxiters)
         mapped_args = (; mapped_args..., MaxSteps=maxiters)
@@ -36,6 +37,10 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::BBO;
     if !isnothing(maxtime)
         mapped_args = (; mapped_args..., MaxTime=maxtime)
     end
+
+    if !isnothing(abstol)
+        mapped_args = (; mapped_args..., MinDeltaFitnessTolerance=abstol)
+  end
   
     return mapped_args
 end

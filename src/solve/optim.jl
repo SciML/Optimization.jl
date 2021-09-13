@@ -10,20 +10,23 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::Union{Optim.Abstra
     if !isnothing(abstol)
         @warn "abstol is currently not used by $(opt)"
     end
-    if !isnothing(reltol)
-        @warn "reltol is currently not used by $(opt)"
+
+    mapped_args = (;extended_trace=true, kwargs...)
+  
+    if !isnothing(cb)
+        mapped_args = (; mapped_args...,  callback = cb)
     end
 
-    mapped_args = (;extended_trace=true,
-    callback = cb,
-    kwargs...)
-  
     if !isnothing(maxiters)
         mapped_args = (; mapped_args..., iterations=maxiters)
     end
 
     if !isnothing(maxtime)
         mapped_args = (; mapped_args..., time_limit=maxtime)
+    end
+
+    if !isnothing(reltol)
+        mapped_args = (; mapped_args..., f_tol=reltol)
     end
     
     return Optim.Options(;mapped_args...)

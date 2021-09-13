@@ -14,9 +14,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::Evolutionary.Abstr
 
     mapped_args = (;)
     
-    if length(kwargs) > 0
-        mapped_args = (; mapped_args..., kwargs...)
-    end
+    mapped_args = (; mapped_args..., kwargs...)
 
     if !isnothing(cb)
         mapped_args = (; mapped_args..., callback = cb)
