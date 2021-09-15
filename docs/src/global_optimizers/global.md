@@ -51,6 +51,7 @@ Recommend `BBO_adaptive_de_rand_1_bin_radiuslimited()`.
 ## NLopt.jl
 
 NLopt.jl algorithms are chosen via `NLopt.Opt(:algname, nstates)` or `NLopt.AlgorithmName()` where nstates is the number of states to be optimized . Consult the
+
 [NLopt Documentation](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/)
 for more information on the algorithms. Possible algorithm names are:
 
