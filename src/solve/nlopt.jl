@@ -1,9 +1,4 @@
-export NLO
-
-struct NLO
-    method::Symbol
-    NLO(method) = new(method)
-end
+(f::NLopt.Algorithm)() = f
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::NLopt.Opt; 
     cb=nothing, 
@@ -11,7 +6,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::NLopt.Opt;
     maxtime::Union{Number, Nothing}=nothing, 
     abstol::Union{Number, Nothing}=nothing, 
     reltol::Union{Number, Nothing}=nothing, 
-    local_method::Union{NLO, NLopt.Opt, Nothing} = nothing,
+    local_method::Union{NLopt.Algorithm, NLopt.Opt, Nothing} = nothing,
     local_maxiters::Union{Number, Nothing} = nothing,
     local_maxtime::Union{Number, Nothing} = nothing,
     local_options::Union{NamedTuple,Nothing} = nothing, 
@@ -24,7 +19,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::NLopt.Opt;
             end
             local_meth = local_method
         else
-            local_meth = NLopt.Opt(local_method.method, length(prob.u0))
+            local_meth = NLopt.Opt(local_method, length(prob.u0))
         end
 
         if !isnothing(local_options)
@@ -76,10 +71,10 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::NLopt.Opt;
 end
 
 
-function __solve(prob::OptimizationProblem, opt::Union{NLO, NLopt.Opt};
+function __solve(prob::OptimizationProblem, opt::Union{NLopt.Algorithm, NLopt.Opt};
                  maxiters::Union{Number, Nothing} = nothing,
                  maxtime::Union{Number, Nothing} = nothing,
-                 local_method::Union{NLO, NLopt.Opt, Nothing} = nothing,
+                 local_method::Union{NLopt.Algorithm, NLopt.Opt, Nothing} = nothing,
                  local_maxiters::Union{Number, Nothing} = nothing,
                  local_maxtime::Union{Number, Nothing} = nothing,
                  local_options::Union{NamedTuple,Nothing} = nothing,
@@ -116,7 +111,7 @@ function __solve(prob::OptimizationProblem, opt::Union{NLO, NLopt.Opt};
         end
         opt_setup = opt
     else
-        opt_setup = NLopt.Opt(opt.method, length(prob.u0))
+        opt_setup = NLopt.Opt(opt, length(prob.u0))
     end
 
     NLopt.min_objective!(opt_setup, fg!)

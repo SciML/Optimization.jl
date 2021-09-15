@@ -1,11 +1,9 @@
-export BBO
+abstract type BBO end
 
-struct BBO
-    method::Symbol
-    BBO(method) = new(method)
+for j = string.(BlackBoxOptim.SingleObjectiveMethodNames)
+    eval(Meta.parse("Base.@kwdef struct BBO_"*j*" <: BBO method=:"*j*" end"))
+    eval(Meta.parse("export BBO_"*j))
 end
-
-BBO() = BBO(:adaptive_de_rand_1_bin_radiuslimited) # the recommended optimizer as default
 
 decompose_trace(opt::BlackBoxOptim.OptRunController) = BlackBoxOptim.best_candidate(opt)
 

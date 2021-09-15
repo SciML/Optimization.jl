@@ -4,7 +4,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::MultistartOptimiza
     maxtime::Union{Number, Nothing}=nothing, 
     abstol::Union{Number, Nothing}=nothing, 
     reltol::Union{Number, Nothing}=nothing, 
-    local_method::Union{NLO, Nothing} = nothing,
+    local_method::Union{NLopt.Algorithm, Nothing} = nothing,
     local_maxiters::Union{Number, Nothing} = nothing,
     local_maxtime::Union{Number, Nothing} = nothing,
     local_options::Union{NamedTuple,Nothing} = nothing, 
@@ -32,7 +32,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::MultistartOptimiza
 
     global_meth = opt
 
-    if isa(local_method, NLO)
+    if isa(local_method, NLopt.Algorithm)
         local_kwargs = (; )
         if !(isnothing(local_maxiters))
             local_kwargs = (; local_kwargs..., maxeval=local_maxiters)
@@ -41,11 +41,14 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::MultistartOptimiza
         if !(isnothing(local_maxtime))
             local_kwargs = (; local_kwargs..., maxtime=local_maxtime)
         end
-        local_kwargs = (; local_kwargs..., local_options...)
 
-        local_meth = MultistartOptimization.NLoptLocalMethod(local_method.method; local_kwargs...)
+        if !(isnothing(local_options))
+            local_kwargs = (; local_kwargs..., local_options...)
+        end
+
+        local_meth = MultistartOptimization.NLoptLocalMethod(local_method; local_kwargs...)
     else
-        error("A local method has to be defined using NLO(:algorithm).")
+        error("A local method has to be defined using algorithm of type NLopt.Algorithm e.g. 'NLopt.LN_NELDERMEAD()'.")
     end
 
     return global_meth, local_meth
@@ -56,9 +59,10 @@ function __solve(prob::OptimizationProblem, opt::MultistartOptimization.TikTak;
                 maxtime::Union{Number, Nothing}=nothing,
                 abstol::Union{Number, Nothing}=nothing,
                 reltol::Union{Number, Nothing}=nothing,
-                local_method::Union{NLO, Nothing} = nothing,
+                local_method::Union{NLopt.Algorithm, Nothing} = nothing,
                 local_maxiters::Union{Number, Nothing} = nothing,
                 local_maxtime::Union{Number, Nothing} = nothing,
+                local_options::Union{NamedTuple,Nothing} = nothing,
                 progress = false, kwargs...)
     local x, _loss
 
@@ -80,7 +84,7 @@ function __solve(prob::OptimizationProblem, opt::MultistartOptimization.TikTak;
     t0 = time()
     opt_res = MultistartOptimization.multistart_minimization(multistart_method, local_method, opt_setup)
     t1 = time()
-    opt_ret = opt_res.ret
+    opt_ret = hasproperty(opt_res, :ret) ? opt_res.ret : nothing
 
-    SciMLBase.build_solution(prob, opt, p.location, p.value; original=p, retcode=opt_ret)
+    SciMLBase.build_solution(prob, opt, opt_res.location, opt_res.value; (isnothing(opt_ret) ? (; original=opt_res) : (; original=opt_res, retcode=opt_ret))... )
 end
