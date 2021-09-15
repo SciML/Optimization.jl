@@ -27,15 +27,15 @@ makedocs(
             "ModelingToolkit Integration" => "API/modelingtoolkit.md"
         ],
         "Optimizer Packages" => [
-            "BlackBoxOptim.jl" => "optimization_packes/blackboxoptim.md",
-            "CMAEvolutionStrategy.jl" => "optimization_packes/cmaevolutionstrategy.md",
-            "Evolutionary.jl" => "optimization_packes/evolutionary.md",
-            "Flux.jl" => "optimization_packes/flux.md",
-            "MathOptInterface.jl" => "optimization_packes/mathoptinterface.md",
-            "MultistartOptimization.jl" => "optimization_packes/multistartoptimization.md",
-            "NLopt.jl" => "optimization_packes/nlopt.md",
-            "Optim.jl" => "optimization_packes/optim.md",
-            "QuadDIRECT.jl" => "optimization_packes/quaddirect.md"
+            "BlackBoxOptim.jl" => "optimization_packages/blackboxoptim.md",
+            "CMAEvolutionStrategy.jl" => "optimization_packages/cmaevolutionstrategy.md",
+            "Evolutionary.jl" => "optimization_packages/evolutionary.md",
+            "Flux.jl" => "optimization_packages/flux.md",
+            "MathOptInterface.jl" => "optimization_packages/mathoptinterface.md",
+            "MultistartOptimization.jl" => "optimization_packages/multistartoptimization.md",
+            "NLopt.jl" => "optimization_packages/nlopt.md",
+            "Optim.jl" => "optimization_packages/optim.md",
+            "QuadDIRECT.jl" => "optimization_packages/quaddirect.md"
         ],
 
         "Local Optimizers" => [
