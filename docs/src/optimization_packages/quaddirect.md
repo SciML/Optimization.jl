@@ -3,7 +3,9 @@
 
 The CMAEvolutionStrategy algorithm is called using `QuadDirect()`. 
 
-Also note that `QuadDIRECT` should (for now) be installed by doing: `] add https://github.com/timholy/QuadDIRECT.jl.git`
+Also note that `QuadDIRECT` should (for now) be installed by doing:
+
+`] add https://github.com/timholy/QuadDIRECT.jl.git`
 
 
 ## Global Optimizer
