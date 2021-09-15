@@ -138,9 +138,9 @@ sol = solve(prob, NLopt.LD_LBFGS())
 sol = solve(prob, NLopt.G_MLSL_LDS(), local_method = NLopt.LD_LBFGS(), local_maxiters=10000, maxiters=10000, population=10)
 @test 10*sol.minimum < l1
 
-using MultistartOptimization
-sol = solve(prob, MultistartOptimization.TikTak(100), local_method = NLopt.LD_LBFGS())
-@test 10*sol.minimum < l1
+# using MultistartOptimization
+# sol = solve(prob, MultistartOptimization.TikTak(100), local_method = NLopt.LD_LBFGS())
+# @test 10*sol.minimum < l1
 
 # using QuadDIRECT
 # sol = solve(prob, QuadDirect(); splits = ([-0.5, 0.0, 0.5],[-0.5, 0.0, 0.5]))
