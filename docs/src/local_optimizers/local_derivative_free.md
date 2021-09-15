@@ -57,7 +57,7 @@ The following special keyword arguments can be used with Optim.jl optimizers:
 
 ## NLopt.jl
 
-NLopt.jl algorithms are chosen via `NLopt.Opt(:algname, nparameter)` or `NLO(:algname)` where `nparameter` is the number of parameters to be optimized . Consult the
+NLopt.jl algorithms are chosen via `NLopt.Opt(:algname, nstates)` or `NLopt.algname()` where nstates is the number of states to be optimized . Consult the
 [NLopt Documentation](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/)
 for more information on the algorithms. Possible algorithm names are:
 
@@ -90,5 +90,5 @@ x0 = zeros(2)
 p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
 prob = OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
-sol = solve(prob, NLO(:LN_NELDERMEAD), maxiters=10000, maxtime=1000.0)
+sol = solve(prob, NLopt.LN_NELDERMEAD(), maxiters=10000, maxtime=1000.0)
 ```

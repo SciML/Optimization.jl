@@ -32,12 +32,12 @@
 
 ## NLopt.jl
 
-NLopt.jl algorithms are chosen via `NLopt.Opt(:algname, nparameter)` or `NLO(:algname)` where `nparameter` is the number of parameters to be optimized . Consult the
+NLopt.jl algorithms are chosen via `NLopt.Opt(:algname, nstates)` or `NLopt.AlgorithmName()` where nstates is the number of states to be optimized . Consult the
 [NLopt Documentation](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/)
 for more information on the algorithms. Possible algorithm names are:
 
-* `:GN_AGS` (handles inequalities but not equalities)
-* `:GN_ISRES`
+* `NLopt.GN_AGS()` (handles inequalities but not equalities)
+* `NLopt.GN_ISRES()`
 
 The following optimizer parameters can be set as `kwargs`:
 

@@ -7,7 +7,7 @@ constraints set by `lb` and `ub` in the `OptimizationProblem` construction.
 ## Recommended Methods
 
 [Good benchmarks](https://github.com/jonathanBieler/BlackBoxOptimizationBenchmarking.jl)
-Recommend `BBO()`.
+Recommend `BBO_adaptive_de_rand_1_bin_radiuslimited()`.
 
 ## Optim.jl
 
@@ -21,9 +21,8 @@ Recommend `BBO()`.
 ## BlackBoxOptim.jl
 
 - [`BlackBoxOptim`](https://github.com/robertfeldt/BlackBoxOptim.jl): **(Meta-)heuristic/stochastic algorithms**
-    * `solve(problem, BBO(method))`
-    * the name of the method must be preceded by `:`, for example: `:de_rand_2_bin`
-    * in GalacticOptim.jl, `BBO()` defaults to the recommended `adaptive_de_rand_1_bin_radiuslimited`
+    * `solve(problem, BBO_method())`
+    * the name of the method must be preceded by `BBO_`, for example: `BBO_adaptive_de_rand_1_bin_radiuslimited()`
     * the available methods are listed [here](https://github.com/robertfeldt/BlackBoxOptim.jl#state-of-the-library)
 
 ## QuadDIRECT.jl
@@ -51,16 +50,16 @@ Recommend `BBO()`.
 
 ## NLopt.jl
 
-NLopt.jl algorithms are chosen via `NLopt.Opt(:algname, nparameter)` or `NLO(:algname)` where `nparameter` is the number of parameters to be optimized . Consult the
+NLopt.jl algorithms are chosen via `NLopt.Opt(:algname, nstates)` or `NLopt.AlgorithmName()` where nstates is the number of states to be optimized . Consult the
 [NLopt Documentation](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/)
 for more information on the algorithms. Possible algorithm names are:
 
-* `:GN_DIRECT`
-* `:GN_DIRECT_L`
-* `:GN_CRS2_LM`
-* `:G_MLSL_LDS`
-* `:GD_STOGO`
-* `:GN_ESCH`
+* `NLopt.GN_DIRECT()`
+* `NLopt.GN_DIRECT_L()`
+* `NLopt.GN_CRS2_LM()`
+* `NLopt.G_MLSL_LDS()`
+* `NLopt.GD_STOGO()`
+* `NLopt.GN_ESCH()`
 
 The following optimizer parameters can be set as `kwargs`:
 
@@ -83,10 +82,10 @@ x0 = zeros(2)
 p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
 prob = OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
-sol = solve(prob, NLO(:GN_DIRECT), maxiters=100000, maxtime=1000.0)
+sol = solve(prob, NLopt.GN_DIRECT(), maxiters=100000, maxtime=1000.0)
 ```
 
-For algorithms such as `:G_MLSL` `:G_MLSL_LDS` also a local optimiser needs to be chosen which is done via `NLopt.Opt(:algname, nparameter)` or `NLO(:algname)` passed to the `local_method` argument of `solve`. The number iterations for the local optimiser are set via `local_maxiters` and the local optimiser parameters as listed above are set via a `NamedTuple` passed to the `local_options` argument of solve.
+For algorithms such as `:G_MLSL` `:G_MLSL_LDS` also a local optimiser needs to be chosen which is done via `NLopt.Opt(:algname, nstates)` or `NLopt.AlgorithmName()` passed to the `local_method` argument of `solve`. The number iterations for the local optimiser are set via `local_maxiters` and the local optimiser parameters as listed above are set via a `NamedTuple` passed to the `local_options` argument of solve.
 
 Running an optimisation with `:G_MLSL_LDS` with setting the number iterations via the common argument `maxiters` and `NLopt.jl`-specific parameters such the number of local optimisation and maximum time to perform the optimisation via `population` and `maxtime` respectively and additionally setting the local optimizer to `:LN_NELDERMEAD`. The local optimizer maximum iterations are set via `local_maxiters`:
 
@@ -96,5 +95,5 @@ x0 = zeros(2)
 p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
 prob = OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
-sol = solve(prob, NLO(:G_MLSL_LDS), local_method = NLO(:LN_NELDERMEAD), local_maxiters=10000, maxiters=10000, maxtime=1000.0, population=10)
+sol = solve(prob, NLopt.G_MLSL_LDS(), local_method = NLopt.LN_NELDERMEAD(), local_maxiters=10000, maxiters=10000, maxtime=1000.0, population=10)
 ```
