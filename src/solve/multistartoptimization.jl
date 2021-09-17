@@ -11,19 +11,19 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::MultistartOptimiza
     kwargs...)
 
     if !isnothing(abstol)
-        @warn "abstol is currently not used by the global method $(opt). Set the absolute tolerance of the optimized states for the local method via local_options using the keyword xtol_abs"
+        @warn "common abstol is currently not used by the global method $(opt). Set the absolute tolerance of the optimized states for the local method via local_options using the keyword xtol_abs"
     end
  
     if !isnothing(reltol)
-        @warn "reltol is currently not used by the global method $(opt). Set the relative tolerance of the optimized states for the local method via local_options using the keyword xtol_rel"
+        @warn "common reltol is currently not used by the global method $(opt). Set the relative tolerance of the optimized states for the local method via local_options using the keyword xtol_rel"
     end
 
     if !isnothing(maxtime)
-        @warn "maxtime is currently not used by the global method $(opt). Set maxtime of local optimiser via local_maxtime."
+        @warn "common maxtime is currently not used by the global method $(opt). Set maxtime of local optimiser via local_maxtime."
     end
 
     if !isnothing(maxiters)
-        @warn "maxiters is currently not used by the global method $(opt). Set maxiters of local optimiser via local_maxiters."
+        @warn "common maxiters is currently not used by the global method $(opt). Set maxiters of local optimiser via local_maxiters."
     end
 
     if !isnothing(cb)

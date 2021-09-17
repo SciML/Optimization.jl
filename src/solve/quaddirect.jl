@@ -10,7 +10,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::QuadDirect;
     reltol::Union{Number, Nothing}=nothing,
     kwargs...)
     if !isnothing(maxtime)
-        @warn "maxtime is currently not used by $(opt)"
+        @warn "common maxtime is currently not used by $(opt)"
     end
 
     if !isnothing(cb)

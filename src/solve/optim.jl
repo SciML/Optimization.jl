@@ -8,7 +8,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::Union{Optim.Abstra
     reltol::Union{Number, Nothing}=nothing,
     kwargs...)
     if !isnothing(abstol)
-        @warn "abstol is currently not used by $(opt)"
+        @warn "common abstol is currently not used by $(opt)"
     end
 
     mapped_args = (;extended_trace=true, kwargs...)

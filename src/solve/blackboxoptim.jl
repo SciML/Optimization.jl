@@ -16,7 +16,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::BBO;
     kwargs...)
 
     if !isnothing(reltol)
-        @warn "reltol is currently not used by $(opt)"
+        @warn "common reltol is currently not used by $(opt)"
     end
 
     mapped_args = (; Method = opt.method,
