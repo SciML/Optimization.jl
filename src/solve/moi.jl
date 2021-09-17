@@ -86,28 +86,76 @@ function make_moi_problem(prob::OptimizationProblem)
     return moiproblem
 end
 
-function __solve(prob::OptimizationProblem, opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes})
-	opt = opt isa MOI.AbstractOptimizer ? typeof(opt) : opt
+function __map_optimizer_args(prob::OptimizationProblem, opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
+    maxiters::Union{Number, Nothing}=nothing,
+    maxtime::Union{Number, Nothing}=nothing,
+    abstol::Union{Number, Nothing}=nothing, 
+    reltol::Union{Number, Nothing}=nothing,
+    kwargs...)
+    
+    mapped_args = Vector{Pair{String, Any}}[]
+    mapped_args = [mapped_args..., [Pair(string(j.first),j.second) for j = kwargs]...]
+
+    if isa(opt, MOI.AbstractOptimizer)
+        if length(mapped_args) > 0
+            opt = MOI.OptimizerWithAttributes(typeof(opt), mapped_args...)
+        else
+            opt = typeof(opt)
+        end
+    end
+
     optimizer = MOI.instantiate(opt)
+
+    if !isnothing(maxtime)
+        MOI.set(optimizer, MOI.TimeLimitSec(), maxtime)
+    end
+
+    if !isnothing(reltol)
+        @warn "common reltol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword aguments."
+    end
+
+    if !isnothing(abstol)
+        @warn "common abstol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword aguments."
+    end
+
+    if !isnothing(maxiters)
+        @warn "common maxiters argument is currently not used by $(optimizer). Set number of interations via optimizer specific keyword aguments."
+    end
+    
+    return optimizer
+end
+
+function __solve(prob::OptimizationProblem, opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
+    maxiters::Union{Number, Nothing}=nothing,
+    maxtime::Union{Number, Nothing}=nothing,
+    abstol::Union{Number, Nothing}=nothing, 
+    reltol::Union{Number, Nothing}=nothing,
+    kwargs...)
+
+    maxiters = _check_and_convert_maxiters(maxiters)
+    maxtime = _check_and_convert_maxtime(maxtime)
+
+    opt_setup = __map_optimizer_args(prob, opt; abstol=abstol, reltol=reltol, maxiters=maxiters, maxtime=maxtime, kwargs...)
+    
     num_variables = length(prob.u0)
-	θ = MOI.add_variables(optimizer, num_variables)
+	θ = MOI.add_variables(opt_setup, num_variables)
 	if prob.lb !== nothing
         @assert eachindex(prob.lb) == Base.OneTo(num_variables)
 		for i in 1:num_variables
-			MOI.add_constraint(optimizer, MOI.SingleVariable(θ[i]), MOI.GreaterThan(prob.lb[i]))
+			MOI.add_constraint(opt_setup, MOI.SingleVariable(θ[i]), MOI.GreaterThan(prob.lb[i]))
         end
     end
 	if prob.ub !== nothing
         @assert eachindex(prob.ub) == Base.OneTo(num_variables)
 		for i in 1:num_variables
-			MOI.add_constraint(optimizer, MOI.SingleVariable(θ[i]), MOI.LessThan(prob.ub[i]))
+			MOI.add_constraint(opt_setup, MOI.SingleVariable(θ[i]), MOI.LessThan(prob.ub[i]))
         end
     end
     @assert eachindex(prob.u0) == Base.OneTo(num_variables)
 	for i in 1:num_variables
-		MOI.set(optimizer, MOI.VariablePrimalStart(), θ[i], prob.u0[i])
+		MOI.set(opt_setup, MOI.VariablePrimalStart(), θ[i], prob.u0[i])
 	end
-    MOI.set(optimizer, MOI.ObjectiveSense(), prob.sense === MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE)
+    MOI.set(opt_setup, MOI.ObjectiveSense(), prob.sense === MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE)
     if prob.lcons === nothing
         @assert prob.ucons === nothing
         con_bounds = MOI.NLPBoundsPair[]
@@ -115,16 +163,18 @@ function __solve(prob::OptimizationProblem, opt::Union{MOI.AbstractOptimizer, MO
         @assert prob.ucons !== nothing
         con_bounds = MOI.NLPBoundsPair.(prob.lcons, prob.ucons)
     end
-	MOI.set(optimizer, MOI.NLPBlock(), MOI.NLPBlockData(con_bounds, make_moi_problem(prob), true))
-	MOI.optimize!(optimizer)
-    if MOI.get(optimizer, MOI.ResultCount()) >= 1
-        minimizer = MOI.get(optimizer, MOI.VariablePrimal(), θ)
-        minimum = MOI.get(optimizer, MOI.ObjectiveValue())
-        ret = Symbol(string(MOI.get(optimizer, MOI.TerminationStatus())))
+	MOI.set(opt_setup, MOI.NLPBlock(), MOI.NLPBlockData(con_bounds, make_moi_problem(prob), true))
+
+	MOI.optimize!(opt_setup)
+
+    if MOI.get(opt_setup, MOI.ResultCount()) >= 1
+        minimizer = MOI.get(opt_setup, MOI.VariablePrimal(), θ)
+        minimum = MOI.get(opt_setup, MOI.ObjectiveValue())
+        opt_ret = Symbol(string(MOI.get(opt_setup, MOI.TerminationStatus())))
     else
         minimizer = fill(NaN, num_variables)
         minimum = NaN
-        ret= :Default
+        opt_ret= :Default
     end
-    SciMLBase.build_solution(prob, opt, minimizer, minimum; original=optimizer, retcode=ret)
+    SciMLBase.build_solution(prob, opt, minimizer, minimum; original=opt_setup, retcode=opt_ret)
 end
