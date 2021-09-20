@@ -4,8 +4,47 @@ function Evolutionary.trace!(record::Dict{String,Any}, objfun, state, population
     record["x"] = population
 end
 
+function __map_optimizer_args(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer;
+    cb=nothing,
+    maxiters::Union{Number, Nothing}=nothing,
+    maxtime::Union{Number, Nothing}=nothing,
+    abstol::Union{Number, Nothing}=nothing,
+    reltol::Union{Number, Nothing}=nothing,
+    kwargs...)
+
+    mapped_args = (;)
+    
+    mapped_args = (; mapped_args..., kwargs...)
+
+    if !isnothing(cb)
+        mapped_args = (; mapped_args..., callback = cb)
+    end
+
+    if !isnothing(maxiters)
+        mapped_args = (; mapped_args..., iterations=maxiters)
+    end
+
+    if !isnothing(maxtime)
+        mapped_args = (; mapped_args..., time_limit=maxtime)
+    end
+
+    if !isnothing(abstol)
+        mapped_args = (; mapped_args..., abstol=abstol)
+    end
+
+    if !isnothing(reltol)
+        mapped_args = (; mapped_args..., reltol=reltol)
+    end
+    
+    return Evolutionary.Options(;mapped_args...)
+end
+
 function __solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer, data = DEFAULT_DATA;
-                 cb = (args...) -> (false), maxiters = nothing,
+                 cb = (args...) -> (false),
+                 maxiters::Union{Number, Nothing} = nothing,
+                 maxtime::Union{Number, Nothing} = nothing,
+                 abstol::Union{Number, Nothing}=nothing,
+                 reltol::Union{Number, Nothing}=nothing,
                  progress = false, kwargs...)
     local x, cur, state
 
@@ -24,22 +63,24 @@ function __solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer,
         cb_call
     end
 
-    if !(isnothing(maxiters)) && maxiters <= 0.0
-        error("The number of maxiters has to be a non-negative and non-zero number.")
-    elseif !(isnothing(maxiters))
-        maxiters = convert(Int, maxiters)
-    end
+    maxiters = _check_and_convert_maxiters(maxiters)
+    maxtime = _check_and_convert_maxtime(maxtime)
 
     _loss = function(θ)
         x = prob.f(θ, prob.p, cur...)
         return first(x)
     end
 
+    opt_args = _map_optimizer_args(prob, opt, cb=_cb, maxiters=maxiters, maxtime=maxtime,abstol=abstol, reltol=reltol; kwargs...)
+    
     t0 = time()
-
-    result = Evolutionary.optimize(_loss, prob.u0, opt, !isnothing(maxiters) ? Evolutionary.Options(;iterations = maxiters, callback = _cb, kwargs...)
-                                                                        : Evolutionary.Options(;callback = _cb, kwargs...))
+    if isnothing(prob.ub) | isnothing(prob.ub) 
+        opt_res = Evolutionary.optimize(_loss, prob.u0, opt, opt_args)
+    else
+        opt_res = Evolutionary.optimize(_loss, prob.lb, prob.ub, prob.u0, opt, opt_args)
+    end                                                                   
     t1 = time()
+    opt_ret = Symbol(Evolutionary.converged(opt_res))
 
-    SciMLBase.build_solution(prob, opt, Evolutionary.minimizer(result), Evolutionary.minimum(result); original=result)
+    SciMLBase.build_solution(prob, opt, Evolutionary.minimizer(opt_res), Evolutionary.minimum(opt_res); original=opt_res, retcode=opt_ret)
 end

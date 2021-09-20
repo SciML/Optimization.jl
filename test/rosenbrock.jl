@@ -125,21 +125,21 @@ sol = solve(prob, NLopt.Opt(:G_MLSL_LDS, 2), local_method = NLopt.Opt(:LD_LBFGS,
 @test 10*sol.minimum < l1
 
 prob = OptimizationProblem(optprob, x0)
-sol = solve(prob, NLO(:LN_BOBYQA))
+sol = solve(prob, NLopt.LN_BOBYQA())
 @test 10*sol.minimum < l1
 
-sol = solve(prob, NLO(:LD_LBFGS))
+sol = solve(prob, NLopt.LD_LBFGS())
 @test 10*sol.minimum < l1
 
 prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
-sol = solve(prob, NLO(:LD_LBFGS))
+sol = solve(prob, NLopt.LD_LBFGS())
 @test 10*sol.minimum < l1
 
-sol = solve(prob, NLO(:G_MLSL_LDS), local_method = NLO(:LD_LBFGS), local_maxiters=10000, maxiters=10000, population=10)
+sol = solve(prob, NLopt.G_MLSL_LDS(), local_method = NLopt.LD_LBFGS(), local_maxiters=10000, maxiters=10000, population=10)
 @test 10*sol.minimum < l1
 
 # using MultistartOptimization
-# sol = solve(prob, MultistartOptimization.TikTak(100), local_method = NLopt.LD_LBFGS)
+# sol = solve(prob, MultistartOptimization.TikTak(100), local_method = NLopt.LD_LBFGS())
 # @test 10*sol.minimum < l1
 
 # using QuadDIRECT
@@ -147,12 +147,13 @@ sol = solve(prob, NLO(:G_MLSL_LDS), local_method = NLO(:LD_LBFGS), local_maxiter
 # @test 10*sol.minimum < l1
 
 using Evolutionary
+prob = GalacticOptim.OptimizationProblem(optprob, x0)
 sol = solve(prob, CMAES(μ =40 , λ = 100),abstol=1e-15)
 @test 10*sol.minimum < l1
 
 using BlackBoxOptim
 prob = GalacticOptim.OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
-sol = solve(prob, BBO())
+sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
 @test 10*sol.minimum < l1
 
 using ModelingToolkit

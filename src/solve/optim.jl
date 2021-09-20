@@ -1,10 +1,44 @@
-
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
+
+function __map_optimizer_args(prob::OptimizationProblem, opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,Optim.SAMIN, Optim.ConstrainedOptimizer};
+    cb=nothing,
+    maxiters::Union{Number, Nothing}=nothing,
+    maxtime::Union{Number, Nothing}=nothing,
+    abstol::Union{Number, Nothing}=nothing,
+    reltol::Union{Number, Nothing}=nothing,
+    kwargs...)
+    if !isnothing(abstol)
+        @warn "common abstol is currently not used by $(opt)"
+    end
+
+    mapped_args = (;extended_trace=true, kwargs...)
+  
+    if !isnothing(cb)
+        mapped_args = (; mapped_args...,  callback = cb)
+    end
+
+    if !isnothing(maxiters)
+        mapped_args = (; mapped_args..., iterations=maxiters)
+    end
+
+    if !isnothing(maxtime)
+        mapped_args = (; mapped_args..., time_limit=maxtime)
+    end
+
+    if !isnothing(reltol)
+        mapped_args = (; mapped_args..., f_tol=reltol)
+    end
+    
+    return Optim.Options(;mapped_args...)
+end
 
 function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
                  data = DEFAULT_DATA;
-                 maxiters = nothing,
                  cb = (args...) -> (false),
+                 maxiters::Union{Number, Nothing} = nothing,
+                 maxtime::Union{Number, Nothing} = nothing,
+                 abstol::Union{Number, Nothing}=nothing,
+                 reltol::Union{Number, Nothing}=nothing,
                  progress = false,
                  kwargs...)
     local x, cur, state
@@ -24,11 +58,8 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
         cb_call
     end
 
-    if !(isnothing(maxiters)) && maxiters <= 0.0
-        error("The number of maxiters has to be a non-negative and non-zero number.")
-    elseif !(isnothing(maxiters))
-        maxiters = convert(Int, maxiters)
-    end
+    maxiters = _check_and_convert_maxiters(maxiters)
+    maxtime = _check_and_convert_maxtime(maxtime)
 
     f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
 
@@ -52,22 +83,23 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
         optim_f = Optim.TwiceDifferentiable(_loss, (G, θ) -> f.grad(G, θ, cur...), fg!, (H,θ) -> f.hess(H,θ,cur...), prob.u0)
     end
 
-    original = Optim.optimize(optim_f, prob.u0, opt,
-                              !(isnothing(maxiters)) ?
-                                Optim.Options(;extended_trace = true,
-                                               callback = _cb,
-                                               iterations = maxiters,
-                                               kwargs...) :
-                                Optim.Options(;extended_trace = true,
-                                               callback = _cb, kwargs...))
-    SciMLBase.build_solution(prob, opt, original.minimizer,
-                             original.minimum; original=original)
+    opt_args = _map_optimizer_args(prob, opt, cb=_cb, maxiters=maxiters, maxtime=maxtime,abstol=abstol, reltol=reltol; kwargs...)
+
+    t0 = time()
+    opt_res = Optim.optimize(optim_f, prob.u0, opt, opt_args)
+    t1 = time()
+    opt_ret = Symbol(Optim.converged(opt_res))
+
+    SciMLBase.build_solution(prob, opt, opt_res.minimizer, opt_res.minimum; original=opt_res, retcode=opt_ret)
 end
 
 function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN},
                  data = DEFAULT_DATA;
-                 maxiters = nothing,
                  cb = (args...) -> (false),
+                 maxiters::Union{Number, Nothing} = nothing,
+                 maxtime::Union{Number, Nothing} = nothing,
+                 abstol::Union{Number, Nothing}=nothing,
+                 reltol::Union{Number, Nothing}=nothing,
                  progress = false,
                  kwargs...)
 
@@ -88,11 +120,8 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
         cb_call
     end
 
-    if !(isnothing(maxiters)) && maxiters <= 0.0
-        error("The number of maxiters has to be a non-negative and non-zero number.")
-    elseif !(isnothing(maxiters))
-        maxiters = convert(Int, maxiters)
-    end
+    maxiters = _check_and_convert_maxiters(maxiters)
+    maxtime = _check_and_convert_maxtime(maxtime)
 
     f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
 
@@ -111,21 +140,24 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
     end
     optim_f = Optim.OnceDifferentiable(_loss, (G, θ) -> f.grad(G, θ, cur...), fg!, prob.u0)
 
-    original = Optim.optimize(optim_f, prob.lb, prob.ub, prob.u0, opt,
-                              !(isnothing(maxiters)) ? Optim.Options(;
-                              extended_trace = true, callback = _cb,
-                              iterations = maxiters, kwargs...) :
-                              Optim.Options(;extended_trace = true,
-                              callback = _cb, kwargs...))
-    SciMLBase.build_solution(prob, opt, original.minimizer,
-                             original.minimum; original=original)
+    opt_args = _map_optimizer_args(prob, opt, cb=_cb, maxiters=maxiters, maxtime=maxtime,abstol=abstol, reltol=reltol; kwargs...)
+
+    t0 = time()
+    opt_res = Optim.optimize(optim_f, prob.lb, prob.ub, prob.u0, opt, opt_args)
+    t1 = time()
+    opt_ret = Symbol(Optim.converged(opt_res))
+
+    SciMLBase.build_solution(prob, opt, opt_res.minimizer, opt_res.minimum; original=opt_res, retcode=opt_ret)
 end
 
 
 function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
                  data = DEFAULT_DATA;
-                 maxiters = nothing,
                  cb = (args...) -> (false),
+                 maxiters::Union{Number, Nothing} = nothing,
+                 maxtime::Union{Number, Nothing} = nothing,
+                 abstol::Union{Number, Nothing}=nothing,
+                 reltol::Union{Number, Nothing}=nothing,
                  progress = false,
                  kwargs...)
 
@@ -146,11 +178,8 @@ function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
       cb_call
     end
 
-    if !(isnothing(maxiters)) && maxiters <= 0.0
-        error("The number of maxiters has to be a non-negative and non-zero number.")
-    elseif !(isnothing(maxiters))
-        maxiters = convert(Int, maxiters)
-    end
+    maxiters = _check_and_convert_maxiters(maxiters)
+    maxtime = _check_and_convert_maxtime(maxtime)
 
     f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p,prob.ucons === nothing ? 0 : length(prob.ucons))
 
@@ -186,14 +215,14 @@ function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
     ub = prob.ub === nothing ? [] : prob.ub
     optim_fc = Optim.TwiceDifferentiableConstraints(cons!, cons_j!, cons_hl!, lb, ub, prob.lcons, prob.ucons)
 
-    original = Optim.optimize(optim_f, optim_fc, prob.u0, opt,
-                              !(isnothing(maxiters)) ? Optim.Options(;
-                                extended_trace = true, callback = _cb,
-                                iterations = maxiters, kwargs...) :
-                                Optim.Options(;extended_trace = true,
-                                callback = _cb, kwargs...))
-    SciMLBase.build_solution(prob, opt, original.minimizer,
-                             original.minimum; original=original)
+    opt_args = _map_optimizer_args(prob, opt, cb=_cb, maxiters=maxiters, maxtime=maxtime,abstol=abstol, reltol=reltol; kwargs...)
+
+    t0 = time()
+    opt_res = Optim.optimize(optim_f, optim_fc, prob.u0, opt, opt_args)
+    t1 = time()
+    opt_ret = Symbol(Optim.converged(opt_res))
+
+    SciMLBase.build_solution(prob, opt, opt_res.minimizer, opt_res.minimum; original=opt_res, retcode=opt_ret)
 end
 
 

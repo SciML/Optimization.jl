@@ -1,8 +1,44 @@
 export CMAEvolutionStrategyOpt
 struct CMAEvolutionStrategyOpt end
 
+function __map_optimizer_args(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt;
+    cb=nothing,
+    maxiters::Union{Number, Nothing}=nothing,
+    maxtime::Union{Number, Nothing}=nothing, 
+    abstol::Union{Number, Nothing}=nothing, 
+    reltol::Union{Number, Nothing}=nothing, 
+    kwargs...)
+
+    if !isnothing(reltol)
+        @warn "common reltol is currently not used by $(opt)"
+    end
+
+    mapped_args = (;lower = prob.lb,
+    upper = prob.ub,
+    kwargs...)
+  
+    if !isnothing(maxiters)
+        mapped_args = (; mapped_args..., maxiter=maxiters)
+    end
+
+    if !isnothing(maxtime)
+        mapped_args = (; mapped_args..., maxtime=maxtime)
+    end
+
+    if !isnothing(abstol)
+        mapped_args = (; mapped_args..., ftol=abstol)
+    end
+  
+    return mapped_args
+end
+
+
 function __solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt, data = DEFAULT_DATA;
-                 cb = (args...) -> (false), maxiters = nothing,
+                 cb = (args...) -> (false), 
+                 maxiters::Union{Number, Nothing} = nothing,
+                 maxtime::Union{Number, Nothing} = nothing,
+                 abstol::Union{Number, Nothing}=nothing,
+                 reltol::Union{Number, Nothing}=nothing,
                  progress = false, kwargs...)
     local x, cur, state
 
@@ -21,27 +57,21 @@ function __solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt, data =
         cb_call
     end
 
+    maxiters = _check_and_convert_maxiters(maxiters)
+    maxtime = _check_and_convert_maxtime(maxtime)
+
     _loss = function(θ)
         x = prob.f(θ, prob.p, cur...)
         return first(x)
     end
 
+    opt_args = _map_optimizer_args(prob, opt, cb=_cb, maxiters=maxiters, maxtime=maxtime,abstol=abstol, reltol=reltol; kwargs...)
 
-    if !(isnothing(maxiters)) && maxiters <= 0.0
-        error("The number of maxiters has to be a non-negative and non-zero number.")
-    elseif !(isnothing(maxiters))
-        maxiters = convert(Int, maxiters)
-    end
+    t0 = time()
+    opt_res = CMAEvolutionStrategy.minimize(_loss, prob.u0, 0.1; opt_args...)
+    t1 = time()
 
-    result = CMAEvolutionStrategy.minimize(_loss, prob.u0, 0.1; lower = prob.lb, upper = prob.ub, maxiter = maxiters, kwargs...)
-    CMAEvolutionStrategy.print_header(result)
-    CMAEvolutionStrategy.print_result(result)
-    println("\n")
-    criterion = true
+    opt_ret = opt_res.stop.reason
 
-    if (result.stop.reason === :maxtime) #this is an arbitrary choice of convergence (based on the stop.reason values)
-        criterion = false
-    end
-
-    SciMLBase.build_solution(prob, opt, result.logger.xbest[end], result.logger.fbest[end]; original=result)
+    SciMLBase.build_solution(prob, opt, opt_res.logger.xbest[end], opt_res.logger.fbest[end]; original=opt_res, retcode=opt_ret)
 end

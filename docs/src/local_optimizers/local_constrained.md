@@ -107,7 +107,7 @@ sol = solve(prob, opt)
 
 ## NLopt.jl
 
-NLopt.jl algorithms are chosen via `NLopt.Opt(:algname, nparameter)` or `NLO(:algname)` where `nparameter` is the number of parameters to be optimized . Consult the
+NLopt.jl algorithms are chosen via `NLopt.Opt(:algname, nstates)` or `NLopt.AlgorithmName()` where nstates is the number of states to be optimized . Consult the
 [NLopt Documentation](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/)
 for more information on the algorithms. Possible algorithm names are:
 
@@ -138,7 +138,7 @@ The following optimizer parameters can be set as `kwargs`:
 * `population`
 * `vector_storage`
 
-Running an optimisation with `:GN_DIRECT` with setting the number iterations via the common argument `maxiters` and `NLopt.jl`-specific parameters such as the maximum time to perform the optimisation via `maxtime`:
+Running an optimisation with `:LD_LBFGS` with setting the number iterations via the common argument `maxiters` and `NLopt.jl`-specific parameters such as the maximum time to perform the optimisation via `maxtime`:
 ```julia
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)

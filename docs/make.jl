@@ -26,6 +26,17 @@ makedocs(
             "solve" => "API/solve.md",
             "ModelingToolkit Integration" => "API/modelingtoolkit.md"
         ],
+        "Optimizer Packages" => [
+            "BlackBoxOptim.jl" => "optimization_packages/blackboxoptim.md",
+            "CMAEvolutionStrategy.jl" => "optimization_packages/cmaevolutionstrategy.md",
+            "Evolutionary.jl" => "optimization_packages/evolutionary.md",
+            "Flux.jl" => "optimization_packages/flux.md",
+            "MathOptInterface.jl" => "optimization_packages/mathoptinterface.md",
+            "MultistartOptimization.jl" => "optimization_packages/multistartoptimization.md",
+            "NLopt.jl" => "optimization_packages/nlopt.md",
+            "Optim.jl" => "optimization_packages/optim.md",
+            "QuadDIRECT.jl" => "optimization_packages/quaddirect.md"
+        ],
 
         "Local Optimizers" => [
             "local_optimizers/local_gradient.md",
