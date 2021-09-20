@@ -1,0 +1,43 @@
+function convert_common_kwargs(opt::NonconvexPavito.PavitoIpoptCbcAlg, opt_kwargs;
+    cb=nothing,
+    maxiters=nothing,
+    maxtime=nothing,
+    abstol=nothing,
+    reltol=nothing)
+
+    conv_opt_kwargs = (; opt_kwargs...)
+
+    if !isnothing(cb)
+        @warn "common callback argument is currently not used by $(opt)"
+    end
+  
+    if !isnothing(maxiters)
+        @warn "common maxiters argument is currently not used by $(opt)"
+    end
+
+    if !isnothing(maxtime)
+        conv_opt_kwargs = (; conv_opt_kwargs..., timeout = maxtime)
+    end
+
+    if !isnothing(abstol)
+        @warn "common abstol argument is currently not used by $(opt)"
+    end
+    
+    if !isnothing(reltol)
+        conv_opt_kwargs = (; conv_opt_kwargs..., rel_gap =reltol)
+    end
+
+    return conv_opt_kwargs
+end
+
+function _create_options(opt::NonconvexPavito.PavitoIpoptCbcAlg;
+    opt_kwargs=nothing,
+    sub_options=nothing,
+    convergence_criteria=nothing)
+
+    options = (; options = !isnothing(opt_kwargs) ? NonconvexPavito.PavitoIpoptCbcOptions(;opt_kwargs...) : NonconvexPavito.PavitoIpoptCbcOptions())
+    
+    return options
+end
+
+include("nonconvex.jl")
