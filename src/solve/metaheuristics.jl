@@ -1,3 +1,18 @@
+function initial_population!(opt, prob, bounds, f)
+    opt_init = deepcopy(opt)
+    opt_init.options.iterations=1
+    Metaheuristics.optimize(f, bounds, opt_init)
+
+    pop_size = opt_init.parameters.N
+    population_rand = [ bounds[1,:] + rand(length(prob.u0)).* ( bounds[2,:] -  bounds[1,:]) for i in 1:(pop_size-1)]
+    push!(population_rand, prob.u0)
+    population_init = [ Metaheuristics.create_child(x, f(x)) for x in population_rand ]
+    prev_status = Metaheuristics.State(Metaheuristics.get_best(population_init), population_init);
+    opt.parameters.N = pop_size
+    opt.status = prev_status
+    return nothing
+end
+
 function __map_optimizer_args(prob::OptimizationProblem, opt::Metaheuristics.AbstractAlgorithm;
     cb=nothing,
     maxiters::Union{Number, Nothing}=nothing,
@@ -44,7 +59,9 @@ function __solve(prob::OptimizationProblem, opt::Metaheuristics.AbstractAlgorith
                  maxtime::Union{Number, Nothing} = nothing,
                  abstol::Union{Number, Nothing}=nothing,
                  reltol::Union{Number, Nothing}=nothing,
-                 progress = false, kwargs...)
+                 progress = false,
+                 use_initial::Bool=false,
+                 kwargs...)
 
     local x
 
@@ -63,7 +80,23 @@ function __solve(prob::OptimizationProblem, opt::Metaheuristics.AbstractAlgorith
         error("$(opt) requires lower and upper bounds to be defined.")
     end
 
+    if !isnothing(prob.f.cons)
+        @warn "Equality constraints are current not passed on by GalacticOptim"
+    end
+
+    if !isnothing(prob.lcons)
+        @warn "Inequality constraints are current not passed on by GalacticOptim"
+    end
+
+    if !isnothing(prob.ucons)
+        @warn "Inequality constraints are current not passed on by GalacticOptim"
+    end
+
     _map_optimizer_args(prob, opt, cb=cb, maxiters=maxiters, maxtime=maxtime,abstol=abstol, reltol=reltol; kwargs...)
+
+    if use_initial
+        initial_population!(opt, prob, opt_bounds, _loss)
+    end
 
     t0 = time()
     opt_res = Metaheuristics.optimize(_loss, opt_bounds, opt)
