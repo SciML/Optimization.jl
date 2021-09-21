@@ -1,6 +1,6 @@
 function initial_population!(opt, prob, bounds, f)
     opt_init = deepcopy(opt)
-    opt_init.options.iterations=1
+    opt_init.options.iterations=2
     Metaheuristics.optimize(f, bounds, opt_init)
 
     pop_size = opt_init.parameters.N
