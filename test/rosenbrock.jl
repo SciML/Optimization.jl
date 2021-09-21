@@ -157,11 +157,11 @@ sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
 @test 10*sol.minimum < l1
 
 using Metaheuristics
-prob = GalacticOptim.OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
+prob = GalacticOptim.OptimizationProblem(f, x0, lb=[-1.0, -1.0], ub=[1.5, 1.5])
 sol = solve(prob, ECA())
 @test 10*sol.minimum < l1
 
-sol = solve(prob, DE())
+sol = solve(prob, Metaheuristics.DE())
 @test 10*sol.minimum < l1
 
 sol = solve(prob, PSO())
@@ -182,7 +182,7 @@ sol = solve(prob, WOA())
 sol = solve(prob, ECA())
 @test 10*sol.minimum < l1
 
-sol = solve(prob, DE(), use_initial=true)
+sol = solve(prob, Metaheuristics.DE(), use_initial=true)
 @test 10*sol.minimum < l1
 
 sol = solve(prob, PSO(), use_initial=true)
