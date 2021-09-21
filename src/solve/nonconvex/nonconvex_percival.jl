@@ -30,14 +30,25 @@ function convert_common_kwargs(opt::NonconvexPercival.AugLag, opt_kwargs;
     return conv_opt_kwargs
 end
 
+function __create_options(opt::NonconvexPercival.AugLag;
+    opt_kwargs=nothing)
+
+    options = !isnothing(opt_kwargs) ? NonconvexPercival.AugLagOptions(;opt_kwargs...) : NonconvexPercival.AugLagOptions()
+
+    return options
+end
+
+
 function _create_options(opt::NonconvexPercival.AugLag;
     opt_kwargs=nothing,
     sub_options=nothing,
     convergence_criteria=nothing)
 
-    options = (; options = !isnothing(opt_kwargs) ? NonconvexPercival.AugLagOptions(;opt_kwargs...) : NonconvexPercival.AugLagOptions())
+    options = (; options = __create_options(opt, opt_kwargs=opt_kwargs))
 
     return options
 end
+
+check_optimizer_backend(opt::NonconvexPercival.AugLag) = false
 
 include("nonconvex.jl")

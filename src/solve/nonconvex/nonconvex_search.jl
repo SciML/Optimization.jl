@@ -30,14 +30,24 @@ function convert_common_kwargs(opt::Union{NonconvexSearch.MTSAlg, NonconvexSearc
     return conv_opt_kwargs
 end
 
+function __create_options(opt::Union{NonconvexSearch.MTSAlg, NonconvexSearch.LS1Alg};
+    opt_kwargs=nothing)
+
+    options = !isnothing(opt_kwargs) ? NonconvexSearch.MTSOptions(;opt_kwargs...) : NonconvexSearch.MTSOptions()
+    
+    return options
+end
+
 function _create_options(opt::Union{NonconvexSearch.MTSAlg, NonconvexSearch.LS1Alg};
     opt_kwargs=nothing,
     sub_options=nothing,
     convergence_criteria=nothing)
 
-    options = (; options = !isnothing(opt_kwargs) ? NonconvexSearch.MTSOptions(;opt_kwargs...) : NonconvexSearch.MTSOptions())
+    options = (; options = __create_options(opt, opt_kwargs=opt_kwargs))
     
     return options
 end
+
+check_optimizer_backend(opt::Union{NonconvexSearch.MTSAlg, NonconvexSearch.LS1Alg}) = true
 
 include("nonconvex.jl")

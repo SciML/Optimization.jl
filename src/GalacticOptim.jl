@@ -31,7 +31,7 @@ function __init__()
     @require QuadDIRECT="dae52e8d-d666-5120-a592-9e15c33b8d7a" include("solve/quaddirect.jl")
     @require Nonconvex="01bcebdf-4d21-426d-b5c4-6132c1619978" begin
         @require ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4" begin
-            @require NonconvexBayesian="01bcebdf-4d21-426d-b5c4-6132c1619978" include("solve/nonconvex/nonconvex_bayesian.jl")
+            @require NonconvexBayesian="fb352abc-de7b-48de-9ebd-665b54b5d9b3" include("solve/nonconvex/nonconvex_bayesian.jl")
             @require NonconvexIpopt="bf347577-a06d-49ad-a669-8c0e005493b8" include("solve/nonconvex/nonconvex_ipopt.jl")
             @require NonconvexJuniper="611adb69-ebe7-45d0-83f5-90aabba2c123" include("solve/nonconvex/nonconvex_juniper.jl")
             @require NonconvexMMA="d3d89cbb-4ecd-4604-818d-8d1ff343e4da" include("solve/nonconvex/nonconvex_mma.jl")

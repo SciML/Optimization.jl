@@ -35,9 +35,14 @@ function _create_options(opt::NonconvexPavito.PavitoIpoptCbcAlg;
     sub_options=nothing,
     convergence_criteria=nothing)
 
-    options = (; options = !isnothing(opt_kwargs) ? NonconvexPavito.PavitoIpoptCbcOptions(;opt_kwargs...) : NonconvexPavito.PavitoIpoptCbcOptions())
-    
+    if !isnothing(sub_options)
+        options = (; options = !isnothing(opt_kwargs) ? NonconvexPavito.PavitoIpoptCbcOptions(; subsolver_options = IpoptOptions(sub_options...), opt_kwargs...) : NonconvexPavito.PavitoIpoptCbcOptions(subsolver_options = IpoptOptions(sub_options...)))
+    else
+        options = (; options = !isnothing(opt_kwargs) ? NonconvexPavito.PavitoIpoptCbcOptions(; subsolver_options = IpoptOptions(), opt_kwargs...) : NonconvexPavito.PavitoIpoptCbcOptions(subsolver_options = IpoptOptions()))
+    end
     return options
 end
+
+check_optimizer_backend(opt::NonconvexPavito.PavitoIpoptCbcAlg) = false
 
 include("nonconvex.jl")

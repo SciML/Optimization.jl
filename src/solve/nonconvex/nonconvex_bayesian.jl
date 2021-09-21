@@ -35,13 +35,11 @@ function _create_options(opt::NonconvexBayesian.BayesOptAlg;
     sub_options=nothing,
     convergence_criteria=nothing)
 
-    if !isnothing(sub_options)
-        options = (; options = !isnothing(opt_kwargs) ? BayesOptOptions(;sub_options= _create_options(opt.sub_alg, opt_kwargs=sub_options) ,kwargs...) : BayesOptOptions(;sub_options= _create_options(alg.sub_alg,opt_kwargs= sub_options)))
-    else    
-        options = (; options = !isnothing(opt_kwargs) ? BayesOptOptions(;opt_kwargs...) : BayesOptOptions())
-    end
+    options = (; options = !isnothing(opt_kwargs) ? NonconvexBayesian.BayesOptOptions(;sub_options= __create_options(opt.sub_alg, opt_kwargs=sub_options) ,opt_kwargs...) : NonconvexBayesian.BayesOptOptions(;sub_options= __create_options(alg.sub_alg,opt_kwargs= sub_options)))
     
     return options
 end
+
+check_optimizer_backend(opt::NonconvexBayesian.BayesOptAlg) = false
 
 include("nonconvex.jl")

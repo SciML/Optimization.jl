@@ -38,18 +38,28 @@ function convert_common_kwargs(opt::Union{NonconvexMMA.MMA02, NonconvexMMA.MMA87
     return conv_opt_kwargs
 end
 
+function __create_options(opt::Union{NonconvexMMA.MMA02, NonconvexMMA.MMA87};
+    opt_kwargs=nothing)
+
+    options = !isnothing(opt_kwargs) ? NonconvexMMA.MMAOptions(;opt_kwargs...) : NonconvexMMA.MMAOptions()
+
+    return options
+end
+
 function _create_options(opt::Union{NonconvexMMA.MMA02, NonconvexMMA.MMA87};
     opt_kwargs=nothing,
     sub_options=nothing,
     convergence_criteria=nothing)
 
     if !isnothing(convergence_criteria)
-        options = (; options = !isnothing(opt_kwargs) ? NonconvexMMA.MAOptions(;opt_kwargs...) : NonconvexMMA.MMAOptions(), convcriteria=convergence_criteria)
+        options = (; options =  __create_options(opt, opt_kwargs=opt_kwargs), convcriteria=convergence_criteria)
     else
-        options = (; options = !isnothing(opt_kwargs) ? NonconvexMMA.MMAOptions(;opt_kwargs...) : NonconvexMMA.MMAOptions())
+        options = (; options =  __create_options(opt, opt_kwargs=opt_kwargs))
     end
 
     return options
 end
+
+check_optimizer_backend(opt::Union{NonconvexMMA.MMA02, NonconvexMMA.MMA87}) = false
 
 include("nonconvex.jl")

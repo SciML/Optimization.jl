@@ -30,14 +30,26 @@ function convert_common_kwargs(opt::NonconvexIpopt.IpoptAlg, opt_kwargs;
     return conv_opt_kwargs
 end
 
+function __create_options(opt::NonconvexIpopt.IpoptAlg;
+    opt_kwargs=nothing)
+
+    options = !isnothing(opt_kwargs) ? NonconvexIpopt.IpoptOptions(;opt_kwargs...) : NonconvexIpopt.IpoptOptions()
+    
+    return options
+end
+
+
+
 function _create_options(opt::NonconvexIpopt.IpoptAlg;
     opt_kwargs=nothing,
     sub_options=nothing,
     convergence_criteria=nothing)
 
-    options = (; options = !isnothing(opt_kwargs) ? NonconvexIpopt.IpoptOptions(;opt_kwargs...) : NonconvexIpopt.IpoptOptions())
+    options = (; options = __create_options(opt, opt_kwargs=opt_kwargs))
     
     return options
 end
+
+check_optimizer_backend(opt::NonconvexIpopt.IpoptAlg) = false
 
 include("nonconvex.jl")

@@ -35,9 +35,14 @@ function _create_options(opt::NonconvexJuniper.JuniperIpoptAlg;
     sub_options=nothing,
     convergence_criteria=nothing)
 
-    options = (; options = !isnothing(opt_kwargs) ? NonconvexJuniper.JuniperIpoptOptions(;opt_kwargs...) : NonconvexJuniper.JuniperIpoptOptions())
-    
+    if !isnothing(sub_options)
+        options = (; options = !isnothing(opt_kwargs) ? NonconvexJuniper.JuniperIpoptOptions(;subsolver_options = IpoptOptions(sub_options...), opt_kwargs...) : NonconvexJuniper.JuniperIpoptOptions(subsolver_options = IpoptOptions(sub_options...)))
+    else
+        options = (; options = !isnothing(opt_kwargs) ? NonconvexJuniper.JuniperIpoptOptions(;subsolver_options = IpoptOptions(),opt_kwargs...) : NonconvexJuniper.JuniperIpoptOptions(subsolver_options=IpoptOptions()))
+    end
     return options
 end
+
+check_optimizer_backend(opt::NonconvexJuniper.JuniperIpoptAlg) = false
 
 include("nonconvex.jl")

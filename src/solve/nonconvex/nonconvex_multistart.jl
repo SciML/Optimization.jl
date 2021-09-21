@@ -12,7 +12,8 @@ function convert_common_kwargs(opt::NonconvexMultistart.HyperoptAlg, opt_kwargs;
     end
   
     if !isnothing(maxiters)
-        @warn "common maxiters argument is currently not used by $(opt)"
+        @info "common maxiters argument refers to how many of the potential starting points will be evaluated by $(opt)"
+        conv_opt_kwargs = (; conv_opt_kwargs..., iters=maxiters)
     end
 
     if !isnothing(maxtime)
@@ -35,16 +36,15 @@ function _create_options(opt::NonconvexMultistart.HyperoptAlg;
     sub_options=nothing,
     convergence_criteria=nothing)
 
-    if !isnothing(sub_options)
-        options = (; options = !isnothing(opt_kwargs) ? NonconvexMultistart.HyperoptOptions(;sub_options= _create_options(opt.sub_alg, sub_options) ,kwargs...) : NonconvexMultistart.HyperoptOptions(;sub_options= _create_options(opt.sub_alg, sub_options)))
-    else
-        options =  (; options = !isnothing(opt_kwargs) ? NonconvexMultistart.HyperoptOptions(;opt_kwargs...) : NonconvexMultistart.HyperoptOptions())
-    end
-    if isa(options.sampler, Hyperband)
-        error("$(options.sampler) is currently not support by GalacticOptim")
+    options = (; options = !isnothing(opt_kwargs) ? NonconvexMultistart.HyperoptOptions(;sub_options= __create_options(opt.sub_alg, opt_kwargs=sub_options) ,opt_kwargs...) : NonconvexMultistart.HyperoptOptions(;sub_options= __create_options(opt.sub_alg, opt_kwargs=sub_options)))
+
+    if isa(options.options.sampler, NonconvexMultistart.Hyperopt.Hyperband)
+        error("$(options.options.sampler) is currently not support by GalacticOptim")
     end
     
     return options
 end
+
+check_optimizer_backend(opt::NonconvexMultistart.HyperoptAlg) = false
 
 include("nonconvex.jl")
