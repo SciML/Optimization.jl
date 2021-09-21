@@ -1,4 +1,4 @@
-import MathOptInterface
+import .MathOptInterface
 const MOI = MathOptInterface
 
 struct MOIOptimizationProblem{T,F<:OptimizationFunction,uType,P} <: MOI.AbstractNLPEvaluator
