@@ -31,6 +31,18 @@ function convert_common_kwargs(opt::NonconvexMultistart.HyperoptAlg, opt_kwargs;
     return conv_opt_kwargs
 end
 
+function __create_options(opt::NonconvexMultistart.HyperoptAlg;
+    opt_kwargs=nothing)
+
+    options = !isnothing(opt_kwargs) ? NonconvexMultistart.HyperoptOptions(;opt_kwargs...) : NonconvexMultistart.HyperoptOptions()
+
+    if isa(options.sampler, NonconvexMultistart.Hyperopt.Hyperband)
+        error("$(options.sampler) is currently not support by GalacticOptim")
+    end
+    
+    return options
+end
+
 function _create_options(opt::NonconvexMultistart.HyperoptAlg;
     opt_kwargs=nothing,
     sub_options=nothing,

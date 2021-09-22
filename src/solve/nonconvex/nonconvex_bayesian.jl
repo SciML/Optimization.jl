@@ -30,6 +30,14 @@ function convert_common_kwargs(opt::NonconvexBayesian.BayesOptAlg, opt_kwargs;
     return conv_opt_kwargs
 end
 
+function __create_options(opt::NonconvexBayesian.BayesOptAlg;
+    opt_kwargs=nothing)
+
+    options = !isnothing(opt_kwargs) ? NonconvexBayesian.BayesOptOptions(;opt_kwargs...) : NonconvexBayesian.BayesOptOptions()
+    
+    return options
+end
+
 function _create_options(opt::NonconvexBayesian.BayesOptAlg;
     opt_kwargs=nothing,
     sub_options=nothing,
