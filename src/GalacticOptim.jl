@@ -29,6 +29,7 @@ function __init__()
     @require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" include("solve/nlopt.jl")
     @require Optim="429524aa-4258-5aef-a3af-852621145aeb" include("solve/optim.jl")
     @require QuadDIRECT="dae52e8d-d666-5120-a592-9e15c33b8d7a" include("solve/quaddirect.jl")
+    @require Metaheuristics="bcdb8e00-2c21-11e9-3065-2b553b22f898" include("solve/metaheuristics.jl")
 
     # AD backends
     @require FiniteDiff="6a86dc24-6348-571c-b903-95158fe2bd41" include("function/finitediff.jl")
