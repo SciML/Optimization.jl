@@ -1,6 +1,6 @@
-struct NonconvexADWrapper
-    f
-    prob
+struct NonconvexADWrapper{F,P}
+    f::F
+    prob::P
 end
 
 (f::NonconvexADWrapper)(θ) = begin
