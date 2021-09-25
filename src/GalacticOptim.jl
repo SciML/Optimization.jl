@@ -42,6 +42,7 @@ function __init__()
             @require NonconvexSearch="75732972-a7cd-4375-b200-958e0814350d" include("solve/nonconvex/nonconvex_search.jl")
         end
     end
+    @require Metaheuristics="bcdb8e00-2c21-11e9-3065-2b553b22f898" include("solve/metaheuristics.jl")
 
     # AD backends
     @require FiniteDiff="6a86dc24-6348-571c-b903-95158fe2bd41" include("function/finitediff.jl")

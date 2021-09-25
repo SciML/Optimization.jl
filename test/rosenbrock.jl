@@ -165,6 +165,51 @@ prob = GalacticOptim.OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 
 sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
 @test 10*sol.minimum < l1
 
+using Metaheuristics
+prob = GalacticOptim.OptimizationProblem(f, x0, lb=[-1.0, -1.0], ub=[1.5, 1.5])
+sol = solve(prob, ECA())
+@test 10*sol.minimum < l1
+
+sol = solve(prob, Metaheuristics.DE())
+@test 10*sol.minimum < l1
+
+sol = solve(prob, PSO())
+@test 10*sol.minimum < l1
+
+sol = solve(prob, ABC())
+@test 10*sol.minimum < l1
+
+sol = solve(prob, CGSA())
+@test 10*sol.minimum < l1
+
+sol = solve(prob, SA())
+@test 10*sol.minimum < l1
+
+sol = solve(prob, WOA())
+@test 10*sol.minimum < l1
+
+sol = solve(prob, ECA())
+@test 10*sol.minimum < l1
+
+sol = solve(prob, Metaheuristics.DE(), use_initial=true)
+@test 10*sol.minimum < l1
+
+sol = solve(prob, PSO(), use_initial=true)
+@test 10*sol.minimum < l1
+
+sol = solve(prob, ABC(), use_initial=true)
+@test 10*sol.minimum < l1
+
+sol = solve(prob, CGSA(), use_initial=true)
+@test 10*sol.minimum < l1
+
+sol = solve(prob, SA(), use_initial=true)
+@test 10*sol.minimum < l1
+
+sol = solve(prob, WOA(), use_initial=true)
+@test 10*sol.minimum < l1
+
+
 using ModelingToolkit
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
