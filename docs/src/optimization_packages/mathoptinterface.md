@@ -1,6 +1,6 @@
 # MathOptInterface.jl
 
-[MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl) is Julia abstration layer to interface with variety of mathematical optimizatioon solvers.
+[MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl) is Julia abstration layer to interface with variety of mathematical optimization solvers.
 
 As of now the `GalacticOptim` interface to `MathOptInterface` implents only the `maxtime` common keyword arguments. An optimizer which is implemented in the `MathOptInterface` is can be called be called directly if no optimizer options have to be defined. For example using the `Ipopt.jl` optimizer:
 
