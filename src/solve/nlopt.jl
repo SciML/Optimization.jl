@@ -114,7 +114,7 @@ function __solve(prob::OptimizationProblem, opt::Union{NLopt.Algorithm, NLopt.Op
         opt_setup = NLopt.Opt(opt, length(prob.u0))
     end
 
-    NLopt.min_objective!(opt_setup, fg!)
+    prob.sense === MaxSense ? NLopt.max_objective!(opt_setup, fg!) : NLopt.min_objective!(opt_setup, fg!)
 
     _map_optimizer_args(prob,opt_setup, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol, local_method=local_method, local_maxiters =local_maxiters, local_options=local_options; kwargs...)
 
