@@ -61,7 +61,13 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
     maxiters = _check_and_convert_maxiters(maxiters)
     maxtime = _check_and_convert_maxtime(maxtime)
 
-    f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
+    if prob.sense === MaxSense
+        obj = (args...) -> -prob.f.f(args...)
+        optfun = OptimizationFunction(obj, prob.f.adtype)
+        f = instantiate_function(optfun,prob.u0,prob.f.adtype,prob.p)
+    else
+        f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
+    end
 
     !(opt isa Optim.ZerothOrderOptimizer) && f.grad === nothing && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
@@ -90,7 +96,7 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
 
-    SciMLBase.build_solution(prob, opt, opt_res.minimizer, opt_res.minimum; original=opt_res, retcode=opt_ret)
+    SciMLBase.build_solution(prob, opt, opt_res.minimizer, prob.sense === MaxSense ? -opt_res.minimum : opt_res.minimum; original=opt_res, retcode=opt_ret)
 end
 
 function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN},
