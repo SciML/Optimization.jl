@@ -40,7 +40,7 @@ end
     cons= (x,p) -> [x[1]^2 + x[2]^2]
     optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons= cons)
 
-    prob = OptimizationProblem(optprob, x0)
+    prob = OptimizationProblem(optprob, x0, _p)
 
     sol = solve(prob, Flux.ADAM(0.1), maxiters = 1000)
     @test 10*sol.minimum < l1
@@ -54,15 +54,15 @@ end
     sol = solve(prob, Optim.KrylovTrustRegion())
     @test 10*sol.minimum < l1
 
-    prob = OptimizationProblem(optprob, x0, lcons = [-Inf], ucons = [Inf])
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [Inf])
     sol = solve(prob, IPNewton())
     @test 10*sol.minimum < l1
 
-    prob = OptimizationProblem(optprob, x0, lcons = [-5.0], ucons = [10.0])
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [-5.0], ucons = [10.0])
     sol = solve(prob, IPNewton())
     @test 10*sol.minimum < l1
 
-    prob = OptimizationProblem(optprob, x0, lcons = [-Inf], ucons = [Inf], lb = [-500.0,-500.0], ub=[50.0,50.0])
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [Inf], lb = [-500.0,-500.0], ub=[50.0,50.0])
     sol = solve(prob, IPNewton())
     @test sol.minimum < l1
 
@@ -71,28 +71,28 @@ end
     end
 
     optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons= con2_c)
-    prob = OptimizationProblem(optprob, x0, lcons = [-Inf,-Inf], ucons = [Inf,Inf])
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf,-Inf], ucons = [Inf,Inf])
     sol = solve(prob, IPNewton())
     @test 10*sol.minimum < l1
 
     cons_circ = (x,p) -> [x[1]^2 + x[2]^2]
     optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons= cons_circ)
-    prob = OptimizationProblem(optprob, x0, lcons = [-Inf], ucons = [0.25^2])
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [0.25^2])
     sol = solve(prob, IPNewton())
     @test sqrt(cons(sol.u,nothing)[1]) ≈ 0.25 rtol = 1e-6
 
     optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoZygote())
 
-    prob = OptimizationProblem(optprob, x0)
+    prob = OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, Flux.ADAM(), maxiters = 1000, progress = false)
     @test 10*sol.minimum < l1
 
-    prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
+    prob = OptimizationProblem(optprob, x0, _p, lb=[-1.0, -1.0], ub=[0.8, 0.8])
     sol = solve(prob, Optim.Fminbox())
     @test 10*sol.minimum < l1
 
     Random.seed!(1234)
-    prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
+    prob = OptimizationProblem(optprob, x0, _p, lb=[-1.0, -1.0], ub=[0.8, 0.8])
     sol = solve(prob, Optim.SAMIN())
     @test 10*sol.minimum < l1
 end
@@ -183,6 +183,7 @@ end
 # @test 10*sol.minimum < l1
 
 @testset "Evolutionary, BlackBoxOptim, Metaheuristics, Nonconvex" begin
+    optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoZygote())
     using Evolutionary
     prob = GalacticOptim.OptimizationProblem(optprob, x0)
     sol = solve(prob, CMAES(μ =40 , λ = 100),abstol=1e-15)
@@ -243,7 +244,7 @@ end
     x0 = zeros(2)
     _p = [1.0, 100.0]
 
-    f = OptimizationFunction(rosenbrock,ModelingToolkit.AutoModelingToolkit(),x0,_p,grad=true,hess=true)
+    f = OptimizationFunction(rosenbrock,ModelingToolkit.AutoModelingToolkit(); grad=true,hess=true)
     prob = OptimizationProblem(f,x0,_p)
     sol = solve(prob,Optim.Newton())
 
