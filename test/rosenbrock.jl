@@ -99,7 +99,7 @@ end
 
 @testset "MaxSense test" begin
     optprob = OptimizationFunction((x,p) -> -rosenbrock(x,p), GalacticOptim.AutoZygote())
-    prob = OptimizationProblem(optprob, x0; sense = GalacticOptim.MaxSense)
+    prob = OptimizationProblem(optprob, x0, _p; sense = GalacticOptim.MaxSense)
 
     import Ipopt
     sol = solve(prob, Ipopt.Optimizer())
@@ -110,6 +110,18 @@ end
     @test 10*sol.minimum < l1
 
     sol = solve(prob, NelderMead())
+    @test 10*sol.minimum < l1
+
+    sol = solve(prob, BFGS())
+    @test 10*sol.minimum < l1
+
+    function g!(G, x)
+        G[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]
+        G[2] = 200.0 * (x[2] - x[1]^2)
+    end
+    optprob = OptimizationFunction((x,p) -> -rosenbrock(x,p), GalacticOptim.AutoZygote(), grad = g!)
+    prob = OptimizationProblem(optprob, x0, _p; sense = GalacticOptim.MaxSense)
+    sol = solve(prob, BFGS())
     @test 10*sol.minimum < l1
 end
 

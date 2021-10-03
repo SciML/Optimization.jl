@@ -63,7 +63,10 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
 
     if prob.sense === MaxSense
         obj = (args...) -> -prob.f.f(args...)
-        optfun = OptimizationFunction(obj, prob.f.adtype)
+        kwargs_tup = (grad = prob.f.grad === nothing ? nothing : (args...) -> -prob.f.grad(args...),
+                      hess = prob.f.hess === nothing ? nothing : (args...) -> -prob.f.hess(args...),
+                      hv = prob.f.hv === nothing ? nothing : (args...) -> -prob.f.hv(args...), )
+        optfun = OptimizationFunction(obj, prob.f.adtype; kwargs_tup...)
         f = instantiate_function(optfun,prob.u0,prob.f.adtype,prob.p)
     else
         f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
