@@ -61,35 +61,49 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
     maxiters = _check_and_convert_maxiters(maxiters)
     maxtime = _check_and_convert_maxtime(maxtime)
 
-    if prob.sense === MaxSense
-        obj = (args...) -> -prob.f.f(args...)
-        kwargs_tup = (grad = prob.f.grad === nothing ? nothing : (args...) -> -prob.f.grad(args...),
-                      hess = prob.f.hess === nothing ? nothing : (args...) -> -prob.f.hess(args...),
-                      hv = prob.f.hv === nothing ? nothing : (args...) -> -prob.f.hv(args...), )
-        optfun = OptimizationFunction(obj, prob.f.adtype; kwargs_tup...)
-        f = instantiate_function(optfun,prob.u0,prob.f.adtype,prob.p)
-    else
-        f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
-    end
+    f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
 
     !(opt isa Optim.ZerothOrderOptimizer) && f.grad === nothing && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
     _loss = function(θ)
         x = f.f(θ, prob.p, cur...)
-        return first(x)
+        __x = first(x)
+        return prob.sense === MaxSense ? -__x : __x
     end
 
     fg! = function (G,θ)
         if G !== nothing
             f.grad(G, θ, cur...)
+            if prob.sense === MaxSense
+                G .*= false
+            end
         end
         return _loss(θ)
     end
 
     if opt isa Optim.KrylovTrustRegion
-        optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, (H,θ,v) -> f.hv(H,θ,v,cur...), prob.u0)
+        hv = function (H,θ,v)
+            f.hv(H,θ,v,cur...)
+            if prob.sense === MaxSense
+                H .*= false
+            end
+        end
+        optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, hv, prob.u0)
     else
-        optim_f = Optim.TwiceDifferentiable(_loss, (G, θ) -> f.grad(G, θ, cur...), fg!, (H,θ) -> f.hess(H,θ,cur...), prob.u0)
+        gg = function (G, θ)
+            f.grad(G, θ, cur...)
+            if prob.sense === MaxSense
+                G .*= false
+            end
+        end
+        
+        hh = function (H,θ)
+            f.hess(H,θ,cur...)
+            if prob.sense === MaxSense
+                H .*= false
+            end
+        end
+        optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, prob.u0)
     end
 
     opt_args = _map_optimizer_args(prob, opt, cb=_cb, maxiters=maxiters, maxtime=maxtime,abstol=abstol, reltol=reltol; kwargs...)
@@ -138,16 +152,26 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 
     _loss = function(θ)
         x = f.f(θ, prob.p, cur...)
-        return first(x)
+        __x = first(x)
+        return prob.sense === MaxSense ? -__x : __x
     end
     fg! = function (G,θ)
         if G !== nothing
             f.grad(G, θ, cur...)
+            if prob.sense === MaxSense
+                G .*= false
+            end
         end
-
         return _loss(θ)
     end
-    optim_f = Optim.OnceDifferentiable(_loss, (G, θ) -> f.grad(G, θ, cur...), fg!, prob.u0)
+    
+    gg = function (G, θ)
+        f.grad(G, θ, cur...)
+        if prob.sense === MaxSense
+            G .*= false
+        end
+    end
+    optim_f = Optim.OnceDifferentiable(_loss, gg, fg!, prob.u0)
 
     opt_args = _map_optimizer_args(prob, opt, cb=_cb, maxiters=maxiters, maxtime=maxtime,abstol=abstol, reltol=reltol; kwargs...)
 
@@ -196,15 +220,32 @@ function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
 
     _loss = function(θ)
         x = f.f(θ, prob.p, cur...)
-        return x[1]
+        __x = first(x)
+        return prob.sense === MaxSense ? -__x : __x
     end
     fg! = function (G,θ)
         if G !== nothing
             f.grad(G, θ, cur...)
+            if prob.sense === MaxSense
+                G .*= false
+            end
         end
         return _loss(θ)
     end
-    optim_f = Optim.TwiceDifferentiable(_loss, (G, θ) -> f.grad(G, θ, cur...), fg!, (H,θ) -> f.hess(H, θ, cur...), prob.u0)
+    gg = function (G, θ)
+        f.grad(G, θ, cur...)
+        if prob.sense === MaxSense
+            G .*= false
+        end
+    end
+    
+    hh = function (H,θ)
+        f.hess(H,θ,cur...)
+        if prob.sense === MaxSense
+            H .*= false
+        end
+    end
+    optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, prob.u0)
 
     cons! = (res, θ) -> res .= f.cons(θ);
 
