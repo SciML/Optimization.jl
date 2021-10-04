@@ -230,10 +230,10 @@ end
     @test 10*sol.minimum < l1
 
 
-    using ModelingToolkit
-    f = OptimizationFunction(rosenbrock,ModelingToolkit.AutoModelingToolkit())
-    prob = OptimizationProblem(f, x0, _p)
-    sol = solve(prob,Optim.Newton())
+    # using ModelingToolkit
+    # f = OptimizationFunction(rosenbrock,ModelingToolkit.AutoModelingToolkit())
+    # prob = OptimizationProblem(f, x0, _p)
+    # sol = solve(prob,Optim.Newton())
 
 
     ### Nonconvex test
@@ -245,7 +245,7 @@ end
     Nonconvex.@load Pavito
     Nonconvex.@load Hyperopt
     Nonconvex.@load MTS
-    prob = GalacticOptim.OptimizationProblem(f, x0, _p, lb = [-1.0,-1.0], ub = [1.5,1.5])
+    prob = GalacticOptim.OptimizationProblem(optprob, x0, _p, lb = [-1.0,-1.0], ub = [1.5,1.5])
 
     sol = solve(prob, MMA02())
     @test 10*sol.minimum < l1
