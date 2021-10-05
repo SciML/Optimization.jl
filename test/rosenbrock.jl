@@ -229,11 +229,10 @@ end
     sol = solve(prob, WOA(), use_initial=true)
     @test 10*sol.minimum < l1
 
-
-    # using ModelingToolkit
-    # f = OptimizationFunction(rosenbrock,ModelingToolkit.AutoModelingToolkit())
-    # prob = OptimizationProblem(f, x0, _p)
-    # sol = solve(prob,Optim.Newton())
+    using ModelingToolkit
+    f = OptimizationFunction(rosenbrock,ModelingToolkit.AutoModelingToolkit())
+    prob = OptimizationProblem(f, x0, _p)
+    @test_broken sol = solve(prob,Optim.Newton())
 
 
     ### Nonconvex test
