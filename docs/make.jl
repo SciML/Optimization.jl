@@ -34,6 +34,7 @@ makedocs(
             "MathOptInterface.jl" => "optimization_packages/mathoptinterface.md",
             "MultistartOptimization.jl" => "optimization_packages/multistartoptimization.md",
             "Metaheuristics.jl" => "optimization_packages/metaheuristics.md",
+            "NOMAD.jl" => "optimization_packages/nomad.md",
             "NLopt.jl" => "optimization_packages/nlopt.md",
             "Nonconvex.jl" => "optimization_packages/nonconvex.md",
             "Optim.jl" => "optimization_packages/optim.md",

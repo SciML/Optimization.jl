@@ -43,6 +43,7 @@ function __init__()
         end
     end
     @require Metaheuristics="bcdb8e00-2c21-11e9-3065-2b553b22f898" include("solve/metaheuristics.jl")
+    @require NOMAD="02130f1c-4665-5b79-af82-ff1385104aa0" include("solve/nomad.jl")
 
     # AD backends
     @require FiniteDiff="6a86dc24-6348-571c-b903-95158fe2bd41" include("function/finitediff.jl")
