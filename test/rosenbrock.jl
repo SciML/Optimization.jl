@@ -165,15 +165,11 @@ end
     @test 10*sol.minimum < l1
 end
 
-# using MultistartOptimization
-# sol = solve(prob, MultistartOptimization.TikTak(100), local_method = NLopt.LD_LBFGS())
-# @test 10*sol.minimum < l1
-
 # using QuadDIRECT
 # sol = solve(prob, QuadDirect(); splits = ([-0.5, 0.0, 0.5],[-0.5, 0.0, 0.5]))
 # @test 10*sol.minimum < l1
 
-@testset "Evolutionary, BlackBoxOptim, Metaheuristics, Nonconvex" begin
+@testset "Evolutionary, BlackBoxOptim, Metaheuristics, Nonconvex, MultistartOptimization" begin
     optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoZygote())
     using Evolutionary
     prob = GalacticOptim.OptimizationProblem(optprob, x0, _p)
@@ -425,5 +421,11 @@ end
     @test 10*sol.minimum < l1
 
     sol = solve(prob, BayesOptAlg(NLoptAlg(:LN_NELDERMEAD)), sub_options=(;maxeval=100))
+    @test 10*sol.minimum < l1
+
+    using MultistartOptimization
+    f = OptimizationFunction(rosenbrock,GalacticOptim.AutoForwardDiff())
+    prob = GalacticOptim.OptimizationProblem(f, x0, _p, lb = [-1.0,-1.0], ub = [1.5,1.5])
+    sol = solve(prob, MultistartOptimization.TikTak(100), local_method = NLopt.LD_LBFGS())
     @test 10*sol.minimum < l1
 end
