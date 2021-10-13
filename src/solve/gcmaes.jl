@@ -64,7 +64,11 @@ function __solve(prob::OptimizationProblem, opt::GCMAESOpt;
     opt_args = _map_optimizer_args(prob,opt, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
     
     t0 = time()
-    opt_xmin, opt_fmin, opt_ret = GCMAES.minimize(isnothing(f.grad) ? _loss : (_loss,g), prob.u0, σ0, prob.lb, prob.ub, opt_args...)
+    if prob.sense === MaxSense 
+        opt_xmin, opt_fmin, opt_ret = GCMAES.maximize(isnothing(f.grad) ? _loss : (_loss,g), prob.u0, σ0, prob.lb, prob.ub; opt_args...)
+    else
+        opt_xmin, opt_fmin, opt_ret = GCMAES.minimize(isnothing(f.grad) ? _loss : (_loss,g), prob.u0, σ0, prob.lb, prob.ub; opt_args...)
+    end
     t1 = time()
 
     SciMLBase.build_solution(prob, opt, opt_xmin, opt_fmin; retcode=Symbol(Bool(opt_ret)))
