@@ -173,7 +173,7 @@ end
 # sol = solve(prob, QuadDirect(); splits = ([-0.5, 0.0, 0.5],[-0.5, 0.0, 0.5]))
 # @test 10*sol.minimum < l1
 
-@testset "Evolutionary, BlackBoxOptim, Metaheuristics, Nonconvex" begin
+@testset "Evolutionary, BlackBoxOptim, Metaheuristics, Nonconvex, SpeedMapping" begin
     optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoZygote())
     using Evolutionary
     prob = GalacticOptim.OptimizationProblem(optprob, x0, _p)
@@ -426,4 +426,19 @@ end
 
     sol = solve(prob, BayesOptAlg(NLoptAlg(:LN_NELDERMEAD)), sub_options=(;maxeval=100))
     @test 10*sol.minimum < l1
+
+    using SpeedMapping
+    f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
+    prob = OptimizationProblem(f, x0, _p)
+    sol = solve(prob,SpeedMappingOpt())
+
+    prob = OptimizationProblem(f, x0, _p;lb=[0.0,0.0], ub=[1.0,1.0])
+    sol = solve(prob,SpeedMappingOpt())
+
+    f = OptimizationFunction(rosenbrock)
+    prob = OptimizationProblem(f, x0, _p)
+    sol = solve(prob,SpeedMappingOpt())
+
+    prob = OptimizationProblem(f, x0, _p;lb=[0.0,0.0], ub=[1.0,1.0])
+    sol = solve(prob,SpeedMappingOpt())
 end
