@@ -20,18 +20,14 @@ import Pkg; Pkg.add("GalacticOptim")
 ```
 The packages relevant to the core functionality of GalacticOptim.jl will be imported
 accordingly and, in most cases, you do not have to worry about the manual
-installation of dependencies. Below is the list of packages that need to be
-installed explicitly if you intend to use the specific optimization algorithms
-offered by them:
+installation of dependencies. However, you will need to add the specific optimizer
+packages.
 
-- [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl)
-- [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)
-- [MultistartOptimization.jl](https://github.com/tpapp/MultistartOptimization.jl)
-- [QuadDIRECT.jl](https://github.com/timholy/QuadDIRECT.jl)
-- [Evolutionary.jl](https://wildart.github.io/Evolutionary.jl/dev/)
-- [CMAEvolutionStrategy.jl](https://github.com/jbrea/CMAEvolutionStrategy.jl)
+## Overview of the Optimizers
 
-The following optimization packages are included by default:
-
-- [Flux.jl](https://fluxml.ai/)
-- [Optim.jl](https://julianlsolvers.github.io/Optim.jl/stable/)
+| Package       | Local Gradient-Based | Local Hessian-Based | Local Derivative-Free | Local Constrained | Global Unconstrained | Global Constrained |
+|---------------|----------------------|---------------------|-----------------------|-------------------|----------------------|--------------------|
+| Flux          | x                    |                     |                       |                   |                      |                    |
+| Optim         | x                    | x                   | x                     | x                 | x                    | x                  |
+| BlackBoxOptim |                      |                     |                       |                   | x                    |                    |
+| NLopt         | x                    | x                   | x                     | x                 | x                    | x                  |
