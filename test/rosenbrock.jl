@@ -165,16 +165,11 @@ end
     @test 10*sol.minimum < l1
 end
 
-# using MultistartOptimization
-# sol = solve(prob, MultistartOptimization.TikTak(100), local_method = NLopt.LD_LBFGS())
-# @test 10*sol.minimum < l1
-
 # using QuadDIRECT
 # sol = solve(prob, QuadDirect(); splits = ([-0.5, 0.0, 0.5],[-0.5, 0.0, 0.5]))
 # @test 10*sol.minimum < l1
 
-
-@testset "Evolutionary, BlackBoxOptim, Metaheuristics, Nonconvex, GCMAES, SpeedMapping, NOMAD" begin
+@testset "Evolutionary, BlackBoxOptim, Metaheuristics, Nonconvex, GCMAES, SpeedMapping, MultistartOptimization, NOMAD" begin
     optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoZygote())
     using Evolutionary
     prob = GalacticOptim.OptimizationProblem(optprob, x0, _p)
@@ -456,13 +451,19 @@ end
     prob = OptimizationProblem(f, x0, _p)
     sol = solve(prob,SpeedMappingOpt())
 
-    prob = OptimizationProblem(f, x0, _p;lb=[0.0,0.0], ub=[1.0,1.0])
+    prob = OptimizationProblem(f, x0, _p;lb = [-1.0,-1.0], ub = [1.5,1.5])
     sol = solve(prob,SpeedMappingOpt())
 
     f = OptimizationFunction(rosenbrock)
     prob = OptimizationProblem(f, x0, _p)
     sol = solve(prob,SpeedMappingOpt())
 
-    prob = OptimizationProblem(f, x0, _p;lb=[0.0,0.0], ub=[1.0,1.0])
+    prob = OptimizationProblem(f, x0, _p;lb = [-1.0,-1.0], ub = [1.5,1.5])
     sol = solve(prob,SpeedMappingOpt())
+  
+    using MultistartOptimization
+    f = OptimizationFunction(rosenbrock,GalacticOptim.AutoForwardDiff())
+    prob = GalacticOptim.OptimizationProblem(f, x0, _p, lb = [-1.0,-1.0], ub = [1.5,1.5])
+    sol = solve(prob, MultistartOptimization.TikTak(100), local_method = NLopt.LD_LBFGS())
+    @test 10*sol.minimum < l1
 end

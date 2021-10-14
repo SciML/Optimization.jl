@@ -27,9 +27,11 @@ function __init__()
     @require GCMAES="4aa9d100-eb0f-11e8-15f1-25748831eb3b" include("solve/gcmaes.jl")
     @require MathOptInterface="b8f27783-ece8-5eb3-8dc8-9495eed66fee" include("solve/moi.jl")
     @require MultistartOptimization="3933049c-43be-478e-a8bb-6e0f7fd53575" include("solve/multistartoptimization.jl")
-    @require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" include("solve/nlopt.jl")
+    @require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" begin
+        include("solve/nlopt.jl")
+        @require QuadDIRECT="dae52e8d-d666-5120-a592-9e15c33b8d7a" include("solve/quaddirect.jl")
+    end
     @require Optim="429524aa-4258-5aef-a3af-852621145aeb" include("solve/optim.jl")
-    @require QuadDIRECT="dae52e8d-d666-5120-a592-9e15c33b8d7a" include("solve/quaddirect.jl")
     @require Nonconvex="01bcebdf-4d21-426d-b5c4-6132c1619978" begin
         @require ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4" begin
             @require NonconvexBayesian="fb352abc-de7b-48de-9ebd-665b54b5d9b3" include("solve/nonconvex/nonconvex_bayesian.jl")
