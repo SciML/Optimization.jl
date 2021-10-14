@@ -31,6 +31,7 @@ makedocs(
             "CMAEvolutionStrategy.jl" => "optimization_packages/cmaevolutionstrategy.md",
             "Evolutionary.jl" => "optimization_packages/evolutionary.md",
             "Flux.jl" => "optimization_packages/flux.md",
+            "GCMAES.jl" => "optimization_packages/gcmaes.md",
             "MathOptInterface.jl" => "optimization_packages/mathoptinterface.md",
             "MultistartOptimization.jl" => "optimization_packages/multistartoptimization.md",
             "Metaheuristics.jl" => "optimization_packages/metaheuristics.md",

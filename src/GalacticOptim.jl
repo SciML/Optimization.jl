@@ -24,6 +24,7 @@ function __init__()
     @require CMAEvolutionStrategy="8d3b24bd-414e-49e0-94fb-163cc3a3e411" include("solve/cmaevolutionstrategy.jl")
     @require Evolutionary="86b6b26d-c046-49b6-aa0b-5f0f74682bd6" include("solve/evolutionary.jl")
     @require Flux="587475ba-b771-5e3f-ad9e-33799f191a9c" include("solve/flux.jl")
+    @require GCMAES="4aa9d100-eb0f-11e8-15f1-25748831eb3b" include("solve/gcmaes.jl")
     @require MathOptInterface="b8f27783-ece8-5eb3-8dc8-9495eed66fee" include("solve/moi.jl")
     @require MultistartOptimization="3933049c-43be-478e-a8bb-6e0f7fd53575" include("solve/multistartoptimization.jl")
     @require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" begin
@@ -45,6 +46,7 @@ function __init__()
         end
     end
     @require Metaheuristics="bcdb8e00-2c21-11e9-3065-2b553b22f898" include("solve/metaheuristics.jl")
+    @require SpeedMapping="f1835b91-879b-4a3f-a438-e4baacf14412" include("solve/speedmapping.jl")
 
     # AD backends
     @require FiniteDiff="6a86dc24-6348-571c-b903-95158fe2bd41" include("function/finitediff.jl")
