@@ -44,6 +44,7 @@ function __init__()
         end
     end
     @require Metaheuristics="bcdb8e00-2c21-11e9-3065-2b553b22f898" include("solve/metaheuristics.jl")
+    @require NOMAD="02130f1c-4665-5b79-af82-ff1385104aa0" include("solve/nomad.jl")
     @require SpeedMapping="f1835b91-879b-4a3f-a438-e4baacf14412" include("solve/speedmapping.jl")
 
     # AD backends
