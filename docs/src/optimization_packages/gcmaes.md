@@ -1,5 +1,5 @@
 # GCMAES.jl
-[`GCMAES`](https://github.com/AStupidBear/GCMAES.jl) is a Julia package implementing the **Gradient-based Covariance Matrix Adaptation Evolutionary Strategy** which can utilize the gradient infomation to spped up the optimization process.
+[`GCMAES`](https://github.com/AStupidBear/GCMAES.jl) is a Julia package implementing the **Gradient-based Covariance Matrix Adaptation Evolutionary Strategy** which can utilize the gradient information to speed up the optimization process.
 
 The GCMAES algorithm is called by `GCMAESOpt()` and the initial search variance is set as a keyword argument `σ0` (default: `σ0 = 0.2`)
 
