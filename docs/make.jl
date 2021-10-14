@@ -41,18 +41,6 @@ makedocs(
             "Optim.jl" => "optimization_packages/optim.md",
             "QuadDIRECT.jl" => "optimization_packages/quaddirect.md"
         ],
-
-        "Local Optimizers" => [
-            "local_optimizers/local_gradient.md",
-            "local_optimizers/local_derivative_free.md",
-            "local_optimizers/local_hessian.md",
-            "local_optimizers/local_hessian_free.md"
-        ],
-
-        "Global Optimizers" => [
-            "global_optimizers/global.md",
-            "global_optimizers/global_constrained.md"
-        ]
     ]
 )
 
