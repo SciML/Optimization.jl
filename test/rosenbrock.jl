@@ -451,14 +451,14 @@ end
     prob = OptimizationProblem(f, x0, _p)
     sol = solve(prob,SpeedMappingOpt())
 
-    prob = OptimizationProblem(f, x0, _p;lb=[0.0,0.0], ub=[1.0,1.0])
+    prob = OptimizationProblem(f, x0, _p;lb = [-1.0,-1.0], ub = [1.5,1.5])
     sol = solve(prob,SpeedMappingOpt())
 
     f = OptimizationFunction(rosenbrock)
     prob = OptimizationProblem(f, x0, _p)
     sol = solve(prob,SpeedMappingOpt())
 
-    prob = OptimizationProblem(f, x0, _p;lb=[0.0,0.0], ub=[1.0,1.0])
+    prob = OptimizationProblem(f, x0, _p;lb = [-1.0,-1.0], ub = [1.5,1.5])
     sol = solve(prob,SpeedMappingOpt())
   
     using MultistartOptimization
