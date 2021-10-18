@@ -1,7 +1,7 @@
 # QuadDIRECT.jl
 [`QuadDIRECT`](https://github.com/timholy/QuadDIRECT.jl) is a Julia package implementing **QuadDIRECT algorithm (inspired by DIRECT and MCS)**. 
 
-The CMAEvolutionStrategy algorithm is called using `QuadDirect()`. 
+The QuadDIRECT algorithm is called using `QuadDirect()`. 
 
 Also note that `QuadDIRECT` should (for now) be installed by doing:
 
