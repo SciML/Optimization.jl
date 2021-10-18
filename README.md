@@ -31,13 +31,13 @@ offered by them:
 - [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl)
 - [Evolutionary.jl](https://github.com/wildart/Evolutionary.jl) (see also [this documentation](https://wildart.github.io/Evolutionary.jl/dev/))
 - [GCMAES.jl](https://github.com/AStupidBear/GCMAES.jl)
-- [Metaheuristics.jl](https://github.com/jmejia8/Metaheuristics.jl)
+- [Metaheuristics.jl](https://github.com/jmejia8/Metaheuristics.jl) (see also [this documentation](https://jmejia8.github.io/Metaheuristics.jl/stable/))
 - [MultistartOptimization.jl](https://github.com/tpapp/MultistartOptimization.jl) (see also [this documentation](https://juliahub.com/docs/MultistartOptimization/cVZvi/0.1.0/))
 - [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) (usage via the NLopt API; see also the available [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/))
-- [NOMAD.jl](https://github.com/bbopt/NOMAD.jl)
-- [Nonconvex.jl](https://github.com/JuliaNonconvex/Nonconvex.jl)
+- [NOMAD.jl](https://github.com/bbopt/NOMAD.jl) (see also [this documentation](https://bbopt.github.io/NOMAD.jl/stable/))
+- [Nonconvex.jl](https://github.com/JuliaNonconvex/Nonconvex.jl) (see also [this documentation](https://julianonconvex.github.io/Nonconvex.jl/stable/))
 - [QuadDIRECT.jl](https://github.com/timholy/QuadDIRECT.jl)
-- [SpeedMapping.jl](https://github.com/NicolasL-S/SpeedMapping.jl)
+- [SpeedMapping.jl](https://github.com/NicolasL-S/SpeedMapping.jl) (see also [this documentation](https://nicolasl-s.github.io/SpeedMapping.jl/stable/))
 
 ## Tutorials and Documentation
 
