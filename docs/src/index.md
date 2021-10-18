@@ -25,9 +25,24 @@ packages.
 
 ## Overview of the Optimizers
 
-| Package       | Local Gradient-Based | Local Hessian-Based | Local Derivative-Free | Local Constrained | Global Unconstrained | Global Constrained |
-|---------------|----------------------|---------------------|-----------------------|-------------------|----------------------|--------------------|
-| Flux          | x                    |                     |                       |                   |                      |                    |
-| Optim         | x                    | x                   | x                     | x                 | x                    | x                  |
-| BlackBoxOptim |                      |                     |                       |                   | x                    |                    |
-| NLopt         | x                    | x                   | x                     | x                 | x                    | x                  |
+| Package                  | Local Gradient-Based     | Local Hessian-Based      | Local Derivative-Free    | Local Constrained        | Global Unconstrained     | Global Constrained       |
+|--------------------------|:------------------------:|:------------------------:|:------------------------:|:------------------------:|:------------------------:|:------------------------:|
+| BlackBoxOptim            | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :heavy_multiplication_x: |
+| CMEAEvolutionaryStrategy | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :heavy_multiplication_x: |
+| Evolutionary             | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :yellow_circle:          |
+| Flux                     | :heavy_check_mark:       | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: |
+| GCMAES                   | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :heavy_multiplication_x: |
+| MathOptInterface         | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_multiplication_x: |
+| MultistartOptimization   | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :heavy_multiplication_x: |
+| Metaheuristics           | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :yellow_circle:          |
+| NOMAD                    | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :yellow_circle:          |
+| NLopt                    | :heavy_check_mark:       | :heavy_multiplication_x: | :heavy_check_mark:       | :yellow_circle:          | :heavy_check_mark:       | :yellow_circle:          |
+| Nonconvex                | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :yellow_circle:          | :heavy_check_mark:       | :yellow_circle:          |
+| Optim                    | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       |
+| QuadDIRECT               | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :heavy_multiplication_x: |
+
+:heavy_check_mark: = supported
+
+:yellow_circle: = supported in downstream library but not yet implemented in `GalacticOptim`; PR to add this functionality are welcome
+
+:heavy_multiplication_x: = not supported

@@ -28,14 +28,17 @@ installation of dependencies. Below is the list of packages that need to be
 installed explicitly if you intend to use the specific optimization algorithms
 offered by them:
 
-- [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) (solver: `BBO()`)
-- [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) (usage via the NLopt API;
-see also the available [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/))
-- [MultistartOptimization.jl](https://github.com/tpapp/MultistartOptimization.jl)
-(see also [this documentation](https://juliahub.com/docs/MultistartOptimization/cVZvi/0.1.0/))
-- [QuadDIRECT.jl](https://github.com/timholy/QuadDIRECT.jl)
+- [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl)
 - [Evolutionary.jl](https://github.com/wildart/Evolutionary.jl) (see also [this documentation](https://wildart.github.io/Evolutionary.jl/dev/))
-- [CMAEvolutionStrategy.jl](https://github.com/jbrea/CMAEvolutionStrategy.jl)
+- [GCMAES.jl](https://github.com/AStupidBear/GCMAES.jl)
+- [MathOptInterface.jl](https://github.com/jump-dev/MathOptInterface.jl) (usage of algorithm via MathOptInterface API; see also the API [documentation](https://jump.dev/MathOptInterface.jl/stable/))
+- [Metaheuristics.jl](https://github.com/jmejia8/Metaheuristics.jl) (see also [this documentation](https://jmejia8.github.io/Metaheuristics.jl/stable/))
+- [MultistartOptimization.jl](https://github.com/tpapp/MultistartOptimization.jl) (see also [this documentation](https://juliahub.com/docs/MultistartOptimization/cVZvi/0.1.0/))
+- [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) (usage via the NLopt API; see also the available [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/))
+- [NOMAD.jl](https://github.com/bbopt/NOMAD.jl) (see also [this documentation](https://bbopt.github.io/NOMAD.jl/stable/))
+- [Nonconvex.jl](https://github.com/JuliaNonconvex/Nonconvex.jl) (see also [this documentation](https://julianonconvex.github.io/Nonconvex.jl/stable/))
+- [QuadDIRECT.jl](https://github.com/timholy/QuadDIRECT.jl)
+- [SpeedMapping.jl](https://github.com/NicolasL-S/SpeedMapping.jl) (see also [this documentation](https://nicolasl-s.github.io/SpeedMapping.jl/stable/))
 
 ## Tutorials and Documentation
 
