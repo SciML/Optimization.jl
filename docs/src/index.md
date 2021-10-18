@@ -43,6 +43,6 @@ packages.
 
 :heavy_check_mark: = supported
 
-:o: = supported in downstream library but not yet implemented in `GalacticOptim`; PR to add this functionality are welcome
+:yellow_circle: = supported in downstream library but not yet implemented in `GalacticOptim`; PR to add this functionality are welcome
 
 :heavy_multiplication_x: = not supported
