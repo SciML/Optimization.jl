@@ -28,9 +28,10 @@ function __solve(prob::OptimizationProblem, opt::AbstractFluxOptimiser, data = D
     θ = copy(prob.u0)
     G = copy(θ)
 
-    local x, min_err, _loss
+    local x, min_err, min_θ
     min_err = typemax(eltype(prob.u0)) #dummy variables
     min_opt = 1
+    min_θ = prob.u0
 
     f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
 
@@ -53,10 +54,13 @@ function __solve(prob::OptimizationProblem, opt::AbstractFluxOptimiser, data = D
           if first(x) < first(min_err)  #found a better solution
             min_opt = opt
             min_err = x
+            min_θ = θ
           end
           if i == maxiters  #Last iteration, revert to best.
             opt = min_opt
-            cb(θ,min_err...)
+            x = min_err
+            θ = min_θ
+            cb(θ,x...)
           end
         end
       end
