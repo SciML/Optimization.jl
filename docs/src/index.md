@@ -27,22 +27,22 @@ packages.
 
 | Package                  | Local Gradient-Based     | Local Hessian-Based      | Local Derivative-Free    | Local Constrained        | Global Unconstrained     | Global Constrained       |
 |--------------------------|:------------------------:|:------------------------:|:------------------------:|:------------------------:|:------------------------:|:------------------------:|
-| BlackBoxOptim            | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :heavy_multiplication_x: |
-| CMEAEvolutionaryStrategy | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :heavy_multiplication_x: |
-| Evolutionary             | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :yellow_circle:          |
-| Flux                     | :heavy_check_mark:       | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: |
-| GCMAES                   | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :heavy_multiplication_x: |
-| MathOptInterface         | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_multiplication_x: |
-| MultistartOptimization   | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :heavy_multiplication_x: |
-| Metaheuristics           | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :yellow_circle:          |
-| NOMAD                    | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :yellow_circle:          |
-| NLopt                    | :heavy_check_mark:       | :heavy_multiplication_x: | :heavy_check_mark:       | :yellow_circle:          | :heavy_check_mark:       | :yellow_circle:          |
-| Nonconvex                | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :yellow_circle:          | :heavy_check_mark:       | :yellow_circle:          |
-| Optim                    | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       |
-| QuadDIRECT               | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :heavy_multiplication_x: |
+| BlackBoxOptim            |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        |                        ❌ |
+| CMEAEvolutionaryStrategy |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        |                        ❌ |
+| Evolutionary             |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        | 🟡                         |
+| Flux                     | ✅                        |                        ❌ |                        ❌ |                        ❌ |                        ❌ |                        ❌ |
+| GCMAES                   |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        |                        ❌ |
+| MathOptInterface         | ✅                        | ✅                        | ✅                        | ✅                        | ✅                        |                        ❌ |
+| MultistartOptimization   |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        |                        ❌ |
+| Metaheuristics           |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        | 🟡                         |
+| NOMAD                    |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        | 🟡                         |
+| NLopt                    | ✅                        |                        ❌ | ✅                        | 🟡                         | ✅                        | 🟡                         |
+| Nonconvex                | ✅                        | ✅                        | ✅                        | 🟡                         | ✅                        | 🟡                         |
+| Optim                    | ✅                        | ✅                        | ✅                        | ✅                        | ✅                        | ✅                        |
+| QuadDIRECT               |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        |                        ❌ |
 
-:heavy_check_mark: = supported
+✅ = supported
 
-:yellow_circle: = supported in downstream library but not yet implemented in `GalacticOptim`; PR to add this functionality are welcome
+🟡 = supported in downstream library but not yet implemented in `GalacticOptim`; PR to add this functionality are welcome
 
-:heavy_multiplication_x: = not supported
+❌ = not supported
