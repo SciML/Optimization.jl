@@ -28,14 +28,16 @@ installation of dependencies. Below is the list of packages that need to be
 installed explicitly if you intend to use the specific optimization algorithms
 offered by them:
 
-- [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) (solver: `BBO()`)
-- [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) (usage via the NLopt API;
-see also the available [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/))
-- [MultistartOptimization.jl](https://github.com/tpapp/MultistartOptimization.jl)
-(see also [this documentation](https://juliahub.com/docs/MultistartOptimization/cVZvi/0.1.0/))
-- [QuadDIRECT.jl](https://github.com/timholy/QuadDIRECT.jl)
+- [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl)
 - [Evolutionary.jl](https://github.com/wildart/Evolutionary.jl) (see also [this documentation](https://wildart.github.io/Evolutionary.jl/dev/))
-- [CMAEvolutionStrategy.jl](https://github.com/jbrea/CMAEvolutionStrategy.jl)
+- [GCMAES.jl](https://github.com/AStupidBear/GCMAES.jl)
+- [Metaheuristics.jl](https://github.com/jmejia8/Metaheuristics.jl)
+- [MultistartOptimization.jl](https://github.com/tpapp/MultistartOptimization.jl) (see also [this documentation](https://juliahub.com/docs/MultistartOptimization/cVZvi/0.1.0/))
+- [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) (usage via the NLopt API; see also the available [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/))
+- [NOMAD.jl](https://github.com/bbopt/NOMAD.jl)
+- [Nonconvex.jl](https://github.com/JuliaNonconvex/Nonconvex.jl)
+- [QuadDIRECT.jl](https://github.com/timholy/QuadDIRECT.jl)
+- [SpeedMapping.jl](https://github.com/NicolasL-S/SpeedMapping.jl)
 
 ## Tutorials and Documentation
 
