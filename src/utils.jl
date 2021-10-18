@@ -59,3 +59,14 @@ function _check_and_convert_maxtime(maxtime)
       return convert(Float32, maxtime)
   end
 end
+
+function check_version(pkg::String,ver::String )
+    deps = dependencies()
+    installs = Dict{String, VersionNumber}()
+    for (uuid, dep) in deps
+        dep.is_direct_dep || continue
+        dep.version === nothing && continue
+        installs[dep.name] = dep.version
+    end
+    return installs[pkg] >= VersionNumber(ver)
+end
