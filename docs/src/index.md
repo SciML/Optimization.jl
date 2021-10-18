@@ -41,8 +41,8 @@ packages.
 | Optim                    | ✅                        | ✅                        | ✅                        | ✅                        | ✅                        | ✅                        |
 | QuadDIRECT               |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        |                        ❌ |
 
-✅                  = supported
+✅ = supported
 
-🟡                = supported in downstream library but not yet implemented in `GalacticOptim`; PR to add this functionality are welcome
+🟡 = supported in downstream library but not yet implemented in `GalacticOptim`; PR to add this functionality are welcome
 
-                       ❌ = not supported
+❌ = not supported
