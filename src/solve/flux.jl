@@ -54,7 +54,7 @@ function __solve(prob::OptimizationProblem, opt::AbstractFluxOptimiser, data = D
           if first(x) < first(min_err)  #found a better solution
             min_opt = opt
             min_err = x
-            min_θ = θ
+            min_θ = copy(θ)
           end
           if i == maxiters  #Last iteration, revert to best.
             opt = min_opt
