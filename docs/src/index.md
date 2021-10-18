@@ -29,15 +29,15 @@ packages.
 |--------------------------|:------------------------:|:------------------------:|:------------------------:|:------------------------:|:------------------------:|:------------------------:|
 | BlackBoxOptim            | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :heavy_multiplication_x: |
 | CMEAEvolutionaryStrategy | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :heavy_multiplication_x: |
-| Evolutionary             | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :o:                      |
+| Evolutionary             | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :yellow_circle:          |
 | Flux                     | :heavy_check_mark:       | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: |
 | GCMAES                   | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :heavy_multiplication_x: |
 | MathOptInterface         | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_multiplication_x: |
 | MultistartOptimization   | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :heavy_multiplication_x: |
-| Metaheuristics           | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :o:                      |
-| NOMAD                    | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :o:                      |
-| NLopt                    | :heavy_check_mark:       | :heavy_multiplication_x: | :heavy_check_mark:       | :o:                      | :heavy_check_mark:       | :o:                      |
-| Nonconvex                | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :o:                      | :heavy_check_mark:       | :o:                      |
+| Metaheuristics           | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :yellow_circle:          |
+| NOMAD                    | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :yellow_circle:          |
+| NLopt                    | :heavy_check_mark:       | :heavy_multiplication_x: | :heavy_check_mark:       | :yellow_circle:          | :heavy_check_mark:       | :yellow_circle:          |
+| Nonconvex                | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :yellow_circle:          | :heavy_check_mark:       | :yellow_circle:          |
 | Optim                    | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       | :heavy_check_mark:       |
 | QuadDIRECT               | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_check_mark:       | :heavy_multiplication_x: |
 
