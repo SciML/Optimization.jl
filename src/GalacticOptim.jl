@@ -16,8 +16,6 @@ import SciMLBase: OptimizationProblem, OptimizationFunction, AbstractADType, __s
 
 @enum ObjSense MinSense MaxSense
 
-abstract type AbstractGalacticOptimOptimizer end
-
 include("utils.jl")
 include("function/function.jl")
 
