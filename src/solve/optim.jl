@@ -32,7 +32,24 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::Union{Optim.Abstra
     return Optim.Options(;mapped_args...)
 end
 
-function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
+function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer, data = DEFAULT_DATA;
+    kwargs...)
+    if !isnothing(prob.lb) | !isnothing(prob.ub)
+        if !(opt isa Union{Optim.Fminbox, Optim.SAMIN, Optim.AbstractConstrainedOptimizer})
+            if opt isa Optim.ParticleSwarm
+                opt = Optim.ParticleSwarm(;lower=prob.lb, upper=prob.ub, n_particles=opt.n_particles)
+            elseif opt isa Optim.SimulatedAnnealing
+                @warn "$(opt) can currently not be wrapped in Fminbox(). The lower and upper bounds thus will be ignored. Consider using a different optimizer or open an issue with Optim.jl"
+            else
+                opt = Optim.Fminbox(opt)
+            end
+        end
+    end
+
+    return ___solve(prob, opt, data; kwargs...)
+end
+
+function ___solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
                  data = DEFAULT_DATA;
                  cb = (args...) -> (false),
                  maxiters::Union{Number, Nothing} = nothing,
@@ -116,7 +133,7 @@ function __solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
     SciMLBase.build_solution(prob, opt, opt_res.minimizer, prob.sense === MaxSense ? -opt_res.minimum : opt_res.minimum; original=opt_res, retcode=opt_ret)
 end
 
-function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN},
+function ___solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN},
                  data = DEFAULT_DATA;
                  cb = (args...) -> (false),
                  maxiters::Union{Number, Nothing} = nothing,
@@ -184,7 +201,7 @@ function __solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN
 end
 
 
-function __solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
+function ___solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
                  data = DEFAULT_DATA;
                  cb = (args...) -> (false),
                  maxiters::Union{Number, Nothing} = nothing,
