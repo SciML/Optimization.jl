@@ -176,7 +176,8 @@ sol = solve(prob, NLopt.G_MLSL_LDS(), local_method = NLopt.LD_LBFGS(), local_max
 The following algorithms in [`NLopt`](https://github.com/JuliaOpt/NLopt.jl) are performing global optimization on problems with
 constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
 
-> !Attention! Equality and inequality equation support for `NLopt` via `GalacticOptim` is not yet supported. However, these algorithms are still usable.
+!!! note "Constraints with NLopt" 
+    Equality and inequality equation support for `NLopt` via `GalacticOptim` is not supported directly. However, you can use the MOI wrapper to use constraints with NLopt optimisers.
 
 `NLopt` global optimizers which fall into this category are:
 
