@@ -10,7 +10,7 @@ using Requires
 using DiffResults
 using Logging, ProgressLogging, Printf, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
 using ArrayInterface, Base.Iterators
-using Pkg: dependencies
+using Pkg
 
 import SciMLBase: OptimizationProblem, OptimizationFunction, AbstractADType, __solve
 
@@ -28,7 +28,11 @@ function __init__()
     @require GCMAES="4aa9d100-eb0f-11e8-15f1-25748831eb3b" include("solve/gcmaes.jl")
     @require MathOptInterface="b8f27783-ece8-5eb3-8dc8-9495eed66fee" include("solve/moi.jl")
     @require MultistartOptimization="3933049c-43be-478e-a8bb-6e0f7fd53575" begin
-        check_version("MultistartOptimization", "0.1.3") ? include("solve/multistartoptimization.jl") : error("GalacticOptim.jl requires MultistartOptimization to be at least at v0.1.3")
+        if check_pkg_version("MultistartOptimization", "0.1.2"; branch="master")
+            include("solve/multistartoptimization.jl")
+        else
+            @require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" include("solve/multistartoptimization_deprecated.jl")
+        end
     end
     @require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" include("solve/nlopt.jl")
     @require QuadDIRECT="dae52e8d-d666-5120-a592-9e15c33b8d7a" include("solve/quaddirect.jl")

@@ -60,13 +60,14 @@ function _check_and_convert_maxtime(maxtime)
   end
 end
 
-function check_version(pkg::String,ver::String )
-    deps = dependencies()
-    installs = Dict{String, VersionNumber}()
+function check_pkg_version(pkg::String,ver::String; branch::Union{String, Nothing}=nothing)
+    deps = Pkg.dependencies()
+    pkg_info = Dict{String, Pkg.Types.PackageInfo}()
     for (uuid, dep) in deps
         dep.is_direct_dep || continue
         dep.version === nothing && continue
-        installs[dep.name] = dep.version
+        pkg_info[dep.name] = dep
     end
-    return installs[pkg] >= VersionNumber(ver)
+
+    return (isnothing(branch) | (pkg_info[pkg].git_revision == branch)) ? pkg_info[pkg].version >= VersionNumber(ver) : pkg_info[pkg].version > VersionNumber(ver) 
 end
