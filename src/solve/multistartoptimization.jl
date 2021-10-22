@@ -64,9 +64,13 @@
                     local_maxiters::Union{Number, Nothing} = nothing,
                     local_maxtime::Union{Number, Nothing} = nothing,
                     local_options::Union{NamedTuple,Nothing} = nothing,
-                    progress = false, kwargs...)
+                    progress = false,
+                    use_threads=true,
+                    kwargs...)
         local x, _loss
     
+        @warn "This method might soon be deprecated; if you are on MultistartOptimization v0.1.2#master or higher consider using the new method solve(prob::OptimizationProblem, multiopt::MultistartOptimization.TikTak, opt; use_threads=true,kwargs...) instead."
+
         maxiters = _check_and_convert_maxiters(maxiters)
         maxtime = _check_and_convert_maxtime(maxtime)
     
@@ -83,7 +87,7 @@
         multistart_method, local_method = _map_optimizer_args(prob, opt, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol,  local_method=local_method, local_maxiters =local_maxiters, local_maxtime=local_maxtime, local_options=local_options; kwargs...)
     
         t0 = time()
-        opt_res = MultistartOptimization.multistart_minimization(multistart_method, local_method, opt_setup)
+        opt_res = MultistartOptimization.multistart_minimization(multistart_method, local_method, opt_setup; use_threads=use_threads)
         t1 = time()
         opt_ret = hasproperty(opt_res, :ret) ? opt_res.ret : nothing
     
