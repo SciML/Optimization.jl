@@ -7,7 +7,9 @@ Currently, only one global method (`TikTak`) is implemented and called by `Multi
 
 Currently, the local methods can be one of the algotithms implemented in `NLopt.jl`. 
 
+
 !!! note
+
     If you checkout the master branch of `MultiStartOptimization` or have version `>=0.1.3` you can use all optimizers found in the `GalacticOptim` which work with an initial parameter set. See an example of this below.
 
 ## Global Optimizer
