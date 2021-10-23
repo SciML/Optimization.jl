@@ -195,7 +195,7 @@ end
     sol = solve(prob, ABC())
     @test 10*sol.minimum < l1
 
-    sol = solve(prob, CGSA())
+    sol = solve(prob, CGSA(N=100))
     @test 10*sol.minimum < l1
 
     sol = solve(prob, SA())
