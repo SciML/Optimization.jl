@@ -17,7 +17,7 @@ code to get started is the following:
 
  using BlackBoxOptim
  prob = OptimizationProblem(rosenbrock, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
- sol = solve(prob,BBO())
+ sol = solve(prob,BBO_adaptive_de_rand_1_bin_radiuslimited())
 ```
 
 Note that Optim.jl is a core dependency of GalaticOptim.jl. However, BlackBoxOptim.jl
