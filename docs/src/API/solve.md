@@ -42,11 +42,12 @@ The callback function `cb` is a function which is called after every optimizer
 step. Its signature is:
 
 ```julia
-cb = (x,other_args) -> nothing
+cb = (x,other_args) -> false
 ```
 
 where `other_args` is are the extra return arguments of the optimization `f`.
 For example, if `f(x,p) = 5x`, then `cb = (x) -> ...` is used. If `f(x,p) = 5x,55x`,
 then `cb = (x,extra) -> ...` is used, where `extra = 55x`. This allows for saving
 values from the optimization and using them for plotting and display without
-recalculating.
+recalculating. The callback should return a Boolean value, and the default 
+should be `false`, such that the optimization gets stopped if it returns `true`.

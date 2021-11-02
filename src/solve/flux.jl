@@ -34,7 +34,6 @@ function __solve(prob::OptimizationProblem, opt::Flux.Optimise.AbstractOptimiser
         end
         msg = @sprintf("loss: %.3g", x[1])
         progress && ProgressLogging.@logprogress msg i/maxiters
-        Flux.update!(opt, θ, G)
 
         if save_best
           if first(x) < first(min_err)  #found a better solution
@@ -47,8 +46,10 @@ function __solve(prob::OptimizationProblem, opt::Flux.Optimise.AbstractOptimiser
             x = min_err
             θ = min_θ
             cb(θ,x...)
+            break
           end
         end
+        Flux.update!(opt, θ, G)
       end
     end
 
