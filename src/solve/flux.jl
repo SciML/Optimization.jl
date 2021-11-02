@@ -1,18 +1,4 @@
-const AbstractFluxOptimiser = Union{Flux.Momentum,
-                                    Flux.Nesterov,
-                                    Flux.RMSProp,
-                                    Flux.ADAM,
-                                    Flux.RADAM,
-                                    Flux.AdaMax,
-                                    Flux.OADAM,
-                                    Flux.ADAGrad,
-                                    Flux.ADADelta,
-                                    Flux.AMSGrad,
-                                    Flux.NADAM,
-                                    Flux.AdaBelief,
-                                    Flux.Optimiser}
-
-function __solve(prob::OptimizationProblem, opt::AbstractFluxOptimiser, data = DEFAULT_DATA;
+function __solve(prob::OptimizationProblem, opt::Flux.Optimise.AbstractOptimiser, data = DEFAULT_DATA;
                  maxiters::Number = 0, cb = (args...) -> (false),
                  progress = false, save_best = true, kwargs...)
 
