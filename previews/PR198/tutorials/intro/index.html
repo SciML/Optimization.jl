@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Basic usage · GalacticOptim.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link rel="canonical" href="https://galacticoptim.sciml.ai/stable/tutorials/intro/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="GalacticOptim.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">GalacticOptim.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">GalacticOptim.jl: Unified Global Optimization Package</a></li><li><span class="tocitem">Tutorials</span><ul><li class="is-active"><a class="tocitem" href>Basic usage</a></li><li><a class="tocitem" href="../rosenbrock/">Rosenbrock function</a></li><li><a class="tocitem" href="../minibatch/">Minibatch</a></li><li><a class="tocitem" href="../symbolic/">Symbolic Modeling</a></li></ul></li><li><span class="tocitem">API</span><ul><li><a class="tocitem" href="../../API/optimization_problem/">OptimizationProblem</a></li><li><a class="tocitem" href="../../API/optimization_function/">OptimizationFunction</a></li><li><a class="tocitem" href="../../API/solve/">solve</a></li><li><a class="tocitem" href="../../API/modelingtoolkit/">ModelingToolkit Integration</a></li></ul></li><li><span class="tocitem">Optimizer Packages</span><ul><li><a class="tocitem" href="../../optimization_packages/blackboxoptim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../../optimization_packages/cmaevolutionstrategy/">CMAEvolutionStrategy.jl</a></li><li><a class="tocitem" href="../../optimization_packages/evolutionary/">Evolutionary.jl</a></li><li><a class="tocitem" href="../../optimization_packages/flux/">Flux.jl</a></li><li><a class="tocitem" href="../../optimization_packages/gcmaes/">GCMAES.jl</a></li><li><a class="tocitem" href="../../optimization_packages/mathoptinterface/">MathOptInterface.jl</a></li><li><a class="tocitem" href="../../optimization_packages/multistartoptimization/">MultistartOptimization.jl</a></li><li><a class="tocitem" href="../../optimization_packages/metaheuristics/">Metaheuristics.jl</a></li><li><a class="tocitem" href="../../optimization_packages/nomad/">NOMAD.jl</a></li><li><a class="tocitem" href="../../optimization_packages/nlopt/">NLopt.jl</a></li><li><a class="tocitem" href="../../optimization_packages/nonconvex/">Nonconvex.jl</a></li><li><a class="tocitem" href="../../optimization_packages/optim/">Optim.jl</a></li><li><a class="tocitem" href="../../optimization_packages/quaddirect/">QuadDIRECT.jl</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Basic usage</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Basic usage</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/SciML/GalacticOptim.jl/blob/master/docs/src/tutorials/intro.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Basic-usage"><a class="docs-heading-anchor" href="#Basic-usage">Basic usage</a><a id="Basic-usage-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-usage" title="Permalink"></a></h1><p>In this tutorial we introduce the basics of GalcticOptim.jl by showing how to easily mix local optimizers from Optim.jl and global optimizers from BlackBoxOptim.jl on the Rosenbrock equation. The simplest copy-pasteable code to get started is the following:</p><pre><code class="language-julia hljs"> using GalacticOptim, Optim
+ rosenbrock(x,p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+ x0 = zeros(2)
+ p  = [1.0,100.0]
+
+ prob = OptimizationProblem(rosenbrock,x0,p)
+ sol = solve(prob,NelderMead())
+
+
+ using BlackBoxOptim
+ prob = OptimizationProblem(rosenbrock, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+ sol = solve(prob,BBO_adaptive_de_rand_1_bin_radiuslimited())</code></pre><p>Note that Optim.jl is a core dependency of GalaticOptim.jl. However, BlackBoxOptim.jl is not and must already be installed (see the list above).</p><p>The output of the first optimization task (with the <code>NelderMead()</code> algorithm) is given below:</p><pre><code class="language-julia hljs">* Status: success
+
+* Candidate solution
+   Final objective value:     3.525527e-09
+
+* Found with
+   Algorithm:     Nelder-Mead
+
+* Convergence measures
+   √(Σ(yᵢ-ȳ)²)/n ≤ 1.0e-08
+
+* Work counters
+   Seconds run:   0  (vs limit Inf)
+   Iterations:    60
+   f(x) calls:    118</code></pre><p>We can also explore other methods in a similar way:</p><pre><code class="language-julia hljs"> f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
+ prob = OptimizationProblem(f, x0, p)
+ sol = solve(prob,BFGS())</code></pre><p>For instance, the above optimization task produces the following output:</p><pre><code class="language-julia hljs">* Status: success
+
+* Candidate solution
+   Final objective value:     7.645684e-21
+
+* Found with
+   Algorithm:     BFGS
+
+* Convergence measures
+   |x - x&#39;|               = 3.48e-07 ≰ 0.0e+00
+   |x - x&#39;|/|x&#39;|          = 3.48e-07 ≰ 0.0e+00
+   |f(x) - f(x&#39;)|         = 6.91e-14 ≰ 0.0e+00
+   |f(x) - f(x&#39;)|/|f(x&#39;)| = 9.03e+06 ≰ 0.0e+00
+   |g(x)|                 = 2.32e-09 ≤ 1.0e-08
+
+* Work counters
+   Seconds run:   0  (vs limit Inf)
+   Iterations:    16
+   f(x) calls:    53
+   ∇f(x) calls:   53</code></pre><pre><code class="language-julia hljs"> prob = OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+ sol = solve(prob, Fminbox(GradientDescent()))</code></pre><p>The examples clearly demonstrate that GalacticOptim.jl provides an intuitive way of specifying optimization tasks and offers a relatively easy access to a wide range of optimization algorithms.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« GalacticOptim.jl: Unified Global Optimization Package</a><a class="docs-footer-nextpage" href="../rosenbrock/">Rosenbrock function »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.10 on <span class="colophon-date" title="Saturday 4 December 2021 15:40">Saturday 4 December 2021</span>. Using Julia version 1.7.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
