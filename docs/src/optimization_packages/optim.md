@@ -378,14 +378,14 @@ constraint equations.
 
     * `solve(problem, SAMIN(nt, ns, rt, neps, f_tol, x_tol, coverage_ok, verbosity))`
     * Defaults:
-      * nt = 5
-      * ns = 5
-      * rt = 0.9
-      * neps = 5
-      * f_tol = 1e-12
-      * x_tol = 1e-6
-      * coverage_ok = false
-      * verbosity = 0
+      * `nt = 5`
+      * `ns = 5`
+      * `rt = 0.9`
+      * `neps = 5`
+      * `f_tol = 1e-12`
+      * `x_tol = 1e-6`
+      * `coverage_ok = false`
+      * `verbosity = 0`
 
 The Rosenbrock function can optimized using the `Optim.SAMIN()` as follows:
 
