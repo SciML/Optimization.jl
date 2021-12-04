@@ -233,7 +233,7 @@ function ___solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
 
     f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p,prob.ucons === nothing ? 0 : length(prob.ucons))
 
-    f.cons_j ===nothing && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
+    f.cons_j ===nothing && error("This optimizer requires derivative definitions for nonlinear constraints. If the problem does not have nonlinear constraints, choose a different optimizer. Otherwise define the derivative for cons using OptimizationFunction either directly or automatically generate them with one of the autodiff backends")
 
     _loss = function(θ)
         x = f.f(θ, prob.p, cur...)
