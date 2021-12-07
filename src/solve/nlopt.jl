@@ -1,15 +1,15 @@
 (f::NLopt.Algorithm)() = f
 
-function __map_optimizer_args(prob::OptimizationProblem, opt::NLopt.Opt; 
-    cb=nothing, 
-    maxiters::Union{Number, Nothing}=nothing, 
-    maxtime::Union{Number, Nothing}=nothing, 
-    abstol::Union{Number, Nothing}=nothing, 
-    reltol::Union{Number, Nothing}=nothing, 
+function __map_optimizer_args(prob::OptimizationProblem, opt::NLopt.Opt;
+    cb=nothing,
+    maxiters::Union{Number, Nothing}=nothing,
+    maxtime::Union{Number, Nothing}=nothing,
+    abstol::Union{Number, Nothing}=nothing,
+    reltol::Union{Number, Nothing}=nothing,
     local_method::Union{NLopt.Algorithm, NLopt.Opt, Nothing} = nothing,
     local_maxiters::Union{Number, Nothing} = nothing,
     local_maxtime::Union{Number, Nothing} = nothing,
-    local_options::Union{NamedTuple,Nothing} = nothing, 
+    local_options::Union{NamedTuple,Nothing} = nothing,
     kwargs...)
 
     if local_method !== nothing
@@ -81,6 +81,7 @@ function __solve(prob::OptimizationProblem, opt::Union{NLopt.Algorithm, NLopt.Op
                  abstol::Union{Number, Nothing}=nothing,
                  reltol::Union{Number, Nothing}=nothing,
                  progress = false,
+                 cb = (args...) -> (false),
                  kwargs...)
     local x
 
@@ -94,6 +95,7 @@ function __solve(prob::OptimizationProblem, opt::Union{NLopt.Algorithm, NLopt.Op
 
     _loss = function(θ)
         x = f.f(θ, prob.p)
+        cb(θ,x...)
         return x[1]
     end
 
