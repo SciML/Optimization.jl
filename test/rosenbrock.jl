@@ -230,7 +230,7 @@ end
     prob = OptimizationProblem(f, x0, _p)
     @test_broken sol = solve(prob,Optim.Newton())
 
-
+    #=
     ### Nonconvex test
     Nonconvex.@load MMA
     Nonconvex.@load Ipopt
@@ -422,6 +422,7 @@ end
 
     sol = solve(prob, BayesOptAlg(NLoptAlg(:LN_NELDERMEAD)), sub_options=(;maxeval=100))
     @test 10*sol.minimum < l1
+    =#
 
     using NOMAD
     f = OptimizationFunction(rosenbrock)
