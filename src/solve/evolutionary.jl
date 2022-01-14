@@ -77,7 +77,8 @@ function __solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer,
     if isnothing(prob.ub) | isnothing(prob.ub) 
         opt_res = Evolutionary.optimize(_loss, prob.u0, opt, opt_args)
     else
-        opt_res = Evolutionary.optimize(_loss, prob.lb, prob.ub, prob.u0, opt, opt_args)
+        cons = Evolutionary.BoxConstraints(prob.lb, prob.ub)
+        opt_res = Evolutionary.optimize(_loss, cons, prob.u0, opt, opt_args)
     end                                                                   
     t1 = time()
     opt_ret = Symbol(Evolutionary.converged(opt_res))
