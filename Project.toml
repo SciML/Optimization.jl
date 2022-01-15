@@ -1,7 +1,7 @@
 name = "GalacticOptim"
 uuid = "a75be94c-b780-496d-a8a9-0878b188d577"
 authors = ["Vaibhavdixit02 <vaibhavyashdixit@gmail.com>"]
-version = "2.3.0"
+version = "2.3.1"
 
 [deps]
 ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
