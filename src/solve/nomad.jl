@@ -53,10 +53,10 @@ function __solve(prob::OptimizationProblem, opt::NOMADOpt;
     end
 
     function bb(x)
-        bb_outputs = [_loss(x)]
-        success = true
+        l = _loss(x)
+        success = !isnan(l) && !isinf(l)
         count_eval = true
-        return (success, count_eval, bb_outputs)
+        return (success, count_eval, [l])
     end
 
     if !isnothing(prob.lcons) | !isnothing(prob.ucons)
