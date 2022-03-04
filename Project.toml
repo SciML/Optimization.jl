@@ -19,7 +19,7 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 TerminalLoggers = "5d786b92-1e48-4d6f-9151-6b4477ca9bed"
 
 [compat]
-ArrayInterface = "2.13, 3.0, 4"
+ArrayInterface = "2.13, 3.0, 4, 5"
 ConsoleProgressMonitor = "0.1"
 DiffResults = "1.0"
 DocStringExtensions = "0.8"
