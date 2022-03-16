@@ -28,7 +28,7 @@ packages.
 | Package                  | Local Gradient-Based     | Local Hessian-Based      | Local Derivative-Free    | Local Constrained        | Global Unconstrained     | Global Constrained       |
 |--------------------------|:------------------------:|:------------------------:|:------------------------:|:------------------------:|:------------------------:|:------------------------:|
 | BlackBoxOptim            |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        |                        ❌ |
-| CMEAEvolutionaryStrategy |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        |                        ❌ |
+| CMAEvolutionaryStrategy |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        |                        ❌ |
 | Evolutionary             |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        | 🟡                         |
 | Flux                     | ✅                        |                        ❌ |                        ❌ |                        ❌ |                        ❌ |                        ❌ |
 | GCMAES                   |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        |                        ❌ |
