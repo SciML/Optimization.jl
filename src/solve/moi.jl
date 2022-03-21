@@ -89,23 +89,13 @@ end
 function __map_optimizer_args(prob::OptimizationProblem, opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
     maxiters::Union{Number, Nothing}=nothing,
     maxtime::Union{Number, Nothing}=nothing,
-    abstol::Union{Number, Nothing}=nothing, 
+    abstol::Union{Number, Nothing}=nothing,
     reltol::Union{Number, Nothing}=nothing,
     kwargs...)
-    
-    mapped_args = Vector{Pair{String, Any}}[]
-    mapped_args = [mapped_args..., [Pair(string(j.first),j.second) for j = kwargs]...]
-
-    if isa(opt, MOI.AbstractOptimizer)
-        if length(mapped_args) > 0
-            opt = MOI.OptimizerWithAttributes(typeof(opt), mapped_args...)
-        else
-            opt = typeof(opt)
-        end
-    end
-
     optimizer = MOI.instantiate(opt)
-
+    for (key, value) in kwargs
+        MOI.set(optimizer, MOI.RawOptimizerattribute("$(key)"), value)
+    end
     if !isnothing(maxtime)
         MOI.set(optimizer, MOI.TimeLimitSec(), maxtime)
     end
@@ -121,14 +111,14 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::Union{MOI.Abstract
     if !isnothing(maxiters)
         @warn "common maxiters argument is currently not used by $(optimizer). Set number of interations via optimizer specific keyword aguments."
     end
-    
+
     return optimizer
 end
 
 function __solve(prob::OptimizationProblem, opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
     maxiters::Union{Number, Nothing}=nothing,
     maxtime::Union{Number, Nothing}=nothing,
-    abstol::Union{Number, Nothing}=nothing, 
+    abstol::Union{Number, Nothing}=nothing,
     reltol::Union{Number, Nothing}=nothing,
     kwargs...)
 
@@ -136,25 +126,27 @@ function __solve(prob::OptimizationProblem, opt::Union{MOI.AbstractOptimizer, MO
     maxtime = _check_and_convert_maxtime(maxtime)
 
     opt_setup = __map_optimizer_args(prob, opt; abstol=abstol, reltol=reltol, maxiters=maxiters, maxtime=maxtime, kwargs...)
-    
+
     num_variables = length(prob.u0)
 	θ = MOI.add_variables(opt_setup, num_variables)
 	if prob.lb !== nothing
         @assert eachindex(prob.lb) == Base.OneTo(num_variables)
 		for i in 1:num_variables
-			MOI.add_constraint(opt_setup, MOI.SingleVariable(θ[i]), MOI.GreaterThan(prob.lb[i]))
+			MOI.add_constraint(opt_setup, θ[i], MOI.GreaterThan(prob.lb[i]))
         end
     end
 	if prob.ub !== nothing
         @assert eachindex(prob.ub) == Base.OneTo(num_variables)
 		for i in 1:num_variables
-			MOI.add_constraint(opt_setup, MOI.SingleVariable(θ[i]), MOI.LessThan(prob.ub[i]))
+			MOI.add_constraint(opt_setup, θ[i], MOI.LessThan(prob.ub[i]))
         end
     end
     @assert eachindex(prob.u0) == Base.OneTo(num_variables)
-	for i in 1:num_variables
-		MOI.set(opt_setup, MOI.VariablePrimalStart(), θ[i], prob.u0[i])
-	end
+    if MOI.supports(opt_setup, MOI.VariablePrimalStart(), MOI.VariableIndex)
+        for i in 1:num_variables
+            MOI.set(opt_setup, MOI.VariablePrimalStart(), θ[i], prob.u0[i])
+        end
+    end
     MOI.set(opt_setup, MOI.ObjectiveSense(), prob.sense === MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE)
     if prob.lcons === nothing
         @assert prob.ucons === nothing
