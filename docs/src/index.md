@@ -32,7 +32,7 @@ packages.
 | Evolutionary             |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        | 🟡                         |
 | Flux                     | ✅                        |                        ❌ |                        ❌ |                        ❌ |                        ❌ |                        ❌ |
 | GCMAES                   |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        |                        ❌ |
-| MathOptInterface         | ✅                        | ✅                        | ✅                        | ✅                        | ✅                        |                        ❌ |
+| MathOptInterface         | ✅                        | ✅                        | ✅                        | ✅                        | ✅                        |                        🟡 |
 | MultistartOptimization   |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        |                        ❌ |
 | Metaheuristics           |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        | 🟡                         |
 | NOMAD                    |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        | 🟡                         |
