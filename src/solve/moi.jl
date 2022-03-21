@@ -94,7 +94,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::Union{MOI.Abstract
     kwargs...)
     optimizer = MOI.instantiate(opt)
     for (key, value) in kwargs
-        MOI.set(optimizer, MOI.RawOptimizerattribute("$(key)"), value)
+        MOI.set(optimizer, MOI.RawOptimizerAttribute("$(key)"), value)
     end
     if !isnothing(maxtime)
         MOI.set(optimizer, MOI.TimeLimitSec(), maxtime)
