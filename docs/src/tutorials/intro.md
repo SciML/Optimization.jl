@@ -46,9 +46,10 @@ is given below:
 We can also explore other methods in a similar way:
 
 ```julia
- f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
- prob = OptimizationProblem(f, x0, p)
- sol = solve(prob,BFGS())
+using ForwardDiff
+f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
+prob = OptimizationProblem(f, x0, p)
+sol = solve(prob,BFGS())
 ```
 For instance, the above optimization task produces the following output:
 
