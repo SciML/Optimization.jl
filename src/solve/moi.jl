@@ -93,9 +93,6 @@ function MOI.eval_hessian_lagrangian(
     μ,
 ) where {T}
     n = length(moiproblem.u0)
-    # TODO(odow): what is this? Why is it called?
-    a = zeros(n, n)
-    moiproblem.f.hess(a, x)
     if iszero(σ)
         fill!(h, zero(T))
     else
