@@ -137,7 +137,7 @@ function __map_optimizer_args(
 )
     optimizer = _create_new_optimizer(opt)
     for (key, value) in kwargs
-        MOI.set(optimizer, MOI.RawOptimizerattribute("$(key)"), value)
+        MOI.set(optimizer, MOI.RawOptimizerAttribute("$(key)"), value)
     end
     if !isnothing(maxtime)
         MOI.set(optimizer, MOI.TimeLimitSec(), maxtime)
