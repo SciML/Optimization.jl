@@ -4,22 +4,95 @@ const MOI = MathOptInterface
 struct MOIOptimizationProblem{T,F<:OptimizationFunction,uType,P} <: MOI.AbstractNLPEvaluator
     f::F
     u0::uType
-	p::P
+    p::P
     J::Matrix{T}
     H::Matrix{T}
     cons_H::Vector{Matrix{T}}
 end
 
-MOI.eval_objective(moiproblem::MOIOptimizationProblem, x) = moiproblem.f(x, moiproblem.p)
+function MOIOptimizationProblem(prob::OptimizationProblem)
+    num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
+    f = instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p, num_cons)
+    T = eltype(prob.u0)
+    n = length(prob.u0)
+    return MOIOptimizationProblem(
+        f,
+        prob.u0,
+        prob.p,
+        zeros(T, num_cons, n),
+        zeros(T, n, n),
+        Matrix{T}[zeros(T, n, n) for i in 1:num_cons],
+    )
+end
 
-MOI.eval_constraint(moiproblem::MOIOptimizationProblem, g, x) = g .= moiproblem.f.cons(x)
+MOI.features_available(::MOIOptimizationProblem) = [:Grad, :Hess, :Jac]
 
-MOI.eval_objective_gradient(moiproblem::MOIOptimizationProblem, G, x) = moiproblem.f.grad(G, x)
+function MOI.initialize(
+    moiproblem::MOIOptimizationProblem,
+    requested_features::Vector{Symbol},
+)
+    available_features = MOI.features_available(moiproblem)
+    for feat in requested_features
+        if !(feat in available_features)
+            error("Unsupported feature $feat")
+            # TODO: implement Jac-vec and Hess-vec products
+            # for solvers that need them
+        end
+    end
+    return
+end
 
-function MOI.eval_hessian_lagrangian(moiproblem::MOIOptimizationProblem{T}, h, x, σ, μ) where {T}
+function MOI.eval_objective(moiproblem::MOIOptimizationProblem, x)
+    return moiproblem.f(x, moiproblem.p)
+end
+
+function MOI.eval_constraint(moiproblem::MOIOptimizationProblem, g, x)
+    g .= moiproblem.f.cons(x)
+    return
+end
+
+function MOI.eval_objective_gradient(moiproblem::MOIOptimizationProblem, G, x)
+    moiproblem.f.grad(G, x)
+    return
+end
+
+# This structure assumes the calculation of moiproblem.J is dense.
+function MOI.jacobian_structure(moiproblem::MOIOptimizationProblem)
+    rows, cols = size(moiproblem.J)
+    return Tuple{Int,Int}[(i, j) for j in 1:cols for i in 1:rows]
+end
+
+function MOI.eval_constraint_jacobian(moiproblem::MOIOptimizationProblem, j, x)
+    if isempty(j)
+        return
+    elseif moiproblem.f.cons_j === nothing
+        error(
+            "Use OptimizationFunction to pass the derivatives or " *
+            "automatically generate them with one of the autodiff backends",
+        )
+    end
+    moiproblem.f.cons_j(moiproblem.J, x)
+    for i in eachindex(j)
+        j[i] = moiproblem.J[i]
+    end
+    return
+end
+
+# Because the Hessian is symmetrical, we choose to store the upper-triangular
+# component. We also assume that it is dense.
+function MOI.hessian_lagrangian_structure(moiproblem::MOIOptimizationProblem)
+    num_vars = length(moiproblem.u0)
+    return Tuple{Int,Int}[(row, col) for col in 1:num_vars for row in 1:col]
+end
+
+function MOI.eval_hessian_lagrangian(
+    moiproblem::MOIOptimizationProblem{T},
+    h,
+    x,
+    σ,
+    μ,
+) where {T}
     n = length(moiproblem.u0)
-    a = zeros(n, n)
-    moiproblem.f.hess(a, x)
     if iszero(σ)
         fill!(h, zero(T))
     else
@@ -47,115 +120,86 @@ function MOI.eval_hessian_lagrangian(moiproblem::MOIOptimizationProblem{T}, h, x
     return
 end
 
-function MOI.eval_constraint_jacobian(moiproblem::MOIOptimizationProblem, j, x)
-    isempty(j) && return
-    moiproblem.f.cons_j === nothing && error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
-    n = length(moiproblem.u0)
-    moiproblem.f.cons_j(moiproblem.J, x)
-    for i in eachindex(j)
-        j[i] = moiproblem.J[i]
-    end
-end
+_create_new_optimizer(opt::MOI.AbstractOptimizer) = opt
+_create_new_optimizer(opt::MOI.OptimizerWithAttributes) = MOI.instantiate(opt)
 
-function MOI.jacobian_structure(moiproblem::MOIOptimizationProblem)
-    return Tuple{Int,Int}[(con, var) for con in 1:size(moiproblem.J,1) for var in 1:size(moiproblem.J,2)]
-end
-
-function MOI.hessian_lagrangian_structure(moiproblem::MOIOptimizationProblem)
-    return Tuple{Int,Int}[(row, col) for col in 1:length(moiproblem.u0) for row in 1:col]
-end
-
-function MOI.initialize(moiproblem::MOIOptimizationProblem, requested_features::Vector{Symbol})
-    for feat in requested_features
-        if !(feat in MOI.features_available(moiproblem))
-            error("Unsupported feature $feat")
-            # TODO: implement Jac-vec and Hess-vec products
-            # for solvers that need them
-        end
-    end
-end
-
-MOI.features_available(moiproblem::MOIOptimizationProblem) = [:Grad, :Hess, :Jac]
-
-function make_moi_problem(prob::OptimizationProblem)
-    num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
-    f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p,num_cons)
-    T = eltype(prob.u0)
-    n = length(prob.u0)
-    moiproblem = MOIOptimizationProblem(f,prob.u0,prob.p,zeros(T,num_cons,n),zeros(T,n,n),Matrix{T}[zeros(T,n,n) for i in 1:num_cons])
-    return moiproblem
-end
-
-function __map_optimizer_args(prob::OptimizationProblem, opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
+function __map_optimizer_args(
+    prob::OptimizationProblem,
+    opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
     maxiters::Union{Number, Nothing}=nothing,
     maxtime::Union{Number, Nothing}=nothing,
-    abstol::Union{Number, Nothing}=nothing, 
+    abstol::Union{Number, Nothing}=nothing,
     reltol::Union{Number, Nothing}=nothing,
-    kwargs...)
-    
-    mapped_args = Vector{Pair{String, Any}}[]
-    mapped_args = [mapped_args..., [Pair(string(j.first),j.second) for j = kwargs]...]
-
-    if isa(opt, MOI.AbstractOptimizer)
-        if length(mapped_args) > 0
-            opt = MOI.OptimizerWithAttributes(typeof(opt), mapped_args...)
-        else
-            opt = typeof(opt)
-        end
+    kwargs...,
+)
+    optimizer = _create_new_optimizer(opt)
+    for (key, value) in kwargs
+        MOI.set(optimizer, MOI.RawOptimizerAttribute("$(key)"), value)
     end
-
-    optimizer = MOI.instantiate(opt)
-
     if !isnothing(maxtime)
         MOI.set(optimizer, MOI.TimeLimitSec(), maxtime)
     end
-
     if !isnothing(reltol)
         @warn "common reltol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword aguments."
     end
-
     if !isnothing(abstol)
         @warn "common abstol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword aguments."
     end
-
     if !isnothing(maxiters)
         @warn "common maxiters argument is currently not used by $(optimizer). Set number of interations via optimizer specific keyword aguments."
     end
-    
     return optimizer
 end
 
-function __solve(prob::OptimizationProblem, opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
+function __solve(
+    prob::OptimizationProblem,
+    opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
     maxiters::Union{Number, Nothing}=nothing,
     maxtime::Union{Number, Nothing}=nothing,
-    abstol::Union{Number, Nothing}=nothing, 
+    abstol::Union{Number, Nothing}=nothing,
     reltol::Union{Number, Nothing}=nothing,
-    kwargs...)
-
+    kwargs...,
+)
     maxiters = _check_and_convert_maxiters(maxiters)
     maxtime = _check_and_convert_maxtime(maxtime)
-
-    opt_setup = __map_optimizer_args(prob, opt; abstol=abstol, reltol=reltol, maxiters=maxiters, maxtime=maxtime, kwargs...)
-    
+    opt_setup = __map_optimizer_args(
+        prob,
+        opt;
+        abstol=abstol,
+        reltol=reltol,
+        maxiters=maxiters,
+        maxtime=maxtime,
+        kwargs...,
+    )
     num_variables = length(prob.u0)
-	θ = MOI.add_variables(opt_setup, num_variables)
-	if prob.lb !== nothing
+    θ = MOI.add_variables(opt_setup, num_variables)
+    if prob.lb !== nothing
         @assert eachindex(prob.lb) == Base.OneTo(num_variables)
-		for i in 1:num_variables
-			MOI.add_constraint(opt_setup, MOI.SingleVariable(θ[i]), MOI.GreaterThan(prob.lb[i]))
+        for i in 1:num_variables
+            if prob.lb[i] > -Inf
+                MOI.add_constraint(opt_setup, θ[i], MOI.GreaterThan(prob.lb[i]))
+            end
         end
     end
-	if prob.ub !== nothing
+    if prob.ub !== nothing
         @assert eachindex(prob.ub) == Base.OneTo(num_variables)
-		for i in 1:num_variables
-			MOI.add_constraint(opt_setup, MOI.SingleVariable(θ[i]), MOI.LessThan(prob.ub[i]))
+        for i in 1:num_variables
+            if prob.ub[i] < Inf
+                MOI.add_constraint(opt_setup, θ[i], MOI.LessThan(prob.ub[i]))
+            end
         end
     end
-    @assert eachindex(prob.u0) == Base.OneTo(num_variables)
-	for i in 1:num_variables
-		MOI.set(opt_setup, MOI.VariablePrimalStart(), θ[i], prob.u0[i])
-	end
-    MOI.set(opt_setup, MOI.ObjectiveSense(), prob.sense === MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE)
+    if MOI.supports(opt_setup, MOI.VariablePrimalStart(), MOI.VariableIndex)
+        @assert eachindex(prob.u0) == Base.OneTo(num_variables)
+        for i in 1:num_variables
+            MOI.set(opt_setup, MOI.VariablePrimalStart(), θ[i], prob.u0[i])
+        end
+    end
+    MOI.set(
+        opt_setup,
+        MOI.ObjectiveSense(),
+        prob.sense === MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE,
+    )
     if prob.lcons === nothing
         @assert prob.ucons === nothing
         con_bounds = MOI.NLPBoundsPair[]
@@ -163,10 +207,12 @@ function __solve(prob::OptimizationProblem, opt::Union{MOI.AbstractOptimizer, MO
         @assert prob.ucons !== nothing
         con_bounds = MOI.NLPBoundsPair.(prob.lcons, prob.ucons)
     end
-	MOI.set(opt_setup, MOI.NLPBlock(), MOI.NLPBlockData(con_bounds, make_moi_problem(prob), true))
-
-	MOI.optimize!(opt_setup)
-
+    MOI.set(
+        opt_setup,
+        MOI.NLPBlock(),
+        MOI.NLPBlockData(con_bounds, MOIOptimizationProblem(prob), true),
+    )
+    MOI.optimize!(opt_setup)
     if MOI.get(opt_setup, MOI.ResultCount()) >= 1
         minimizer = MOI.get(opt_setup, MOI.VariablePrimal(), θ)
         minimum = MOI.get(opt_setup, MOI.ObjectiveValue())
@@ -176,5 +222,12 @@ function __solve(prob::OptimizationProblem, opt::Union{MOI.AbstractOptimizer, MO
         minimum = NaN
         opt_ret= :Default
     end
-    SciMLBase.build_solution(prob, opt, minimizer, minimum; original=opt_setup, retcode=opt_ret)
+    return SciMLBase.build_solution(
+        prob,
+        opt,
+        minimizer,
+        minimum;
+        original=opt_setup,
+        retcode=opt_ret,
+    )
 end
