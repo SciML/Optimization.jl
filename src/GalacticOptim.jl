@@ -21,7 +21,6 @@ include("function/function.jl")
 
 function __init__()
     # Optimization backends
-    @require BlackBoxOptim="a134a8b2-14d6-55f6-9291-3336d3ab0209" include("solve/blackboxoptim.jl")
     @require CMAEvolutionStrategy="8d3b24bd-414e-49e0-94fb-163cc3a3e411" include("solve/cmaevolutionstrategy.jl")
     @require Evolutionary="86b6b26d-c046-49b6-aa0b-5f0f74682bd6" include("solve/evolutionary.jl")
     @require GCMAES="4aa9d100-eb0f-11e8-15f1-25748831eb3b" include("solve/gcmaes.jl")
