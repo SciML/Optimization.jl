@@ -25,7 +25,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::Evolutionary.Abstr
     end
 
     if !isnothing(maxtime)
-        mapped_args = (; mapped_args..., time_limit=maxtime)
+        mapped_args = (; mapped_args..., time_limit=Float64(maxtime))
     end
 
     if !isnothing(abstol)
