@@ -21,8 +21,6 @@ include("function/function.jl")
 
 function __init__()
     # Optimization backends
-    @require Evolutionary="86b6b26d-c046-49b6-aa0b-5f0f74682bd6" include("solve/evolutionary.jl")
-    @require GCMAES="4aa9d100-eb0f-11e8-15f1-25748831eb3b" include("solve/gcmaes.jl")
     @require MathOptInterface="b8f27783-ece8-5eb3-8dc8-9495eed66fee" include("solve/moi.jl")
     @require MultistartOptimization="3933049c-43be-478e-a8bb-6e0f7fd53575" include("solve/multistartoptimization.jl")
     @require NLopt="76087f3c-5699-56af-9a33-bf431cd00edd" include("solve/nlopt.jl")
@@ -41,7 +39,6 @@ function __init__()
             @require NonconvexSearch="75732972-a7cd-4375-b200-958e0814350d" include("solve/nonconvex/nonconvex_search.jl")
         end
     end
-    @require Metaheuristics="bcdb8e00-2c21-11e9-3065-2b553b22f898" include("solve/metaheuristics.jl")
     @require NOMAD="02130f1c-4665-5b79-af82-ff1385104aa0" include("solve/nomad.jl")
     @require SpeedMapping="f1835b91-879b-4a3f-a438-e4baacf14412" include("solve/speedmapping.jl")
 
