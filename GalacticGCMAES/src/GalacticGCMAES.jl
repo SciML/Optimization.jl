@@ -1,12 +1,16 @@
+module GalacticGCMAES
+
+using GCMAES, GalacticOptim, GalacticOptim.SciMLBase
+
 export GCMAESOpt
 
 struct GCMAESOpt end
 
-function __map_optimizer_args(prob::OptimizationProblem, opt::GCMAESOpt; 
-    cb=nothing, 
-    maxiters::Union{Number, Nothing}=nothing, 
-    maxtime::Union{Number, Nothing}=nothing, 
-    abstol::Union{Number, Nothing}=nothing, 
+function __map_optimizer_args(prob::OptimizationProblem, opt::GCMAESOpt;
+    cb=nothing,
+    maxiters::Union{Number, Nothing}=nothing,
+    maxtime::Union{Number, Nothing}=nothing,
+    abstol::Union{Number, Nothing}=nothing,
     reltol::Union{Number, Nothing}=nothing,
     kwargs...)
 
@@ -33,7 +37,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::GCMAESOpt;
 end
 
 
-function __solve(prob::OptimizationProblem, opt::GCMAESOpt;
+function SciMLBase.__solve(prob::OptimizationProblem, opt::GCMAESOpt;
                  maxiters::Union{Number, Nothing} = nothing,
                  maxtime::Union{Number, Nothing} = nothing,
                  abstol::Union{Number, Nothing}=nothing,
@@ -44,10 +48,11 @@ function __solve(prob::OptimizationProblem, opt::GCMAESOpt;
     local x
     local G = similar(prob.u0)
 
-    maxiters = _check_and_convert_maxiters(maxiters)
-    maxtime = _check_and_convert_maxtime(maxtime)
 
-    f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
+    maxiters = GalacticOptim._check_and_convert_maxiters(maxiters)
+    maxtime = GalacticOptim._check_and_convert_maxtime(maxtime)
+
+    f = GalacticOptim.instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p)
 
     _loss = function(θ)
         x = f.f(θ, prob.p)
@@ -60,11 +65,11 @@ function __solve(prob::OptimizationProblem, opt::GCMAESOpt;
             return G
         end
     end
-    
-    opt_args = _map_optimizer_args(prob,opt, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
-    
+
+    opt_args = __map_optimizer_args(prob,opt, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
+
     t0 = time()
-    if prob.sense === MaxSense 
+    if prob.sense === GalacticOptim.MaxSense
         opt_xmin, opt_fmin, opt_ret = GCMAES.maximize(isnothing(f.grad) ? _loss : (_loss,g), prob.u0, σ0, prob.lb, prob.ub; opt_args...)
     else
         opt_xmin, opt_fmin, opt_ret = GCMAES.minimize(isnothing(f.grad) ? _loss : (_loss,g), prob.u0, σ0, prob.lb, prob.ub; opt_args...)
@@ -72,4 +77,6 @@ function __solve(prob::OptimizationProblem, opt::GCMAESOpt;
     t1 = time()
 
     SciMLBase.build_solution(prob, opt, opt_xmin, opt_fmin; retcode=Symbol(Bool(opt_ret)))
+end
+
 end

@@ -98,6 +98,4 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO, data=G
         BlackBoxOptim.best_fitness(opt_res); original=opt_res, retcode=opt_ret)
 end
 
-export __solve, __map_optimizer_args
-
 end

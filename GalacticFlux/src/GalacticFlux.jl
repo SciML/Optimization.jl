@@ -63,6 +63,4 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Flux.Optimise.Abstrac
     # here should be build_solution to create the output message
 end
 
-export __solve
-
 end
