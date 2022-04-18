@@ -1,4 +1,6 @@
-import .MathOptInterface
+module GalacticMOI
+
+using MathOptInterface, GalacticOptim, GalacticOptim.SciMLBase
 const MOI = MathOptInterface
 
 struct MOIOptimizationProblem{T,F<:OptimizationFunction,uType,P} <: MOI.AbstractNLPEvaluator
@@ -12,7 +14,7 @@ end
 
 function MOIOptimizationProblem(prob::OptimizationProblem)
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
-    f = instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p, num_cons)
+    f = GalacticOptim.instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p, num_cons)
     T = eltype(prob.u0)
     n = length(prob.u0)
     return MOIOptimizationProblem(
@@ -125,12 +127,12 @@ _create_new_optimizer(opt::MOI.OptimizerWithAttributes) = MOI.instantiate(opt)
 
 function __map_optimizer_args(
     prob::OptimizationProblem,
-    opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
-    maxiters::Union{Number, Nothing}=nothing,
-    maxtime::Union{Number, Nothing}=nothing,
-    abstol::Union{Number, Nothing}=nothing,
-    reltol::Union{Number, Nothing}=nothing,
-    kwargs...,
+    opt::Union{MOI.AbstractOptimizer,MOI.OptimizerWithAttributes};
+    maxiters::Union{Number,Nothing}=nothing,
+    maxtime::Union{Number,Nothing}=nothing,
+    abstol::Union{Number,Nothing}=nothing,
+    reltol::Union{Number,Nothing}=nothing,
+    kwargs...
 )
     optimizer = _create_new_optimizer(opt)
     for (key, value) in kwargs
@@ -151,17 +153,17 @@ function __map_optimizer_args(
     return optimizer
 end
 
-function __solve(
+function SciMLBase.__solve(
     prob::OptimizationProblem,
-    opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
-    maxiters::Union{Number, Nothing}=nothing,
-    maxtime::Union{Number, Nothing}=nothing,
-    abstol::Union{Number, Nothing}=nothing,
-    reltol::Union{Number, Nothing}=nothing,
-    kwargs...,
+    opt::Union{MOI.AbstractOptimizer,MOI.OptimizerWithAttributes};
+    maxiters::Union{Number,Nothing}=nothing,
+    maxtime::Union{Number,Nothing}=nothing,
+    abstol::Union{Number,Nothing}=nothing,
+    reltol::Union{Number,Nothing}=nothing,
+    kwargs...
 )
-    maxiters = _check_and_convert_maxiters(maxiters)
-    maxtime = _check_and_convert_maxtime(maxtime)
+    maxiters = GalacticOptim._check_and_convert_maxiters(maxiters)
+    maxtime = GalacticOptim._check_and_convert_maxtime(maxtime)
     opt_setup = __map_optimizer_args(
         prob,
         opt;
@@ -169,7 +171,7 @@ function __solve(
         reltol=reltol,
         maxiters=maxiters,
         maxtime=maxtime,
-        kwargs...,
+        kwargs...
     )
     num_variables = length(prob.u0)
     θ = MOI.add_variables(opt_setup, num_variables)
@@ -198,7 +200,7 @@ function __solve(
     MOI.set(
         opt_setup,
         MOI.ObjectiveSense(),
-        prob.sense === MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE,
+        prob.sense === GalacticOptim.MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE,
     )
     if prob.lcons === nothing
         @assert prob.ucons === nothing
@@ -220,7 +222,7 @@ function __solve(
     else
         minimizer = fill(NaN, num_variables)
         minimum = NaN
-        opt_ret= :Default
+        opt_ret = :Default
     end
     return SciMLBase.build_solution(
         prob,
@@ -228,6 +230,9 @@ function __solve(
         minimizer,
         minimum;
         original=opt_setup,
-        retcode=opt_ret,
+        retcode=opt_ret
     )
+end
+
+
 end
