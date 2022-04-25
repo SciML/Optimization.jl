@@ -16,10 +16,12 @@ if GROUP == "All" || GROUP == "Core"
     @safetestset "AD Tests" begin include("ADtests.jl") end
     @safetestset "Mini batching" begin include("minibatch.jl") end
     @safetestset "DiffEqFlux" begin include("diffeqfluxtests.jl") end
-end
-
-if !is_APPVEYOR && GROUP == "GPU"
+elseif GROUP == "GPU"
     activate_downstream_env()
     @safetestset "DiffEqFlux GPU" begin include("downstream/gpu_neural_ode.jl") end
+else
+    subpkg = joinpath(dirname(@__DIR__), "lib", GROUP)
+    Pkg.develop(PackageSpec(path=subpkg))
+    include(joinpath(subpkg,"test","runtests.jl"))
 end
 end
