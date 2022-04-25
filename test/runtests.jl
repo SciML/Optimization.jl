@@ -27,7 +27,8 @@ elseif GROUP == "GPU"
     activate_downstream_env()
     @safetestset "DiffEqFlux GPU" begin include("downstream/gpu_neural_ode.jl") end
 else
-    dev_subpkg(subpkg)
-    include(joinpath(subpkg,"test","runtests.jl"))
+    subpkg_path = joinpath(dirname(@__DIR__), "lib", GROUP)
+    Pkg.develop(PackageSpec(path=subpkg_path))
+    include(joinpath(GROUP,"test","runtests.jl"))
 end
 end
