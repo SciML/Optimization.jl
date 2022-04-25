@@ -1,6 +1,7 @@
 module GalacticMetaheuristics
 
-using Metaheuristics, GalacticOptim, GalacticOptim.SciMLBase
+using Reexport, GalacticOptim, GalacticOptim.SciMLBase
+@reexport using Metaheuristics
 
 function initial_population!(opt, prob, bounds, f)
     opt_init = deepcopy(opt)

@@ -6,6 +6,7 @@ version = "0.1.0"
 [deps]
 GalacticOptim = "a75be94c-b780-496d-a8a9-0878b188d577"
 Metaheuristics = "bcdb8e00-2c21-11e9-3065-2b553b22f898"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
 julia = "1"

@@ -1,6 +1,7 @@
 module GalacticNLopt
 
-using NLopt, GalacticOptim, GalacticOptim.SciMLBase
+using Reexport, GalacticOptim, GalacticOptim.SciMLBase
+@reexport using NLopt
 
 (f::NLopt.Algorithm)() = f
 

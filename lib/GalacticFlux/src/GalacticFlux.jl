@@ -1,6 +1,7 @@
 module GalacticFlux
 
-using GalacticOptim, Flux, Printf, ProgressLogging, GalacticOptim.SciMLBase
+using GalacticOptim, Reexport, Printf, ProgressLogging, GalacticOptim.SciMLBase
+@reexport using Flux
 
 function SciMLBase.__solve(prob::OptimizationProblem, opt::Flux.Optimise.AbstractOptimiser, data = GalacticOptim.DEFAULT_DATA;
     maxiters::Number = 0, cb = (args...) -> (false),

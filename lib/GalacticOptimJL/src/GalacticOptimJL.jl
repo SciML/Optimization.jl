@@ -1,7 +1,7 @@
 module GalacticOptimJL
 
-using Optim, GalacticOptim, GalacticOptim.SciMLBase
-
+using Reexport, GalacticOptim, GalacticOptim.SciMLBase
+@reexport using Optim
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace::Optim.OptimizationState) = trace
 

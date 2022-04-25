@@ -1,6 +1,7 @@
 module GalacticEvolutionary
 
-using Evolutionary, GalacticOptim, GalacticOptim.SciMLBase
+using Reexport, GalacticOptim, GalacticOptim.SciMLBase
+@reexport using Evolutionary
 
 decompose_trace(trace::Evolutionary.OptimizationTrace) = last(trace)
 decompose_trace(trace::Evolutionary.OptimizationTraceRecord) = trace
