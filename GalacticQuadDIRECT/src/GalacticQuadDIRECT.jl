@@ -1,13 +1,17 @@
+module GalacticQuadDIRECT
+
+using QuadDIRECT, GalacticOptim, GalacticOptim.SciMLBase
+
 export QuadDirect
 
 struct QuadDirect end
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::QuadDirect;
     cb=nothing,
-    maxiters::Union{Number, Nothing}=nothing,
-    maxtime::Union{Number, Nothing}=nothing,
-    abstol::Union{Number, Nothing}=nothing,
-    reltol::Union{Number, Nothing}=nothing,
+    maxiters::Union{Number,Nothing}=nothing,
+    maxtime::Union{Number,Nothing}=nothing,
+    abstol::Union{Number,Nothing}=nothing,
+    reltol::Union{Number,Nothing}=nothing,
     kwargs...)
     if !isnothing(maxtime)
         @warn "common maxtime is currently not used by $(opt)"
@@ -18,39 +22,39 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::QuadDirect;
     end
 
     mapped_args = (; kwargs...)
-  
+
     if !isnothing(maxiters)
         mapped_args = (; mapped_args..., maxevals=maxiters)
     end
-  
+
     if !isnothing(abstol)
         mapped_args = (; mapped_args..., atol=abstol)
     end
-    
+
     if !isnothing(reltol)
         mapped_args = (; mapped_args..., rtol=reltol)
-    end  
-    
+    end
+
     return mapped_args
 end
 
-function __solve(prob::OptimizationProblem, opt::QuadDirect;
-    splits = nothing,
-    maxiters::Union{Number, Nothing}=nothing, 
-    maxtime::Union{Number, Nothing}=nothing, 
-    abstol::Union{Number, Nothing}=nothing, 
-    reltol::Union{Number, Nothing}=nothing,
+function SciMLBase.__solve(prob::OptimizationProblem, opt::QuadDirect;
+    splits=nothing,
+    maxiters::Union{Number,Nothing}=nothing,
+    maxtime::Union{Number,Nothing}=nothing,
+    abstol::Union{Number,Nothing}=nothing,
+    reltol::Union{Number,Nothing}=nothing,
     kwargs...)
 
     local x, _loss
 
-    maxiters = _check_and_convert_maxiters(maxiters)
+    maxiters = GalacticOptim._check_and_convert_maxiters(maxiters)
 
     if splits === nothing
         error("You must provide the initial locations at which to evaluate the function in `splits` (a list of 3-vectors with values in strictly increasing order and within the specified bounds).")
     end
 
-    _loss = function(θ)
+    _loss = function (θ)
         x = prob.f(θ, prob.p)
         return first(x)
     end
@@ -63,4 +67,7 @@ function __solve(prob::OptimizationProblem, opt::QuadDirect;
     t1 = time()
 
     SciMLBase.build_solution(prob, opt, QuadDIRECT.position(box, x0), QuadDIRECT.value(box); original=root)
+end
+
+
 end

@@ -14,6 +14,7 @@ NonconvexMMA = "d3d89cbb-4ecd-4604-818d-8d1ff343e4da"
 NonconvexMultistart = "11b12826-7e46-4acf-9706-be0a67f2add7"
 NonconvexNLopt = "b43a31b8-ff9b-442d-8e31-c163daa8ab75"
 NonconvexPavito = "75d5b151-dcdf-4236-8ef5-9c4e63ef33e2"
+NonconvexPercival = "4296f080-e499-44ba-a02c-ae40015c44d5"
 NonconvexSearch = "75732972-a7cd-4375-b200-958e0814350d"
 
 [compat]

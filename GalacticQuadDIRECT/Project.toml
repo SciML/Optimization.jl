@@ -1,0 +1,17 @@
+name = "GalacticQuadDIRECT"
+uuid = "4bf6b49a-7500-4e3e-a673-0c4a2031f894"
+authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
+version = "0.1.0"
+
+[deps]
+GalacticOptim = "a75be94c-b780-496d-a8a9-0878b188d577"
+QuadDIRECT = "dae52e8d-d666-5120-a592-9e15c33b8d7a"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
