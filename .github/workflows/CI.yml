@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.group == 'Downstream' }}
     strategy:
-      #fail-fast: false
+      fail-fast: false
       matrix:
         group:
           - Core
@@ -27,7 +27,7 @@ jobs:
           - GalacticNOMAD
           - GalacticNonconvex
           - GalacticOptimJL
-          #- GalacticQuadDIRECT
+          - GalacticQuadDIRECT
           - GalacticSpeedMapping
         version:
           - '1'
