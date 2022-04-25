@@ -1,0 +1,18 @@
+name = "GalacticNLopt"
+uuid = "792012fa-ebfb-4b3a-ab44-69908522effd"
+authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
+version = "0.1.0"
+
+[deps]
+GalacticOptim = "a75be94c-b780-496d-a8a9-0878b188d577"
+NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

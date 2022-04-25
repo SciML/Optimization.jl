@@ -39,11 +39,6 @@ end
 
 decompose_trace(trace) = trace
 
-
-function _map_optimizer_args(prob::OptimizationProblem, opt; kwargs...)
-    __map_optimizer_args(prob, opt; kwargs...)
-end
-
 function _check_and_convert_maxiters(maxiters)
     if !(isnothing(maxiters)) && maxiters <= 0.0
         error("The number of maxiters has to be a non-negative and non-zero number.")
@@ -69,5 +64,5 @@ function check_pkg_version(pkg::String,ver::String; branch::Union{String, Nothin
         pkg_info[dep.name] = dep
     end
 
-    return (isnothing(branch) | (pkg_info[pkg].git_revision == branch)) ? pkg_info[pkg].version >= VersionNumber(ver) : pkg_info[pkg].version > VersionNumber(ver) 
+    return (isnothing(branch) | (pkg_info[pkg].git_revision == branch)) ? pkg_info[pkg].version >= VersionNumber(ver) : pkg_info[pkg].version > VersionNumber(ver)
 end

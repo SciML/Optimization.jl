@@ -1,25 +1,34 @@
 using SafeTestsets, Pkg
 
 const GROUP = get(ENV, "GROUP", "All")
-const is_APPVEYOR = Sys.iswindows() && haskey(ENV,"APPVEYOR")
-const is_TRAVIS = haskey(ENV,"TRAVIS")
 
-function activate_downstream_env()
-    Pkg.activate("downstream")
-    Pkg.develop(PackageSpec(path=dirname(@__DIR__)))
+function dev_subpkg(subpkg)
+    subpkg_path = joinpath(dirname(@__DIR__), "lib", subpkg)
+    Pkg.develop(PackageSpec(path=subpkg_path))
+end
+
+function activate_subpkg_env(subpkg)
+    subpkg_path = joinpath(dirname(@__DIR__), "lib", subpkg)
+    Pkg.activate(subpkg_path)
+    Pkg.develop(PackageSpec(path=subpkg_path))
     Pkg.instantiate()
 end
 
 @time begin
 if GROUP == "All" || GROUP == "Core"
-    @safetestset "Rosenbrock" begin include("rosenbrock.jl") end
+    dev_subpkg("GalacticOptimJL")
+    dev_subpkg("GalacticFlux")
     @safetestset "AD Tests" begin include("ADtests.jl") end
     @safetestset "Mini batching" begin include("minibatch.jl") end
     @safetestset "DiffEqFlux" begin include("diffeqfluxtests.jl") end
-end
-
-if !is_APPVEYOR && GROUP == "GPU"
+elseif GROUP == "GPU"
+    dev_subpkg("GalacticOptimJL")
+    dev_subpkg("GalacticFlux")
     activate_downstream_env()
     @safetestset "DiffEqFlux GPU" begin include("downstream/gpu_neural_ode.jl") end
+else
+    subpkg_path = joinpath(dirname(@__DIR__), "lib", GROUP)
+    Pkg.develop(PackageSpec(path=subpkg_path))
+    include(joinpath(subpkg_path,"test","runtests.jl"))
 end
 end

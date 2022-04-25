@@ -9,10 +9,26 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.group == 'Downstream' }}
     strategy:
+      fail-fast: false
       matrix:
         group:
-          - All
+          - Core
+          - GalacticBBO
+          - GalacticCMAEvolutionStrategy
+          - GalacticEvolutionary
+          - GalacticFlux
+          - GalacticGCMAES
+          - GalacticMetaheuristics
+          - GalacticMOI
+          - GalacticMultistartOptimization
+          - GalacticNLopt
+          - GalacticNOMAD
+          - GalacticNonconvex
+          - GalacticOptimJL
+          - GalacticQuadDIRECT
+          - GalacticSpeedMapping
         version:
           - '1'
           - '1.6'
