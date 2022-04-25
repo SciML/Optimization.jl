@@ -1,4 +1,4 @@
-using GalacticCMAEvolutionStrategy, CMAEvolutionStrategy, GalacticOptim, ForwardDiff
+using GalacticCMAEvolutionStrategy, GalacticOptim, ForwardDiff
 using Test
 
 @testset "GalacticCMAEvolutionStrategy.jl" begin

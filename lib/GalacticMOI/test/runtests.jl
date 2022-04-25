@@ -1,4 +1,4 @@
-using GalacticMOI, MathOptInterface, GalacticOptim, Ipopt, NLopt, Zygote
+using GalacticMOI, GalacticOptim, Ipopt, NLopt, Zygote
 using Test
 
 @testset "GalacticMOI.jl" begin

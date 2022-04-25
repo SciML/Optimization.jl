@@ -1,4 +1,4 @@
-using GalacticMultistartOptimization, GalacticOptim, MultistartOptimization, NLopt, ForwardDiff
+using GalacticMultistartOptimization, GalacticOptim, ForwardDiff
 using Test
 
 @testset "GalacticMultistartOptimization.jl" begin

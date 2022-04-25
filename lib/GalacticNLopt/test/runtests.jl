@@ -1,4 +1,4 @@
-using GalacticNLopt, GalacticOptim, Zygote, NLopt
+using GalacticNLopt, GalacticOptim, Zygote
 using Test
 
 @testset "GalacticNLopt.jl" begin

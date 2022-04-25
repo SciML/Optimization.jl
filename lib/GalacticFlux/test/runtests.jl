@@ -1,4 +1,4 @@
-using GalacticFlux, GalacticOptim, Flux
+using GalacticFlux, GalacticOptim
 using Test
 
 @testset "GalacticFlux.jl" begin

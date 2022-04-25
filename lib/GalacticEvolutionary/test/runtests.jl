@@ -1,4 +1,4 @@
-using GalacticEvolutionary, Evolutionary, Zygote, GalacticOptim
+using GalacticEvolutionary, Zygote, GalacticOptim
 using Test
 
 @testset "GalacticEvolutionary.jl" begin

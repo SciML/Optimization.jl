@@ -1,4 +1,4 @@
-using GalacticMetaheuristics, Metaheuristics, GalacticOptim, Zygote
+using GalacticMetaheuristics, GalacticOptim, Zygote
 using Test
 
 @testset "GalacticMetaheuristics.jl" begin
