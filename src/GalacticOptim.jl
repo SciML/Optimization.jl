@@ -22,7 +22,6 @@ include("function/function.jl")
 function __init__()
     # Optimization backends
     @require Optim="429524aa-4258-5aef-a3af-852621145aeb" include("solve/optim.jl")
-    @require SpeedMapping="f1835b91-879b-4a3f-a438-e4baacf14412" include("solve/speedmapping.jl")
 
     # AD backends
     @require FiniteDiff="6a86dc24-6348-571c-b903-95158fe2bd41" include("function/finitediff.jl")
