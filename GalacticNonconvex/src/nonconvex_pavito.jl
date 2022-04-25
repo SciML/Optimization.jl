@@ -1,3 +1,4 @@
+using NonconvexPavito
 function convert_common_kwargs(opt::NonconvexPavito.PavitoIpoptCbcAlg, opt_kwargs;
     cb=nothing,
     maxiters=nothing,
@@ -10,7 +11,7 @@ function convert_common_kwargs(opt::NonconvexPavito.PavitoIpoptCbcAlg, opt_kwarg
     if !isnothing(cb)
         @warn "common callback argument is currently not used by $(opt)"
     end
-  
+
     if !isnothing(maxiters)
         @warn "common maxiters argument is currently not used by $(opt)"
     end
@@ -22,7 +23,7 @@ function convert_common_kwargs(opt::NonconvexPavito.PavitoIpoptCbcAlg, opt_kwarg
     if !isnothing(abstol)
         @warn "common abstol argument is currently not used by $(opt)"
     end
-    
+
     if !isnothing(reltol)
         conv_opt_kwargs = (; conv_opt_kwargs..., rel_gap =reltol)
     end

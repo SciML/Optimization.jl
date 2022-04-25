@@ -1,3 +1,4 @@
+using NonconvexNLopt
 function convert_common_kwargs(opt::NonconvexNLopt.NLoptAlg, opt_kwargs;
     cb=nothing,
     maxiters=nothing,
@@ -10,7 +11,7 @@ function convert_common_kwargs(opt::NonconvexNLopt.NLoptAlg, opt_kwargs;
     if !isnothing(cb)
         @warn "common callback argument is currently not used by $(opt)"
     end
-  
+
     if !isnothing(maxiters)
         conv_opt_kwargs = (; conv_opt_kwargs..., maxeval=maxiters)
      end
@@ -22,7 +23,7 @@ function convert_common_kwargs(opt::NonconvexNLopt.NLoptAlg, opt_kwargs;
     if !isnothing(abstol)
         conv_opt_kwargs = (; conv_opt_kwargs..., ftol_abs = abstol)
     end
-    
+
     if !isnothing(reltol)
         conv_opt_kwargs = (; conv_opt_kwargs..., ftol_rel =reltol)
     end

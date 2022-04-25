@@ -1,4 +1,5 @@
-function convert_common_kwargs(opt::NonconvexPercival.AugLag, opt_kwargs;
+using NonconvexIpopt
+function convert_common_kwargs(opt::NonconvexIpopt.IpoptAlg, opt_kwargs;
     cb=nothing,
     maxiters=nothing,
     maxtime=nothing,
@@ -10,36 +11,37 @@ function convert_common_kwargs(opt::NonconvexPercival.AugLag, opt_kwargs;
     if !isnothing(cb)
         @warn "common callback argument is currently not used by $(opt)"
     end
-  
+
     if !isnothing(maxiters)
         conv_opt_kwargs = (; conv_opt_kwargs..., max_iter=maxiters)
     end
 
     if !isnothing(maxtime)
-        conv_opt_kwargs = (; conv_opt_kwargs..., max_time = maxtime)
+        conv_opt_kwargs = (; conv_opt_kwargs..., max_cpu_time = maxtime)
     end
 
     if !isnothing(abstol)
-        conv_opt_kwargs = (; conv_opt_kwargs..., atol = abstol)
+        @warn "common abstol argument is currently not used by $(opt)"
     end
-    
+
     if !isnothing(reltol)
-        conv_opt_kwargs = (; conv_opt_kwargs..., rtol =reltol)
+        conv_opt_kwargs = (; conv_opt_kwargs..., tol =reltol)
     end
 
     return conv_opt_kwargs
 end
 
-function __create_options(opt::NonconvexPercival.AugLag;
+function __create_options(opt::NonconvexIpopt.IpoptAlg;
     opt_kwargs=nothing)
 
-    options = !isnothing(opt_kwargs) ? NonconvexPercival.AugLagOptions(;opt_kwargs...) : NonconvexPercival.AugLagOptions()
+    options = !isnothing(opt_kwargs) ? NonconvexIpopt.IpoptOptions(;opt_kwargs...) : NonconvexIpopt.IpoptOptions()
 
     return options
 end
 
 
-function _create_options(opt::NonconvexPercival.AugLag;
+
+function _create_options(opt::NonconvexIpopt.IpoptAlg;
     opt_kwargs=nothing,
     sub_options=nothing,
     convergence_criteria=nothing)
@@ -49,6 +51,6 @@ function _create_options(opt::NonconvexPercival.AugLag;
     return options
 end
 
-check_optimizer_backend(opt::NonconvexPercival.AugLag) = false
+check_optimizer_backend(opt::NonconvexIpopt.IpoptAlg) = false
 
 include("nonconvex.jl")

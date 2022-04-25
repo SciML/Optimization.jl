@@ -1,3 +1,17 @@
+module GalacticNonconvex
+
+using Nonconvex, GalacticOptim, GalacticOptim.SciMLBase, ChainRulesCore
+
+include("nonconvex_bayesian.jl")
+include("nonconvex_pavito.jl")
+include("nonconvex_juniper.jl")
+include("nonconvex_ipopt.jl")
+include("nonconvex_nlopt.jl")
+include("nonconvex_mma.jl")
+include("nonconvex_multistart.jl")
+include("nonconvex_percival.jl")
+include("nonconvex_search.jl")
+
 struct NonconvexADWrapper{F,P}
     f::F
     prob::P
@@ -11,7 +25,7 @@ end
 
 ## Create ChainRule
 function ChainRulesCore.rrule(f::NonconvexADWrapper, θ::AbstractVector)
-    val =  f.f.f(θ, f.prob.p)
+    val = f.f.f(θ, f.prob.p)
     G = similar(θ)
     f.f.grad(G, θ)
     val, Δ -> (ChainRulesCore.NoTangent(), Δ * G)
@@ -29,47 +43,47 @@ end
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::Nonconvex.NonconvexCore.AbstractOptimizer;
     cb=nothing,
-    maxiters::Union{Number, Nothing}=nothing,
-    maxtime::Union{Number, Nothing}=nothing,
-    abstol::Union{Number, Nothing}=nothing, 
-    reltol::Union{Number, Nothing}=nothing,
+    maxiters::Union{Number,Nothing}=nothing,
+    maxtime::Union{Number,Nothing}=nothing,
+    abstol::Union{Number,Nothing}=nothing,
+    reltol::Union{Number,Nothing}=nothing,
     integer=nothing,
     kwargs...)
 
     opt_kwargs, sub_options, convergence_criteria = separate_kwargs(kwargs)
     opt_kwargs = convert_common_kwargs(opt, opt_kwargs, cb=cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol)
-    mapped_args = _create_options(opt, opt_kwargs=opt_kwargs, sub_options=sub_options, convergence_criteria=convergence_criteria) 
+    mapped_args = _create_options(opt, opt_kwargs=opt_kwargs, sub_options=sub_options, convergence_criteria=convergence_criteria)
 
     integer = isnothing(integer) ? fill(false, length(prob.u0)) : integer
 
     return mapped_args, integer
 end
 
-function __solve(prob::OptimizationProblem, opt::Nonconvex.NonconvexCore.AbstractOptimizer;
-                 cb = nothing, 
-                 maxiters::Union{Number, Nothing} = nothing,
-                 maxtime::Union{Number, Nothing} = nothing,
-                 abstol::Union{Number, Nothing}=nothing,
-                 reltol::Union{Number, Nothing}=nothing,
-                 progress = false,
-                 surrogate_objective::Union{Symbol, Nothing}=nothing,
-                 integer=nothing,
-                 kwargs...)
+function SciMLBase.__solve(prob::OptimizationProblem, opt::Nonconvex.NonconvexCore.AbstractOptimizer;
+    cb=nothing,
+    maxiters::Union{Number,Nothing}=nothing,
+    maxtime::Union{Number,Nothing}=nothing,
+    abstol::Union{Number,Nothing}=nothing,
+    reltol::Union{Number,Nothing}=nothing,
+    progress=false,
+    surrogate_objective::Union{Symbol,Nothing}=nothing,
+    integer=nothing,
+    kwargs...)
 
     # local x
 
-    maxiters = _check_and_convert_maxiters(maxiters)
-    maxtime = _check_and_convert_maxtime(maxtime)
+    maxiters = GalacticOptim._check_and_convert_maxiters(maxiters)
+    maxtime = GalacticOptim._check_and_convert_maxtime(maxtime)
 
-    f = instantiate_function(prob.f,prob.u0,prob.f.adtype,prob.p)
+    f = GalacticOptim.instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p)
 
 
     _loss = NonconvexADWrapper(f, prob)
 
-    opt_f(θ) =_loss(θ)
+    opt_f(θ) = _loss(θ)
 
 
-    opt_args, integer = _map_optimizer_args(prob, opt, cb=cb, maxiters=maxiters, maxtime=maxtime,abstol=abstol, reltol=reltol, integer=integer; kwargs...)
+    opt_args, integer = __map_optimizer_args(prob, opt, cb=cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol, integer=integer; kwargs...)
 
     opt_set = Nonconvex.Model()
     if isnothing(surrogate_objective)
@@ -78,8 +92,8 @@ function __solve(prob::OptimizationProblem, opt::Nonconvex.NonconvexCore.Abstrac
         Nonconvex.set_objective!(opt_set, opt_f, flags=[surrogate_objective])
     end
 
-    Nonconvex.addvar!(opt_set, prob.lb, prob.ub, integer = integer)
-    
+    Nonconvex.addvar!(opt_set, prob.lb, prob.ub, integer=integer)
+
     if !isnothing(prob.f.cons)
         @warn "Equality constraints are current not passed on by GalacticOptim"
         #add_ineq_constraint!(opt_set, f)
@@ -102,8 +116,10 @@ function __solve(prob::OptimizationProblem, opt::Nonconvex.NonconvexCore.Abstrac
         opt_res = Nonconvex.optimize(opt_set, opt, prob.u0; opt_args...)
     end
     t1 = time()
-    
-    opt_ret = hasproperty(opt_res,:status) ? Symbol(string(opt_res.status)) : nothing
+
+    opt_ret = hasproperty(opt_res, :status) ? Symbol(string(opt_res.status)) : nothing
 
     SciMLBase.build_solution(prob, opt, opt_res.minimizer, opt_res.minimum; (isnothing(opt_ret) ? (; original=opt_res) : (; original=opt_res, retcode=opt_ret))...)
+end
+
 end

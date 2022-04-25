@@ -1,3 +1,4 @@
+using NonconvexMultistart
 function convert_common_kwargs(opt::NonconvexMultistart.HyperoptAlg, opt_kwargs;
     cb=nothing,
     maxiters=nothing,
@@ -10,7 +11,7 @@ function convert_common_kwargs(opt::NonconvexMultistart.HyperoptAlg, opt_kwargs;
     if !isnothing(cb)
         @warn "common callback argument is currently not used by $(opt)"
     end
-  
+
     if !isnothing(maxiters)
         @info "common maxiters argument refers to how many of the potential starting points will be evaluated by $(opt)"
         conv_opt_kwargs = (; conv_opt_kwargs..., iters=maxiters)
@@ -23,7 +24,7 @@ function convert_common_kwargs(opt::NonconvexMultistart.HyperoptAlg, opt_kwargs;
     if !isnothing(abstol)
         @warn "common abstol argument is currently not used by $(opt)"
     end
-    
+
     if !isnothing(reltol)
         @warn "common reltol argument is currently not used by $(opt)"
     end
@@ -39,7 +40,7 @@ function __create_options(opt::NonconvexMultistart.HyperoptAlg;
     if isa(options.sampler, NonconvexMultistart.Hyperopt.Hyperband)
         error("$(options.sampler) is currently not support by GalacticOptim")
     end
-    
+
     return options
 end
 
@@ -53,7 +54,7 @@ function _create_options(opt::NonconvexMultistart.HyperoptAlg;
     if isa(options.options.sampler, NonconvexMultistart.Hyperopt.Hyperband)
         error("$(options.options.sampler) is currently not support by GalacticOptim")
     end
-    
+
     return options
 end
 

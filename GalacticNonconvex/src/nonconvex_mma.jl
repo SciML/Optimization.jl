@@ -1,3 +1,4 @@
+using NonconvexMMA
 function convert_common_kwargs(opt::Union{NonconvexMMA.MMA02, NonconvexMMA.MMA87}, opt_kwargs;
     cb=nothing,
     maxiters=nothing,
@@ -10,7 +11,7 @@ function convert_common_kwargs(opt::Union{NonconvexMMA.MMA02, NonconvexMMA.MMA87
     if !isnothing(cb)
         @warn "common callback argument is currently not used by $(opt)"
     end
-  
+
     if !isnothing(maxiters)
         conv_opt_kwargs = (; conv_opt_kwargs..., outer_maxiter=maxiters)
     end
@@ -26,7 +27,7 @@ function convert_common_kwargs(opt::Union{NonconvexMMA.MMA02, NonconvexMMA.MMA87
 
         conv_opt_kwargs = (; conv_opt_kwargs..., tol = Nonconvex.NonconvexCore.Tolerance(tol_tmp_args...))
     end
-    
+
     if !isnothing(reltol)
         tol_tmp = :tol .∈ Ref(keys(conv_opt_kwargs)) ? conv_opt_kwargs[:tol] : Nonconvex.NonconvexCore.Tolerance()
         tol_tmp_args = (; zip(propertynames(tol_tmp), [getproperty(tol_tmp, j) for j in propertynames(tol_tmp)])...)
