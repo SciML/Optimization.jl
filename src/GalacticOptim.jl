@@ -20,9 +20,6 @@ include("utils.jl")
 include("function/function.jl")
 
 function __init__()
-    # Optimization backends
-    @require Optim="429524aa-4258-5aef-a3af-852621145aeb" include("solve/optim.jl")
-
     # AD backends
     @require FiniteDiff="6a86dc24-6348-571c-b903-95158fe2bd41" include("function/finitediff.jl")
     @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("function/forwarddiff.jl")
