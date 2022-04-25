@@ -1,4 +1,4 @@
-using GalacticOptim, GalacticOptimJL, GalacticFluxJL, Test
+using GalacticOptim, GalacticOptimJL, GalacticFlux, Test
 using ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker
 
 x0 = zeros(2)
