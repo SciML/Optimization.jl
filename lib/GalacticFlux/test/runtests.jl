@@ -1,4 +1,4 @@
-using GalacticFlux, GalacticOptim
+using GalacticFlux, GalacticOptim, ForwardDiff
 using Test
 
 @testset "GalacticFlux.jl" begin

@@ -1,4 +1,4 @@
-using GalacticMetaheuristics, GalacticOptim, Zygote
+using GalacticMetaheuristics, GalacticOptim
 using Test
 
 @testset "GalacticMetaheuristics.jl" begin
@@ -6,7 +6,7 @@ using Test
     x0 = zeros(2)
     _p = [1.0, 100.0]
     l1 = rosenbrock(x0, _p)
-    optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoZygote())
+    optprob = OptimizationFunction(rosenbrock)
     prob = GalacticOptim.OptimizationProblem(optprob, x0, _p, lb=[-1.0, -1.0], ub=[1.5, 1.5])
     sol = solve(prob, ECA())
     @test 10 * sol.minimum < l1

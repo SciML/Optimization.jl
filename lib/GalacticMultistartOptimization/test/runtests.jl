@@ -1,4 +1,5 @@
-using GalacticMultistartOptimization, GalacticOptim, ForwardDiff
+using Pkg; Pkg.dev("./GalacticNLopt")
+using GalacticMultistartOptimization, GalacticOptim, ForwardDiff, GalacticNLopt
 using Test
 
 @testset "GalacticMultistartOptimization.jl" begin
