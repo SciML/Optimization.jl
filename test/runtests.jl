@@ -29,6 +29,6 @@ elseif GROUP == "GPU"
 else
     subpkg_path = joinpath(dirname(@__DIR__), "lib", GROUP)
     Pkg.develop(PackageSpec(path=subpkg_path))
-    include(joinpath(subpkg_path,"test","runtests.jl"))
+    Pkg.test(PackageSpec(path=subpkg_path))
 end
 end
