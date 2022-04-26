@@ -1,4 +1,4 @@
-using Pkg; Pkg.add("https://github.com/timholy/QuadDIRECT.jl.git");
+using Pkg; Pkg.dev("https://github.com/timholy/QuadDIRECT.jl.git");
 using GalacticQuadDIRECT, GalacticOptim
 using Test
 

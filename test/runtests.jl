@@ -27,8 +27,10 @@ elseif GROUP == "GPU"
     activate_downstream_env()
     @safetestset "DiffEqFlux GPU" begin include("downstream/gpu_neural_ode.jl") end
 else
-    subpkg_path = joinpath(dirname(@__DIR__), "lib", GROUP)
-    Pkg.develop(PackageSpec(path=subpkg_path))
+    dev_subpkg(GROUP)
+    if GROUP == "MultistartOptimization"
+        dev_subpkg("GalacticNLopt")
+    end
     Pkg.test(PackageSpec(name = GROUP, path=subpkg_path))
 end
 end

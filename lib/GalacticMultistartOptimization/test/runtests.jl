@@ -1,4 +1,3 @@
-using Pkg; Pkg.dev("./GalacticNLopt")
 using GalacticMultistartOptimization, GalacticOptim, ForwardDiff, GalacticNLopt
 using Test
 
