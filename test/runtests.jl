@@ -36,9 +36,6 @@ elseif GROUP == "GPU"
     end
 else
     dev_subpkg(GROUP)
-    if GROUP == "MultistartOptimization"
-        dev_subpkg("GalacticNLopt")
-    end
     subpkg_path = joinpath(dirname(@__DIR__), "lib", GROUP)
     Pkg.test(PackageSpec(name=GROUP, path=subpkg_path))
 end
