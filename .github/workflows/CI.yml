@@ -27,7 +27,6 @@ jobs:
           - GalacticNOMAD
           - GalacticNonconvex
           - GalacticOptimJL
-          - GalacticQuadDIRECT
           - GalacticSpeedMapping
         version:
           - '1'

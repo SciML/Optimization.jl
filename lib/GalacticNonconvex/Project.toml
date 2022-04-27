@@ -19,6 +19,7 @@ NonconvexSearch = "75732972-a7cd-4375-b200-958e0814350d"
 
 [compat]
 julia = "1"
+NonconvexIpopt = "0.1.4"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
