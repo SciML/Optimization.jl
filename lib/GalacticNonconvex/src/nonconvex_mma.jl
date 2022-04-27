@@ -62,5 +62,3 @@ function _create_options(opt::Union{NonconvexMMA.MMA02, NonconvexMMA.MMA87};
 end
 
 check_optimizer_backend(opt::Union{NonconvexMMA.MMA02, NonconvexMMA.MMA87}) = false
-
-include("nonconvex.jl")

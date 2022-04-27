@@ -45,5 +45,3 @@ function _create_options(opt::NonconvexJuniper.JuniperIpoptAlg;
 end
 
 check_optimizer_backend(opt::NonconvexJuniper.JuniperIpoptAlg) = false
-
-include("nonconvex.jl")

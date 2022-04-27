@@ -8,7 +8,7 @@ include("nonconvex_juniper.jl")
 include("nonconvex_ipopt.jl")
 include("nonconvex_nlopt.jl")
 include("nonconvex_mma.jl")
-include("nonconvex_multistart.jl")
+# include("nonconvex_multistart.jl")
 include("nonconvex_percival.jl")
 include("nonconvex_search.jl")
 

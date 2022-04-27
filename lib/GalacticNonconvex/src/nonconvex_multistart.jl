@@ -59,5 +59,3 @@ function _create_options(opt::NonconvexMultistart.HyperoptAlg;
 end
 
 check_optimizer_backend(opt::NonconvexMultistart.HyperoptAlg) = false
-
-include("nonconvex.jl")

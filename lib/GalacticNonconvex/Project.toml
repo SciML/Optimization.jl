@@ -11,7 +11,6 @@ NonconvexBayesian = "fb352abc-de7b-48de-9ebd-665b54b5d9b3"
 NonconvexIpopt = "bf347577-a06d-49ad-a669-8c0e005493b8"
 NonconvexJuniper = "611adb69-ebe7-45d0-83f5-90aabba2c123"
 NonconvexMMA = "d3d89cbb-4ecd-4604-818d-8d1ff343e4da"
-NonconvexMultistart = "11b12826-7e46-4acf-9706-be0a67f2add7"
 NonconvexNLopt = "b43a31b8-ff9b-442d-8e31-c163daa8ab75"
 NonconvexPavito = "75d5b151-dcdf-4236-8ef5-9c4e63ef33e2"
 NonconvexPercival = "4296f080-e499-44ba-a02c-ae40015c44d5"
@@ -22,8 +21,9 @@ julia = "1"
 NonconvexIpopt = "0.1.4"
 
 [extras]
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Test", "Zygote"]
+test = ["Pkg", "Test", "Zygote"]

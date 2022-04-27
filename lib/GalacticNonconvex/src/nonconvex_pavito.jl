@@ -45,5 +45,3 @@ function _create_options(opt::NonconvexPavito.PavitoIpoptCbcAlg;
 end
 
 check_optimizer_backend(opt::NonconvexPavito.PavitoIpoptCbcAlg) = false
-
-include("nonconvex.jl")

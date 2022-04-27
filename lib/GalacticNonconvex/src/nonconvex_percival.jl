@@ -51,5 +51,3 @@ function _create_options(opt::NonconvexPercival.AugLag;
 end
 
 check_optimizer_backend(opt::NonconvexPercival.AugLag) = false
-
-include("nonconvex.jl")

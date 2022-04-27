@@ -5,13 +5,13 @@ version = "0.1.0"
 
 [deps]
 GalacticOptim = "a75be94c-b780-496d-a8a9-0878b188d577"
-QuadDIRECT = "dae52e8d-d666-5120-a592-9e15c33b8d7a"
 
 [compat]
 julia = "1"
 
 [extras]
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Pkg", "Test"]
