@@ -14,7 +14,7 @@ using Test
     GalacticNonconvex.Nonconvex.@load BayesOpt
     GalacticNonconvex.Nonconvex.@load Juniper
     GalacticNonconvex.Nonconvex.@load Pavito
-    # GalacticNonconvex.Nonconvex.@load Hyperopt
+    GalacticNonconvex.Nonconvex.@load Hyperopt
     GalacticNonconvex.Nonconvex.@load MTS
     prob = GalacticOptim.OptimizationProblem(optprob, x0, _p, lb=[-1.0, -1.0], ub=[1.5, 1.5])
 
@@ -36,29 +36,29 @@ using Test
     sol = solve(prob, MTSAlg())
     @test 10 * sol.minimum < l1
 
-    # sol = solve(prob, HyperoptAlg(NLoptAlg(:LN_NELDERMEAD)))
-    # @test 10 * sol.minimum < l1
+    sol = solve(prob, HyperoptAlg(NLoptAlg(:LN_NELDERMEAD)))
+    @test 10 * sol.minimum < l1
 
-    # sol = solve(prob, HyperoptAlg(NLoptAlg(:LN_NELDERMEAD)), sampler=LHSampler())
-    # @test 10 * sol.minimum < l1
+    sol = solve(prob, HyperoptAlg(NLoptAlg(:LN_NELDERMEAD)), sampler=LHSampler())
+    @test 10 * sol.minimum < l1
 
-    # sol = solve(prob, HyperoptAlg(NLoptAlg(:LN_NELDERMEAD)), sampler=CLHSampler())
-    # @test 10 * sol.minimum < l1
+    sol = solve(prob, HyperoptAlg(NLoptAlg(:LN_NELDERMEAD)), sampler=CLHSampler())
+    @test 10 * sol.minimum < l1
 
-    # sol = solve(prob, HyperoptAlg(NLoptAlg(:LN_NELDERMEAD)), sampler=GPSampler())
-    # @test 10 * sol.minimum < l1
+    sol = solve(prob, HyperoptAlg(NLoptAlg(:LN_NELDERMEAD)), sampler=GPSampler())
+    @test 10 * sol.minimum < l1
 
-    # sol = solve(prob, HyperoptAlg(IpoptAlg()))
-    # @test 10 * sol.minimum < l1
+    sol = solve(prob, HyperoptAlg(IpoptAlg()))
+    @test 10 * sol.minimum < l1
 
-    # sol = solve(prob, HyperoptAlg(IpoptAlg()), sampler=LHSampler())
-    # @test 10 * sol.minimum < l1
+    sol = solve(prob, HyperoptAlg(IpoptAlg()), sampler=LHSampler())
+    @test 10 * sol.minimum < l1
 
-    # sol = solve(prob, HyperoptAlg(IpoptAlg()), sampler=CLHSampler())
-    # @test 10 * sol.minimum < l1
+    sol = solve(prob, HyperoptAlg(IpoptAlg()), sampler=CLHSampler())
+    @test 10 * sol.minimum < l1
 
-    # sol = solve(prob, HyperoptAlg(IpoptAlg()), sampler=GPSampler())
-    # @test 10 * sol.minimum < l1
+    sol = solve(prob, HyperoptAlg(IpoptAlg()), sampler=GPSampler())
+    @test 10 * sol.minimum < l1
 
     sol = solve(prob, BayesOptAlg(IpoptAlg()))
     @test 10 * sol.minimum < l1
