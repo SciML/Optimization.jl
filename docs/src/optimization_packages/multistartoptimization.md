@@ -18,6 +18,8 @@ To use this package, install the GalacticMultiStartOptimization package:
 ```julia
 import Pkg; Pkg.add("GalacticMultiStartOptimization")
 ```
+!!! note
+
 You also need to load the relevant subpackage for the local method of you choice, for example if you plan to use one of the NLopt.jl's optimizers, you'd install and load GalacticNLopt as described in the [NLopt.jl](@ref)'s section.
 
 ## Global Optimizer
