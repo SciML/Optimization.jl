@@ -6,7 +6,7 @@ using Reexport, GalacticOptim, GalacticOptim.SciMLBase
 (f::NLopt.Algorithm)() = f
 
 function __map_optimizer_args!(prob::OptimizationProblem, opt::NLopt.Opt;
-    cb=nothing,
+    callback=nothing,
     maxiters::Union{Number,Nothing}=nothing,
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
@@ -86,7 +86,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Union{NLopt.Algorithm
     abstol::Union{Number,Nothing}=nothing,
     reltol::Union{Number,Nothing}=nothing,
     progress=false,
-    cb=(args...) -> (false),
+    callback=(args...) -> (false),
     kwargs...)
     local x
 
@@ -100,7 +100,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Union{NLopt.Algorithm
 
     _loss = function (θ)
         x = f.f(θ, prob.p)
-        cb(θ, x...)
+        callback(θ, x...)
         return x[1]
     end
 

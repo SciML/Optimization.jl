@@ -19,7 +19,7 @@ function initial_population!(opt, prob, bounds, f)
 end
 
 function __map_optimizer_args!(prob::OptimizationProblem, opt::Metaheuristics.AbstractAlgorithm;
-    cb=nothing,
+    callback=nothing,
     maxiters::Union{Number,Nothing}=nothing,
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
@@ -36,7 +36,7 @@ function __map_optimizer_args!(prob::OptimizationProblem, opt::Metaheuristics.Ab
         end
     end
 
-    if !isnothing(cb)
+    if !isnothing(callback)
         @warn "Callback argument is currently not used by $(typeof(opt).super)"
     end
 
@@ -59,7 +59,7 @@ function __map_optimizer_args!(prob::OptimizationProblem, opt::Metaheuristics.Ab
 end
 
 function SciMLBase.__solve(prob::OptimizationProblem, opt::Metaheuristics.AbstractAlgorithm;
-    cb=nothing,
+    callback=nothing,
     maxiters::Union{Number,Nothing}=nothing,
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
@@ -97,7 +97,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Metaheuristics.Abstra
         @warn "Inequality constraints are current not passed on by GalacticOptim"
     end
 
-    __map_optimizer_args!(prob, opt, cb=cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
+    __map_optimizer_args!(prob, opt, callback=callback, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
 
     if use_initial
         initial_population!(opt, prob, opt_bounds, _loss)

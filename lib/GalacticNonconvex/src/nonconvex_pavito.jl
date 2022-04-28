@@ -1,6 +1,6 @@
 using NonconvexPavito
 function convert_common_kwargs(opt::NonconvexPavito.PavitoIpoptCbcAlg, opt_kwargs;
-    cb=nothing,
+    callback=nothing,
     maxiters=nothing,
     maxtime=nothing,
     abstol=nothing,
@@ -8,7 +8,7 @@ function convert_common_kwargs(opt::NonconvexPavito.PavitoIpoptCbcAlg, opt_kwarg
 
     conv_opt_kwargs = (; opt_kwargs...)
 
-    if !isnothing(cb)
+    if !isnothing(callback)
         @warn "common callback argument is currently not used by $(opt)"
     end
 

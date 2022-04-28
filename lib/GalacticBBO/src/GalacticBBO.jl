@@ -12,7 +12,7 @@ end
 decompose_trace(opt::BlackBoxOptim.OptRunController) = BlackBoxOptim.best_candidate(opt)
 
 function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
-    cb=nothing,
+    callback=nothing,
     maxiters::Union{Number,Nothing}=nothing,
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
@@ -26,8 +26,8 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
     mapped_args = (; Method=opt.method,
         SearchRange=[(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)])
 
-    if !isnothing(cb)
-        mapped_args = (; mapped_args..., CallbackFunction=cb, CallbackInterval=0.0)
+    if !isnothing(callback)
+        mapped_args = (; mapped_args..., CallbackFunction=callback, CallbackInterval=0.0)
     end
 
     mapped_args = (; mapped_args..., kwargs...)
@@ -48,7 +48,7 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
 end
 
 function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO, data=GalacticOptim.DEFAULT_DATA;
-    cb=(args...) -> (false),
+    callback=(args...) -> (false),
     maxiters::Union{Number,Nothing}=nothing,
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
@@ -64,7 +64,7 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO, data=G
     cur, state = iterate(data)
 
     function _cb(trace)
-        cb_call = cb(decompose_trace(trace), x...)
+        cb_call = callback(decompose_trace(trace), x...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -84,7 +84,7 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO, data=G
         return first(x)
     end
 
-    opt_args = __map_optimizer_args(prob, opt, cb=_cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
+    opt_args = __map_optimizer_args(prob, opt, callback=_cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
 
     opt_setup = BlackBoxOptim.bbsetup(_loss; opt_args...)
 

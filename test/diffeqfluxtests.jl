@@ -52,7 +52,7 @@ prob = GalacticOptim.OptimizationProblem(optprob, p)
 
 result_ode = GalacticOptim.solve(prob,
                                  BFGS(initial_stepnorm = 0.0001),
-                                 cb = callback)
+                                 callback = callback)
 
 
 u0 = Float32[2.0; 0.0]
@@ -102,14 +102,14 @@ optprob = OptimizationFunction( (p,x) -> loss_neuralode(p), GalacticOptim.AutoFo
 prob = GalacticOptim.OptimizationProblem(optprob, prob_neuralode.p)
 
 result_neuralode = GalacticOptim.solve(prob,
-                                ADAM(), cb = callback,
+                                ADAM(), callback = callback,
                                 maxiters = 300)
 @test result_neuralode.minimum == loss_neuralode(result_neuralode.u)[1] 
 
 prob2 = remake(prob,u0=result_neuralode.u)
 result_neuralode2 = GalacticOptim.solve(prob2,
                                         BFGS(initial_stepnorm=0.0001),
-                                        cb = callback,
+                                        callback = callback,
                                         maxiters = 100)
 @test result_neuralode2.minimum == loss_neuralode(result_neuralode2.u)[1] 
 @test result_neuralode2.minimum < 10

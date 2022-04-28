@@ -4,7 +4,7 @@ using GalacticOptim, Reexport, Printf, ProgressLogging, GalacticOptim.SciMLBase
 @reexport using Flux
 
 function SciMLBase.__solve(prob::OptimizationProblem, opt::Flux.Optimise.AbstractOptimiser, data = GalacticOptim.DEFAULT_DATA;
-    maxiters::Number = 0, cb = (args...) -> (false),
+    maxiters::Number = 0, callback = (args...) -> (false),
     progress = false, save_best = true, kwargs...)
 
     if data != GalacticOptim.DEFAULT_DATA
@@ -31,7 +31,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Flux.Optimise.Abstrac
         for (i, d) in enumerate(data)
             f.grad(G, θ, d...)
             x = f.f(θ, prob.p, d...)
-            cb_call = cb(θ, x...)
+            cb_call = callback(θ, x...)
             if !(typeof(cb_call) <: Bool)
                 error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
             elseif cb_call
@@ -50,7 +50,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Flux.Optimise.Abstrac
                     opt = min_opt
                     x = min_err
                     θ = min_θ
-                    cb(θ, x...)
+                    callback(θ, x...)
                     break
                 end
             end

@@ -13,7 +13,7 @@ These common arguments are:
 - `maxtime` (the maximum of time the optimization runs for)
 - `abstol` (absolute tolerance in changes of the objective value)
 - `reltol` (relative tolerance  in changes of the objective value)
-- `cb` (a callback function)
+- `callback` (a callback function)
 
 If the chosen global optimzer employs a local optimization method a similiar set of common local optimizer arguments exists.
 The common local optimizer arguments are:
@@ -38,16 +38,16 @@ If a common argument is not implemented for a optimizer a warning will be shown.
 
 ## Callback Functions
 
-The callback function `cb` is a function which is called after every optimizer
+The callback function `callback` is a function which is called after every optimizer
 step. Its signature is:
 
 ```julia
-cb = (x,other_args) -> false
+callback = (x,other_args) -> false
 ```
 
 where `other_args` is are the extra return arguments of the optimization `f`.
-For example, if `f(x,p) = 5x`, then `cb = (x) -> ...` is used. If `f(x,p) = 5x,55x`,
-then `cb = (x,extra) -> ...` is used, where `extra = 55x`. This allows for saving
+For example, if `f(x,p) = 5x`, then `callback = (x) -> ...` is used. If `f(x,p) = 5x,55x`,
+then ` = (x,extra) -> ...` is used, where `extra = 55x`. This allows for saving
 values from the optimization and using them for plotting and display without
 recalculating. The callback should return a Boolean value, and the default 
 should be `false`, such that the optimization gets stopped if it returns `true`.

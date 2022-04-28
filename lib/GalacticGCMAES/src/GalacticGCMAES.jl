@@ -7,7 +7,7 @@ export GCMAESOpt
 struct GCMAESOpt end
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::GCMAESOpt;
-    cb=nothing,
+    callback=nothing,
     maxiters::Union{Number, Nothing}=nothing,
     maxtime::Union{Number, Nothing}=nothing,
     abstol::Union{Number, Nothing}=nothing,
