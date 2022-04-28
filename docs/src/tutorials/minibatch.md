@@ -1,7 +1,12 @@
 # Minibatch examples
 
+!!! note
+
+    This example uses the GalacticOptimJL.jl package. See the [Optim.jl page](@ref optim)
+    for details on the installation and usage.
+
 ```julia
-using DiffEqFlux, GalacticOptim, OrdinaryDiffEq
+using DiffEqFlux, GalacticOptim, GalacticOptimJL, OrdinaryDiffEq
 
 function newtons_cooling(du, u, p, t)
     temp = u[1]

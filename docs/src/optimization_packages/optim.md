@@ -1,4 +1,4 @@
-# Optim.jl
+# [Optim.jl](@id optim)
 [`Optim`](https://github.com/JuliaNLSolvers/Optim.jl) is Julia package implementing various algorithm to perform univariate and multivariate optimization.
 
 ## Installation: GalacticOptimJL.jl

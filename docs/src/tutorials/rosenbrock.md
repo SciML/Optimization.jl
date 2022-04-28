@@ -1,5 +1,12 @@
 # Rosenbrock function examples
 
+!!! note
+
+    This example uses many different solvers of GalacticOptim.jl. Each solver
+    subpackage needs to be installed separate. For example, for the details on 
+    the installation and usage of GalacticOptimJL.jl package, see the 
+    [Optim.jl page](@ref optim).
+
 ```julia
 using GalacticOptim, Optim, ForwardDiff, Zygote, Test, Random
 
@@ -10,6 +17,11 @@ _p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
 l1 = rosenbrock(x0, _p)
 prob = OptimizationProblem(f, x0, _p)
+
+## Optim.jl Solvers
+
+using GalacticOptimJL
+
 sol = solve(prob, SimulatedAnnealing())
 @test 10*sol.minimum < l1
 
@@ -17,12 +29,6 @@ Random.seed!(1234)
 prob = OptimizationProblem(f, x0, _p, lb=[-1.0, -1.0], ub=[0.8, 0.8])
 sol = solve(prob, SAMIN())
 @test 10*sol.minimum < l1
-
-using CMAEvolutionStrategy
-sol = solve(prob, CMAEvolutionStrategyOpt())
-@test 10*sol.minimum < l1
-
-rosenbrock(x, p=nothing) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 
 l1 = rosenbrock(x0)
 prob = OptimizationProblem(rosenbrock, x0)
@@ -86,7 +92,17 @@ prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
 @test_broken @test_nowarn sol = solve(prob, SAMIN())
 @test 10*sol.minimum < l1
 
-using NLopt
+## CMAEvolutionStrategy.jl solvers
+
+using GalacticCMAEvolutionStrategy
+sol = solve(prob, CMAEvolutionStrategyOpt())
+@test 10*sol.minimum < l1
+
+rosenbrock(x, p=nothing) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+
+## NLopt.jl solvers
+
+using GalacticNLopt
 prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, Opt(:LN_BOBYQA, 2))
 @test 10*sol.minimum < l1
@@ -101,19 +117,15 @@ sol = solve(prob, Opt(:LD_LBFGS, 2))
 sol = solve(prob, Opt(:G_MLSL_LDS, 2), nstart=2, local_method = Opt(:LD_LBFGS, 2), maxiters=10000)
 @test 10*sol.minimum < l1
 
-# using MultistartOptimization
-# sol = solve(prob, MultistartOptimization.TikTak(100), local_method = NLopt.LD_LBFGS)
-# @test 10*sol.minimum < l1
+## Evolutionary.jl Solvers
 
-# using QuadDIRECT
-# sol = solve(prob, QuadDirect(); splits = ([-0.5, 0.0, 0.5],[-0.5, 0.0, 0.5]))
-# @test 10*sol.minimum < l1
-
-using Evolutionary
+using GalacticEvolutionary
 sol = solve(prob, CMAES(μ =40 , λ = 100),abstol=1e-15)
 @test 10*sol.minimum < l1
 
-using BlackBoxOptim
+## BlackBoxOptim.jl Solvers
+
+using GalacticBBO
 prob = GalacticOptim.OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
 sol = solve(prob, BBO())
 @test 10*sol.minimum < l1

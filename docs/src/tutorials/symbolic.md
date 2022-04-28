@@ -1,7 +1,12 @@
 # Symbolic Problem Building with ModelingToolkit
 
+!!! note
+
+    This example uses the GalacticOptimJL.jl package. See the [Optim.jl page](@ref optim)
+    for details on the installation and usage.
+
 ```julia
-using ModelingToolkit, GalacticOptim
+using ModelingToolkit, GalacticOptim, GalacticOptimJL
 
 @variables x y
 @parameters a b
