@@ -2,12 +2,21 @@
 
 [MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl) is Julia abstration layer to interface with variety of mathematical optimization solvers.
 
+## Installation: GalacticMOI.jl
+
+To use this package, install the GalacticMOI package:
+
+```julia
+import Pkg; Pkg.add("GalacticMOI")
+```
+
+## Details
+
 As of now the `GalacticOptim` interface to `MathOptInterface` implents only the `maxtime` common keyword arguments. An optimizer which is implemented in the `MathOptInterface` is can be called be called directly if no optimizer options have to be defined. For example using the `Ipopt.jl` optimizer:
 
 ```julia
 sol = solve(prob, Ipopt.Optimizer())
 ```
-
 
 The optimizer options are handled in one of two ways. They can either be set via `GalacticOptim.MOI.OptimizerWithAttributes()` or as keyword argument to `solve`. For example using the `Ipopt.jl` optimizer:
 

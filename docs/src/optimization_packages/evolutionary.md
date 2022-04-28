@@ -1,6 +1,20 @@
 # Evolutionary.jl
 [`Evolutionary`](https://github.com/wildart/Evolutionary.jl) is a Julia package implementing various evolutionary and genetic algorithm.
 
+## Installation: GalacticCMAEvolutionStrategy.jl
+
+To use this package, install the GalacticCMAEvolutionStrategy package:
+
+```julia
+import Pkg; Pkg.add("GalacticCMAEvolutionStrategy")
+```
+
+## Global Optimizer
+### Without Constraint Equations
+
+The methods in [`Evolutionary`](https://github.com/wildart/Evolutionary.jl) are performing global optimization on problems without
+constraint equations. These methods work both with and without lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem`.
+
 A `Evolutionary` algorithm is called by one of the following:
 
 - [`Evolutionary.GA()`](https://wildart.github.io/Evolutionary.jl/stable/ga/): **Genetic Algorithm optimizer**
@@ -13,17 +27,7 @@ A `Evolutionary` algorithm is called by one of the following:
 
 Algorithm specific options are defined as `kwargs`. See the respective documentation for more detail.
 
-
-## Global Optimizer
-### Without Constraint Equations
-
-The methods in [`Evolutionary`](https://github.com/wildart/Evolutionary.jl) are performing global optimization on problems without
-constraint equations. These methods work both with and without lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem`.
-
-
-
-
-
+## Example
 
 The Rosenbrock function can optimized using the `Evolutionary.CMAES()` as follows:
 

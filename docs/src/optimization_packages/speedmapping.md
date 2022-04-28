@@ -3,6 +3,14 @@
 
 The SpeedMapping algorithm is called by `SpeedMappingOpt()`
 
+## Installation: GalacticSpeedMapping.jl
+
+To use this package, install the GalacticSpeedMapping package:
+
+```julia
+import Pkg; Pkg.add("GalacticSpeedMapping")
+```
+
 ## Global Optimizer
 ### Without Constraint Equations
 

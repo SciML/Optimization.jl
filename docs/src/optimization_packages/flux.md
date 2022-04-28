@@ -1,5 +1,14 @@
 # Flux.jl
 
+## Installation: GalacticFlux.jl
+
+To use this package, install the GalacticFlux package:
+
+```julia
+import Pkg; Pkg.add("GalacticFlux")
+```
+
+## Local Unconstrained Optimizers 
 
 - [`Flux.Optimise.Descent`](https://fluxml.ai/Flux.jl/stable/training/optimisers/#Flux.Optimise.Descent): **Classic gradient descent optimizer with learning rate**
 

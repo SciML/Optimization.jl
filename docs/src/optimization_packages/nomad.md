@@ -3,6 +3,14 @@
 
 The NOMAD algorithm is called by `NOMADOpt()`
 
+## Installation: GalacticNOMAD.jl
+
+To use this package, install the GalacticNOMAD package:
+
+```julia
+import Pkg; Pkg.add("GalacticNOMAD")
+```
+
 ## Global Optimizer
 ### Without Constraint Equations
 
@@ -11,6 +19,7 @@ constraint equations. Currently however, linear and nonlinear constraints  defin
 
 NOMAD works both with and without lower and upper boxconstraints set by `lb` and `ub` in the `OptimizationProblem`.
 
+## Examples
 
 The Rosenbrock function can optimized using the `NOMADOpt()` with and without boxcontraints as follows:
 
