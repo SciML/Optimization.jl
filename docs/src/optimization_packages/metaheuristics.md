@@ -1,6 +1,17 @@
 # Metaheuristics.jl
 [`Metaheuristics`](https://github.com/jmejia8/Metaheuristics.jl) is a is a Julia package implementing **metaheuristic algorithms** for global optiimization that do not require for the optimized function to be differentiable.
 
+## Installation: GalacticMetaheuristics.jl
+
+To use this package, install the GalacticMetaheuristics package:
+
+```julia
+import Pkg; Pkg.add("GalacticMetaheuristics")
+```
+
+## Global Optimizer
+### Without Constraint Equations
+
 A `Metaheuristics` Single-Objective algorithm is called using one of the following:
 
 * Evolutionary Centers Algorithm: `ECA()`
@@ -28,11 +39,12 @@ Lastly, information about the optimization problem such as the true optimum is s
 
 The currently available algorithms and their parameters are listed [here](https://jmejia8.github.io/Metaheuristics.jl/stable/algorithms/).
 
-## Global Optimizer
-### Without Constraint Equations
+## Notes
 
 The algorithms in [`Metaheuristics`](https://github.com/jmejia8/Metaheuristics.jl) are performing global optimization on problems without
 constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
+
+## Examples
 
 The Rosenbrock function can optimized using the Evolutionary Centers Algorithm `ECA()` as follows:
 

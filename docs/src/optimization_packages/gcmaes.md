@@ -1,13 +1,23 @@
 # GCMAES.jl
 [`GCMAES`](https://github.com/AStupidBear/GCMAES.jl) is a Julia package implementing the **Gradient-based Covariance Matrix Adaptation Evolutionary Strategy** which can utilize the gradient information to speed up the optimization process.
 
-The GCMAES algorithm is called by `GCMAESOpt()` and the initial search variance is set as a keyword argument `σ0` (default: `σ0 = 0.2`)
+## Installation: GalacticGCMAES.jl
+
+To use this package, install the GalacticGCMAES package:
+
+```julia
+import Pkg; Pkg.add("GalacticGCMAES")
+```
 
 ## Global Optimizer
 ### Without Constraint Equations
 
+The GCMAES algorithm is called by `GCMAESOpt()` and the initial search variance is set as a keyword argument `σ0` (default: `σ0 = 0.2`)
+
 The method in [`GCMAES`](https://github.com/AStupidBear/GCMAES.jl) is performing global optimization on problems without
 constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
+
+## Example
 
 The Rosenbrock function can optimized using the `GCMAESOpt()` without utilizing the gradient information as follows:
 

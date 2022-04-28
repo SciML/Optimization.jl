@@ -3,12 +3,21 @@
 
 The CMAEvolutionStrategy algorithm is called by `CMAEvolutionStrategyOpt()`
 
+## Installation: GalacticCMAEvolutionStrategy.jl
+
+To use this package, install the GalacticCMAEvolutionStrategy package:
+
+```julia
+import Pkg; Pkg.add("GalacticCMAEvolutionStrategy")
+```
+
 ## Global Optimizer
 ### Without Constraint Equations
 
 The method in [`CMAEvolutionStrategy`](https://github.com/jbrea/CMAEvolutionStrategy.jl) is performing global optimization on problems without
 constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
 
+## Example
 
 The Rosenbrock function can optimized using the `CMAEvolutionStrategyOpt()` as follows:
 

@@ -1,6 +1,21 @@
 # BlackBoxOptim.jl
 [`BlackBoxOptim`](https://github.com/robertfeldt/BlackBoxOptim.jl) is a is a Julia package implementing **(Meta-)heuristic/stochastic algorithms** that do not require for the optimized function to be differentiable.
 
+## Installation: GalacticBBO.jl
+
+To use this package, install the GalacticBBO package:
+
+```julia
+import Pkg; Pkg.add("GalacticBBO")
+```
+
+## Global Optimizers
+
+### Without Constraint Equations
+
+The algorithms in [`BlackBoxOptim`](https://github.com/robertfeldt/BlackBoxOptim.jl) are performing global optimization on problems without
+constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
+
 A `BlackBoxOptim` algorithm is called by `BBO_` prefix followed by the algorithm name:
 
 * Natural Evolution Strategies:
@@ -29,11 +44,7 @@ The recommended optimizer is `BBO_adaptive_de_rand_1_bin_radiuslimited()`
 
 The currently available algorithms are listed [here](https://github.com/robertfeldt/BlackBoxOptim.jl#state-of-the-library)
 
-## Global Optimizer
-### Without Constraint Equations
-
-The algorithms in [`BlackBoxOptim`](https://github.com/robertfeldt/BlackBoxOptim.jl) are performing global optimization on problems without
-constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
+## Example
 
 The Rosenbrock function can optimized using the `BBO_adaptive_de_rand_1_bin_radiuslimited()` as follows:
 

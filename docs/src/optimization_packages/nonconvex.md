@@ -1,6 +1,17 @@
 # Nonconvex.jl
 [`Nonconvex`](https://github.com/JuliaNonconvex/Nonconvex.jl) is a is a Julia package implementing and wrapping nonconvex constrained optimization algorithms.
 
+## Installation: GalacticNOMAD.jl
+
+To use this package, install the GalacticNOMAD package:
+
+```julia
+import Pkg; Pkg.add("GalacticNOMAD")
+```
+
+## Global Optimizer
+### Without Constraint Equations
+
 A `Nonconvex` algorithm is called using one of the following:
 
 * [Method of moving asymptotes (MMA)](https://julianonconvex.github.io/Nonconvex.jl/stable/algorithms/mma/#Method-of-moving-asymptotes-(MMA)):
@@ -25,15 +36,15 @@ A `Nonconvex` algorithm is called using one of the following:
 
 When performing optimizing a combination of integer and floating-point parameters the `integer` keyword has to be set. It takes a boolean vector indicating which parameter is an integer.
 
+## Notes
 
 Some optimizer may require further options to be defined in order to work.
 
 The currently available algorithms are listed [here](https://julianonconvex.github.io/Nonconvex.jl/stable/algorithms/algorithms/)
 
-## Global Optimizer
-### Without Constraint Equations
-
 The algorithms in [`Nonconvex`](https://julianonconvex.github.io/Nonconvex.jl/stable/algorithms/algorithms/) are performing global optimization on problems without constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
+
+## Examples
 
 The Rosenbrock function can optimized using the Method of moving asymptotes algorithm `MMA02()` as follows:
 

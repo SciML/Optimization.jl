@@ -12,12 +12,22 @@ Currently, the local methods can be one of the algotithms implemented in `NLopt.
 
     If you checkout the master branch of `MultiStartOptimization` or have version `>=0.1.3` you can use all optimizers found in the `GalacticOptim` which work with an initial parameter set. See an example of this below.
 
+
+## Installation: GalacticMultiStartOptimization.jl
+
+To use this package, install the GalacticMultiStartOptimization package:
+
+```julia
+import Pkg; Pkg.add("GalacticMultiStartOptimization")
+```
+
 ## Global Optimizer
 ### Without Constraint Equations
 
 The methods in [`MultistartOptimization`](https://github.com/tpapp/MultistartOptimization.jl) is performing global optimization on problems without
 constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
 
+## Examples 
 
 The Rosenbrock function can optimized using `MultistartOptimization.TikTak()` with 100 initial points and the local method `NLopt.LD_LBFGS()` as follows:
 

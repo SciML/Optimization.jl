@@ -1,5 +1,15 @@
-# Optim.jl
+# [Optim.jl](@id optim)
 [`Optim`](https://github.com/JuliaNLSolvers/Optim.jl) is Julia package implementing various algorithm to perform univariate and multivariate optimization.
+
+## Installation: GalacticOptimJL.jl
+
+To use this package, install the GalacticNOMAD package:
+
+```julia
+import Pkg; Pkg.add("GalacticNOMAD")
+```
+
+## Methods
 
 `Optim.jl` algorithms are chosen either via `NLopt.AlgorithmName()` where `AlgorithmName` can be one of the following:
 
@@ -38,7 +48,6 @@ The following special keyword arguments which are not covered by the common `sol
 
 For a more extensive documentation of all the algorithms and options please consult the 
 [`Documentation`](https://julianlsolvers.github.io/Optim.jl/stable/#)
-
 
 ## Local Optimizer
 ### Local Constraint

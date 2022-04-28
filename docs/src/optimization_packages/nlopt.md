@@ -1,6 +1,16 @@
 # NLopt.jl
 [`NLopt`](https://github.com/JuliaOpt/NLopt.jl) is Julia package interfacing to the free/open-source [`NLopt library`](http://ab-initio.mit.edu/nlopt) which implements many optimization methods both global and local [`NLopt Documentation`](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/).
 
+## Installation: GalacticNLopt.jl
+
+To use this package, install the GalacticNLopt package:
+
+```julia
+import Pkg; Pkg.add("GalacticNLopt")
+```
+
+## Methods
+
 `NLopt.jl` algorithms are chosen either via `NLopt.Opt(:algname, nstates)` where nstates is the number of states to be optimized but preferably via `NLopt.AlgorithmName()` where `AlgorithmName can be one of the following:
 * `NLopt.GN_DIRECT()`
 * `NLopt.GN_DIRECT_L()`
