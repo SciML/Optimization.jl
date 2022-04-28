@@ -8,7 +8,6 @@ GalacticOptim = "a75be94c-b780-496d-a8a9-0878b188d577"
 
 [compat]
 julia = "1"
-GalacticOptim = "3"
 
 [extras]
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"

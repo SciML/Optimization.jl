@@ -19,7 +19,6 @@ NonconvexSearch = "75732972-a7cd-4375-b200-958e0814350d"
 [compat]
 julia = "1"
 ChainRulesCore = "1"
-GalacticOptim = "3"
 Nonconvex = "1"
 NonconvexBayesian = "0.1"
 NonconvexIpopt = "0.1.4"

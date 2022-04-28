@@ -12,7 +12,6 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 julia = "1"
 Metaheuristics = "3"
 Reexport = "1.2"
-GalacticOptim = "3"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
