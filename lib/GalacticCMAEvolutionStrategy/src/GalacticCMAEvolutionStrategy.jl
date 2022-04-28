@@ -7,7 +7,7 @@ export CMAEvolutionStrategyOpt
 struct CMAEvolutionStrategyOpt end
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt;
-    cb=nothing,
+    callback=nothing,
     maxiters::Union{Number,Nothing}=nothing,
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
@@ -39,7 +39,7 @@ end
 
 
 function SciMLBase.__solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt, data=GalacticOptim.DEFAULT_DATA;
-    cb=(args...) -> (false),
+    callback=(args...) -> (false),
     maxiters::Union{Number,Nothing}=nothing,
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
@@ -54,7 +54,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyO
     cur, state = iterate(data)
 
     function _cb(trace)
-        cb_call = cb(decompose_trace(trace).metadata["x"], trace.value...)
+        cb_call = callback(decompose_trace(trace).metadata["x"], trace.value...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -70,7 +70,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyO
         return first(x)
     end
 
-    opt_args = __map_optimizer_args(prob, opt, cb=_cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
+    opt_args = __map_optimizer_args(prob, opt, callback=_cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
 
     t0 = time()
     opt_res = CMAEvolutionStrategy.minimize(_loss, prob.u0, 0.1; opt_args...)

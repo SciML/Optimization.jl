@@ -7,7 +7,7 @@ export QuadDirect
 struct QuadDirect end
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::QuadDirect;
-    cb=nothing,
+    callback=nothing,
     maxiters::Union{Number,Nothing}=nothing,
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
@@ -17,7 +17,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::QuadDirect;
         @warn "common maxtime is currently not used by $(opt)"
     end
 
-    if !isnothing(cb)
+    if !isnothing(callback)
         @warn "callbacks are currently not used by $(opt)"
     end
 

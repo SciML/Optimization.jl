@@ -6,7 +6,7 @@ decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace::Optim.OptimizationState) = trace
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::Union{Optim.AbstractOptimizer,Optim.Fminbox,Optim.SAMIN,Optim.ConstrainedOptimizer};
-    cb=nothing,
+    callback=nothing,
     maxiters::Union{Number,Nothing}=nothing,
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
@@ -18,8 +18,8 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::Union{Optim.Abstra
 
     mapped_args = (; extended_trace=true, kwargs...)
 
-    if !isnothing(cb)
-        mapped_args = (; mapped_args..., callback=cb)
+    if !isnothing(callback)
+        mapped_args = (; mapped_args..., callback=callback)
     end
 
     if !isnothing(maxiters)
@@ -58,7 +58,7 @@ end
 
 function ___solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
     data=GalacticOptim.DEFAULT_DATA;
-    cb=(args...) -> (false),
+    callback=(args...) -> (false),
     maxiters::Union{Number,Nothing}=nothing,
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
@@ -74,7 +74,7 @@ function ___solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
     cur, state = iterate(data)
 
     function _cb(trace)
-        cb_call = opt == Optim.NelderMead() ? cb(decompose_trace(trace).metadata["centroid"], x...) : cb(decompose_trace(trace).metadata["x"], x...)
+        cb_call = opt == Optim.NelderMead() ? callback(decompose_trace(trace).metadata["centroid"], x...) : callback(decompose_trace(trace).metadata["x"], x...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -130,7 +130,7 @@ function ___solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
         optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, prob.u0)
     end
 
-    opt_args = __map_optimizer_args(prob, opt, cb=_cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
+    opt_args = __map_optimizer_args(prob, opt, callback=_cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
 
     t0 = time()
     opt_res = Optim.optimize(optim_f, prob.u0, opt, opt_args)
@@ -142,7 +142,7 @@ end
 
 function ___solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMIN},
     data=GalacticOptim.DEFAULT_DATA;
-    cb=(args...) -> (false),
+    callback=(args...) -> (false),
     maxiters::Union{Number,Nothing}=nothing,
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
@@ -159,7 +159,7 @@ function ___solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMI
     cur, state = iterate(data)
 
     function _cb(trace)
-        cb_call = !(opt isa Optim.SAMIN) && opt.method == Optim.NelderMead() ? cb(decompose_trace(trace).metadata["centroid"], x...) : cb(decompose_trace(trace).metadata["x"], x...)
+        cb_call = !(opt isa Optim.SAMIN) && opt.method == Optim.NelderMead() ? callback(decompose_trace(trace).metadata["centroid"], x...) : callback(decompose_trace(trace).metadata["x"], x...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -197,7 +197,7 @@ function ___solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMI
     end
     optim_f = Optim.OnceDifferentiable(_loss, gg, fg!, prob.u0)
 
-    opt_args = __map_optimizer_args(prob, opt, cb=_cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
+    opt_args = __map_optimizer_args(prob, opt, callback=_cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
 
     t0 = time()
     opt_res = Optim.optimize(optim_f, prob.lb, prob.ub, prob.u0, opt, opt_args)
@@ -210,7 +210,7 @@ end
 
 function ___solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
     data=GalacticOptim.DEFAULT_DATA;
-    cb=(args...) -> (false),
+    callback=(args...) -> (false),
     maxiters::Union{Number,Nothing}=nothing,
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
@@ -227,7 +227,7 @@ function ___solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
     cur, state = iterate(data)
 
     function _cb(trace)
-        cb_call = cb(decompose_trace(trace).metadata["x"], x...)
+        cb_call = callback(decompose_trace(trace).metadata["x"], x...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -289,7 +289,7 @@ function ___solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
     ub = prob.ub === nothing ? [] : prob.ub
     optim_fc = Optim.TwiceDifferentiableConstraints(cons!, cons_j!, cons_hl!, lb, ub, prob.lcons, prob.ucons)
 
-    opt_args = __map_optimizer_args(prob, opt, cb=_cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
+    opt_args = __map_optimizer_args(prob, opt, callback=_cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
 
     t0 = time()
     opt_res = Optim.optimize(optim_f, optim_fc, prob.u0, opt, opt_args)

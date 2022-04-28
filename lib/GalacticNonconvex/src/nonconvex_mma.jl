@@ -1,6 +1,6 @@
 using NonconvexMMA
 function convert_common_kwargs(opt::Union{NonconvexMMA.MMA02, NonconvexMMA.MMA87}, opt_kwargs;
-    cb=nothing,
+    callback=nothing,
     maxiters=nothing,
     maxtime=nothing,
     abstol=nothing,
@@ -8,7 +8,7 @@ function convert_common_kwargs(opt::Union{NonconvexMMA.MMA02, NonconvexMMA.MMA87
 
     conv_opt_kwargs = (; opt_kwargs...)
 
-    if !isnothing(cb)
+    if !isnothing(callback)
         @warn "common callback argument is currently not used by $(opt)"
     end
 

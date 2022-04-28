@@ -42,7 +42,7 @@ function separate_kwargs(orig_kwargs)
 end
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::Nonconvex.NonconvexCore.AbstractOptimizer;
-    cb=nothing,
+    callback=nothing,
     maxiters::Union{Number,Nothing}=nothing,
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
@@ -51,7 +51,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::Nonconvex.Nonconve
     kwargs...)
 
     opt_kwargs, sub_options, convergence_criteria = separate_kwargs(kwargs)
-    opt_kwargs = convert_common_kwargs(opt, opt_kwargs, cb=cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol)
+    opt_kwargs = convert_common_kwargs(opt, opt_kwargs, callback=callback, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol)
     mapped_args = _create_options(opt, opt_kwargs=opt_kwargs, sub_options=sub_options, convergence_criteria=convergence_criteria)
 
     integer = isnothing(integer) ? fill(false, length(prob.u0)) : integer
@@ -60,7 +60,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::Nonconvex.Nonconve
 end
 
 function SciMLBase.__solve(prob::OptimizationProblem, opt::Nonconvex.NonconvexCore.AbstractOptimizer;
-    cb=nothing,
+    callback=nothing,
     maxiters::Union{Number,Nothing}=nothing,
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
@@ -83,7 +83,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Nonconvex.NonconvexCo
     opt_f(θ) = _loss(θ)
 
 
-    opt_args, integer = __map_optimizer_args(prob, opt, cb=cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol, integer=integer; kwargs...)
+    opt_args, integer = __map_optimizer_args(prob, opt, callback=callback, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol, integer=integer; kwargs...)
 
     opt_set = Nonconvex.Model()
     if isnothing(surrogate_objective)
