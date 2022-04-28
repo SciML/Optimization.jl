@@ -5,8 +5,6 @@
 
 Currently, only one global method (`TikTak`) is implemented and called by `MultiStartOptimization.TikTak(n)` where `n` is the number of initial Sobol points. 
 
-Currently, the local methods can be one of the algotithms implemented in `NLopt.jl`. 
-
 
 !!! note
 
@@ -20,6 +18,7 @@ To use this package, install the GalacticMultiStartOptimization package:
 ```julia
 import Pkg; Pkg.add("GalacticMultiStartOptimization")
 ```
+You also need to load the relevant subpackage for the local method of you choice, for example if you plan to use one of the NLopt.jl's optimizers, you'd install and load GalacticNLopt as described in the [NLopt.jl](@ref)'s section.
 
 ## Global Optimizer
 ### Without Constraint Equations
