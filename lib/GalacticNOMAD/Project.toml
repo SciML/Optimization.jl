@@ -9,6 +9,8 @@ NOMAD = "02130f1c-4665-5b79-af82-ff1385104aa0"
 
 [compat]
 julia = "1"
+NOMAD = "2"
+GalacticOptim = "3"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
