@@ -9,6 +9,8 @@ SpeedMapping = "f1835b91-879b-4a3f-a438-e4baacf14412"
 
 [compat]
 julia = "1"
+GalacticOptim = "3"
+SpeedMapping = "0.3"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

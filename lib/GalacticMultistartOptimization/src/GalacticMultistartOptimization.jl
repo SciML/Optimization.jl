@@ -1,6 +1,7 @@
 module GalacticMultistartOptimization
 
-using MultistartOptimization, GalacticOptim, GalacticOptim.SciMLBase
+using Reexport, GalacticOptim, GalacticOptim.SciMLBase
+@reexport using MultistartOptimization
 
 function SciMLBase.__solve(prob::OptimizationProblem, multiopt::MultistartOptimization.TikTak, opt;
     use_threads=true,
