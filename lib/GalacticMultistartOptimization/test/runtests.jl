@@ -1,4 +1,5 @@
-using GalacticMultistartOptimization, GalacticOptim, ForwardDiff
+using Pkg; Pkg.develop(path=joinpath(@__DIR__,"../../","GalacticNLopt"));
+using GalacticMultistartOptimization, GalacticOptim, ForwardDiff, GalacticNLopt
 using Test
 
 @testset "GalacticMultistartOptimization.jl" begin
@@ -8,6 +9,6 @@ using Test
     l1 = rosenbrock(x0, _p)
     f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
     prob = GalacticOptim.OptimizationProblem(f, x0, _p, lb=[-1.0, -1.0], ub=[1.5, 1.5])
-    sol = solve(prob, MultistartOptimization.TikTak(100), NLopt.LD_LBFGS())
+    sol = solve(prob, GalacticMultistartOptimization.TikTak(100), GalacticNLopt.Opt(:LD_LBFGS, 2))
     @test 10 * sol.minimum < l1
 end

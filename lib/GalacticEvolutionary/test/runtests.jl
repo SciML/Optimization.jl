@@ -1,4 +1,4 @@
-using GalacticEvolutionary, Zygote, GalacticOptim
+using GalacticEvolutionary, GalacticOptim
 using Test
 
 @testset "GalacticEvolutionary.jl" begin
@@ -6,7 +6,7 @@ using Test
     x0 = zeros(2)
     _p = [1.0, 100.0]
     l1 = rosenbrock(x0, _p)
-    optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoZygote())
+    optprob = OptimizationFunction(rosenbrock)
     prob = GalacticOptim.OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, CMAES(μ=40, λ=100), abstol=1e-15)
     @test 10 * sol.minimum < l1

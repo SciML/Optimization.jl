@@ -50,5 +50,3 @@ function _create_options(opt::NonconvexBayesian.BayesOptAlg;
 end
 
 check_optimizer_backend(opt::NonconvexBayesian.BayesOptAlg) = false
-
-include("nonconvex.jl")

@@ -1,3 +1,4 @@
+using Pkg; Pkg.develop(url="https://github.com/timholy/QuadDIRECT.jl.git");
 using GalacticQuadDIRECT, GalacticOptim
 using Test
 

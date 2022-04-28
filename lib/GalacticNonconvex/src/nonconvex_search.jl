@@ -50,5 +50,3 @@ function _create_options(opt::Union{NonconvexSearch.MTSAlg, NonconvexSearch.LS1A
 end
 
 check_optimizer_backend(opt::Union{NonconvexSearch.MTSAlg, NonconvexSearch.LS1Alg}) = true
-
-include("nonconvex.jl")

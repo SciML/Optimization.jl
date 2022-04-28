@@ -11,8 +11,9 @@ MultistartOptimization = "3933049c-43be-478e-a8bb-6e0f7fd53575"
 julia = "1"
 
 [extras]
-NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["ForwardDiff", "Pkg", "Test"]

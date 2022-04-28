@@ -25,7 +25,6 @@ jobs:
           - GalacticMultistartOptimization
           - GalacticNLopt
           - GalacticNOMAD
-          - GalacticNonconvex
           - GalacticOptimJL
           - GalacticQuadDIRECT
           - GalacticSpeedMapping

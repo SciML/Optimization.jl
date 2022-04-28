@@ -52,5 +52,3 @@ function _create_options(opt::NonconvexIpopt.IpoptAlg;
 end
 
 check_optimizer_backend(opt::NonconvexIpopt.IpoptAlg) = false
-
-include("nonconvex.jl")

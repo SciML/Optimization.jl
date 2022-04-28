@@ -18,17 +18,25 @@ end
 if GROUP == "All" || GROUP == "Core"
     dev_subpkg("GalacticOptimJL")
     dev_subpkg("GalacticFlux")
-    @safetestset "AD Tests" begin include("ADtests.jl") end
-    @safetestset "Mini batching" begin include("minibatch.jl") end
-    @safetestset "DiffEqFlux" begin include("diffeqfluxtests.jl") end
+    @safetestset "AD Tests" begin
+        include("ADtests.jl")
+    end
+    @safetestset "Mini batching" begin
+        include("minibatch.jl")
+    end
+    @safetestset "DiffEqFlux" begin
+        include("diffeqfluxtests.jl")
+    end
 elseif GROUP == "GPU"
     dev_subpkg("GalacticOptimJL")
     dev_subpkg("GalacticFlux")
     activate_downstream_env()
-    @safetestset "DiffEqFlux GPU" begin include("downstream/gpu_neural_ode.jl") end
+    @safetestset "DiffEqFlux GPU" begin
+        include("downstream/gpu_neural_ode.jl")
+    end
 else
+    dev_subpkg(GROUP)
     subpkg_path = joinpath(dirname(@__DIR__), "lib", GROUP)
-    Pkg.develop(PackageSpec(path=subpkg_path))
-    include(joinpath(subpkg_path,"test","runtests.jl"))
+    Pkg.test(PackageSpec(name=GROUP, path=subpkg_path))
 end
 end

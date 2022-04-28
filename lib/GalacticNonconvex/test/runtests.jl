@@ -1,4 +1,4 @@
-using GalacticNonconvex, GalacticOptim, Zygote
+using GalacticNonconvex, GalacticOptim, Zygote, Pkg
 using Test
 
 @testset "GalacticNonconvex.jl" begin

@@ -11,7 +11,8 @@ GalacticOptim = "a75be94c-b780-496d-a8a9-0878b188d577"
 julia = "1"
 
 [extras]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["ForwardDiff", "Test"]
