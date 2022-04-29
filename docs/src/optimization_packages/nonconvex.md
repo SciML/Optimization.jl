@@ -1,12 +1,12 @@
 # Nonconvex.jl
 [`Nonconvex`](https://github.com/JuliaNonconvex/Nonconvex.jl) is a is a Julia package implementing and wrapping nonconvex constrained optimization algorithms.
 
-## Installation: GalacticNOMAD.jl
+## Installation: GalacticNonconvex.jl
 
-To use this package, install the GalacticNOMAD package:
+To use this package, install the GalacticNonconvex package:
 
 ```julia
-import Pkg; Pkg.add("GalacticNOMAD")
+import Pkg; Pkg.add("GalacticNonconvex")
 ```
 
 ## Global Optimizer
