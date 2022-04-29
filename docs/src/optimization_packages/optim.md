@@ -3,15 +3,15 @@
 
 ## Installation: GalacticOptimJL.jl
 
-To use this package, install the GalacticNOMAD package:
+To use this package, install the GalacticOptimJL package:
 
 ```julia
-import Pkg; Pkg.add("GalacticNOMAD")
+import Pkg; Pkg.add("GalacticOptimJL")
 ```
 
 ## Methods
 
-`Optim.jl` algorithms are chosen either via `NLopt.AlgorithmName()` where `AlgorithmName` can be one of the following:
+`Optim.jl` algorithms can be one of the following:
 
 * `Optim.NelderMead()`
 * `Optim.SimulatedAnnealing()`
