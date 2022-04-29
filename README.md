@@ -26,17 +26,17 @@ installation of dependencies. Below is the list of packages that need to be
 installed explicitly if you intend to use the specific optimization algorithms
 offered by them:
 
-- [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl)
-- [Evolutionary.jl](https://github.com/wildart/Evolutionary.jl) (see also [this documentation](https://wildart.github.io/Evolutionary.jl/dev/))
-- [GCMAES.jl](https://github.com/AStupidBear/GCMAES.jl)
-- [MathOptInterface.jl](https://github.com/jump-dev/MathOptInterface.jl) (usage of algorithm via MathOptInterface API; see also the API [documentation](https://jump.dev/MathOptInterface.jl/stable/))
-- [Metaheuristics.jl](https://github.com/jmejia8/Metaheuristics.jl) (see also [this documentation](https://jmejia8.github.io/Metaheuristics.jl/stable/))
-- [MultistartOptimization.jl](https://github.com/tpapp/MultistartOptimization.jl) (see also [this documentation](https://juliahub.com/docs/MultistartOptimization/cVZvi/0.1.0/))
-- [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) (usage via the NLopt API; see also the available [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/))
-- [NOMAD.jl](https://github.com/bbopt/NOMAD.jl) (see also [this documentation](https://bbopt.github.io/NOMAD.jl/stable/))
-- [Nonconvex.jl](https://github.com/JuliaNonconvex/Nonconvex.jl) (see also [this documentation](https://julianonconvex.github.io/Nonconvex.jl/stable/))
-- [QuadDIRECT.jl](https://github.com/timholy/QuadDIRECT.jl)
-- [SpeedMapping.jl](https://github.com/NicolasL-S/SpeedMapping.jl) (see also [this documentation](https://nicolasl-s.github.io/SpeedMapping.jl/stable/))
+- GalacticBBO for [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl)
+- GalacticEvolutionary for [Evolutionary.jl](https://github.com/wildart/Evolutionary.jl) (see also [this documentation](https://wildart.github.io/Evolutionary.jl/dev/))
+- GalacticGCMAES for [GCMAES.jl](https://github.com/AStupidBear/GCMAES.jl)
+- GalacticMOI for [MathOptInterface.jl](https://github.com/jump-dev/MathOptInterface.jl) (usage of algorithm via MathOptInterface API; see also the API [documentation](https://jump.dev/MathOptInterface.jl/stable/))
+- GalacticMetaheuristics for [Metaheuristics.jl](https://github.com/jmejia8/Metaheuristics.jl) (see also [this documentation](https://jmejia8.github.io/Metaheuristics.jl/stable/))
+- GalacticMultistartOptimization for [MultistartOptimization.jl](https://github.com/tpapp/MultistartOptimization.jl) (see also [this documentation](https://juliahub.com/docs/MultistartOptimization/cVZvi/0.1.0/))
+- GalacticNLopt for [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) (usage via the NLopt API; see also the available [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/))
+- GalacticNOMAD for [NOMAD.jl](https://github.com/bbopt/NOMAD.jl) (see also [this documentation](https://bbopt.github.io/NOMAD.jl/stable/))
+- GalacticNonconvex for [Nonconvex.jl](https://github.com/JuliaNonconvex/Nonconvex.jl) (see also [this documentation](https://julianonconvex.github.io/Nonconvex.jl/stable/))
+- GalacticQuadDIRECT for [QuadDIRECT.jl](https://github.com/timholy/QuadDIRECT.jl)
+- GalacticSpeedMapping for [SpeedMapping.jl](https://github.com/NicolasL-S/SpeedMapping.jl) (see also [this documentation](https://nicolasl-s.github.io/SpeedMapping.jl/stable/))
 
 ## Tutorials and Documentation
 
@@ -48,18 +48,20 @@ the documentation, which contains the unreleased features.
 ## Examples
 
 ```julia
- using GalacticOptim, Optim
- rosenbrock(x,p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
- x0 = zeros(2)
- p  = [1.0,100.0]
+using GalacticOptim
+rosenbrock(x,p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+x0 = zeros(2)
+p  = [1.0,100.0]
 
- prob = OptimizationProblem(rosenbrock,x0,p)
- sol = solve(prob,NelderMead())
+prob = OptimizationProblem(rosenbrock,x0,p)
+
+using GalacticOptimJL
+sol = solve(prob,NelderMead())
 
 
- using BlackBoxOptim
- prob = OptimizationProblem(rosenbrock, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
- sol = solve(prob,BBO_adaptive_de_rand_1_bin_radiuslimited())
+using GalacticBBO
+prob = OptimizationProblem(rosenbrock, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+sol = solve(prob,BBO_adaptive_de_rand_1_bin_radiuslimited())
 ```
 
 Note that Optim.jl is a core dependency of GalaticOptim.jl. However, BlackBoxOptim.jl
