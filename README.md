@@ -135,3 +135,4 @@ sol = solve(prob, Fminbox(GradientDescent()))
 The examples clearly demonstrate that GalacticOptim.jl provides an intuitive
 way of specifying optimization tasks and offers a relatively
 easy access to a wide range of optimization algorithms.
+
