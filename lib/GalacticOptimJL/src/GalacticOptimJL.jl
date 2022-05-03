@@ -65,6 +65,7 @@ function ___solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
     reltol::Union{Number,Nothing}=nothing,
     progress=false,
     kwargs...)
+
     local x, cur, state
 
     if data != GalacticOptim.DEFAULT_DATA
@@ -78,8 +79,13 @@ function ___solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
-        cur, state = iterate(data, state)
-        cb_call
+        nx_itr = iterate(data, state)
+        if isnothing(nx_itr)
+            true
+        else
+            cur, state = nx_itr
+            cb_call
+        end
     end
 
     maxiters = GalacticOptim._check_and_convert_maxiters(maxiters)
@@ -163,8 +169,13 @@ function ___solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox,Optim.SAMI
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
-        cur, state = iterate(data, state)
-        cb_call
+        nx_itr = iterate(data, state)
+        if isnothing(nx_itr)
+            true
+        else
+            cur, state = nx_itr
+            cb_call
+        end
     end
 
     maxiters = GalacticOptim._check_and_convert_maxiters(maxiters)
@@ -231,8 +242,13 @@ function ___solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
-        cur, state = iterate(data, state)
-        cb_call
+        nx_itr = iterate(data, state)
+        if isnothing(nx_itr)
+            true
+        else
+            cur, state = nx_itr
+            cb_call
+        end
     end
 
     maxiters = GalacticOptim._check_and_convert_maxiters(maxiters)
