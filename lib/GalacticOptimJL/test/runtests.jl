@@ -23,6 +23,7 @@ using Test
 
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff(); cons=cons)
+    optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoModelingToolkit(); cons=cons)
 
     prob = OptimizationProblem(optprob, x0, _p)
 
