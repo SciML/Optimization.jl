@@ -1,4 +1,4 @@
-using GalacticOptimJL, GalacticOptimJL.Optim, GalacticOptim, ForwardDiff, Zygote, Random
+using GalacticOptimJL, GalacticOptimJL.Optim, GalacticOptim, ForwardDiff, Zygote, Random, ModelingToolkit
 using Test
 
 @testset "GalacticOptimJL.jl" begin
@@ -89,5 +89,10 @@ using Test
     optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), GalacticOptim.AutoZygote(), grad=g!)
     prob = OptimizationProblem(optprob, x0, _p; sense=GalacticOptim.MaxSense)
     sol = solve(prob, BFGS())
+    @test 10 * sol.minimum < l1
+
+    optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoModelingToolkit())
+    prob = OptimizationProblem(optprob, x0, _p)
+    sol = solve(prob, Optim.BFGS())
     @test 10 * sol.minimum < l1
 end

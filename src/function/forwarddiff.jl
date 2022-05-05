@@ -43,10 +43,8 @@ function instantiate_function(f::OptimizationFunction{true}, x, ::AutoForwardDif
 
     if f.cons === nothing
         cons = nothing
-        cons! = nothing
     else
         cons = θ -> f.cons(θ,p)
-        cons! = (res, θ) -> (res .= f.cons(θ,p); res)
     end
 
     if cons !== nothing && f.cons_j === nothing
