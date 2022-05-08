@@ -26,12 +26,36 @@ g!(G1, x0)
 h!(H1, x0)
 
 cons = (x, p) -> [x[1]^2 + x[2]^2]
-optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoModelingToolkit(), cons = cons)
-optprob = GalacticOptim.instantiate_function(optf, x0, GalacticOptim.AutoModelingToolkit(), nothing)
+optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoModelingToolkit(), cons=cons)
+optprob = GalacticOptim.instantiate_function(optf, x0, GalacticOptim.AutoModelingToolkit(), nothing, 1)
 optprob.grad(G2, x0)
 @test G1 == G2
 optprob.hess(H2, x0)
 @test H1 == H2
+@test optprob.cons(x0) == [0.0]
+J = Array{Float64}(undef, 2)
+optprob.cons_j(J, [5.0, 3.0])
+@test J == [10.0, 6.0]
+H3 = [Array{Float64}(undef, 2, 2)]
+optprob.cons_h(H3, x0)
+@test H3 == [[2.0 0.0; 0.0 2.0]]
+
+function con2_c(x, p)
+    [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
+end
+optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoModelingToolkit(), cons=con2_c)
+optprob = GalacticOptim.instantiate_function(optf, x0, GalacticOptim.AutoModelingToolkit(), nothing, 2)
+optprob.grad(G2, x0)
+@test G1 == G2
+optprob.hess(H2, x0)
+@test H1 == H2
+@test optprob.cons(x0) == [0.0, 0.0]
+J = Array{Float64}(undef, 2, 2)
+optprob.cons_j(J, [5.0, 3.0])
+@test all(isapprox(J, [10.0 6.0; -0.149013 -0.958924]; rtol=1e-3))
+H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
+optprob.cons_h(H3, x0)
+@test H3 == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 
 optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
 optprob = GalacticOptim.instantiate_function(optf, x0, GalacticOptim.AutoForwardDiff(), nothing)

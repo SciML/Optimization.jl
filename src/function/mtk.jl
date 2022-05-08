@@ -1,9 +1,9 @@
 struct AutoModelingToolkit <: AbstractADType end
 
 function instantiate_function(f, x, ::AutoModelingToolkit, p, num_cons=0)
-
+    p = isnothing(p) ? SciMLBase.NullParameters() : p
     sys = ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, x, p))
-    println(sys)
+
     if f.grad === nothing
         grad_oop, grad_iip = ModelingToolkit.generate_gradient(sys, expression=Val{false})
         grad(J, u) = (grad_iip(J, u, p); J)
