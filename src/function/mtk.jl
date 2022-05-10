@@ -32,7 +32,7 @@ function instantiate_function(f, x, ::AutoModelingToolkit, p, num_cons=0)
         cons = nothing
     else
         cons = (θ) -> f.cons(θ, p)
-        cons_sys = ModelingToolkit.modelingtoolkitize(OptimizationProblem(f.cons, x, p); checks=false)
+        cons_sys = ModelingToolkit.modelingtoolkitize(NonlinearProblem(f.cons, x, p))
     end
 
     if f.cons !== nothing && f.cons_j === nothing
@@ -46,11 +46,8 @@ function instantiate_function(f, x, ::AutoModelingToolkit, p, num_cons=0)
 
     if f.cons !== nothing && f.cons_h === nothing
         cons_h = function (res, θ)
-            for i in 1:num_cons
-                cons_sys_i = ModelingToolkit.modelingtoolkitize(OptimizationProblem((args...) -> f.cons(args...)[i], x, p); checks=false)
-                cons_hess_oop, cons_hess_iip = ModelingToolkit.generate_hessian(cons_sys_i, expression=Val{false})
-                cons_hess_iip(res[i], θ, p)
-            end
+            cons_hess_oop, cons_hess_iip = ModelingToolkit.generate_hessian(cons_sys, expression=Val{false})
+            cons_hess_iip(res, θ, p)
         end
     else
         cons_h = f.cons_h
