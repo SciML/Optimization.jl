@@ -5,7 +5,7 @@ makedocs(
     authors="Chris Rackauckas, Vaibhav Kumar Dixit et al.",
     clean=true,
     doctest=false,
-    modules=[GalacticOptim],
+    modules=[GalacticOptim,GalacticOptim.SciMLBase],
 
     format=Documenter.HTML(analytics = "UA-90474609-3",
                            assets=["assets/favicon.ico"],
