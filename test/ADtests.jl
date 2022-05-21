@@ -57,6 +57,20 @@ H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 @test H3 == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 
+optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoModelingToolkit(true, true), cons=con2_c)
+optprob = GalacticOptim.instantiate_function(optf, x0, GalacticOptim.AutoModelingToolkit(true, true), nothing, 2)
+using SparseArrays
+sH = sparse([1, 1, 2, 2], [1, 2, 1, 2], zeros(4))
+optprob.hess(sH, x0)
+@test sH == H2
+@test optprob.cons(x0) == [0.0, 0.0]
+sJ = sparse([1, 1, 2, 2], [1, 2, 1, 2], zeros(4))
+optprob.cons_j(sJ, [5.0, 3.0])
+@test all(isapprox(sJ, [10.0 6.0; -0.149013 -0.958924]; rtol=1e-3))
+sH3 = [sparse([1,2], [1, 2], zeros(2)), sparse([1, 1, 2], [1, 2, 1], zeros(3))]
+optprob.cons_h(sH3, x0)
+@test Array.(sH3) == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
+
 optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
 optprob = GalacticOptim.instantiate_function(optf, x0, GalacticOptim.AutoForwardDiff(), nothing)
 optprob.grad(G2, x0)

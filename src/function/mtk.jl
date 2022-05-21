@@ -1,6 +1,11 @@
-struct AutoModelingToolkit <: AbstractADType end
+struct AutoModelingToolkit <: AbstractADType
+    obj_sparse::Bool
+    cons_sparse::Bool
+end
 
-function instantiate_function(f, x, ::AutoModelingToolkit, p, num_cons=0)
+AutoModelingToolkit() = AutoModelingToolkit(false, false)
+
+function instantiate_function(f, x, ad::AutoModelingToolkit, p, num_cons=0)
     p = isnothing(p) ? SciMLBase.NullParameters() : p
     sys = ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, x, p))
 
@@ -12,8 +17,8 @@ function instantiate_function(f, x, ::AutoModelingToolkit, p, num_cons=0)
     end
 
     if f.hess === nothing
-        hess_oop, hess_iip = ModelingToolkit.generate_hessian(sys, expression=Val{false})
-        hess(J, u) = (hess_iip(J, u, p); J)
+        hess_oop, hess_iip = ModelingToolkit.generate_hessian(sys, expression=Val{false}, sparse = ad.obj_sparse)
+        hess(H, u) = (hess_iip(H, u, p); H)
     else
         hess = f.hess
     end
@@ -36,8 +41,8 @@ function instantiate_function(f, x, ::AutoModelingToolkit, p, num_cons=0)
     end
 
     if f.cons !== nothing && f.cons_j === nothing
+        jac_oop, jac_iip = ModelingToolkit.generate_jacobian(cons_sys, expression=Val{false}, sparse=ad.cons_sparse)
         cons_j = function (J, θ)
-            jac_oop, jac_iip = ModelingToolkit.generate_jacobian(cons_sys, expression=Val{false})
             jac_iip(J, θ, p)
         end
     else
@@ -45,8 +50,8 @@ function instantiate_function(f, x, ::AutoModelingToolkit, p, num_cons=0)
     end
 
     if f.cons !== nothing && f.cons_h === nothing
+        cons_hess_oop, cons_hess_iip = ModelingToolkit.generate_hessian(cons_sys, expression=Val{false}, sparse=ad.cons_sparse)
         cons_h = function (res, θ)
-            cons_hess_oop, cons_hess_iip = ModelingToolkit.generate_hessian(cons_sys, expression=Val{false})
             cons_hess_iip(res, θ, p)
         end
     else
