@@ -25,7 +25,7 @@ function instantiate_function(f, x, ad::AutoModelingToolkit, p, num_cons=0)
 
     if f.hv === nothing
         hv = function (H, θ, v, args...)
-            res = ArrayInterface.zeromatrix(θ)
+            res = ArrayInterfaceCore.zeromatrix(θ)
             hess(res, θ, args...)
             H .= res * v
         end
