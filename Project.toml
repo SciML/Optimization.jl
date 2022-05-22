@@ -4,7 +4,7 @@ authors = ["Vaibhavdixit02 <vaibhavyashdixit@gmail.com>"]
 version = "3.2.1"
 
 [deps]
-ArrayInterface = "30b0a656-2188-435a-8636-2ec0e6a096e2"
+ArrayInterfaceCore = "30b0a656-2188-435a-8636-2ec0e6a096e2"
 ConsoleProgressMonitor = "88cd18e8-d9cc-4ea6-8889-5259c0d15c8b"
 DiffResults = "163ba53b-c6d8-5494-b064-1a9d43ac40c5"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
