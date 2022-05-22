@@ -4,7 +4,7 @@ authors = ["Vaibhavdixit02 <vaibhavyashdixit@gmail.com>"]
 version = "3.2.1"
 
 [deps]
-ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
+ArrayInterfaceCore = "30b0a656-2188-435a-8636-2ec0e6a096e2"
 ConsoleProgressMonitor = "88cd18e8-d9cc-4ea6-8889-5259c0d15c8b"
 DiffResults = "163ba53b-c6d8-5494-b064-1a9d43ac40c5"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
@@ -19,7 +19,7 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 TerminalLoggers = "5d786b92-1e48-4d6f-9151-6b4477ca9bed"
 
 [compat]
-ArrayInterface = "2.13, 3.0, 4, 5"
+ArrayInterfaceCore = "0.1.1"
 ConsoleProgressMonitor = "0.1"
 DiffResults = "1.0"
 DocStringExtensions = "0.8"

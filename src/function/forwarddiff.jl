@@ -33,7 +33,7 @@ function instantiate_function(f::OptimizationFunction{true}, x, ::AutoForwardDif
 
     if f.hv === nothing
         hv = function (H,θ,v, args...)
-            res = ArrayInterface.zeromatrix(θ)
+            res = ArrayInterfaceCore.zeromatrix(θ)
             hess(res, θ, args...)
             H .= res*v
         end
