@@ -18,7 +18,7 @@ using Test
     @test 10 * sol.minimum < l1
 
     prob = OptimizationProblem(rosenbrock, x0, _p)
-    sol = solve(prob, Optim.NelderMead())
+    sol = solve(prob, Optim.NelderMead(;initial_simplex=Optim.AffineSimplexer(;a = 0.025, b = 0.5)))
     @test 10 * sol.minimum < l1
 
     cons = (x, p) -> [x[1]^2 + x[2]^2]

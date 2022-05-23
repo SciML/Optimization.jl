@@ -75,7 +75,7 @@ function ___solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
     cur, state = iterate(data)
 
     function _cb(trace)
-        cb_call = opt == Optim.NelderMead() ? callback(decompose_trace(trace).metadata["centroid"], x...) : callback(decompose_trace(trace).metadata["x"], x...)
+        cb_call = opt isa Optim.NelderMead ? callback(decompose_trace(trace).metadata["centroid"], x...) : callback(decompose_trace(trace).metadata["x"], x...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
