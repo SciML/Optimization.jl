@@ -1,7 +1,7 @@
 name = "GalacticOptimJL"
 uuid = "9d3c5eb1-403b-401b-8c0f-c11105342e6b"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 GalacticOptim = "a75be94c-b780-496d-a8a9-0878b188d577"
