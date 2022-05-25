@@ -96,4 +96,9 @@ using Test
     prob = OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, Optim.BFGS())
     @test 10 * sol.minimum < l1
+
+    optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoModelingToolkit(true, false))
+    prob = OptimizationProblem(optprob, x0, _p)
+    sol = solve(prob, Optim.BFGS())
+    @test 10 * sol.minimum < l1
 end
