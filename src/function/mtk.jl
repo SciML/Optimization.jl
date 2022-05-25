@@ -9,6 +9,8 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
     p = isnothing(p) ? SciMLBase.NullParameters() : p
     sys = ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, x, p))
 
+    hess_prototype, cons_jac_prototype, cons_hess_prototype = nothing, nothing, nothing
+
     if f.grad === nothing
         grad_oop, grad_iip = ModelingToolkit.generate_gradient(sys, expression=Val{false})
         grad(J, u) = (grad_iip(J, u, p); J)
@@ -25,7 +27,7 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
 
     if f.hv === nothing
         hv = function (H, θ, v, args...)
-            res = ArrayInterfaceCore.zeromatrix(θ)
+            res = ad.obj_sparse ? sparse(findnz(hess_prototype)[1], findnz(hess_prototype)[2], zeros(nnz(hess_prototype))) : ArrayInterfaceCore.zeromatrix(θ)
             hess(res, θ, args...)
             H .= res * v
         end
@@ -56,6 +58,15 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
         end
     else
         cons_h = f.cons_h
+    end
+
+    if ad.obj_sparse
+        hess_prototype = ModelingToolkit.hessian_sparsity(sys)
+    end
+
+    if ad.cons_sparse
+        cons_jac_prototype = ModelingToolkit.jacobian_sparsity(cons_sys)
+        cons_hess_prototype = ModelingToolkit.hessian_sparsity(cons_sys)
     end
 
     return OptimizationFunction{true}(f.f, adtype; grad=grad, hess=hess, hv=hv, 
