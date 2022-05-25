@@ -27,7 +27,7 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
 
     if f.hv === nothing
         hv = function (H, θ, v, args...)
-            res = ad.obj_sparse ? sparse(findnz(hess_prototype)[1], findnz(hess_prototype)[2], zeros(nnz(hess_prototype))) : ArrayInterfaceCore.zeromatrix(θ)
+            res = ad.obj_sparse ? hess_prototype : ArrayInterfaceCore.zeromatrix(θ)
             hess(res, θ, args...)
             H .= res * v
         end
@@ -61,12 +61,15 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
     end
 
     if ad.obj_sparse
-        hess_prototype = ModelingToolkit.hessian_sparsity(sys)
+        _hess_prototype = ModelingToolkit.hessian_sparsity(sys)
+        hess_prototype = sparse(findnz(_hess_prototype)[1], findnz(_hess_prototype)[2], zeros(nnz(_hess_prototype)))
     end
 
     if ad.cons_sparse
-        cons_jac_prototype = ModelingToolkit.jacobian_sparsity(cons_sys)
-        cons_hess_prototype = ModelingToolkit.hessian_sparsity(cons_sys)
+        _cons_jac_prototype = ModelingToolkit.jacobian_sparsity(cons_sys)
+        cons_jac_prototype = sparse(findnz(_cons_jac_prototype)[1], findnz(_cons_jac_prototype)[2], zeros(nnz(_cons_jac_prototype)))
+        _cons_hess_prototype = ModelingToolkit.hessian_sparsity(cons_sys)
+        cons_hess_prototype = sparse(findnz(_cons_hess_prototype)[1], findnz(_cons_hess_prototype)[2], zeros(nnz(_cons_hess_prototype)))
     end
 
     return OptimizationFunction{true}(f.f, adtype; grad=grad, hess=hess, hv=hv, 
