@@ -1,6 +1,6 @@
 struct AutoTracker <: AbstractADType end
 
-function instantiate_function(f, x, ::AutoTracker, p, num_cons = 0)
+function instantiate_function(f, x, adtype::AutoTracker, p, num_cons = 0)
     num_cons != 0 && error("AutoTracker does not currently support constraints")
     _f = (θ, args...) -> first(f.f(θ, p, args...))
 
@@ -23,5 +23,6 @@ function instantiate_function(f, x, ::AutoTracker, p, num_cons = 0)
     end
 
 
-    return OptimizationFunction{false,AutoTracker,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,AutoTracker(),grad,hess,hv,nothing,nothing,nothing)
+    return OptimizationFunction{false}(f, adtype; grad, hess, hv, cons=nothing, cons_j=nothing, cons_h=nothing,
+        hess_prototype=nothing, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
 end

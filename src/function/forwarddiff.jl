@@ -11,7 +11,7 @@ function default_chunk_size(len)
     end
 end
 
-function instantiate_function(f::OptimizationFunction{true}, x, ::AutoForwardDiff{_chunksize}, p, num_cons = 0) where _chunksize
+function instantiate_function(f::OptimizationFunction{true}, x, adtype::AutoForwardDiff{_chunksize}, p, num_cons = 0) where _chunksize
 
     chunksize = _chunksize === nothing ? default_chunk_size(length(x)) : _chunksize
 
@@ -67,5 +67,6 @@ function instantiate_function(f::OptimizationFunction{true}, x, ::AutoForwardDif
         cons_h = f.cons_h
     end
 
-    return OptimizationFunction{true,AutoForwardDiff,typeof(f.f),typeof(grad),typeof(hess),typeof(hv),typeof(cons),typeof(cons_j),typeof(cons_h)}(f.f,AutoForwardDiff(),grad,hess,hv,cons,cons_j,cons_h)
+    return OptimizationFunction{true}(f.f, adtype; grad, hess, hv, cons, cons_j, cons_h,
+        hess_prototype=nothing, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
 end

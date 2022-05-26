@@ -32,5 +32,6 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
         hv = f.hv
     end
 
-    return OptimizationFunction{false,AutoFiniteDiff,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,adtype,grad,hess,hv,nothing,nothing,nothing)
+    return OptimizationFunction{false}(f,adtype; grad, hess, hv, cons=nothing, cons_j=nothing, cons_h=nothing,
+        hess_prototype=nothing, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
 end

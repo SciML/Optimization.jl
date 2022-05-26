@@ -1,6 +1,6 @@
 struct AutoZygote <: AbstractADType end
 
-function instantiate_function(f, x, ::AutoZygote, p, num_cons = 0)
+function instantiate_function(f, x, adtype::AutoZygote, p, num_cons = 0)
     num_cons != 0 && error("AutoZygote does not currently support constraints")
 
     _f = (θ, args...) -> f(θ,p,args...)[1]
@@ -37,5 +37,6 @@ function instantiate_function(f, x, ::AutoZygote, p, num_cons = 0)
         hv = f.hv
     end
 
-    return OptimizationFunction{false,AutoZygote,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,AutoZygote(),grad,hess,hv,nothing,nothing,nothing)
+    return OptimizationFunction{false}(f, adtype; grad, hess, hv, cons=nothing, cons_j=nothing, cons_h=nothing,
+        hess_prototype=nothing, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
 end
