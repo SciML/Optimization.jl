@@ -1,4 +1,4 @@
-using OrdinaryDiffEq, DiffEqFlux, GalacticOptim, GalacticOptimJL, GalacticFlux, ForwardDiff
+using OrdinaryDiffEq, DiffEqFlux, GalacticOptim, GalacticOptimJL, GalacticOptimisers, ForwardDiff
 
 function lotka_volterra!(du, u, p, t)
   x, y = u

@@ -1,4 +1,4 @@
-module GalacticFlux
+module GalacticOptimisers
 
 using GalacticOptim, Reexport, Printf, ProgressLogging, GalacticOptim.SciMLBase
 @reexport using Optimisers

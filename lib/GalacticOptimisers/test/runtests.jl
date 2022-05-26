@@ -1,7 +1,7 @@
-using GalacticFlux, GalacticOptim, ForwardDiff
+using GalacticOptimisers, GalacticOptim, ForwardDiff
 using Test
 
-@testset "GalacticFlux.jl" begin
+@testset "GalacticOptimisers.jl" begin
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = zeros(2)
     _p = [1.0, 100.0]
@@ -11,10 +11,10 @@ using Test
 
     prob = OptimizationProblem(optprob, x0, _p)
 
-    sol = GalacticOptim.solve(prob, Optimisers.ADAM(0.1), maxiters = 1000)
+    sol = GalacticOptim.solve(prob, Optimisers.ADAM(0.1), maxiters=1000)
     @test 10 * sol.minimum < l1
 
     prob = OptimizationProblem(optprob, x0, _p)
-    sol = solve(prob, Optimisers.ADAM(), maxiters = 1000, progress = false)
+    sol = solve(prob, Optimisers.ADAM(), maxiters=1000, progress=false)
     @test 10 * sol.minimum < l1
 end

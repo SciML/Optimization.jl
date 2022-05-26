@@ -1,5 +1,5 @@
-name = "GalacticFlux"
-uuid = "08766a1d-66fd-4ddf-8f8a-8b0fccaded3b"
+name = "GalacticOptimisers"
+uuid = "86b7a833-eb4b-49e2-87ed-89357ad7afa2"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.1.0"
 
