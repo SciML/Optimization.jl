@@ -1,0 +1,25 @@
+name = "GalacticFlux"
+uuid = "08766a1d-66fd-4ddf-8f8a-8b0fccaded3b"
+authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
+version = "0.1.0"
+
+[deps]
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+GalacticOptim = "a75be94c-b780-496d-a8a9-0878b188d577"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+
+[compat]
+julia = "1"
+Flux = "0.13"
+ProgressLogging = "0.1"
+Reexport = "1.2"
+GalacticOptim = "3"
+
+[extras]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["ForwardDiff","Test"]
