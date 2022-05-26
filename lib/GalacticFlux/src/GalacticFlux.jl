@@ -1,9 +1,9 @@
 module GalacticFlux
 
 using GalacticOptim, Reexport, Printf, ProgressLogging, GalacticOptim.SciMLBase
-@reexport using Flux
+@reexport using Optimisers
 
-function SciMLBase.__solve(prob::OptimizationProblem, opt::Flux.Optimise.AbstractOptimiser, data = GalacticOptim.DEFAULT_DATA;
+function SciMLBase.__solve(prob::OptimizationProblem, opt::Optimisers.AbstractOptimiser, data = GalacticOptim.DEFAULT_DATA;
     maxiters::Number = 0, callback = (args...) -> (false),
     progress = false, save_best = true, kwargs...)
 
@@ -14,8 +14,6 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Flux.Optimise.Abstrac
         data = GalacticOptim.take(data, maxiters)
     end
 
-    # Flux is silly and doesn't have an abstract type on its optimizers, so assume
-    # this is a Flux optimizer
     θ = copy(prob.u0)
     G = copy(θ)
 
@@ -54,7 +52,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Flux.Optimise.Abstrac
                     break
                 end
             end
-            Flux.update!(opt, θ, G)
+            Optimisers.update!(opt, θ, G)
         end
     end
 
