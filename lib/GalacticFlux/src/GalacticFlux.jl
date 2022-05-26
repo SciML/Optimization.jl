@@ -57,7 +57,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::OptimisersOptimizers,
                     break
                 end
             end
-            state, model = Optimisers.update(opt, θ, G)
+            state, θ = Optimisers.update(state, θ, G)
         end
     end
 
