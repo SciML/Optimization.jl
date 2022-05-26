@@ -20,6 +20,7 @@ TerminalLoggers = "5d786b92-1e48-4d6f-9151-6b4477ca9bed"
 
 [compat]
 ArrayInterfaceCore = "0.1.1"
+ArrayInterface = "6"
 ConsoleProgressMonitor = "0.1"
 DiffResults = "1.0"
 DocStringExtensions = "0.8"
@@ -27,6 +28,9 @@ LoggingExtras = "0.4"
 ProgressLogging = "0.1"
 Reexport = "0.2, 1.0"
 Requires = "1.0"
-SciMLBase = "1.32"
+SciMLBase = "1.34"
 TerminalLoggers = "0.1"
 julia = "1.6"
+
+[extras]
+ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"

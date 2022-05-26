@@ -1,6 +1,6 @@
 struct AutoReverseDiff <: AbstractADType end
 
-function instantiate_function(f, x, ::AutoReverseDiff, p=SciMLBase.NullParameters(), num_cons = 0)
+function instantiate_function(f, x, adtype::AutoReverseDiff, p=SciMLBase.NullParameters(), num_cons = 0)
     num_cons != 0 && error("AutoReverseDiff does not currently support constraints")
 
     _f = (θ, args...) -> first(f.f(θ,p, args...))
@@ -39,5 +39,7 @@ function instantiate_function(f, x, ::AutoReverseDiff, p=SciMLBase.NullParameter
         hv = f.hv
     end
 
-    return OptimizationFunction{false,AutoReverseDiff,typeof(f),typeof(grad),typeof(hess),typeof(hv),Nothing,Nothing,Nothing}(f,AutoReverseDiff(),grad,hess,hv,nothing,nothing,nothing)
+    return OptimizationFunction{false}(f, adtype; grad=grad, hess=hess, hv=hv, 
+        cons=nothing, cons_j=nothing, cons_h=nothing,
+        hess_prototype=nothing, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
 end

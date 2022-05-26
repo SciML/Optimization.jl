@@ -6,9 +6,7 @@ function instantiate_function(f, x, ::AbstractADType, p, num_cons = 0)
     cons_j = f.cons_j === nothing ? nothing : (res,x)->f.cons_j(res,x,p)
     cons_h = f.cons_h === nothing ? nothing : (res,x)->f.cons_h(res,x,p)
 
-    OptimizationFunction{true,SciMLBase.NoAD,typeof(f.f),typeof(grad),
-                         typeof(hess),typeof(hv),typeof(cons),
-                         typeof(cons_j),typeof(cons_h)}(f.f,
-                         SciMLBase.NoAD(),grad,hess,hv,cons,
-                         cons_j,cons_h)
+    return OptimizationFunction{true}(f.f, SciMLBase.NoAD(); grad=grad, hess=hess, hv=hv, 
+        cons=cons, cons_j=cons_j, cons_h=cons_h,
+        hess_prototype=nothing, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
 end
