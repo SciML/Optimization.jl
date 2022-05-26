@@ -4,7 +4,7 @@ using GalacticOptim, Reexport, Printf, ProgressLogging, GalacticOptim.SciMLBase
 @reexport using Optimisers
 
 const OptimisersOptimizers = Union{Descent, Adam, Momentum, Nesterov, RMSProp,
-       AdaGrad, AdaMax, AdaDelta, AMSGrad, NAdam, AdamW, RAdam, OAdam, AdaBelief,
+       AdaGrad, AdaMax, AdaDelta, AMSGrad, NAdam, RAdam, OAdam, AdaBelief,
        WeightDecay, ClipGrad, ClipNorm, OptimiserChain}
 
 function SciMLBase.__solve(prob::OptimizationProblem, opt::OptimisersOptimizers, data = GalacticOptim.DEFAULT_DATA;
