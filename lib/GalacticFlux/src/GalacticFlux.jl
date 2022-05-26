@@ -3,7 +3,11 @@ module GalacticFlux
 using GalacticOptim, Reexport, Printf, ProgressLogging, GalacticOptim.SciMLBase
 @reexport using Optimisers
 
-function SciMLBase.__solve(prob::OptimizationProblem, opt::Optimisers.AbstractOptimiser, data = GalacticOptim.DEFAULT_DATA;
+const OptimisersOptimizers = Union{Descent, Adam, Momentum, Nesterov, RMSProp,
+       AdaGrad, AdaMax, AdaDelta, AMSGrad, NAdam, AdamW, RAdam, OAdam, AdaBelief,
+       WeightDecay, ClipGrad, ClipNorm, OptimiserChain}
+
+function SciMLBase.__solve(prob::OptimizationProblem, opt::OptimisersOptimizers, data = GalacticOptim.DEFAULT_DATA;
     maxiters::Number = 0, callback = (args...) -> (false),
     progress = false, save_best = true, kwargs...)
 
