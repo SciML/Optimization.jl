@@ -27,6 +27,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::OptimisersOptimizers,
     min_θ = prob.u0
 
     f = GalacticOptim.instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p)
+    state = Optimisers.setup(opt, θ)
 
     t0 = time()
     GalacticOptim.@withprogress progress name = "Training" begin
@@ -56,7 +57,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::OptimisersOptimizers,
                     break
                 end
             end
-            Optimisers.update!(opt, θ, G)
+            state, model = Optimisers.update(opt, θ, G)
         end
     end
 
