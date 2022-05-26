@@ -1,4 +1,4 @@
-using GalacticMOI, GalacticOptim, Ipopt, NLopt, Zygote
+using GalacticMOI, GalacticOptim, Ipopt, NLopt, Zygote, ModelingToolkit
 using Test
 
 @testset "GalacticMOI.jl" begin
@@ -29,5 +29,15 @@ using Test
     @test 10 * sol.minimum < l1
 
     sol = solve(prob, GalacticMOI.MOI.OptimizerWithAttributes(NLopt.Optimizer, "algorithm" => :LD_LBFGS))
+    @test 10 * sol.minimum < l1
+
+    cons_circ = (x, p) -> [x[1]^2 + x[2]^2]
+    optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoModelingToolkit(true, true); cons=cons_circ)
+    prob = OptimizationProblem(optprob, x0, _p)
+
+    sol = solve(prob, Ipopt.Optimizer())
+    @test 10 * sol.minimum < l1
+
+    sol = solve(prob, GalacticMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "max_cpu_time" => 60.0))
     @test 10 * sol.minimum < l1
 end
