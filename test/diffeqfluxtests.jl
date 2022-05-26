@@ -1,4 +1,4 @@
-using OrdinaryDiffEq, DiffEqFlux, GalacticOptim, GalacticOptimJL, GalacticFlux, ForwardDiff
+using OrdinaryDiffEq, DiffEqFlux, GalacticOptim, GalacticOptimJL, GalacticOptimisers, ForwardDiff
 
 function lotka_volterra!(du, u, p, t)
   x, y = u
@@ -102,7 +102,7 @@ optprob = OptimizationFunction( (p,x) -> loss_neuralode(p), GalacticOptim.AutoFo
 prob = GalacticOptim.OptimizationProblem(optprob, prob_neuralode.p)
 
 result_neuralode = GalacticOptim.solve(prob,
-                                ADAM(), callback = callback,
+                                GalacticOptimisers.ADAM(), callback = callback,
                                 maxiters = 300)
 @test result_neuralode.minimum == loss_neuralode(result_neuralode.u)[1] 
 
