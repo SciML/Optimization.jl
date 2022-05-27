@@ -37,7 +37,7 @@ function instantiate_function(f, x, adtype::AutoZygote, p, num_cons = 0)
         hv = f.hv
     end
 
-    return OptimizationFunction{false}(f, adtype; grad=grad, hess=hess, hv=hv, 
+    return OptimizationFunction{true}(f, adtype; grad=grad, hess=hess, hv=hv,
         cons=nothing, cons_j=nothing, cons_h=nothing,
         hess_prototype=nothing, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
 end
