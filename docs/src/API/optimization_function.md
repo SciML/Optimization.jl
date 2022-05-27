@@ -49,6 +49,14 @@ The choices for the auto-AD fill-ins with quick descriptions are:
 
 The following sections describe the Auto-AD choices in detail.
 
+### Using instantiate_function
+
+`instantiate_function()`  builds the closures required for the calls to exist without the `p` parameters as part of it, which is required by many of the optimizers. For example,
+
+```julia
+GalacticOptim.instantiate_function(f, p, adtype, nothing)
+```
+
 ### AutoForwardDiff
 
 This uses the [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl)
