@@ -61,18 +61,15 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
     end
 
     if adtype.obj_sparse
-        _hess_prototype = ModelingToolkit.hessian_sparsity(sys)
-        hess_prototype = sparse(findnz(_hess_prototype)[1], findnz(_hess_prototype)[2], zeros(nnz(_hess_prototype)))
+        hess_prototype = ModelingToolkit.hessian_sparsity(sys)
     end
 
     if adtype.cons_sparse
-        _cons_jac_prototype = ModelingToolkit.jacobian_sparsity(cons_sys)
-        cons_jac_prototype = sparse(findnz(_cons_jac_prototype)[1], findnz(_cons_jac_prototype)[2], zeros(nnz(_cons_jac_prototype)))
-        _cons_hess_prototype = ModelingToolkit.hessian_sparsity(cons_sys)
-        cons_hess_prototype = [sparse(findnz(_cons_hess_prototype[i])[1], findnz(_cons_hess_prototype[i])[2], zeros(nnz(_cons_hess_prototype[i]))) for i in eachindex(_cons_hess_prototype)]
+        cons_jac_prototype = ModelingToolkit.jacobian_sparsity(cons_sys)
+        cons_hess_prototype = ModelingToolkit.hessian_sparsity(cons_sys)
     end
 
     return OptimizationFunction{true}(f.f, adtype; grad=grad, hess=hess, hv=hv,
         cons=cons, cons_j=cons_j, cons_h=cons_h,
-        hess_prototype=nothing, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
+        hess_prototype=hess_prototype, cons_jac_prototype=cons_jac_prototype, cons_hess_prototype=cons_hess_prototype)
 end
