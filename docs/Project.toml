@@ -1,5 +1,17 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
+ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
+Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
 Documenter = "0.26, 0.27"
+FiniteDiff = ">= 2.8.1"
+ForwardDiff = ">= 0.10.19"
+ModelingToolkit = ">= 8.11.0"
+ReverseDiff = ">= 1.9.0"
+Tracker = ">= 0.2"
+Zygote = ">= 0.5"
