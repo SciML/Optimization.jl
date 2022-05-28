@@ -1,11 +1,13 @@
 using Documenter, GalacticOptim
+using FiniteDiff, ForwardDiff, ModelingToolkit, ReverseDiff, Tracker, Zygote
 
 makedocs(
     sitename="GalacticOptim.jl",
     authors="Chris Rackauckas, Vaibhav Kumar Dixit et al.",
     clean=true,
     doctest=false,
-    modules=[GalacticOptim,GalacticOptim.SciMLBase],
+    modules=[GalacticOptim, GalacticOptim.SciMLBase, FiniteDiff, 
+             ForwardDiff, ModelingToolkit, ReverseDiff, Tracker, Zygote],
 
     format=Documenter.HTML(analytics = "UA-90474609-3",
                            assets=["assets/favicon.ico"],
