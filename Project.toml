@@ -28,7 +28,7 @@ LoggingExtras = "0.4, 0.5"
 ProgressLogging = "0.1"
 Reexport = "0.2, 1.0"
 Requires = "1.0"
-SciMLBase = "1.34"
+SciMLBase = "1.37"
 TerminalLoggers = "0.1"
 julia = "1.6"
 

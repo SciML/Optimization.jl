@@ -1,3 +1,50 @@
+"""
+AutoModelingToolkit <: AbstractADType
+
+An AbstractADType choice for use in OptimizationFunction for automatically
+generating the unspecified derivative functions. Usage:
+
+```julia
+OptimizationFunction(f,AutoModelingToolkit();kwargs...)
+```
+
+This uses the [ModelingToolkit.jl](https://github.com/SciML/ModelingToolkit.jl)
+symbolic system for automatically converting the `f` function into
+a symbolic equation and uses symbolic differentiation in order to generate
+a fast derivative code. Note that this will also compile a new version
+of your `f` function that is automatically optimized. Because of the
+required symbolic analysis, the state and parameters are required in
+the function definition, i.e.:
+
+Summary:
+
+- Not compatible with GPUs
+- Compatible with Hessian-based optimization
+- Not compatible with Hv-based optimization
+- Not compatible with constraint functions
+
+## Constructor
+
+```julia
+OptimizationFunction(f,AutoModelingToolkit(),x0,p,
+                     grad = false, hess = false, sparse = false,
+                     checkbounds = false,
+                     linenumbers = true,
+                     parallel=SerialForm(),
+                     kwargs...)
+```
+
+The special keyword arguments are as follows:
+
+- `grad`: whether to symbolically generate the gradient function.
+- `hess`: whether to symbolically generate the Hessian function.
+- `sparse`: whether to use sparsity detection in the Hessian.
+- `checkbounds`: whether to perform bounds checks in the generated code.
+- `linenumbers`: whether to include line numbers in the generated code.
+- `parallel`: whether to automatically parallelize the calculations.
+
+For more information, see the [ModelingToolkit.jl `OptimizationSystem` documentation](https://mtk.sciml.ai/dev/systems/OptimizationSystem/)
+"""
 struct AutoModelingToolkit <: AbstractADType
     obj_sparse::Bool
     cons_sparse::Bool
