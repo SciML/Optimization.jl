@@ -1,5 +1,5 @@
-# Common Solver Options
+# Common Solver Options (Solve Keyword Arguments)
 
 ```@docs
-solve(::OptimizationProblem,::AbstractOptimizationAlgorithm)
+solve(::OptimizationProblem,::Any)
 ```
