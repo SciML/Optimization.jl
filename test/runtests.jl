@@ -16,8 +16,8 @@ end
 
 @time begin
 if GROUP == "All" || GROUP == "Core"
-    dev_subpkg("GalacticOptimJL")
-    dev_subpkg("GalacticOptimisers")
+    dev_subpkg("OptimizationOptimJL")
+    dev_subpkg("OptimizationOptimisers")
     @safetestset "AD Tests" begin
         include("ADtests.jl")
     end
@@ -28,8 +28,8 @@ if GROUP == "All" || GROUP == "Core"
         include("diffeqfluxtests.jl")
     end
 elseif GROUP == "GPU"
-    dev_subpkg("GalacticOptimJL")
-    dev_subpkg("GalacticOptimisers")
+    dev_subpkg("OptimizationOptimJL")
+    dev_subpkg("OptimizationOptimisers")
     activate_downstream_env()
     @safetestset "DiffEqFlux GPU" begin
         include("downstream/gpu_neural_ode.jl")

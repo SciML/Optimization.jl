@@ -1,4 +1,4 @@
-using OrdinaryDiffEq, DiffEqFlux, GalacticOptim, GalacticOptimJL, GalacticOptimisers, ForwardDiff
+using OrdinaryDiffEq, DiffEqFlux, Optimization, OptimizationOptimJL, OptimizationOptimisers, ForwardDiff
 
 function lotka_volterra!(du, u, p, t)
   x, y = u
@@ -46,11 +46,11 @@ callback = function (p, l, pred)
   return false
 end
 
-optprob = OptimizationFunction((x,p) -> loss_adjoint(x), GalacticOptim.AutoForwardDiff())
+optprob = OptimizationFunction((x,p) -> loss_adjoint(x), Optimization.AutoForwardDiff())
 
-prob = GalacticOptim.OptimizationProblem(optprob, p)
+prob = Optimization.OptimizationProblem(optprob, p)
 
-result_ode = GalacticOptim.solve(prob,
+result_ode = Optimization.solve(prob,
                                  BFGS(initial_stepnorm = 0.0001),
                                  callback = callback)
 
@@ -97,17 +97,17 @@ callback = function (p, l, pred)
   return false
 end
 
-optprob = OptimizationFunction( (p,x) -> loss_neuralode(p), GalacticOptim.AutoForwardDiff())
+optprob = OptimizationFunction( (p,x) -> loss_neuralode(p), Optimization.AutoForwardDiff())
 
-prob = GalacticOptim.OptimizationProblem(optprob, prob_neuralode.p)
+prob = Optimization.OptimizationProblem(optprob, prob_neuralode.p)
 
-result_neuralode = GalacticOptim.solve(prob,
-                                GalacticOptimisers.ADAM(), callback = callback,
+result_neuralode = Optimization.solve(prob,
+                                OptimizationOptimisers.ADAM(), callback = callback,
                                 maxiters = 300)
 @test result_neuralode.minimum == loss_neuralode(result_neuralode.u)[1] 
 
 prob2 = remake(prob,u0=result_neuralode.u)
-result_neuralode2 = GalacticOptim.solve(prob2,
+result_neuralode2 = Optimization.solve(prob2,
                                         BFGS(initial_stepnorm=0.0001),
                                         callback = callback,
                                         maxiters = 100)

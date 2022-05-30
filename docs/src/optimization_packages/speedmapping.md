@@ -3,12 +3,12 @@
 
 The SpeedMapping algorithm is called by `SpeedMappingOpt()`
 
-## Installation: GalacticSpeedMapping.jl
+## Installation: OptimizationSpeedMapping.jl
 
-To use this package, install the GalacticSpeedMapping package:
+To use this package, install the OptimizationSpeedMapping package:
 
 ```julia
-import Pkg; Pkg.add("GalacticSpeedMapping")
+import Pkg; Pkg.add("OptimizationSpeedMapping")
 ```
 
 ## Global Optimizer
@@ -25,7 +25,7 @@ The Rosenbrock function can be optimized using the `SpeedMappingOpt()` with and 
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0, 100.0]
-f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
+f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 prob = OptimizationProblem(f, x0, _p)
 sol = solve(prob,SpeedMappingOpt())
 

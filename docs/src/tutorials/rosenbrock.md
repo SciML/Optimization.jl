@@ -2,25 +2,25 @@
 
 !!! note
 
-    This example uses many different solvers of GalacticOptim.jl. Each solver
+    This example uses many different solvers of Optimization.jl. Each solver
     subpackage needs to be installed separate. For example, for the details on 
-    the installation and usage of GalacticOptimJL.jl package, see the 
+    the installation and usage of OptimizationOptimJL.jl package, see the 
     [Optim.jl page](@ref optim).
 
 ```julia
-using GalacticOptim, Optim, ForwardDiff, Zygote, Test, Random
+using Optimization, Optim, ForwardDiff, Zygote, Test, Random
 
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 _p  = [1.0, 100.0]
 
-f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
+f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 l1 = rosenbrock(x0, _p)
 prob = OptimizationProblem(f, x0, _p)
 
 ## Optim.jl Solvers
 
-using GalacticOptimJL
+using OptimizationOptimJL
 
 sol = solve(prob, SimulatedAnnealing())
 @test 10*sol.minimum < l1
@@ -36,7 +36,7 @@ sol = solve(prob, NelderMead())
 @test 10*sol.minimum < l1
 
 cons= (x,p) -> [x[1]^2 + x[2]^2]
-optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons= cons)
+optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();cons= cons)
 
 prob = OptimizationProblem(optprob, x0)
 
@@ -68,18 +68,18 @@ function con2_c(x,p)
     [x[1]^2 + x[2]^2, x[2]*sin(x[1])-x[1]]
 end
 
-optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons= con2_c)
+optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();cons= con2_c)
 prob = OptimizationProblem(optprob, x0, lcons = [-Inf,-Inf], ucons = [Inf,Inf])
 sol = solve(prob, IPNewton())
 @test 10*sol.minimum < l1
 
 cons_circ = (x,p) -> [x[1]^2 + x[2]^2]
-optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons= cons_circ)
+optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();cons= cons_circ)
 prob = OptimizationProblem(optprob, x0, lcons = [-Inf], ucons = [0.25^2])
 sol = solve(prob, IPNewton())
 @test sqrt(cons(sol.minimizer,nothing)[1]) ≈ 0.25 rtol = 1e-6
 
-optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoZygote())
+optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
 prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, ADAM(), maxiters = 1000, progress = false)
 @test 10*sol.minimum < l1
@@ -94,7 +94,7 @@ prob = OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
 
 ## CMAEvolutionStrategy.jl solvers
 
-using GalacticCMAEvolutionStrategy
+using OptimizationCMAEvolutionStrategy
 sol = solve(prob, CMAEvolutionStrategyOpt())
 @test 10*sol.minimum < l1
 
@@ -102,7 +102,7 @@ rosenbrock(x, p=nothing) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 
 ## NLopt.jl solvers
 
-using GalacticNLopt
+using OptimizationNLopt
 prob = OptimizationProblem(optprob, x0)
 sol = solve(prob, Opt(:LN_BOBYQA, 2))
 @test 10*sol.minimum < l1
@@ -119,14 +119,14 @@ sol = solve(prob, Opt(:G_MLSL_LDS, 2), nstart=2, local_method = Opt(:LD_LBFGS, 2
 
 ## Evolutionary.jl Solvers
 
-using GalacticEvolutionary
+using OptimizationEvolutionary
 sol = solve(prob, CMAES(μ =40 , λ = 100),abstol=1e-15)
 @test 10*sol.minimum < l1
 
 ## BlackBoxOptim.jl Solvers
 
-using GalacticBBO
-prob = GalacticOptim.OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
+using OptimizationBBO
+prob = Optimization.OptimizationProblem(optprob, x0, lb=[-1.0, -1.0], ub=[0.8, 0.8])
 sol = solve(prob, BBO())
 @test 10*sol.minimum < l1
 ```

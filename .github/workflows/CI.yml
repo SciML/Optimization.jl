@@ -15,22 +15,22 @@ jobs:
       matrix:
         group:
           - Core
-          - GalacticBBO
-          - GalacticCMAEvolutionStrategy
-          - GalacticEvolutionary
-          - GalacticFlux
-          - GalacticGCMAES
-          - GalacticMetaheuristics
-          - GalacticMOI
-          - GalacticMultistartOptimization
-          - GalacticNLopt
-          #- GalacticNonconvex
-          - GalacticNOMAD
-          - GalacticOptimJL
-          - GalacticOptimisers
-          - GalacticQuadDIRECT
-          - GalacticSpeedMapping
-          - GalacticPolyalgorithms
+          - OptimizationBBO
+          - OptimizationCMAEvolutionStrategy
+          - OptimizationEvolutionary
+          - OptimizationFlux
+          - OptimizationGCMAES
+          - OptimizationMetaheuristics
+          - OptimizationMOI
+          - OptimizationMultistartOptimization
+          - OptimizationNLopt
+          #- OptimizationNonconvex
+          - OptimizationNOMAD
+          - OptimizationOptimJL
+          - OptimizationOptimisers
+          - OptimizationQuadDIRECT
+          - OptimizationSpeedMapping
+          - OptimizationPolyalgorithms
         version:
           - '1'
           - '1.6'

@@ -1,12 +1,12 @@
 # [Optim.jl](@id optim)
 [`Optim`](https://github.com/JuliaNLSolvers/Optim.jl) is Julia package implementing various algorithm to perform univariate and multivariate optimization.
 
-## Installation: GalacticOptimJL.jl
+## Installation: OptimizationOptimJL.jl
 
-To use this package, install the GalacticOptimJL package:
+To use this package, install the OptimizationOptimJL package:
 
 ```julia
-import Pkg; Pkg.add("GalacticOptimJL")
+import Pkg; Pkg.add("OptimizationOptimJL")
 ```
 
 ## Methods
@@ -76,14 +76,14 @@ rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 cons= (x,p) -> [x[1]^2 + x[2]^2]
 x0 = zeros(2)
 p  = [1.0,100.0]
-prob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons= cons)
-prob = GalacticOptim.OptimizationProblem(prob, x0, p, lcons = [-5.0], ucons = [10.0])
+prob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();cons= cons)
+prob = Optimization.OptimizationProblem(prob, x0, p, lcons = [-5.0], ucons = [10.0])
 sol = solve(prob, IPNewton())
 ```
 
 
 ### Derivative-Free
-Derivative-free optimizers are optimizers that can be used even in cases where no derivatives or automatic differentiation is specified. While they tend to be less efficient than derivative-based optimizers, they can be easily applied to cases where defining derivatives is difficult. Note that while these methods do not support general constraints, all support bounds constraints via `lb` and `ub` in the `GalacticOptim.OptimizationProblem`.
+Derivative-free optimizers are optimizers that can be used even in cases where no derivatives or automatic differentiation is specified. While they tend to be less efficient than derivative-based optimizers, they can be easily applied to cases where defining derivatives is difficult. Note that while these methods do not support general constraints, all support bounds constraints via `lb` and `ub` in the `Optimization.OptimizationProblem`.
 
 `Optim.jl` implements the following derivative-free algorithms:
 
@@ -116,7 +116,7 @@ The Rosenbrock function can optimized using the `Optim.NelderMead()` as follows:
 rosenbrock(x, p) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0,100.0]
-prob = GalacticOptim.OptimizationProblem(rosenbrock, x0, p)
+prob = Optimization.OptimizationProblem(rosenbrock, x0, p)
 sol = solve(prob, Optim.NelderMead())
 ```
 
@@ -261,8 +261,8 @@ The Rosenbrock function can optimized using the `Optim.LD_LBFGS()` as follows:
 rosenbrock(x, p) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0,100.0]
-optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
-prob = GalacticOptim.OptimizationProblem(optprob, x0, p, lb=[-1.0, -1.0], ub=[0.8, 0.8])
+optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+prob = Optimization.OptimizationProblem(optprob, x0, p, lb=[-1.0, -1.0], ub=[0.8, 0.8])
 sol = solve(prob, NLopt.LD_LBFGS())
 ```
 
@@ -314,7 +314,7 @@ rosenbrock(x, p) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0,100.0]
 f = OptimizationFunction(rosenbrock,ModelingToolkit.AutoModelingToolkit(),x0,p,grad=true,hess=true)
-prob = GalacticOptim.OptimizationProblem(f,x0,p)
+prob = Optimization.OptimizationProblem(f,x0,p)
 sol = solve(prob,Optim.Newton())
 ```
 
@@ -348,8 +348,8 @@ rosenbrock(x, p) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 cons= (x,p) -> [x[1]^2 + x[2]^2]
 x0 = zeros(2)
 p  = [1.0,100.0]
-optprob = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff();cons= cons)
-prob = GalacticOptim.OptimizationProblem(optprob, x0, p)
+optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();cons= cons)
+prob = Optimization.OptimizationProblem(optprob, x0, p)
 sol = solve(prob, Optim.KrylovTrustRegion())
 ```
 
@@ -358,7 +358,7 @@ sol = solve(prob, Optim.KrylovTrustRegion())
 
 ### Without Constraint Equations
 The following method in [`Optim`](https://github.com/JuliaNLSolvers/Optim.jl) is performing global optimization on problems without
-constraint equations. It works both with and without lower and upper constraints set by `lb` and `ub` in the `GalacticOptim.OptimizationProblem`.
+constraint equations. It works both with and without lower and upper constraints set by `lb` and `ub` in the `Optimization.OptimizationProblem`.
 
 - [`Optim.ParticleSwarm()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/particle_swarm/): **Particle Swarm Optimization**
 
@@ -375,7 +375,7 @@ rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0,100.0]
 f = OptimizationFunction(rosenbrock)
-prob = GalacticOptim.OptimizationProblem(f, x0, p, lb=[-1.0, -1.0], ub=[1.0, 1.0])
+prob = Optimization.OptimizationProblem(f, x0, p, lb=[-1.0, -1.0], ub=[1.0, 1.0])
 sol = solve(prob, Optim.ParticleSwarm(lower=prob.lb, upper= prob.ub, n_particles=100))
 ```
 
@@ -402,7 +402,7 @@ The Rosenbrock function can optimized using the `Optim.SAMIN()` as follows:
 rosenbrock(x, p) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0,100.0]
-f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
-prob = GalacticOptim.OptimizationProblem(f, x0, p, lb=[-1.0, -1.0], ub=[1.0, 1.0])
+f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+prob = Optimization.OptimizationProblem(f, x0, p, lb=[-1.0, -1.0], ub=[1.0, 1.0])
 sol = solve(prob, Optim.SAMIN())
 ```

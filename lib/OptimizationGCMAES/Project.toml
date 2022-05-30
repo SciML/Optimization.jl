@@ -1,0 +1,20 @@
+name = "OptimizationGCMAES"
+uuid = "6f0a0517-dbc2-4a7a-8a20-99ae7f27e911"
+authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
+version = "0.1.0"
+
+[deps]
+GCMAES = "4aa9d100-eb0f-11e8-15f1-25748831eb3b"
+Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+
+[compat]
+julia = "1"
+Optimization = "3"
+GCMAES = "0.1"
+
+[extras]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["ForwardDiff", "Test"]

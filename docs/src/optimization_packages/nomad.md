@@ -3,19 +3,19 @@
 
 The NOMAD algorithm is called by `NOMADOpt()`
 
-## Installation: GalacticNOMAD.jl
+## Installation: OptimizationNOMAD.jl
 
-To use this package, install the GalacticNOMAD package:
+To use this package, install the OptimizationNOMAD package:
 
 ```julia
-import Pkg; Pkg.add("GalacticNOMAD")
+import Pkg; Pkg.add("OptimizationNOMAD")
 ```
 
 ## Global Optimizer
 ### Without Constraint Equations
 
 The method in [`NOMAD`](https://github.com/bbopt/NOMAD.jl) is performing global optimization on problems both with and without
-constraint equations. Currently however, linear and nonlinear constraints  defined in `GalacticOPtim` are not passed.
+constraint equations. Currently however, linear and nonlinear constraints  defined in `Optimization` are not passed.
 
 NOMAD works both with and without lower and upper boxconstraints set by `lb` and `ub` in the `OptimizationProblem`.
 
@@ -30,8 +30,8 @@ p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
 
 prob = OptimizationProblem(f, x0, _p)
-sol = GalacticOptim.solve(prob,NOMADOpt())
+sol = Optimization.solve(prob,NOMADOpt())
 
 prob = OptimizationProblem(f, x0, _p, lb = [-1.0,-1.0], ub = [1.5,1.5])
-sol = GalacticOptim.solve(prob,NOMADOpt())
+sol = Optimization.solve(prob,NOMADOpt())
 ```
