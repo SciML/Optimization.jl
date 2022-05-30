@@ -20,9 +20,9 @@ function SciMLBase.__solve(prob::OptimizationProblem,
     if isempty(args) && deterministic && prob.lb === nothing && prob.ub === nothing
         # If determinsitic then ADAM -> finish with BFGS
         if maxiters === nothing
-            res1 = GalacticOptim.solve(optprob, Optimisers.ADAM(0.01), args...; maxiters=300, kwargs...)
+            res1 = GalacticOptim.solve(prob, Optimisers.ADAM(0.01), args...; maxiters=300, kwargs...)
         else
-            res1 = GalacticOptim.solve(optprob, Optimisers.ADAM(0.01), args...; maxiters, kwargs...)
+            res1 = GalacticOptim.solve(prob, Optimisers.ADAM(0.01), args...; maxiters, kwargs...)
         end
 
         optprob2 = GalacticOptim.OptimizationProblem(
@@ -31,9 +31,9 @@ function SciMLBase.__solve(prob::OptimizationProblem,
             optprob2, BFGS(initial_stepnorm=0.01), args...; maxiters, kwargs...)
     elseif isempty(args) && deterministic
         res1 = GalacticOptim.solve(
-            optprob, BFGS(initial_stepnorm=0.01), args...; maxiters, kwargs...)
+            prob, BFGS(initial_stepnorm=0.01), args...; maxiters, kwargs...)
     else
-        res1 = GalacticOptim.solve(optprob, Optimisers.ADAM(0.1), args...; maxiters, kwargs...)
+        res1 = GalacticOptim.solve(prob, Optimisers.ADAM(0.1), args...; maxiters, kwargs...)
     end
 
 end
