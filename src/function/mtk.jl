@@ -61,12 +61,15 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
     end
 
     if adtype.obj_sparse
-        hess_prototype = ModelingToolkit.hessian_sparsity(sys)
+        _hess_prototype = ModelingToolkit.hessian_sparsity(sys)
+        hess_prototype = convert.(eltype(x), _hess_prototype)
     end
 
     if adtype.cons_sparse
-        cons_jac_prototype = ModelingToolkit.jacobian_sparsity(cons_sys)
-        cons_hess_prototype = ModelingToolkit.hessian_sparsity(cons_sys)
+        _cons_jac_prototype = ModelingToolkit.jacobian_sparsity(cons_sys)
+        cons_jac_prototype = convert.(eltype(x), _cons_jac_prototype)
+        _cons_hess_prototype = ModelingToolkit.hessian_sparsity(cons_sys)
+        cons_hess_prototype = [convert.(eltype(x), _cons_hess_prototype[i]) for i in 1:num_cons]
     end
 
     return OptimizationFunction{true}(f.f, adtype; grad=grad, hess=hess, hv=hv,
