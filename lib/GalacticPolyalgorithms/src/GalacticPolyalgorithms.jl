@@ -25,8 +25,7 @@ function SciMLBase.__solve(prob::OptimizationProblem,
             res1 = GalacticOptim.solve(prob, Optimisers.ADAM(0.01), args...; maxiters, kwargs...)
         end
 
-        optprob2 = GalacticOptim.OptimizationProblem(
-            prob.f, res1.u; lb=prob.lb, ub=prob.ub, kwargs...)
+        optprob2 = remake(prob,u0 = res1.u)
         res1 = GalacticOptim.solve(
             optprob2, BFGS(initial_stepnorm=0.01), args...; maxiters, kwargs...)
     elseif isempty(args) && deterministic
