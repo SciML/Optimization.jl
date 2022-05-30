@@ -1,0 +1,22 @@
+name = "GalacticPolyalgorithms"
+uuid = "8202cac9-28d3-4ced-94fb-69829a1553b4"
+authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
+version = "0.1.0"
+
+[deps]
+GalacticOptim = "a75be94c-b780-496d-a8a9-0878b188d577"
+GalacticOptimJL = "9d3c5eb1-403b-401b-8c0f-c11105342e6b"
+GalacticOptimisers = "86b7a833-eb4b-49e2-87ed-89357ad7afa2"
+
+[compat]
+GalacticOptim = "3"
+GalacticOptimJL = "0.1"
+GalacticOptimisers = "0.1"
+julia = "1.6"
+
+[extras]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["ForwardDiff", "Test"]
