@@ -10,7 +10,7 @@ function SciMLBase.__solve(prob::OptimizationProblem,
                            maxiters = nothing,
                            kwargs...)
 
-    loss, θ = prob.f, prob.u0
+    loss, θ = x -> prob.f(x, prob.p), prob.u0
     deterministic = first(loss(θ)) == first(loss(θ))
 
     if (!isempty(args) || !deterministic) && maxiters === nothing
