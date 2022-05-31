@@ -1,13 +1,13 @@
-# GalacticOptim.jl
+# Optimization.jl
 
-[![Build Status](https://github.com/SciML/GalacticOptim.jl/workflows/CI/badge.svg)](https://github.com/SciML/GalacticOptim.jl/actions?query=workflow%3ACI)
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](http://galacticoptim.sciml.ai/stable/)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](http://galacticoptim.sciml.ai/dev/)
+[![Build Status](https://github.com/SciML/Optimization.jl/workflows/CI/badge.svg)](https://github.com/SciML/Optimization.jl/actions?query=workflow%3ACI)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](http://Optimization.sciml.ai/stable/)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](http://Optimization.sciml.ai/dev/)
 
-GalacticOptim.jl is a package with a scope that is beyond your normal global optimization
-package. GalacticOptim.jl seeks to bring together all of the optimization packages
+Optimization.jl is a package with a scope that is beyond your normal global optimization
+package. Optimization.jl seeks to bring together all of the optimization packages
 it can find, local and global, into one unified Julia interface. This means, you
-learn one package and you learn them all! GalacticOptim.jl adds a few high-level
+learn one package and you learn them all! Optimization.jl adds a few high-level
 features, such as integrating with automatic differentiation, to make its usage
 fairly simple for most cases, while allowing all of the options in a single
 unified interface.
@@ -15,51 +15,51 @@ unified interface.
 ## Installation
 
 Assuming that you already have Julia correctly installed, it suffices to import
-GalacticOptim.jl in the standard way:
+Optimization.jl in the standard way:
 
 ```julia
-import Pkg; Pkg.add("GalacticOptim")
+import Pkg; Pkg.add("Optimization")
 ```
-The packages relevant to the core functionality of GalacticOptim.jl will be imported
+The packages relevant to the core functionality of Optimization.jl will be imported
 accordingly and, in most cases, you do not have to worry about the manual
 installation of dependencies. Below is the list of packages that need to be
 installed explicitly if you intend to use the specific optimization algorithms
 offered by them:
 
-- GalacticBBO for [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl)
-- GalacticEvolutionary for [Evolutionary.jl](https://github.com/wildart/Evolutionary.jl) (see also [this documentation](https://wildart.github.io/Evolutionary.jl/dev/))
-- GalacticGCMAES for [GCMAES.jl](https://github.com/AStupidBear/GCMAES.jl)
-- GalacticMOI for [MathOptInterface.jl](https://github.com/jump-dev/MathOptInterface.jl) (usage of algorithm via MathOptInterface API; see also the API [documentation](https://jump.dev/MathOptInterface.jl/stable/))
-- GalacticMetaheuristics for [Metaheuristics.jl](https://github.com/jmejia8/Metaheuristics.jl) (see also [this documentation](https://jmejia8.github.io/Metaheuristics.jl/stable/))
-- GalacticMultistartOptimization for [MultistartOptimization.jl](https://github.com/tpapp/MultistartOptimization.jl) (see also [this documentation](https://juliahub.com/docs/MultistartOptimization/cVZvi/0.1.0/))
-- GalacticNLopt for [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) (usage via the NLopt API; see also the available [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/))
-- GalacticNOMAD for [NOMAD.jl](https://github.com/bbopt/NOMAD.jl) (see also [this documentation](https://bbopt.github.io/NOMAD.jl/stable/))
-- GalacticNonconvex for [Nonconvex.jl](https://github.com/JuliaNonconvex/Nonconvex.jl) (see also [this documentation](https://julianonconvex.github.io/Nonconvex.jl/stable/))
-- GalacticQuadDIRECT for [QuadDIRECT.jl](https://github.com/timholy/QuadDIRECT.jl)
-- GalacticSpeedMapping for [SpeedMapping.jl](https://github.com/NicolasL-S/SpeedMapping.jl) (see also [this documentation](https://nicolasl-s.github.io/SpeedMapping.jl/stable/))
+- OptimizationBBO for [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl)
+- OptimizationEvolutionary for [Evolutionary.jl](https://github.com/wildart/Evolutionary.jl) (see also [this documentation](https://wildart.github.io/Evolutionary.jl/dev/))
+- OptimizationGCMAES for [GCMAES.jl](https://github.com/AStupidBear/GCMAES.jl)
+- OptimizationMOI for [MathOptInterface.jl](https://github.com/jump-dev/MathOptInterface.jl) (usage of algorithm via MathOptInterface API; see also the API [documentation](https://jump.dev/MathOptInterface.jl/stable/))
+- OptimizationMetaheuristics for [Metaheuristics.jl](https://github.com/jmejia8/Metaheuristics.jl) (see also [this documentation](https://jmejia8.github.io/Metaheuristics.jl/stable/))
+- OptimizationMultistartOptimization for [MultistartOptimization.jl](https://github.com/tpapp/MultistartOptimization.jl) (see also [this documentation](https://juliahub.com/docs/MultistartOptimization/cVZvi/0.1.0/))
+- OptimizationNLopt for [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) (usage via the NLopt API; see also the available [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/))
+- OptimizationNOMAD for [NOMAD.jl](https://github.com/bbopt/NOMAD.jl) (see also [this documentation](https://bbopt.github.io/NOMAD.jl/stable/))
+- OptimizationNonconvex for [Nonconvex.jl](https://github.com/JuliaNonconvex/Nonconvex.jl) (see also [this documentation](https://julianonconvex.github.io/Nonconvex.jl/stable/))
+- OptimizationQuadDIRECT for [QuadDIRECT.jl](https://github.com/timholy/QuadDIRECT.jl)
+- OptimizationSpeedMapping for [SpeedMapping.jl](https://github.com/NicolasL-S/SpeedMapping.jl) (see also [this documentation](https://nicolasl-s.github.io/SpeedMapping.jl/stable/))
 
 ## Tutorials and Documentation
 
 For information on using the package,
-[see the stable documentation](https://galacticoptim.sciml.ai/stable/). Use the
-[in-development documentation](https://galacticoptim.sciml.ai/dev/) for the version of
+[see the stable documentation](https://Optimization.sciml.ai/stable/). Use the
+[in-development documentation](https://Optimization.sciml.ai/dev/) for the version of
 the documentation, which contains the unreleased features.
 
 ## Examples
 
 ```julia
-using GalacticOptim
+using Optimization
 rosenbrock(x,p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0,100.0]
 
 prob = OptimizationProblem(rosenbrock,x0,p)
 
-using GalacticOptimJL
+using OptimizationOptimJL
 sol = solve(prob,NelderMead())
 
 
-using GalacticBBO
+using OptimizationBBO
 prob = OptimizationProblem(rosenbrock, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
 sol = solve(prob,BBO_adaptive_de_rand_1_bin_radiuslimited())
 ```
@@ -99,7 +99,7 @@ We can also explore other methods in a similar way:
 
 ```julia
 using ForwardDiff
-f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
+f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 prob = OptimizationProblem(f, x0, p)
 sol = solve(prob,BFGS())
 ```
@@ -132,6 +132,6 @@ For instance, the above optimization task produces the following output:
 prob = OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
 sol = solve(prob, Fminbox(GradientDescent()))
 ```
-The examples clearly demonstrate that GalacticOptim.jl provides an intuitive
+The examples clearly demonstrate that Optimization.jl provides an intuitive
 way of specifying optimization tasks and offers a relatively
 easy access to a wide range of optimization algorithms.

@@ -1,12 +1,12 @@
 # NLopt.jl
 [`NLopt`](https://github.com/JuliaOpt/NLopt.jl) is Julia package interfacing to the free/open-source [`NLopt library`](http://ab-initio.mit.edu/nlopt) which implements many optimization methods both global and local [`NLopt Documentation`](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/).
 
-## Installation: GalacticNLopt.jl
+## Installation: OptimizationNLopt.jl
 
-To use this package, install the GalacticNLopt package:
+To use this package, install the OptimizationNLopt package:
 
 ```julia
-import Pkg; Pkg.add("GalacticNLopt")
+import Pkg; Pkg.add("OptimizationNLopt")
 ```
 
 ## Methods
@@ -95,7 +95,7 @@ rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = GalacticOptim.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
 sol = solve(prob, NLopt.LN_NELDERMEAD())
 ```
 
@@ -126,8 +126,8 @@ The Rosenbrock function can optimized using `NLopt.LD_LBFGS()` as follows:
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0, 100.0]
-f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
-prob = GalacticOptim.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
 sol = solve(prob, NLopt.LD_LBFGS())
 ```
 
@@ -165,7 +165,7 @@ rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = GalacticOptim.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
 sol = solve(prob, NLopt.GN_DIRECT())
 ```
 
@@ -177,8 +177,8 @@ The Rosenbrock function can optimized using `NLopt.G_MLSL_LDS()` with `NLopt.LN_
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0, 100.0]
-f = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
-prob = GalacticOptim.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
 sol = solve(prob, NLopt.G_MLSL_LDS(), local_method = NLopt.LD_LBFGS(), local_maxiters=10000)
 ```
 
@@ -187,7 +187,7 @@ The following algorithms in [`NLopt`](https://github.com/JuliaOpt/NLopt.jl) are 
 constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
 
 !!! note "Constraints with NLopt" 
-    Equality and inequality equation support for `NLopt` via `GalacticOptim` is not supported directly. However, you can use the MOI wrapper to use constraints with NLopt optimisers.
+    Equality and inequality equation support for `NLopt` via `Optimization` is not supported directly. However, you can use the MOI wrapper to use constraints with NLopt optimisers.
 
 `NLopt` global optimizers which fall into this category are:
 

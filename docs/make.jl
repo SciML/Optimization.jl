@@ -1,20 +1,20 @@
-using Documenter, GalacticOptim
+using Documenter, Optimization
 using FiniteDiff, ForwardDiff, ModelingToolkit, ReverseDiff, Tracker, Zygote
 
 makedocs(
-    sitename="GalacticOptim.jl",
+    sitename="Optimization.jl",
     authors="Chris Rackauckas, Vaibhav Kumar Dixit et al.",
     clean=true,
     doctest=false,
-    modules=[GalacticOptim, GalacticOptim.SciMLBase, FiniteDiff, 
+    modules=[Optimization, Optimization.SciMLBase, FiniteDiff, 
              ForwardDiff, ModelingToolkit, ReverseDiff, Tracker, Zygote],
 
     format=Documenter.HTML(analytics = "UA-90474609-3",
                            assets=["assets/favicon.ico"],
-                           canonical="https://galacticoptim.sciml.ai/stable/"),
+                           canonical="https://Optimization.sciml.ai/stable/"),
 
     pages=[
-        "GalacticOptim.jl: Unified Global Optimization Package" => "index.md",
+        "Optimization.jl: A Unified Optimization Package" => "index.md",
 
         "Tutorials" => [
             "Basic usage" => "tutorials/intro.md",
@@ -48,6 +48,6 @@ makedocs(
 )
 
 deploydocs(
-    repo="github.com/SciML/GalacticOptim.jl";
+    repo="github.com/SciML/Optimization.jl";
     push_preview=true
 )

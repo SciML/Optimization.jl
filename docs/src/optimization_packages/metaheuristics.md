@@ -1,12 +1,12 @@
 # Metaheuristics.jl
 [`Metaheuristics`](https://github.com/jmejia8/Metaheuristics.jl) is a is a Julia package implementing **metaheuristic algorithms** for global optiimization that do not require for the optimized function to be differentiable.
 
-## Installation: GalacticMetaheuristics.jl
+## Installation: OptimizationMetaheuristics.jl
 
-To use this package, install the GalacticMetaheuristics package:
+To use this package, install the OptimizationMetaheuristics package:
 
 ```julia
-import Pkg; Pkg.add("GalacticMetaheuristics")
+import Pkg; Pkg.add("OptimizationMetaheuristics")
 ```
 
 ## Global Optimizer
@@ -27,7 +27,7 @@ A `Metaheuristics` Single-Objective algorithm is called using one of the followi
 * Simulated Annealing: `SA()`
 * Whale Optimization Algorithm: `WOA()`
 
-`Metaheuristics` also performs [`Multiobjective optimization`](https://jmejia8.github.io/Metaheuristics.jl/stable/examples/#Multiobjective-Optimization) but this is not yet supported by `GalacticOptim`.
+`Metaheuristics` also performs [`Multiobjective optimization`](https://jmejia8.github.io/Metaheuristics.jl/stable/examples/#Multiobjective-Optimization) but this is not yet supported by `Optimization`.
 
 Each optimizer sets default settings based on the optimization problem but specific parameters can be set as shown in the original [`Documentation`](https://jmejia8.github.io/Metaheuristics.jl/stable/algorithms/) 
 
@@ -53,18 +53,18 @@ rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = GalacticOptim.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
 sol = solve(prob, ECA(), maxiters=100000, maxtime=1000.0)
 ```
 
-Per default `Metaheuristics` ignores the initial values `x0` set in the `OptimizationProblem`. In order to for `GalacticOptim` to use `x0` we have to set `use_initial=true`:
+Per default `Metaheuristics` ignores the initial values `x0` set in the `OptimizationProblem`. In order to for `Optimization` to use `x0` we have to set `use_initial=true`:
 
 ```julia
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = GalacticOptim.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
 sol = solve(prob, ECA(), use_initial=true, maxiters=100000, maxtime=1000.0)
 ```
 
@@ -73,7 +73,7 @@ sol = solve(prob, ECA(), use_initial=true, maxiters=100000, maxtime=1000.0)
 
 ### With Constraint Equations
 
-While `Metaheuristics.jl` supports such constraints, `GalacticOptim.jl` currently does not relay these constraints.
+While `Metaheuristics.jl` supports such constraints, `Optimization.jl` currently does not relay these constraints.
 
 
 

@@ -1,11 +1,11 @@
 # Flux.jl
 
-## Installation: GalacticFlux.jl
+## Installation: OptimizationFlux.jl
 
-To use this package, install the GalacticFlux package:
+To use this package, install the OptimizationFlux package:
 
 ```julia
-import Pkg; Pkg.add("GalacticFlux")
+import Pkg; Pkg.add("OptimizationFlux")
 ```
 
 ## Local Unconstrained Optimizers 

@@ -2,11 +2,11 @@
 
 !!! note
 
-    This example uses the GalacticOptimJL.jl package. See the [Optim.jl page](@ref optim)
+    This example uses the OptimizationOptimJL.jl package. See the [Optim.jl page](@ref optim)
     for details on the installation and usage.
 
 ```julia
-using DiffEqFlux, GalacticOptim, GalacticOptimJL, OrdinaryDiffEq
+using DiffEqFlux, Optimization, OptimizationOptimJL, OrdinaryDiffEq
 
 function newtons_cooling(du, u, p, t)
     temp = u[1]
@@ -62,9 +62,9 @@ train_loader = Flux.Data.DataLoader((ode_data, t), batchsize = k)
 numEpochs = 300
 l1 = loss_adjoint(pp, train_loader.data[1], train_loader.data[2])[1]
 
-optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, batch, time_batch), GalacticOptim.AutoZygote())
+optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, batch, time_batch), Optimization.AutoZygote())
 optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
-res1 = GalacticOptim.solve(optprob, ADAM(0.05), ncycle(train_loader, numEpochs), callback = callback)
+res1 = Optimization.solve(optprob, ADAM(0.05), ncycle(train_loader, numEpochs), callback = callback)
 @test 10res1.minimum < l1
 ```

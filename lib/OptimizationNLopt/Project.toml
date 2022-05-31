@@ -1,0 +1,22 @@
+name = "OptimizationNLopt"
+uuid = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
+authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
+version = "0.1.0"
+
+[deps]
+Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+
+[compat]
+julia = "1"
+NLopt = "0.6"
+Optimization = "3"
+Reexport = "1.2"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+
+[targets]
+test = ["Test", "Zygote"]

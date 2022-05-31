@@ -1,0 +1,21 @@
+name = "OptimizationMetaheuristics"
+uuid = "3aafef2f-86ae-4776-b337-85a36adf0b55"
+authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
+version = "0.1.0"
+
+[deps]
+Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+Metaheuristics = "bcdb8e00-2c21-11e9-3065-2b553b22f898"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+
+[compat]
+julia = "1"
+Metaheuristics = "3"
+Reexport = "1.2"
+Optimization = "3"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

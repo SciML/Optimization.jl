@@ -2,11 +2,11 @@
 
 !!! note
 
-    This example uses the GalacticOptimJL.jl package. See the [Optim.jl page](@ref optim)
+    This example uses the OptimizationOptimJL.jl package. See the [Optim.jl page](@ref optim)
     for details on the installation and usage.
 
 ```julia
-using ModelingToolkit, GalacticOptim, GalacticOptimJL
+using ModelingToolkit, Optimization, OptimizationOptimJL
 
 @variables x y
 @parameters a b

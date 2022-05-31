@@ -1,4 +1,4 @@
-using GalacticOptim, GalacticOptimJL, GalacticOptimisers, Test
+using Optimization, OptimizationOptimJL, OptimizationOptimisers, Test
 using ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker
 using ModelingToolkit
 x0 = zeros(2)
@@ -26,8 +26,8 @@ g!(G1, x0)
 h!(H1, x0)
 
 cons = (x, p) -> [x[1]^2 + x[2]^2]
-optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoModelingToolkit(), cons=cons)
-optprob = GalacticOptim.instantiate_function(optf, x0, GalacticOptim.AutoModelingToolkit(), nothing, 1)
+optf = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(), cons=cons)
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoModelingToolkit(), nothing, 1)
 optprob.grad(G2, x0)
 @test G1 == G2
 optprob.hess(H2, x0)
@@ -43,8 +43,8 @@ optprob.cons_h(H3, x0)
 function con2_c(x, p)
     [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
 end
-optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoModelingToolkit(), cons=con2_c)
-optprob = GalacticOptim.instantiate_function(optf, x0, GalacticOptim.AutoModelingToolkit(), nothing, 2)
+optf = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(), cons=con2_c)
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoModelingToolkit(), nothing, 2)
 optprob.grad(G2, x0)
 @test G1 == G2
 optprob.hess(H2, x0)
@@ -57,8 +57,8 @@ H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 @test H3 == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 
-optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoModelingToolkit(true, true), cons=con2_c)
-optprob = GalacticOptim.instantiate_function(optf, x0, GalacticOptim.AutoModelingToolkit(true, true), nothing, 2)
+optf = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(true, true), cons=con2_c)
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoModelingToolkit(true, true), nothing, 2)
 using SparseArrays
 sH = sparse([1, 1, 2, 2], [1, 2, 1, 2], zeros(4))
 optprob.hess(sH, x0)
@@ -71,8 +71,8 @@ sH3 = [sparse([1,2], [1, 2], zeros(2)), sparse([1, 1, 2], [1, 2, 1], zeros(3))]
 optprob.cons_h(sH3, x0)
 @test Array.(sH3) == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 
-optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoForwardDiff())
-optprob = GalacticOptim.instantiate_function(optf, x0, GalacticOptim.AutoForwardDiff(), nothing)
+optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoForwardDiff(), nothing)
 optprob.grad(G2, x0)
 @test G1 == G2
 optprob.hess(H2, x0)
@@ -89,8 +89,8 @@ sol = solve(prob, Optim.Newton())
 sol = solve(prob, Optim.KrylovTrustRegion())
 @test 10 * sol.minimum < l1
 
-optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoZygote())
-optprob = GalacticOptim.instantiate_function(optf, x0, GalacticOptim.AutoZygote(), nothing)
+optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoZygote(), nothing)
 optprob.grad(G2, x0)
 @test G1 == G2
 optprob.hess(H2, x0)
@@ -107,8 +107,8 @@ sol = solve(prob, Optim.Newton())
 sol = solve(prob, Optim.KrylovTrustRegion())
 @test 10 * sol.minimum < l1
 
-optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoReverseDiff())
-optprob = GalacticOptim.instantiate_function(optf, x0, GalacticOptim.AutoReverseDiff(), nothing)
+optf = OptimizationFunction(rosenbrock, Optimization.AutoReverseDiff())
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoReverseDiff(), nothing)
 optprob.grad(G2, x0)
 @test G1 == G2
 optprob.hess(H2, x0)
@@ -124,8 +124,8 @@ sol = solve(prob, Optim.Newton())
 sol = solve(prob, Optim.KrylovTrustRegion())
 @test 10 * sol.minimum < l1
 
-optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoTracker())
-optprob = GalacticOptim.instantiate_function(optf, x0, GalacticOptim.AutoTracker(), nothing)
+optf = OptimizationFunction(rosenbrock, Optimization.AutoTracker())
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoTracker(), nothing)
 optprob.grad(G2, x0)
 @test G1 == G2
 @test_throws ErrorException optprob.hess(H2, x0)
@@ -138,8 +138,8 @@ sol = solve(prob, Optim.BFGS())
 
 @test_throws ErrorException solve(prob, Newton())
 
-optf = OptimizationFunction(rosenbrock, GalacticOptim.AutoFiniteDiff())
-optprob = GalacticOptim.instantiate_function(optf, x0, GalacticOptim.AutoFiniteDiff(), nothing)
+optf = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff())
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoFiniteDiff(), nothing)
 optprob.grad(G2, x0)
 @test G1 ≈ G2 rtol = 1e-6
 optprob.hess(H2, x0)

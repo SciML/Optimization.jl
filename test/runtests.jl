@@ -14,10 +14,13 @@ function activate_subpkg_env(subpkg)
     Pkg.instantiate()
 end
 
+if GROUP == "All" || GROUP == "Core" || GROUP == "GPU" || GROUP == "OptimizationPolyalgorithms"
+    dev_subpkg("OptimizationOptimJL")
+    dev_subpkg("OptimizationOptimisers")
+end
+
 @time begin
 if GROUP == "All" || GROUP == "Core"
-    dev_subpkg("GalacticOptimJL")
-    dev_subpkg("GalacticOptimisers")
     @safetestset "AD Tests" begin
         include("ADtests.jl")
     end
@@ -28,8 +31,6 @@ if GROUP == "All" || GROUP == "Core"
         include("diffeqfluxtests.jl")
     end
 elseif GROUP == "GPU"
-    dev_subpkg("GalacticOptimJL")
-    dev_subpkg("GalacticOptimisers")
     activate_downstream_env()
     @safetestset "DiffEqFlux GPU" begin
         include("downstream/gpu_neural_ode.jl")

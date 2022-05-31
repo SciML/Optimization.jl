@@ -3,12 +3,12 @@
 
 The QuadDIRECT algorithm is called using `QuadDirect()`. 
 
-## Installation: GalacticQuadDIRECT.jl
+## Installation: OptimizationQuadDIRECT.jl
 
-To use this package, install the GalacticQuadDIRECT package:
+To use this package, install the OptimizationQuadDIRECT package:
 
 ```julia
-import Pkg; Pkg.add("GalacticQuadDIRECT")
+import Pkg; Pkg.add("OptimizationQuadDIRECT")
 ```
 
 Also note that `QuadDIRECT` should (for now) be installed by doing:
@@ -32,7 +32,7 @@ rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = GalacticOptim.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
 solve(prob, QuadDirect(), splits = ([-0.9, 0, 0.9], [-0.8, 0, 0.8]))
 ```
     
