@@ -14,7 +14,7 @@ makedocs(
                            canonical="https://Optimization.sciml.ai/stable/"),
 
     pages=[
-        "Optimization.jl: Unified Global Optimization Package" => "index.md",
+        "Optimization.jl: A Unified Optimization Package" => "index.md",
 
         "Tutorials" => [
             "Basic usage" => "tutorials/intro.md",
