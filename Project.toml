@@ -1,6 +1,5 @@
 name = "Optimization"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-authors = ["Vaibhavdixit02 <vaibhavyashdixit@gmail.com>"]
 version = "3.5.0"
 
 [deps]
