@@ -9,7 +9,7 @@ using Reexport
 using Requires
 using DiffResults
 using Logging, ProgressLogging, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
-using ArrayInterfaceCore, Base.Iterators
+using ArrayInterfaceCore, Base.Iterators, SparseArrays
 using Pkg
 
 import SciMLBase: OptimizationProblem, OptimizationFunction, AbstractADType

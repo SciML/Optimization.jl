@@ -1,6 +1,6 @@
 module OptimizationOptimJL
 
-using Reexport, Optimization, Optimization.SciMLBase
+using Reexport, Optimization, Optimization.SciMLBase, Optimization.SparseArrays
 @reexport using Optim
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace::Optim.OptimizationState) = trace
@@ -133,7 +133,8 @@ function ___solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
                 H .*= false
             end
         end
-        optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, prob.u0)
+        F = eltype(prob.u0)
+        optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, prob.u0, real(zero(F)), Optim.NLSolversBase.alloc_DF(prob.u0, real(zero(F))), isnothing(f.hess_prototype) ? Optim.NLSolversBase.alloc_H(prob.u0, real(zero(F))) : convert.(F, f.hess_prototype))
     end
 
     opt_args = __map_optimizer_args(prob, opt, callback=_cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
@@ -285,7 +286,8 @@ function ___solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
             H .*= false
         end
     end
-    optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, prob.u0)
+    F = eltype(prob.u0)
+    optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, prob.u0, real(zero(F)), Optim.NLSolversBase.alloc_DF(prob.u0, real(zero(F))), isnothing(f.hess_prototype) ? Optim.NLSolversBase.alloc_H(prob.u0, real(zero(F))) : convert.(F, f.hess_prototype))
 
     cons! = (res, θ) -> res .= f.cons(θ)
 

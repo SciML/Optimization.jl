@@ -18,7 +18,7 @@ using Test
     @test 10 * sol.minimum < l1
 
     prob = OptimizationProblem(rosenbrock, x0, _p)
-    sol = solve(prob, Optim.NelderMead(;initial_simplex=Optim.AffineSimplexer(;a = 0.025, b = 0.5)))
+    sol = solve(prob, Optim.NelderMead(; initial_simplex=Optim.AffineSimplexer(; a=0.025, b=0.5)))
     @test 10 * sol.minimum < l1
 
     cons = (x, p) -> [x[1]^2 + x[2]^2]
@@ -95,5 +95,13 @@ using Test
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit())
     prob = OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, Optim.BFGS())
+    @test 10 * sol.minimum < l1
+
+    optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(true, false))
+    prob = OptimizationProblem(optprob, x0, _p)
+    sol = solve(prob, Optim.Newton())
+    @test 10 * sol.minimum < l1
+
+    sol = solve(prob, Optim.KrylovTrustRegion())
     @test 10 * sol.minimum < l1
 end

@@ -1,4 +1,4 @@
-using OptimizationMOI, Optimization, Ipopt, NLopt, Zygote
+using OptimizationMOI, Optimization, Ipopt, NLopt, Zygote, ModelingToolkit
 using Test
 
 @testset "OptimizationMOI.jl" begin
@@ -29,5 +29,15 @@ using Test
     @test 10 * sol.minimum < l1
 
     sol = solve(prob, OptimizationMOI.MOI.OptimizerWithAttributes(NLopt.Optimizer, "algorithm" => :LD_LBFGS))
+    @test 10 * sol.minimum < l1
+
+    cons_circ = (x, p) -> [x[1]^2 + x[2]^2]
+    optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(true, true); cons=cons_circ)
+    prob = OptimizationProblem(optprob, x0, _p, ucons=[Inf], lcons=[0.0])
+
+    sol = solve(prob, Ipopt.Optimizer())
+    @test 10 * sol.minimum < l1
+
+    sol = solve(prob, OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "max_cpu_time" => 60.0))
     @test 10 * sol.minimum < l1
 end
