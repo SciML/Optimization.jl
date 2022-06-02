@@ -5,7 +5,7 @@ This function is used internally by Optimization.jl to construct
 the necessary extra functions (gradients, Hessians, etc.) before
 optimization. Each of the ADType dispatches use the supplied automatic
 differentiation type in order to specify how the construction process
-occurs. 
+occurs.
 
 If no ADType is given, then the default `NoAD` dispatch simply
 defines closures on any supplied gradient function to enclose the
@@ -31,7 +31,7 @@ function instantiate_function(f, x, ::AbstractADType, p, num_cons = 0)
     cons_j = f.cons_j === nothing ? nothing : (res,x)->f.cons_j(res,x,p)
     cons_h = f.cons_h === nothing ? nothing : (res,x)->f.cons_h(res,x,p)
 
-    return OptimizationFunction{true}(f.f, SciMLBase.NoAD(); grad=grad, hess=hess, hv=hv, 
+    return OptimizationFunction{true}(f.f, SciMLBase.NoAD(); grad=grad, hess=hess, hv=hv,
         cons=cons, cons_j=cons_j, cons_h=cons_h,
-        hess_prototype=nothing, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
+        hess_prototype=f.hess_prototype, cons_jac_prototype=f.cons_jac_prototype, cons_hess_prototype=f.cons_hess_prototype)
 end

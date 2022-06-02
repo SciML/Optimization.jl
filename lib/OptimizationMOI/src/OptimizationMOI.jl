@@ -1,15 +1,15 @@
 module OptimizationMOI
 
-using MathOptInterface, Optimization, Optimization.SciMLBase
+using MathOptInterface, Optimization, Optimization.SciMLBase, Optimization.SparseArrays
 const MOI = MathOptInterface
 
 struct MOIOptimizationProblem{T,F<:OptimizationFunction,uType,P} <: MOI.AbstractNLPEvaluator
     f::F
     u0::uType
     p::P
-    J::Matrix{T}
-    H::Matrix{T}
-    cons_H::Vector{Matrix{T}}
+    J::Union{Matrix{T},SparseMatrixCSC{T}}
+    H::Union{Matrix{T},SparseMatrixCSC{T}}
+    cons_H::Vector{<:Union{Matrix{T},SparseMatrixCSC{T}}}
 end
 
 function MOIOptimizationProblem(prob::OptimizationProblem)
@@ -21,9 +21,9 @@ function MOIOptimizationProblem(prob::OptimizationProblem)
         f,
         prob.u0,
         prob.p,
-        zeros(T, num_cons, n),
-        zeros(T, n, n),
-        Matrix{T}[zeros(T, n, n) for i in 1:num_cons],
+        isnothing(f.cons_jac_prototype) ? zeros(T, num_cons, n) : convert.(T, f.cons_jac_prototype),
+        isnothing(f.hess_prototype) ? zeros(T, n, n) : convert.(T, f.hess_prototype),
+        isnothing(f.cons_hess_prototype) ? Matrix{T}[zeros(T, n, n) for i in 1:num_cons] : [convert.(T, f.cons_hess_prototype[i]) for i in 1:num_cons],
     )
 end
 
