@@ -1,6 +1,6 @@
 module OptimizationMOI
 
-using MathOptInterface, Optimization, Optimization.SciMLBase, Optimization.SparseArrays
+using MathOptInterface, Optimization, Optimization.SciMLBase, SparseArrays
 const MOI = MathOptInterface
 
 struct MOIOptimizationProblem{T,F<:OptimizationFunction,uType,P} <: MOI.AbstractNLPEvaluator

@@ -1,6 +1,6 @@
 module OptimizationOptimJL
 
-using Reexport, Optimization, Optimization.SciMLBase, Optimization.SparseArrays
+using Reexport, Optimization, Optimization.SciMLBase, SparseArrays
 @reexport using Optim
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace::Optim.OptimizationState) = trace
