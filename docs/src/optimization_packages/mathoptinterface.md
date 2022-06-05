@@ -46,19 +46,6 @@ sol = solve(prob,  Ipopt.Optimizer(); option_name = option_value, ...)
   `Optimization.MOI.OptimizerWithAttributes(KNITRO.Optimizer, "option_name" => option_value, ...)`
 - The full list of optimizer options can be found in the [KNITRO Documentation](https://www.artelys.com/docs/knitro//3_referenceManual/callableLibraryAPI.html)
 
-#### AmplNLWriter.jl (MathOptInterface)
-
-- [`AmplNLWriter.Optimizer`](https://github.com/jump-dev/AmplNLWriter.jl)
-- AmplNLWriter is a MathOptInterface optimizer, and thus its options are handled via
-  `Optimization.MOI.OptimizerWithAttributes(AmplNLWriter.Optimizer(algname), "option_name" => option_value, ...)`
-- Possible `algname`s are:
-    * `Bonmin_jll.amplexe`
-    * `Couenne_jll.amplexe`
-    * `Ipopt_jll.amplexe`
-    * `SHOT_jll.amplexe`
-
-To use one of the JLLs, they must be added first. For example: `Pkg.add("Bonmin_jll")`.
-
 #### Juniper.jl (MathOptInterface)
 
 - [`Juniper.Optimizer`](https://github.com/lanl-ansi/Juniper.jl)
@@ -85,15 +72,6 @@ opt = Optimization.MOI.OptimizerWithAttributes(optimizer, "nl_solver"=>nl_solver
 sol = solve(prob, opt)
 ```
 
-
-## BARON.jl (MathOptInterface)
-
-- [`BARON.Optimizer`](https://github.com/joehuchette/BARON.jl)
-- BARON is a MathOptInterface optimizer, and thus its options are handled via
-  `Optimization.MOI.OptimizerWithAttributes(BARON.Optimizer, "option_name" => option_value, ...)`
-- The full list of optimizer options can be found in the [BARON Documentation](https://minlp.com/baron-solver)
-
-
 ### Gradient-Based
 #### Ipopt.jl (MathOptInterface)
 
@@ -101,14 +79,3 @@ sol = solve(prob, opt)
 - Ipopt is a MathOptInterface optimizer, and thus its options are handled via
   `Optimization.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "option_name" => option_value, ...)`
 - The full list of optimizer options can be found in the [Ipopt Documentation](https://coin-or.github.io/Ipopt/OPTIONS.html#OPTIONS_REF)
-
-
-## Global Optimizer
-
-### With Constraint Equations
-#### Alpine.jl (MathOptInterface)
-
-- [`Alpine.Optimizer`](https://github.com/lanl-ansi/Alpine.jl)
-- Alpine is a MathOptInterface optimizer, and thus its options are handled via
-  `Optimization.MOI.OptimizerWithAttributes(Alpine.Optimizer, "option_name" => option_value, ...)`
-- The full list of optimizer options can be found in the [Alpine Documentation](https://github.com/lanl-ansi/Alpine.jl)
