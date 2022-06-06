@@ -67,7 +67,7 @@ function MOI.jacobian_structure(moiproblem::MOIOptimizationProblem)
         rows, cols = size(moiproblem.J)
         inds = Tuple{Int,Int}[(i, j) for j in 1:cols for i in 1:rows]
     end
-    return inds 
+    return inds
 end
 
 function MOI.eval_constraint_jacobian(moiproblem::MOIOptimizationProblem, j, x)
@@ -112,16 +112,23 @@ function MOI.eval_hessian_lagrangian(
     σ,
     μ,
 ) where {T}
-    n = length(moiproblem.u0)
     if iszero(σ)
         fill!(h, zero(T))
     else
         moiproblem.f.hess(moiproblem.H, x)
         k = 0
-        for col in 1:n
-            for row in 1:col
+        if moiproblem.H isa SparseMatrixCSC
+            rows, cols, _ = findnz(moiproblem.H)
+            for (i, j) in zip(rows, cols)
                 k += 1
-                h[k] = σ * moiproblem.H[row, col]
+                h[k] = σ * moiproblem.H[i, j]
+            end
+        else
+            for i in 1:size(moiproblem.H, 1)
+                for j in 1:i
+                    k += 1
+                    h[k] = σ * moiproblem.H[i, j]
+                end
             end
         end
     end
@@ -129,10 +136,18 @@ function MOI.eval_hessian_lagrangian(
         moiproblem.f.cons_h(moiproblem.cons_H, x)
         for (μi, Hi) in zip(μ, moiproblem.cons_H)
             k = 0
-            for col in 1:n
-                for row in 1:col
+            if Hi isa SparseMatrixCSC
+                rows, cols, _ = findnz(Hi)
+                for (i, j) in zip(rows, cols)
                     k += 1
-                    h[k] += μi * Hi[row, col]
+                    h[k] += μi * Hi[i, j]
+                end
+            else
+                for i in 1:size(Hi, 1)
+                    for j in 1:i
+                        k += 1
+                        h[k] += μi * Hi[i, j]
+                    end
                 end
             end
         end
