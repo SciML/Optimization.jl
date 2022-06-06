@@ -98,6 +98,7 @@ function MOI.hessian_lagrangian_structure(moiproblem::MOIOptimizationProblem)
                 push!(inds, (i,j))
             end
         end
+        return inds
     else
         num_vars = length(moiproblem.u0)
         return Tuple{Int,Int}[(row, col) for col in 1:num_vars for row in 1:col]
