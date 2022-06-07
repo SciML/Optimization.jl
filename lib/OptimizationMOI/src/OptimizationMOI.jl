@@ -27,7 +27,14 @@ function MOIOptimizationProblem(prob::OptimizationProblem)
     )
 end
 
-MOI.features_available(::MOIOptimizationProblem) = [:Grad, :Hess, :Jac]
+function MOI.features_available(prob::MOIOptimizationProblem) 
+    features = [:Grad, :Hess, :Jac]
+
+    # Assume that if there are constraints and expr then cons_expr exists
+    if prob.expr !== nothing
+        push!(features,:ExprGraph)
+    end
+end
 
 function MOI.initialize(
     moiproblem::MOIOptimizationProblem,
@@ -154,6 +161,9 @@ function MOI.eval_hessian_lagrangian(
     end
     return
 end
+
+MOI.objective_expr(prob::MOIOptimizationProblem) = prob.f.expr
+MOI.constraint_expr(prob::MOIOptimizationProblem,i) = prob.f.cons_expr
 
 _create_new_optimizer(opt::MOI.AbstractOptimizer) = opt
 _create_new_optimizer(opt::MOI.OptimizerWithAttributes) = MOI.instantiate(opt)
