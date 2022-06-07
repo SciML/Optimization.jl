@@ -190,7 +190,7 @@ function MOI.eval_hessian_lagrangian(
 end
 
 MOI.objective_expr(prob::MOIOptimizationProblem) = prob.f.expr
-MOI.constraint_expr(prob::MOIOptimizationProblem,i) = prob.f.cons_expr
+MOI.constraint_expr(prob::MOIOptimizationProblem,i) = prob.f.cons_expr[i]
 
 _create_new_optimizer(opt::MOI.AbstractOptimizer) = opt
 _create_new_optimizer(opt::MOI.OptimizerWithAttributes) = MOI.instantiate(opt)
