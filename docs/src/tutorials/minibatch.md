@@ -2,11 +2,11 @@
 
 !!! note
 
-    This example uses the OptimizationOptimJL.jl package. See the [Optim.jl page](@ref optim)
+    This example uses the OptimizationOptimisers.jl package. See the [Optimisers.jl page](@ref optimisers)
     for details on the installation and usage.
 
 ```julia
-using DiffEqFlux, Optimization, OptimizationOptimJL, OrdinaryDiffEq
+using DiffEqFlux, Optimization, OptimizationOptimisers, OrdinaryDiffEq
 
 function newtons_cooling(du, u, p, t)
     temp = u[1]
@@ -65,6 +65,6 @@ l1 = loss_adjoint(pp, train_loader.data[1], train_loader.data[2])[1]
 optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, batch, time_batch), Optimization.AutoZygote())
 optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
-res1 = Optimization.solve(optprob, ADAM(0.05), ncycle(train_loader, numEpochs), callback = callback)
+res1 = Optimization.solve(optprob, Optimisers.ADAM(0.05), ncycle(train_loader, numEpochs), callback = callback)
 @test 10res1.minimum < l1
 ```
