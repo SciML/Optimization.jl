@@ -6,7 +6,7 @@
     for details on the installation and usage.
 
 ```julia
-using DiffEqFlux, Optimization, OptimizationOptimisers, OrdinaryDiffEq
+using Flux, Optimization, OptimizationOptimisers, OrdinaryDiffEq
 
 function newtons_cooling(du, u, p, t)
     temp = u[1]
@@ -19,8 +19,11 @@ function true_sol(du, u, p, t)
     newtons_cooling(du, u, true_p, t)
 end
 
+ann = Chain(FastDense(1,8,tanh), FastDense(8,1,tanh))
+pp,re = Flux.destructure(ann)
+
 function dudt_(u,p,t)
-    ann(u, p).* u
+    re(p)(u) .* u
 end
 
 callback = function (p,l,pred;doplot=false) #callback function to observe training
@@ -42,8 +45,6 @@ t = range(tspan[1], tspan[2], length=datasize)
 true_prob = ODEProblem(true_sol, u0, tspan)
 ode_data = Array(solve(true_prob, Tsit5(), saveat=t))
 
-ann = FastChain(FastDense(1,8,tanh), FastDense(8,1,tanh))
-pp = initial_params(ann)
 prob = ODEProblem{false}(dudt_, u0, tspan, pp)
 
 function predict_adjoint(fullp, time_batch)
