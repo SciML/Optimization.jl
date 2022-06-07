@@ -6,7 +6,7 @@
     for details on the installation and usage.
 
 ```julia
-using Flux, Optimization, OptimizationOptimisers, OrdinaryDiffEq
+using Flux, Optimization, OptimizationOptimisers, OrdinaryDiffEq, DiffEqSensitivity
 
 function newtons_cooling(du, u, p, t)
     temp = u[1]
