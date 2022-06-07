@@ -45,7 +45,6 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
         cons_sys = ModelingToolkit.modelingtoolkitize(NonlinearProblem(f.cons, x, p))
 
         cons_eqs = equations(cons_sys)
-        cons_stats = states()
         cons_exprs = [toexpr(cons_eq) for cons_eq in cons_eqs]
     end
 
