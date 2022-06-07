@@ -34,6 +34,7 @@ function MOI.features_available(prob::MOIOptimizationProblem)
     if prob.expr !== nothing
         push!(features,:ExprGraph)
     end
+    return features
 end
 
 function MOI.initialize(
