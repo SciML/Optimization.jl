@@ -35,11 +35,18 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
         hv = f.hv
     end
 
+    expr = ModelingToolkit.Symbolics.toexpr(equations(sys))
+
     if f.cons === nothing
         cons = nothing
+        cons_exprs = nothing
     else
         cons = (θ) -> f.cons(θ, p)
         cons_sys = ModelingToolkit.modelingtoolkitize(NonlinearProblem(f.cons, x, p))
+
+        cons_eqs = equations(cons_sys)
+        cons_stats = states()
+        cons_exprs = [toexpr(cons_eq) for cons_eq in cons_eqs]
     end
 
     if f.cons !== nothing && f.cons_j === nothing
@@ -74,5 +81,6 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
 
     return OptimizationFunction{true}(f.f, adtype; grad=grad, hess=hess, hv=hv,
         cons=cons, cons_j=cons_j, cons_h=cons_h,
-        hess_prototype=hess_prototype, cons_jac_prototype=cons_jac_prototype, cons_hess_prototype=cons_hess_prototype)
+        hess_prototype=hess_prototype, cons_jac_prototype=cons_jac_prototype, cons_hess_prototype=cons_hess_prototype,
+        expr = expr, cons_exprs = cons_exprs)
 end
