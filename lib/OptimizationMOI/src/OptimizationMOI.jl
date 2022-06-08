@@ -3,13 +3,15 @@ module OptimizationMOI
 using MathOptInterface, Optimization, Optimization.SciMLBase, SparseArrays
 const MOI = MathOptInterface
 
-struct MOIOptimizationProblem{T,F<:OptimizationFunction,uType,P} <: MOI.AbstractNLPEvaluator
+struct MOIOptimizationProblem{T,F<:OptimizationFunction,uType,P,EX,CEX} <: MOI.AbstractNLPEvaluator
     f::F
     u0::uType
     p::P
     J::Union{Matrix{T},SparseMatrixCSC{T}}
     H::Union{Matrix{T},SparseMatrixCSC{T}}
     cons_H::Vector{<:Union{Matrix{T},SparseMatrixCSC{T}}}
+    expr::EX
+    cons_expr::CEX
 end
 
 function MOIOptimizationProblem(prob::OptimizationProblem)
@@ -24,10 +26,12 @@ function MOIOptimizationProblem(prob::OptimizationProblem)
         isnothing(f.cons_jac_prototype) ? zeros(T, num_cons, n) : convert.(T, f.cons_jac_prototype),
         isnothing(f.hess_prototype) ? zeros(T, n, n) : convert.(T, f.hess_prototype),
         isnothing(f.cons_hess_prototype) ? Matrix{T}[zeros(T, n, n) for i in 1:num_cons] : [convert.(T, f.cons_hess_prototype[i]) for i in 1:num_cons],
+        prob.expr,
+        prob.cons_expr,
     )
 end
 
-function MOI.features_available(prob::MOIOptimizationProblem) 
+function MOI.features_available(prob::MOIOptimizationProblem)
     features = [:Grad, :Hess, :Jac]
 
     # Assume that if there are constraints and expr then cons_expr exists
