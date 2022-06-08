@@ -26,8 +26,8 @@ function MOIOptimizationProblem(prob::OptimizationProblem)
         isnothing(f.cons_jac_prototype) ? zeros(T, num_cons, n) : convert.(T, f.cons_jac_prototype),
         isnothing(f.hess_prototype) ? zeros(T, n, n) : convert.(T, f.hess_prototype),
         isnothing(f.cons_hess_prototype) ? Matrix{T}[zeros(T, n, n) for i in 1:num_cons] : [convert.(T, f.cons_hess_prototype[i]) for i in 1:num_cons],
-        prob.expr,
-        prob.cons_expr,
+        f.expr,
+        f.cons_expr,
     )
 end
 

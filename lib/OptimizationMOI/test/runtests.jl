@@ -1,4 +1,4 @@
-using OptimizationMOI, Optimization, Ipopt, NLopt, Zygote, ModelingToolkit
+using OptimizationMOI, Optimization, Ipopt, NLopt, Zygote, ModelingToolkit, Juniper, AmplNLWriter, Ipopt_jll
 using Test
 
 @testset "OptimizationMOI.jl" begin
@@ -40,4 +40,12 @@ using Test
 
     sol = solve(prob, OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "max_cpu_time" => 60.0))
     @test 10 * sol.minimum < l1
+
+    nl_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "print_level" => 0)
+    minlp_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer, "nl_solver" => nl_solver)
+
+    sol = solve(prob, minlp_solver)
+    @test 10 * sol.minimum < l1
+
+    sol = solve(prob, OptimizationMOI.MOI.OptimizerWithAttributes( () -> AmplNLWriter.Optimizer(Ipopt_jll.amplexe)))
 end
