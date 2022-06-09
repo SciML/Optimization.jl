@@ -57,7 +57,9 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
         cons_sys = ModelingToolkit.modelingtoolkitize(NonlinearProblem(f.cons, x, p))
 
         cons_eqs = ModelingToolkit.equations(cons_sys)
-        cons_exprs = [ModelingToolkit.Symbolics.toexpr(cons_eq) for cons_eq in cons_eqs]
+        cons_exprs = map(cons_eqs) do cons_eq
+            Expr(:call, :(==), :0, symbolify(ModelingToolkit.Symbolics.toexpr(cons_eq).args[2:end]))
+        end
     end
 
     if f.cons !== nothing && f.cons_j === nothing
