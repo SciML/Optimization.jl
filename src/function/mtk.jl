@@ -17,6 +17,13 @@ function symbolify(e)
     return e
 end
 
+function rep_pars_vals!(e::Expr, p)
+    rep_pars_vals!.(e.args, Ref(p))
+    replace!(e.args, p...)
+end
+
+function rep_pars_vals!(e, p) end
+
 function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
     p = isnothing(p) ? SciMLBase.NullParameters() : p
     sys = ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, x, p))
@@ -48,6 +55,8 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
     end
 
     expr = symbolify(ModelingToolkit.Symbolics.toexpr(ModelingToolkit.equations(sys)))
+    pairs_arr = p isa SciMLBase.NullParameters ? [Symbol(_s) => Expr(:ref, :x, i) for (i,_s) in enumerate(sys.states)] : [[Symbol(_s) => Expr(:ref, :x, i) for (i,_s) in enumerate(sys.states)]..., [Symbol(_p) => p[i] for (i,_p) in enumerate(sys.ps)]...]
+    rep_pars_vals!(expr, pairs_arr)
 
     if f.cons === nothing
         cons = nothing
@@ -58,7 +67,9 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
 
         cons_eqs = ModelingToolkit.equations(cons_sys)
         cons_exprs = map(cons_eqs) do cons_eq
-            Expr(:call, :(==), :0, symbolify(ModelingToolkit.Symbolics.toexpr(cons_eq).args[2:end]))
+            e = symbolify(ModelingToolkit.Symbolics.toexpr(cons_eq))
+            rep_pars_vals!(e, pairs_arr)
+            return Expr(:call, :(==), e.args[2], :0)
         end
     end
 
@@ -91,7 +102,8 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
         _cons_hess_prototype = ModelingToolkit.hessian_sparsity(cons_sys)
         cons_hess_prototype = [convert.(eltype(x), _cons_hess_prototype[i]) for i in 1:num_cons]
     end
-
+    println(dump(expr))
+    println(dump.(cons_exprs))
     return OptimizationFunction{true}(f.f, adtype; grad=grad, hess=hess, hv=hv,
         cons=cons, cons_j=cons_j, cons_h=cons_h,
         hess_prototype=hess_prototype, cons_jac_prototype=cons_jac_prototype, cons_hess_prototype=cons_hess_prototype,
