@@ -5,6 +5,18 @@ end
 
 AutoModelingToolkit() = AutoModelingToolkit(false, false)
 
+function symbolify(e::Expr)
+    if !(e.args[1] isa Symbol)
+        e.args[1] = Symbol(e.args[1])
+    end
+    symbolify.(e.args)
+    return e
+end
+
+function symbolify(e)
+    return e
+end
+
 function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
     p = isnothing(p) ? SciMLBase.NullParameters() : p
     sys = ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, x, p))
@@ -35,7 +47,7 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
         hv = f.hv
     end
 
-    expr = ModelingToolkit.Symbolics.toexpr(ModelingToolkit.equations(sys))
+    expr = symbolify(ModelingToolkit.Symbolics.toexpr(ModelingToolkit.equations(sys)))
 
     if f.cons === nothing
         cons = nothing
