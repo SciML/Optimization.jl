@@ -1,4 +1,4 @@
-using OptimizationMOI, Optimization, Ipopt, NLopt, Zygote, ModelingToolkit, Juniper, AmplNLWriter, Ipopt_jll
+using OptimizationMOI, Optimization, Ipopt, NLopt, Zygote, ModelingToolkit, Juniper, BARON
 using Test
 
 function _test_sparse_derivatives_hs071(backend)
@@ -75,7 +75,11 @@ end
     sol = solve(prob, minlp_solver)
     @test 10 * sol.minimum < l1
 
-    sol = solve(prob, OptimizationMOI.MOI.OptimizerWithAttributes( () -> AmplNLWriter.Optimizer(Ipopt_jll.amplexe)))
+    cons = (x, p) -> [x[2] - x[1]]
+    optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(true, true); cons=cons)
+    prob = OptimizationProblem(optprob, x0, _p, ucons=[0.0], lcons=[0.0])
+    sol = solve(prob, BARON.Optimizer())
+    @test 10 * sol.minimum < l1
 end
 
 @testset "backends" begin
