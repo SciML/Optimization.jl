@@ -102,8 +102,7 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
         _cons_hess_prototype = ModelingToolkit.hessian_sparsity(cons_sys)
         cons_hess_prototype = [convert.(eltype(x), _cons_hess_prototype[i]) for i in 1:num_cons]
     end
-    println(dump(expr))
-    println(dump.(cons_exprs))
+
     return OptimizationFunction{true}(f.f, adtype; grad=grad, hess=hess, hv=hv,
         cons=cons, cons_j=cons_j, cons_h=cons_h,
         hess_prototype=hess_prototype, cons_jac_prototype=cons_jac_prototype, cons_hess_prototype=cons_hess_prototype,
