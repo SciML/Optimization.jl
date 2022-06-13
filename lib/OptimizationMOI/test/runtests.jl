@@ -1,6 +1,34 @@
 using OptimizationMOI, Optimization, Ipopt, NLopt, Zygote, ModelingToolkit
 using Test
 
+function _test_sparse_derivatives_hs071(backend)
+    function objective(x, ::Any)
+        return x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3]
+    end
+    function constraints(x, ::Any)
+        return [
+            x[1] * x[2] * x[3] * x[4],
+            x[1]^2 + x[2]^2 + x[3]^2 + x[4]^2,
+        ]
+    end
+    prob = OptimizationProblem(
+        OptimizationFunction(objective, backend; cons = constraints),
+        [1.0, 5.0, 5.0, 1.0];
+        sense = Optimization.MinSense,
+        lb = [1.0, 1.0, 1.0, 1.0],
+        ub = [5.0, 5.0, 5.0, 5.0],
+        lcons = [25.0, 40.0],
+        ucons = [Inf, 40.0],
+    )
+    sol = solve(prob, Ipopt.Optimizer())
+    @test isapprox(sol.minimum, 17.014017145179164; atol = 1e-6)
+    x = [1.0, 4.7429996418092970, 3.8211499817883077, 1.3794082897556983]
+    @test isapprox(sol.minimizer, x; atol = 1e-6)
+    @test prod(sol.minimizer) >= 25.0 - 1e-6
+    @test isapprox(sum(sol.minimizer.^2), 40.0; atol = 1e-6)
+    return
+end
+
 @testset "OptimizationMOI.jl" begin
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = zeros(2)
@@ -40,4 +68,17 @@ using Test
 
     sol = solve(prob, OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "max_cpu_time" => 60.0))
     @test 10 * sol.minimum < l1
+end
+
+@testset "backends" begin
+    for backend in (
+        Optimization.AutoModelingToolkit(false, false),
+        Optimization.AutoModelingToolkit(true, false),
+        Optimization.AutoModelingToolkit(false, true),
+        Optimization.AutoModelingToolkit(true, true),
+    )
+        @testset "$backend" begin
+            _test_sparse_derivatives_hs071(backend)
+        end
+    end
 end
