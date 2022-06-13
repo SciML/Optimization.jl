@@ -29,8 +29,6 @@ function __init__()
     @require ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78" include("function/mtk.jl")
 end
 
-SciMLBase.__solve(prob::OptimizationProblem, args...; kwargs...) = throw(ArgumentError("The optimization algorithm used doesn't have the associated subpackage loaded"))
-
 export solve
 
 end # module
