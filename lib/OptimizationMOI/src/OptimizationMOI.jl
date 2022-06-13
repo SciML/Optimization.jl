@@ -80,29 +80,51 @@ function MOI.eval_constraint_jacobian(moiproblem::MOIOptimizationProblem, j, x)
         )
     end
     moiproblem.f.cons_j(moiproblem.J, x)
-    for i in eachindex(j)
-        j[i] = moiproblem.J[i]
+    if moiproblem.J isa SparseMatrixCSC
+        nnz = nonzeros(moiproblem.J)
+        @assert length(j) == length(nnz)
+        for (i, Ji) in zip(eachindex(j), nnz)
+            j[i] = Ji
+        end
+    else
+        for i in eachindex(j)
+            j[i] = moiproblem.J[i]
+        end
     end
     return
 end
 
-# Because the Hessian is symmetrical, we choose to store the upper-triangular
-# component. We also assume that it is dense.
 function MOI.hessian_lagrangian_structure(moiproblem::MOIOptimizationProblem)
-    if moiproblem.H isa SparseMatrixCSC
+    sparse_obj = moiproblem.H isa SparseMatrixCSC
+    sparse_constraints = all(H -> H isa SparseMatrixCSC, moiproblem.cons_H)
+    if !sparse_constraints && any(H -> H isa SparseMatrixCSC, moiproblem.cons_H)
+        # Some constraint hessians are dense and some are sparse! :(
+        error("Mix of sparse and dense constraint hessians are not supported")
+    end
+    N = length(moiproblem.u0)
+    inds = if sparse_obj
         rows, cols, _ = findnz(moiproblem.H)
-        inds = Tuple{Int,Int}[(i, j) for (i,j) in zip(rows, cols)]
-        for ind in 1:length(moiproblem.cons_H)
-            r,c,_ = findnz(moiproblem.cons_H[ind])
-            for (i,j) in zip(r,c)
-                push!(inds, (i,j))
+        Tuple{Int,Int}[(i, j) for (i, j) in zip(rows, cols) if i <= j]
+    else
+        Tuple{Int,Int}[(row, col) for col in 1:N for row in 1:col]
+    end
+    if sparse_constraints
+        for Hi in moiproblem.cons_H
+            r, c, _ = findnz(Hi)
+            for (i, j) in zip(r, c)
+                if i <= j
+                    push!(inds, (i, j))
+                end
             end
         end
-        return inds
+    elseif !sparse_obj
+        # Performance optimization. If both are dense, no need to repeat
     else
-        num_vars = length(moiproblem.u0)
-        return Tuple{Int,Int}[(row, col) for col in 1:num_vars for row in 1:col]
+        for col in 1:N, row in 1:col
+            push!(inds, (row, col))
+        end
     end
+    return inds
 end
 
 function MOI.eval_hessian_lagrangian(
@@ -112,42 +134,46 @@ function MOI.eval_hessian_lagrangian(
     σ,
     μ,
 ) where {T}
-    if iszero(σ)
-        fill!(h, zero(T))
-    else
-        moiproblem.f.hess(moiproblem.H, x)
-        k = 0
-        if moiproblem.H isa SparseMatrixCSC
-            rows, cols, _ = findnz(moiproblem.H)
-            for (i, j) in zip(rows, cols)
+    fill!(h, zero(T))
+    k = 0
+    moiproblem.f.hess(moiproblem.H, x)
+    sparse_objective = moiproblem.H isa SparseMatrixCSC
+    if sparse_objective
+        rows, cols, _ = findnz(moiproblem.H)
+        for (i, j) in zip(rows, cols)
+            if i <= j
                 k += 1
                 h[k] = σ * moiproblem.H[i, j]
             end
-        else
-            for i in 1:size(moiproblem.H, 1)
-                for j in 1:i
-                    k += 1
-                    h[k] = σ * moiproblem.H[i, j]
-                end
-            end
+        end
+    else
+        for i in 1:size(moiproblem.H, 1), j in 1:i
+            k += 1
+            h[k] = σ * moiproblem.H[i, j]
         end
     end
+    # A count of the number of non-zeros in the objective Hessian is needed if
+    # the constraints are dense.
+    nnz_objective = k
     if !isempty(μ) && !all(iszero, μ)
         moiproblem.f.cons_h(moiproblem.cons_H, x)
         for (μi, Hi) in zip(μ, moiproblem.cons_H)
-            k = 0
             if Hi isa SparseMatrixCSC
                 rows, cols, _ = findnz(Hi)
                 for (i, j) in zip(rows, cols)
-                    k += 1
-                    h[k] += μi * Hi[i, j]
-                end
-            else
-                for i in 1:size(Hi, 1)
-                    for j in 1:i
+                    if i <= j
                         k += 1
                         h[k] += μi * Hi[i, j]
                     end
+                end
+            else
+                # The constraints are dense. We only store one copy of the
+                # Hessian, so reset `k` to where it starts. That will be
+                # `nnz_objective` if the objective is sprase, and `0` otherwise.
+                k = sparse_objective ? nnz_objective : 0
+                for i in 1:size(Hi, 1), j in 1:i
+                    k += 1
+                    h[k] += μi * Hi[i, j]
                 end
             end
         end
