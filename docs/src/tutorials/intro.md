@@ -23,7 +23,7 @@ sol = solve(prob,BBO_adaptive_de_rand_1_bin_radiuslimited())
 ```
 
 Notice that Optimization.jl is the core glue package that holds all of the common
-pieces, but to solve the equations we need to use a solver package. Here, GalcticOptimJL
+pieces, but to solve the equations we need to use a solver package. Here, OptimizationOptimJL
 is for [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) and OptimizationBBO is for
 [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl).
 
