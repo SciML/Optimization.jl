@@ -14,23 +14,23 @@ jobs:
       fail-fast: false
       matrix:
         group:
-          # - Core
-          # - OptimizationBBO
-          # - OptimizationCMAEvolutionStrategy
-          # - OptimizationEvolutionary
-          # - OptimizationFlux
-          # - OptimizationGCMAES
-          # - OptimizationMetaheuristics
+          - Core
+          - OptimizationBBO
+          - OptimizationCMAEvolutionStrategy
+          - OptimizationEvolutionary
+          - OptimizationFlux
+          - OptimizationGCMAES
+          - OptimizationMetaheuristics
           - OptimizationMOI
-          # - OptimizationMultistartOptimization
-          # - OptimizationNLopt
-          # #- OptimizationNonconvex
-          # - OptimizationNOMAD
-          # - OptimizationOptimJL
-          # - OptimizationOptimisers
-          # - OptimizationQuadDIRECT
-          # - OptimizationSpeedMapping
-          # - OptimizationPolyalgorithms
+          - OptimizationMultistartOptimization
+          - OptimizationNLopt
+          #- OptimizationNonconvex
+          - OptimizationNOMAD
+          - OptimizationOptimJL
+          - OptimizationOptimisers
+          - OptimizationQuadDIRECT
+          - OptimizationSpeedMapping
+          - OptimizationPolyalgorithms
         version:
           - '1'
           - '1.6'
