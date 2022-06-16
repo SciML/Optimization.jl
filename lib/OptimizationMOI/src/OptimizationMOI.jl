@@ -192,11 +192,29 @@ function MOI.eval_hessian_lagrangian(
     return
 end
 
-MOI.objective_expr(prob::MOIOptimizationProblem) = prob.f.expr
+_replace_variable_indices(expr) = expr
+
+function _replace_variable_indices(expr::Expr)
+    if expr.head == :ref
+        @assert length(expr.args) == 2
+        @assert expr.args[1] == :x
+        return Expr(:ref, :x, MOI.VariableIndex(expr.args[2]))
+    end
+    for i in 1:length(expr.args)
+        expr.args[i] = _replace_variable_indices(expr.args[i])
+    end
+    return expr
+end
+
+function MOI.objective_expr(prob::MOIOptimizationProblem)
+    return _replace_variable_indices(prob.f.expr)
+end
+
 function MOI.constraint_expr(prob::MOIOptimizationProblem,i)
     # expr has the form f(x) == 0
-    lb, expr, ub = prob.lcons[i], prob.f.cons_expr[i], prob.ucons[i]
-    return :($lb <= $(expr.args[2]) <= $ub)
+    expr = _replace_variable_indices(prob.f.cons_expr[i].args[2])
+    lb, ub = prob.lcons[i], prob.ucons[i]
+    return :($lb <= $expr <= $ub)
 end
 
 function _create_new_optimizer(opt::MOI.OptimizerWithAttributes)
