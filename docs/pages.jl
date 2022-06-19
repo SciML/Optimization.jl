@@ -2,17 +2,17 @@ pages = [
         "Optimization.jl: A Unified Optimization Package" => "index.md",
 
         "Tutorials" => [
-            "Basic usage" => "tutorials/intro.md",
-            "Rosenbrock function" => "tutorials/rosenbrock.md",
-            "Minibatch" => "tutorials/minibatch.md",
-            "Symbolic Modeling" => "tutorials/symbolic.md"
+            "tutorials/intro.md",
+            "tutorials/rosenbrock.md",
+            "tutorials/minibatch.md",
+            "tutorials/symbolic.md"
         ],
 
         "API" => [
-            "OptimizationProblem" => "API/optimization_problem.md",
-            "OptimizationFunction" => "API/optimization_function.md",
-            "solve" => "API/solve.md",
-            "ModelingToolkit Integration" => "API/modelingtoolkit.md"
+            "API/optimization_problem.md",
+            "API/optimization_function.md",
+            "API/solve.md",
+            "API/modelingtoolkit.md"
         ],
         "Optimizer Packages" => [
             "BlackBoxOptim.jl" => "optimization_packages/blackboxoptim.md",
