@@ -1,0 +1,1 @@
+# [Using Equality and Inequality Constraints](@id constraints)

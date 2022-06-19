@@ -1,9 +1,9 @@
-# Minibatch examples
+# Data Iterators and Minibatching
 
 !!! note
 
-    This example uses the OptimizationOptimisers.jl package. See the [Optimisers.jl page](@ref optimisers)
-    for details on the installation and usage.
+    This example uses the OptimizationOptimisers.jl package. See the 
+    [Optimisers.jl page](@ref optimisers) for details on the installation and usage.
 
 ```julia
 using Flux, Optimization, OptimizationOptimisers, OrdinaryDiffEq, DiffEqSensitivity

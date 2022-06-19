@@ -1,24 +1,26 @@
 # Basic usage
 
-In this tutorial we introduce the basics of GalcticOptim.jl by showing
+In this tutorial we introduce the basics of Optimization.jl by showing
 how to easily mix local optimizers from Optim.jl and global optimizers
 from BlackBoxOptim.jl on the Rosenbrock equation. The simplest copy-pasteable
 code to get started is the following:
 
-```julia
+```@example intro
+# Import the package and define the problem to optimize
 using Optimization
-rosenbrock(x,p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
-x0 = zeros(2)
+rosenbrock(u,p) =  (u[1] - u[1])^2 + p[2] * (u[2] - u[1]^2)^2
+u0 = zeros(2)
 p  = [1.0,100.0]
 
-prob = OptimizationProblem(rosenbrock,x0,p)
+prob = OptimizationProblem(rosenbrock,u0,p)
 
+# Import a solver package and solve the optimization problem
 using OptimizationOptimJL
 sol = solve(prob,NelderMead())
 
-
+# Import a different solver package and solve the optimization problem a different way
 using OptimizationBBO
-prob = OptimizationProblem(rosenbrock, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+prob = OptimizationProblem(rosenbrock, u0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
 sol = solve(prob,BBO_adaptive_de_rand_1_bin_radiuslimited())
 ```
 
@@ -30,72 +32,73 @@ is for [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) and OptimizationBB
 The output of the first optimization task (with the `NelderMead()` algorithm)
 is given below:
 
-```julia
+```@example intro
 sol = solve(prob,NelderMead())
-u: 2-element Vector{Float64}:
- 0.9999634355313174
- 0.9999315506115275
 ```
 
 The solution from the original solver can always be obtained via `original`:
 
-```julia
-julia> sol.original
- * Status: success
-
- * Candidate solution
-    Final objective value:     3.525527e-09
-
- * Found with
-    Algorithm:     Nelder-Mead
-
- * Convergence measures
-    √(Σ(yᵢ-ȳ)²)/n ≤ 1.0e-08
-
- * Work counters
-    Seconds run:   0  (vs limit Inf)
-    Iterations:    60
-    f(x) calls:    117
+```@example intro
+sol.original
 ```
 
-We can also explore other methods in a similar way:
+## Controlling Gradient Calculations (Automatic Differentiation)
 
-```julia
+Notice that both of the above methods were derivative-free methods, and thus no
+gradients were required to do the optimization. However, in many cases first order
+optimization (i.e. using gradients) is much more efficient. Defining gradients
+can be done in two ways. One way is to manually provide a gradient definition
+in the `OptimizationFunction` constructor. However, the more convenient way
+to obtain gradients is to provide an AD backend type. 
+
+For example, let's now use the OptimizationOptimJL `BFGS` method to solve the same
+problem. We will import the forward-mode automatic differentiation library
+(`using ForwardDiff`) and then specify in the `OptimizationFunction` to
+automatically construct the derivative functions using ForwardDiff.jl. This
+looks like:
+
+```@example intro
 using ForwardDiff
-f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
-prob = OptimizationProblem(f, x0, p)
+optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+prob = OptimizationProblem(optf, u0, p)
 sol = solve(prob,BFGS())
 ```
-For instance, the above optimization task produces the following output:
 
-```julia
-* Status: success
+We can inspect the `original` to see the statistics on the number of steps 
+required and gradients computed:
 
-* Candidate solution
-   Final objective value:     7.645684e-21
-
-* Found with
-   Algorithm:     BFGS
-
-* Convergence measures
-   |x - x'|               = 3.48e-07 ≰ 0.0e+00
-   |x - x'|/|x'|          = 3.48e-07 ≰ 0.0e+00
-   |f(x) - f(x')|         = 6.91e-14 ≰ 0.0e+00
-   |f(x) - f(x')|/|f(x')| = 9.03e+06 ≰ 0.0e+00
-   |g(x)|                 = 2.32e-09 ≤ 1.0e-08
-
-* Work counters
-   Seconds run:   0  (vs limit Inf)
-   Iterations:    16
-   f(x) calls:    53
-   ∇f(x) calls:   53
+```@example intro
+sol.original
 ```
 
-```julia
- prob = OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
- sol = solve(prob, Fminbox(GradientDescent()))
+Sure enough, it's a lot less than the derivative-free methods!
+
+However, the compute cost of forward-mode automatic differentiation scales
+via the number of inputs, and thus as our optimization problem grows large it
+slow down. To counteract this, for larger optimization problems (>100 state
+variables) one normally would want to use reverse-mode automatic differentiation.
+One common choice for reverse-mode automatic differentiation is Zygote.jl.
+We can demonstrate this via:
+
+```@example intro
+using Zygote
+optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+prob = OptimizationProblem(optf, u0, p)
+sol = solve(prob,BFGS())
 ```
 
-The examples clearly demonstrate that Optimization.jl provides an intuitive
-way of specifying optimization tasks and offers a relatively
-easy access to a wide range of optimization algorithms.
+## Setting Box Constraints
+
+In many cases one knows the potential bounds on the solution values. In
+Optimization.jl, these can be supplied as the `lb` and `ub` arguments for
+the lower bounds and upper bounds respectively, supplying a vector of
+values with one per state variable. Let's now do our gradient-based
+optimization with box constraints by rebuilding the OptimizationProblem:
+
+```@example intro
+prob = OptimizationProblem(optf, u0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
+sol = solve(prob,BFGS())
+```
+
+For more information on handling constraints, in particular equality and
+inequality constraints, take a look at the [constraints tutorial](@ref constraints).
