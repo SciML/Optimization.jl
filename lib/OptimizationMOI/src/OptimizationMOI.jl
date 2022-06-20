@@ -10,6 +10,8 @@ struct MOIOptimizationProblem{T,F<:OptimizationFunction,uType,P} <: MOI.Abstract
     J::Union{Matrix{T},SparseMatrixCSC{T}}
     H::Union{Matrix{T},SparseMatrixCSC{T}}
     cons_H::Vector{<:Union{Matrix{T},SparseMatrixCSC{T}}}
+    lcons::Vector{T}
+    ucons::Vector{T}
 end
 
 function MOIOptimizationProblem(prob::OptimizationProblem)
@@ -24,10 +26,19 @@ function MOIOptimizationProblem(prob::OptimizationProblem)
         isnothing(f.cons_jac_prototype) ? zeros(T, num_cons, n) : convert.(T, f.cons_jac_prototype),
         isnothing(f.hess_prototype) ? zeros(T, n, n) : convert.(T, f.hess_prototype),
         isnothing(f.cons_hess_prototype) ? Matrix{T}[zeros(T, n, n) for i in 1:num_cons] : [convert.(T, f.cons_hess_prototype[i]) for i in 1:num_cons],
+        prob.lcons === nothing ? fill(-Inf, num_cons) : prob.lcons,
+        prob.ucons === nothing ? fill(Inf, num_cons) : prob.ucons,
     )
 end
 
-MOI.features_available(::MOIOptimizationProblem) = [:Grad, :Hess, :Jac]
+function MOI.features_available(prob::MOIOptimizationProblem)
+    features = [:Grad, :Hess, :Jac]
+    # Assume that if there are constraints and expr then cons_expr exists
+    if prob.f.expr !== nothing
+        push!(features, :ExprGraph)
+    end
+    return features
+end
 
 function MOI.initialize(
     moiproblem::MOIOptimizationProblem,
@@ -181,8 +192,44 @@ function MOI.eval_hessian_lagrangian(
     return
 end
 
-_create_new_optimizer(opt::MOI.AbstractOptimizer) = opt
-_create_new_optimizer(opt::MOI.OptimizerWithAttributes) = MOI.instantiate(opt)
+_replace_variable_indices(expr) = expr
+
+function _replace_variable_indices(expr::Expr)
+    if expr.head == :ref
+        @assert length(expr.args) == 2
+        @assert expr.args[1] == :x
+        return Expr(:ref, :x, MOI.VariableIndex(expr.args[2]))
+    end
+    for i in 1:length(expr.args)
+        expr.args[i] = _replace_variable_indices(expr.args[i])
+    end
+    return expr
+end
+
+function MOI.objective_expr(prob::MOIOptimizationProblem)
+    return _replace_variable_indices(prob.f.expr)
+end
+
+function MOI.constraint_expr(prob::MOIOptimizationProblem,i)
+    # expr has the form f(x) == 0
+    expr = _replace_variable_indices(prob.f.cons_expr[i].args[2])
+    lb, ub = prob.lcons[i], prob.ucons[i]
+    return :($lb <= $expr <= $ub)
+end
+
+function _create_new_optimizer(opt::MOI.OptimizerWithAttributes)
+    return _create_new_optimizer(MOI.instantiate(opt))
+end
+
+function _create_new_optimizer(model::MOI.AbstractOptimizer)
+    if MOI.supports_incremental_interface(model)
+        return model
+    end
+    return MOI.Utilities.CachingOptimizer(
+        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+        model,
+    )
+end
 
 function __map_optimizer_args(
     prob::OptimizationProblem,

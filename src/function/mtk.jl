@@ -5,6 +5,25 @@ end
 
 AutoModelingToolkit() = AutoModelingToolkit(false, false)
 
+function symbolify(e::Expr)
+    if !(e.args[1] isa Symbol)
+        e.args[1] = Symbol(e.args[1])
+    end
+    symbolify.(e.args)
+    return e
+end
+
+function symbolify(e)
+    return e
+end
+
+function rep_pars_vals!(e::Expr, p)
+    rep_pars_vals!.(e.args, Ref(p))
+    replace!(e.args, p...)
+end
+
+function rep_pars_vals!(e, p) end
+
 function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
     p = isnothing(p) ? SciMLBase.NullParameters() : p
     sys = ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, x, p))
@@ -35,11 +54,23 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
         hv = f.hv
     end
 
+    expr = symbolify(ModelingToolkit.Symbolics.toexpr(ModelingToolkit.equations(sys)))
+    pairs_arr = p isa SciMLBase.NullParameters ? [Symbol(_s) => Expr(:ref, :x, i) for (i,_s) in enumerate(sys.states)] : [[Symbol(_s) => Expr(:ref, :x, i) for (i,_s) in enumerate(sys.states)]..., [Symbol(_p) => p[i] for (i,_p) in enumerate(sys.ps)]...]
+    rep_pars_vals!(expr, pairs_arr)
+
     if f.cons === nothing
         cons = nothing
+        cons_exprs = nothing
     else
         cons = (θ) -> f.cons(θ, p)
         cons_sys = ModelingToolkit.modelingtoolkitize(NonlinearProblem(f.cons, x, p))
+
+        cons_eqs = ModelingToolkit.equations(cons_sys)
+        cons_exprs = map(cons_eqs) do cons_eq
+            e = symbolify(ModelingToolkit.Symbolics.toexpr(cons_eq))
+            rep_pars_vals!(e, pairs_arr)
+            return Expr(:call, :(==), e.args[2], :0)
+        end
     end
 
     if f.cons !== nothing && f.cons_j === nothing
@@ -74,5 +105,6 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
 
     return OptimizationFunction{true}(f.f, adtype; grad=grad, hess=hess, hv=hv,
         cons=cons, cons_j=cons_j, cons_h=cons_h,
-        hess_prototype=hess_prototype, cons_jac_prototype=cons_jac_prototype, cons_hess_prototype=cons_hess_prototype)
+        hess_prototype=hess_prototype, cons_jac_prototype=cons_jac_prototype, cons_hess_prototype=cons_hess_prototype,
+        expr = expr, cons_expr = cons_exprs)
 end

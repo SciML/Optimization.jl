@@ -1,7 +1,8 @@
 using OptimizationMOI, Optimization, Ipopt, NLopt, Zygote, ModelingToolkit
+using AmplNLWriter, Ipopt_jll
 using Test
 
-function _test_sparse_derivatives_hs071(backend)
+function _test_sparse_derivatives_hs071(backend, optimizer)
     function objective(x, ::Any)
         return x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3]
     end
@@ -20,7 +21,7 @@ function _test_sparse_derivatives_hs071(backend)
         lcons = [25.0, 40.0],
         ucons = [Inf, 40.0],
     )
-    sol = solve(prob, Ipopt.Optimizer())
+    sol = solve(prob, optimizer)
     @test isapprox(sol.minimum, 17.014017145179164; atol = 1e-6)
     x = [1.0, 4.7429996418092970, 3.8211499817883077, 1.3794082897556983]
     @test isapprox(sol.minimizer, x; atol = 1e-6)
@@ -78,7 +79,8 @@ end
         Optimization.AutoModelingToolkit(true, true),
     )
         @testset "$backend" begin
-            _test_sparse_derivatives_hs071(backend)
+            _test_sparse_derivatives_hs071(backend, Ipopt.Optimizer())
+            _test_sparse_derivatives_hs071(backend, AmplNLWriter.Optimizer(Ipopt_jll.amplexe))
         end
     end
 end
