@@ -1,4 +1,4 @@
-# Optimisers.jl
+# [Optimisers.jl](@id optimisers)
 
 ## Installation: OptimizationFlux.jl
 
