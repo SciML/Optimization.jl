@@ -8,6 +8,11 @@ To use this package, install the OptimizationFlux package:
 import Pkg; Pkg.add("OptimizationFlux")
 ```
 
+!!! warn
+
+    Flux's optimizers are soon to be deprecated by [Optimisers.jl](https://github.com/FluxML/Optimisers.jl)
+    Because of this, we recommend using the OptimizationOptimisers.jl setup instead of OptimizationFlux.jl
+
 ## Local Unconstrained Optimizers 
 
 - [`Flux.Optimise.Descent`](https://fluxml.ai/Flux.jl/stable/training/optimisers/#Flux.Optimise.Descent): **Classic gradient descent optimizer with learning rate**

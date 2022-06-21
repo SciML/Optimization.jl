@@ -5,7 +5,7 @@
     This example uses the OptimizationOptimisers.jl package. See the 
     [Optimisers.jl page](@ref optimisers) for details on the installation and usage.
 
-```julia
+```@example
 using Flux, Optimization, OptimizationOptimisers, OrdinaryDiffEq, DiffEqSensitivity
 
 function newtons_cooling(du, u, p, t)
