@@ -27,6 +27,7 @@ pages = [
             "NLopt.jl" => "optimization_packages/nlopt.md",
             "Nonconvex.jl" => "optimization_packages/nonconvex.md",
             "Optim.jl" => "optimization_packages/optim.md",
+            "Optimisers.jl" => "optimization_packages/optimisers.md",
             "QuadDIRECT.jl" => "optimization_packages/quaddirect.md"
         ],
     ]
