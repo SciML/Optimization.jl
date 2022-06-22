@@ -5,25 +5,6 @@ end
 
 AutoModelingToolkit() = AutoModelingToolkit(false, false)
 
-function symbolify(e::Expr)
-    if !(e.args[1] isa Symbol)
-        e.args[1] = Symbol(e.args[1])
-    end
-    symbolify.(e.args)
-    return e
-end
-
-function symbolify(e)
-    return e
-end
-
-function rep_pars_vals!(e::Expr, p)
-    rep_pars_vals!.(e.args, Ref(p))
-    replace!(e.args, p...)
-end
-
-function rep_pars_vals!(e, p) end
-
 function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
     p = isnothing(p) ? SciMLBase.NullParameters() : p
     sys = ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, x, p))
