@@ -1,3 +1,23 @@
+
+function symbolify(e::Expr)
+    if !(e.args[1] isa Symbol)
+        e.args[1] = Symbol(e.args[1])
+    end
+    symbolify.(e.args)
+    return e
+end
+
+function symbolify(e)
+    return e
+end
+
+function rep_pars_vals!(e::Expr, p)
+    rep_pars_vals!.(e.args, Ref(p))
+    replace!(e.args, p...)
+end
+
+function rep_pars_vals!(e, p) end
+
 """
 instantiate_function(f, x, ::AbstractADType, p, num_cons = 0)::OptimizationFunction
 
@@ -30,8 +50,14 @@ function instantiate_function(f, x, ::AbstractADType, p, num_cons = 0)
     cons   = f.cons   === nothing ? nothing : (x)->f.cons(x,p)
     cons_j = f.cons_j === nothing ? nothing : (res,x)->f.cons_j(res,x,p)
     cons_h = f.cons_h === nothing ? nothing : (res,x)->f.cons_h(res,x,p)
+    hess_prototype = f.hess_prototype === nothing ? nothing : convert.(eltype(x), f.hess_prototype)
+    cons_jac_prototype = f.cons_jac_prototype === nothing ? nothing : convert.(eltype(x), f.cons_jac_prototype)
+    cons_hess_prototype = f.cons_hess_prototype === nothing ? nothing : convert.(eltype(x), f.cons_hess_prototype)
+    expr = symbolify(f.expr)
+    cons_expr = symbolify.(f.cons_expr)
 
     return OptimizationFunction{true}(f.f, SciMLBase.NoAD(); grad=grad, hess=hess, hv=hv,
         cons=cons, cons_j=cons_j, cons_h=cons_h,
-        hess_prototype=f.hess_prototype, cons_jac_prototype=f.cons_jac_prototype, cons_hess_prototype=f.cons_hess_prototype)
+        hess_prototype=hess_prototype, cons_jac_prototype=cons_jac_prototype,
+        cons_hess_prototype=cons_hess_prototype, expr=expr, cons_expr=cons_expr)
 end
