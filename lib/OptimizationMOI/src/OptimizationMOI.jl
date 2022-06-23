@@ -23,9 +23,11 @@ function MOIOptimizationProblem(prob::OptimizationProblem)
         f,
         prob.u0,
         prob.p,
-        isnothing(f.cons_jac_prototype) ? zeros(T, num_cons, n) : convert.(T, f.cons_jac_prototype),
+        isnothing(f.cons_jac_prototype) ? zeros(T, num_cons, n) :
+        convert.(T, f.cons_jac_prototype),
         isnothing(f.hess_prototype) ? zeros(T, n, n) : convert.(T, f.hess_prototype),
-        isnothing(f.cons_hess_prototype) ? Matrix{T}[zeros(T, n, n) for i in 1:num_cons] : [convert.(T, f.cons_hess_prototype[i]) for i in 1:num_cons],
+        isnothing(f.cons_hess_prototype) ? Matrix{T}[zeros(T, n, n) for i = 1:num_cons] :
+        [convert.(T, f.cons_hess_prototype[i]) for i = 1:num_cons],
         prob.lcons === nothing ? fill(-Inf, num_cons) : prob.lcons,
         prob.ucons === nothing ? fill(Inf, num_cons) : prob.ucons,
     )
@@ -73,10 +75,10 @@ end
 function MOI.jacobian_structure(moiproblem::MOIOptimizationProblem)
     if moiproblem.J isa SparseMatrixCSC
         rows, cols, _ = findnz(moiproblem.J)
-        inds = Tuple{Int,Int}[(i, j) for (i,j) in zip(rows, cols)]
+        inds = Tuple{Int,Int}[(i, j) for (i, j) in zip(rows, cols)]
     else
         rows, cols = size(moiproblem.J)
-        inds = Tuple{Int,Int}[(i, j) for j in 1:cols for i in 1:rows]
+        inds = Tuple{Int,Int}[(i, j) for j = 1:cols for i = 1:rows]
     end
     return inds
 end
@@ -117,7 +119,7 @@ function MOI.hessian_lagrangian_structure(moiproblem::MOIOptimizationProblem)
         rows, cols, _ = findnz(moiproblem.H)
         Tuple{Int,Int}[(i, j) for (i, j) in zip(rows, cols) if i <= j]
     else
-        Tuple{Int,Int}[(row, col) for col in 1:N for row in 1:col]
+        Tuple{Int,Int}[(row, col) for col = 1:N for row = 1:col]
     end
     if sparse_constraints
         for Hi in moiproblem.cons_H
@@ -131,7 +133,7 @@ function MOI.hessian_lagrangian_structure(moiproblem::MOIOptimizationProblem)
     elseif !sparse_obj
         # Performance optimization. If both are dense, no need to repeat
     else
-        for col in 1:N, row in 1:col
+        for col = 1:N, row = 1:col
             push!(inds, (row, col))
         end
     end
@@ -158,7 +160,7 @@ function MOI.eval_hessian_lagrangian(
             end
         end
     else
-        for i in 1:size(moiproblem.H, 1), j in 1:i
+        for i = 1:size(moiproblem.H, 1), j = 1:i
             k += 1
             h[k] = σ * moiproblem.H[i, j]
         end
@@ -182,7 +184,7 @@ function MOI.eval_hessian_lagrangian(
                 # Hessian, so reset `k` to where it starts. That will be
                 # `nnz_objective` if the objective is sprase, and `0` otherwise.
                 k = sparse_objective ? nnz_objective : 0
-                for i in 1:size(Hi, 1), j in 1:i
+                for i = 1:size(Hi, 1), j = 1:i
                     k += 1
                     h[k] += μi * Hi[i, j]
                 end
@@ -200,7 +202,7 @@ function _replace_variable_indices(expr::Expr)
         @assert expr.args[1] == :x
         return Expr(:ref, :x, MOI.VariableIndex(expr.args[2]))
     end
-    for i in 1:length(expr.args)
+    for i = 1:length(expr.args)
         expr.args[i] = _replace_variable_indices(expr.args[i])
     end
     return expr
@@ -210,7 +212,7 @@ function MOI.objective_expr(prob::MOIOptimizationProblem)
     return _replace_variable_indices(prob.f.expr)
 end
 
-function MOI.constraint_expr(prob::MOIOptimizationProblem,i)
+function MOI.constraint_expr(prob::MOIOptimizationProblem, i)
     # expr has the form f(x) == 0
     expr = _replace_variable_indices(prob.f.cons_expr[i].args[2])
     lb, ub = prob.lcons[i], prob.ucons[i]
@@ -234,11 +236,11 @@ end
 function __map_optimizer_args(
     prob::OptimizationProblem,
     opt::Union{MOI.AbstractOptimizer,MOI.OptimizerWithAttributes};
-    maxiters::Union{Number,Nothing}=nothing,
-    maxtime::Union{Number,Nothing}=nothing,
-    abstol::Union{Number,Nothing}=nothing,
-    reltol::Union{Number,Nothing}=nothing,
-    kwargs...
+    maxiters::Union{Number,Nothing} = nothing,
+    maxtime::Union{Number,Nothing} = nothing,
+    abstol::Union{Number,Nothing} = nothing,
+    reltol::Union{Number,Nothing} = nothing,
+    kwargs...,
 )
     optimizer = _create_new_optimizer(opt)
     for (key, value) in kwargs
@@ -262,28 +264,28 @@ end
 function SciMLBase.__solve(
     prob::OptimizationProblem,
     opt::Union{MOI.AbstractOptimizer,MOI.OptimizerWithAttributes};
-    maxiters::Union{Number,Nothing}=nothing,
-    maxtime::Union{Number,Nothing}=nothing,
-    abstol::Union{Number,Nothing}=nothing,
-    reltol::Union{Number,Nothing}=nothing,
-    kwargs...
+    maxiters::Union{Number,Nothing} = nothing,
+    maxtime::Union{Number,Nothing} = nothing,
+    abstol::Union{Number,Nothing} = nothing,
+    reltol::Union{Number,Nothing} = nothing,
+    kwargs...,
 )
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
     maxtime = Optimization._check_and_convert_maxtime(maxtime)
     opt_setup = __map_optimizer_args(
         prob,
         opt;
-        abstol=abstol,
-        reltol=reltol,
-        maxiters=maxiters,
-        maxtime=maxtime,
-        kwargs...
+        abstol = abstol,
+        reltol = reltol,
+        maxiters = maxiters,
+        maxtime = maxtime,
+        kwargs...,
     )
     num_variables = length(prob.u0)
     θ = MOI.add_variables(opt_setup, num_variables)
     if prob.lb !== nothing
         @assert eachindex(prob.lb) == Base.OneTo(num_variables)
-        for i in 1:num_variables
+        for i = 1:num_variables
             if prob.lb[i] > -Inf
                 MOI.add_constraint(opt_setup, θ[i], MOI.GreaterThan(prob.lb[i]))
             end
@@ -291,7 +293,7 @@ function SciMLBase.__solve(
     end
     if prob.ub !== nothing
         @assert eachindex(prob.ub) == Base.OneTo(num_variables)
-        for i in 1:num_variables
+        for i = 1:num_variables
             if prob.ub[i] < Inf
                 MOI.add_constraint(opt_setup, θ[i], MOI.LessThan(prob.ub[i]))
             end
@@ -299,7 +301,7 @@ function SciMLBase.__solve(
     end
     if MOI.supports(opt_setup, MOI.VariablePrimalStart(), MOI.VariableIndex)
         @assert eachindex(prob.u0) == Base.OneTo(num_variables)
-        for i in 1:num_variables
+        for i = 1:num_variables
             MOI.set(opt_setup, MOI.VariablePrimalStart(), θ[i], prob.u0[i])
         end
     end
@@ -335,8 +337,8 @@ function SciMLBase.__solve(
         opt,
         minimizer,
         minimum;
-        original=opt_setup,
-        retcode=opt_ret
+        original = opt_setup,
+        retcode = opt_ret,
     )
 end
 

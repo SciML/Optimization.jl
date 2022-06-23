@@ -1,10 +1,13 @@
 using NonconvexMultistart
-function convert_common_kwargs(opt::NonconvexMultistart.HyperoptAlg, opt_kwargs;
-    callback=nothing,
-    maxiters=nothing,
-    maxtime=nothing,
-    abstol=nothing,
-    reltol=nothing)
+function convert_common_kwargs(
+    opt::NonconvexMultistart.HyperoptAlg,
+    opt_kwargs;
+    callback = nothing,
+    maxiters = nothing,
+    maxtime = nothing,
+    abstol = nothing,
+    reltol = nothing,
+)
 
     conv_opt_kwargs = (; opt_kwargs...)
 
@@ -14,7 +17,7 @@ function convert_common_kwargs(opt::NonconvexMultistart.HyperoptAlg, opt_kwargs;
 
     if !isnothing(maxiters)
         @info "common maxiters argument refers to how many of the potential starting points will be evaluated by $(opt)"
-        conv_opt_kwargs = (; conv_opt_kwargs..., iters=maxiters)
+        conv_opt_kwargs = (; conv_opt_kwargs..., iters = maxiters)
     end
 
     if !isnothing(maxtime)
@@ -32,10 +35,11 @@ function convert_common_kwargs(opt::NonconvexMultistart.HyperoptAlg, opt_kwargs;
     return conv_opt_kwargs
 end
 
-function __create_options(opt::NonconvexMultistart.HyperoptAlg;
-    opt_kwargs=nothing)
+function __create_options(opt::NonconvexMultistart.HyperoptAlg; opt_kwargs = nothing)
 
-    options = !isnothing(opt_kwargs) ? NonconvexMultistart.HyperoptOptions(;opt_kwargs...) : NonconvexMultistart.HyperoptOptions()
+    options =
+        !isnothing(opt_kwargs) ? NonconvexMultistart.HyperoptOptions(; opt_kwargs...) :
+        NonconvexMultistart.HyperoptOptions()
 
     if isa(options.sampler, NonconvexMultistart.Hyperopt.Hyperband)
         error("$(options.sampler) is currently not support by Optimization")
@@ -44,12 +48,23 @@ function __create_options(opt::NonconvexMultistart.HyperoptAlg;
     return options
 end
 
-function _create_options(opt::NonconvexMultistart.HyperoptAlg;
-    opt_kwargs=nothing,
-    sub_options=nothing,
-    convergence_criteria=nothing)
+function _create_options(
+    opt::NonconvexMultistart.HyperoptAlg;
+    opt_kwargs = nothing,
+    sub_options = nothing,
+    convergence_criteria = nothing,
+)
 
-    options = (; options = !isnothing(opt_kwargs) ? NonconvexMultistart.HyperoptOptions(;sub_options= __create_options(opt.sub_alg, opt_kwargs=sub_options) ,opt_kwargs...) : NonconvexMultistart.HyperoptOptions(;sub_options= __create_options(opt.sub_alg, opt_kwargs=sub_options)))
+    options = (;
+        options = !isnothing(opt_kwargs) ?
+                  NonconvexMultistart.HyperoptOptions(;
+            sub_options = __create_options(opt.sub_alg, opt_kwargs = sub_options),
+            opt_kwargs...,
+        ) :
+                  NonconvexMultistart.HyperoptOptions(;
+            sub_options = __create_options(opt.sub_alg, opt_kwargs = sub_options),
+        )
+    )
 
     if isa(options.options.sampler, NonconvexMultistart.Hyperopt.Hyperband)
         error("$(options.options.sampler) is currently not support by Optimization")

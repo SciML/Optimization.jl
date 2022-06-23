@@ -3,13 +3,36 @@ module OptimizationOptimisers
 using Optimization, Reexport, Printf, ProgressLogging, Optimization.SciMLBase
 @reexport using Optimisers
 
-const OptimisersOptimizers = Union{Descent, Adam, Momentum, Nesterov, RMSProp,
-       AdaGrad, AdaMax, AdaDelta, AMSGrad, NAdam, RAdam, OAdam, AdaBelief,
-       WeightDecay, ClipGrad, ClipNorm, OptimiserChain}
+const OptimisersOptimizers = Union{
+    Descent,
+    Adam,
+    Momentum,
+    Nesterov,
+    RMSProp,
+    AdaGrad,
+    AdaMax,
+    AdaDelta,
+    AMSGrad,
+    NAdam,
+    RAdam,
+    OAdam,
+    AdaBelief,
+    WeightDecay,
+    ClipGrad,
+    ClipNorm,
+    OptimiserChain,
+}
 
-function SciMLBase.__solve(prob::OptimizationProblem, opt::OptimisersOptimizers, data = Optimization.DEFAULT_DATA;
-    maxiters::Number = 0, callback = (args...) -> (false),
-    progress = false, save_best = true, kwargs...)
+function SciMLBase.__solve(
+    prob::OptimizationProblem,
+    opt::OptimisersOptimizers,
+    data = Optimization.DEFAULT_DATA;
+    maxiters::Number = 0,
+    callback = (args...) -> (false),
+    progress = false,
+    save_best = true,
+    kwargs...,
+)
 
     if data != Optimization.DEFAULT_DATA
         maxiters = length(data)
@@ -36,7 +59,9 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::OptimisersOptimizers,
             x = f.f(θ, prob.p, d...)
             cb_call = callback(θ, x...)
             if !(typeof(cb_call) <: Bool)
-                error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
+                error(
+                    "The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.",
+                )
             elseif cb_call
                 break
             end

@@ -11,7 +11,7 @@ using Test
     sol = solve(prob, SpeedMappingOpt())
     @test 10 * sol.minimum < l1
 
-    prob = OptimizationProblem(f, x0, _p; lb=[-1.0, -1.0], ub=[1.5, 1.5])
+    prob = OptimizationProblem(f, x0, _p; lb = [-1.0, -1.0], ub = [1.5, 1.5])
     sol = solve(prob, SpeedMappingOpt())
     @test 10 * sol.minimum < l1
 
@@ -20,7 +20,7 @@ using Test
     sol = solve(prob, SpeedMappingOpt())
     @test 10 * sol.minimum < l1
 
-    prob = OptimizationProblem(f, x0, _p; lb=[-1.0, -1.0], ub=[1.5, 1.5])
+    prob = OptimizationProblem(f, x0, _p; lb = [-1.0, -1.0], ub = [1.5, 1.5])
     sol = solve(prob, SpeedMappingOpt())
     @test 10 * sol.minimum < l1
 end

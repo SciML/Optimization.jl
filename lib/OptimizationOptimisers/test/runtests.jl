@@ -11,10 +11,10 @@ using Test
 
     prob = OptimizationProblem(optprob, x0, _p)
 
-    sol = Optimization.solve(prob, Optimisers.ADAM(0.1), maxiters=1000)
+    sol = Optimization.solve(prob, Optimisers.ADAM(0.1), maxiters = 1000)
     @test 10 * sol.minimum < l1
 
     prob = OptimizationProblem(optprob, x0, _p)
-    sol = solve(prob, Optimisers.ADAM(), maxiters=1000, progress=false)
+    sol = solve(prob, Optimisers.ADAM(), maxiters = 1000, progress = false)
     @test 10 * sol.minimum < l1
 end

@@ -1,8 +1,16 @@
 # Optimization.jl
 
+[![Join the chat at https://julialang.zulipchat.com #sciml-bridged](https://img.shields.io/static/v1?label=Zulip&message=chat&color=9558b2&labelColor=389826)](https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](http://optimization.sciml.ai/stable/)
+[![Global Docs](https://img.shields.io/badge/docs-SciML-blue.svg)](https://docs.sciml.ai/dev/modules/Optimization/)
+
+[![codecov](https://codecov.io/gh/SciML/Optimization.jl/branch/master/graph/badge.svg?token=FwXaKBNW67)](https://codecov.io/gh/SciML/Optimization.jl)
 [![Build Status](https://github.com/SciML/Optimization.jl/workflows/CI/badge.svg)](https://github.com/SciML/Optimization.jl/actions?query=workflow%3ACI)
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](http://Optimization.sciml.ai/stable/)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](http://Optimization.sciml.ai/dev/)
+[![Build status](https://badge.buildkite.com/e0ee4d9d914eb44a43c291d78c53047eeff95e7edb7881b6f7.svg)](https://buildkite.com/julialang/optimization-dot-jl)
+
+[![ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet)](https://github.com/SciML/ColPrac)
+[![SciML Code Style](https://img.shields.io/static/v1?label=code%20style&message=SciML&color=9558b2&labelColor=389826)](https://github.com/SciML/SciMLStyle)
+[![Package Downloads](https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/Optimization)](https://pkgs.genieframework.com?packages=Optimization)
 
 Optimization.jl is a package with a scope that is beyond your normal global optimization
 package. Optimization.jl seeks to bring together all of the optimization packages
