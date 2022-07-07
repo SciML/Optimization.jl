@@ -199,7 +199,7 @@ optprob.cons_h(H3, x0)
 
 ## Solving some problems 
 #cons = (x, p) -> [x[1]^2 + x[2]^2]
-#optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = cons)
+#optf = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons = cons)
 #prob = OptimizationProblem(optf, x0, lcons = [0.2], rcons = [0.2])
 #sol = solve(prob, Optim.BFGS()) ## not recognising gradients?
 
