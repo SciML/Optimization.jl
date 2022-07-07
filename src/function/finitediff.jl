@@ -47,7 +47,7 @@ AutoFiniteDiff(; fdtype=Val(:forward), fdjtype=fdtype, fdhtype=Val(:hcentral)) =
     AutoFiniteDiff(fdtype, fdjtype, fdhtype)
 
 function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
-    _f = (θ, args...) -> first(f.f(θ, p))
+    _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
         grad = (res, θ, args...) -> FiniteDiff.finite_difference_gradient!(res, x -> _f(x, args...), θ, FiniteDiff.GradientCache(res, x, adtype.fdtype))
@@ -83,7 +83,8 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
             nothing
         end
         cons_j = function (J, θ)
-            FiniteDiff.finite_difference_jacobian!(J, iip_cons, θ)#, FiniteDiff.JacobianCache(θ, adtype.fdjtype)) <-- ??
+            y0 = zeros(num_cons)
+            FiniteDiff.finite_difference_jacobian!(J, iip_cons, θ, FiniteDiff.JacobianCache(copy(θ), copy(y0), copy(y0), adtype.fdjtype))
         end
     else
         cons_j = f.cons_j
@@ -92,7 +93,7 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
     if cons !== nothing && f.cons_h === nothing
         cons_h = function (res, θ)
             for i in 1:num_cons
-                FiniteDiff.finite_difference_hessian!(res[i], (x) -> cons(x)[i], θ, FiniteDiff.HessianCache(θ, adtype.fdhtype))
+                FiniteDiff.finite_difference_hessian!(res[i], (x) -> cons(x)[i], θ, FiniteDiff.HessianCache(copy(θ), adtype.fdhtype))
             end
         end
     else
