@@ -1,5 +1,5 @@
 """
-AutoFiniteDiff{T1,T2} <: AbstractADType
+AutoFiniteDiff{T1,T2,T3} <: AbstractADType
 
 An AbstractADType choice for use in OptimizationFunction for automatically
 generating the unspecified derivative functions. Usage:
@@ -47,18 +47,16 @@ AutoFiniteDiff(; fdtype=Val(:forward), fdjtype=fdtype, fdhtype=Val(:hcentral)) =
     AutoFiniteDiff(fdtype, fdjtype, fdhtype)
 
 function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
-    _f = (θ, args...) -> first(f.f(θ, p, args...))
+    _f = (θ, args...) -> first(f.f(θ, p))
 
     if f.grad === nothing
-        gradcache = res -> FiniteDiff.GradientCache(res, x, adtype.fdtype)
-        grad = (res, θ, args...) -> FiniteDiff.finite_difference_gradient!(res, x -> _f(x, args...), θ, gradcache(res))
+        grad = (res, θ, args...) -> FiniteDiff.finite_difference_gradient!(res, x -> _f(x, args...), θ, FiniteDiff.GradientCache(res, x, adtype.fdtype))
     else
         grad = f.grad
     end
 
     if f.hess === nothing
-        hesscache = FiniteDiff.HessianCache(x, adtype.fdhtype)
-        hess = (res, θ, args...) -> FiniteDiff.finite_difference_hessian!(res, x -> _f(x, args...), θ, hesscache)
+        hess = (res, θ, args...) -> FiniteDiff.finite_difference_hessian!(res, x -> _f(x, args...), θ, FiniteDiff.HessianCache(x, adtype.fdhtype))
     else
         hess = f.hess
     end
@@ -80,26 +78,28 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
     end
 
     if cons !== nothing && f.cons_j === nothing
-        jaccache = FiniteDiff.JacobianCache(x, adtype.fdjtype)
+        function iip_cons(dx, x) # need f(dx, x) for jacobian? 
+            dx .= [cons(x)[i] for i in 1:num_cons] # Not very efficient probably?
+            nothing
+        end
         cons_j = function (J, θ)
-            FiniteDiff.finite_difference_jacobian!(J, cons, θ, jaccache)
+            FiniteDiff.finite_difference_jacobian!(J, iip_cons, θ)#, FiniteDiff.JacobianCache(θ, adtype.fdjtype)) <-- ??
         end
     else
         cons_j = f.cons_j
     end
 
     if cons !== nothing && f.cons_h === nothing
-        hesscache = FiniteDiff.HessianCache(x, adtype.fdhtype) # repeated from above, in case f.hess === nothing?
         cons_h = function (res, θ)
             for i in 1:num_cons
-                FiniteDiff.finite_difference_hessian!(res, (x) -> cons(x)[i], θ, hesscache)
+                FiniteDiff.finite_difference_hessian!(res[i], (x) -> cons(x)[i], θ, FiniteDiff.HessianCache(θ, adtype.fdhtype))
             end
         end
     else
         cons_h = f.cons_h
     end
 
-    return OptimizationFunction{false}(f, adtype; grad=grad, hess=hess, hv=hv,
-        cons=nothing, cons_j=cons_j, cons_h=cons_h,
+    return OptimizationFunction{true}(f, adtype; grad=grad, hess=hess, hv=hv,
+        cons=cons, cons_j=cons_j, cons_h=cons_h,
         hess_prototype=nothing, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
 end

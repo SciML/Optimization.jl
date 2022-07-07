@@ -2,7 +2,7 @@ using Optimization, OptimizationOptimJL, OptimizationOptimisers, Test
 using ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker
 using ModelingToolkit
 
-x0 = zeros(2) 
+x0 = zeros(2)
 rosenbrock(x, p=nothing) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 l1 = rosenbrock(x0)
 
@@ -161,3 +161,45 @@ sol = solve(prob, Optim.KrylovTrustRegion())
 
 sol = solve(prob, Optimisers.ADAM(0.1), maxiters=1000)
 @test 10 * sol.minimum < l1
+
+## Test new constraints
+cons = (x, p) -> [x[1]^2 + x[2]^2]
+optf = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(), cons=cons)
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoFiniteDiff(), nothing, 1)
+optprob.grad(G2, x0)
+@test G1 ≈ G2 rtol = 1e-6
+optprob.hess(H2, x0)
+@test H1 ≈ H2 rtol = 1e-6
+@test optprob.cons(x0) == [0.0]
+@test optprob.cons([1.0, 4.0]) == [17.0]
+J = zeros(1, 2)
+optprob.cons_j(J, [5.0, 3.0])
+@test J ≈ [10.0 6.0]
+H3 = [Array{Float64}(undef, 2, 2)]
+optprob.cons_h(H3, x0)
+@test H3 ≈ [[2.0 0.0; 0.0 2.0]]
+
+function con2_c(x, p)
+    [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
+end
+optf = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(), cons=con2_c)
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoFiniteDiff(), nothing, 2)
+optprob.grad(G2, x0)
+@test G1 ≈ G2 rtol = 1e-6
+optprob.hess(H2, x0)
+@test H1 ≈ H2 rtol = 1e-6
+@test optprob.cons(x0) == [0.0, 0.0]
+@test optprob.cons([1.0, 2.0]) ≈ [5.0, 0.682941969615793]
+J = Array{Float64}(undef, 2, 2)
+optprob.cons_j(J, [5.0, 3.0])
+@test all(isapprox(J, [10.0 6.0; -0.149013 -0.958924]; rtol=1e-3))
+H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
+optprob.cons_h(H3, x0)
+@test H3 ≈ [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
+
+## Solving some problems 
+#cons = (x, p) -> [x[1]^2 + x[2]^2]
+#optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = cons)
+#prob = OptimizationProblem(optf, x0, lcons = [0.2], rcons = [0.2])
+#sol = solve(prob, Optim.BFGS()) ## not recognising gradients?
+
