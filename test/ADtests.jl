@@ -2,7 +2,7 @@ using Optimization, OptimizationOptimJL, OptimizationOptimisers, Test
 using ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker
 using ModelingToolkit
 
-x0 = zeros(2)
+x0 = zeros(2) 
 rosenbrock(x, p=nothing) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 l1 = rosenbrock(x0)
 
