@@ -220,10 +220,10 @@ optprob.cons_j(J, [5.0, 3.0])
 # Can we solve problems? Using AutoForwardDiff to test since we know that works 
 for consf in [cons, con2_c]
     optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons = consf)
-    prob1 = OptimizationProblem(optf, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8])
+    prob1 = OptimizationProblem(optf1, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8])
     sol1 = solve(prob1,BFGS())
     optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = consf)
-    prob2 = OptimizationProblem(optf, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8])
+    prob2 = OptimizationProblem(optf2, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8])
     sol2 = solve(prob2,BFGS())
     @test sol1.minimum ≈ sol2.minimum 
     @test sol1.u ≈ sol2.u
@@ -231,10 +231,10 @@ for consf in [cons, con2_c]
     optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons = consf)
     lcons = consf == cons ? [0.2] : [0.2, 0.33]
     ucons = consf == cons ? [0.55] : [0.55, 0.81]
-    prob1 = OptimizationProblem(optf, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8], lcons = lcons, ucons = ucons)
+    prob1 = OptimizationProblem(optf1, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8], lcons = lcons, ucons = ucons)
     sol1 = solve(prob1,IPNewton())
     optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = consf)
-    prob2 = OptimizationProblem(optf, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8], lcons = lcons, ucons = ucons)
+    prob2 = OptimizationProblem(optf2, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8], lcons = lcons, ucons = ucons)
     sol2 = solve(prob2,IPNewton())
     @test sol1.minimum ≈ sol2.minimum 
     @test sol1.u ≈ sol2.u
@@ -246,10 +246,10 @@ for consf in [cons, con2_c]
     lcons = consf == cons ? [0.2] : [0.2, 0.4]
     ucons = consf == cons ? [0.2] : [0.2, 0.4]
     optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons = consf)
-    prob1 = OptimizationProblem(optf, [0.3, 0.5], lcons = lcons, ucons = ucons)
+    prob1 = OptimizationProblem(optf1, [0.3, 0.5], lcons = lcons, ucons = ucons)
     sol1 = solve(prob1,IPNewton(), maxiters=500)
     optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = consf)
-    prob2 = OptimizationProblem(optf, [0.3, 0.5], lcons = lcons, ucons = ucons)
+    prob2 = OptimizationProblem(optf2, [0.3, 0.5], lcons = lcons, ucons = ucons)
     sol2 = solve(prob2,IPNewton(), maxiters=500)
     @test sol1.minimum ≈ sol2.minimum 
     @test sol1.u ≈ sol2.u    
