@@ -31,7 +31,7 @@ AutoFiniteDiff(;fdtype = Val(:forward) fdjtype = fdtype, fdhtype = Val(:hcentral
 ```
 
 - `fdtype`: the method used for defining the gradient
-- `fdjtype`: the method used for defining the Jacobian
+- `fdjtype`: the method used for defining the Jacobian of constraints.
 - `fdhtype`: the method used for defining the Hessian
 
 For more information on the derivative type specifiers, see the
