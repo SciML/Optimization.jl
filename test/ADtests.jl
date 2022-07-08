@@ -162,7 +162,7 @@ sol = solve(prob, Optim.KrylovTrustRegion())
 sol = solve(prob, Optimisers.ADAM(0.1), maxiters=1000)
 @test 10 * sol.minimum < l1
 
-## Test new constraints
+# Test new constraints
 cons = (x, p) -> [x[1]^2 + x[2]^2]
 optf = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(), cons=cons)
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoFiniteDiff(), nothing, 1)
@@ -178,6 +178,16 @@ optprob.cons_j(J, [5.0, 3.0])
 H3 = [Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 @test H3 ≈ [[2.0 0.0; 0.0 2.0]]
+
+cons_jac_proto = Float64.(sparse([1 1])) # Things break if you only use [1 1]; see FiniteDiff.jl
+cons_jac_colors = 1:2 
+optf = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(), cons=cons, cons_jac_prototype = cons_jac_proto, cons_jac_colorvec = cons_jac_colors)
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoFiniteDiff(), nothing, 1)
+@test optprob.cons_jac_prototype == sparse([1.0 1.0]) # make sure it's still using it 
+@test optprob.cons_jac_colorvec == 1:2
+J = zeros(1, 2)
+optprob.cons_j(J, [5.0, 3.0])
+@test J ≈ [10.0 6.0]
 
 function con2_c(x, p)
     [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
@@ -197,9 +207,12 @@ H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 @test H3 ≈ [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 
-## Solving some problems 
-#cons = (x, p) -> [x[1]^2 + x[2]^2]
-#optf = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons = cons)
-#prob = OptimizationProblem(optf, x0, lcons = [0.2], rcons = [0.2])
-#sol = solve(prob, Optim.BFGS()) ## not recognising gradients?
-
+cons_jac_proto = Float64.(sparse([1 1; 1 1])) 
+cons_jac_colors = 1:2 
+optf = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(), cons=con2_c, cons_jac_prototype = cons_jac_proto, cons_jac_colorvec = cons_jac_colors)
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoFiniteDiff(), nothing, 2)
+@test optprob.cons_jac_prototype == sparse([1.0 1.0; 1.0 1.0]) # make sure it's still using it 
+@test optprob.cons_jac_colorvec == 1:2
+J = Array{Float64}(undef, 2, 2)
+optprob.cons_j(J, [5.0, 3.0])
+@test all(isapprox(J, [10.0 6.0; -0.149013 -0.958924]; rtol=1e-3))

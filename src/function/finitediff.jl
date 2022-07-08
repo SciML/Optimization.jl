@@ -77,6 +77,8 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
         cons = θ -> f.cons(θ, p)
     end
 
+    cons_jac_colorvec = f.cons_jac_colorvec === nothing ? (1:length(x)) : f.cons_jac_colorvec
+
     if cons !== nothing && f.cons_j === nothing
         function iip_cons(dx, x) # need f(dx, x) for jacobian? 
             dx .= [cons(x)[i] for i in 1:num_cons] # Not very efficient probably?
@@ -84,7 +86,7 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
         end
         cons_j = function (J, θ)
             y0 = zeros(num_cons)
-            FiniteDiff.finite_difference_jacobian!(J, iip_cons, θ, FiniteDiff.JacobianCache(copy(θ), copy(y0), copy(y0), adtype.fdjtype))
+            FiniteDiff.finite_difference_jacobian!(J, iip_cons, θ, FiniteDiff.JacobianCache(copy(θ), copy(y0), copy(y0), adtype.fdjtype; colorvec = cons_jac_colorvec, sparsity = f.cons_jac_prototype))
         end
     else
         cons_j = f.cons_j
@@ -92,7 +94,7 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
 
     if cons !== nothing && f.cons_h === nothing
         cons_h = function (res, θ)
-            for i in 1:num_cons
+            for i in 1:num_cons#note: colorvecs not yet supported by FiniteDiff for Hessians 
                 FiniteDiff.finite_difference_hessian!(res[i], (x) -> cons(x)[i], θ, FiniteDiff.HessianCache(copy(θ), adtype.fdhtype))
             end
         end
@@ -102,5 +104,6 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
 
     return OptimizationFunction{true}(f, adtype; grad=grad, hess=hess, hv=hv,
         cons=cons, cons_j=cons_j, cons_h=cons_h,
-        hess_prototype=nothing, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
+        cons_jac_colorvec = cons_jac_colorvec,
+        hess_prototype=nothing, cons_jac_prototype=f.cons_jac_prototype, cons_hess_prototype=nothing)
 end
