@@ -216,3 +216,35 @@ optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoFiniteDif
 J = Array{Float64}(undef, 2, 2)
 optprob.cons_j(J, [5.0, 3.0])
 @test all(isapprox(J, [10.0 6.0; -0.149013 -0.958924]; rtol=1e-3))
+
+# Can we solve problems? Using AutoForwardDiff to test since we know that works 
+for consf in [cons, con2_c]
+    optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons = consf)
+    prob1 = OptimizationProblem(optf, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8])
+    sol1 = solve(prob1,BFGS())
+    optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = consf)
+    prob2 = OptimizationProblem(optf, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8])
+    sol2 = solve(prob2,BFGS())
+    @test sol1.minimum ≈ sol2.minimum 
+    @test sol1.u ≈ sol2.u
+
+    optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons = consf)
+    prob1 = OptimizationProblem(optf, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8], lcons = [0.2], ucons = [0.55])
+    sol1 = solve(prob1,IPNewton())
+    optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = consf)
+    prob2 = OptimizationProblem(optf, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8], lcons = [0.2], ucons = [0.55])
+    sol2 = solve(prob2,IPNewton())
+    @test sol1.minimum ≈ sol2.minimum 
+    @test sol1.u ≈ sol2.u
+    @test 0.2 ≤ cons(sol1.u, nothing)[1] ≤ 0.55
+
+    optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons = consf)
+    prob1 = OptimizationProblem(optf, [0.3, 0.5], lcons = [0.2], ucons = [0.2])
+    sol1 = solve(prob1,IPNewton(), maxiters=500)
+    optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = consf)
+    prob2 = OptimizationProblem(optf, [0.3, 0.5], lcons = [0.2], ucons = [0.2])
+    sol2 = solve(prob2,IPNewton(), maxiters=500)
+    @test sol1.minimum ≈ sol2.minimum 
+    @test sol1.u ≈ sol2.u
+    @test cons(sol1.u, nothing)[1] ≈ 0.2 
+end
