@@ -229,22 +229,32 @@ for consf in [cons, con2_c]
     @test sol1.u ≈ sol2.u
 
     optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons = consf)
-    prob1 = OptimizationProblem(optf, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8], lcons = [0.2], ucons = [0.55])
+    lcons = consf == cons ? [0.2] : [0.2, 0.33]
+    ucons = consf == cons ? [0.55] : [0.55, 0.81]
+    prob1 = OptimizationProblem(optf, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8], lcons = lcons, ucons = ucons)
     sol1 = solve(prob1,IPNewton())
     optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = consf)
-    prob2 = OptimizationProblem(optf, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8], lcons = [0.2], ucons = [0.55])
+    prob2 = OptimizationProblem(optf, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8], lcons = lcons, ucons = ucons)
     sol2 = solve(prob2,IPNewton())
     @test sol1.minimum ≈ sol2.minimum 
     @test sol1.u ≈ sol2.u
-    @test 0.2 ≤ cons(sol1.u, nothing)[1] ≤ 0.55
+    @test lcons[1] ≤ consf(sol1.u, nothing)[1] ≤ ucons[1]
+    if consf == con2_c
+        @test lcons[2] ≤ consf(sol1.u, nothing)[2] ≤ ucons[2]
+    end
 
+    lcons = consf == cons ? [0.2] : [0.2, 0.4]
+    ucons = consf == cons ? [0.2] : [0.2, 0.4]
     optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons = consf)
-    prob1 = OptimizationProblem(optf, [0.3, 0.5], lcons = [0.2], ucons = [0.2])
+    prob1 = OptimizationProblem(optf, [0.3, 0.5], lcons = lcons, ucons = ucons)
     sol1 = solve(prob1,IPNewton(), maxiters=500)
     optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = consf)
-    prob2 = OptimizationProblem(optf, [0.3, 0.5], lcons = [0.2], ucons = [0.2])
+    prob2 = OptimizationProblem(optf, [0.3, 0.5], lcons = lcons, ucons = ucons)
     sol2 = solve(prob2,IPNewton(), maxiters=500)
     @test sol1.minimum ≈ sol2.minimum 
-    @test sol1.u ≈ sol2.u
-    @test cons(sol1.u, nothing)[1] ≈ 0.2 
+    @test sol1.u ≈ sol2.u    
+    @test consf(sol1.u, nothing)[1] ≈ lcons[1]
+    if consf == con2_c
+        @test consf(sol1.u, nothing)[2] ≈ lcons[2]
+    end
 end
