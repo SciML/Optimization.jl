@@ -71,7 +71,7 @@ sJ = sparse([1, 1, 2, 2], [1, 2, 1, 2], zeros(4))
 optprob.cons_j(sJ, [5.0, 3.0])
 @test all(isapprox(sJ, [10.0 6.0; -0.149013 -0.958924]; rtol=1e-3))
 sH3 = [sparse([1, 2], [1, 2], zeros(2)), sparse([1, 1, 2], [1, 2, 1], zeros(3))]
-@test getindex.(findnz.(sH3), Ref([1,2])) == getindex.(findnz.(optprob.cons_hess_prototype), Ref([1,2]))
+@test getindex.(findnz.(sH3), Ref([1, 2])) == getindex.(findnz.(optprob.cons_hess_prototype), Ref([1, 2]))
 optprob.cons_h(sH3, x0)
 @test Array.(sH3) == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 
@@ -180,10 +180,10 @@ optprob.cons_h(H3, x0)
 @test H3 ≈ [[2.0 0.0; 0.0 2.0]]
 
 cons_jac_proto = Float64.(sparse([1 1])) # Things break if you only use [1 1]; see FiniteDiff.jl
-cons_jac_colors = 1:2 
-optf = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(), cons=cons, cons_jac_prototype = cons_jac_proto, cons_jac_colorvec = cons_jac_colors)
+cons_jac_colors = 1:2
+optf = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(), cons=cons, cons_jac_prototype=cons_jac_proto, cons_jac_colorvec=cons_jac_colors)
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoFiniteDiff(), nothing, 1)
-@test optprob.cons_jac_prototype == sparse([1.0 1.0]) # make sure it's still using it 
+@test optprob.cons_jac_prototype == sparse([1.0 1.0]) # make sure it's still using it
 @test optprob.cons_jac_colorvec == 1:2
 J = zeros(1, 2)
 optprob.cons_j(J, [5.0, 3.0])
@@ -207,35 +207,29 @@ H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 @test H3 ≈ [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 
-cons_jac_proto = Float64.(sparse([1 1; 1 1])) 
-cons_jac_colors = 1:2 
-optf = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(), cons=con2_c, cons_jac_prototype = cons_jac_proto, cons_jac_colorvec = cons_jac_colors)
+cons_jac_proto = Float64.(sparse([1 1; 1 1]))
+cons_jac_colors = 1:2
+optf = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(), cons=con2_c, cons_jac_prototype=cons_jac_proto, cons_jac_colorvec=cons_jac_colors)
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoFiniteDiff(), nothing, 2)
-@test optprob.cons_jac_prototype == sparse([1.0 1.0; 1.0 1.0]) # make sure it's still using it 
+@test optprob.cons_jac_prototype == sparse([1.0 1.0; 1.0 1.0]) # make sure it's still using it
 @test optprob.cons_jac_colorvec == 1:2
 J = Array{Float64}(undef, 2, 2)
 optprob.cons_j(J, [5.0, 3.0])
 @test all(isapprox(J, [10.0 6.0; -0.149013 -0.958924]; rtol=1e-3))
+H2 = Array{Float64}(undef, 2, 2)
+optprob.hess(H2, [5.0, 3.0])
+@test all(isapprox(H2, [28802.0 -2000.0; -2000.0 200.0]; rtol=1e-3))
 
-# Can we solve problems? Using AutoForwardDiff to test since we know that works 
+# Can we solve problems? Using AutoForwardDiff to test since we know that works
 for consf in [cons, con2_c]
-    optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons = consf)
-    prob1 = OptimizationProblem(optf1, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8])
-    sol1 = solve(prob1,BFGS())
-    optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = consf)
-    prob2 = OptimizationProblem(optf2, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8])
-    sol2 = solve(prob2,BFGS())
-    @test sol1.minimum ≈ sol2.minimum 
-    @test sol1.u ≈ sol2.u
-
-    optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons = consf)
+    optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons=consf)
     lcons = consf == cons ? [0.2] : [0.2, -0.81]
     ucons = consf == cons ? [0.55] : [0.55, -0.1]
-    prob1 = OptimizationProblem(optf1, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8], lcons = lcons, ucons = ucons)
-    sol1 = solve(prob1,Optim.SAMIN(), maxiters = 10000) # a lot of iterations... doesn't even converge actually
-    optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = consf)
-    prob2 = OptimizationProblem(optf2, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8], lcons = lcons, ucons = ucons)
-    sol2 = solve(prob2,Optim.SAMIN(), maxiters = 10000)
+    prob1 = OptimizationProblem(optf1, [0.3, 0.5], lb=[0.2, 0.4], ub=[0.6, 0.8], lcons=lcons, ucons=ucons)
+    sol1 = solve(prob1, Optim.IPNewton())
+    optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons=consf)
+    prob2 = OptimizationProblem(optf2, [0.3, 0.5], lb=[0.2, 0.4], ub=[0.6, 0.8], lcons=lcons, ucons=ucons)
+    sol2 = solve(prob2, Optim.IPNewton())
     @test sol1.minimum ≈ sol2.minimum rtol = 1e-4
     @test sol1.u ≈ sol2.u
     @test lcons[1] ≤ consf(sol1.u, nothing)[1] ≤ ucons[1]
@@ -243,21 +237,18 @@ for consf in [cons, con2_c]
         @test lcons[2] ≤ consf(sol1.u, nothing)[2] ≤ ucons[2]
     end
 
-    # --- These equality constraints are so fiddly. Can't get it to pass with consf(sol1.u, nothing)[1] ≈ lcons[1] rtol = 0.1 being true 
-    #      (I can get sol1.minimum ≈ sol2.minimum and sol1.u ≈ sol2.u, though, just not the constraint - or I can get the constraint and not 
-    #        sol1.minimum ≈ sol2.minimum, sol1.u ≈ sol2.u)
     lcons = consf == cons ? [0.2] : [0.2, 0.5]
     ucons = consf == cons ? [0.2] : [0.2, 0.5]
-    optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons = consf)
-    prob1 = OptimizationProblem(optf1, [0.5, 0.5], lcons = lcons, ucons = ucons)
-    sol1 = solve(prob1,Optim.IPNewton())
-    optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = consf)
-    prob2 = OptimizationProblem(optf2, [0.5, 0.5], lcons = lcons, ucons = ucons)
-    sol2 = solve(prob2,Optim.IPNewton())
-    @test_broken sol1.minimum ≈ sol2.minimum 
-    @test_broken sol1.u ≈ sol2.u 
-    @test consf(sol1.u, nothing)[1] ≈ lcons[1] rtol = 0.1
+    optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons=consf)
+    prob1 = OptimizationProblem(optf1, [0.5, 0.5], lcons=lcons, ucons=ucons)
+    sol1 = solve(prob1, Optim.IPNewton())
+    optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons=consf)
+    prob2 = OptimizationProblem(optf2, [0.5, 0.5], lcons=lcons, ucons=ucons)
+    sol2 = solve(prob2, Optim.IPNewton())
+    @test sol1.minimum ≈ sol2.minimum rtol = 1e-4
+    @test sol1.u ≈ sol2.u rtol = 1e-4
+    @test consf(sol1.u, nothing)[1] ≈ lcons[1] rtol = 1e-1
     if consf == con2_c
-        @test_broken consf(sol1.u, nothing)[2] ≈ lcons[2]
+        @test consf(sol1.u, nothing)[2] ≈ lcons[2] rtol = 1e-2
     end
 end
