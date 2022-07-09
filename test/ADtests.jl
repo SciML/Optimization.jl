@@ -243,9 +243,9 @@ for consf in [cons, con2_c]
         @test lcons[2] ≤ consf(sol1.u, nothing)[2] ≤ ucons[2]
     end
 
-    #= --- These equality constraints are so fiddly. Can't get it to pass with consf(sol1.u, nothing)[1] ≈ lcons[1] rtol = 0.1 being true 
-           (I can get sol1.minimum ≈ sol2.minimum and sol1.u ≈ sol2.u, though, just not the constraint - or I can get the constraint and not 
-            sol1.minimum ≈ sol2.minimum, sol1.u ≈ sol2.u)
+    # --- These equality constraints are so fiddly. Can't get it to pass with consf(sol1.u, nothing)[1] ≈ lcons[1] rtol = 0.1 being true 
+    #      (I can get sol1.minimum ≈ sol2.minimum and sol1.u ≈ sol2.u, though, just not the constraint - or I can get the constraint and not 
+    #        sol1.minimum ≈ sol2.minimum, sol1.u ≈ sol2.u)
     lcons = consf == cons ? [0.2] : [0.2, 0.5]
     ucons = consf == cons ? [0.2] : [0.2, 0.5]
     optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons = consf)
@@ -254,11 +254,10 @@ for consf in [cons, con2_c]
     optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = consf)
     prob2 = OptimizationProblem(optf2, [0.5, 0.5], lcons = lcons, ucons = ucons)
     sol2 = solve(prob2,Optim.IPNewton())
-    @test sol1.minimum ≈ sol2.minimum 
-    @test sol1.u ≈ sol2.u 
+    @test_broken sol1.minimum ≈ sol2.minimum 
+    @test_broken sol1.u ≈ sol2.u 
     @test consf(sol1.u, nothing)[1] ≈ lcons[1] rtol = 0.1
     if consf == con2_c
-        @test consf(sol1.u, nothing)[2] ≈ lcons[2]
+        @test_broken consf(sol1.u, nothing)[2] ≈ lcons[2]
     end
-    =#
 end
