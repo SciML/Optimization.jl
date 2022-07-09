@@ -1,5 +1,5 @@
 """
-AutoFiniteDiff{T1,T2} <: AbstractADType
+AutoFiniteDiff{T1,T2,T3} <: AbstractADType
 
 An AbstractADType choice for use in OptimizationFunction for automatically
 generating the unspecified derivative functions. Usage:
@@ -18,7 +18,7 @@ introduces numerical error into the derivative estimates.
 - Compatible with GPUs
 - Compatible with Hessian-based optimization
 - Compatible with Hv-based optimization
-- Not compatible with constraint functions
+- Compatible with constraint functions
 
 Note that only the unspecified derivative functions are defined. For example,
 if a `hess` function is supplied to the `OptimizationFunction`, then the
@@ -27,35 +27,36 @@ Hessian is not defined via FiniteDiff.
 ## Constructor
 
 ```julia
-AutoFiniteDiff(;fdtype = Val(:forward), fdhtype = Val(:hcentral))
+AutoFiniteDiff(;fdtype = Val(:forward) fdjtype = fdtype, fdhtype = Val(:hcentral))
 ```
 
 - `fdtype`: the method used for defining the gradient
+- `fdjtype`: the method used for defining the Jacobian of constraints.
 - `fdhtype`: the method used for defining the Hessian
 
 For more information on the derivative type specifiers, see the
 [FiniteDiff.jl documentation](https://github.com/JuliaDiff/FiniteDiff.jl).
 """
-struct AutoFiniteDiff{T1,T2} <: AbstractADType
+struct AutoFiniteDiff{T1,T2,T3} <: AbstractADType
     fdtype::T1
-    fdhtype::T2
+    fdjtype::T2
+    fdhtype::T3
 end
 
-AutoFiniteDiff(;fdtype = Val(:forward), fdhtype = Val(:hcentral)) =
-                                                  AutoFiniteDiff(fdtype,fdhtype)
+AutoFiniteDiff(; fdtype=Val(:forward), fdjtype=fdtype, fdhtype=Val(:hcentral)) =
+    AutoFiniteDiff(fdtype, fdjtype, fdhtype)
 
-function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
-    num_cons != 0 && error("AutoFiniteDiff does not currently support constraints")
+function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
     _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
-        grad = (res, θ, args...) -> FiniteDiff.finite_difference_gradient!(res, x ->_f(x, args...), θ, FiniteDiff.GradientCache(res, x, adtype.fdtype))
+        grad = (res, θ, args...) -> FiniteDiff.finite_difference_gradient!(res, x -> _f(x, args...), θ, FiniteDiff.GradientCache(res, x, adtype.fdtype))
     else
         grad = f.grad
     end
 
     if f.hess === nothing
-        hess = (res, θ, args...) -> FiniteDiff.finite_difference_hessian!(res, x ->_f(x, args...), θ, FiniteDiff.HessianCache(x, adtype.fdhtype))
+        hess = (res, θ, args...) -> FiniteDiff.finite_difference_hessian!(res, x -> _f(x, args...), θ, FiniteDiff.HessianCache(x, adtype.fdhtype))
     else
         hess = f.hess
     end
@@ -64,13 +65,45 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
         hv = function (H, θ, v, args...)
             res = ArrayInterfaceCore.zeromatrix(θ)
             hess(res, θ, args...)
-            H .= res*v
+            H .= res * v
         end
     else
         hv = f.hv
     end
 
-    return OptimizationFunction{false}(f, adtype; grad=grad, hess=hess, hv=hv, 
-        cons=nothing, cons_j=nothing, cons_h=nothing,
-        hess_prototype=nothing, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
+    if f.cons === nothing
+        cons = nothing
+    else
+        cons = θ -> f.cons(θ, p)
+    end
+
+    cons_jac_colorvec = f.cons_jac_colorvec === nothing ? (1:length(x)) : f.cons_jac_colorvec
+
+    if cons !== nothing && f.cons_j === nothing
+        function iip_cons(dx, x) # need f(dx, x) for jacobian? 
+            dx .= [cons(x)[i] for i in 1:num_cons] # Not very efficient probably?
+            nothing
+        end
+        cons_j = function (J, θ)
+            y0 = zeros(num_cons)
+            FiniteDiff.finite_difference_jacobian!(J, iip_cons, θ, FiniteDiff.JacobianCache(copy(θ), copy(y0), copy(y0), adtype.fdjtype; colorvec = cons_jac_colorvec, sparsity = f.cons_jac_prototype))
+        end
+    else
+        cons_j = f.cons_j
+    end
+
+    if cons !== nothing && f.cons_h === nothing
+        cons_h = function (res, θ)
+            for i in 1:num_cons#note: colorvecs not yet supported by FiniteDiff for Hessians 
+                FiniteDiff.finite_difference_hessian!(res[i], (x) -> cons(x)[i], θ, FiniteDiff.HessianCache(copy(θ), adtype.fdhtype))
+            end
+        end
+    else
+        cons_h = f.cons_h
+    end
+
+    return OptimizationFunction{true}(f, adtype; grad=grad, hess=hess, hv=hv,
+        cons=cons, cons_j=cons_j, cons_h=cons_h,
+        cons_jac_colorvec = cons_jac_colorvec,
+        hess_prototype=nothing, cons_jac_prototype=f.cons_jac_prototype, cons_hess_prototype=nothing)
 end
