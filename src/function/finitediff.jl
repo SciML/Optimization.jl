@@ -56,7 +56,7 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
     end
 
     if f.hess === nothing
-        hess = (res, θ, args...) -> FiniteDiff.finite_difference_hessian!(res, x -> _f(x, args...), θ, FiniteDiff.HessianCache(x, adtype.fdhtype))
+        hess = (res, θ, args...) -> FiniteDiff.finite_difference_hessian!(res, x -> _f(x, args...), θ, FiniteDiff.HessianCache(θ, adtype.fdhtype))
     else
         hess = f.hess
     end
@@ -80,8 +80,8 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
     cons_jac_colorvec = f.cons_jac_colorvec === nothing ? (1:length(x)) : f.cons_jac_colorvec
 
     if cons !== nothing && f.cons_j === nothing
-        function iip_cons(dx, x) # need f(dx, x) for jacobian? 
-            dx .= [cons(x)[i] for i in 1:num_cons] # Not very efficient probably?
+        function iip_cons(dx, x) # need f(dx, x) for jacobian?
+            dx .= cons(x) # Not very efficient probably?
             nothing
         end
         cons_j = function (J, θ)
@@ -94,7 +94,7 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
 
     if cons !== nothing && f.cons_h === nothing
         cons_h = function (res, θ)
-            for i in 1:num_cons#note: colorvecs not yet supported by FiniteDiff for Hessians 
+            for i in 1:num_cons#note: colorvecs not yet supported by FiniteDiff for Hessians
                 FiniteDiff.finite_difference_hessian!(res[i], (x) -> cons(x)[i], θ, FiniteDiff.HessianCache(copy(θ), adtype.fdhtype))
             end
         end
