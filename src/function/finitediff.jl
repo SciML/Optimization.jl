@@ -56,7 +56,9 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
     end
 
     if f.hess === nothing
-        hess = (res, θ, args...) -> FiniteDiff.finite_difference_hessian!(res, x -> _f(x, args...), θ, FiniteDiff.HessianCache(θ, adtype.fdhtype))
+        hesscache = FiniteDiff.HessianCache(x, adtype.fdhtype)
+        updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
+        hess = (res, θ, args...) -> FiniteDiff.finite_difference_hessian!(res, x -> _f(x, args...), θ, updatecache(hesscache, θ))
     else
         hess = f.hess
     end
@@ -81,7 +83,7 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
 
     if cons !== nothing && f.cons_j === nothing
         function iip_cons(dx, x) # need f(dx, x) for jacobian?
-            dx .= cons(x) # Not very efficient probably?
+            dx .= cons(x)
             nothing
         end
         cons_j = function (J, θ)

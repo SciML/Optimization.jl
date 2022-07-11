@@ -46,15 +46,15 @@ function instantiate_function(f::OptimizationFunction{true}, x, adtype::AutoForw
     _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
-        gradcfg = (args...) -> ForwardDiff.GradientConfig(x -> _f(x, args...), x, ForwardDiff.Chunk{chunksize}())
-        grad = (res, θ, args...) -> ForwardDiff.gradient!(res, x -> _f(x, args...), θ, gradcfg(args...), Val{false}())
+        gradcfg = ForwardDiff.GradientConfig(_f, x, ForwardDiff.Chunk{chunksize}())
+        grad = (res, θ, args...) -> ForwardDiff.gradient!(res, x -> _f(x, args...), θ, gradcfg, Val{false}())
     else
         grad = f.grad
     end
 
     if f.hess === nothing
-        hesscfg = (args...) -> ForwardDiff.HessianConfig(x -> _f(x, args...), x, ForwardDiff.Chunk{chunksize}())
-        hess = (res, θ, args...) -> ForwardDiff.hessian!(res, x -> _f(x, args...), θ, hesscfg(args...), Val{false}())
+        hesscfg = ForwardDiff.HessianConfig(_f, x, ForwardDiff.Chunk{chunksize}())
+        hess = (res, θ, args...) -> ForwardDiff.hessian!(res, x -> _f(x, args...), θ, hesscfg, Val{false}())
     else
         hess = f.hess
     end
@@ -76,8 +76,8 @@ function instantiate_function(f::OptimizationFunction{true}, x, adtype::AutoForw
     end
 
     if cons !== nothing && f.cons_j === nothing
+        cjconfig = ForwardDiff.JacobianConfig(cons, x, ForwardDiff.Chunk{chunksize}())
         cons_j = function (J, θ)
-            cjconfig = ForwardDiff.JacobianConfig(cons, θ, ForwardDiff.Chunk{chunksize}())
             ForwardDiff.jacobian!(J, cons, θ, cjconfig)
         end
     else
@@ -85,17 +85,17 @@ function instantiate_function(f::OptimizationFunction{true}, x, adtype::AutoForw
     end
 
     if cons !== nothing && f.cons_h === nothing
+        hess_config_cache = [ForwardDiff.HessianConfig(x -> cons(x)[i], θ, ForwardDiff.Chunk{chunksize}()) for i in 1:num_cons]
         cons_h = function (res, θ)
             for i in 1:num_cons
-                hess_config_cache = ForwardDiff.HessianConfig(x -> cons(x)[i], θ,ForwardDiff.Chunk{chunksize}())
-                ForwardDiff.hessian!(res[i], (x) -> cons(x)[i], θ, hess_config_cache,Val{false}())
+                ForwardDiff.hessian!(res[i], (x) -> cons(x)[i], θ, hess_config_cache[i], Val{false}())
             end
         end
     else
         cons_h = f.cons_h
     end
 
-    return OptimizationFunction{true}(f.f, adtype; grad=grad, hess=hess, hv=hv, 
+    return OptimizationFunction{true}(f.f, adtype; grad=grad, hess=hess, hv=hv,
         cons=cons, cons_j=cons_j, cons_h=cons_h,
         hess_prototype=nothing, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
 end

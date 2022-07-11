@@ -37,7 +37,7 @@ AutoReverseDiff(;compile = false)
 
 #### Note: currently compilation is not defined/used!
 """
-struct AutoReverseDiff <: AbstractADType 
+struct AutoReverseDiff <: AbstractADType
     compile::Bool
 end
 
@@ -49,7 +49,8 @@ function instantiate_function(f, x, adtype::AutoReverseDiff, p=SciMLBase.NullPar
     _f = (θ, args...) -> first(f.f(θ,p, args...))
 
     if f.grad === nothing
-        grad = (res, θ, args...) -> ReverseDiff.gradient!(res, x -> _f(x, args...), θ, ReverseDiff.GradientConfig(θ))
+        gradcfg = ReverseDiff.GradientConfig(x)
+        grad = (res, θ, args...) -> ReverseDiff.gradient!(res, x -> _f(x, args...), θ, gradcfg)
     else
         grad = f.grad
     end
@@ -82,7 +83,7 @@ function instantiate_function(f, x, adtype::AutoReverseDiff, p=SciMLBase.NullPar
         hv = f.hv
     end
 
-    return OptimizationFunction{false}(f, adtype; grad=grad, hess=hess, hv=hv, 
+    return OptimizationFunction{false}(f, adtype; grad=grad, hess=hess, hv=hv,
         cons=nothing, cons_j=nothing, cons_h=nothing,
         hess_prototype=nothing, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
 end
