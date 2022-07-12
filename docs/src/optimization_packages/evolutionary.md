@@ -1,12 +1,12 @@
 # Evolutionary.jl
 [`Evolutionary`](https://github.com/wildart/Evolutionary.jl) is a Julia package implementing various evolutionary and genetic algorithm.
 
-## Installation: OptimizationCMAEvolutionStrategy.jl
+## Installation: OptimizationEvolutionary.jl
 
-To use this package, install the OptimizationCMAEvolutionStrategy package:
+To use this package, install the OptimizationEvolutionary package:
 
 ```julia
-import Pkg; Pkg.add("OptimizationCMAEvolutionStrategy")
+import Pkg; Pkg.add("OptimizationEvolutionary")
 ```
 
 ## Global Optimizer
