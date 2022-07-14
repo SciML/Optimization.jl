@@ -26,14 +26,16 @@ H2 = Array{Float64}(undef, 2, 2)
 g!(G1, x0)
 h!(H1, x0)
 
-cons = (x, p) -> [x[1]^2 + x[2]^2]
+cons = (res, x, p) -> (res .= [x[1]^2 + x[2]^2])
 optf = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(), cons=cons)
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoModelingToolkit(), nothing, 1)
 optprob.grad(G2, x0)
 @test G1 == G2
 optprob.hess(H2, x0)
 @test H1 == H2
-@test optprob.cons(x0) == [0.0]
+res = Array{Float64}(undef, 1)
+optprob.cons(res, x0)
+@test res == [0.0]
 J = Array{Float64}(undef, 2)
 optprob.cons_j(J, [5.0, 3.0])
 @test J == [10.0, 6.0]
@@ -41,8 +43,8 @@ H3 = [Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 @test H3 == [[2.0 0.0; 0.0 2.0]]
 
-function con2_c(x, p)
-    [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
+function con2_c(res, x, p)
+    res .= [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
 end
 optf = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(), cons=con2_c)
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoModelingToolkit(), nothing, 2)
@@ -50,7 +52,9 @@ optprob.grad(G2, x0)
 @test G1 == G2
 optprob.hess(H2, x0)
 @test H1 == H2
-@test optprob.cons(x0) == [0.0, 0.0]
+res = Array{Float64}(undef, 2)
+optprob.cons(res, x0)
+@test res == [0.0, 0.0]
 J = Array{Float64}(undef, 2, 2)
 optprob.cons_j(J, [5.0, 3.0])
 @test all(isapprox(J, [10.0 6.0; -0.149013 -0.958924]; rtol=1e-3))
@@ -65,7 +69,9 @@ sH = sparse([1, 1, 2, 2], [1, 2, 1, 2], zeros(4))
 @test findnz(sH)[1:2] == findnz(optprob.hess_prototype)[1:2]
 optprob.hess(sH, x0)
 @test sH == H2
-@test optprob.cons(x0) == [0.0, 0.0]
+res = Array{Float64}(undef, 2)
+optprob.cons(res, x0)
+@test res == [0.0, 0.0]
 sJ = sparse([1, 1, 2, 2], [1, 2, 1, 2], zeros(4))
 @test findnz(sJ)[1:2] == findnz(optprob.cons_jac_prototype)[1:2]
 optprob.cons_j(sJ, [5.0, 3.0])
@@ -170,7 +176,7 @@ optprob.grad(G2, x0)
 @test G1 ≈ G2 rtol = 1e-6
 optprob.hess(H2, x0)
 @test H1 ≈ H2 rtol = 1e-6
-res = Array{Float64}(undef,1)
+res = Array{Float64}(undef, 1)
 optprob.cons(res, x0)
 @test res == [0.0]
 optprob.cons(res, [1.0, 4.0])
@@ -201,7 +207,7 @@ optprob.grad(G2, x0)
 @test G1 ≈ G2 rtol = 1e-6
 optprob.hess(H2, x0)
 @test H1 ≈ H2 rtol = 1e-6
-res = Array{Float64}(undef,2)
+res = Array{Float64}(undef, 2)
 optprob.cons(res, x0)
 @test res == [0.0, 0.0]
 optprob.cons(res, [1.0, 2.0])

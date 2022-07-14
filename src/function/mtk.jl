@@ -43,9 +43,10 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
         cons = nothing
         cons_exprs = nothing
     else
-        cons = (θ) -> f.cons(θ, p)
-        cons_sys = ModelingToolkit.modelingtoolkitize(NonlinearProblem(f.cons, x, p))
+        cons = (res, θ) -> f.cons(res, θ, p)
+        cons_oop = (x,p) -> (_res = zeros(eltype(x), num_cons); f.cons(_res, x, p); _res)
 
+        cons_sys = ModelingToolkit.modelingtoolkitize(NonlinearProblem(cons_oop, x, p))
         cons_eqs = ModelingToolkit.equations(cons_sys)
         cons_exprs = map(cons_eqs) do cons_eq
             e = symbolify(ModelingToolkit.Symbolics.toexpr(cons_eq))
