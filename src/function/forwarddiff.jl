@@ -72,23 +72,25 @@ function instantiate_function(f::OptimizationFunction{true}, x, adtype::AutoForw
     if f.cons === nothing
         cons = nothing
     else
-        cons = θ -> f.cons(θ,p)
+        cons = (res, θ) -> f.cons(res, θ, p)
+        cons_oop = (x) -> (_res = zeros(eltype(x), num_cons); cons(_res, x); _res)
     end
 
     if cons !== nothing && f.cons_j === nothing
-        cjconfig = ForwardDiff.JacobianConfig(cons, x, ForwardDiff.Chunk{chunksize}())
+        cjconfig = ForwardDiff.JacobianConfig(cons_oop, x, ForwardDiff.Chunk{chunksize}())
         cons_j = function (J, θ)
-            ForwardDiff.jacobian!(J, cons, θ, cjconfig)
+            ForwardDiff.jacobian!(J, cons_oop, θ, cjconfig)
         end
     else
         cons_j = f.cons_j
     end
 
     if cons !== nothing && f.cons_h === nothing
-        hess_config_cache = [ForwardDiff.HessianConfig(x -> cons(x)[i], θ, ForwardDiff.Chunk{chunksize}()) for i in 1:num_cons]
+        fncs = [(x) -> cons_oop(x)[i] for i in 1:num_cons]
+        hess_config_cache = [ForwardDiff.HessianConfig(fncs[i], x, ForwardDiff.Chunk{chunksize}()) for i in 1:num_cons]
         cons_h = function (res, θ)
             for i in 1:num_cons
-                ForwardDiff.hessian!(res[i], (x) -> cons(x)[i], θ, hess_config_cache[i], Val{false}())
+                ForwardDiff.hessian!(res[i], fncs[i], θ, hess_config_cache[i], Val{true}())
             end
         end
     else

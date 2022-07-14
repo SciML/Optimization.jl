@@ -289,12 +289,6 @@ function ___solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
     F = eltype(prob.u0)
     optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, prob.u0, real(zero(F)), Optim.NLSolversBase.alloc_DF(prob.u0, real(zero(F))), isnothing(f.hess_prototype) ? Optim.NLSolversBase.alloc_H(prob.u0, real(zero(F))) : convert.(F, f.hess_prototype))
 
-    cons! = (res, θ) -> res .= f.cons(θ)
-
-    cons_j! = function (J, x)
-        f.cons_j(J, x)
-    end
-
     cons_hl! = function (h, θ, λ)
         res = [similar(h) for i in 1:length(λ)]
         f.cons_h(res, θ)
@@ -305,7 +299,7 @@ function ___solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
 
     lb = prob.lb === nothing ? [] : prob.lb
     ub = prob.ub === nothing ? [] : prob.ub
-    optim_fc = Optim.TwiceDifferentiableConstraints(cons!, cons_j!, cons_hl!, lb, ub, prob.lcons, prob.ucons)
+    optim_fc = Optim.TwiceDifferentiableConstraints(f.cons, f.cons_j, cons_hl!, lb, ub, prob.lcons, prob.ucons)
 
     opt_args = __map_optimizer_args(prob, opt, callback=_cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
 
