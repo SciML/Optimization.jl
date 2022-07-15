@@ -5,15 +5,18 @@ The QuadDIRECT algorithm is called using `QuadDirect()`.
 
 ## Installation: OptimizationQuadDIRECT.jl
 
-To use this package, install the OptimizationQuadDIRECT package:
+To use this package, install the OptimizationQuadDIRECT package as:
 
 ```julia
-import Pkg; Pkg.add("OptimizationQuadDIRECT")
+import Pkg; Pkg.add(url="https://github.com/SciML/Optimization.jl", subdir = "lib/OptimizationQuadDIRECT")
 ```
 
 Also note that `QuadDIRECT` should (for now) be installed by doing:
 
 `] add https://github.com/timholy/QuadDIRECT.jl.git`
+
+Since QuadDIRECT is not a registered package in General registry, OptimizationQuadDIRECT is not registered as well hence it can't be installed with 
+the traditional command.
 
 ## Global Optimizer
 ### Without Constraint Equations
