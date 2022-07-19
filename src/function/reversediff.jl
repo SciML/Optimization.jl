@@ -49,8 +49,7 @@ function instantiate_function(f, x, adtype::AutoReverseDiff, p=SciMLBase.NullPar
     _f = (θ, args...) -> first(f.f(θ,p, args...))
 
     if f.grad === nothing
-        gradcfg = ReverseDiff.GradientConfig(x)
-        grad = (res, θ, args...) -> ReverseDiff.gradient!(res, x -> _f(x, args...), θ, gradcfg)
+        grad = (res, θ, args...) -> ReverseDiff.gradient!(res, x -> _f(x, args...), θ, ReverseDiff.GradientConfig(θ))
     else
         grad = f.grad
     end
