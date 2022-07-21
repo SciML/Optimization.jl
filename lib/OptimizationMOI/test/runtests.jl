@@ -6,8 +6,8 @@ function _test_sparse_derivatives_hs071(backend, optimizer)
     function objective(x, ::Any)
         return x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3]
     end
-    function constraints(x, ::Any)
-        return [
+    function constraints(res, x, ::Any)
+        res .= [
             x[1] * x[2] * x[3] * x[4],
             x[1]^2 + x[2]^2 + x[3]^2 + x[4]^2,
         ]
@@ -60,7 +60,7 @@ end
     sol = solve(prob, OptimizationMOI.MOI.OptimizerWithAttributes(NLopt.Optimizer, "algorithm" => :LD_LBFGS))
     @test 10 * sol.minimum < l1
 
-    cons_circ = (x, p) -> [x[1]^2 + x[2]^2]
+    cons_circ = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(true, true); cons=cons_circ)
     prob = OptimizationProblem(optprob, x0, _p, ucons=[Inf], lcons=[0.0])
 

@@ -21,7 +21,7 @@ using Test
     sol = solve(prob, Optim.NelderMead(; initial_simplex=Optim.AffineSimplexer(; a=0.025, b=0.5)))
     @test 10 * sol.minimum < l1
 
-    cons = (x, p) -> [x[1]^2 + x[2]^2]
+    cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons=cons)
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(); cons=cons)
 
@@ -48,8 +48,8 @@ using Test
     sol = solve(prob, IPNewton())
     @test sol.minimum < l1
 
-    function con2_c(x, p)
-        [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
+    function con2_c(res, x, p)
+        res .= [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     end
 
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons=con2_c)
@@ -57,11 +57,13 @@ using Test
     sol = solve(prob, IPNewton())
     @test 10 * sol.minimum < l1
 
-    cons_circ = (x, p) -> [x[1]^2 + x[2]^2]
+    cons_circ = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons=cons_circ)
     prob = OptimizationProblem(optprob, x0, _p, lcons=[-Inf], ucons=[0.25^2])
     sol = solve(prob, IPNewton())
-    @test sqrt(cons(sol.u, nothing)[1]) ≈ 0.25 rtol = 1e-6
+    res = Array{Float64}(undef,1)
+    cons(res, sol.u, nothing)
+    @test sqrt(res[1]) ≈ 0.25 rtol = 1e-6
 
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
 
