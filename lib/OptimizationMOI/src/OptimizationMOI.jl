@@ -60,7 +60,7 @@ function MOI.eval_objective(moiproblem::MOIOptimizationProblem, x)
 end
 
 function MOI.eval_constraint(moiproblem::MOIOptimizationProblem, g, x)
-    g .= moiproblem.f.cons(x)
+    moiproblem.f.cons(g, x)
     return
 end
 
