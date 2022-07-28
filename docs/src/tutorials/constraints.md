@@ -42,8 +42,11 @@ Let's check that the constraints are satisfied and the objective is lower than a
 ```@example constraints
 res = zeros(2)
 cons(res, sol.u, _p)
+res
+```
+
+```@example constraints
 prob.f(sol.u, _p)
-nothing # hide
 ```
 
 We can also use the Ipopt library with the OptimizationMOI package.
@@ -55,23 +58,24 @@ sol = solve(prob, Ipopt.Optimizer())
 ```@example constraints
 res = zeros(2)
 cons(res, sol.u, _p)
-println(res)
+res
+```
+
+```@example constraints
 prob.f(sol.u, _p)
-nothing # hide
 ```
 
 We can also use ModelingToolkit as our AD backend and generate symbolic derivatives and expression graph for the objective and constraints.
 
 Let's modify the bounds to use the function as an equality constraint. The constraint now becomes -
 
-
 ```math
-\begin{align}
+\begin{aligned}
 
 x_1^2 + x_2^2 = 1.0 \\
 
-\leq x_1 * x_2 = 0.5
-\end{align}
+x_1 * x_2 = 0.5
+\end{aligned}
 ```
 
 ```@example constraints
