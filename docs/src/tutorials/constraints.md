@@ -6,12 +6,14 @@ in `OptimizationFunction` to indicate if it's an equality or inequality constrai
 
 Let's define the rosenbrock function as our objective function and consider the below inequalities as our constraints.
 
-$$
+```math
+\begin{aligned}
 
-x_1^2 + x_2^2 \leq 0.8
+x_1^2 + x_2^2 \leq 0.8 \\
 
 0.0 \leq x_1 * x_2 \leq 5.0
-$$
+\end{aligned}
+```
 
 ```@example constraints
 using Optimization, OptimizationMOI, OptimizationOptimJL, ForwardDiff, ModelingToolkit
@@ -61,12 +63,14 @@ We can also use ModelingToolkit as our AD backend and generate symbolic derivati
 Let's modify the bounds to use the function as an equality constraint. The constraint now becomes -
 
 
-$$
+```
+\begin{align}
 
-x_1^2 + x_2^2 = 1.0
+x_1^2 + x_2^2 = 1.0 \\
 
 \leq x_1 * x_2 = 0.5
-$$
+\end{align}
+```
 
 ```@example constraints
 optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(), cons = cons)
