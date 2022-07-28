@@ -5,7 +5,8 @@ pages = [
             "tutorials/intro.md",
             "tutorials/rosenbrock.md",
             "tutorials/minibatch.md",
-            "tutorials/symbolic.md"
+            "tutorials/symbolic.md",
+            "tutorials/constraints.md",
         ],
 
         "API" => [
