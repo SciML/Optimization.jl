@@ -43,6 +43,7 @@ Let's check that the constraints are satisfied and the objective is lower than a
 res = zeros(2)
 cons(res, sol.u, _p)
 prob.f(sol.u, _p)
+nothing # hide
 ```
 
 We can also use the Ipopt library with the OptimizationMOI package.
@@ -56,6 +57,7 @@ res = zeros(2)
 cons(res, sol.u, _p)
 println(res)
 prob.f(sol.u, _p)
+nothing # hide
 ```
 
 We can also use ModelingToolkit as our AD backend and generate symbolic derivatives and expression graph for the objective and constraints.
@@ -63,7 +65,7 @@ We can also use ModelingToolkit as our AD backend and generate symbolic derivati
 Let's modify the bounds to use the function as an equality constraint. The constraint now becomes -
 
 
-```
+```math
 \begin{align}
 
 x_1^2 + x_2^2 = 1.0 \\
