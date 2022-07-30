@@ -1,5 +1,5 @@
 # Defining OptimizationProblems
 
 ```@docs
-OptimizationProblem
+SciMLBase.OptimizationProblem
 ```
