@@ -1,7 +1,7 @@
 # [OptimizationFunction](@id optfunction)
 
 ```@docs
-OptimizationFunction
+SciMLBase.OptimizationFunction
 ```
 
 ## Automatic Differentiation Construction Choice Recommendations
