@@ -44,6 +44,10 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
         mapped_args = (; mapped_args..., MinDeltaFitnessTolerance=abstol)
     end
 
+    if !isnothing(verbose)
+        mapped_args = (; mapped_args..., TraceMode=verbose)
+    end
+
     return mapped_args
 end
 
@@ -53,7 +57,9 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO, data=O
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
     reltol::Union{Number,Nothing}=nothing,
-    progress=false, kwargs...)
+    verbose::Symbol=:compact,
+    progress=false,
+    kwargs...)
 
     local x, cur, state
 
@@ -84,7 +90,7 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO, data=O
         return first(x)
     end
 
-    opt_args = __map_optimizer_args(prob, opt, callback=_cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
+    opt_args = __map_optimizer_args(prob, opt, callback=_cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol, verbose=verbose; kwargs...)
 
     opt_setup = BlackBoxOptim.bbsetup(_loss; opt_args...)
 
