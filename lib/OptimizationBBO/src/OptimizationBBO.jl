@@ -18,6 +18,7 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
     reltol::Union{Number,Nothing}=nothing,
+    verbose::Symbol=:compact,
     kwargs...)
 
     if !isnothing(reltol)
