@@ -63,6 +63,7 @@ function log_lines(rd, progress, maxiters)
             isnothing(maxiters) && continue
             progress && Base.@logmsg(Base.LogLevel(-1),ln,progress=(s/maxiters),_id=:OptimizationBBO)
         end
+          return
     end
 end
 
