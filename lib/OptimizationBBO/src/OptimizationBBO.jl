@@ -1,7 +1,6 @@
 module OptimizationBBO
 
 using BlackBoxOptim, Optimization, Optimization.SciMLBase
-using ProgressLogging
 
 abstract type BBO end
 
@@ -53,7 +52,7 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
     return mapped_args
 end
 
-function log_lines(rd, progress, maxiters, id)
+function log_lines(rd, progress, maxiters)
     while isopen(rd)
         ln = readline(rd)
         isempty(ln) && continue
@@ -62,15 +61,15 @@ function log_lines(rd, progress, maxiters, id)
             s = tryparse(Int, m[1])
             isnothing(s) && continue
             isnothing(maxiters) && continue
-            progress && @info ln progress=(s / maxiters) _id=id
+            progress && Base.@logmsg(Base.LogLevel(-1),ln,progress=(s/maxiters),_id=:OptimizationBBO)
         end
     end
 end
 
-function redirect_output(f::Function, progress, maxiters, id)
+function redirect_output(f::Function, progress, maxiters)
     old_stdout = stdout
     rd, = redirect_stdout()
-    task = @async log_lines(rd, progress, maxiters, id)
+    task = @async log_lines(rd, progress, maxiters)
     try
         ret = f()
         Libc.flush_cstdio()
@@ -128,10 +127,8 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO, data=O
 
     t0 = time()
 
-    opt_res = ProgressLogging.progress(name="optimizing") do id
-        redirect_output(progress, maxiters, id) do
-            BlackBoxOptim.bboptimize(opt_setup)
-        end
+    opt_res = redirect_output(progress, maxiters) do
+        BlackBoxOptim.bboptimize(opt_setup)
     end
     t1 = time()
 
