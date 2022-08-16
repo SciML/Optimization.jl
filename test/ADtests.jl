@@ -232,6 +232,14 @@ H2 = Array{Float64}(undef, 2, 2)
 optprob.hess(H2, [5.0, 3.0])
 @test all(isapprox(H2, [28802.0 -2000.0; -2000.0 200.0]; rtol=1e-3))
 
+cons_j = optprob.cons_j
+optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(), cons=con2_c, cons_j=cons_j, cons_jac_prototype=cons_jac_proto)
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoForwardDiff(), nothing, 2)
+@test optprob.cons_jac_prototype == sparse([1.0 1.0; 1.0 1.0]) # make sure it's still using it
+J = Array{Float64}(undef, 2, 2)
+optprob.cons_j(J, [5.0, 3.0])
+@test all(isapprox(J, [10.0 6.0; -0.149013 -0.958924]; rtol=1e-3))
+
 # Can we solve problems? Using AutoForwardDiff to test since we know that works
 for consf in [cons, con2_c]
     optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons=consf)
