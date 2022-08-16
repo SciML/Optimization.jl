@@ -96,8 +96,8 @@ function instantiate_function(f::OptimizationFunction{true}, x, adtype::AutoForw
     else
         cons_h = f.cons_h
     end
-
+    
     return OptimizationFunction{true}(f.f, adtype; grad=grad, hess=hess, hv=hv,
         cons=cons, cons_j=cons_j, cons_h=cons_h,
-        hess_prototype=nothing, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
+        hess_prototype=nothing, cons_jac_prototype=f.cons_jac_prototype, cons_hess_prototype=f.cons_hess_prototype)
 end
