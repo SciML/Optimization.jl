@@ -123,8 +123,10 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
         cons_h = (res, θ) -> f.cons_h(res, θ, p)
     end
 
-    return OptimizationFunction{true}(f, adtype; grad=grad, hess=hess, hv=hv,
-        cons=cons, cons_j=cons_j, cons_h=cons_h,
-        cons_jac_colorvec = cons_jac_colorvec,
-        hess_prototype=f.hess_prototype, cons_jac_prototype=f.cons_jac_prototype, cons_hess_prototype=f.cons_hess_prototype)
+    return OptimizationFunction{true}(f, adtype; grad = grad, hess = hess, hv = hv,
+                                      cons = cons, cons_j = cons_j, cons_h = cons_h,
+                                      cons_jac_colorvec = cons_jac_colorvec,
+                                      hess_prototype = f.hess_prototype,
+                                      cons_jac_prototype = f.cons_jac_prototype,
+                                      cons_hess_prototype = f.cons_hess_prototype)
 end

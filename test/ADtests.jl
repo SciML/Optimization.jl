@@ -148,7 +148,6 @@ optprob.grad(G2, x0)
 @test G1 == G2
 @test_throws ErrorException optprob.hess(H2, x0)
 
-
 prob = OptimizationProblem(optf, x0)
 
 sol = solve(prob, Optim.BFGS())
@@ -253,14 +252,17 @@ cons_j = (J, θ, p) -> optprob.cons_j(J, θ)
 hess = (H, θ, p) -> optprob.hess(H, θ)
 sH = sparse([1, 1, 2, 2], [1, 2, 1, 2], zeros(4))
 sJ = sparse([1, 1, 2, 2], [1, 2, 1, 2], zeros(4))
-optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(), hess=hess, hess_prototype=copy(sH), cons=con2_c, cons_j=cons_j, cons_jac_prototype=copy(sJ))
-optprob1 = Optimization.instantiate_function(optf, x0, Optimization.AutoForwardDiff(), nothing, 2)
+optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(), hess = hess,
+                            hess_prototype = copy(sH), cons = con2_c, cons_j = cons_j,
+                            cons_jac_prototype = copy(sJ))
+optprob1 = Optimization.instantiate_function(optf, x0, Optimization.AutoForwardDiff(),
+                                             nothing, 2)
 @test optprob1.hess_prototype == sparse([0.0 0.0; 0.0 0.0]) # make sure it's still using it
 optprob1.hess(sH, [5.0, 3.0])
-@test all(isapprox(sH, [28802.0 -2000.0; -2000.0 200.0]; rtol=1e-3))
+@test all(isapprox(sH, [28802.0 -2000.0; -2000.0 200.0]; rtol = 1e-3))
 @test optprob1.cons_jac_prototype == sparse([0.0 0.0; 0.0 0.0]) # make sure it's still using it
 optprob1.cons_j(sJ, [5.0, 3.0])
-@test all(isapprox(sJ, [10.0 6.0; -0.149013 -0.958924]; rtol=1e-3))
+@test all(isapprox(sJ, [10.0 6.0; -0.149013 -0.958924]; rtol = 1e-3))
 
 grad = (G, θ, p) -> optprob.grad(G, θ)
 hess = (H, θ, p) -> optprob.hess(H, θ)
@@ -269,14 +271,20 @@ cons_h = (res, θ, p) -> optprob.cons_h(res, θ)
 sH = sparse([1, 1, 2, 2], [1, 2, 1, 2], zeros(4))
 sJ = sparse([1, 1, 2, 2], [1, 2, 1, 2], zeros(4))
 sH3 = [sparse([1, 2], [1, 2], zeros(2)), sparse([1, 1, 2], [1, 2, 1], zeros(3))]
-optf = OptimizationFunction(rosenbrock, SciMLBase.NoAD(), grad=grad, hess=hess, cons=con2_c, cons_j=cons_j, cons_h=cons_h, hess_prototype=sH, cons_jac_prototype=sJ, cons_hess_prototype=sH3)
+optf = OptimizationFunction(rosenbrock, SciMLBase.NoAD(), grad = grad, hess = hess,
+                            cons = con2_c, cons_j = cons_j, cons_h = cons_h,
+                            hess_prototype = sH, cons_jac_prototype = sJ,
+                            cons_hess_prototype = sH3)
 optprob2 = Optimization.instantiate_function(optf, x0, SciMLBase.NoAD(), nothing, 2)
 optprob2.hess(sH, [5.0, 3.0])
-@test all(isapprox(sH, [28802.0 -2000.0; -2000.0 200.0]; rtol=1e-3))
+@test all(isapprox(sH, [28802.0 -2000.0; -2000.0 200.0]; rtol = 1e-3))
 optprob2.cons_j(sJ, [5.0, 3.0])
-@test all(isapprox(sJ, [10.0 6.0; -0.149013 -0.958924]; rtol=1e-3))
+@test all(isapprox(sJ, [10.0 6.0; -0.149013 -0.958924]; rtol = 1e-3))
 optprob2.cons_h(sH3, [5.0, 3.0])
-@test sH3 ≈ [[2.0 0.0; 0.0 2.0], [2.8767727327346804 0.2836621681849162; 0.2836621681849162 -6.622738308376736e-9]]
+@test sH3 ≈ [
+    [2.0 0.0; 0.0 2.0],
+    [2.8767727327346804 0.2836621681849162; 0.2836621681849162 -6.622738308376736e-9],
+]
 
 # Can we solve problems? Using AutoForwardDiff to test since we know that works
 for consf in [cons, con2_c]

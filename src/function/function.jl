@@ -44,15 +44,19 @@ For more information on the use of automatic differentiation, see the
 documentation of the `AbstractADType` types.
 """
 function instantiate_function(f, x, ::AbstractADType, p, num_cons = 0)
-    grad   = f.grad   === nothing ? nothing : (G,x)->f.grad(G,x,p)
-    hess   = f.hess   === nothing ? nothing : (H,x)->f.hess(H,x,p)
-    hv     = f.hv     === nothing ? nothing : (H,x,v)->f.hv(H,x,v,p)
-    cons   = f.cons   === nothing ? nothing : (res,x)->f.cons(res,x,p)
-    cons_j = f.cons_j === nothing ? nothing : (res,x)->f.cons_j(res,x,p)
-    cons_h = f.cons_h === nothing ? nothing : (res,x)->f.cons_h(res,x,p)
-    hess_prototype = f.hess_prototype === nothing ? nothing : convert.(eltype(x), f.hess_prototype)
-    cons_jac_prototype = f.cons_jac_prototype === nothing ? nothing : convert.(eltype(x), f.cons_jac_prototype)
-    cons_hess_prototype = f.cons_hess_prototype === nothing ? nothing : [convert.(eltype(x), f.cons_hess_prototype[i]) for i in 1:num_cons]
+    grad = f.grad === nothing ? nothing : (G, x) -> f.grad(G, x, p)
+    hess = f.hess === nothing ? nothing : (H, x) -> f.hess(H, x, p)
+    hv = f.hv === nothing ? nothing : (H, x, v) -> f.hv(H, x, v, p)
+    cons = f.cons === nothing ? nothing : (res, x) -> f.cons(res, x, p)
+    cons_j = f.cons_j === nothing ? nothing : (res, x) -> f.cons_j(res, x, p)
+    cons_h = f.cons_h === nothing ? nothing : (res, x) -> f.cons_h(res, x, p)
+    hess_prototype = f.hess_prototype === nothing ? nothing :
+                     convert.(eltype(x), f.hess_prototype)
+    cons_jac_prototype = f.cons_jac_prototype === nothing ? nothing :
+                         convert.(eltype(x), f.cons_jac_prototype)
+    cons_hess_prototype = f.cons_hess_prototype === nothing ? nothing :
+                          [convert.(eltype(x), f.cons_hess_prototype[i])
+                           for i in 1:num_cons]
     expr = symbolify(f.expr)
     cons_expr = symbolify.(f.cons_expr)
 
