@@ -5,21 +5,22 @@ end
 
 AutoModelingToolkit() = AutoModelingToolkit(false, false)
 
-function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
+function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons = 0)
     p = isnothing(p) ? SciMLBase.NullParameters() : p
     sys = ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, x, p))
 
     hess_prototype, cons_jac_prototype, cons_hess_prototype = nothing, nothing, nothing
 
     if f.grad === nothing
-        grad_oop, grad_iip = ModelingToolkit.generate_gradient(sys, expression=Val{false})
+        grad_oop, grad_iip = ModelingToolkit.generate_gradient(sys, expression = Val{false})
         grad(J, u) = (grad_iip(J, u, p); J)
     else
         grad = f.grad
     end
 
     if f.hess === nothing
-        hess_oop, hess_iip = ModelingToolkit.generate_hessian(sys, expression=Val{false}, sparse = adtype.obj_sparse)
+        hess_oop, hess_iip = ModelingToolkit.generate_hessian(sys, expression = Val{false},
+                                                              sparse = adtype.obj_sparse)
         hess(H, u) = (hess_iip(H, u, p); H)
     else
         hess = f.hess
@@ -36,7 +37,12 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
     end
 
     expr = symbolify(ModelingToolkit.Symbolics.toexpr(ModelingToolkit.equations(sys)))
-    pairs_arr = p isa SciMLBase.NullParameters ? [Symbol(_s) => Expr(:ref, :x, i) for (i,_s) in enumerate(sys.states)] : [[Symbol(_s) => Expr(:ref, :x, i) for (i,_s) in enumerate(sys.states)]..., [Symbol(_p) => p[i] for (i,_p) in enumerate(sys.ps)]...]
+    pairs_arr = p isa SciMLBase.NullParameters ?
+                [Symbol(_s) => Expr(:ref, :x, i) for (i, _s) in enumerate(sys.states)] :
+                [
+        [Symbol(_s) => Expr(:ref, :x, i) for (i, _s) in enumerate(sys.states)]...,
+        [Symbol(_p) => p[i] for (i, _p) in enumerate(sys.ps)]...,
+    ]
     rep_pars_vals!(expr, pairs_arr)
 
     if f.cons === nothing
@@ -44,7 +50,7 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
         cons_exprs = nothing
     else
         cons = (res, θ) -> f.cons(res, θ, p)
-        cons_oop = (x,p) -> (_res = zeros(eltype(x), num_cons); f.cons(_res, x, p); _res)
+        cons_oop = (x, p) -> (_res = zeros(eltype(x), num_cons); f.cons(_res, x, p); _res)
 
         cons_sys = ModelingToolkit.modelingtoolkitize(NonlinearProblem(cons_oop, x, p))
         cons_eqs = ModelingToolkit.equations(cons_sys)
@@ -56,7 +62,9 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
     end
 
     if f.cons !== nothing && f.cons_j === nothing
-        jac_oop, jac_iip = ModelingToolkit.generate_jacobian(cons_sys, expression=Val{false}, sparse=adtype.cons_sparse)
+        jac_oop, jac_iip = ModelingToolkit.generate_jacobian(cons_sys,
+                                                             expression = Val{false},
+                                                             sparse = adtype.cons_sparse)
         cons_j = function (J, θ)
             jac_iip(J, θ, p)
         end
@@ -65,7 +73,11 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
     end
 
     if f.cons !== nothing && f.cons_h === nothing
-        cons_hess_oop, cons_hess_iip = ModelingToolkit.generate_hessian(cons_sys, expression=Val{false}, sparse=adtype.cons_sparse)
+        cons_hess_oop, cons_hess_iip = ModelingToolkit.generate_hessian(cons_sys,
+                                                                        expression = Val{
+                                                                                         false
+                                                                                         },
+                                                                        sparse = adtype.cons_sparse)
         cons_h = function (res, θ)
             cons_hess_iip(res, θ, p)
         end
@@ -82,11 +94,14 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons=0)
         _cons_jac_prototype = ModelingToolkit.jacobian_sparsity(cons_sys)
         cons_jac_prototype = convert.(eltype(x), _cons_jac_prototype)
         _cons_hess_prototype = ModelingToolkit.hessian_sparsity(cons_sys)
-        cons_hess_prototype = [convert.(eltype(x), _cons_hess_prototype[i]) for i in 1:num_cons]
+        cons_hess_prototype = [convert.(eltype(x), _cons_hess_prototype[i])
+                               for i in 1:num_cons]
     end
 
-    return OptimizationFunction{true}(f.f, adtype; grad=grad, hess=hess, hv=hv,
-        cons=cons, cons_j=cons_j, cons_h=cons_h,
-        hess_prototype=hess_prototype, cons_jac_prototype=cons_jac_prototype, cons_hess_prototype=cons_hess_prototype,
-        expr = expr, cons_expr = cons_exprs)
+    return OptimizationFunction{true}(f.f, adtype; grad = grad, hess = hess, hv = hv,
+                                      cons = cons, cons_j = cons_j, cons_h = cons_h,
+                                      hess_prototype = hess_prototype,
+                                      cons_jac_prototype = cons_jac_prototype,
+                                      cons_hess_prototype = cons_hess_prototype,
+                                      expr = expr, cons_expr = cons_exprs)
 end
