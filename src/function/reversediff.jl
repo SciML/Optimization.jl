@@ -53,7 +53,7 @@ function instantiate_function(f, x, adtype::AutoReverseDiff, p = SciMLBase.NullP
         grad = (res, θ, args...) -> ReverseDiff.gradient!(res, x -> _f(x, args...), θ,
                                                           ReverseDiff.GradientConfig(θ))
     else
-        grad = f.grad
+        grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
     end
 
     if f.hess === nothing
@@ -70,7 +70,7 @@ function instantiate_function(f, x, adtype::AutoReverseDiff, p = SciMLBase.NullP
             end
         end
     else
-        hess = f.hess
+        hess = (H, θ, args...) -> f.hess(H, θ, p, args...)
     end
 
     if f.hv === nothing
@@ -84,9 +84,7 @@ function instantiate_function(f, x, adtype::AutoReverseDiff, p = SciMLBase.NullP
         hv = f.hv
     end
 
-    return OptimizationFunction{false}(f, adtype; grad = grad, hess = hess, hv = hv,
-                                       cons = nothing, cons_j = nothing, cons_h = nothing,
-                                       hess_prototype = nothing,
-                                       cons_jac_prototype = nothing,
-                                       cons_hess_prototype = nothing)
+    return OptimizationFunction{false}(f, adtype; grad=grad, hess=hess, hv=hv,
+        cons=nothing, cons_j=nothing, cons_h=nothing,
+        hess_prototype=f.hess_prototype, cons_jac_prototype=nothing, cons_hess_prototype=nothing)
 end

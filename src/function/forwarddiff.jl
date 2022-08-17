@@ -51,7 +51,7 @@ function instantiate_function(f::OptimizationFunction{true}, x,
         grad = (res, θ, args...) -> ForwardDiff.gradient!(res, x -> _f(x, args...), θ,
                                                           gradcfg, Val{false}())
     else
-        grad = f.grad
+        grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
     end
 
     if f.hess === nothing
@@ -59,7 +59,7 @@ function instantiate_function(f::OptimizationFunction{true}, x,
         hess = (res, θ, args...) -> ForwardDiff.hessian!(res, x -> _f(x, args...), θ,
                                                          hesscfg, Val{false}())
     else
-        hess = f.hess
+        hess = (H, θ, args...) -> f.hess(H, θ, p, args...)
     end
 
     if f.hv === nothing
@@ -85,7 +85,7 @@ function instantiate_function(f::OptimizationFunction{true}, x,
             ForwardDiff.jacobian!(J, cons_oop, θ, cjconfig)
         end
     else
-        cons_j = f.cons_j
+        cons_j = (J, θ) -> f.cons_j(J, θ, p)
     end
 
     if cons !== nothing && f.cons_h === nothing
@@ -99,12 +99,10 @@ function instantiate_function(f::OptimizationFunction{true}, x,
             end
         end
     else
-        cons_h = f.cons_h
+        cons_h = (res, θ) -> f.cons_h(res, θ, p)
     end
 
-    return OptimizationFunction{true}(f.f, adtype; grad = grad, hess = hess, hv = hv,
-                                      cons = cons, cons_j = cons_j, cons_h = cons_h,
-                                      hess_prototype = nothing,
-                                      cons_jac_prototype = f.cons_jac_prototype,
-                                      cons_hess_prototype = f.cons_hess_prototype)
+    return OptimizationFunction{true}(f.f, adtype; grad=grad, hess=hess, hv=hv,
+        cons=cons, cons_j=cons_j, cons_h=cons_h,
+        hess_prototype=f.hess_prototype, cons_jac_prototype=f.cons_jac_prototype, cons_hess_prototype=f.cons_hess_prototype)
 end
