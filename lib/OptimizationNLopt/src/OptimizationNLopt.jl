@@ -6,17 +6,16 @@ using Reexport, Optimization, Optimization.SciMLBase
 (f::NLopt.Algorithm)() = f
 
 function __map_optimizer_args!(prob::OptimizationProblem, opt::NLopt.Opt;
-    callback=nothing,
-    maxiters::Union{Number,Nothing}=nothing,
-    maxtime::Union{Number,Nothing}=nothing,
-    abstol::Union{Number,Nothing}=nothing,
-    reltol::Union{Number,Nothing}=nothing,
-    local_method::Union{NLopt.Algorithm,NLopt.Opt,Nothing}=nothing,
-    local_maxiters::Union{Number,Nothing}=nothing,
-    local_maxtime::Union{Number,Nothing}=nothing,
-    local_options::Union{NamedTuple,Nothing}=nothing,
-    kwargs...)
-
+                               callback = nothing,
+                               maxiters::Union{Number, Nothing} = nothing,
+                               maxtime::Union{Number, Nothing} = nothing,
+                               abstol::Union{Number, Nothing} = nothing,
+                               reltol::Union{Number, Nothing} = nothing,
+                               local_method::Union{NLopt.Algorithm, NLopt.Opt, Nothing} = nothing,
+                               local_maxiters::Union{Number, Nothing} = nothing,
+                               local_maxtime::Union{Number, Nothing} = nothing,
+                               local_options::Union{NamedTuple, Nothing} = nothing,
+                               kwargs...)
     if local_method !== nothing
         if isa(local_method, NLopt.Opt)
             if ndims(local_method) != length(prob.u0)
@@ -75,26 +74,25 @@ function __map_optimizer_args!(prob::OptimizationProblem, opt::NLopt.Opt;
     return nothing
 end
 
-
-function SciMLBase.__solve(prob::OptimizationProblem, opt::Union{NLopt.Algorithm,NLopt.Opt};
-    maxiters::Union{Number,Nothing}=nothing,
-    maxtime::Union{Number,Nothing}=nothing,
-    local_method::Union{NLopt.Algorithm,NLopt.Opt,Nothing}=nothing,
-    local_maxiters::Union{Number,Nothing}=nothing,
-    local_maxtime::Union{Number,Nothing}=nothing,
-    local_options::Union{NamedTuple,Nothing}=nothing,
-    abstol::Union{Number,Nothing}=nothing,
-    reltol::Union{Number,Nothing}=nothing,
-    progress=false,
-    callback=(args...) -> (false),
-    kwargs...)
+function SciMLBase.__solve(prob::OptimizationProblem,
+                           opt::Union{NLopt.Algorithm, NLopt.Opt};
+                           maxiters::Union{Number, Nothing} = nothing,
+                           maxtime::Union{Number, Nothing} = nothing,
+                           local_method::Union{NLopt.Algorithm, NLopt.Opt, Nothing} = nothing,
+                           local_maxiters::Union{Number, Nothing} = nothing,
+                           local_maxtime::Union{Number, Nothing} = nothing,
+                           local_options::Union{NamedTuple, Nothing} = nothing,
+                           abstol::Union{Number, Nothing} = nothing,
+                           reltol::Union{Number, Nothing} = nothing,
+                           progress = false,
+                           callback = (args...) -> (false),
+                           kwargs...)
     local x
 
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
     maxtime = Optimization._check_and_convert_maxtime(maxtime)
     local_maxiters = Optimization._check_and_convert_maxiters(local_maxiters)
     local_maxtime = Optimization._check_and_convert_maxtime(local_maxtime)
-
 
     f = Optimization.instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p)
 
@@ -121,15 +119,19 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Union{NLopt.Algorithm
         opt_setup = NLopt.Opt(opt, length(prob.u0))
     end
 
-    prob.sense === Optimization.MaxSense ? NLopt.max_objective!(opt_setup, fg!) : NLopt.min_objective!(opt_setup, fg!)
+    prob.sense === Optimization.MaxSense ? NLopt.max_objective!(opt_setup, fg!) :
+    NLopt.min_objective!(opt_setup, fg!)
 
-    __map_optimizer_args!(prob, opt_setup, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol, local_method=local_method, local_maxiters=local_maxiters, local_options=local_options; kwargs...)
+    __map_optimizer_args!(prob, opt_setup, maxiters = maxiters, maxtime = maxtime,
+                          abstol = abstol, reltol = reltol, local_method = local_method,
+                          local_maxiters = local_maxiters, local_options = local_options;
+                          kwargs...)
 
     t0 = time()
     (minf, minx, ret) = NLopt.optimize(opt_setup, prob.u0)
     t1 = time()
 
-    SciMLBase.build_solution(prob, opt, minx, minf; original=opt_setup, retcode=ret)
+    SciMLBase.build_solution(prob, opt, minx, minf; original = opt_setup, retcode = ret)
 end
 
 end

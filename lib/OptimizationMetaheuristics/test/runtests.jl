@@ -7,7 +7,8 @@ using Test
     _p = [1.0, 100.0]
     l1 = rosenbrock(x0, _p)
     optprob = OptimizationFunction(rosenbrock)
-    prob = Optimization.OptimizationProblem(optprob, x0, _p, lb=[-1.0, -1.0], ub=[1.5, 1.5])
+    prob = Optimization.OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0],
+                                            ub = [1.5, 1.5])
     sol = solve(prob, ECA())
     @test 10 * sol.minimum < l1
 
@@ -20,7 +21,7 @@ using Test
     sol = solve(prob, ABC())
     @test 10 * sol.minimum < l1
 
-    sol = solve(prob, CGSA(N=100))
+    sol = solve(prob, CGSA(N = 100))
     @test 10 * sol.minimum < l1
 
     sol = solve(prob, SA())
@@ -32,21 +33,21 @@ using Test
     sol = solve(prob, ECA())
     @test 10 * sol.minimum < l1
 
-    sol = solve(prob, Metaheuristics.DE(), use_initial=true)
+    sol = solve(prob, Metaheuristics.DE(), use_initial = true)
     @test 10 * sol.minimum < l1
 
-    sol = solve(prob, PSO(), use_initial=true)
+    sol = solve(prob, PSO(), use_initial = true)
     @test 10 * sol.minimum < l1
 
-    sol = solve(prob, ABC(), use_initial=true)
+    sol = solve(prob, ABC(), use_initial = true)
     @test 10 * sol.minimum < l1
 
-    sol = solve(prob, CGSA(N=100), use_initial=true)
+    sol = solve(prob, CGSA(N = 100), use_initial = true)
     @test 10 * sol.minimum < l1
 
-    sol = solve(prob, SA(), use_initial=true)
+    sol = solve(prob, SA(), use_initial = true)
     @test 10 * sol.minimum < l1
 
-    sol = solve(prob, WOA(), use_initial=true)
+    sol = solve(prob, WOA(), use_initial = true)
     @test 10 * sol.minimum < l1
 end

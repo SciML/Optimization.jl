@@ -7,44 +7,43 @@ export CMAEvolutionStrategyOpt
 struct CMAEvolutionStrategyOpt end
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt;
-    callback=nothing,
-    maxiters::Union{Number,Nothing}=nothing,
-    maxtime::Union{Number,Nothing}=nothing,
-    abstol::Union{Number,Nothing}=nothing,
-    reltol::Union{Number,Nothing}=nothing,
-    kwargs...)
-
+                              callback = nothing,
+                              maxiters::Union{Number, Nothing} = nothing,
+                              maxtime::Union{Number, Nothing} = nothing,
+                              abstol::Union{Number, Nothing} = nothing,
+                              reltol::Union{Number, Nothing} = nothing,
+                              kwargs...)
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
 
-    mapped_args = (; lower=prob.lb,
-        upper=prob.ub,
-        kwargs...)
+    mapped_args = (; lower = prob.lb,
+                   upper = prob.ub,
+                   kwargs...)
 
     if !isnothing(maxiters)
-        mapped_args = (; mapped_args..., maxiter=maxiters)
+        mapped_args = (; mapped_args..., maxiter = maxiters)
     end
 
     if !isnothing(maxtime)
-        mapped_args = (; mapped_args..., maxtime=maxtime)
+        mapped_args = (; mapped_args..., maxtime = maxtime)
     end
 
     if !isnothing(abstol)
-        mapped_args = (; mapped_args..., ftol=abstol)
+        mapped_args = (; mapped_args..., ftol = abstol)
     end
 
     return mapped_args
 end
 
-
-function SciMLBase.__solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt, data=Optimization.DEFAULT_DATA;
-    callback=(args...) -> (false),
-    maxiters::Union{Number,Nothing}=nothing,
-    maxtime::Union{Number,Nothing}=nothing,
-    abstol::Union{Number,Nothing}=nothing,
-    reltol::Union{Number,Nothing}=nothing,
-    kwargs...)
+function SciMLBase.__solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt,
+                           data = Optimization.DEFAULT_DATA;
+                           callback = (args...) -> (false),
+                           maxiters::Union{Number, Nothing} = nothing,
+                           maxtime::Union{Number, Nothing} = nothing,
+                           abstol::Union{Number, Nothing} = nothing,
+                           reltol::Union{Number, Nothing} = nothing,
+                           kwargs...)
     local x, cur, state
 
     if data != Optimization.DEFAULT_DATA
@@ -70,7 +69,9 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyO
         return first(x)
     end
 
-    opt_args = __map_optimizer_args(prob, opt, callback=_cb, maxiters=maxiters, maxtime=maxtime, abstol=abstol, reltol=reltol; kwargs...)
+    opt_args = __map_optimizer_args(prob, opt, callback = _cb, maxiters = maxiters,
+                                    maxtime = maxtime, abstol = abstol, reltol = reltol;
+                                    kwargs...)
 
     t0 = time()
     opt_res = CMAEvolutionStrategy.minimize(_loss, prob.u0, 0.1; opt_args...)
@@ -78,7 +79,9 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyO
 
     opt_ret = opt_res.stop.reason
 
-    SciMLBase.build_solution(prob, opt, opt_res.logger.xbest[end], opt_res.logger.fbest[end]; original=opt_res, retcode=opt_ret)
+    SciMLBase.build_solution(prob, opt, opt_res.logger.xbest[end],
+                             opt_res.logger.fbest[end]; original = opt_res,
+                             retcode = opt_ret)
 end
 
 end

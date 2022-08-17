@@ -9,7 +9,6 @@ function SciMLBase.__solve(prob::OptimizationProblem,
                            args...;
                            maxiters = nothing,
                            kwargs...)
-
     loss, θ = x -> prob.f(x, prob.p), prob.u0
     deterministic = first(loss(θ)) == first(loss(θ))
 
@@ -20,21 +19,22 @@ function SciMLBase.__solve(prob::OptimizationProblem,
     if isempty(args) && deterministic && prob.lb === nothing && prob.ub === nothing
         # If determinsitic then ADAM -> finish with BFGS
         if maxiters === nothing
-            res1 = Optimization.solve(prob, Optimisers.ADAM(0.01), args...; maxiters=300, kwargs...)
+            res1 = Optimization.solve(prob, Optimisers.ADAM(0.01), args...; maxiters = 300,
+                                      kwargs...)
         else
-            res1 = Optimization.solve(prob, Optimisers.ADAM(0.01), args...; maxiters, kwargs...)
+            res1 = Optimization.solve(prob, Optimisers.ADAM(0.01), args...; maxiters,
+                                      kwargs...)
         end
 
-        optprob2 = remake(prob,u0 = res1.u)
-        res1 = Optimization.solve(
-            optprob2, BFGS(initial_stepnorm=0.01), args...; maxiters, kwargs...)
+        optprob2 = remake(prob, u0 = res1.u)
+        res1 = Optimization.solve(optprob2, BFGS(initial_stepnorm = 0.01), args...;
+                                  maxiters, kwargs...)
     elseif isempty(args) && deterministic
-        res1 = Optimization.solve(
-            prob, BFGS(initial_stepnorm=0.01), args...; maxiters, kwargs...)
+        res1 = Optimization.solve(prob, BFGS(initial_stepnorm = 0.01), args...; maxiters,
+                                  kwargs...)
     else
         res1 = Optimization.solve(prob, Optimisers.ADAM(0.1), args...; maxiters, kwargs...)
     end
-
 end
 
 export PolyOpt

@@ -37,29 +37,39 @@ AutoFiniteDiff(;fdtype = Val(:forward) fdjtype = fdtype, fdhtype = Val(:hcentral
 For more information on the derivative type specifiers, see the
 [FiniteDiff.jl documentation](https://github.com/JuliaDiff/FiniteDiff.jl).
 """
-struct AutoFiniteDiff{T1,T2,T3} <: AbstractADType
+struct AutoFiniteDiff{T1, T2, T3} <: AbstractADType
     fdtype::T1
     fdjtype::T2
     fdhtype::T3
 end
 
-AutoFiniteDiff(; fdtype=Val(:forward), fdjtype=fdtype, fdhtype=Val(:hcentral)) =
+function AutoFiniteDiff(; fdtype = Val(:forward), fdjtype = fdtype,
+                        fdhtype = Val(:hcentral))
     AutoFiniteDiff(fdtype, fdjtype, fdhtype)
+end
 
-function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
+function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, p, args...))
     updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
 
     if f.grad === nothing
         gradcache = FiniteDiff.GradientCache(x, x, adtype.fdtype)
-        grad = (res, θ, args...) -> FiniteDiff.finite_difference_gradient!(res, x -> _f(x, args...), θ, gradcache)
+        grad = (res, θ, args...) -> FiniteDiff.finite_difference_gradient!(res,
+                                                                           x -> _f(x,
+                                                                                   args...),
+                                                                           θ, gradcache)
     else
         grad = f.grad
     end
 
     if f.hess === nothing
         hesscache = FiniteDiff.HessianCache(x, adtype.fdhtype)
-        hess = (res, θ, args...) -> FiniteDiff.finite_difference_hessian!(res, x -> _f(x, args...), θ, updatecache(hesscache, θ))
+        hess = (res, θ, args...) -> FiniteDiff.finite_difference_hessian!(res,
+                                                                          x -> _f(x,
+                                                                                  args...),
+                                                                          θ,
+                                                                          updatecache(hesscache,
+                                                                                      θ))
     else
         hess = f.hess
     end
@@ -80,12 +90,15 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
         cons = (res, θ) -> f.cons(res, θ, p)
     end
 
-    cons_jac_colorvec = f.cons_jac_colorvec === nothing ? (1:length(x)) : f.cons_jac_colorvec
+    cons_jac_colorvec = f.cons_jac_colorvec === nothing ? (1:length(x)) :
+                        f.cons_jac_colorvec
 
     if cons !== nothing && f.cons_j === nothing
         cons_j = function (J, θ)
             y0 = zeros(num_cons)
-            jaccache = FiniteDiff.JacobianCache(copy(x), copy(y0), copy(y0), adtype.fdjtype; colorvec=cons_jac_colorvec, sparsity=f.cons_jac_prototype)
+            jaccache = FiniteDiff.JacobianCache(copy(x), copy(y0), copy(y0), adtype.fdjtype;
+                                                colorvec = cons_jac_colorvec,
+                                                sparsity = f.cons_jac_prototype)
             FiniteDiff.finite_difference_jacobian!(J, cons, θ, jaccache)
         end
     else
@@ -93,18 +106,27 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons=0)
     end
 
     if cons !== nothing && f.cons_h === nothing
-        hess_cons_cache = [FiniteDiff.HessianCache(copy(x), adtype.fdhtype) for i in 1:num_cons]
+        hess_cons_cache = [FiniteDiff.HessianCache(copy(x), adtype.fdhtype)
+                           for i in 1:num_cons]
         cons_h = function (res, θ)
             for i in 1:num_cons#note: colorvecs not yet supported by FiniteDiff for Hessians
-                FiniteDiff.finite_difference_hessian!(res[i], (x) -> (_res = zeros(eltype(θ), num_cons); cons(_res, x); _res[i]), θ, updatecache(hess_cons_cache[i], θ))
+                FiniteDiff.finite_difference_hessian!(res[i],
+                                                      (x) -> (_res = zeros(eltype(θ),
+                                                                           num_cons);
+                                                              cons(_res,
+                                                                   x);
+                                                              _res[i]),
+                                                      θ, updatecache(hess_cons_cache[i], θ))
             end
         end
     else
         cons_h = f.cons_h
     end
 
-    return OptimizationFunction{true}(f, adtype; grad=grad, hess=hess, hv=hv,
-        cons=cons, cons_j=cons_j, cons_h=cons_h,
-        cons_jac_colorvec = cons_jac_colorvec,
-        hess_prototype=nothing, cons_jac_prototype=f.cons_jac_prototype, cons_hess_prototype=nothing)
+    return OptimizationFunction{true}(f, adtype; grad = grad, hess = hess, hv = hv,
+                                      cons = cons, cons_j = cons_j, cons_h = cons_h,
+                                      cons_jac_colorvec = cons_jac_colorvec,
+                                      hess_prototype = nothing,
+                                      cons_jac_prototype = f.cons_jac_prototype,
+                                      cons_hess_prototype = nothing)
 end

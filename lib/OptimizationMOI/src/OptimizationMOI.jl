@@ -3,13 +3,14 @@ module OptimizationMOI
 using MathOptInterface, Optimization, Optimization.SciMLBase, SparseArrays
 const MOI = MathOptInterface
 
-struct MOIOptimizationProblem{T,F<:OptimizationFunction,uType,P} <: MOI.AbstractNLPEvaluator
+struct MOIOptimizationProblem{T, F <: OptimizationFunction, uType, P} <:
+       MOI.AbstractNLPEvaluator
     f::F
     u0::uType
     p::P
-    J::Union{Matrix{T},SparseMatrixCSC{T}}
-    H::Union{Matrix{T},SparseMatrixCSC{T}}
-    cons_H::Vector{<:Union{Matrix{T},SparseMatrixCSC{T}}}
+    J::Union{Matrix{T}, SparseMatrixCSC{T}}
+    H::Union{Matrix{T}, SparseMatrixCSC{T}}
+    cons_H::Vector{<:Union{Matrix{T}, SparseMatrixCSC{T}}}
     lcons::Vector{T}
     ucons::Vector{T}
 end
@@ -19,16 +20,20 @@ function MOIOptimizationProblem(prob::OptimizationProblem)
     f = Optimization.instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p, num_cons)
     T = eltype(prob.u0)
     n = length(prob.u0)
-    return MOIOptimizationProblem(
-        f,
-        prob.u0,
-        prob.p,
-        isnothing(f.cons_jac_prototype) ? zeros(T, num_cons, n) : convert.(T, f.cons_jac_prototype),
-        isnothing(f.hess_prototype) ? zeros(T, n, n) : convert.(T, f.hess_prototype),
-        isnothing(f.cons_hess_prototype) ? Matrix{T}[zeros(T, n, n) for i in 1:num_cons] : [convert.(T, f.cons_hess_prototype[i]) for i in 1:num_cons],
-        prob.lcons === nothing ? fill(-Inf, num_cons) : prob.lcons,
-        prob.ucons === nothing ? fill(Inf, num_cons) : prob.ucons,
-    )
+    return MOIOptimizationProblem(f,
+                                  prob.u0,
+                                  prob.p,
+                                  isnothing(f.cons_jac_prototype) ? zeros(T, num_cons, n) :
+                                  convert.(T, f.cons_jac_prototype),
+                                  isnothing(f.hess_prototype) ? zeros(T, n, n) :
+                                  convert.(T, f.hess_prototype),
+                                  isnothing(f.cons_hess_prototype) ?
+                                  Matrix{T}[zeros(T, n, n) for i in 1:num_cons] :
+                                  [convert.(T, f.cons_hess_prototype[i])
+                                   for i in 1:num_cons],
+                                  prob.lcons === nothing ? fill(-Inf, num_cons) :
+                                  prob.lcons,
+                                  prob.ucons === nothing ? fill(Inf, num_cons) : prob.ucons)
 end
 
 function MOI.features_available(prob::MOIOptimizationProblem)
@@ -40,10 +45,8 @@ function MOI.features_available(prob::MOIOptimizationProblem)
     return features
 end
 
-function MOI.initialize(
-    moiproblem::MOIOptimizationProblem,
-    requested_features::Vector{Symbol},
-)
+function MOI.initialize(moiproblem::MOIOptimizationProblem,
+                        requested_features::Vector{Symbol})
     available_features = MOI.features_available(moiproblem)
     for feat in requested_features
         if !(feat in available_features)
@@ -73,10 +76,10 @@ end
 function MOI.jacobian_structure(moiproblem::MOIOptimizationProblem)
     if moiproblem.J isa SparseMatrixCSC
         rows, cols, _ = findnz(moiproblem.J)
-        inds = Tuple{Int,Int}[(i, j) for (i,j) in zip(rows, cols)]
+        inds = Tuple{Int, Int}[(i, j) for (i, j) in zip(rows, cols)]
     else
         rows, cols = size(moiproblem.J)
-        inds = Tuple{Int,Int}[(i, j) for j in 1:cols for i in 1:rows]
+        inds = Tuple{Int, Int}[(i, j) for j in 1:cols for i in 1:rows]
     end
     return inds
 end
@@ -85,10 +88,8 @@ function MOI.eval_constraint_jacobian(moiproblem::MOIOptimizationProblem, j, x)
     if isempty(j)
         return
     elseif moiproblem.f.cons_j === nothing
-        error(
-            "Use OptimizationFunction to pass the derivatives or " *
-            "automatically generate them with one of the autodiff backends",
-        )
+        error("Use OptimizationFunction to pass the derivatives or " *
+              "automatically generate them with one of the autodiff backends")
     end
     moiproblem.f.cons_j(moiproblem.J, x)
     if moiproblem.J isa SparseMatrixCSC
@@ -115,9 +116,9 @@ function MOI.hessian_lagrangian_structure(moiproblem::MOIOptimizationProblem)
     N = length(moiproblem.u0)
     inds = if sparse_obj
         rows, cols, _ = findnz(moiproblem.H)
-        Tuple{Int,Int}[(i, j) for (i, j) in zip(rows, cols) if i <= j]
+        Tuple{Int, Int}[(i, j) for (i, j) in zip(rows, cols) if i <= j]
     else
-        Tuple{Int,Int}[(row, col) for col in 1:N for row in 1:col]
+        Tuple{Int, Int}[(row, col) for col in 1:N for row in 1:col]
     end
     if sparse_constraints
         for Hi in moiproblem.cons_H
@@ -138,13 +139,11 @@ function MOI.hessian_lagrangian_structure(moiproblem::MOIOptimizationProblem)
     return inds
 end
 
-function MOI.eval_hessian_lagrangian(
-    moiproblem::MOIOptimizationProblem{T},
-    h,
-    x,
-    σ,
-    μ,
-) where {T}
+function MOI.eval_hessian_lagrangian(moiproblem::MOIOptimizationProblem{T},
+                                     h,
+                                     x,
+                                     σ,
+                                     μ) where {T}
     fill!(h, zero(T))
     k = 0
     moiproblem.f.hess(moiproblem.H, x)
@@ -210,7 +209,7 @@ function MOI.objective_expr(prob::MOIOptimizationProblem)
     return _replace_variable_indices(prob.f.expr)
 end
 
-function MOI.constraint_expr(prob::MOIOptimizationProblem,i)
+function MOI.constraint_expr(prob::MOIOptimizationProblem, i)
     # expr has the form f(x) == 0
     expr = _replace_variable_indices(prob.f.cons_expr[i].args[2])
     lb, ub = prob.lcons[i], prob.ucons[i]
@@ -225,21 +224,20 @@ function _create_new_optimizer(model::MOI.AbstractOptimizer)
     if MOI.supports_incremental_interface(model)
         return model
     end
-    return MOI.Utilities.CachingOptimizer(
-        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
-        model,
-    )
+    return MOI.Utilities.CachingOptimizer(MOI.Utilities.UniversalFallback(MOI.Utilities.Model{
+                                                                                              Float64
+                                                                                              }()),
+                                          model)
 end
 
-function __map_optimizer_args(
-    prob::OptimizationProblem,
-    opt::Union{MOI.AbstractOptimizer,MOI.OptimizerWithAttributes};
-    maxiters::Union{Number,Nothing}=nothing,
-    maxtime::Union{Number,Nothing}=nothing,
-    abstol::Union{Number,Nothing}=nothing,
-    reltol::Union{Number,Nothing}=nothing,
-    kwargs...
-)
+function __map_optimizer_args(prob::OptimizationProblem,
+                              opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes
+                                         };
+                              maxiters::Union{Number, Nothing} = nothing,
+                              maxtime::Union{Number, Nothing} = nothing,
+                              abstol::Union{Number, Nothing} = nothing,
+                              reltol::Union{Number, Nothing} = nothing,
+                              kwargs...)
     optimizer = _create_new_optimizer(opt)
     for (key, value) in kwargs
         MOI.set(optimizer, MOI.RawOptimizerAttribute("$(key)"), value)
@@ -259,26 +257,22 @@ function __map_optimizer_args(
     return optimizer
 end
 
-function SciMLBase.__solve(
-    prob::OptimizationProblem,
-    opt::Union{MOI.AbstractOptimizer,MOI.OptimizerWithAttributes};
-    maxiters::Union{Number,Nothing}=nothing,
-    maxtime::Union{Number,Nothing}=nothing,
-    abstol::Union{Number,Nothing}=nothing,
-    reltol::Union{Number,Nothing}=nothing,
-    kwargs...
-)
+function SciMLBase.__solve(prob::OptimizationProblem,
+                           opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
+                           maxiters::Union{Number, Nothing} = nothing,
+                           maxtime::Union{Number, Nothing} = nothing,
+                           abstol::Union{Number, Nothing} = nothing,
+                           reltol::Union{Number, Nothing} = nothing,
+                           kwargs...)
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
     maxtime = Optimization._check_and_convert_maxtime(maxtime)
-    opt_setup = __map_optimizer_args(
-        prob,
-        opt;
-        abstol=abstol,
-        reltol=reltol,
-        maxiters=maxiters,
-        maxtime=maxtime,
-        kwargs...
-    )
+    opt_setup = __map_optimizer_args(prob,
+                                     opt;
+                                     abstol = abstol,
+                                     reltol = reltol,
+                                     maxiters = maxiters,
+                                     maxtime = maxtime,
+                                     kwargs...)
     num_variables = length(prob.u0)
     θ = MOI.add_variables(opt_setup, num_variables)
     if prob.lb !== nothing
@@ -303,11 +297,9 @@ function SciMLBase.__solve(
             MOI.set(opt_setup, MOI.VariablePrimalStart(), θ[i], prob.u0[i])
         end
     end
-    MOI.set(
-        opt_setup,
-        MOI.ObjectiveSense(),
-        prob.sense === Optimization.MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE,
-    )
+    MOI.set(opt_setup,
+            MOI.ObjectiveSense(),
+            prob.sense === Optimization.MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE)
     if prob.lcons === nothing
         @assert prob.ucons === nothing
         con_bounds = MOI.NLPBoundsPair[]
@@ -315,11 +307,9 @@ function SciMLBase.__solve(
         @assert prob.ucons !== nothing
         con_bounds = MOI.NLPBoundsPair.(prob.lcons, prob.ucons)
     end
-    MOI.set(
-        opt_setup,
-        MOI.NLPBlock(),
-        MOI.NLPBlockData(con_bounds, MOIOptimizationProblem(prob), true),
-    )
+    MOI.set(opt_setup,
+            MOI.NLPBlock(),
+            MOI.NLPBlockData(con_bounds, MOIOptimizationProblem(prob), true))
     MOI.optimize!(opt_setup)
     if MOI.get(opt_setup, MOI.ResultCount()) >= 1
         minimizer = MOI.get(opt_setup, MOI.VariablePrimal(), θ)
@@ -330,15 +320,12 @@ function SciMLBase.__solve(
         minimum = NaN
         opt_ret = :Default
     end
-    return SciMLBase.build_solution(
-        prob,
-        opt,
-        minimizer,
-        minimum;
-        original=opt_setup,
-        retcode=opt_ret
-    )
+    return SciMLBase.build_solution(prob,
+                                    opt,
+                                    minimizer,
+                                    minimum;
+                                    original = opt_setup,
+                                    retcode = opt_ret)
 end
-
 
 end

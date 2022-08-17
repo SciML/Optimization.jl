@@ -27,7 +27,7 @@ Hessian is not defined via ForwardDiff.
 """
 struct AutoForwardDiff{chunksize} <: AbstractADType end
 
-function AutoForwardDiff(chunksize=nothing)
+function AutoForwardDiff(chunksize = nothing)
     AutoForwardDiff{chunksize}()
 end
 
@@ -39,31 +39,34 @@ function default_chunk_size(len)
     end
 end
 
-function instantiate_function(f::OptimizationFunction{true}, x, adtype::AutoForwardDiff{_chunksize}, p, num_cons = 0) where _chunksize
-
+function instantiate_function(f::OptimizationFunction{true}, x,
+                              adtype::AutoForwardDiff{_chunksize}, p,
+                              num_cons = 0) where {_chunksize}
     chunksize = _chunksize === nothing ? default_chunk_size(length(x)) : _chunksize
 
     _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
         gradcfg = ForwardDiff.GradientConfig(_f, x, ForwardDiff.Chunk{chunksize}())
-        grad = (res, θ, args...) -> ForwardDiff.gradient!(res, x -> _f(x, args...), θ, gradcfg, Val{false}())
+        grad = (res, θ, args...) -> ForwardDiff.gradient!(res, x -> _f(x, args...), θ,
+                                                          gradcfg, Val{false}())
     else
         grad = f.grad
     end
 
     if f.hess === nothing
         hesscfg = ForwardDiff.HessianConfig(_f, x, ForwardDiff.Chunk{chunksize}())
-        hess = (res, θ, args...) -> ForwardDiff.hessian!(res, x -> _f(x, args...), θ, hesscfg, Val{false}())
+        hess = (res, θ, args...) -> ForwardDiff.hessian!(res, x -> _f(x, args...), θ,
+                                                         hesscfg, Val{false}())
     else
         hess = f.hess
     end
 
     if f.hv === nothing
-        hv = function (H,θ,v, args...)
+        hv = function (H, θ, v, args...)
             res = ArrayInterfaceCore.zeromatrix(θ)
             hess(res, θ, args...)
-            H .= res*v
+            H .= res * v
         end
     else
         hv = f.hv
@@ -87,7 +90,9 @@ function instantiate_function(f::OptimizationFunction{true}, x, adtype::AutoForw
 
     if cons !== nothing && f.cons_h === nothing
         fncs = [(x) -> cons_oop(x)[i] for i in 1:num_cons]
-        hess_config_cache = [ForwardDiff.HessianConfig(fncs[i], x, ForwardDiff.Chunk{chunksize}()) for i in 1:num_cons]
+        hess_config_cache = [ForwardDiff.HessianConfig(fncs[i], x,
+                                                       ForwardDiff.Chunk{chunksize}())
+                             for i in 1:num_cons]
         cons_h = function (res, θ)
             for i in 1:num_cons
                 ForwardDiff.hessian!(res[i], fncs[i], θ, hess_config_cache[i], Val{true}())
@@ -96,8 +101,10 @@ function instantiate_function(f::OptimizationFunction{true}, x, adtype::AutoForw
     else
         cons_h = f.cons_h
     end
-    
-    return OptimizationFunction{true}(f.f, adtype; grad=grad, hess=hess, hv=hv,
-        cons=cons, cons_j=cons_j, cons_h=cons_h,
-        hess_prototype=nothing, cons_jac_prototype=f.cons_jac_prototype, cons_hess_prototype=f.cons_hess_prototype)
+
+    return OptimizationFunction{true}(f.f, adtype; grad = grad, hess = hess, hv = hv,
+                                      cons = cons, cons_j = cons_j, cons_h = cons_h,
+                                      hess_prototype = nothing,
+                                      cons_jac_prototype = f.cons_jac_prototype,
+                                      cons_hess_prototype = f.cons_hess_prototype)
 end
