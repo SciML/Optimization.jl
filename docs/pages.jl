@@ -1,5 +1,4 @@
-pages = [
-    "Optimization.jl: A Unified Optimization Package" => "index.md",
+pages = ["index.md",
     "Tutorials" => [
         "tutorials/intro.md",
         "tutorials/rosenbrock.md",
