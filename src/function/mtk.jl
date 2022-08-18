@@ -15,7 +15,7 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons = 0
         grad_oop, grad_iip = ModelingToolkit.generate_gradient(sys, expression = Val{false})
         grad(J, u) = (grad_iip(J, u, p); J)
     else
-        grad = f.grad
+        grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
     end
 
     if f.hess === nothing
@@ -23,7 +23,7 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons = 0
                                                               sparse = adtype.obj_sparse)
         hess(H, u) = (hess_iip(H, u, p); H)
     else
-        hess = f.hess
+        hess = (H, θ, args...) -> f.hess(H, θ, p, args...)
     end
 
     if f.hv === nothing
@@ -69,7 +69,7 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons = 0
             jac_iip(J, θ, p)
         end
     else
-        cons_j = f.cons_j
+        cons_j = (J, θ) -> f.cons_j(J, θ, p)
     end
 
     if f.cons !== nothing && f.cons_h === nothing
@@ -82,7 +82,7 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons = 0
             cons_hess_iip(res, θ, p)
         end
     else
-        cons_h = f.cons_h
+        cons_h = (res, θ) -> f.cons_h(res, θ, p)
     end
 
     if adtype.obj_sparse

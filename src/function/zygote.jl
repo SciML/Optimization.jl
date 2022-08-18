@@ -36,7 +36,7 @@ function instantiate_function(f, x, adtype::AutoZygote, p, num_cons = 0)
                                                                           θ)[1]) :
                                     res .= Zygote.gradient(x -> _f(x, args...), θ)[1]
     else
-        grad = f.grad
+        grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
     end
 
     if f.hess === nothing
@@ -52,7 +52,7 @@ function instantiate_function(f, x, adtype::AutoZygote, p, num_cons = 0)
             end
         end
     else
-        hess = f.hess
+        hess = (H, θ, args...) -> f.hess(H, θ, p, args...)
     end
 
     if f.hv === nothing
@@ -68,7 +68,7 @@ function instantiate_function(f, x, adtype::AutoZygote, p, num_cons = 0)
 
     return OptimizationFunction{false}(f, adtype; grad = grad, hess = hess, hv = hv,
                                        cons = nothing, cons_j = nothing, cons_h = nothing,
-                                       hess_prototype = nothing,
+                                       hess_prototype = f.hess_prototype,
                                        cons_jac_prototype = nothing,
                                        cons_hess_prototype = nothing)
 end

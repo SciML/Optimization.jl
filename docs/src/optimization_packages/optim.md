@@ -46,7 +46,7 @@ The following special keyword arguments which are not covered by the common `sol
 * `show_every`: Trace output is printed every `show_every`th iteration.
 
 
-For a more extensive documentation of all the algorithms and options please consult the 
+For a more extensive documentation of all the algorithms and options please consult the
 [`Documentation`](https://julianlsolvers.github.io/Optim.jl/stable/#)
 
 ## Local Optimizer
@@ -73,7 +73,7 @@ The Rosenbrock function can optimized using the `Optim.IPNewton()` as follows:
 
 ```julia
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
-cons= (x,p) -> [x[1]^2 + x[2]^2]
+cons= (res,x,p) -> res .= [x[1]^2 + x[2]^2]
 x0 = zeros(2)
 p  = [1.0,100.0]
 prob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();cons= cons)
@@ -345,7 +345,7 @@ The Rosenbrock function can optimized using the `Optim.KrylovTrustRegion()` as f
 
 ```julia
 rosenbrock(x, p) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
-cons= (x,p) -> [x[1]^2 + x[2]^2]
+cons= (res,x,p) -> res .= [x[1]^2 + x[2]^2]
 x0 = zeros(2)
 p  = [1.0,100.0]
 optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();cons= cons)
