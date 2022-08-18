@@ -12,4 +12,18 @@ using Test
                                             ub = [0.8, 0.8])
     sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
     @test 10 * sol.minimum < l1
+
+    @test_logs begin
+        (Base.LogLevel(-1), "loss: 0.0")
+        min_level = Base.LogLevel(-1)
+        solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(), progress = true)
+    end
+
+    @test_logs begin
+        (Base.LogLevel(-1), "loss: 0.0")
+        min_level = Base.LogLevel(-1)
+        solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(),
+              progress = true,
+              maxtime = 5)
+    end
 end
