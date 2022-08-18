@@ -3,8 +3,9 @@ module OptimizationMOI
 using MathOptInterface, Optimization, Optimization.SciMLBase, SparseArrays
 const MOI = MathOptInterface
 
+abstract type AbstractMOIOptimizationProblem <: MOI.AbstractNLPEvaluator end
 struct MOIOptimizationProblem{T, F <: OptimizationFunction, uType, P} <:
-       MOI.AbstractNLPEvaluator
+       AbstractMOIOptimizationProblem
     f::F
     u0::uType
     p::P
@@ -29,14 +30,13 @@ function MOIOptimizationProblem(prob::OptimizationProblem)
                                   convert.(T, f.hess_prototype),
                                   isnothing(f.cons_hess_prototype) ?
                                   Matrix{T}[zeros(T, n, n) for i in 1:num_cons] :
-                                  [convert.(T, f.cons_hess_prototype[i])
-                                   for i in 1:num_cons],
+                                  [convert.(T, h) for h in f.cons_hess_prototype],
                                   prob.lcons === nothing ? fill(-Inf, num_cons) :
                                   prob.lcons,
                                   prob.ucons === nothing ? fill(Inf, num_cons) : prob.ucons)
 end
 
-function MOI.features_available(prob::MOIOptimizationProblem)
+function MOI.features_available(prob::AbstractMOIOptimizationProblem)
     features = [:Grad, :Hess, :Jac]
     # Assume that if there are constraints and expr then cons_expr exists
     if prob.f.expr !== nothing
@@ -45,7 +45,7 @@ function MOI.features_available(prob::MOIOptimizationProblem)
     return features
 end
 
-function MOI.initialize(moiproblem::MOIOptimizationProblem,
+function MOI.initialize(moiproblem::AbstractMOIOptimizationProblem,
                         requested_features::Vector{Symbol})
     available_features = MOI.features_available(moiproblem)
     for feat in requested_features
@@ -58,22 +58,22 @@ function MOI.initialize(moiproblem::MOIOptimizationProblem,
     return
 end
 
-function MOI.eval_objective(moiproblem::MOIOptimizationProblem, x)
+function MOI.eval_objective(moiproblem::AbstractMOIOptimizationProblem, x)
     return moiproblem.f(x, moiproblem.p)
 end
 
-function MOI.eval_constraint(moiproblem::MOIOptimizationProblem, g, x)
+function MOI.eval_constraint(moiproblem::AbstractMOIOptimizationProblem, g, x)
     moiproblem.f.cons(g, x)
     return
 end
 
-function MOI.eval_objective_gradient(moiproblem::MOIOptimizationProblem, G, x)
+function MOI.eval_objective_gradient(moiproblem::AbstractMOIOptimizationProblem, G, x)
     moiproblem.f.grad(G, x)
     return
 end
 
 # This structure assumes the calculation of moiproblem.J is dense.
-function MOI.jacobian_structure(moiproblem::MOIOptimizationProblem)
+function MOI.jacobian_structure(moiproblem::AbstractMOIOptimizationProblem)
     if moiproblem.J isa SparseMatrixCSC
         rows, cols, _ = findnz(moiproblem.J)
         inds = Tuple{Int, Int}[(i, j) for (i, j) in zip(rows, cols)]
@@ -84,7 +84,7 @@ function MOI.jacobian_structure(moiproblem::MOIOptimizationProblem)
     return inds
 end
 
-function MOI.eval_constraint_jacobian(moiproblem::MOIOptimizationProblem, j, x)
+function MOI.eval_constraint_jacobian(moiproblem::AbstractMOIOptimizationProblem, j, x)
     if isempty(j)
         return
     elseif moiproblem.f.cons_j === nothing
@@ -106,7 +106,7 @@ function MOI.eval_constraint_jacobian(moiproblem::MOIOptimizationProblem, j, x)
     return
 end
 
-function MOI.hessian_lagrangian_structure(moiproblem::MOIOptimizationProblem)
+function MOI.hessian_lagrangian_structure(moiproblem::AbstractMOIOptimizationProblem)
     sparse_obj = moiproblem.H isa SparseMatrixCSC
     sparse_constraints = all(H -> H isa SparseMatrixCSC, moiproblem.cons_H)
     if !sparse_constraints && any(H -> H isa SparseMatrixCSC, moiproblem.cons_H)
@@ -139,7 +139,7 @@ function MOI.hessian_lagrangian_structure(moiproblem::MOIOptimizationProblem)
     return inds
 end
 
-function MOI.eval_hessian_lagrangian(moiproblem::MOIOptimizationProblem{T},
+function MOI.eval_hessian_lagrangian(moiproblem::AbstractMOIOptimizationProblem{T},
                                      h,
                                      x,
                                      σ,
@@ -205,11 +205,11 @@ function _replace_variable_indices(expr::Expr)
     return expr
 end
 
-function MOI.objective_expr(prob::MOIOptimizationProblem)
+function MOI.objective_expr(prob::AbstractMOIOptimizationProblem)
     return _replace_variable_indices(prob.f.expr)
 end
 
-function MOI.constraint_expr(prob::MOIOptimizationProblem, i)
+function MOI.constraint_expr(prob::AbstractMOIOptimizationProblem, i)
     # expr has the form f(x) == 0
     expr = _replace_variable_indices(prob.f.cons_expr[i].args[2])
     lb, ub = prob.lcons[i], prob.ucons[i]

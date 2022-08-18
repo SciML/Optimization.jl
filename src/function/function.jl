@@ -55,8 +55,8 @@ function instantiate_function(f, x, ::AbstractADType, p, num_cons = 0)
     cons_jac_prototype = f.cons_jac_prototype === nothing ? nothing :
                          convert.(eltype(x), f.cons_jac_prototype)
     cons_hess_prototype = f.cons_hess_prototype === nothing ? nothing :
-                          [convert.(eltype(x), f.cons_hess_prototype[i])
-                           for i in 1:num_cons]
+                          [convert.(eltype(x), h)
+                           for h in f.cons_hess_prototype]
     expr = symbolify(f.expr)
     cons_expr = symbolify.(f.cons_expr)
 
