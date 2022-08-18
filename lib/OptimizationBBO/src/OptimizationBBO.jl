@@ -9,7 +9,23 @@ for j = string.(BlackBoxOptim.SingleObjectiveMethodNames)
     eval(Meta.parse("export BBO_" * j))
 end
 
-decompose_trace(opt::BlackBoxOptim.OptRunController) = BlackBoxOptim.best_candidate(opt)
+function decompose_trace(opt::BlackBoxOptim.OptRunController, progress)
+    if progress
+        maxiters = opt.max_steps
+        max_time = opt.max_time
+        msg = string(best_fitness(opt))
+        if iszero(max_time)
+            # we stop at either convergence or max_steps
+            n_steps = BlackBoxOptim.num_steps(opt)
+            Base.@logmsg(Base.LogLevel(-1), msg, progress=n_steps / maxiters, _id=:OptimizationBBO)
+        else
+            # we stop at either convergence or max_time
+            elapsed = BlackBoxOptim.elapsed_time(opt)
+            Base.@logmsg(Base.LogLevel(-1), msg, progress=elapsed / max_time, _id=:OptimizationBBO)
+        end
+    end
+    return BlackBoxOptim.best_candidate(opt)
+end
 
 function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
     callback=nothing,
@@ -17,7 +33,7 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
     reltol::Union{Number,Nothing}=nothing,
-    verbose::Symbol=:compact,
+    verbose::Bool=false,
     kwargs...)
 
     if !isnothing(reltol)
@@ -45,42 +61,13 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
         mapped_args = (; mapped_args..., MinDeltaFitnessTolerance=abstol)
     end
 
-    if !isnothing(verbose)
-        mapped_args = (; mapped_args..., TraceMode=verbose)
+    if verbose
+        mapped_args = (; mapped_args..., TraceMode=:verbose)
+    else
+        mapped_args = (; mapped_args..., TraceMode=:silent)
     end
 
     return mapped_args
-end
-
-function log_lines(rd, progress, maxiters)
-    while isopen(rd)
-        ln = readline(rd)
-        isempty(ln) && continue
-        m = match(r"([0-9]*) steps", ln)
-        if !isnothing(m)
-            s = tryparse(Int, m[1])
-            isnothing(s) && continue
-            isnothing(maxiters) && continue
-            progress && Base.@logmsg(Base.LogLevel(-1),ln,progress=(s/maxiters),_id=:OptimizationBBO)
-        end
-          return
-    end
-end
-
-function redirect_output(f::Function, progress, maxiters)
-    old_stdout = stdout
-    rd, = redirect_stdout()
-    task = @async log_lines(rd, progress, maxiters)
-    try
-        ret = f()
-        Libc.flush_cstdio()
-        flush(stdout)
-        return ret
-    finally
-        close(rd)
-        redirect_stdout(old_stdout)
-        wait(task)
-    end
 end
 
 function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO, data=Optimization.DEFAULT_DATA;
@@ -89,7 +76,7 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO, data=O
     maxtime::Union{Number,Nothing}=nothing,
     abstol::Union{Number,Nothing}=nothing,
     reltol::Union{Number,Nothing}=nothing,
-    verbose::Symbol=:compact,
+    verbose::Bool=false,
     progress=false,
     kwargs...)
 
@@ -102,7 +89,7 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO, data=O
     cur, state = iterate(data)
 
     function _cb(trace)
-        cb_call = callback(decompose_trace(trace), x...)
+        cb_call = callback(decompose_trace(trace, progress), x...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -128,9 +115,8 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO, data=O
 
     t0 = time()
 
-    opt_res = redirect_output(progress, maxiters) do
-        BlackBoxOptim.bboptimize(opt_setup)
-    end
+    opt_res = BlackBoxOptim.bboptimize(opt_setup)
+
     t1 = time()
 
     opt_ret = Symbol(opt_res.stop_reason)
