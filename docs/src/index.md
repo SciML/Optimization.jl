@@ -1,4 +1,4 @@
-# Optimization.jl
+# Optimization.jl: A Unified Optimization Package
 
 Optimization.jl is a package with a scope that is beyond your normal global optimization
 package. Optimization.jl seeks to bring together all of the optimization packages
@@ -14,12 +14,27 @@ Assuming that you already have Julia correctly installed, it suffices to import
 Optimization.jl in the standard way:
 
 ```julia
-import Pkg; Pkg.add("Optimization")
+import Pkg
+Pkg.add("Optimization")
 ```
 The packages relevant to the core functionality of Optimization.jl will be imported
 accordingly and, in most cases, you do not have to worry about the manual
 installation of dependencies. However, you will need to add the specific optimizer
 packages.
+
+## Contributing
+
+- Please refer to the
+  [SciML ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://github.com/SciML/ColPrac/blob/master/README.md)
+  for guidance on PRs, issues, and other matters relating to contributing to SciML.
+- See the [SciML Style Guide](https://github.com/SciML/SciMLStyle) for common coding practices and other style decisions.
+- There are a few community forums:
+    - The #diffeq-bridged and #sciml-bridged channels in the
+      [Julia Slack](https://julialang.org/slack/)
+    - The #diffeq-bridged and #sciml-bridged channels in the
+      [Julia Zulip](https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged)
+    - On the [Julia Discourse forums](https://discourse.julialang.org)
+    - See also [SciML Community page](https://sciml.ai/community/)
 
 ## Overview of the Optimizers
 
