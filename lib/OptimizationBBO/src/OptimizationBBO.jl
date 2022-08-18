@@ -13,15 +13,17 @@ function decompose_trace(opt::BlackBoxOptim.OptRunController, progress)
     if progress
         maxiters = opt.max_steps
         max_time = opt.max_time
-        msg = sprint(show, best_fitness(opt), context=:compact => true)
+        msg = sprint(show, best_fitness(opt), context = :compact => true)
         if iszero(max_time)
             # we stop at either convergence or max_steps
             n_steps = BlackBoxOptim.num_steps(opt)
-            Base.@logmsg(Base.LogLevel(-1), msg, progress=n_steps / maxiters, _id=:OptimizationBBO)
+            Base.@logmsg(Base.LogLevel(-1), msg, progress=n_steps / maxiters,
+                         _id=:OptimizationBBO)
         else
             # we stop at either convergence or max_time
             elapsed = BlackBoxOptim.elapsed_time(opt)
-            Base.@logmsg(Base.LogLevel(-1), msg, progress=elapsed / max_time, _id=:OptimizationBBO)
+            Base.@logmsg(Base.LogLevel(-1), msg, progress=elapsed / max_time,
+                         _id=:OptimizationBBO)
         end
     end
     return BlackBoxOptim.best_candidate(opt)
@@ -62,9 +64,9 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
     end
 
     if verbose
-        mapped_args = (; mapped_args..., TraceMode=:verbose)
+        mapped_args = (; mapped_args..., TraceMode = :verbose)
     else
-        mapped_args = (; mapped_args..., TraceMode=:silent)
+        mapped_args = (; mapped_args..., TraceMode = :silent)
     end
 
     return mapped_args
