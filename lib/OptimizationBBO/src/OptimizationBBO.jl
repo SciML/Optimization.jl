@@ -13,7 +13,7 @@ function decompose_trace(opt::BlackBoxOptim.OptRunController, progress)
     if progress
         maxiters = opt.max_steps
         max_time = opt.max_time
-        msg = sprint(show, best_fitness(opt), context = :compact => true)
+        msg = "loss: " * sprint(show, best_fitness(opt), context = :compact => true)
         if iszero(max_time)
             # we stop at either convergence or max_steps
             n_steps = BlackBoxOptim.num_steps(opt)
