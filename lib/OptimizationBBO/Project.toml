@@ -6,7 +6,6 @@ version = "0.1.0"
 [deps]
 BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
 
 [compat]
 BlackBoxOptim = "0.6"
