@@ -8,9 +8,9 @@ BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 
 [compat]
-julia = "1"
 BlackBoxOptim = "0.6"
 Optimization = "3"
+julia = "1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
