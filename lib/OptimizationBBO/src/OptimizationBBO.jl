@@ -116,13 +116,13 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO,
     opt_setup = BlackBoxOptim.bbsetup(_loss; opt_args...)
 
     t0 = time()
-    
+
+    opt_res = BlackBoxOptim.bboptimize(opt_setup)
+
     if progress
         # Set progressbar to 1 to finish it
-        Base.@logmsg(Base.LogLevel(-1), msg, progress=1, _id=:OptimizationBBO)
+        Base.@logmsg(Base.LogLevel(-1), "", progress=1, _id=:OptimizationBBO)
     end
-    
-    opt_res = BlackBoxOptim.bboptimize(opt_setup)
 
     t1 = time()
 
