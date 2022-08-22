@@ -24,16 +24,18 @@ optimizer:
 
 
 ```julia
+using OptimizationMOI, Ipopt
 sol = solve(prob, Ipopt.Optimizer())
 ```
 
 The optimizer options are handled in one of two ways. They can either be set via
-`Optimization.MOI.OptimizerWithAttributes()` or as keyword argument to `solve`. 
+`OptimizationMOI.MOI.OptimizerWithAttributes()` or as keyword argument to `solve`. 
 
 For example using the `Ipopt.jl` optimizer:
 
 ```julia
-opt = Optimization.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "option_name" => option_value, ...)
+using OptimizationMOI, Ipopt
+opt = OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "option_name" => option_value, ...)
 sol = solve(prob, opt)
 
 sol = solve(prob,  Ipopt.Optimizer(); option_name = option_value, ...)
@@ -68,10 +70,10 @@ _p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 prob = Optimization.OptimizationProblem(f, x0, _p)
 
-using Juniper, Ipopt
-opt = Optimization.MOI.OptimizerWithAttributes(
+using OptimizationMOI, Juniper, Ipopt
+opt = OptimizationMOI.MOI.OptimizerWithAttributes(
     Juniper.Optimizer,
-    "nl_solver"=>Optimization.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "print_level"=>0),
+    "nl_solver"=>OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "print_level"=>0),
 )
 sol = solve(prob, opt)
 ```
