@@ -19,7 +19,7 @@ function true_sol(du, u, p, t)
     newtons_cooling(du, u, true_p, t)
 end
 
-ann = Chain(FastDense(1,8,tanh), FastDense(8,1,tanh))
+ann = Chain(Dense(1,8,tanh), Dense(8,1,tanh))
 pp,re = Flux.destructure(ann)
 
 function dudt_(u,p,t)
