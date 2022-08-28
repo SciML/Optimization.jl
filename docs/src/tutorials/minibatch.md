@@ -6,13 +6,13 @@
     [Optimisers.jl page](@ref optimisers) for details on the installation and usage.
 
 ```@example
-using Flux, Optimization, OptimizationOptimisers, OrdinaryDiffEq, DiffEqSensitivity
+using Flux, Optimization, OptimizationOptimisers, OrdinaryDiffEq, SciMLSensitivity
 
 function newtons_cooling(du, u, p, t)
     temp = u[1]
     k, temp_m = p
     du[1] = dT = -k*(temp-temp_m)
-  end
+end
 
 function true_sol(du, u, p, t)
     true_p = [log(2)/8.0, 100.0]
@@ -67,5 +67,4 @@ optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, bat
 optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
 res1 = Optimization.solve(optprob, Optimisers.ADAM(0.05), ncycle(train_loader, numEpochs), callback = callback)
-@test 10res1.minimum < l1
 ```
