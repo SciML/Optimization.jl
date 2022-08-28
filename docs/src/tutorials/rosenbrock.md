@@ -53,10 +53,8 @@ sol = solve(prob, Optim.KrylovTrustRegion())
 
 # Now derivative-based optimizers with various constraints
 
-    cons = (res,x,p) -> res .= [x[1]^2 + x[2]^2]
-    optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();cons= cons)
-    #prob = OptimizationProblem(optf, x0, _p)
-    #sol = solve(prob, IPNewton()) # No lcons or rcons, so constraints not satisfied
+cons = (res,x,p) -> res .= [x[1]^2 + x[2]^2]
+optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();cons= cons)
 
 prob = OptimizationProblem(optf, x0, _p, lcons = [-Inf], ucons = [Inf])
 sol = solve(prob, IPNewton()) # Note that -Inf < x[1]^2 + x[2]^2 < Inf is always true
@@ -73,6 +71,14 @@ prob = OptimizationProblem(optf, x0, _p, lcons = [0.5], ucons = [0.5],
 sol = solve(prob, IPNewton()) # Notice now that x[1]^2 + x[2]^2 ≈ 0.5:
                               # cons(sol.minimizer, _p) = 0.49999999999999994
 
+function con_c(res,x,p)
+    res .= [x[1]^2 + x[2]^2]
+end
+
+optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();cons= con_c)
+prob = OptimizationProblem(optf, x0, _p, lcons = [-Inf], ucons = [0.25^2])
+sol = solve(prob, IPNewton()) # -Inf < cons_circ(sol.minimizer, _p) = 0.25^2
+
 function con2_c(res,x,p)
     res .= [x[1]^2 + x[2]^2, x[2]*sin(x[1])-x[1]]
 end
@@ -81,10 +87,7 @@ optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();cons= con
 prob = OptimizationProblem(optf, x0, _p, lcons = [-Inf,-Inf], ucons = [Inf,Inf])
 sol = solve(prob, IPNewton())
 
-cons_circ = (x,p) -> res .= [x[1]^2 + x[2]^2]
-optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();cons= cons_circ)
-prob = OptimizationProblem(optf, x0, _p, lcons = [-Inf], ucons = [0.25^2])
-sol = solve(prob, IPNewton()) # -Inf < cons_circ(sol.minimizer, _p) = 0.25^2
+
 
 # Now let's switch over to OptimizationOptimisers with reverse-mode AD
 
@@ -107,7 +110,7 @@ prob = OptimizationProblem(optf, x0, _p)
 sol = solve(prob, Opt(:LN_BOBYQA, 2))
 sol = solve(prob, Opt(:LD_LBFGS, 2))
 
-## Add some box constarints and solve with a few NLopt.jl methods
+## Add some box constraints and solve with a few NLopt.jl methods
 
 prob = OptimizationProblem(optf, x0, _p, lb=[-1.0, -1.0], ub=[0.8, 0.8])
 sol = solve(prob, Opt(:LD_LBFGS, 2))

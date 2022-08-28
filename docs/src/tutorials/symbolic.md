@@ -26,7 +26,7 @@ for the loss function:
 
 ```@example modelingtoolkit
 loss = (a - x)^2 + b * (y - x^2)^2
-sys = OptimizationSystem(loss,[x,y],[a,b])
+@named sys = OptimizationSystem(loss,[x,y],[a,b])
 ```
 
 In order to turn it into a problem for numerical solutions, we need to specify what

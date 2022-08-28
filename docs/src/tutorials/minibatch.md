@@ -6,13 +6,13 @@
     [Optimisers.jl page](@ref optimisers) for details on the installation and usage.
 
 ```@example
-using Flux, Optimization, OptimizationOptimisers, OrdinaryDiffEq, DiffEqSensitivity
+using Flux, Optimization, OptimizationOptimisers, OrdinaryDiffEq, SciMLSensitivity
 
 function newtons_cooling(du, u, p, t)
     temp = u[1]
     k, temp_m = p
     du[1] = dT = -k*(temp-temp_m)
-  end
+end
 
 function true_sol(du, u, p, t)
     true_p = [log(2)/8.0, 100.0]
