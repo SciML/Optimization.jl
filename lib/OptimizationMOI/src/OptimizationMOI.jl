@@ -3,14 +3,18 @@ module OptimizationMOI
 using MathOptInterface, Optimization, Optimization.SciMLBase, SparseArrays
 const MOI = MathOptInterface
 
-struct MOIOptimizationProblem{T, F <: OptimizationFunction, uType, P} <:
+const DenseOrSparse{T} = Union{Matrix{T}, SparseMatrixCSC{T}}
+
+struct MOIOptimizationProblem{T, F <: OptimizationFunction, uType, P,
+                              JT <: DenseOrSparse{T}, HT <: DenseOrSparse{T},
+                              CHT <: DenseOrSparse{T}} <:
        MOI.AbstractNLPEvaluator
     f::F
     u0::uType
     p::P
-    J::Union{Matrix{T}, SparseMatrixCSC{T}}
-    H::Union{Matrix{T}, SparseMatrixCSC{T}}
-    cons_H::Vector{<:Union{Matrix{T}, SparseMatrixCSC{T}}}
+    J::JT
+    H::HT
+    cons_H::Vector{CHT}
     lcons::Vector{T}
     ucons::Vector{T}
 end
