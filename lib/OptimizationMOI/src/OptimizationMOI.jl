@@ -106,36 +106,15 @@ function MOI.eval_constraint_jacobian(moiproblem::MOIOptimizationProblem, j, x)
 end
 
 function MOI.hessian_lagrangian_structure(moiproblem::MOIOptimizationProblem)
-    sparse_obj = moiproblem.H isa SparseMatrixCSC
-    sparse_constraints = all(H -> H isa SparseMatrixCSC, moiproblem.cons_H)
-    if !sparse_constraints && any(H -> H isa SparseMatrixCSC, moiproblem.cons_H)
-        # Some constraint hessians are dense and some are sparse! :(
-        error("Mix of sparse and dense constraint hessians are not supported")
-    end
+    sparse_lag = moiproblem.lag_H isa SparseMatrixCSC
     N = length(moiproblem.u0)
-    inds = if sparse_obj
-        rows, cols, _ = findnz(moiproblem.H)
+    inds = if sparse_lag
+        rows, cols, _ = findnz(moiproblem.lag_H)
         Tuple{Int, Int}[(i, j) for (i, j) in zip(rows, cols) if i <= j]
     else
         Tuple{Int, Int}[(row, col) for col in 1:N for row in 1:col]
     end
-    if sparse_constraints
-        for Hi in moiproblem.cons_H
-            r, c, _ = findnz(Hi)
-            for (i, j) in zip(r, c)
-                if i <= j
-                    push!(inds, (i, j))
-                end
-            end
-        end
-    elseif !sparse_obj
-        # Performance optimization. If both are dense, no need to repeat
-    else
-        for col in 1:N, row in 1:col
-            push!(inds, (row, col))
-        end
-    end
-    return inds
+    inds
 end
 
 function MOI.eval_hessian_lagrangian(moiproblem::MOIOptimizationProblem{T},
