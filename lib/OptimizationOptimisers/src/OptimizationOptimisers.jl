@@ -23,7 +23,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::OptimisersOptimizers,
     G = copy(θ)
 
     local x, min_err, min_θ
-    min_err = typemax(eltype(prob.u0)) #dummy variables
+    min_err = typemax(eltype(real(prob.u0))) #dummy variables
     min_opt = 1
     min_θ = prob.u0
 
