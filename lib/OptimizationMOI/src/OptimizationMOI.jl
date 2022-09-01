@@ -6,15 +6,14 @@ const MOI = MathOptInterface
 const DenseOrSparse{T} = Union{Matrix{T}, SparseMatrixCSC{T}}
 
 struct MOIOptimizationProblem{T, F <: OptimizationFunction, uType, P,
-                              JT <: DenseOrSparse{T}, HT <: DenseOrSparse{T},
-                              CHT <: DenseOrSparse{T}} <:
+                              JT <: DenseOrSparse{T},
+                              LHT <: DenseOrSparse{T}} <:
        MOI.AbstractNLPEvaluator
     f::F
     u0::uType
     p::P
     J::JT
-    H::HT
-    cons_H::Vector{CHT}
+    lag_H::LHT
     lcons::Vector{T}
     ucons::Vector{T}
 end
@@ -29,12 +28,8 @@ function MOIOptimizationProblem(prob::OptimizationProblem)
                                   prob.p,
                                   isnothing(f.cons_jac_prototype) ? zeros(T, num_cons, n) :
                                   convert.(T, f.cons_jac_prototype),
-                                  isnothing(f.hess_prototype) ? zeros(T, n, n) :
-                                  convert.(T, f.hess_prototype),
-                                  isnothing(f.cons_hess_prototype) ?
-                                  Matrix{T}[zeros(T, n, n) for i in 1:num_cons] :
-                                  [convert.(T, f.cons_hess_prototype[i])
-                                   for i in 1:num_cons],
+                                  isnothing(f.lag_hess_prototype) ? zeros(T, n, n) :
+                                  convert.(T, f.lag_hess_prototype),
                                   prob.lcons === nothing ? fill(-Inf, num_cons) :
                                   prob.lcons,
                                   prob.ucons === nothing ? fill(Inf, num_cons) : prob.ucons)
@@ -150,48 +145,26 @@ function MOI.eval_hessian_lagrangian(moiproblem::MOIOptimizationProblem{T},
                                      μ) where {T}
     fill!(h, zero(T))
     k = 0
-    moiproblem.f.hess(moiproblem.H, x)
-    sparse_objective = moiproblem.H isa SparseMatrixCSC
-    if sparse_objective
-        rows, cols, _ = findnz(moiproblem.H)
-        for (i, j) in zip(rows, cols)
-            if i <= j
+    hess = moiproblem.H
+    moiproblem.f.lag_h(hess, x, σ, μ)
+    if hess isa SparseMatrixCSC
+        for col in 1:size(hess, 2)
+            for r in nzrange(hess, col)
+                I = rowvals(hess)[r]
+                J = col
+                V = nonzeros(hess)[r]
+                I >= J || continue
+                h[k] = V
                 k += 1
-                h[k] = σ * moiproblem.H[i, j]
             end
         end
     else
-        for i in 1:size(moiproblem.H, 1), j in 1:i
+        for i in 1:size(hess, 1), j in 1:i
             k += 1
-            h[k] = σ * moiproblem.H[i, j]
+            h[k] = hess[i, j]
         end
     end
-    # A count of the number of non-zeros in the objective Hessian is needed if
-    # the constraints are dense.
-    nnz_objective = k
-    if !isempty(μ) && !all(iszero, μ)
-        moiproblem.f.cons_h(moiproblem.cons_H, x)
-        for (μi, Hi) in zip(μ, moiproblem.cons_H)
-            if Hi isa SparseMatrixCSC
-                rows, cols, _ = findnz(Hi)
-                for (i, j) in zip(rows, cols)
-                    if i <= j
-                        k += 1
-                        h[k] += μi * Hi[i, j]
-                    end
-                end
-            else
-                # The constraints are dense. We only store one copy of the
-                # Hessian, so reset `k` to where it starts. That will be
-                # `nnz_objective` if the objective is sprase, and `0` otherwise.
-                k = sparse_objective ? nnz_objective : 0
-                for i in 1:size(Hi, 1), j in 1:i
-                    k += 1
-                    h[k] += μi * Hi[i, j]
-                end
-            end
-        end
-    end
+
     return
 end
 
