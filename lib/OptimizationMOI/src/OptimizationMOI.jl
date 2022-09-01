@@ -110,7 +110,7 @@ function MOI.hessian_lagrangian_structure(moiproblem::MOIOptimizationProblem)
     N = length(moiproblem.u0)
     inds = if sparse_lag
         rows, cols, _ = findnz(moiproblem.lag_H)
-        Tuple{Int, Int}[(i, j) for (i, j) in zip(rows, cols) if i <= j]
+        Tuple{Int, Int}[(i, j) for (i, j) in zip(rows, cols) if i >= j]
     else
         Tuple{Int, Int}[(row, col) for col in 1:N for row in 1:col]
     end
