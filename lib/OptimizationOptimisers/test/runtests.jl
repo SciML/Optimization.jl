@@ -22,7 +22,7 @@ using Test
     _p = ones(2)
     sumfunc(x0, _p) = sum(abs2, (x0 - _p))
     l1 = sumfunc(x0, _p)
-
+using Zygote
     optprob = OptimizationFunction(sumfunc, Optimization.AutoZygote())
 
     prob = OptimizationProblem(optprob, x0, _p)
