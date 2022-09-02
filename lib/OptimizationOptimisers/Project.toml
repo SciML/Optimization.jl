@@ -9,6 +9,7 @@ Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
 julia = "1"
