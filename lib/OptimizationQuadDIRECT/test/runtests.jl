@@ -1,5 +1,3 @@
-using Pkg;
-Pkg.develop(url = "https://github.com/timholy/QuadDIRECT.jl.git");
 using OptimizationQuadDIRECT, Optimization
 using Test
 
