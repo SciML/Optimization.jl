@@ -5,10 +5,11 @@ version = "0.1.0"
 
 [deps]
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+QuadDIRECT = "dae52e8d-d666-5120-a592-9e15c33b8d7a"
 
 [compat]
-julia = "1"
 Optimization = "3"
+julia = "1"
 
 [extras]
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"

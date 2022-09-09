@@ -49,6 +49,8 @@ jobs:
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
+      - if: ${{ matrix.group == 'OptimizationQuadDIRECT' }}
+        run: julia --project `using Pkg; Pkg.develop(url = "https://github.com/timholy/QuadDIRECT.jl.git")`
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         env:
