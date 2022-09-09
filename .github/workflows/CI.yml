@@ -50,7 +50,7 @@ jobs:
             ${{ runner.os }}-test-
             ${{ runner.os }}-
       - if: ${{ matrix.group == 'OptimizationQuadDIRECT' }}
-        run: julia --project `using Pkg; Pkg.Registry.add(url = "https://github.com/HolyLab/HolyLabRegistry.git"); Pkg.add("QuadDIRECT")`
+        run: julia --project -e 'using Pkg; Pkg.Registry.add("https://github.com/HolyLab/HolyLabRegistry.git"); Pkg.add("QuadDIRECT")'
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         env:
