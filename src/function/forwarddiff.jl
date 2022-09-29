@@ -26,6 +26,7 @@ if a `hess` function is supplied to the `OptimizationFunction`, then the
 Hessian is not defined via ForwardDiff.
 """
 struct AutoForwardDiff{chunksize} <: AbstractADType end
+struct OptimizationTag end
 
 function AutoForwardDiff(chunksize = nothing)
     AutoForwardDiff{chunksize}()
@@ -47,7 +48,7 @@ function instantiate_function(f::OptimizationFunction{true}, x,
     _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
-        gradcfg = ForwardDiff.GradientConfig(_f, x, ForwardDiff.Chunk{chunksize}())
+        gradcfg = ForwardDiff.GradientConfig(_f, x, ForwardDiff.Chunk{chunksize}(), ForwardDiff.Tag(OptimizationTag(), eltype(x)))
         grad = (res, θ, args...) -> ForwardDiff.gradient!(res, x -> _f(x, args...), θ,
                                                           gradcfg, Val{false}())
     else
@@ -55,7 +56,7 @@ function instantiate_function(f::OptimizationFunction{true}, x,
     end
 
     if f.hess === nothing
-        hesscfg = ForwardDiff.HessianConfig(_f, x, ForwardDiff.Chunk{chunksize}())
+        hesscfg = ForwardDiff.HessianConfig(_f, x, ForwardDiff.Chunk{chunksize}(), ForwardDiff.Tag(OptimizationTag(), eltype(x)))
         hess = (res, θ, args...) -> ForwardDiff.hessian!(res, x -> _f(x, args...), θ,
                                                          hesscfg, Val{false}())
     else
@@ -80,7 +81,7 @@ function instantiate_function(f::OptimizationFunction{true}, x,
     end
 
     if cons !== nothing && f.cons_j === nothing
-        cjconfig = ForwardDiff.JacobianConfig(cons_oop, x, ForwardDiff.Chunk{chunksize}())
+        cjconfig = ForwardDiff.JacobianConfig(cons_oop, x, ForwardDiff.Chunk{chunksize}(), ForwardDiff.Tag(OptimizationTag(), eltype(x)))
         cons_j = function (J, θ)
             ForwardDiff.jacobian!(J, cons_oop, θ, cjconfig)
         end
@@ -91,7 +92,8 @@ function instantiate_function(f::OptimizationFunction{true}, x,
     if cons !== nothing && f.cons_h === nothing
         fncs = [(x) -> cons_oop(x)[i] for i in 1:num_cons]
         hess_config_cache = [ForwardDiff.HessianConfig(fncs[i], x,
-                                                       ForwardDiff.Chunk{chunksize}())
+                                                       ForwardDiff.Chunk{chunksize}(), 
+                                                       ForwardDiff.Tag(OptimizationTag(), eltype(x)))
                              for i in 1:num_cons]
         cons_h = function (res, θ)
             for i in 1:num_cons
