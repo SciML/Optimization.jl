@@ -1,11 +1,15 @@
 module OptimizationSpeedMapping
 
+using Reexport
 @reexport using Optimization
 using SpeedMapping, Optimization.SciMLBase
 
 export SpeedMappingOpt
 
 struct SpeedMappingOpt end
+
+SciMLBase.isbounded(::SpeedMappingOpt) = true
+SciMLBase.callbacks_support(::SpeedMappingOpt) = false
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::SpeedMappingOpt;
                               callback = nothing,
@@ -15,7 +19,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::SpeedMappingOpt;
                               reltol::Union{Number, Nothing} = nothing)
 
     # add optimiser options from kwargs
-    mapped_args = (; kwargs...)
+    mapped_args = (;)
 
     if !(isnothing(maxiters))
         @info "maxiters defines maximum gradient calls for $(opt)"

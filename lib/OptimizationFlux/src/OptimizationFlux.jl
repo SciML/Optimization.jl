@@ -1,7 +1,8 @@
 module OptimizationFlux
 
-using Reexport, Printf, ProgressLogging, Optimization.SciMLBase
+using Reexport, Printf, ProgressLogging
 @reexport using Flux, Optimization
+using Optimization.SciMLBase
 
 function SciMLBase.__solve(prob::OptimizationProblem, opt::Flux.Optimise.AbstractOptimiser,
                            data = Optimization.DEFAULT_DATA;

@@ -1,7 +1,10 @@
 module OptimizationEvolutionary
 
-using Reexport, Optimization.SciMLBase
+using Reexport
 @reexport using Evolutionary, Optimization
+using Optimization.SciMLBase
+
+SciMLBase.isbounded(opt::Evolutionary.AbstractOptimizer) = true
 
 decompose_trace(trace::Evolutionary.OptimizationTrace) = last(trace)
 decompose_trace(trace::Evolutionary.OptimizationTraceRecord) = trace
@@ -19,8 +22,6 @@ function __map_optimizer_args(prob::OptimizationProblem,
                               abstol::Union{Number, Nothing} = nothing,
                               reltol::Union{Number, Nothing} = nothing)
     mapped_args = (;)
-
-    mapped_args = (; mapped_args..., kwargs...)
 
     if !isnothing(callback)
         mapped_args = (; mapped_args..., callback = callback)
@@ -83,7 +84,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Evolutionary.Abstract
                                     kwargs...)
 
     t0 = time()
-    if isnothing(prob.ub) | isnothing(prob.ub)
+    if isnothing(prob.ub) || isnothing(prob.ub)
         opt_res = Evolutionary.optimize(_loss, prob.u0, opt, opt_args)
     else
         cons = Evolutionary.BoxConstraints(prob.lb, prob.ub)

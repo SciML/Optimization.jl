@@ -1,17 +1,22 @@
 module OptimizationNOMAD
 
+using Reexport
 @reexport using Optimization
 using NOMAD, Optimization.SciMLBase
 
 export NOMADOpt
 struct NOMADOpt end
 
+SciMLBase.isbounded(::NOMADOpt) = true
+SciMLBase.callbacks_support(::NOMADOpt) = false
+
 function __map_optimizer_args!(prob::OptimizationProblem, opt::NOMAD.NomadProblem;
                                callback = nothing,
                                maxiters::Union{Number, Nothing} = nothing,
                                maxtime::Union{Number, Nothing} = nothing,
                                abstol::Union{Number, Nothing} = nothing,
-                               reltol::Union{Number, Nothing} = nothing)
+                               reltol::Union{Number, Nothing} = nothing,
+                               kwargs...)
     for j in kwargs
         setproperty!(opt.options, j.first, j.second)
     end

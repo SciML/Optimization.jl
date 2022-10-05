@@ -1,11 +1,15 @@
 module OptimizationQuadDIRECT
 
+using Reexport
 @reexport using Optimization
 using QuadDIRECT, Optimization.SciMLBase
 
 export QuadDirect
 
 struct QuadDirect end
+
+SciMLBase.isbounded(::QuadDirect) = true
+SciMLBase.callbacks_support(::QuadDirect) = false
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::QuadDirect;
                               callback = nothing,
@@ -17,11 +21,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::QuadDirect;
         @warn "common maxtime is currently not used by $(opt)"
     end
 
-    if !isnothing(callback)
-        @warn "callbacks are currently not used by $(opt)"
-    end
-
-    mapped_args = (; kwargs...)
+    mapped_args = (;)
 
     if !isnothing(maxiters)
         mapped_args = (; mapped_args..., maxevals = maxiters)

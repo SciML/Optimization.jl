@@ -1,7 +1,9 @@
 module OptimizationMOI
 
+using Reexport
 @reexport using Optimization
 using MathOptInterface, Optimization.SciMLBase, SparseArrays
+
 const MOI = MathOptInterface
 
 const DenseOrSparse{T} = Union{Matrix{T}, SparseMatrixCSC{T}}

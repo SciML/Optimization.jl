@@ -1,9 +1,13 @@
 module OptimizationOptimJL
 
+using Reexport
 @reexport using Optim, Optimization
-using Reexport, Optimization.SciMLBase, SparseArrays
+using Optimization.SciMLBase, SparseArrays
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace::Optim.OptimizationState) = trace
+
+SciMLBase.isconstrained(::IPNewton) = true
+SciMLBase.isbounded(opt::Optim.SimulatedAnnealing) = false
 
 function __map_optimizer_args(prob::OptimizationProblem,
                               opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
@@ -17,7 +21,7 @@ function __map_optimizer_args(prob::OptimizationProblem,
         @warn "common abstol is currently not used by $(opt)"
     end
 
-    mapped_args = (; extended_trace = true, kwargs...)
+    mapped_args = (; extended_trace = true)
 
     if !isnothing(callback)
         mapped_args = (; mapped_args..., callback = callback)

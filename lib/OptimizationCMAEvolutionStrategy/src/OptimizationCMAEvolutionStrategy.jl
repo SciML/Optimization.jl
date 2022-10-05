@@ -1,11 +1,15 @@
 module OptimizationCMAEvolutionStrategy
 
+using Reexport
 @reexport using Optimization
 using CMAEvolutionStrategy, Optimization.SciMLBase
 
 export CMAEvolutionStrategyOpt
 
 struct CMAEvolutionStrategyOpt end
+
+SciMLBase.isbounded(::CMAEvolutionStrategyOpt) = true
+SciMLBase.callbacks_support(::CMAEvolutionStrategyOpt) = false #looks like `logger` kwarg can be used to pass it, so should be implemented
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt;
                               callback = nothing,
@@ -18,8 +22,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::CMAEvolutionStrate
     end
 
     mapped_args = (; lower = prob.lb,
-                   upper = prob.ub,
-                   kwargs...)
+                   upper = prob.ub)
 
     if !isnothing(maxiters)
         mapped_args = (; mapped_args..., maxiter = maxiters)

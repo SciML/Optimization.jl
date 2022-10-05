@@ -1,11 +1,14 @@
 module OptimizationGCMAES
 
+using Reexport
 @reexport using Optimization
 using GCMAES, Optimization.SciMLBase
 
 export GCMAESOpt
 
 struct GCMAESOpt end
+
+SciMLBase.isbounded(::GCMAESOpt) = true
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::GCMAESOpt;
                               callback = nothing,
@@ -15,7 +18,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::GCMAESOpt;
                               reltol::Union{Number, Nothing} = nothing)
 
     # add optimiser options from kwargs
-    mapped_args = (; kwargs...)
+    mapped_args = (;)
 
     if !(isnothing(maxiters))
         mapped_args = (; mapped_args..., maxiter = maxiters)

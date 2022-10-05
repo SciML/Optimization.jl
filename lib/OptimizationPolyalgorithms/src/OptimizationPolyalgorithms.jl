@@ -1,5 +1,6 @@
 module OptimizationPolyalgorithms
 
+using Reexport
 @reexport using Optimization
 using Optimization.SciMLBase, OptimizationOptimJL, OptimizationOptimisers
 

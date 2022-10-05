@@ -1,9 +1,12 @@
 module OptimizationBBO
 
+using Reexport
 @reexport using Optimization
 using BlackBoxOptim, Optimization.SciMLBase
 
 abstract type BBO end
+
+SciMLBase.isbounded(::BBO) = true
 
 for j in string.(BlackBoxOptim.SingleObjectiveMethodNames)
     eval(Meta.parse("Base.@kwdef struct BBO_" * j * " <: BBO method=:" * j * " end"))
@@ -48,8 +51,6 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
         mapped_args = (; mapped_args..., CallbackFunction = callback,
                        CallbackInterval = 0.0)
     end
-
-    mapped_args = (; mapped_args..., kwargs...)
 
     if !isnothing(maxiters)
         mapped_args = (; mapped_args..., MaxSteps = maxiters)
