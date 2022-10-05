@@ -1,7 +1,7 @@
 module OptimizationOptimJL
 
-using Reexport, Optimization, Optimization.SciMLBase, SparseArrays
-@reexport using Optim
+@reexport using Optim, Optimization
+using Reexport, Optimization.SciMLBase, SparseArrays
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace::Optim.OptimizationState) = trace
 
@@ -12,8 +12,7 @@ function __map_optimizer_args(prob::OptimizationProblem,
                               maxiters::Union{Number, Nothing} = nothing,
                               maxtime::Union{Number, Nothing} = nothing,
                               abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing,
-                              kwargs...)
+                              reltol::Union{Number, Nothing} = nothing)
     if !isnothing(abstol)
         @warn "common abstol is currently not used by $(opt)"
     end
@@ -43,7 +42,7 @@ function SciMLBase.__solve(prob::OptimizationProblem,
                            opt::Optim.AbstractOptimizer,
                            data = Optimization.DEFAULT_DATA;
                            kwargs...)
-    if !isnothing(prob.lb) | !isnothing(prob.ub)
+    if !isnothing(prob.lb) || !isnothing(prob.ub)
         if !(opt isa Union{Optim.Fminbox, Optim.SAMIN, Optim.AbstractConstrainedOptimizer})
             if opt isa Optim.ParticleSwarm
                 opt = Optim.ParticleSwarm(; lower = prob.lb, upper = prob.ub,

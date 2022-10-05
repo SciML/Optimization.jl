@@ -1,7 +1,7 @@
 module OptimizationEvolutionary
 
-using Reexport, Optimization, Optimization.SciMLBase
-@reexport using Evolutionary
+using Reexport, Optimization.SciMLBase
+@reexport using Evolutionary, Optimization
 
 decompose_trace(trace::Evolutionary.OptimizationTrace) = last(trace)
 decompose_trace(trace::Evolutionary.OptimizationTraceRecord) = trace
@@ -17,8 +17,7 @@ function __map_optimizer_args(prob::OptimizationProblem,
                               maxiters::Union{Number, Nothing} = nothing,
                               maxtime::Union{Number, Nothing} = nothing,
                               abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing,
-                              kwargs...)
+                              reltol::Union{Number, Nothing} = nothing)
     mapped_args = (;)
 
     mapped_args = (; mapped_args..., kwargs...)

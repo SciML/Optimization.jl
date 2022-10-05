@@ -1,6 +1,7 @@
 module OptimizationCMAEvolutionStrategy
 
-using CMAEvolutionStrategy, Optimization, Optimization.SciMLBase
+@reexport using Optimization
+using CMAEvolutionStrategy, Optimization.SciMLBase
 
 export CMAEvolutionStrategyOpt
 
@@ -11,8 +12,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::CMAEvolutionStrate
                               maxiters::Union{Number, Nothing} = nothing,
                               maxtime::Union{Number, Nothing} = nothing,
                               abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing,
-                              kwargs...)
+                              reltol::Union{Number, Nothing} = nothing)
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end

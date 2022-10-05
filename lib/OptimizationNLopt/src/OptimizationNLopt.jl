@@ -1,7 +1,7 @@
 module OptimizationNLopt
 
-using Reexport, Optimization, Optimization.SciMLBase
-@reexport using NLopt
+using Reexport, Optimization.SciMLBase
+@reexport using NLopt, Optimization
 
 (f::NLopt.Algorithm)() = f
 
@@ -14,8 +14,7 @@ function __map_optimizer_args!(prob::OptimizationProblem, opt::NLopt.Opt;
                                local_method::Union{NLopt.Algorithm, NLopt.Opt, Nothing} = nothing,
                                local_maxiters::Union{Number, Nothing} = nothing,
                                local_maxtime::Union{Number, Nothing} = nothing,
-                               local_options::Union{NamedTuple, Nothing} = nothing,
-                               kwargs...)
+                               local_options::Union{NamedTuple, Nothing} = nothing)
     if local_method !== nothing
         if isa(local_method, NLopt.Opt)
             if ndims(local_method) != length(prob.u0)

@@ -1,7 +1,7 @@
 module OptimizationOptimisers
 
-using Optimization, Reexport, Printf, ProgressLogging, Optimization.SciMLBase
-@reexport using Optimisers
+using Reexport, Printf, ProgressLogging, Optimization.SciMLBase
+@reexport using Optimisers, Optimization
 
 const OptimisersOptimizers = Union{Descent, Adam, Momentum, Nesterov, RMSProp,
                                    AdaGrad, AdaMax, AdaDelta, AMSGrad, NAdam, RAdam, OAdam,

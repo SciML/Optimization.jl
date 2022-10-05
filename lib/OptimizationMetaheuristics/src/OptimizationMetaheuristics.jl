@@ -1,7 +1,7 @@
 module OptimizationMetaheuristics
 
-using Reexport, Optimization, Optimization.SciMLBase
-@reexport using Metaheuristics
+@reexport using Metaheuristics, Optimization
+using Reexport, Optimization.SciMLBase
 
 function initial_population!(opt, prob, bounds, f)
     opt_init = deepcopy(opt)
@@ -27,8 +27,7 @@ function __map_optimizer_args!(prob::OptimizationProblem,
                                maxiters::Union{Number, Nothing} = nothing,
                                maxtime::Union{Number, Nothing} = nothing,
                                abstol::Union{Number, Nothing} = nothing,
-                               reltol::Union{Number, Nothing} = nothing,
-                               kwargs...)
+                               reltol::Union{Number, Nothing} = nothing)
     for j in kwargs
         if j.first .∈ Ref(propertynames(Metaheuristics.Information()))
             error("Set $(j.first) by directly passing it to Information Structure which is passed to $(typeof(opt)) algorithms when calling solve().")

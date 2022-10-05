@@ -1,7 +1,7 @@
 module OptimizationMultistartOptimization
 
-using Reexport, Optimization, Optimization.SciMLBase
-@reexport using MultistartOptimization
+using Reexport, Optimization.SciMLBase
+@reexport using MultistartOptimization, Optimization
 
 function SciMLBase.__solve(prob::OptimizationProblem,
                            multiopt::MultistartOptimization.TikTak, opt;

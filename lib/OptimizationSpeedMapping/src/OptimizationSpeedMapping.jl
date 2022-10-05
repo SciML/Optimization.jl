@@ -1,6 +1,7 @@
 module OptimizationSpeedMapping
 
-using SpeedMapping, Optimization, Optimization.SciMLBase
+@reexport using Optimization
+using SpeedMapping, Optimization.SciMLBase
 
 export SpeedMappingOpt
 
@@ -11,8 +12,7 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::SpeedMappingOpt;
                               maxiters::Union{Number, Nothing} = nothing,
                               maxtime::Union{Number, Nothing} = nothing,
                               abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing,
-                              kwargs...)
+                              reltol::Union{Number, Nothing} = nothing)
 
     # add optimiser options from kwargs
     mapped_args = (; kwargs...)

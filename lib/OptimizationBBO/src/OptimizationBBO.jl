@@ -1,6 +1,7 @@
 module OptimizationBBO
 
-using BlackBoxOptim, Optimization, Optimization.SciMLBase
+@reexport using Optimization
+using BlackBoxOptim, Optimization.SciMLBase
 
 abstract type BBO end
 
@@ -35,8 +36,7 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
                               maxtime::Union{Number, Nothing} = nothing,
                               abstol::Union{Number, Nothing} = nothing,
                               reltol::Union{Number, Nothing} = nothing,
-                              verbose::Bool = false,
-                              kwargs...)
+                              verbose::Bool = false)
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
