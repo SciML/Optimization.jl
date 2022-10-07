@@ -7,6 +7,7 @@ decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace::Optim.OptimizationState) = trace
 
 SciMLBase.isconstrained(::IPNewton) = true
+SciMLBase.isbounded(opt::Optim.AbstractOptimizer) = true
 SciMLBase.isbounded(opt::Optim.SimulatedAnnealing) = false
 
 function __map_optimizer_args(prob::OptimizationProblem,
