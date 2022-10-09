@@ -8,7 +8,8 @@
 x_1^2 + x_2^2 \leq 0.8 \\
 
 0.0 \leq x_1 * x_2 \leq 5.0
-\end{aligned}\]</p><pre><code class="language-julia hljs">using Optimization, OptimizationMOI, OptimizationOptimJL, ForwardDiff, ModelingToolkit
+\end{aligned}\]</p><pre><code class="language-julia hljs">using Optimization, OptimizationMOI, OptimizationOptimJL, Ipopt
+using ForwardDiff, ModelingToolkit
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
@@ -22,11 +23,13 @@ sol = solve(prob, IPNewton())</code></pre><pre class="documenter-example-output"
 cons(res, sol.u, _p)
 res</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{Float64}:
  0.7999999999999997
- 0.36417869099766553</code></pre><pre><code class="language-julia hljs">prob.f(sol.u, _p)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.06810654459826093</code></pre><p>We can also use the Ipopt library with the OptimizationMOI package.</p><pre><code class="language- hljs">sol = solve(prob, Ipopt.Optimizer())</code></pre><pre><code class="language-julia hljs">res = zeros(2)
+ 0.36417869099766553</code></pre><pre><code class="language-julia hljs">prob.f(sol.u, _p)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.06810654459826093</code></pre><p>We can also use the Ipopt library with the OptimizationMOI package.</p><pre><code class="language-julia hljs">sol = solve(prob, Ipopt.Optimizer())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">u: 2-element Vector{Float64}:
+ 0.7519644519971305
+ 0.4843030638909282</code></pre><pre><code class="language-julia hljs">res = zeros(2)
 cons(res, sol.u, _p)
 res</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{Float64}:
- 0.7999999999999997
- 0.36417869099766553</code></pre><pre><code class="language-julia hljs">prob.f(sol.u, _p)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.06810654459826093</code></pre><p>We can also use ModelingToolkit as our AD backend and generate symbolic derivatives and expression graph for the objective and constraints.</p><p>Let&#39;s modify the bounds to use the function as an equality constraint. The constraint now becomes -</p><p class="math-container">\[\begin{aligned}
+ 0.7999999947614852
+ 0.3641786880392731</code></pre><pre><code class="language-julia hljs">prob.f(sol.u, _p)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.06810654547600103</code></pre><p>We can also use ModelingToolkit as our AD backend and generate symbolic derivatives and expression graph for the objective and constraints.</p><p>Let&#39;s modify the bounds to use the function as an equality constraint. The constraint now becomes -</p><p class="math-container">\[\begin{aligned}
 
 x_1^2 + x_2^2 = 1.0 \\
 
@@ -37,7 +40,7 @@ u0: 2-element Vector{Float64}:
  0.0
  0.0</code></pre><p>Below the AmplNLWriter.jl package is used with to use the Ipopt library to solve the problem.</p><pre><code class="language-julia hljs">using AmplNLWriter, Ipopt_jll
 sol = solve(prob, AmplNLWriter.Optimizer(Ipopt_jll.amplexe))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">u: 2-element Vector{Float64}:
- 0.7071678163428021
- 0.7070457460302929</code></pre><p>The constraints evaluate to 1.0 and 0.5 respectively as expected.</p><pre><code class="language-julia hljs">res = zeros(2)
+ 0.7071678163428006
+ 0.7070457460302945</code></pre><p>The constraints evaluate to 1.0 and 0.5 respectively as expected.</p><pre><code class="language-julia hljs">res = zeros(2)
 cons(res, sol.u, _p)
-println(res)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[1.0000000074505806, 0.4999999962747097]</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../symbolic/">« Symbolic Problem Building with ModelingToolkit</a><a class="docs-footer-nextpage" href="../../API/optimization_problem/">Defining OptimizationProblems »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Friday 9 September 2022 12:13">Friday 9 September 2022</span>. Using Julia version 1.8.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+println(res)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[1.0000000074505806, 0.4999999962747097]</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../symbolic/">« Symbolic Problem Building with ModelingToolkit</a><a class="docs-footer-nextpage" href="../../API/optimization_problem/">Defining OptimizationProblems »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Sunday 9 October 2022 13:14">Sunday 9 October 2022</span>. Using Julia version 1.8.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
