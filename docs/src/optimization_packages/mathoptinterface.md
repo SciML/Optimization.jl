@@ -61,8 +61,8 @@ sol = solve(prob,  Ipopt.Optimizer(); option_name = option_value, ...)
   [Juniper documentation](https://github.com/lanl-ansi/Juniper.jl) for more
   detail.
 
-```julia
-using Optimization, ForwardDiff
+```@example MOI
+using Optimization, OptimizationMOI, Juniper, Ipopt
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 _p  = [1.0, 100.0]
@@ -70,7 +70,6 @@ _p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 prob = Optimization.OptimizationProblem(f, x0, _p)
 
-using OptimizationMOI, Juniper, Ipopt
 opt = OptimizationMOI.MOI.OptimizerWithAttributes(
     Juniper.Optimizer,
     "nl_solver"=>OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "print_level"=>0),

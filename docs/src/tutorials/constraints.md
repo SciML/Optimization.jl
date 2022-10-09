@@ -16,7 +16,8 @@ x_1^2 + x_2^2 \leq 0.8 \\
 ```
 
 ```@example constraints
-using Optimization, OptimizationMOI, OptimizationOptimJL, ForwardDiff, ModelingToolkit
+using Optimization, OptimizationMOI, OptimizationOptimJL, Ipopt
+using ForwardDiff, ModelingToolkit
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)

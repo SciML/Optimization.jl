@@ -26,9 +26,8 @@ constraint equations. However, lower and upper constraints set by `lb` and `ub` 
 
 The Rosenbrock function can optimized using `MultistartOptimization.TikTak()` with 100 initial points and the local method `NLopt.LD_LBFGS()` as follows:
 
-```julia
-using OptimizationMultistartOptimization
-using OptimizationNLopt
+```@example MultiStart
+using Optimization, OptimizationMultistartOptimization, OptimizationNLopt
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0, 100.0]
@@ -39,12 +38,8 @@ sol = solve(prob, MultistartOptimization.TikTak(100), NLopt.LD_LBFGS())
 
 You can use any `Optimization` optimizers you like. The global method of the `MultistartOptimization` is a positional argument and followed by the local method. This for example means we can perform a multistartoptimization with LBFGS as the optimizer using either the `NLopt.jl` or `Optim.jl` implementation as follows. Moreover, this interface allows you access and adjust all the optimizer settings as you normally would:
 
-```julia
+```@example MultiStart
 using OptimizationOptimJL
-using ForwardDiff
-rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
-x0 = zeros(2)
-p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
 sol = solve(prob, MultistartOptimization.TikTak(100), LBFGS(), maxiters=5)

@@ -90,7 +90,9 @@ Derivative-free optimizers are optimizers that can be used even in cases where n
 
 The Rosenbrock function can optimized using the `NLopt.LN_NELDERMEAD()` as follows:
 
-```julia
+```@example NLopt1
+using Optimization
+using NLopt
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0, 100.0]
@@ -122,7 +124,8 @@ Gradient-based optimizers are optimizers which utilise the gradient information 
 
 The Rosenbrock function can optimized using `NLopt.LD_LBFGS()` as follows:
 
-```julia
+```@example NLopt2
+using Optimization, OptimizationNLopt
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0, 100.0]
@@ -160,26 +163,28 @@ constraint equations. However, lower and upper constraints set by `lb` and `ub` 
 
 The Rosenbrock function can optimized using `NLopt.GN_DIRECT()` as follows:
 
-```julia
+```@example NLopt3
+using Optimization, OptimizationNLopt
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
 prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
-sol = solve(prob, NLopt.GN_DIRECT())
+sol = solve(prob, NLopt.GN_DIRECT(),maxtime=10.0)
 ```
 
 Algorithms such as `NLopt.G_MLSL()` or `NLopt.G_MLSL_LDS()` also require a local optimiser to be selected which via the `local_method` argument of `solve`.
 
 The Rosenbrock function can optimized using `NLopt.G_MLSL_LDS()` with `NLopt.LN_NELDERMEAD()` as the local optimizer. The local optimizer maximum iterations are set via `local_maxiters`:
 
-```julia
+```@example NLopt4
+using Optimization, OptimizationNLopt
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
-sol = solve(prob, NLopt.G_MLSL_LDS(), local_method = NLopt.LD_LBFGS(), local_maxiters=10000)
+sol = solve(prob, NLopt.G_MLSL_LDS(), local_method = NLopt.LD_LBFGS(),maxtime=10.0, local_maxiters=10)
 ```
 
 ### With Constraint Equations

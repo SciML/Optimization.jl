@@ -21,7 +21,8 @@ constraint equations. However, lower and upper constraints set by `lb` and `ub` 
 
 The Rosenbrock function can optimized using the `CMAEvolutionStrategyOpt()` as follows:
 
-```julia
+```@example CMAEvolutionStrategy
+using Optimization, OptimizationCMAEvolutionStrategy
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0, 100.0]

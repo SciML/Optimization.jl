@@ -20,11 +20,11 @@ The choices for the auto-AD fill-ins with quick descriptions are:
 The following sections describe the Auto-AD choices in detail.
 
 ```@docs
-AutoForwardDiff
-AutoFiniteDiff
-AutoReverseDiff
-AutoZygote
-AutoTracker
-AutoModelingToolkit
+Optimization.AutoForwardDiff
+Optimization.AutoFiniteDiff
+Optimization.AutoReverseDiff
+Optimization.AutoZygote
+Optimization.AutoTracker
+Optimization.AutoModelingToolkit
 ```
 
