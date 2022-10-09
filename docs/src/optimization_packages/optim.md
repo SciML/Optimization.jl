@@ -71,7 +71,8 @@ For a more extensive documentation of all the algorithms and options please cons
 
 The Rosenbrock function can optimized using the `Optim.IPNewton()` as follows:
 
-```julia
+```@example Optim1
+using Optimization, OptimizationOptimJL
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 cons= (res,x,p) -> res .= [x[1]^2 + x[2]^2]
 x0 = zeros(2)
@@ -112,7 +113,8 @@ Derivative-free optimizers are optimizers that can be used even in cases where n
 
 The Rosenbrock function can optimized using the `Optim.NelderMead()` as follows:
 
-```julia
+```@example Optim2
+using Optimization, OptimizationOptimJL
 rosenbrock(x, p) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0,100.0]
@@ -255,15 +257,16 @@ Gradient-based optimizers are optimizers which utilise the gradient information 
 
 
 
-The Rosenbrock function can optimized using the `Optim.LD_LBFGS()` as follows:
+The Rosenbrock function can optimized using the `Optim.LBFGS()` as follows:
 
-```julia
+```@example Optim3
+using Optimization, OptimizationOptimJL
 rosenbrock(x, p) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0,100.0]
 optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 prob = Optimization.OptimizationProblem(optprob, x0, p, lb=[-1.0, -1.0], ub=[0.8, 0.8])
-sol = solve(prob, NLopt.LD_LBFGS())
+sol = solve(prob, Optim.LBFGS())
 ```
 
 ### Hessian-Based Second Order
@@ -309,11 +312,12 @@ the Hessian in order to be appropriate.
 
 The Rosenbrock function can optimized using the `Optim.Newton()` as follows:
 
-```julia
+```@example Optim4
+using Optimization, OptimizationOptimJL, ModelingToolkit
 rosenbrock(x, p) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0,100.0]
-f = OptimizationFunction(rosenbrock,ModelingToolkit.AutoModelingToolkit(),x0,p,grad=true,hess=true)
+f = OptimizationFunction(rosenbrock,Optimization.AutoModelingToolkit())
 prob = Optimization.OptimizationProblem(f,x0,p)
 sol = solve(prob,Optim.Newton())
 ```
@@ -343,7 +347,8 @@ special case when considering conditioning of the Hessian.
 
 The Rosenbrock function can optimized using the `Optim.KrylovTrustRegion()` as follows:
 
-```julia
+```@example Optim5
+using Optimization, OptimizationOptimJL
 rosenbrock(x, p) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 cons= (res,x,p) -> res .= [x[1]^2 + x[2]^2]
 x0 = zeros(2)
@@ -370,7 +375,8 @@ constraint equations. It works both with and without lower and upper constraints
 
 The Rosenbrock function can optimized using the `Optim.ParticleSwarm()` as follows:
 
-```julia
+```@example Optim6
+using Optimization, OptimizationOptimJL
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0,100.0]
@@ -398,7 +404,8 @@ constraint equations.
 
 The Rosenbrock function can optimized using the `Optim.SAMIN()` as follows:
 
-```julia
+```@example Optim7
+using Optimization, OptimizationOptimJL
 rosenbrock(x, p) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p  = [1.0,100.0]

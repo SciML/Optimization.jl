@@ -33,6 +33,8 @@ The output of the first optimization task (with the `NelderMead()` algorithm)
 is given below:
 
 ```@example intro
+optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+prob = OptimizationProblem(optf, u0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
 sol = solve(prob,NelderMead())
 ```
 
