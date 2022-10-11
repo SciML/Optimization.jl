@@ -7,16 +7,6 @@ using Test
     x0 = zeros(2)
     _p = [1.0, 100.0]
     l1 = rosenbrock(x0, _p)
-    f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
-    prob = OptimizationProblem(f, x0, _p)
-    Random.seed!(1234)
-    sol = solve(prob, SimulatedAnnealing())
-    @test 10 * sol.minimum < l1
-
-    Random.seed!(1234)
-    prob = OptimizationProblem(f, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
-    sol = solve(prob, SAMIN())
-    @test 10 * sol.minimum < l1
 
     prob = OptimizationProblem(rosenbrock, x0, _p)
     sol = solve(prob,
@@ -25,12 +15,17 @@ using Test
                                                                          b = 0.5)))
     @test 10 * sol.minimum < l1
 
-    cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = cons)
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit();
-                                   cons = cons)
+    f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 
-    prob = OptimizationProblem(optprob, x0, _p)
+    Random.seed!(1234)
+    prob = OptimizationProblem(f, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+    sol = solve(prob, SAMIN())
+    @test 10 * sol.minimum < l1
+
+    prob = OptimizationProblem(f, x0, _p)
+    Random.seed!(1234)
+    sol = solve(prob, SimulatedAnnealing())
+    @test 10 * sol.minimum < l1
 
     sol = solve(prob, Optim.BFGS())
     @test 10 * sol.minimum < l1
@@ -40,6 +35,10 @@ using Test
 
     sol = solve(prob, Optim.KrylovTrustRegion())
     @test 10 * sol.minimum < l1
+
+    cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
+    optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit();
+                                   cons = cons)
 
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [Inf])
     sol = solve(prob, IPNewton())
