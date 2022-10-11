@@ -8,8 +8,9 @@ export CMAEvolutionStrategyOpt
 
 struct CMAEvolutionStrategyOpt end
 
-SciMLBase.isbounded(::CMAEvolutionStrategyOpt) = true
-SciMLBase.callbacks_support(::CMAEvolutionStrategyOpt) = false #looks like `logger` kwarg can be used to pass it, so should be implemented
+SciMLBase.requiresbounds(::CMAEvolutionStrategyOpt) = true
+SciMLBase.allowsbounds(::CMAEvolutionStrategyOpt) = true
+SciMLBase.allowscallback(::CMAEvolutionStrategyOpt) = false #looks like `logger` kwarg can be used to pass it, so should be implemented
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt;
                               callback = nothing,

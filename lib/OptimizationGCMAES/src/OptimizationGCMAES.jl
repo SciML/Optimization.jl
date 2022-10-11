@@ -8,7 +8,8 @@ export GCMAESOpt
 
 struct GCMAESOpt end
 
-SciMLBase.isbounded(::GCMAESOpt) = true
+SciMLBase.requiresbounds(::GCMAESOpt) = true
+SciMLBase.allowsbounds(::GCMAESOpt) = true
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::GCMAESOpt;
                               callback = nothing,

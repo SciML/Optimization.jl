@@ -4,8 +4,9 @@ using Reexport
 @reexport using Metaheuristics, Optimization
 using Optimization.SciMLBase
 
-SciMLBase.isbounded(opt::Metaheuristics.AbstractAlgorithm) = true
-SciMLBase.callbacks_support(opt::Metaheuristics.AbstractAlgorithm) = false
+SciMLBase.requiresbounds(opt::Metaheuristics.AbstractAlgorithm) = true
+SciMLBase.allowsbounds(opt::Metaheuristics.AbstractAlgorithm) = true
+SciMLBase.allowscallback(opt::Metaheuristics.AbstractAlgorithm) = false
 
 function initial_population!(opt, prob, bounds, f)
     opt_init = deepcopy(opt)

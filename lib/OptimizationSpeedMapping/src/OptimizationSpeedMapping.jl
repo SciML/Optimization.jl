@@ -8,8 +8,9 @@ export SpeedMappingOpt
 
 struct SpeedMappingOpt end
 
-SciMLBase.isbounded(::SpeedMappingOpt) = true
-SciMLBase.callbacks_support(::SpeedMappingOpt) = false
+SciMLBase.allowsbounds(::SpeedMappingOpt) = true
+SciMLBase.requiresbounds(::SpeedMappingOpt) = true
+SciMLBase.allowscallback(::SpeedMappingOpt) = false
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::SpeedMappingOpt;
                               callback = nothing,

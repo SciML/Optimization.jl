@@ -6,9 +6,12 @@ using Optimization.SciMLBase, SparseArrays
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace::Optim.OptimizationState) = trace
 
-SciMLBase.isconstrained(::IPNewton) = true
-SciMLBase.isbounded(opt::Optim.AbstractOptimizer) = true
-SciMLBase.isbounded(opt::Optim.SimulatedAnnealing) = false
+SciMLBase.allowsconstraints(::IPNewton) = true
+SciMLBase.requiresconstraints(::IPNewton) = true
+SciMLBase.allowsbounds(opt::Optim.AbstractOptimizer) = true
+SciMLBase.allowsbounds(opt::Optim.SimulatedAnnealing) = false
+SciMLBase.requiresbounds(opt::Optim.Fminbox) = true
+SciMLBase.requiresbounds(opt::Optim.SAMIN) = true
 
 function __map_optimizer_args(prob::OptimizationProblem,
                               opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,

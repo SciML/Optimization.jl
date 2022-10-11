@@ -8,6 +8,15 @@ const MOI = MathOptInterface
 
 const DenseOrSparse{T} = Union{Matrix{T}, SparseMatrixCSC{T}}
 
+function SciMLBase.allowsbounds(opt::Union{MOI.AbstractOptimizer,
+                                           MOI.OptimizerWithAttributes})
+    true
+end
+function SciMLBase.allowsconstraints(opt::Union{MOI.AbstractOptimizer,
+                                                MOI.OptimizerWithAttributes})
+    true
+end
+
 struct MOIOptimizationProblem{T, F <: OptimizationFunction, uType, P,
                               JT <: DenseOrSparse{T}, HT <: DenseOrSparse{T},
                               CHT <: DenseOrSparse{T}} <:
@@ -243,7 +252,8 @@ function __map_optimizer_args(prob::OptimizationProblem,
                               maxiters::Union{Number, Nothing} = nothing,
                               maxtime::Union{Number, Nothing} = nothing,
                               abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing)
+                              reltol::Union{Number, Nothing} = nothing,
+                              kwargs...)
     optimizer = _create_new_optimizer(opt)
     for (key, value) in kwargs
         MOI.set(optimizer, MOI.RawOptimizerAttribute("$(key)"), value)

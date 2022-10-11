@@ -4,7 +4,7 @@ using Reexport
 @reexport using Evolutionary, Optimization
 using Optimization.SciMLBase
 
-SciMLBase.isbounded(opt::Evolutionary.AbstractOptimizer) = true
+SciMLBase.allowsbounds(opt::Evolutionary.AbstractOptimizer) = true
 
 decompose_trace(trace::Evolutionary.OptimizationTrace) = last(trace)
 decompose_trace(trace::Evolutionary.OptimizationTraceRecord) = trace

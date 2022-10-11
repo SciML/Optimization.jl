@@ -4,7 +4,8 @@ using Reexport
 @reexport using MultistartOptimization, Optimization
 using Optimization.SciMLBase
 
-SciMLBase.isbounded(opt::MultistartOptimization.TikTak) = true
+SciMLBase.requiresbounds(opt::MultistartOptimization.TikTak) = true
+SciMLBase.allowsbounds(opt::MultistartOptimization.TikTak) = true
 
 function SciMLBase.__solve(prob::OptimizationProblem,
                            multiopt::MultistartOptimization.TikTak, opt;

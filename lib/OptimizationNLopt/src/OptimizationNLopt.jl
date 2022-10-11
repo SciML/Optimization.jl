@@ -6,6 +6,8 @@ using Optimization.SciMLBase
 
 (f::NLopt.Algorithm)() = f
 
+SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
+
 function __map_optimizer_args!(prob::OptimizationProblem, opt::NLopt.Opt;
                                callback = nothing,
                                maxiters::Union{Number, Nothing} = nothing,

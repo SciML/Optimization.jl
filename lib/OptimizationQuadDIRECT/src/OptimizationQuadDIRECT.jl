@@ -8,8 +8,9 @@ export QuadDirect
 
 struct QuadDirect end
 
-SciMLBase.isbounded(::QuadDirect) = true
-SciMLBase.callbacks_support(::QuadDirect) = false
+SciMLBase.allowsbounds(::QuadDirect) = true
+SciMLBase.requiresbounds(::QuadDirect) = true
+SciMLBase.allowscallback(::QuadDirect) = false
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::QuadDirect;
                               callback = nothing,
