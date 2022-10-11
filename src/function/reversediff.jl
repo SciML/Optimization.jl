@@ -58,15 +58,8 @@ function instantiate_function(f, x, adtype::AutoReverseDiff, p = SciMLBase.NullP
 
     if f.hess === nothing
         hess = function (res, θ, args...)
-            if res isa DiffResults.DiffResult
-                DiffResults.hessian!(res,
-                                     ForwardDiff.jacobian(θ) do θ
-                                         ReverseDiff.gradient(x -> _f(x, args...), θ)[1]
-                                     end)
-            else
-                res .= ForwardDiff.jacobian(θ) do θ
-                    ReverseDiff.gradient(x -> _f(x, args...), θ)
-                end
+            res .= ForwardDiff.jacobian(θ) do θ
+                ReverseDiff.gradient(x -> _f(x, args...), θ)
             end
         end
     else
@@ -76,9 +69,9 @@ function instantiate_function(f, x, adtype::AutoReverseDiff, p = SciMLBase.NullP
     if f.hv === nothing
         hv = function (H, θ, v, args...)
             _θ = ForwardDiff.Dual.(θ, v)
-            res = DiffResults.GradientResult(_θ)
+            res = similar(_θ)
             grad(res, _θ, args...)
-            H .= getindex.(ForwardDiff.partials.(DiffResults.gradient(res)), 1)
+            H .= getindex.(ForwardDiff.partials.(res), 1)
         end
     else
         hv = f.hv

@@ -28,12 +28,7 @@ function instantiate_function(f, x, adtype::AutoTracker, p, num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
-        grad = (res, θ, args...) -> res isa DiffResults.DiffResult ?
-                                    DiffResults.gradient!(res,
-                                                          Tracker.data(Tracker.gradient(x -> _f(x,
-                                                                                                args...),
-                                                                                        θ)[1])) :
-                                    res .= Tracker.data(Tracker.gradient(x -> _f(x, args...),
+        grad = (res, θ, args...) -> res .= Tracker.data(Tracker.gradient(x -> _f(x, args...),
                                                                          θ)[1])
     else
         grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
