@@ -1,9 +1,21 @@
 module OptimizationMOI
 
-using MathOptInterface, Optimization, Optimization.SciMLBase, SparseArrays
+using Reexport
+@reexport using Optimization
+using MathOptInterface, Optimization.SciMLBase, SparseArrays
+
 const MOI = MathOptInterface
 
 const DenseOrSparse{T} = Union{Matrix{T}, SparseMatrixCSC{T}}
+
+function SciMLBase.allowsbounds(opt::Union{MOI.AbstractOptimizer,
+                                           MOI.OptimizerWithAttributes})
+    true
+end
+function SciMLBase.allowsconstraints(opt::Union{MOI.AbstractOptimizer,
+                                                MOI.OptimizerWithAttributes})
+    true
+end
 
 struct MOIOptimizationProblem{T, F <: OptimizationFunction, uType, P,
                               JT <: DenseOrSparse{T}, HT <: DenseOrSparse{T},

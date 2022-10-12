@@ -1,25 +1,29 @@
 module OptimizationCMAEvolutionStrategy
 
-using CMAEvolutionStrategy, Optimization, Optimization.SciMLBase
+using Reexport
+@reexport using Optimization
+using CMAEvolutionStrategy, Optimization.SciMLBase
 
 export CMAEvolutionStrategyOpt
 
 struct CMAEvolutionStrategyOpt end
+
+SciMLBase.requiresbounds(::CMAEvolutionStrategyOpt) = true
+SciMLBase.allowsbounds(::CMAEvolutionStrategyOpt) = true
+SciMLBase.allowscallback(::CMAEvolutionStrategyOpt) = false #looks like `logger` kwarg can be used to pass it, so should be implemented
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::CMAEvolutionStrategyOpt;
                               callback = nothing,
                               maxiters::Union{Number, Nothing} = nothing,
                               maxtime::Union{Number, Nothing} = nothing,
                               abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing,
-                              kwargs...)
+                              reltol::Union{Number, Nothing} = nothing)
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
 
     mapped_args = (; lower = prob.lb,
-                   upper = prob.ub,
-                   kwargs...)
+                   upper = prob.ub)
 
     if !isnothing(maxiters)
         mapped_args = (; mapped_args..., maxiter = maxiters)

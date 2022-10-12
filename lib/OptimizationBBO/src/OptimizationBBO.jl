@@ -1,8 +1,13 @@
 module OptimizationBBO
 
-using BlackBoxOptim, Optimization, Optimization.SciMLBase
+using Reexport
+@reexport using Optimization
+using BlackBoxOptim, Optimization.SciMLBase
 
 abstract type BBO end
+
+SciMLBase.requiresbounds(::BBO) = true
+SciMLBase.allowsbounds(::BBO) = true
 
 for j in string.(BlackBoxOptim.SingleObjectiveMethodNames)
     eval(Meta.parse("Base.@kwdef struct BBO_" * j * " <: BBO method=:" * j * " end"))
@@ -35,8 +40,7 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
                               maxtime::Union{Number, Nothing} = nothing,
                               abstol::Union{Number, Nothing} = nothing,
                               reltol::Union{Number, Nothing} = nothing,
-                              verbose::Bool = false,
-                              kwargs...)
+                              verbose::Bool = false)
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
@@ -48,8 +52,6 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
         mapped_args = (; mapped_args..., CallbackFunction = callback,
                        CallbackInterval = 0.0)
     end
-
-    mapped_args = (; mapped_args..., kwargs...)
 
     if !isnothing(maxiters)
         mapped_args = (; mapped_args..., MaxSteps = maxiters)

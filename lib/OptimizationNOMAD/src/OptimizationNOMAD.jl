@@ -1,9 +1,14 @@
 module OptimizationNOMAD
 
-using NOMAD, Optimization, Optimization.SciMLBase
+using Reexport
+@reexport using Optimization
+using NOMAD, Optimization.SciMLBase
 
 export NOMADOpt
 struct NOMADOpt end
+
+SciMLBase.allowsbounds(::NOMADOpt) = true
+SciMLBase.allowscallback(::NOMADOpt) = false
 
 function __map_optimizer_args!(prob::OptimizationProblem, opt::NOMAD.NomadProblem;
                                callback = nothing,

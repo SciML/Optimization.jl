@@ -1,6 +1,8 @@
 module OptimizationPolyalgorithms
 
-using Optimization, Optimization.SciMLBase, OptimizationOptimJL, OptimizationOptimisers
+using Reexport
+@reexport using Optimization
+using Optimization.SciMLBase, OptimizationOptimJL, OptimizationOptimisers
 
 struct PolyOpt end
 

@@ -1,21 +1,25 @@
 module OptimizationSpeedMapping
 
-using SpeedMapping, Optimization, Optimization.SciMLBase
+using Reexport
+@reexport using Optimization
+using SpeedMapping, Optimization.SciMLBase
 
 export SpeedMappingOpt
 
 struct SpeedMappingOpt end
+
+SciMLBase.allowsbounds(::SpeedMappingOpt) = true
+SciMLBase.allowscallback(::SpeedMappingOpt) = false
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::SpeedMappingOpt;
                               callback = nothing,
                               maxiters::Union{Number, Nothing} = nothing,
                               maxtime::Union{Number, Nothing} = nothing,
                               abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing,
-                              kwargs...)
+                              reltol::Union{Number, Nothing} = nothing)
 
     # add optimiser options from kwargs
-    mapped_args = (; kwargs...)
+    mapped_args = (;)
 
     if !(isnothing(maxiters))
         @info "maxiters defines maximum gradient calls for $(opt)"

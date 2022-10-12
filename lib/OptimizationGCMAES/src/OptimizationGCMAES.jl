@@ -1,21 +1,25 @@
 module OptimizationGCMAES
 
-using GCMAES, Optimization, Optimization.SciMLBase
+using Reexport
+@reexport using Optimization
+using GCMAES, Optimization.SciMLBase
 
 export GCMAESOpt
 
 struct GCMAESOpt end
+
+SciMLBase.requiresbounds(::GCMAESOpt) = true
+SciMLBase.allowsbounds(::GCMAESOpt) = true
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::GCMAESOpt;
                               callback = nothing,
                               maxiters::Union{Number, Nothing} = nothing,
                               maxtime::Union{Number, Nothing} = nothing,
                               abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing,
-                              kwargs...)
+                              reltol::Union{Number, Nothing} = nothing)
 
     # add optimiser options from kwargs
-    mapped_args = (; kwargs...)
+    mapped_args = (;)
 
     if !(isnothing(maxiters))
         mapped_args = (; mapped_args..., maxiter = maxiters)

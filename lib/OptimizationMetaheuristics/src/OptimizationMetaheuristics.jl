@@ -1,7 +1,12 @@
 module OptimizationMetaheuristics
 
-using Reexport, Optimization, Optimization.SciMLBase
-@reexport using Metaheuristics
+using Reexport
+@reexport using Metaheuristics, Optimization
+using Optimization.SciMLBase
+
+SciMLBase.requiresbounds(opt::Metaheuristics.AbstractAlgorithm) = true
+SciMLBase.allowsbounds(opt::Metaheuristics.AbstractAlgorithm) = true
+SciMLBase.allowscallback(opt::Metaheuristics.AbstractAlgorithm) = false
 
 function initial_population!(opt, prob, bounds, f)
     opt_init = deepcopy(opt)
@@ -37,10 +42,6 @@ function __map_optimizer_args!(prob::OptimizationProblem,
         else
             error("$(j.first) keyword is not a valid option for $(typeof(opt).super) algorithm.")
         end
-    end
-
-    if !isnothing(callback)
-        @warn "Callback argument is currently not used by $(typeof(opt).super)"
     end
 
     if !isnothing(maxiters)
@@ -82,8 +83,6 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Metaheuristics.Abstra
 
     if !isnothing(prob.lb) & !isnothing(prob.ub)
         opt_bounds = [prob.lb prob.ub]'
-    else
-        error("$(opt) requires lower and upper bounds to be defined.")
     end
 
     if !isnothing(prob.f.cons)
