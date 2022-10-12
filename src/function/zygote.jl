@@ -29,11 +29,8 @@ function instantiate_function(f, x, adtype::AutoZygote, p, num_cons = 0)
 
     _f = (θ, args...) -> f(θ, p, args...)[1]
     if f.grad === nothing
-        grad = (res, θ, args...) -> res isa DiffResults.DiffResult ?
-                                    DiffResults.gradient!(res,
-                                                          Zygote.gradient(x -> _f(x,
-                                                                                  args...),
-                                                                          θ)[1]) :
+        grad = (res, θ, args...) -> false ?
+                                    false :
                                     res .= Zygote.gradient(x -> _f(x, args...), θ)[1]
     else
         grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
@@ -41,14 +38,8 @@ function instantiate_function(f, x, adtype::AutoZygote, p, num_cons = 0)
 
     if f.hess === nothing
         hess = function (res, θ, args...)
-            if res isa DiffResults.DiffResult
-                DiffResults.hessian!(res, ForwardDiff.jacobian(θ) do θ
-                                         Zygote.gradient(x -> _f(x, args...), θ)[1]
-                                     end)
-            else
-                res .= ForwardDiff.jacobian(θ) do θ
-                    Zygote.gradient(x -> _f(x, args...), θ)[1]
-                end
+            res .= ForwardDiff.jacobian(θ) do θ
+                Zygote.gradient(x -> _f(x, args...), θ)[1]
             end
         end
     else
@@ -58,9 +49,9 @@ function instantiate_function(f, x, adtype::AutoZygote, p, num_cons = 0)
     if f.hv === nothing
         hv = function (H, θ, v, args...)
             _θ = ForwardDiff.Dual.(θ, v)
-            res = DiffResults.GradientResult(_θ)
+            res = similar(_θ)
             grad(res, _θ, args...)
-            H .= getindex.(ForwardDiff.partials.(DiffResults.gradient(res)), 1)
+            H .= getindex.(ForwardDiff.partials.(res), 1)
         end
     else
         hv = f.hv

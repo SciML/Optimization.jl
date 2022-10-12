@@ -7,7 +7,6 @@ using DocStringExtensions
 using Reexport
 @reexport using SciMLBase
 using Requires
-using DiffResults
 using Logging, ProgressLogging, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
 using ArrayInterfaceCore, Base.Iterators, SparseArrays
 using Pkg
