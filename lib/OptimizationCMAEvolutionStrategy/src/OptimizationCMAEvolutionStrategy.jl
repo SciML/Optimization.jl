@@ -8,7 +8,6 @@ export CMAEvolutionStrategyOpt
 
 struct CMAEvolutionStrategyOpt end
 
-SciMLBase.requiresbounds(::CMAEvolutionStrategyOpt) = true
 SciMLBase.allowsbounds(::CMAEvolutionStrategyOpt) = true
 SciMLBase.allowscallback(::CMAEvolutionStrategyOpt) = false #looks like `logger` kwarg can be used to pass it, so should be implemented
 
