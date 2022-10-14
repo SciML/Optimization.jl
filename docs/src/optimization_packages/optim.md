@@ -69,7 +69,7 @@ For a more extensive documentation of all the algorithms and options please cons
         * `μ0::Union{Symbol,Number} = :auto`
         * `show_linesearch::Bool = false`
 
-The Rosenbrock function can optimized using the `Optim.IPNewton()` as follows:
+The Rosenbrock function with constraints can optimized using the `Optim.IPNewton()` as follows:
 
 ```@example Optim1
 using Optimization, OptimizationOptimJL
@@ -350,10 +350,9 @@ The Rosenbrock function can optimized using the `Optim.KrylovTrustRegion()` as f
 ```@example Optim5
 using Optimization, OptimizationOptimJL
 rosenbrock(x, p) =  (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
-cons= (res,x,p) -> res .= [x[1]^2 + x[2]^2]
 x0 = zeros(2)
 p  = [1.0,100.0]
-optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();cons= cons)
+optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 prob = Optimization.OptimizationProblem(optprob, x0, p)
 sol = solve(prob, Optim.KrylovTrustRegion())
 ```
@@ -362,8 +361,8 @@ sol = solve(prob, Optim.KrylovTrustRegion())
 
 
 ### Without Constraint Equations
-The following method in [`Optim`](https://github.com/JuliaNLSolvers/Optim.jl) is performing global optimization on problems without
-constraint equations. It works both with and without lower and upper constraints set by `lb` and `ub` in the `Optimization.OptimizationProblem`.
+The following method in [`Optim`](https://github.com/JuliaNLSolvers/Optim.jl) performs global optimization on problems with or without
+box constraints. It works both with and without lower and upper bounds set by `lb` and `ub` in the `Optimization.OptimizationProblem`.
 
 - [`Optim.ParticleSwarm()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/particle_swarm/): **Particle Swarm Optimization**
 
@@ -386,8 +385,8 @@ sol = solve(prob, Optim.ParticleSwarm(lower=prob.lb, upper= prob.ub, n_particles
 ```
 
 ### With Constraint Equations
-The following method in [`Optim`](https://github.com/JuliaNLSolvers/Optim.jl) is performing global optimization on problems with
-constraint equations.
+The following method in [`Optim`](https://github.com/JuliaNLSolvers/Optim.jl) performs global optimization on problems with
+box constraints.
 
 - [`Optim.SAMIN()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/samin/): **Simulated Annealing with bounds**
 
