@@ -5,7 +5,7 @@
     This example uses the OptimizationOptimJL.jl package. See the [Optim.jl page](@ref optim)
     for details on the installation and usage.
 
-[ModelingToolkit.jl](https://github.com/SciML/ModelingToolkit.jl) is a comprehensive system
+[ModelingToolkit.jl](https://docs.sciml.ai/ModelingToolkit/stable/) is a comprehensive system
 for symbolic modeling in Julia. Allows for doing many manipulations before the solver phase,
 such as detecting sparsity patterns, analytically solving parts of the model to reduce the
 solving complexity, and more. One of the types of system types that it supports is
@@ -53,5 +53,5 @@ solve(prob,Newton())
 It has a lot of other features like auto-parallelism and sparsification too.
 Plus you can hierarchically nest systems to have it generate huge
 optimization problems. Check out the
-[ModelingToolkit.jl OptimizationSystem documentation](https://mtk.sciml.ai/dev/systems/OptimizationSystem/)
+[ModelingToolkit.jl OptimizationSystem documentation](https://docs.sciml.ai/ModelingToolkit/stable/)
 for more information.
