@@ -40,12 +40,13 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
                               maxtime::Union{Number, Nothing} = nothing,
                               abstol::Union{Number, Nothing} = nothing,
                               reltol::Union{Number, Nothing} = nothing,
-                              verbose::Bool = false)
+                              verbose::Bool = false,
+                              kwargs...)
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
-
-    mapped_args = (; Method = opt.method,
+    mapped_args = (; kwargs...)
+    mapped_args = (; mapped_args..., Method = opt.method,
                    SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)])
 
     if !isnothing(callback)
