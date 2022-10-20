@@ -6,8 +6,9 @@ version = "0.1.4"
 [deps]
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+Setfield = "efcf1570-3423-57d1-acb7-fd33fddbac46"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 MathOptInterface = "1"
