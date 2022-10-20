@@ -21,8 +21,8 @@ function SciMLBase.allowsconstraints(opt::Union{MOI.AbstractOptimizer,
 end
 
 struct MOIOptimizationCache{T, F <: OptimizationFunction, uType, P, LB, UB, I,
-                              JT <: DenseOrSparse{T}, HT <: DenseOrSparse{T},
-                              CHT <: DenseOrSparse{T}, S, PR} <:
+                            JT <: DenseOrSparse{T}, HT <: DenseOrSparse{T},
+                            CHT <: DenseOrSparse{T}, S, PR} <:
        MOI.AbstractNLPEvaluator
     f::F
     u0::uType
@@ -45,24 +45,24 @@ function MOIOptimizationCache(prob::OptimizationProblem)
     T = eltype(prob.u0)
     n = length(prob.u0)
     return MOIOptimizationCache(f,
-                                  prob.u0,
-                                  prob.p,
-                                  prob.lb,
-                                  prob.ub, 
-                                  prob.int,
-                                  isnothing(f.cons_jac_prototype) ? zeros(T, num_cons, n) :
-                                  convert.(T, f.cons_jac_prototype),
-                                  isnothing(f.hess_prototype) ? zeros(T, n, n) :
-                                  convert.(T, f.hess_prototype),
-                                  isnothing(f.cons_hess_prototype) ?
-                                  Matrix{T}[zeros(T, n, n) for i in 1:num_cons] :
-                                  [convert.(T, f.cons_hess_prototype[i])
-                                   for i in 1:num_cons],
-                                  prob.lcons === nothing ? fill(-Inf, num_cons) :
-                                  prob.lcons,
-                                  prob.ucons === nothing ? fill(Inf, num_cons) : prob.ucons,
-                                  prob.sense,
-                                  prob)
+                                prob.u0,
+                                prob.p,
+                                prob.lb,
+                                prob.ub,
+                                prob.int,
+                                isnothing(f.cons_jac_prototype) ? zeros(T, num_cons, n) :
+                                convert.(T, f.cons_jac_prototype),
+                                isnothing(f.hess_prototype) ? zeros(T, n, n) :
+                                convert.(T, f.hess_prototype),
+                                isnothing(f.cons_hess_prototype) ?
+                                Matrix{T}[zeros(T, n, n) for i in 1:num_cons] :
+                                [convert.(T, f.cons_hess_prototype[i])
+                                 for i in 1:num_cons],
+                                prob.lcons === nothing ? fill(-Inf, num_cons) :
+                                prob.lcons,
+                                prob.ucons === nothing ? fill(Inf, num_cons) : prob.ucons,
+                                prob.sense,
+                                prob)
 end
 
 function MOI.features_available(cache::MOIOptimizationCache)
@@ -288,26 +288,25 @@ end
 
 # TODO: this needs to go but needs a change in SciMLBase/solve.jl
 function SciMLBase.solve(prob::OptimizationProblem,
-                           opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes},
-                           args...;
-                           kwargs...)
+                         opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes},
+                         args...;
+                         kwargs...)
     cache = SciMLBase.init(prob, opt, args...; kwargs...)
     SciMLBase.solve!(cache, opt, args...; kwargs...)
 end
 
-function SciMLBase.init(prob::OptimizationProblem, args...; kwargs...) 
+function SciMLBase.init(prob::OptimizationProblem, args...; kwargs...)
     cache = MOIOptimizationCache(prob)
     return cache
 end
 
 function SciMLBase.solve!(cache::MOIOptimizationCache,
-    opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    kwargs...)
-
+                          opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
+                          maxiters::Union{Number, Nothing} = nothing,
+                          maxtime::Union{Number, Nothing} = nothing,
+                          abstol::Union{Number, Nothing} = nothing,
+                          reltol::Union{Number, Nothing} = nothing,
+                          kwargs...)
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
     maxtime = Optimization._check_and_convert_maxtime(maxtime)
     opt_setup = __map_optimizer_args(cache,
@@ -334,7 +333,8 @@ function SciMLBase.solve!(cache::MOIOptimizationCache,
             MOI.add_constraint(opt_setup, θ[i], MOI.LessThan(cache.ub[i]))
         end
         if cache.int !== nothing && cache.int[i]
-            if cache.lb !== nothing && cache.lb[i] == 0 && cache.ub !== nothing && cache.ub[i] == 1
+            if cache.lb !== nothing && cache.lb[i] == 0 && cache.ub !== nothing &&
+               cache.ub[i] == 1
                 MOI.add_constraint(opt_setup, θ[i], MOI.ZeroOne())
             else
                 MOI.add_constraint(opt_setup, θ[i], MOI.Integer())
@@ -380,7 +380,7 @@ function SciMLBase.solve!(cache::MOIOptimizationCache,
                                     retcode = opt_ret)
 end
 
-function SciMLBase.reinit!(cache::MOIOptimizationCache; p=nothing)
+function SciMLBase.reinit!(cache::MOIOptimizationCache; p = nothing)
     if !isnothing(p)
         @set! cache.p = p
     end
