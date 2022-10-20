@@ -287,20 +287,20 @@ function __map_optimizer_args(cache::MOIOptimizationCache,
 end
 
 # TODO: this needs to go but needs a change in SciMLBase/solve.jl
-function SciMLBase.__solve(prob::OptimizationProblem,
+function SciMLBase.solve(prob::OptimizationProblem,
                            opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes},
                            args...;
                            kwargs...)
-    cache = SciMLBase.__init(prob, opt, args...; kwargs...)
-    SciMLBase.__solve(cache, opt, args...; kwargs...)
+    cache = SciMLBase.init(prob, opt, args...; kwargs...)
+    SciMLBase.solve!(cache, opt, args...; kwargs...)
 end
 
-function SciMLBase.__init(prob::OptimizationProblem, args...; kwargs...) 
+function SciMLBase.init(prob::OptimizationProblem, args...; kwargs...) 
     cache = MOIOptimizationCache(prob)
     return cache
 end
 
-function SciMLBase.__solve(cache::MOIOptimizationCache,
+function SciMLBase.solve!(cache::MOIOptimizationCache,
     opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
     maxiters::Union{Number, Nothing} = nothing,
     maxtime::Union{Number, Nothing} = nothing,
