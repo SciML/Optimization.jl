@@ -380,10 +380,8 @@ function SciMLBase.solve!(cache::MOIOptimizationCache,
                                     retcode = opt_ret)
 end
 
-function SciMLBase.reinit!(cache::MOIOptimizationCache; p = nothing)
-    if !isnothing(p)
-        @set! cache.p = p
-    end
+function set_p(cache::MOIOptimizationCache, p)
+    @set! cache.p = p
     return cache
 end
 
