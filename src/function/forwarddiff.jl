@@ -101,7 +101,7 @@ function instantiate_function(f::OptimizationFunction{true}, x,
                              for i in 1:num_cons]
         cons_h = function (res, θ)
             for i in 1:num_cons
-                ForwardDiff.hessian!(res[i], fncs[i], θ, hess_config_cache[i], Val{true}())
+                ForwardDiff.hessian!(res[i], fncs[i], θ, hess_config_cache[i], Val{false}())
             end
         end
     else
