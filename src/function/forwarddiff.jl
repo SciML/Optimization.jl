@@ -86,7 +86,7 @@ function instantiate_function(f::OptimizationFunction{true}, x,
         cjconfig = ForwardDiff.JacobianConfig(cons_oop, x, ForwardDiff.Chunk{chunksize}(),
                                               ForwardDiff.Tag(OptimizationTag(), eltype(x)))
         cons_j = function (J, θ)
-            ForwardDiff.jacobian!(J, cons_oop, θ, cjconfig)
+            ForwardDiff.jacobian!(J, cons_oop, θ, cjconfig, Val{false}())
         end
     else
         cons_j = (J, θ) -> f.cons_j(J, θ, p)
