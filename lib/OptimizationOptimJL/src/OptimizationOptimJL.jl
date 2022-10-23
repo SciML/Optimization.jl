@@ -20,12 +20,13 @@ function __map_optimizer_args(prob::OptimizationProblem,
                               maxiters::Union{Number, Nothing} = nothing,
                               maxtime::Union{Number, Nothing} = nothing,
                               abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing)
+                              reltol::Union{Number, Nothing} = nothing,
+                              kwargs...)
     if !isnothing(abstol)
         @warn "common abstol is currently not used by $(opt)"
     end
 
-    mapped_args = (; extended_trace = true)
+    mapped_args = (; extended_trace = true, kwargs...)
 
     if !isnothing(callback)
         mapped_args = (; mapped_args..., callback = callback)
