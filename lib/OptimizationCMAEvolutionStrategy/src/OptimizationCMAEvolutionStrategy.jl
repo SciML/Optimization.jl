@@ -82,7 +82,8 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::CMAEvolutionStrategyO
 
     opt_ret = opt_res.stop.reason
 
-    SciMLBase.build_solution(prob, opt, opt_res.logger.xbest[end],
+    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
+                             opt_res.logger.xbest[end],
                              opt_res.logger.fbest[end]; original = opt_res,
                              retcode = opt_ret)
 end

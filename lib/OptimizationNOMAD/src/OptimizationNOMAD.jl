@@ -86,7 +86,8 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::NOMADOpt;
     opt_res = NOMAD.solve(opt_setup, prob.u0)
     t1 = time()
 
-    SciMLBase.build_solution(prob, opt, opt_res.x_best_feas, first(opt_res.bbo_best_feas);
+    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
+                             opt_res.x_best_feas, first(opt_res.bbo_best_feas);
                              original = opt_res)
 end
 

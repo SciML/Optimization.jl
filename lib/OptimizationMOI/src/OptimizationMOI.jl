@@ -336,7 +336,7 @@ function SciMLBase.__solve(prob::OptimizationProblem,
         minimum = NaN
         opt_ret = :Default
     end
-    return SciMLBase.build_solution(prob,
+    return SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p),
                                     opt,
                                     minimizer,
                                     minimum;

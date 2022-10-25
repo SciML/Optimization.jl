@@ -93,7 +93,8 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Evolutionary.Abstract
     t1 = time()
     opt_ret = Symbol(Evolutionary.converged(opt_res))
 
-    SciMLBase.build_solution(prob, opt, Evolutionary.minimizer(opt_res),
+    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
+                             Evolutionary.minimizer(opt_res),
                              Evolutionary.minimum(opt_res); original = opt_res,
                              retcode = opt_ret)
 end
