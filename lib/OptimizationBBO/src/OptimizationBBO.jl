@@ -75,12 +75,6 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
     return mapped_args
 end
 
-function SciMLBase.__init(prob::OptimizationProblem, opt::BBO, args...; kwargs...)
-    cache = BBOOptimizationCache(prob)
-    return cache
-end
-
-# TODO: split into init and solve
 function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO,
                            data = Optimization.DEFAULT_DATA;
                            callback = (args...) -> (false),
