@@ -1,3 +1,4 @@
+using SparseDiffTools, Symbolics
 """
 AutoForwardDiff{chunksize} <: AbstractADType
 
@@ -50,22 +51,27 @@ function instantiate_function(f::OptimizationFunction{true}, x,
     if f.grad === nothing
         gradcfg = ForwardDiff.GradientConfig(_f, x, ForwardDiff.Chunk{chunksize}(),
                                              ForwardDiff.Tag(OptimizationTag(), eltype(x)))
-        grad = (res, θ, args...) -> ForwardDiff.gradient!(res, x -> _f(x, args...), θ,
+        grad = (res, θ, args...) -> ForwardDiff.gradient!(res, _f, θ,
                                                           gradcfg, Val{false}())
     else
         grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
     end
 
     if f.hess === nothing
-        hesscfg = ForwardDiff.HessianConfig(_f, x, ForwardDiff.Chunk{chunksize}(),
-                                            ForwardDiff.Tag(OptimizationTag(), eltype(x)))
-        hess = (res, θ, args...) -> ForwardDiff.hessian!(res, x -> _f(x, args...), θ,
-                                                         hesscfg, Val{false}())
+        sparsity = f.hess_prototype === nothing ? Symbolics.hessian_sparsity(_f, x) : f.hess_prototype
+        colors = matrix_colors(sparsity)
+        hescache = ForwardAutoColorHesCache(_f,
+                              x,
+                              colors,
+                              sparsity, ForwardDiff.Tag(OptimizationTag(), eltype(x)))
+
+        hess = (res, θ, args...) -> SparseDiffTools.autoauto_color_hessian!(res, _f, θ, hescache)
     else
         hess = (H, θ, args...) -> f.hess(H, θ, p, args...)
     end
 
     if f.hv === nothing
+        hessvec = HesVec(_f, x)
         hv = function (H, θ, v, args...)
             res = ArrayInterfaceCore.zeromatrix(θ)
             hess(res, θ, args...)
@@ -82,11 +88,15 @@ function instantiate_function(f::OptimizationFunction{true}, x,
         cons_oop = (x) -> (_res = zeros(eltype(x), num_cons); cons(_res, x); _res)
     end
 
+    cons_jac_colorvec = f.cons_jac_colorvec === nothing ? (1:length(x)) :
+                        f.cons_jac_colorvec
+
     if cons !== nothing && f.cons_j === nothing
-        cjconfig = ForwardDiff.JacobianConfig(cons_oop, x, ForwardDiff.Chunk{chunksize}(),
-                                              ForwardDiff.Tag(OptimizationTag(), eltype(x)))
+        cjconfig = ForwardColorJacCache(cons, x, chunksize,
+                                              tag = ForwardDiff.Tag(OptimizationTag(), eltype(x)),
+                                              colorvec = cons_jac_colorvec, sparsity = f.cons_jac_prototype)
         cons_j = function (J, θ)
-            ForwardDiff.jacobian!(J, cons_oop, θ, cjconfig, Val{false}())
+            forwarddiff_color_jacobian!(J, cons, θ, cjconfig)
         end
     else
         cons_j = (J, θ) -> f.cons_j(J, θ, p)
@@ -94,14 +104,16 @@ function instantiate_function(f::OptimizationFunction{true}, x,
 
     if cons !== nothing && f.cons_h === nothing
         fncs = [(x) -> cons_oop(x)[i] for i in 1:num_cons]
-        hess_config_cache = [ForwardDiff.HessianConfig(fncs[i], x,
-                                                       ForwardDiff.Chunk{chunksize}(),
-                                                       ForwardDiff.Tag(OptimizationTag(),
-                                                                       eltype(x)))
+        sparsity = [Symbolics.hessian_sparsity(fncs[i], x) for i in 1:num_cons]
+        colors = matrix_colors.(sparsity)
+        hess_config_cache = [ForwardAutoColorHesCache(fncs[i],
+                              x,
+                              colors[i],
+                              sparsity[i], ForwardDiff.Tag(OptimizationTag(), eltype(x)))
                              for i in 1:num_cons]
         cons_h = function (res, θ)
             for i in 1:num_cons
-                ForwardDiff.hessian!(res[i], fncs[i], θ, hess_config_cache[i], Val{false}())
+                autoauto_color_hessian!(res[i], fncs[i], θ, hess_config_cache[i])
             end
         end
     else
