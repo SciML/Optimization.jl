@@ -108,7 +108,8 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Metaheuristics.Abstra
     opt_res = Metaheuristics.optimize(_loss, opt_bounds, opt)
     t1 = time()
 
-    SciMLBase.build_solution(prob, opt, Metaheuristics.minimizer(opt_res),
+    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
+                             Metaheuristics.minimizer(opt_res),
                              Metaheuristics.minimum(opt_res); original = opt_res)
 end
 

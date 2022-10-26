@@ -127,7 +127,8 @@ function SciMLBase.__solve(prob::OptimizationProblem,
 
     opt_ret = hasproperty(opt_res, :status) ? Symbol(string(opt_res.status)) : nothing
 
-    SciMLBase.build_solution(prob, opt, opt_res.minimizer, opt_res.minimum;
+    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
+                             opt_res.minimizer, opt_res.minimum;
                              (isnothing(opt_ret) ? (; original = opt_res) :
                               (; original = opt_res, retcode = opt_ret))...)
 end

@@ -63,7 +63,8 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::OptimisersOptimizers,
 
     t1 = time()
 
-    SciMLBase.build_solution(prob, opt, θ, x[1])
+    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt, θ,
+                             x[1])
     # here should be build_solution to create the output message
 end
 

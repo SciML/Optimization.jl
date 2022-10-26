@@ -131,7 +131,8 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO,
 
     opt_ret = Symbol(opt_res.stop_reason)
 
-    SciMLBase.build_solution(prob, opt, BlackBoxOptim.best_candidate(opt_res),
+    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
+                             BlackBoxOptim.best_candidate(opt_res),
                              BlackBoxOptim.best_fitness(opt_res); original = opt_res,
                              retcode = opt_ret)
 end

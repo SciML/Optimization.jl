@@ -134,7 +134,8 @@ function SciMLBase.__solve(prob::OptimizationProblem,
     (minf, minx, ret) = NLopt.optimize(opt_setup, prob.u0)
     t1 = time()
 
-    SciMLBase.build_solution(prob, opt, minx, minf; original = opt_setup, retcode = ret)
+    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt, minx,
+                             minf; original = opt_setup, retcode = ret)
 end
 
 end
