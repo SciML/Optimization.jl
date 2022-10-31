@@ -33,19 +33,23 @@ AutoFiniteDiff(;fdtype = Val(:forward) fdjtype = fdtype, fdhtype = Val(:hcentral
 - `fdtype`: the method used for defining the gradient
 - `fdjtype`: the method used for defining the Jacobian of constraints.
 - `fdhtype`: the method used for defining the Hessian
+- `relstep`: the relative step size in finite differencing
+- `absstep`: the absolute step size in finite differencing
 
-For more information on the derivative type specifiers, see the
+For more information on the derivative type specifiers and step sizes, see the
 [FiniteDiff.jl documentation](https://github.com/JuliaDiff/FiniteDiff.jl).
 """
 struct AutoFiniteDiff{T1, T2, T3} <: AbstractADType
     fdtype::T1
     fdjtype::T2
     fdhtype::T3
+    relstep::Float64
+    absstep::Float64
 end
 
 function AutoFiniteDiff(; fdtype = Val(:forward), fdjtype = fdtype,
-                        fdhtype = Val(:hcentral))
-    AutoFiniteDiff(fdtype, fdjtype, fdhtype)
+                        fdhtype = Val(:hcentral), relstep=FiniteDiff.default_relstep(fdtype, Float64), absstep=relstep)
+    AutoFiniteDiff(fdtype, fdjtype, fdhtype, relstep, absstep)
 end
 
 function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
@@ -57,7 +61,7 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
         grad = (res, θ, args...) -> FiniteDiff.finite_difference_gradient!(res,
                                                                            x -> _f(x,
                                                                                    args...),
-                                                                           θ, gradcache)
+                                                                           θ, gradcache, relstep = adtype.relstep, absstep = adtype.absstep)
     else
         grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
     end
@@ -69,7 +73,7 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
                                                                                   args...),
                                                                           θ,
                                                                           updatecache(hesscache,
-                                                                                      θ))
+                                                                                      θ), relstep = adtype.relstep, absstep = adtype.absstep)
     else
         hess = (H, θ, args...) -> f.hess(H, θ, p, args...)
     end
@@ -99,7 +103,7 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
             jaccache = FiniteDiff.JacobianCache(copy(x), copy(y0), copy(y0), adtype.fdjtype;
                                                 colorvec = cons_jac_colorvec,
                                                 sparsity = f.cons_jac_prototype)
-            FiniteDiff.finite_difference_jacobian!(J, cons, θ, jaccache)
+            FiniteDiff.finite_difference_jacobian!(J, cons, θ, jaccache, relstep = adtype.relstep, absstep = adtype.absstep)
         end
     else
         cons_j = (J, θ) -> f.cons_j(J, θ, p)
@@ -116,7 +120,7 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
                                                               cons(_res,
                                                                    x);
                                                               _res[i]),
-                                                      θ, updatecache(hess_cons_cache[i], θ))
+                                                      θ, updatecache(hess_cons_cache[i], θ), relstep = adtype.relstep, absstep = adtype.absstep)
             end
         end
     else
