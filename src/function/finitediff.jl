@@ -48,7 +48,8 @@ function AutoFiniteDiff(; fdtype = Val(:forward), fdjtype = fdtype,
     AutoFiniteDiff(fdtype, fdjtype, fdhtype)
 end
 
-function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
+function instantiate_function(f, x, adtype::AutoFiniteDiff, p,
+                              num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, p, args...))
     updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
 
@@ -121,6 +122,91 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
         end
     else
         cons_h = (res, θ) -> f.cons_h(res, θ, p)
+    end
+
+    return OptimizationFunction{true}(f, adtype; grad = grad, hess = hess, hv = hv,
+                                      cons = cons, cons_j = cons_j, cons_h = cons_h,
+                                      cons_jac_colorvec = cons_jac_colorvec,
+                                      hess_prototype = f.hess_prototype,
+                                      cons_jac_prototype = f.cons_jac_prototype,
+                                      cons_hess_prototype = f.cons_hess_prototype)
+end
+
+function instantiate_function(f, cache::ReInitCache,
+                              adtype::AutoFiniteDiff, num_cons = 0)
+    _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
+    updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
+
+    if f.grad === nothing
+        gradcache = FiniteDiff.GradientCache(cache.u0, cache.u0, adtype.fdtype)
+        grad = (res, θ, args...) -> FiniteDiff.finite_difference_gradient!(res,
+                                                                           x -> _f(x,
+                                                                                   args...),
+                                                                           θ, gradcache)
+    else
+        grad = (G, θ, args...) -> f.grad(G, θ, cache.p, args...)
+    end
+
+    if f.hess === nothing
+        hesscache = FiniteDiff.HessianCache(cache.u0, adtype.fdhtype)
+        hess = (res, θ, args...) -> FiniteDiff.finite_difference_hessian!(res,
+                                                                          x -> _f(x,
+                                                                                  args...),
+                                                                          θ,
+                                                                          updatecache(hesscache,
+                                                                                      θ))
+    else
+        hess = (H, θ, args...) -> f.hess(H, θ, cache.p, args...)
+    end
+
+    if f.hv === nothing
+        hv = function (H, θ, v, args...)
+            res = ArrayInterfaceCore.zeromatrix(θ)
+            hess(res, θ, args...)
+            H .= res * v
+        end
+    else
+        hv = f.hv
+    end
+
+    if f.cons === nothing
+        cons = nothing
+    else
+        cons = (res, θ) -> f.cons(res, θ, cache.p)
+    end
+
+    cons_jac_colorvec = f.cons_jac_colorvec === nothing ? (1:length(cache.u0)) :
+                        f.cons_jac_colorvec
+
+    if cons !== nothing && f.cons_j === nothing
+        cons_j = function (J, θ)
+            y0 = zeros(num_cons)
+            jaccache = FiniteDiff.JacobianCache(copy(cache.u0), copy(y0), copy(y0),
+                                                adtype.fdjtype;
+                                                colorvec = cons_jac_colorvec,
+                                                sparsity = f.cons_jac_prototype)
+            FiniteDiff.finite_difference_jacobian!(J, cons, θ, jaccache)
+        end
+    else
+        cons_j = (J, θ) -> f.cons_j(J, θ, cache.p)
+    end
+
+    if cons !== nothing && f.cons_h === nothing
+        hess_cons_cache = [FiniteDiff.HessianCache(copy(cache.u0), adtype.fdhtype)
+                           for i in 1:num_cons]
+        cons_h = function (res, θ)
+            for i in 1:num_cons#note: colorvecs not yet supported by FiniteDiff for Hessians
+                FiniteDiff.finite_difference_hessian!(res[i],
+                                                      (x) -> (_res = zeros(eltype(θ),
+                                                                           num_cons);
+                                                              cons(_res,
+                                                                   x);
+                                                              _res[i]),
+                                                      θ, updatecache(hess_cons_cache[i], θ))
+            end
+        end
+    else
+        cons_h = (res, θ) -> f.cons_h(res, θ, cache.p)
     end
 
     return OptimizationFunction{true}(f, adtype; grad = grad, hess = hess, hv = hv,
