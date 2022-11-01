@@ -150,7 +150,8 @@ function instantiate_function(f::OptimizationFunction{true}, cache::ReInitCache,
     end
 
     if cons !== nothing && f.cons_j === nothing
-        cjconfig = ForwardDiff.JacobianConfig(cons_oop, cache.u0, ForwardDiff.Chunk{chunksize}())
+        cjconfig = ForwardDiff.JacobianConfig(cons_oop, cache.u0,
+                                              ForwardDiff.Chunk{chunksize}())
         cons_j = function (J, θ)
             ForwardDiff.jacobian!(J, cons_oop, θ, cjconfig)
         end

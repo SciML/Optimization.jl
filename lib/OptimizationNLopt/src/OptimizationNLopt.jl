@@ -8,13 +8,15 @@ using Optimization.SciMLBase
 
 SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 
-struct NLoptOptimizationCache{F <: OptimizationFunction, RC, LB, UB, S, O} <: SciMLBase.AbstractOptimizationCache
+struct NLoptOptimizationCache{F <: OptimizationFunction, RC, LB, UB, S, O, P} <:
+       SciMLBase.AbstractOptimizationCache
     f::F
     reinit_cache::RC
     lb::LB
     ub::UB
     sense::S
     opt::O
+    progress::P
     solver_args::NamedTuple
 end
 
@@ -25,10 +27,13 @@ function Base.getproperty(cache::NLoptOptimizationCache, x::Symbol)
     return getfield(cache, x)
 end
 
-function NLoptOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
+function NLoptOptimizationCache(prob::OptimizationProblem, opt; progress, kwargs...)
     reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
     f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype)
-    return NLoptOptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.sense, opt, NamedTuple(kwargs))
+
+    return NLoptOptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.sense, opt,
+                                  progress,
+                                  NamedTuple(kwargs))
 end
 
 function __map_optimizer_args!(cache::NLoptOptimizationCache, opt::NLopt.Opt;
@@ -103,27 +108,29 @@ end
 SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 
 function SciMLBase.__init(prob::OptimizationProblem, opt::Union{NLopt.Algorithm, NLopt.Opt};
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    local_method::Union{NLopt.Algorithm, NLopt.Opt, Nothing} = nothing,
-    local_maxiters::Union{Number, Nothing} = nothing,
-    local_maxtime::Union{Number, Nothing} = nothing,
-    local_options::Union{NamedTuple, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    progress = false,
-    callback = (args...) -> (false),
-    kwargs...)
-    return NLoptOptimizationCache(prob, opt; maxiters, maxtime, local_method, local_maxiters, local_maxtime, local_options, abstol, reltol, progress, callback)
+                          maxiters::Union{Number, Nothing} = nothing,
+                          maxtime::Union{Number, Nothing} = nothing,
+                          local_method::Union{NLopt.Algorithm, NLopt.Opt, Nothing} = nothing,
+                          local_maxiters::Union{Number, Nothing} = nothing,
+                          local_maxtime::Union{Number, Nothing} = nothing,
+                          local_options::Union{NamedTuple, Nothing} = nothing,
+                          abstol::Union{Number, Nothing} = nothing,
+                          reltol::Union{Number, Nothing} = nothing,
+                          progress = false,
+                          callback = (args...) -> (false),
+                          kwargs...)
+    maxiters = Optimization._check_and_convert_maxiters(maxiters)
+    maxtime = Optimization._check_and_convert_maxtime(maxtime)
+    local_maxiters = Optimization._check_and_convert_maxiters(local_maxiters)
+    local_maxtime = Optimization._check_and_convert_maxtime(local_maxtime)
+
+    return NLoptOptimizationCache(prob, opt; maxiters, maxtime, local_method,
+                                  local_maxiters, local_maxtime, local_options, abstol,
+                                  reltol, progress, callback)
 end
 
 function SciMLBase.__solve(cache::NLoptOptimizationCache)
     local x
-
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
-    local_maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.local_maxiters)
-    local_maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.local_maxtime)
 
     _loss = function (θ)
         x = cache.f.f(θ, cache.p)
@@ -139,24 +146,28 @@ function SciMLBase.__solve(cache::NLoptOptimizationCache)
         return _loss(θ)
     end
 
-    if isa(opt, NLopt.Opt)
-        if ndims(opt) != length(cache.u0)
+    opt_setup = if isa(cache.opt, NLopt.Opt)
+        if ndims(cache.opt) != length(cache.u0)
             error("Passed NLopt.Opt optimization dimension does not match OptimizationProblem dimension.")
         end
-        opt_setup = opt
+        cache.opt
     else
-        opt_setup = NLopt.Opt(opt, length(cache.u0))
+        NLopt.Opt(cache.opt, length(cache.u0))
     end
 
-    if cache.sense === Optimization.MaxSense 
+    if cache.sense === Optimization.MaxSense
         NLopt.max_objective!(opt_setup, fg!)
     else
         NLopt.min_objective!(opt_setup, fg!)
     end
 
-    __map_optimizer_args!(cache, opt_setup, maxiters = cache.solver_args.maxiters, maxtime = cache.solver_args.maxtime,
-                          abstol = cache.solver_args.abstol, reltol = cache.solver_args.reltol, local_method = cache.solver_args.local_method,
-                          local_maxiters = cache.solver_args.local_maxiters, local_options = cache.solver_args.local_options;
+    __map_optimizer_args!(cache, opt_setup, maxiters = cache.solver_args.maxiters,
+                          maxtime = cache.solver_args.maxtime,
+                          abstol = cache.solver_args.abstol,
+                          reltol = cache.solver_args.reltol,
+                          local_method = cache.solver_args.local_method,
+                          local_maxiters = cache.solver_args.local_maxiters,
+                          local_options = cache.solver_args.local_options;
                           cache.solver_args...)
 
     t0 = time()

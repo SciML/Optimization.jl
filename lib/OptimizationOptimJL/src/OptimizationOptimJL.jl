@@ -13,9 +13,8 @@ SciMLBase.allowsbounds(opt::Optim.SimulatedAnnealing) = false
 SciMLBase.requiresbounds(opt::Optim.Fminbox) = true
 SciMLBase.requiresbounds(opt::Optim.SAMIN) = true
 
-abstract type AbstractOptimJLOptimizationCache <: SciMLBase.AbstractOptimizationCache end
-
-struct OptimJLOptimizationCache{F, RC, LB, UB, S, O, D} <: AbstractOptimJLOptimizationCache
+struct OptimJLOptimizationCache{F, RC, LB, UB, S, O, D, P} <:
+       SciMLBase.AbstractOptimizationCache
     f::F
     reinit_cache::RC
     lb::LB
@@ -23,187 +22,26 @@ struct OptimJLOptimizationCache{F, RC, LB, UB, S, O, D} <: AbstractOptimJLOptimi
     sense::S
     opt::O
     data::D
+    progress::P
     solver_args::NamedTuple
 end
 
-struct OptimJLBoxConstraintOptimizationCache{F, RC, LB, UB, S, O, D} <: AbstractOptimJLOptimizationCache
-    f::F
-    reinit_cache::RC
-    lb::LB
-    ub::UB
-    sense::S
-    opt::O
-    data::D
-    solver_args::NamedTuple
-end
-
-struct OptimJLConstraintOptimizationCache{F, FC, RC, LB, UB, S, O, D} <: AbstractOptimJLOptimizationCache
-    f::F
-    fc::FC
-    reinit_cache::RC
-    lb::LB
-    ub::UB
-    sense::S
-    opt::O
-    data::D
-    solver_args::NamedTuple
-end
-
-function Base.getproperty(cache::AbstractOptimJLOptimizationCache, x::Symbol)
+function Base.getproperty(cache::OptimJLOptimizationCache, x::Symbol)
     if x in fieldnames(Optimization.ReInitCache)
         return getfield(cache.reinit_cache, x)
     end
     return getfield(cache, x)
 end
 
-function OptimJLOptimizationCache(prob::OptimizationProblem, opt, data; kwargs...)
+function OptimJLOptimizationCache(prob::OptimizationProblem, opt, data; progress, kwargs...)
     reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
     f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype)
 
     !(opt isa Optim.ZerothOrderOptimizer) && f.grad === nothing &&
         error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
-    _loss = function (θ)
-        x = f.f(θ, reinit_cache.p, cur...)
-        __x = first(x)
-        return prob.sense === Optimization.MaxSense ? -__x : __x
-    end
-
-    fg! = function (G, θ)
-        if G !== nothing
-            f.grad(G, θ, cur...)
-            if prob.sense === Optimization.MaxSense
-                G .*= false
-            end
-        end
-        return _loss(θ)
-    end
-
-    if opt isa Optim.KrylovTrustRegion
-        hv = function (H, θ, v)
-            f.hv(H, θ, v, cur...)
-            if prob.sense === Optimization.MaxSense
-                H .*= false
-            end
-        end
-        optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, hv, reinit_cache.u0)
-    else
-        gg = function (G, θ)
-            f.grad(G, θ, cur...)
-            if prob.sense === Optimization.MaxSense
-                G .*= false
-            end
-        end
-
-        hh = function (H, θ)
-            f.hess(H, θ, cur...)
-            if prob.sense === Optimization.MaxSense
-                H .*= false
-            end
-        end
-        F = eltype(reinit_cache.u0)
-        optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, reinit_cache.u0, real(zero(F)),
-                                            Optim.NLSolversBase.alloc_DF(reinit_cache.u0,
-                                                                         real(zero(F))),
-                                            isnothing(f.hess_prototype) ?
-                                            Optim.NLSolversBase.alloc_H(reinit_cache.u0,
-                                                                        real(zero(F))) :
-                                            convert.(F, f.hess_prototype))
-    end
-
-    return OptimJLOptimizationCache(optim_f, reinit_cache, prob.lb, prob.ub, prob.sense, opt, data, NamedTuple(kwargs))
-end
-
-function OptimJLBoxConstraintOptimizationCache(prob::OptimizationProblem, opt, data; kwargs...)
-    reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
-    f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype)
-
-    !(opt isa Optim.ZerothOrderOptimizer) && f.grad === nothing &&
-        error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
-
-    _loss = function (θ)
-        x = f.f(θ, reinit_cache.p, cur...)
-        __x = first(x)
-        return prob.sense === Optimization.MaxSense ? -__x : __x
-    end
-    fg! = function (G, θ)
-        if G !== nothing
-            f.grad(G, θ, cur...)
-            if prob.sense === Optimization.MaxSense
-                G .*= false
-            end
-        end
-        return _loss(θ)
-    end
-
-    gg = function (G, θ)
-        f.grad(G, θ, cur...)
-        if prob.sense === Optimization.MaxSense
-            G .*= false
-        end
-    end
-    optim_f = Optim.OnceDifferentiable(_loss, gg, fg!, reinit_cache.u0)
-
-    return OptimJLBoxConstraintOptimizationCache(optim_f, reinit_cache, prob.lb, prob.ub, prob.sense, opt, data, NamedTuple(kwargs))
-end
-
-function OptimJLConstraintOptimizationCache(prob::OptimizationProblem, opt, data; kwargs...)
-    reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
-    f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype)
-
-    f.cons_j === nothing &&
-            error("This optimizer requires derivative definitions for nonlinear constraints. If the problem does not have nonlinear constraints, choose a different optimizer. Otherwise define the derivative for cons using OptimizationFunction either directly or automatically generate them with one of the autodiff backends")
-
-    _loss = function (θ)
-        x = f.f(θ, reinit_cache.p, cur...)
-        __x = first(x)
-        return prob.sense === Optimization.MaxSense ? -__x : __x
-    end
-    fg! = function (G, θ)
-        if G !== nothing
-            f.grad(G, θ, cur...)
-            if prob.sense === Optimization.MaxSense
-                G .*= false
-            end
-        end
-        return _loss(θ)
-    end
-    gg = function (G, θ)
-        f.grad(G, θ, cur...)
-        if prob.sense === Optimization.MaxSense
-            G .*= false
-        end
-    end
-
-    hh = function (H, θ)
-        f.hess(H, θ, cur...)
-        if prob.sense === Optimization.MaxSense
-            H .*= false
-        end
-    end
-    F = eltype(reinit_cache.u0)
-    optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, reinit_cache.u0, real(zero(F)),
-                                        Optim.NLSolversBase.alloc_DF(reinit_cache.u0,
-                                                                     real(zero(F))),
-                                        isnothing(f.hess_prototype) ?
-                                        Optim.NLSolversBase.alloc_H(reinit_cache.u0,
-                                                                    real(zero(F))) :
-                                        convert.(F, f.hess_prototype))
-
-    cons_hl! = function (h, θ, λ)
-        res = [similar(h) for i in 1:length(λ)]
-        f.cons_h(res, θ)
-        for i in 1:length(λ)
-            h .+= λ[i] * res[i]
-        end
-    end
-
-    lb = prob.lb === nothing ? [] : prob.lb
-    ub = prob.ub === nothing ? [] : prob.ub
-    optim_fc = Optim.TwiceDifferentiableConstraints(f.cons, f.cons_j, cons_hl!, lb, ub,
-                                                    prob.lcons, prob.ucons)
-
-    return OptimJLConstraintOptimizationCache(optim_f, optim_fc, reinit_cache, prob.lb, prob.ub, prob.sense, opt, data, NamedTuple(kwargs))
+    return OptimJLOptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.sense,
+                                    opt, data, progress, NamedTuple(kwargs))
 end
 
 SciMLBase.supports_opt_cache_interface(opt::Optim.AbstractOptimizer) = true
@@ -245,14 +83,14 @@ function __map_optimizer_args(cache::OptimJLOptimizationCache,
 end
 
 function SciMLBase.__init(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
-                  data = Optimization.DEFAULT_DATA;
-                  callback = (args...) -> (false),
-                  maxiters::Union{Number, Nothing} = nothing,
-                  maxtime::Union{Number, Nothing} = nothing,
-                  abstol::Union{Number, Nothing} = nothing,
-                  reltol::Union{Number, Nothing} = nothing,
-                  progress = false,
-                  kwargs...)
+                          data = Optimization.DEFAULT_DATA;
+                          callback = (args...) -> (false),
+                          maxiters::Union{Number, Nothing} = nothing,
+                          maxtime::Union{Number, Nothing} = nothing,
+                          abstol::Union{Number, Nothing} = nothing,
+                          reltol::Union{Number, Nothing} = nothing,
+                          progress = false,
+                          kwargs...)
     if !isnothing(prob.lb) || !isnothing(prob.ub)
         if !(opt isa Union{Optim.Fminbox, Optim.SAMIN, Optim.AbstractConstrainedOptimizer})
             if opt isa Optim.ParticleSwarm
@@ -265,30 +103,39 @@ function SciMLBase.__init(prob::OptimizationProblem, opt::Optim.AbstractOptimize
             end
         end
     end
-    return ___init(prob, opt, data; callback, maxiters, maxtime, abstol, reltol, progress, kwargs...)
-end
 
-function ___init(prob::OptimizationProblem, opt::Optim.AbstractOptimizer, args...; kwargs...)
-end
-function ___init(prob::OptimizationProblem, opt::Union{Optim.Fminbox, Optim.SAMIN}, args...; kwargs...)
-end
-function ___init(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer, args...; kwargs...)
-end
-
-function SciMLBase.__solve(cache::OptimJLOptimizationCache)
-    local x, cur, state
-
-    if cache.data != Optimization.DEFAULT_DATA
-        maxiters = length(cache.data)
+    maxiters = if data != Optimization.DEFAULT_DATA
+        length(data)
     else
-        maxiters = cache.solver_args.maxiters
+        maxiters
     end
+
+    maxiters = Optimization._check_and_convert_maxiters(maxiters)
+    maxtime = Optimization._check_and_convert_maxtime(maxtime)
+    return OptimJLOptimizationCache(prob, opt, data; callback, maxiters, maxtime, abstol,
+                                    reltol, progress,
+                                    kwargs...)
+end
+
+function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, S, O, D, P}) where {
+                                                                                              F,
+                                                                                              RC,
+                                                                                              LB,
+                                                                                              UB,
+                                                                                              S,
+                                                                                              O <:
+                                                                                              Optim.AbstractOptimizer,
+                                                                                              D,
+                                                                                              P
+                                                                                              }
+    local x, cur, state
 
     cur, state = iterate(cache.data)
 
     function _cb(trace)
-        cb_call = opt isa Optim.NelderMead ?
-                  cache.solver_args.callback(decompose_trace(trace).metadata["centroid"], x...) :
+        cb_call = cache.opt isa Optim.NelderMead ?
+                  cache.solver_args.callback(decompose_trace(trace).metadata["centroid"],
+                                             x...) :
                   cache.solver_args.callback(decompose_trace(trace).metadata["x"], x...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
@@ -302,15 +149,64 @@ function SciMLBase.__solve(cache::OptimJLOptimizationCache)
         end
     end
 
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(maxtime) 
+    _loss = function (θ)
+        x = cache.f.f(θ, cache.p, cur...)
+        __x = first(x)
+        return cache.sense === Optimization.MaxSense ? -__x : __x
+    end
 
-    opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb, maxiters = maxiters,
-                                    maxtime = maxtime, abstol = cache.solver_args.abstol, reltol = cache.solver_args.reltol;
+    fg! = function (G, θ)
+        if G !== nothing
+            cache.f.grad(G, θ, cur...)
+            if cache.sense === Optimization.MaxSense
+                G .*= false
+            end
+        end
+        return _loss(θ)
+    end
+
+    if cache.opt isa Optim.KrylovTrustRegion
+        hv = function (H, θ, v)
+            cache.f.hv(H, θ, v, cur...)
+            if cache.sense === Optimization.MaxSense
+                H .*= false
+            end
+        end
+        optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, hv, cache.u0)
+    else
+        gg = function (G, θ)
+            cache.f.grad(G, θ, cur...)
+            if cache.sense === Optimization.MaxSense
+                G .*= false
+            end
+        end
+
+        hh = function (H, θ)
+            cache.f.hess(H, θ, cur...)
+            if cache.sense === Optimization.MaxSense
+                H .*= false
+            end
+        end
+        u0_type = eltype(cache.u0)
+        optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, cache.u0,
+                                            real(zero(u0_type)),
+                                            Optim.NLSolversBase.alloc_DF(cache.u0,
+                                                                         real(zero(u0_type))),
+                                            isnothing(cache.f.hess_prototype) ?
+                                            Optim.NLSolversBase.alloc_H(cache.u0,
+                                                                        real(zero(u0_type))) :
+                                            convert.(u0_type, cache.f.hess_prototype))
+    end
+
+    opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb,
+                                    maxiters = cache.solver_args.maxiters,
+                                    maxtime = cache.solver_args.maxtime,
+                                    abstol = cache.solver_args.abstol,
+                                    reltol = cache.solver_args.reltol;
                                     cache.solver_args...)
 
     t0 = time()
-    opt_res = Optim.optimize(cache.f, cache.u0, cache.opt, opt_args)
+    opt_res = Optim.optimize(optim_f, cache.u0, cache.opt, opt_args)
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
 
@@ -321,20 +217,28 @@ function SciMLBase.__solve(cache::OptimJLOptimizationCache)
                              solve_time = t1 - t0)
 end
 
-function SciMLBase.__solve(cache::OptimJLBoxConstraintOptimizationCache)
+function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, S, O, D, P}) where {
+                                                                                              F,
+                                                                                              RC,
+                                                                                              LB,
+                                                                                              UB,
+                                                                                              S,
+                                                                                              O <:
+                                                                                              Union{
+                                                                                                    Optim.Fminbox,
+                                                                                                    Optim.SAMIN
+                                                                                                    },
+                                                                                              D,
+                                                                                              P
+                                                                                              }
     local x, cur, state
-
-    if cache.data != Optimization.DEFAULT_DATA
-        maxiters = length(cache.data)
-    else
-        maxiters = cache.solver_args.maxiters
-    end
 
     cur, state = iterate(cache.data)
 
     function _cb(trace)
-        cb_call = !(opt isa Optim.SAMIN) && opt.method == Optim.NelderMead() ?
-                  cache.solver_args.callback(decompose_trace(trace).metadata["centroid"], x...) :
+        cb_call = !(cache.opt isa Optim.SAMIN) && cache.opt.method == Optim.NelderMead() ?
+                  cache.solver_args.callback(decompose_trace(trace).metadata["centroid"],
+                                             x...) :
                   cache.solver_args.callback(decompose_trace(trace).metadata["x"], x...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
@@ -348,14 +252,38 @@ function SciMLBase.__solve(cache::OptimJLBoxConstraintOptimizationCache)
         end
     end
 
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
-    opt_args = __map_optimizer_args(cache, opt, callback = _cb, maxiters = maxiters,
-                                    maxtime = maxtime, abstol = cache.solver_args.abstol, reltol = cache.solver_args.reltol;
+    _loss = function (θ)
+        x = cache.f.f(θ, cache.p, cur...)
+        __x = first(x)
+        return cache.sense === Optimization.MaxSense ? -__x : __x
+    end
+    fg! = function (G, θ)
+        if G !== nothing
+            cache.f.grad(G, θ, cur...)
+            if cache.sense === Optimization.MaxSense
+                G .*= false
+            end
+        end
+        return _loss(θ)
+    end
+
+    gg = function (G, θ)
+        cache.f.grad(G, θ, cur...)
+        if cache.sense === Optimization.MaxSense
+            G .*= false
+        end
+    end
+    optim_f = Optim.OnceDifferentiable(_loss, gg, fg!, cache.u0)
+
+    opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb,
+                                    maxiters = cache.solver_args.maxiters,
+                                    maxtime = cache.solver_args.maxtime,
+                                    abstol = cache.solver_args.abstol,
+                                    reltol = cache.solver_args.reltol;
                                     cache.solver_args...)
 
     t0 = time()
-    opt_res = Optim.optimize(cache.f, cache.lb, cache.ub, cache.u0, cache.opt, opt_args)
+    opt_res = Optim.optimize(optim_f, cache.lb, cache.ub, cache.u0, cache.opt, opt_args)
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
 
@@ -364,14 +292,18 @@ function SciMLBase.__solve(cache::OptimJLBoxConstraintOptimizationCache)
                              original = opt_res, retcode = opt_ret, solve_time = t1 - t0)
 end
 
-function SciMLBase.__solve(cache::OptimJLConstraintOptimizationCache)
+function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, S, O, D, P}) where {
+                                                                                              F,
+                                                                                              RC,
+                                                                                              LB,
+                                                                                              UB,
+                                                                                              S,
+                                                                                              O <:
+                                                                                              Optim.ConstrainedOptimizer,
+                                                                                              D,
+                                                                                              P
+                                                                                              }
     local x, cur, state
-
-    if cache.data != Optimization.DEFAULT_DATA
-        maxiters = length(cache.data)
-    else
-        maxiters = cache.solver_args.maxiters
-    end
 
     cur, state = iterate(cache.data)
 
@@ -389,18 +321,70 @@ function SciMLBase.__solve(cache::OptimJLConstraintOptimizationCache)
         end
     end
 
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
-    opt_args = __map_optimizer_args(cache, opt, callback = _cb, maxiters = maxiters,
-                                    maxtime = maxtime, abstol = cache.solver_args.abstol, reltol = cache.solver_args.reltol;
+    _loss = function (θ)
+        x = cache.f.f(θ, cache.p, cur...)
+        __x = first(x)
+        return cache.sense === Optimization.MaxSense ? -__x : __x
+    end
+    fg! = function (G, θ)
+        if G !== nothing
+            cache.f.grad(G, θ, cur...)
+            if cache.sense === Optimization.MaxSense
+                G .*= false
+            end
+        end
+        return _loss(θ)
+    end
+    gg = function (G, θ)
+        cache.f.grad(G, θ, cur...)
+        if cache.sense === Optimization.MaxSense
+            G .*= false
+        end
+    end
+
+    hh = function (H, θ)
+        cache.f.hess(H, θ, cur...)
+        if cache.sense === Optimization.MaxSense
+            H .*= false
+        end
+    end
+    u0_type = eltype(cache.u0)
+    optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, cache.u0,
+                                        real(zero(u0_type)),
+                                        Optim.NLSolversBase.alloc_DF(cache.u0,
+                                                                     real(zero(u0_type))),
+                                        isnothing(cache.f.hess_prototype) ?
+                                        Optim.NLSolversBase.alloc_H(cache.u0,
+                                                                    real(zero(u0_type))) :
+                                        convert.(u0_type, cache.f.hess_prototype))
+
+    cons_hl! = function (h, θ, λ)
+        res = [similar(h) for i in 1:length(λ)]
+        cache.f.cons_h(res, θ)
+        for i in 1:length(λ)
+            h .+= λ[i] * res[i]
+        end
+    end
+
+    lb = cache.lb === nothing ? [] : cache.lb
+    ub = cache.ub === nothing ? [] : cache.ub
+    optim_fc = Optim.TwiceDifferentiableConstraints(cache.f.cons, cache.f.cons_j, cons_hl!,
+                                                    lb, ub,
+                                                    cache.lcons, cache.ucons)
+
+    opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb,
+                                    maxiters = cache.solver_args.maxiters,
+                                    maxtime = cache.solver_args.maxtime,
+                                    abstol = cache.solver_args.abstol,
+                                    reltol = cache.solver_args.reltol;
                                     cache.solver_args...)
 
     t0 = time()
-    opt_res = Optim.optimize(cache.f, cache.fc, cache.u0, opt, opt_args)
+    opt_res = Optim.optimize(optim_f, optim_fc, cache.u0, cache.opt, opt_args)
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
 
-    SciMLBase.build_solution(cache, opt,
+    SciMLBase.build_solution(cache, cache.opt,
                              opt_res.minimizer, opt_res.minimum;
                              original = opt_res, retcode = opt_ret)
 end

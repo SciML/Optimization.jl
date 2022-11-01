@@ -4,7 +4,8 @@ using Reexport, Printf, ProgressLogging
 @reexport using Flux, Optimization
 using Optimization.SciMLBase
 
-struct FluxOptimizationCache{F <: OptimizationFunction, RC, O, D} <: SciMLBase.AbstractOptimizationCache
+struct FluxOptimizationCache{F <: OptimizationFunction, RC, O, D} <:
+       SciMLBase.AbstractOptimizationCache
     f::F
     reinit_cache::RC
     opt::O
@@ -28,10 +29,11 @@ end
 SciMLBase.supports_opt_cache_interface(opt::Flux.Optimise.AbstractOptimiser) = true
 
 function SciMLBase.__init(prob::OptimizationProblem, opt::Flux.Optimise.AbstractOptimiser,
-    data = Optimization.DEFAULT_DATA;
-    maxiters::Number = 0, callback = (args...) -> (false),
-    progress = false, save_best = true, kwargs...)
-    return FluxOptimizationCache(prob, opt, data; maxiters, callback, progress, save_best, kwargs...)
+                          data = Optimization.DEFAULT_DATA;
+                          maxiters::Number = 0, callback = (args...) -> (false),
+                          progress = false, save_best = true, kwargs...)
+    return FluxOptimizationCache(prob, opt, data; maxiters, callback, progress, save_best,
+                                 kwargs...)
 end
 
 function SciMLBase.__solve(cache::FluxOptimizationCache)
@@ -39,8 +41,8 @@ function SciMLBase.__solve(cache::FluxOptimizationCache)
         maxiters = length(cache.data)
         data = cache.data
     else
-        maxiters = Optimization._check_and_convert_maxiters(caceh.maxiters)
-        data = Optimization.take(cache.data, cache.solver_args.maxiters)
+        maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
+        data = Optimization.take(cache.data, maxiters)
     end
 
     # Flux is silly and doesn't have an abstract type on its optimizers, so assume

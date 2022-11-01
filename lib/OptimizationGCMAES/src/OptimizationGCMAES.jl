@@ -11,6 +11,37 @@ struct GCMAESOpt end
 SciMLBase.requiresbounds(::GCMAESOpt) = true
 SciMLBase.allowsbounds(::GCMAESOpt) = true
 
+struct GCMAESOptimizationCache{F <: OptimizationFunction, RC, LB, UB, S, O, P, S0} <:
+       SciMLBase.AbstractOptimizationCache
+    f::F
+    reinit_cache::RC
+    lb::LB
+    ub::UB
+    sense::S
+    opt::O
+    progress::P
+    sigma0::S0
+    solver_args::NamedTuple
+end
+
+function Base.getproperty(cache::GCMAESOptimizationCache, x::Symbol)
+    if x in fieldnames(Optimization.ReInitCache)
+        return getfield(cache.reinit_cache, x)
+    end
+    return getfield(cache, x)
+end
+
+function GCMAESOptimizationCache(prob::OptimizationProblem, opt; progress, sigma0,
+                                 kwargs...)
+    reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
+    f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype)
+    return GCMAESOptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.sense, opt,
+                                   progress, sigma0,
+                                   NamedTuple(kwargs))
+end
+
+SciMLBase.supports_opt_cache_interface(opt::GCMAESOpt) = true
+
 function __map_optimizer_args(cache::GCMAESOptimizationCache, opt::GCMAESOpt;
                               callback = nothing,
                               maxiters::Union{Number, Nothing} = nothing,
@@ -40,40 +71,16 @@ function __map_optimizer_args(cache::GCMAESOptimizationCache, opt::GCMAESOpt;
     return mapped_args
 end
 
-struct GCMAESOptimizationCache{F <: OptimizationFunction, RC, LB, UB, S, O} <: SciMLBase.AbstractOptimizationCache
-    f::F
-    reinit_cache::RC
-    lb::LB
-    ub::UB
-    sense::S
-    opt::O
-    solver_args::NamedTuple
-end
-
-function Base.getproperty(cache::GCMAESOptimizationCache, x::Symbol)
-    if x in fieldnames(Optimization.ReInitCache)
-        return getfield(cache.reinit_cache, x)
-    end
-    return getfield(cache, x)
-end
-
-function GCMAESOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
-    reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
-    f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype)
-    return GCMAESOptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.sense, opt, NamedTuple(kwargs))
-end
-
-SciMLBase.supports_opt_cache_interface(opt::GCMAESOpt) = true
-
 function SciMLBase.__init(prob::OptimizationProblem, opt::GCMAESOpt;
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    progress = false,
-    σ0 = 0.2,
-    kwargs...)
-    return GCMAESOptimizationCache(prob, opt; maxiters, maxtime, abstol, reltol, progress, σ0, kwargs...)
+                          maxiters::Union{Number, Nothing} = nothing,
+                          maxtime::Union{Number, Nothing} = nothing,
+                          abstol::Union{Number, Nothing} = nothing,
+                          reltol::Union{Number, Nothing} = nothing,
+                          progress = false,
+                          σ0 = 0.2,
+                          kwargs...)
+    return GCMAESOptimizationCache(prob, opt; maxiters, maxtime, abstol, reltol, progress,
+                                   sigma0 = σ0, kwargs...)
 end
 
 function SciMLBase.__solve(cache::GCMAESOptimizationCache)
@@ -95,17 +102,21 @@ function SciMLBase.__solve(cache::GCMAESOptimizationCache)
         end
     end
 
-    opt_args = __map_optimizer_args(cache, opt, maxiters = cache.solver_args.maxiters, maxtime = cache.solver_args.maxtime,
-                                    abstol = cache.solver_args.abstol, reltol = cache.solver_args.reltol; cache.solver_args...)
+    opt_args = __map_optimizer_args(cache, cache.opt, maxiters = cache.solver_args.maxiters,
+                                    maxtime = cache.solver_args.maxtime,
+                                    abstol = cache.solver_args.abstol,
+                                    reltol = cache.solver_args.reltol; cache.solver_args...)
 
     t0 = time()
     if cache.sense === Optimization.MaxSense
         opt_xmin, opt_fmin, opt_ret = GCMAES.maximize(isnothing(cache.f.grad) ? _loss :
-                                                      (_loss, g), cache.u0, cache.solver_args.σ0, cache.lb,
+                                                      (_loss, g), cache.u0,
+                                                      cache.sigma0, cache.lb,
                                                       cache.ub; opt_args...)
     else
-        opt_xmin, opt_fmin, opt_ret = GCMAES.minimize(isnothing(f.grad) ? _loss :
-                                                      (_loss, g), cache.u0, cache.solver_args.σ0, cache.lb,
+        opt_xmin, opt_fmin, opt_ret = GCMAES.minimize(isnothing(cache.f.grad) ? _loss :
+                                                      (_loss, g), cache.u0,
+                                                      cache.sigma0, cache.lb,
                                                       cache.ub; opt_args...)
     end
     t1 = time()

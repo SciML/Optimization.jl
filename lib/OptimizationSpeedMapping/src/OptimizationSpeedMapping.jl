@@ -11,7 +11,34 @@ struct SpeedMappingOpt end
 SciMLBase.allowsbounds(::SpeedMappingOpt) = true
 SciMLBase.allowscallback(::SpeedMappingOpt) = false
 
-function __map_optimizer_args(prob::OptimizationProblem, opt::SpeedMappingOpt;
+struct SpeedMappingOptimizationCache{F <: OptimizationFunction, RC, LB, UB, O, P} <:
+       SciMLBase.AbstractOptimizationCache
+    f::F
+    reinit_cache::RC
+    lb::LB
+    ub::UB
+    opt::O
+    progress::P
+    solver_args::NamedTuple
+end
+
+function Base.getproperty(cache::SpeedMappingOptimizationCache, x::Symbol)
+    if x in fieldnames(Optimization.ReInitCache)
+        return getfield(cache.reinit_cache, x)
+    end
+    return getfield(cache, x)
+end
+
+function SpeedMappingOptimizationCache(prob::OptimizationProblem, opt; progress, kwargs...)
+    reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
+    f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype)
+    return SpeedMappingOptimizationCache(f, reinit_cache, prob.lb, prob.ub, opt, progress,
+                                         NamedTuple(kwargs))
+end
+
+SciMLBase.supports_opt_cache_interface(opt::SpeedMappingOpt) = true
+
+function __map_optimizer_args(cache::SpeedMappingOptimizationCache, opt::SpeedMappingOpt;
                               callback = nothing,
                               maxiters::Union{Number, Nothing} = nothing,
                               maxtime::Union{Number, Nothing} = nothing,
@@ -41,39 +68,44 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::SpeedMappingOpt;
     return mapped_args
 end
 
-function SciMLBase.__solve(prob::OptimizationProblem, opt::SpeedMappingOpt;
-                           maxiters::Union{Number, Nothing} = nothing,
-                           maxtime::Union{Number, Nothing} = nothing,
-                           abstol::Union{Number, Nothing} = nothing,
-                           reltol::Union{Number, Nothing} = nothing,
-                           progress = false,
-                           kwargs...)
+function SciMLBase.__init(prob::OptimizationProblem, opt::SpeedMappingOpt;
+                          maxiters::Union{Number, Nothing} = nothing,
+                          maxtime::Union{Number, Nothing} = nothing,
+                          abstol::Union{Number, Nothing} = nothing,
+                          reltol::Union{Number, Nothing} = nothing,
+                          progress = false,
+                          kwargs...)
+    return SpeedMappingOptimizationCache(prob, opt; maxiters, maxtime, abstol, reltol,
+                                         progress, kwargs...)
+end
+
+function SciMLBase.__solve(cache::SpeedMappingOptimizationCache)
     local x
 
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(maxtime)
-
-    f = Optimization.instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p)
-
     _loss = function (θ)
-        x = f.f(θ, prob.p)
+        x = cache.f.f(θ, cache.p)
         return first(x)
     end
 
-    if isnothing(f.grad)
+    if isnothing(cache.f.grad)
         @info "SpeedMapping's ForwardDiff AD backend is used to calculate the gradient information."
     end
 
-    opt_args = __map_optimizer_args(prob, opt, maxiters = maxiters, maxtime = maxtime,
-                                    abstol = abstol, reltol = reltol; kwargs...)
+    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
+    opt_args = __map_optimizer_args(cache, cache.opt, maxiters = maxiters,
+                                    maxtime = maxtime,
+                                    abstol = cache.solver_args.abstol,
+                                    reltol = cache.solver_args.reltol; cache.solver_args...)
 
     t0 = time()
-    opt_res = SpeedMapping.speedmapping(prob.u0; f = _loss, (g!) = f.grad, lower = prob.lb,
-                                        upper = prob.ub, opt_args...)
+    opt_res = SpeedMapping.speedmapping(cache.u0; f = _loss, (g!) = cache.f.grad,
+                                        lower = cache.lb,
+                                        upper = cache.ub, opt_args...)
     t1 = time()
     opt_ret = Symbol(opt_res.converged)
 
-    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
+    SciMLBase.build_solution(cache, cache.opt,
                              opt_res.minimizer, _loss(opt_res.minimizer);
                              original = opt_res, retcode = opt_ret, solve_time = t1 - t0)
 end
