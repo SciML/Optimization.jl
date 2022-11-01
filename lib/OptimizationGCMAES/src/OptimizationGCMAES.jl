@@ -11,7 +11,7 @@ struct GCMAESOpt end
 SciMLBase.requiresbounds(::GCMAESOpt) = true
 SciMLBase.allowsbounds(::GCMAESOpt) = true
 
-function __map_optimizer_args(prob::OptimizationProblem, opt::GCMAESOpt;
+function __map_optimizer_args(cache::GCMAESOptimizationCache, opt::GCMAESOpt;
                               callback = nothing,
                               maxiters::Union{Number, Nothing} = nothing,
                               maxtime::Union{Number, Nothing} = nothing,
@@ -95,7 +95,7 @@ function SciMLBase.__solve(cache::GCMAESOptimizationCache)
         end
     end
 
-    opt_args = __map_optimizer_args(prob, opt, maxiters = cache.solver_args.maxiters, maxtime = cache.solver_args.maxtime,
+    opt_args = __map_optimizer_args(cache, opt, maxiters = cache.solver_args.maxiters, maxtime = cache.solver_args.maxtime,
                                     abstol = cache.solver_args.abstol, reltol = cache.solver_args.reltol; cache.solver_args...)
 
     t0 = time()

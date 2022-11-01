@@ -112,7 +112,7 @@ end
 function instantiate_function(f::OptimizationFunction{true}, cache::ReInitCache,
                               adtype::AutoForwardDiff{_chunksize},
                               num_cons = 0) where {_chunksize}
-    chunksize = _chunksize === nothing ? default_chunk_size(length(x)) : _chunksize
+    chunksize = _chunksize === nothing ? default_chunk_size(length(cache.u0)) : _chunksize
 
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
 
