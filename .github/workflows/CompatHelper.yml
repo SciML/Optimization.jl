@@ -14,4 +14,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMPATHELPER_PRIV: ${{ secrets.DOCUMENTER_KEY }}
-        run: julia -e 'using CompatHelper; CompatHelper.main(; subdirs = ["", "docs"])'
+        run: >
+          julia -e 'using CompatHelper; CompatHelper.main(; subdirs = ["", "docs",
+                                                                       "lib/OptimizationBBO",
+                                                                       "lib/OptimizationCMAEvolutionStrategy",
+                                                                       "lib/OptimizationEvolutionary",
+                                                                       "lib/OptimizationFlux",
+                                                                       "lib/OptimizationGCMAES",
+                                                                       "lib/OptimizationMOI",
+                                                                       "lib/OptimizationMetaheuristics",
+                                                                       "lib/OptimizationMultistartOptimization",
+                                                                       "lib/OptimizationNLopt",
+                                                                       "lib/OptimizationNOMAD",
+                                                                       "lib/OptimizationNonconvex",
+                                                                       "lib/OptimizationOptimJL",
+                                                                       "lib/OptimizationOptimisers",
+                                                                       "lib/OptimizationPolyalgorithms",
+                                                                       "lib/OptimizationQuadDIRECT",
+                                                                       "lib/OptimizationSpeedMapping"])'
