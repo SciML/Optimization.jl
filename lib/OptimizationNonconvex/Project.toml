@@ -5,7 +5,6 @@ version = "0.1.0"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 Nonconvex = "01bcebdf-4d21-426d-b5c4-6132c1619978"
 NonconvexBayesian = "fb352abc-de7b-48de-9ebd-665b54b5d9b3"
 NonconvexIpopt = "bf347577-a06d-49ad-a669-8c0e005493b8"
@@ -15,20 +14,21 @@ NonconvexNLopt = "b43a31b8-ff9b-442d-8e31-c163daa8ab75"
 NonconvexPavito = "75d5b151-dcdf-4236-8ef5-9c4e63ef33e2"
 NonconvexPercival = "4296f080-e499-44ba-a02c-ae40015c44d5"
 NonconvexSearch = "75732972-a7cd-4375-b200-958e0814350d"
+Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 
 [compat]
-julia = "1"
 ChainRulesCore = "1"
-Optimization = "3"
 Nonconvex = "1"
 NonconvexBayesian = "0.1"
 NonconvexIpopt = "0.1.4"
-NonconvexJuniper = "0.1"
+NonconvexJuniper = "0.1, 0.3"
 NonconvexMMA = "0.1"
 NonconvexNLopt = "0.1"
 NonconvexPavito = "0.1"
 NonconvexPercival = "0.1"
 NonconvexSearch = "0.1"
+Optimization = "3"
+julia = "1"
 
 [extras]
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
