@@ -12,15 +12,16 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
-julia = "1"
 Optimisers = "0.2"
+Optimization = "3"
 ProgressLogging = "0.1"
 Reexport = "1.2"
-Optimization = "3"
+Zygote = "0.6"
+julia = "1"
 
 [extras]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["ForwardDiff","Test"]
+test = ["ForwardDiff", "Test"]
