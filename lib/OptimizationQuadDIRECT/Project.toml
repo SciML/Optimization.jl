@@ -1,7 +1,7 @@
 name = "OptimizationQuadDIRECT"
 uuid = "842ac81e-713d-465f-80f7-84eddaced298"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
@@ -9,7 +9,7 @@ QuadDIRECT = "dae52e8d-d666-5120-a592-9e15c33b8d7a"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
-Optimization = "3"
+Optimization = "3.9"
 Reexport = "1.2"
 julia = "1"
 
