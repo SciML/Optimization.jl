@@ -1,7 +1,7 @@
 name = "OptimizationPolyalgorithms"
 uuid = "500b13db-7e66-49ce-bda4-eed966be6282"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
@@ -10,7 +10,7 @@ OptimizationOptimisers = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
-Optimization = "3"
+Optimization = "3.9"
 OptimizationOptimJL = "0.1"
 OptimizationOptimisers = "0.1"
 Reexport = "1.2"
