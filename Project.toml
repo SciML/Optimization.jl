@@ -1,6 +1,6 @@
 name = "Optimization"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-version = "3.9.3"
+version = "3.9.4"
 
 [deps]
 ArrayInterfaceCore = "30b0a656-2188-435a-8636-2ec0e6a096e2"
@@ -24,7 +24,6 @@ ArrayInterfaceCore = "0.1.1"
 ConsoleProgressMonitor = "0.1"
 DocStringExtensions = "0.8, 0.9"
 LoggingExtras = "0.4, 0.5, 1"
-ModelingToolkit = "~8.30.0"
 ProgressLogging = "0.1"
 Reexport = "0.2, 1.0"
 Requires = "1.0"

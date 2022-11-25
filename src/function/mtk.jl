@@ -57,7 +57,7 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons = 0
         cons_exprs = map(cons_eqs) do cons_eq
             e = symbolify(ModelingToolkit.Symbolics.toexpr(cons_eq))
             rep_pars_vals!(e, pairs_arr)
-            return Expr(:call, :(==), e.args[2], :0)
+            return Expr(:call, :(==), e.args[3], :0)
         end
     end
 
