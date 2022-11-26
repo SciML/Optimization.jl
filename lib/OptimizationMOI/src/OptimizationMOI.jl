@@ -16,6 +16,10 @@ function SciMLBase.allowsconstraints(opt::Union{MOI.AbstractOptimizer,
                                                 MOI.OptimizerWithAttributes})
     true
 end
+function SciMLBase.allowscallback(opt::Union{MOI.AbstractOptimizer,
+                                                MOI.OptimizerWithAttributes})
+    false
+end
 
 struct MOIOptimizationProblem{T, F <: OptimizationFunction, uType, P,
                               JT <: DenseOrSparse{T}, HT <: DenseOrSparse{T},
