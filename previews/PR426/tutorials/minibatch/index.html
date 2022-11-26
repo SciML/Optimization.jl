@@ -64,23 +64,23 @@ optfun = OptimizationFunction((θ, p, batch, time_batch) -&gt; loss_adjoint(θ, 
 optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
 res1 = Optimization.solve(optprob, Optimisers.ADAM(0.05), ncycle(train_loader, numEpochs), callback = callback)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">u: 25-element Vector{Float32}:
- -0.5975551
-  0.1451748
- -0.22716661
-  0.79042745
- -0.7588751
-  0.32445115
- -0.43284732
-  0.6874327
+  0.16334647
+ -0.56888705
+  0.374741
+  0.63069266
+  0.7269655
+  0.39853212
+ -0.56481254
+  0.7425798
   0.0
   0.0
   ⋮
- -0.04361291
-  0.29335612
-  0.54336417
-  0.6069397
-  0.5836342
- -0.31868938
-  0.3768258
-  0.75776446
-  0.07782236</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../rosenbrock/">« Solving the Rosenbrock Problem in &gt;10 Ways</a><a class="docs-footer-nextpage" href="../symbolic/">Symbolic Problem Building with ModelingToolkit »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Saturday 26 November 2022 12:36">Saturday 26 November 2022</span>. Using Julia version 1.8.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ -0.79286385
+ -0.26690903
+  0.16098386
+ -0.22056691
+  0.26827997
+ -0.2765582
+  0.109480515
+  0.6650392
+ -0.004804556</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../rosenbrock/">« Solving the Rosenbrock Problem in &gt;10 Ways</a><a class="docs-footer-nextpage" href="../symbolic/">Symbolic Problem Building with ModelingToolkit »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Saturday 26 November 2022 21:36">Saturday 26 November 2022</span>. Using Julia version 1.8.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
