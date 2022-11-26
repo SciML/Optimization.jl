@@ -17,7 +17,7 @@ function SciMLBase.allowsconstraints(opt::Union{MOI.AbstractOptimizer,
     true
 end
 function SciMLBase.allowscallback(opt::Union{MOI.AbstractOptimizer,
-                                                MOI.OptimizerWithAttributes})
+                                             MOI.OptimizerWithAttributes})
     false
 end
 
@@ -284,7 +284,6 @@ function SciMLBase.__solve(prob::OptimizationProblem,
                            abstol::Union{Number, Nothing} = nothing,
                            reltol::Union{Number, Nothing} = nothing,
                            kwargs...)
-
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
     maxtime = Optimization._check_and_convert_maxtime(maxtime)
     opt_setup = __map_optimizer_args(prob,
