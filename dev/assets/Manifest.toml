@@ -1123,9 +1123,9 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[deps.ModelingToolkit]]
 deps = ["AbstractTrees", "ArrayInterfaceCore", "Combinatorics", "Compat", "ConstructionBase", "DataStructures", "DiffEqBase", "DiffEqCallbacks", "DiffRules", "Distributed", "Distributions", "DocStringExtensions", "DomainSets", "ForwardDiff", "FunctionWrappersWrappers", "Graphs", "IfElse", "InteractiveUtils", "JuliaFormatter", "JumpProcesses", "LabelledArrays", "Latexify", "Libdl", "LinearAlgebra", "MacroTools", "NaNMath", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLBase", "Serialization", "Setfield", "SimpleNonlinearSolve", "SparseArrays", "SpecialFunctions", "StaticArrays", "SymbolicUtils", "Symbolics", "UnPack", "Unitful"]
-git-tree-sha1 = "8fceee702d16f98203f6ea5d339ff281584dd46f"
+git-tree-sha1 = "979fe2270282a1478c5ca3524853aa79910a3a56"
 uuid = "961ee093-0014-501f-94e3-6117800e7a78"
-version = "8.35.1"
+version = "8.35.2"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
@@ -1284,12 +1284,12 @@ version = "1.7.4"
 
 [[deps.Optimisers]]
 deps = ["ChainRulesCore", "Functors", "LinearAlgebra", "Random", "Statistics"]
-git-tree-sha1 = "c8884e88057968a715ddfd39f5c18b4c03aa3b64"
+git-tree-sha1 = "5fdc24095a4a5ac80c8f416a431caeec80e3b0d8"
 uuid = "3bd65402-5787-11e9-1adc-39752487f4e2"
-version = "0.2.11"
+version = "0.2.12"
 
 [[deps.Optimization]]
-deps = ["ArrayInterfaceCore", "ConsoleProgressMonitor", "DocStringExtensions", "Logging", "LoggingExtras", "ModelingToolkit", "Pkg", "Printf", "ProgressLogging", "Reexport", "Requires", "SciMLBase", "SparseArrays", "TerminalLoggers"]
+deps = ["ArrayInterfaceCore", "ConsoleProgressMonitor", "DocStringExtensions", "Logging", "LoggingExtras", "Pkg", "Printf", "ProgressLogging", "Reexport", "Requires", "SciMLBase", "SparseArrays", "TerminalLoggers"]
 path = "/home/runner/work/Optimization.jl/Optimization.jl"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 version = "3.9.4"
