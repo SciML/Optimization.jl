@@ -241,13 +241,16 @@ function _create_new_optimizer(opt::MOI.OptimizerWithAttributes)
 end
 
 function _create_new_optimizer(model::MOI.AbstractOptimizer)
+    if !MOI.is_empty(model)
+        MOI.empty!(model)
+    end
     if MOI.supports_incremental_interface(model)
-        return MOI.instantiate(typeof(model))
+        return model
     end
     return MOI.Utilities.CachingOptimizer(MOI.Utilities.UniversalFallback(MOI.Utilities.Model{
                                                                                               Float64
                                                                                               }()),
-                                          MOI.instantiate(typeof(model)))
+                                          model)
 end
 
 function __map_optimizer_args(prob::OptimizationProblem,

@@ -43,7 +43,10 @@ end
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
     prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MinSense)
 
-    sol = solve(prob, Ipopt.Optimizer())
+    opt = Ipopt.Optimizer()
+    sol = solve(prob, opt)
+    @test 10 * sol.minimum < l1
+    sol = solve(prob, opt) #test reuse of optimizer
     @test 10 * sol.minimum < l1
 
     sol = solve(prob,
@@ -61,9 +64,11 @@ end
                                                             "algorithm" => :LD_LBFGS))
     @test 10 * sol.minimum < l1
 
-    sol = solve(prob,
-                OptimizationMOI.MOI.OptimizerWithAttributes(NLopt.Optimizer,
-                                                            "algorithm" => :LD_LBFGS))
+    opt = OptimizationMOI.MOI.OptimizerWithAttributes(NLopt.Optimizer,
+                                                      "algorithm" => :LD_LBFGS)
+    sol = solve(prob, opt)
+    @test 10 * sol.minimum < l1
+    sol = solve(prob, opt)
     @test 10 * sol.minimum < l1
 
     cons_circ = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
