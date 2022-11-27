@@ -17,7 +17,7 @@ function SciMLBase.allowsconstraints(opt::Union{MOI.AbstractOptimizer,
     true
 end
 function SciMLBase.allowscallback(opt::Union{MOI.AbstractOptimizer,
-                                                MOI.OptimizerWithAttributes})
+                                             MOI.OptimizerWithAttributes})
     false
 end
 
@@ -241,13 +241,16 @@ function _create_new_optimizer(opt::MOI.OptimizerWithAttributes)
 end
 
 function _create_new_optimizer(model::MOI.AbstractOptimizer)
+    if !MOI.is_empty(model)
+        MOI.empty!(model)
+    end
     if MOI.supports_incremental_interface(model)
-        return MOI.instantiate(typeof(model))
+        return model
     end
     return MOI.Utilities.CachingOptimizer(MOI.Utilities.UniversalFallback(MOI.Utilities.Model{
                                                                                               Float64
                                                                                               }()),
-                                          MOI.instantiate(typeof(model)))
+                                          model)
 end
 
 function __map_optimizer_args(prob::OptimizationProblem,
@@ -284,7 +287,6 @@ function SciMLBase.__solve(prob::OptimizationProblem,
                            abstol::Union{Number, Nothing} = nothing,
                            reltol::Union{Number, Nothing} = nothing,
                            kwargs...)
-
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
     maxtime = Optimization._check_and_convert_maxtime(maxtime)
     opt_setup = __map_optimizer_args(prob,
