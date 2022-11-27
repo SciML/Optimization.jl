@@ -19,6 +19,7 @@ jobs:
         package:
           - {user: SciML, repo: DiffEqFlux.jl, group: DiffEqFlux}
           - {user: SciML, repo: NeuralPDE.jl, group: NNPDE}
+          - {user: SciML, repo: ModelingToolkit.jl, group: All}
 
     steps:
       - uses: actions/checkout@v2
