@@ -10,7 +10,7 @@ pages = ["index.md",
         "API/optimization_problem.md",
         "API/optimization_function.md",
         "API/solve.md",
-        "API/optimization_solution.md"
+        "API/optimization_solution.md",
         "API/modelingtoolkit.md",
     ],
     "Optimizer Packages" => [
