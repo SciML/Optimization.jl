@@ -6,10 +6,11 @@ pages = ["index.md",
         "tutorials/symbolic.md",
         "tutorials/constraints.md",
     ],
-    "API" => [
+    "Basics" => [
         "API/optimization_problem.md",
         "API/optimization_function.md",
         "API/solve.md",
+        "API/optimization_solution.md",
         "API/modelingtoolkit.md",
     ],
     "Optimizer Packages" => [
