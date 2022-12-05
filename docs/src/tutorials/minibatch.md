@@ -1,5 +1,7 @@
 # Data Iterators and Minibatching
 
+It is possible to solve an optimization problem with batches using a `Flux.Data.DataLoader`, which is passed to `Optimization.solve` with `ncycles`. All data for the batches need to be passed as a tuple of vectors.
+
 !!! note
 
     This example uses the OptimizationOptimisers.jl package. See the 
@@ -58,6 +60,7 @@ end
 
 
 k = 10
+# Pass the data for the batches as separate vectors wrapped in a tuple
 train_loader = Flux.Data.DataLoader((ode_data, t), batchsize = k)
 
 numEpochs = 300
