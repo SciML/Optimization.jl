@@ -30,9 +30,7 @@ end
 
 function GradientDescentOptimizer(M::AbstractManifold;
                                   eval = MutatingEvaluation(),
-                                  stepsize = ArmijoLinesearch(1.0,
-                                                              ExponentialRetraction(),
-                                                              0.5, 0.0001))
+                                  stepsize = ArmijoLinesearch(M))
     GradientDescentOptimizer{typeof(eval), typeof(M), typeof(stepsize)}(M, stepsize)
 end
 
@@ -54,16 +52,24 @@ function call_manopt_optimizer(opt::GradientDescentOptimizer{Teval},
                             stepsize = opt.stepsize,
                             sckwarg...)
     # we unwrap DebugOptions here
-    minimizer = opts.options.x
-    return (; minimizer = minimizer, minimum = loss(opt.M, minimizer)), :who_knows
+    minimizer = Manopt.get_solver_result(opts)
+    return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
+           :who_knows
 end
 
 ## Nelder-Mead
 
 struct NelderMeadOptimizer{
-                           TM <: AbstractManifold
+                           TM <: AbstractManifold,
+                           Tpop <: AbstractVector
                            } <: AbstractManoptOptimizer
     M::TM
+    initial_population::Tpop
+end
+
+function NelderMeadOptimizer(M::AbstractManifold)
+    initial_population = [rand(M) for _ in 1:(manifold_dimension(M) + 1)]
+    return NelderMeadOptimizer{typeof(M), typeof(initial_population)}(M, initial_population)
 end
 
 function call_manopt_optimizer(opt::NelderMeadOptimizer,
@@ -74,11 +80,13 @@ function call_manopt_optimizer(opt::NelderMeadOptimizer,
     sckwarg = stopping_criterion_to_kwarg(stopping_criterion)
 
     opts = NelderMead(opt.M,
-                      loss;
+                      loss,
+                      opt.initial_population;
                       return_options = true,
                       sckwarg...)
-    minimizer = opts.x
-    return (; minimizer = minimizer, minimum = loss(opt.M, minimizer)), :who_knows
+    minimizer = Manopt.get_solver_result(opts)
+    return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
+           :who_knows
 end
 
 ## Optimization.jl stuff
@@ -146,7 +154,7 @@ function SciMLBase.__solve(prob::OptimizationProblem,
                                     opt_res.minimizer,
                                     prob.sense === Optimization.MaxSense ?
                                     -opt_res.minimum : opt_res.minimum;
-                                    original = opt_res,
+                                    original = opt_res.options,
                                     retcode = opt_ret)
 end
 
