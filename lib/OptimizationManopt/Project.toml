@@ -1,0 +1,10 @@
+name = "OptimizationManopt"
+uuid = "e57b7fff-7ee7-4550-b4f0-90e9476e9fb6"
+authors = ["Mateusz Baran <mateuszbaran89@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+Manifolds = "1cead3c2-87b3-11e9-0ccd-23c62b72b94e"
+ManifoldsBase = "3362f125-f0bb-47a3-aa74-596ffd7ef2fb"
+Manopt = "0fc0a36d-df90-57f3-8f93-d78a9fc72bb5"
+Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
