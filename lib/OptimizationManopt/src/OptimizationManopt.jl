@@ -29,8 +29,8 @@ struct GradientDescentOptimizer{
 end
 
 function GradientDescentOptimizer(M::AbstractManifold;
-                                  eval = MutatingEvaluation(),
-                                  stepsize = ArmijoLinesearch(M))
+                                  eval::AbstractEvaluationType = MutatingEvaluation(),
+                                  stepsize::Stepsize = ArmijoLinesearch(M))
     GradientDescentOptimizer{typeof(eval), typeof(M), typeof(stepsize)}(M, stepsize)
 end
 
@@ -84,6 +84,103 @@ function call_manopt_optimizer(opt::NelderMeadOptimizer,
                       opt.initial_population;
                       return_options = true,
                       sckwarg...)
+    minimizer = Manopt.get_solver_result(opts)
+    return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
+           :who_knows
+end
+
+## augmented Lagrangian method
+
+## conjugate gradient descent
+
+struct ConjugateGradientDescentOptimizer{Teval <: AbstractEvaluationType,
+                                         TM <: AbstractManifold, TLS <: Stepsize} <:
+       AbstractManoptOptimizer
+    M::TM
+    stepsize::TLS
+end
+
+function ConjugateGradientDescentOptimizer(M::AbstractManifold;
+                                           eval::AbstractEvaluationType = MutatingEvaluation(),
+                                           stepsize::Stepsize = ArmijoLinesearch(M))
+    ConjugateGradientDescentOptimizer{typeof(eval), typeof(M), typeof(stepsize)}(M,
+                                                                                 stepsize)
+end
+
+function call_manopt_optimizer(opt::ConjugateGradientDescentOptimizer{Teval},
+                               loss,
+                               gradF,
+                               x0,
+                               stopping_criterion::Union{Nothing, Manopt.StoppingCriterion}) where {
+                                                                                                    Teval <:
+                                                                                                    AbstractEvaluationType
+                                                                                                    }
+    sckwarg = stopping_criterion_to_kwarg(stopping_criterion)
+    opts = conjugate_gradient_descent(opt.M,
+                                      loss,
+                                      gradF,
+                                      x0;
+                                      return_options = true,
+                                      evaluation = Teval(),
+                                      stepsize = opt.stepsize,
+                                      sckwarg...)
+    # we unwrap DebugOptions here
+    minimizer = Manopt.get_solver_result(opts)
+    return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
+           :who_knows
+end
+
+## exact penalty method
+
+## particle swarm
+
+## quasi Newton
+
+struct QuasiNewtonOptimizer{Teval <: AbstractEvaluationType,
+                            TM <: AbstractManifold, Tretr <: AbstractRetractionMethod,
+                            Tvt <: AbstractVectorTransportMethod, TLS <: Stepsize} <:
+       AbstractManoptOptimizer
+    M::TM
+    retraction_method::Tretr
+    vector_transport_method::Tvt
+    stepsize::TLS
+end
+
+function QuasiNewtonOptimizer(M::AbstractManifold;
+                              eval::AbstractEvaluationType = MutatingEvaluation(),
+                              retraction_method::AbstractRetractionMethod = default_retraction_method(M),
+                              vector_transport_method::AbstractVectorTransportMethod = default_vector_transport_method(M),
+                              stepsize = WolfePowellLinesearch(M;
+                                                               retraction_method = retraction_method,
+                                                               vector_transport_method = vector_transport_method,
+                                                               linesearch_stopsize = 1e-12))
+    QuasiNewtonOptimizer{typeof(eval), typeof(M), typeof(retraction_method),
+                         typeof(vector_transport_method), typeof(stepsize)}(M,
+                                                                            retraction_method,
+                                                                            vector_transport_method,
+                                                                            stepsize)
+end
+
+function call_manopt_optimizer(opt::QuasiNewtonOptimizer{Teval},
+                               loss,
+                               gradF,
+                               x0,
+                               stopping_criterion::Union{Nothing, Manopt.StoppingCriterion}) where {
+                                                                                                    Teval <:
+                                                                                                    AbstractEvaluationType
+                                                                                                    }
+    sckwarg = stopping_criterion_to_kwarg(stopping_criterion)
+    opts = conjugate_gradient_descent(opt.M,
+                                      loss,
+                                      gradF,
+                                      x0;
+                                      return_options = true,
+                                      evaluation = Teval(),
+                                      retraction_method = opt.retraction_method,
+                                      vector_transport_method = opt.vector_transport_method,
+                                      stepsize = opt.stepsize,
+                                      sckwarg...)
+    # we unwrap DebugOptions here
     minimizer = Manopt.get_solver_result(opts)
     return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
            :who_knows

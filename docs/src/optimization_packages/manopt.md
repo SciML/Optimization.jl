@@ -15,6 +15,7 @@ import Pkg; Pkg.add("OptimizationManopt")
 
 `Manopt.jl` algorithms can be accessed via Optimization.jl using one of the following optimizers:
 
+- `ConjugateGradientDescentOptimizer`
 - `GradientDescentOptimizer`
 - `NelderMeadOptimizer`
 
