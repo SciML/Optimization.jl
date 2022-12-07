@@ -13,8 +13,6 @@ using Pkg
 
 import SciMLBase: OptimizationProblem, OptimizationFunction, AbstractADType
 
-@enum ObjSense MinSense MaxSense
-
 include("utils.jl")
 include("function/function.jl")
 
