@@ -126,6 +126,21 @@ sol = solve(prob, CMAES(μ =40 , λ = 100),abstol=1e-15) # -1.0 ≤ x[1], x[2] �
 using OptimizationBBO
 prob = Optimization.OptimizationProblem(rosenbrock, x0, _p, lb=[-1.0, 0.2], ub=[0.8, 0.43])
 sol = solve(prob, BBO_adaptive_de_rand_1_bin()) # -1.0 ≤ x[1] ≤ 0.8, 0.2 ≤ x[2] ≤ 0.43
+
+## Riemannian optimization
+
+using Manopt, Manifolds, OptimizationManopt
+
+function rosenbrock_grad!(storage, x, p)
+    ForwardDiff.gradient!(storage, y -> rosenbrock(y, p), x)
+    project!(Manifolds.Sphere(1), storage, x, storage)
+end
+
+optprob = OptimizationFunction(rosenbrock; grad=rosenbrock_grad!)
+opt = OptimizationManopt.QuasiNewtonOptimizer(Manifolds.Sphere(1))
+x0 = [1.0, 0.0]
+prob = OptimizationProblem(optprob, x0, _p)
+sol = Optimization.solve(prob, opt)
 ```
 
 And this is only a small subset of what Optimization.jl has to offer!

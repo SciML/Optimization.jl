@@ -89,8 +89,6 @@ function call_manopt_optimizer(opt::NelderMeadOptimizer,
            :who_knows
 end
 
-## augmented Lagrangian method
-
 ## conjugate gradient descent
 
 struct ConjugateGradientDescentOptimizer{Teval <: AbstractEvaluationType,
@@ -130,9 +128,59 @@ function call_manopt_optimizer(opt::ConjugateGradientDescentOptimizer{Teval},
            :who_knows
 end
 
-## exact penalty method
-
 ## particle swarm
+
+struct ParticleSwarmOptimizer{Teval <: AbstractEvaluationType,
+                              TM <: AbstractManifold, Tretr <: AbstractRetractionMethod,
+                              Tinvretr <: AbstractInverseRetractionMethod,
+                              Tvt <: AbstractVectorTransportMethod} <:
+       AbstractManoptOptimizer
+    M::TM
+    retraction_method::Tretr
+    inverse_retraction_method::Tinvretr
+    vector_transport_method::Tvt
+    population_size::Int
+end
+
+function ParticleSwarmOptimizer(M::AbstractManifold;
+                                eval::AbstractEvaluationType = MutatingEvaluation(),
+                                population_size::Int = 100,
+                                retraction_method::AbstractRetractionMethod = default_retraction_method(M),
+                                inverse_retraction_method::AbstractInverseRetractionMethod = default_inverse_retraction_method(M),
+                                vector_transport_method::AbstractVectorTransportMethod = default_vector_transport_method(M))
+    ParticleSwarmOptimizer{typeof(eval), typeof(M), typeof(retraction_method),
+                           typeof(inverse_retraction_method),
+                           typeof(vector_transport_method)}(M,
+                                                            retraction_method,
+                                                            inverse_retraction_method,
+                                                            vector_transport_method,
+                                                            population_size)
+end
+
+function call_manopt_optimizer(opt::ParticleSwarmOptimizer{Teval},
+                               loss,
+                               gradF,
+                               x0,
+                               stopping_criterion::Union{Nothing, Manopt.StoppingCriterion}) where {
+                                                                                                    Teval <:
+                                                                                                    AbstractEvaluationType
+                                                                                                    }
+    sckwarg = stopping_criterion_to_kwarg(stopping_criterion)
+    initial_population = vcat([x0], [rand(opt.M) for _ in 1:(opt.population_size - 1)])
+    opts = particle_swarm(opt.M,
+                          loss;
+                          x0 = initial_population,
+                          n = opt.population_size,
+                          return_options = true,
+                          retraction_method = opt.retraction_method,
+                          inverse_retraction_method = opt.inverse_retraction_method,
+                          vector_transport_method = opt.vector_transport_method,
+                          sckwarg...)
+    # we unwrap DebugOptions here
+    minimizer = Manopt.get_solver_result(opts)
+    return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
+           :who_knows
+end
 
 ## quasi Newton
 
@@ -170,7 +218,7 @@ function call_manopt_optimizer(opt::QuasiNewtonOptimizer{Teval},
                                                                                                     AbstractEvaluationType
                                                                                                     }
     sckwarg = stopping_criterion_to_kwarg(stopping_criterion)
-    opts = conjugate_gradient_descent(opt.M,
+    opts = quasi_Newton(opt.M,
                                       loss,
                                       gradF,
                                       x0;

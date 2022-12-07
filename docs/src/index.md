@@ -45,6 +45,7 @@ packages.
 | Evolutionary             |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        | 🟡                         |
 | Flux                     | ✅                        |                        ❌ |                        ❌ |                        ❌ |                        ❌ |                        ❌ |
 | GCMAES                   |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        |                        ❌ |
+| Manopt                   | ✅                        |                        🟡 | ✅                        | ✅                        | ✅                        | ✅                        |
 | MathOptInterface         | ✅                        | ✅                        | ✅                        | ✅                        | ✅                        |                        🟡 |
 | MultistartOptimization   |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        |                        ❌ |
 | Metaheuristics           |                        ❌ |                        ❌ |                        ❌ |                        ❌ | ✅                        | 🟡                         |
