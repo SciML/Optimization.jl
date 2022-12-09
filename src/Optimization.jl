@@ -12,6 +12,7 @@ using ArrayInterfaceCore, Base.Iterators, SparseArrays
 using Pkg
 
 import SciMLBase: OptimizationProblem, OptimizationFunction, AbstractADType, ObjSense, MaxSense, MinSense
+export ObjSense, MaxSense, MinSense
 
 include("utils.jl")
 include("function/function.jl")
