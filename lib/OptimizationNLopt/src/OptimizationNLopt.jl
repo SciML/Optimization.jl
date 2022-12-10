@@ -135,7 +135,8 @@ function SciMLBase.__solve(prob::OptimizationProblem,
     t1 = time()
 
     SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt, minx,
-                             minf; original = opt_setup, retcode = ret)
+                             minf; original = opt_setup, retcode = ret,
+                             solve_time = t1 - t0)
 end
 
 end

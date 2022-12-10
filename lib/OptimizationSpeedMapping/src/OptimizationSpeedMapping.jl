@@ -75,7 +75,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::SpeedMappingOpt;
 
     SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
                              opt_res.minimizer, _loss(opt_res.minimizer);
-                             original = opt_res, retcode = opt_ret)
+                             original = opt_res, retcode = opt_ret, solve_time = t1 - t0)
 end
 
 end

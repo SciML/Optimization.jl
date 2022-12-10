@@ -60,7 +60,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Flux.Optimise.Abstrac
     t1 = time()
 
     SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt, θ,
-                             x[1])
+                             x[1], solve_time = t1 - t0)
     # here should be build_solution to create the output message
 end
 
