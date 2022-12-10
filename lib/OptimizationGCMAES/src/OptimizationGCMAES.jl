@@ -84,7 +84,8 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::GCMAESOpt;
     t1 = time()
 
     SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
-                             opt_xmin, opt_fmin; retcode = Symbol(Bool(opt_ret)))
+                             opt_xmin, opt_fmin; retcode = Symbol(Bool(opt_ret)),
+                             solve_time = t1 - t0)
 end
 
 end

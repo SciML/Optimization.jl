@@ -168,7 +168,8 @@ function ___solve(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
     SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
                              opt_res.minimizer,
                              prob.sense === Optimization.MaxSense ? -opt_res.minimum :
-                             opt_res.minimum; original = opt_res, retcode = opt_ret)
+                             opt_res.minimum; original = opt_res, retcode = opt_ret,
+                             solve_time = t1 - t0)
 end
 
 function ___solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox, Optim.SAMIN},
@@ -246,7 +247,7 @@ function ___solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox, Optim.SAM
 
     SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
                              opt_res.minimizer, opt_res.minimum;
-                             original = opt_res, retcode = opt_ret)
+                             original = opt_res, retcode = opt_ret, solve_time = t1 - t0)
 end
 
 function ___solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,

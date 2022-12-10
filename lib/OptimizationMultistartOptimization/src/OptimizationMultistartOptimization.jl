@@ -39,7 +39,8 @@ function SciMLBase.__solve(prob::OptimizationProblem,
     SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p),
                              (multiopt, opt), opt_res.location, opt_res.value;
                              (isnothing(opt_ret) ? (; original = opt_res) :
-                              (; original = opt_res, retcode = opt_ret))...)
+                              (; original = opt_res, retcode = opt_ret,
+                               solve_time = t1 - t0))...)
 end
 
 end
