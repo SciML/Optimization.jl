@@ -134,7 +134,7 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO,
     SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
                              BlackBoxOptim.best_candidate(opt_res),
                              BlackBoxOptim.best_fitness(opt_res); original = opt_res,
-                             retcode = opt_ret)
+                             retcode = opt_ret, solve_time = t1 - t0)
 end
 
 end

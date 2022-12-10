@@ -69,7 +69,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::QuadDirect;
 
     SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
                              QuadDIRECT.position(box, x0), QuadDIRECT.value(box);
-                             original = root)
+                             original = root, solve_time = t1 - t0)
 end
 
 end

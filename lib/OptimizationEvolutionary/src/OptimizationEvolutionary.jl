@@ -96,7 +96,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Evolutionary.Abstract
     SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
                              Evolutionary.minimizer(opt_res),
                              Evolutionary.minimum(opt_res); original = opt_res,
-                             retcode = opt_ret)
+                             retcode = opt_ret, solve_time = t1 - t0)
 end
 
 end

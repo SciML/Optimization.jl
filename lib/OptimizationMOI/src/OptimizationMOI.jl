@@ -333,7 +333,9 @@ function SciMLBase.__solve(prob::OptimizationProblem,
     MOI.set(opt_setup,
             MOI.NLPBlock(),
             MOI.NLPBlockData(con_bounds, MOIOptimizationProblem(prob), true))
+    t0 = time()
     MOI.optimize!(opt_setup)
+    t1 = time()
     if MOI.get(opt_setup, MOI.ResultCount()) >= 1
         minimizer = MOI.get(opt_setup, MOI.VariablePrimal(), θ)
         minimum = MOI.get(opt_setup, MOI.ObjectiveValue())
@@ -348,7 +350,7 @@ function SciMLBase.__solve(prob::OptimizationProblem,
                                     minimizer,
                                     minimum;
                                     original = opt_setup,
-                                    retcode = opt_ret)
+                                    retcode = opt_ret, solve_time = t1 - t0)
 end
 
 end
