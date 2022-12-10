@@ -11,7 +11,8 @@ using Logging, ProgressLogging, ConsoleProgressMonitor, TerminalLoggers, Logging
 using ArrayInterfaceCore, Base.Iterators, SparseArrays
 using Pkg
 
-import SciMLBase: OptimizationProblem, OptimizationFunction, AbstractADType, ObjSense, MaxSense, MinSense
+import SciMLBase: OptimizationProblem, OptimizationFunction, AbstractADType, ObjSense, 
+                                 MaxSense, MinSense
 export ObjSense, MaxSense, MinSense
 
 include("utils.jl")
