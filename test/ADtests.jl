@@ -98,13 +98,13 @@ optprob.hess(H2, x0)
 prob = OptimizationProblem(optf, x0)
 
 sol = solve(prob, Optim.BFGS())
-@test 10 * sol.minimum < l1
+@test 10 * sol.objective < l1
 
 sol = solve(prob, Optim.Newton())
-@test 10 * sol.minimum < l1
+@test 10 * sol.objective < l1
 
 sol = solve(prob, Optim.KrylovTrustRegion())
-@test 10 * sol.minimum < l1
+@test 10 * sol.objective < l1
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoZygote(), nothing)
@@ -116,13 +116,13 @@ optprob.hess(H2, x0)
 prob = OptimizationProblem(optf, x0)
 
 sol = solve(prob, Optim.BFGS())
-@test 10 * sol.minimum < l1
+@test 10 * sol.objective < l1
 
 sol = solve(prob, Optim.Newton())
-@test 10 * sol.minimum < l1
+@test 10 * sol.objective < l1
 
 sol = solve(prob, Optim.KrylovTrustRegion())
-@test 10 * sol.minimum < l1
+@test 10 * sol.objective < l1
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoReverseDiff())
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoReverseDiff(),
@@ -134,13 +134,13 @@ optprob.hess(H2, x0)
 
 prob = OptimizationProblem(optf, x0)
 sol = solve(prob, Optim.BFGS())
-@test 10 * sol.minimum < l1
+@test 10 * sol.objective < l1
 
 sol = solve(prob, Optim.Newton())
-@test 10 * sol.minimum < l1
+@test 10 * sol.objective < l1
 
 sol = solve(prob, Optim.KrylovTrustRegion())
-@test 10 * sol.minimum < l1
+@test 10 * sol.objective < l1
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoTracker())
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoTracker(), nothing)
@@ -151,7 +151,7 @@ optprob.grad(G2, x0)
 prob = OptimizationProblem(optf, x0)
 
 sol = solve(prob, Optim.BFGS())
-@test 10 * sol.minimum < l1
+@test 10 * sol.objective < l1
 
 @test_throws ErrorException solve(prob, Newton())
 
@@ -165,16 +165,16 @@ optprob.hess(H2, x0)
 
 prob = OptimizationProblem(optf, x0)
 sol = solve(prob, Optim.BFGS())
-@test 10 * sol.minimum < l1
+@test 10 * sol.objective < l1
 
 sol = solve(prob, Optim.Newton())
-@test 10 * sol.minimum < l1
+@test 10 * sol.objective < l1
 
 sol = solve(prob, Optim.KrylovTrustRegion())
-@test sol.minimum < l1 #the loss doesn't go below 5e-1 here
+@test sol.objective < l1 #the loss doesn't go below 5e-1 here
 
 sol = solve(prob, Optimisers.ADAM(0.1), maxiters = 1000)
-@test 10 * sol.minimum < l1
+@test 10 * sol.objective < l1
 
 # Test new constraints
 cons = (res, x, p) -> (res .= [x[1]^2 + x[2]^2])
@@ -298,7 +298,7 @@ for consf in [cons, con2_c]
     prob2 = OptimizationProblem(optf2, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8],
                                 lcons = lcons, ucons = ucons)
     sol2 = solve(prob2, Optim.IPNewton())
-    @test sol1.minimum≈sol2.minimum rtol=1e-4
+    @test sol1.objective≈sol2.objective rtol=1e-4
     @test sol1.u ≈ sol2.u
     res = Array{Float64}(undef, length(lcons))
     consf(res, sol1.u, nothing)
@@ -315,7 +315,7 @@ for consf in [cons, con2_c]
     optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = consf)
     prob2 = OptimizationProblem(optf2, [0.5, 0.5], lcons = lcons, ucons = ucons)
     sol2 = solve(prob2, Optim.IPNewton())
-    @test sol1.minimum≈sol2.minimum rtol=1e-4
+    @test sol1.objective≈sol2.objective rtol=1e-4
     @test sol1.u≈sol2.u rtol=1e-4
     res = Array{Float64}(undef, length(lcons))
     consf(res, sol1.u, nothing)

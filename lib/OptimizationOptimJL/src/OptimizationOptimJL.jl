@@ -245,7 +245,7 @@ function ___solve(prob::OptimizationProblem, opt::Union{Optim.Fminbox, Optim.SAM
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
 
-    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
+    SciMLBase.build_solution(SciMLBase.DefaultOptimizat.objective(prob.f, prob.p), opt,
                              opt_res.minimizer, opt_res.minimum;
                              original = opt_res, retcode = opt_ret, solve_time = t1 - t0)
 end
@@ -348,7 +348,7 @@ function ___solve(prob::OptimizationProblem, opt::Optim.ConstrainedOptimizer,
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
 
-    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
+    SciMLBase.build_solution(SciMLBase.DefaultOptimizat.objective(prob.f, prob.p), opt,
                              opt_res.minimizer, opt_res.minimum;
                              original = opt_res, retcode = opt_ret)
 end

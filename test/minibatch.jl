@@ -60,4 +60,4 @@ optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
 res1 = Optimization.solve(optprob, Optimisers.ADAM(0.05), ncycle(train_loader, numEpochs),
                           callback = callback, maxiters = numEpochs)
-@test 10res1.minimum < l1
+@test 10res1.objective < l1

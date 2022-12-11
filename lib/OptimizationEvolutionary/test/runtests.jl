@@ -9,5 +9,5 @@ using Test
     optprob = OptimizationFunction(rosenbrock)
     prob = Optimization.OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, CMAES(μ = 40, λ = 100), abstol = 1e-15)
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 end

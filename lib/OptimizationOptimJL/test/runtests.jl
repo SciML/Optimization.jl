@@ -13,28 +13,28 @@ using Test
                 Optim.NelderMead(;
                                  initial_simplex = Optim.AffineSimplexer(; a = 0.025,
                                                                          b = 0.5)))
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 
     Random.seed!(1234)
     prob = OptimizationProblem(f, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
     sol = solve(prob, SAMIN())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     prob = OptimizationProblem(f, x0, _p)
     Random.seed!(1234)
     sol = solve(prob, SimulatedAnnealing())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     sol = solve(prob, Optim.BFGS())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     sol = solve(prob, Optim.Newton())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     sol = solve(prob, Optim.KrylovTrustRegion())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit();
@@ -42,16 +42,16 @@ using Test
 
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [Inf])
     sol = solve(prob, IPNewton())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-5.0], ucons = [10.0])
     sol = solve(prob, IPNewton())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [Inf],
                                lb = [-500.0, -500.0], ub = [50.0, 50.0])
     sol = solve(prob, IPNewton())
-    @test sol.minimum < l1
+    @test sol.objective < l1
 
     function con2_c(res, x, p)
         res .= [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
@@ -61,7 +61,7 @@ using Test
                                    cons = con2_c)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf, -Inf], ucons = [Inf, Inf])
     sol = solve(prob, IPNewton())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     cons_circ = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();
@@ -76,21 +76,21 @@ using Test
 
     prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
     sol = solve(prob, Optim.Fminbox())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     Random.seed!(1234)
     prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
     sol = solve(prob, Optim.SAMIN())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), Optimization.AutoZygote())
     prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MaxSense)
 
     sol = solve(prob, NelderMead())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     sol = solve(prob, BFGS())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     function g!(G, x, p = nothing)
         G[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]
@@ -100,19 +100,19 @@ using Test
                                    grad = g!)
     prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MaxSense)
     sol = solve(prob, BFGS())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit())
     prob = OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, Optim.BFGS())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     optprob = OptimizationFunction(rosenbrock,
                                    Optimization.AutoModelingToolkit(true, false))
     prob = OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, Optim.Newton())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     sol = solve(prob, Optim.KrylovTrustRegion())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 end

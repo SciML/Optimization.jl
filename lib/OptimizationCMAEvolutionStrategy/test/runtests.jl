@@ -9,5 +9,5 @@ using Test
     f = OptimizationFunction(rosenbrock)
     prob = OptimizationProblem(f, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
     sol = solve(prob, CMAEvolutionStrategyOpt())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 end

@@ -9,18 +9,18 @@ using Test
     f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
     prob = OptimizationProblem(f, x0, _p)
     sol = solve(prob, SpeedMappingOpt())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     prob = OptimizationProblem(f, x0, _p; lb = [-1.0, -1.0], ub = [1.5, 1.5])
     sol = solve(prob, SpeedMappingOpt())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     f = OptimizationFunction(rosenbrock)
     prob = OptimizationProblem(f, x0, _p)
     sol = solve(prob, SpeedMappingOpt())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     prob = OptimizationProblem(f, x0, _p; lb = [-1.0, -1.0], ub = [1.5, 1.5])
     sol = solve(prob, SpeedMappingOpt())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 end

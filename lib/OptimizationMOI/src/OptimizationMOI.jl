@@ -382,17 +382,17 @@ function SciMLBase.__solve(prob::OptimizationProblem,
     t1 = time()
     if MOI.get(opt_setup, MOI.ResultCount()) >= 1
         minimizer = MOI.get(opt_setup, MOI.VariablePrimal(), θ)
-        minimum = MOI.get(opt_setup, MOI.ObjectiveValue())
+        objective = MOI.get(opt_setup, MOI.ObjectiveValue())
         opt_ret = __moi_status_to_ReturnCode(MOI.get(opt_setup, MOI.TerminationStatus()))
     else
         minimizer = fill(NaN, num_variables)
-        minimum = NaN
+        objective = NaN
         opt_ret = ReturnCode.Default
     end
     return SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p),
                                     opt,
                                     minimizer,
-                                    minimum;
+                                    objective;
                                     original = opt_setup,
                                     retcode = opt_ret, solve_time = t1 - t0)
 end
