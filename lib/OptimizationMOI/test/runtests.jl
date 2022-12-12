@@ -87,7 +87,7 @@ end
 
 @testset "backends" begin for backend in (Optimization.AutoModelingToolkit(false, false),
                                           Optimization.AutoModelingToolkit(true, false),
-                                 Optimization.AutoModelingToolkit(false, true),
+                                          Optimization.AutoModelingToolkit(false, true),
                                           Optimization.AutoModelingToolkit(true, true))
     @testset "$backend" begin
         _test_sparse_derivatives_hs071(backend, Ipopt.Optimizer())
