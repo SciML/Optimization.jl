@@ -43,14 +43,14 @@ end
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
     prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MinSense)
 
-    opt = Ipopt.Op.objective)
+    opt = Ipopt.Optimizer()
     sol = solve(prob, opt)
     @test 10 * sol.objective < l1
     sol = solve(prob, opt) #test reuse of optimizer
     @test 10 * sol.objective < l1
 
     sol = solve(prob,
-                Op.objectiveonMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
+                OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
                                                             "max_cpu_time" => 60.0))
     @test 10 * sol.objective < l1
 
@@ -72,9 +72,9 @@ end
     @test 10 * sol.objective < l1
 
     cons_circ = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
-    optprob = Opti.objectiveFunction(rosenbrock, Optimization.AutoModelingToolkit(true, true);
+    optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(true, true);
                                    cons = cons_circ)
-    prob = Optimiz.objectiveblem(optprob, x0, _p, ucons = [Inf], lcons = [0.0])
+    prob = OptimizationProblem(optprob, x0, _p, ucons = [Inf], lcons = [0.0])
 
     sol = solve(prob, Ipopt.Optimizer())
     @test 10 * sol.objective < l1
@@ -87,7 +87,7 @@ end
 
 @testset "backends" begin for backend in (Optimization.AutoModelingToolkit(false, false),
                                           Optimization.AutoModelingToolkit(true, false),
-                  .objective                Optimization.AutoModelingToolkit(false, true),
+                                 Optimization.AutoModelingToolkit(false, true),
                                           Optimization.AutoModelingToolkit(true, true))
     @testset "$backend" begin
         _test_sparse_derivatives_hs071(backend, Ipopt.Optimizer())
