@@ -1,6 +1,6 @@
 # Basic usage
 
-In this tutorial we introduce the basics of Optimization.jl by showing
+In this tutorial, we introduce the basics of Optimization.jl by showing
 how to easily mix local optimizers from Optim.jl and global optimizers
 from BlackBoxOptim.jl on the Rosenbrock equation. The simplest copy-pasteable
 code to get started is the following:
@@ -24,8 +24,8 @@ prob = OptimizationProblem(rosenbrock, u0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
 sol = solve(prob,BBO_adaptive_de_rand_1_bin_radiuslimited())
 ```
 
-Notice that Optimization.jl is the core glue package that holds all of the common
-pieces, but to solve the equations we need to use a solver package. Here, OptimizationOptimJL
+Notice that Optimization.jl is the core glue package that holds all the common
+pieces, but to solve the equations, we need to use a solver package. Here, OptimizationOptimJL
 is for [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) and OptimizationBBO is for
 [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl).
 
@@ -47,8 +47,8 @@ sol.original
 ## Controlling Gradient Calculations (Automatic Differentiation)
 
 Notice that both of the above methods were derivative-free methods, and thus no
-gradients were required to do the optimization. However, in many cases first order
-optimization (i.e. using gradients) is much more efficient. Defining gradients
+gradients were required to do the optimization. However, often first order
+optimization (i.e., using gradients) is much more efficient. Defining gradients
 can be done in two ways. One way is to manually provide a gradient definition
 in the `OptimizationFunction` constructor. However, the more convenient way
 to obtain gradients is to provide an AD backend type. 
@@ -77,7 +77,7 @@ Sure enough, it's a lot less than the derivative-free methods!
 
 However, the compute cost of forward-mode automatic differentiation scales
 via the number of inputs, and thus as our optimization problem grows large it
-slow down. To counteract this, for larger optimization problems (>100 state
+slows down. To counteract this, for larger optimization problems (>100 state
 variables) one normally would want to use reverse-mode automatic differentiation.
 One common choice for reverse-mode automatic differentiation is Zygote.jl.
 We can demonstrate this via:
@@ -91,7 +91,7 @@ sol = solve(prob,BFGS())
 
 ## Setting Box Constraints
 
-In many cases one knows the potential bounds on the solution values. In
+In many cases, one knows the potential bounds on the solution values. In
 Optimization.jl, these can be supplied as the `lb` and `ub` arguments for
 the lower bounds and upper bounds respectively, supplying a vector of
 values with one per state variable. Let's now do our gradient-based

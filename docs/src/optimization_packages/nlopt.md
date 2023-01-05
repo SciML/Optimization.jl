@@ -11,7 +11,8 @@ import Pkg; Pkg.add("OptimizationNLopt")
 
 ## Methods
 
-`NLopt.jl` algorithms are chosen either via `NLopt.Opt(:algname, nstates)` where nstates is the number of states to be optimized but preferably via `NLopt.AlgorithmName()` where `AlgorithmName can be one of the following:
+`NLopt.jl` algorithms are chosen either via `NLopt.Opt(:algname, nstates)` where nstates is the number of states to be optimized,
+but preferably via `NLopt.AlgorithmName()` where `AlgorithmName can be one of the following:
 * `NLopt.GN_DIRECT()`
 * `NLopt.GN_DIRECT_L()`
 * `NLopt.GN_DIRECT_L_RAND()`
@@ -59,7 +60,7 @@ import Pkg; Pkg.add("OptimizationNLopt")
 
 See the [`NLopt Documentation`](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/) for more details on each optimizer.
 
-Beyond the common arguments the following optimizer parameters can be set as `kwargs`:
+Beyond the common arguments, the following optimizer parameters can be set as `kwargs`:
 
 * `stopval`
 * `xtol_rel`
@@ -88,7 +89,7 @@ Derivative-free optimizers are optimizers that can be used even in cases where n
 * `NLopt.LN_AUGLAG_EQ()`
 * `NLopt.LN_BOBYQA()`
 
-The Rosenbrock function can optimized using the `NLopt.LN_NELDERMEAD()` as follows:
+The Rosenbrock function can be optimized using the `NLopt.LN_NELDERMEAD()` as follows:
 
 ```@example NLopt1
 using Optimization
@@ -104,7 +105,7 @@ sol = solve(prob, NLopt.LN_NELDERMEAD())
 
 ### Gradient-Based
 
-Gradient-based optimizers are optimizers which utilise the gradient information based on derivatives defined or automatic differentiation.
+Gradient-based optimizers are optimizers which utilize the gradient information based on derivatives defined or automatic differentiation.
 
 `NLopt` gradient-based optimizers are:
 
@@ -122,7 +123,7 @@ Gradient-based optimizers are optimizers which utilise the gradient information 
 - `NLopt.LD_SLSQP()`
 - `NLopt.LD_CCSAQ()`
 
-The Rosenbrock function can optimized using `NLopt.LD_LBFGS()` as follows:
+The Rosenbrock function can be optimized using `NLopt.LD_LBFGS()` as follows:
 
 ```@example NLopt2
 using Optimization, OptimizationNLopt
@@ -161,7 +162,7 @@ constraint equations. However, lower and upper constraints set by `lb` and `ub` 
 * `NLopt.GN_ESCH()`
 
 
-The Rosenbrock function can optimized using `NLopt.GN_DIRECT()` as follows:
+The Rosenbrock function can be optimized using `NLopt.GN_DIRECT()` as follows:
 
 ```@example NLopt3
 using Optimization, OptimizationNLopt
@@ -173,9 +174,11 @@ prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.
 sol = solve(prob, NLopt.GN_DIRECT(),maxtime=10.0)
 ```
 
-Algorithms such as `NLopt.G_MLSL()` or `NLopt.G_MLSL_LDS()` also require a local optimiser to be selected which via the `local_method` argument of `solve`.
+Algorithms such as `NLopt.G_MLSL()` or `NLopt.G_MLSL_LDS()` also require a local optimizer to be selected,
+which via the `local_method` argument of `solve`.
 
-The Rosenbrock function can optimized using `NLopt.G_MLSL_LDS()` with `NLopt.LN_NELDERMEAD()` as the local optimizer. The local optimizer maximum iterations are set via `local_maxiters`:
+The Rosenbrock function can be optimized using `NLopt.G_MLSL_LDS()` with `NLopt.LN_NELDERMEAD()` as the local optimizer.
+The local optimizer maximum iterations are set via `local_maxiters`:
 
 ```@example NLopt4
 using Optimization, OptimizationNLopt
@@ -192,7 +195,7 @@ The following algorithms in [`NLopt`](https://github.com/JuliaOpt/NLopt.jl) are 
 constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
 
 !!! note "Constraints with NLopt" 
-    Equality and inequality equation support for `NLopt` via `Optimization` is not supported directly. However, you can use the MOI wrapper to use constraints with NLopt optimisers.
+    Equality and inequality equation support for `NLopt` via `Optimization` is not supported directly. However, you can use the MOI wrapper to use constraints with NLopt optimizers.
 
 `NLopt` global optimizers which fall into this category are:
 

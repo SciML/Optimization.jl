@@ -1,5 +1,5 @@
 # [Optim.jl](@id optim)
-[`Optim`](https://github.com/JuliaNLSolvers/Optim.jl) is Julia package implementing various algorithm to perform univariate and multivariate optimization.
+[`Optim`](https://github.com/JuliaNLSolvers/Optim.jl) is Julia package implementing various algorithms to perform univariate and multivariate optimization.
 
 ## Installation: OptimizationOptimJL.jl
 
@@ -34,7 +34,7 @@ Each optimizer also takes special arguments which are outlined in the sections b
 The following special keyword arguments which are not covered by the common `solve` arguments can be used with Optim.jl optimizers:
 
 * `x_tol`: Absolute tolerance in changes of the input vector `x`, in infinity norm. Defaults to `0.0`.
-* `g_tol`: Absolute tolerance in the gradient, in infinity norm. Defaults to `1e-8`. For gradient free methods, this will control the main convergence tolerance, which is solver specific.
+* `g_tol`: Absolute tolerance in the gradient, in infinity norm. Defaults to `1e-8`. For gradient free methods, this will control the main convergence tolerance, which is solver-specific.
 * `f_calls_limit`: A soft upper limit on the number of objective calls. Defaults to `0` (unlimited).
 * `g_calls_limit`: A soft upper limit on the number of gradient calls. Defaults to `0` (unlimited).
 * `h_calls_limit`: A soft upper limit on the number of Hessian calls. Defaults to `0` (unlimited).
@@ -46,7 +46,7 @@ The following special keyword arguments which are not covered by the common `sol
 * `show_every`: Trace output is printed every `show_every`th iteration.
 
 
-For a more extensive documentation of all the algorithms and options please consult the
+For a more extensive documentation of all the algorithms and options, please consult the
 [`Documentation`](https://julianlsolvers.github.io/Optim.jl/stable/#)
 
 ## Local Optimizer
@@ -69,7 +69,7 @@ For a more extensive documentation of all the algorithms and options please cons
         * `μ0::Union{Symbol,Number} = :auto`
         * `show_linesearch::Bool = false`
 
-The Rosenbrock function with constraints can optimized using the `Optim.IPNewton()` as follows:
+The Rosenbrock function with constraints can be optimized using the `Optim.IPNewton()` as follows:
 
 ```@example Optim1
 using Optimization, OptimizationOptimJL
@@ -111,7 +111,7 @@ Derivative-free optimizers are optimizers that can be used even in cases where n
 - [`Optim.ParticleSwarm()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/particle_swarm/)
 
 
-The Rosenbrock function can optimized using the `Optim.NelderMead()` as follows:
+The Rosenbrock function can be optimized using the `Optim.NelderMead()` as follows:
 
 ```@example Optim2
 using Optimization, OptimizationOptimJL
@@ -123,7 +123,7 @@ sol = solve(prob, Optim.NelderMead())
 ```
 
 ### Gradient-Based
-Gradient-based optimizers are optimizers which utilise the gradient information based on derivatives defined or automatic differentiation.
+Gradient-based optimizers are optimizers which utilize the gradient information based on derivatives defined or automatic differentiation.
 
 
 `Optim.jl` implements the following gradient-based algorithms:
@@ -257,7 +257,7 @@ Gradient-based optimizers are optimizers which utilise the gradient information 
 
 
 
-The Rosenbrock function can optimized using the `Optim.LBFGS()` as follows:
+The Rosenbrock function can be optimized using the `Optim.LBFGS()` as follows:
 
 ```@example Optim3
 using Optimization, OptimizationOptimJL
@@ -272,7 +272,7 @@ sol = solve(prob, Optim.LBFGS())
 ### Hessian-Based Second Order
 Hessian-based optimization methods are second order optimization
 methods which use the direct computation of the Hessian. These can
-converge faster but require fast and accurate methods for calulating
+converge faster, but require fast and accurate methods for calculating
 the Hessian in order to be appropriate.
 
 `Optim.jl` implements the following hessian-based algorithms:
@@ -310,7 +310,7 @@ the Hessian in order to be appropriate.
         * `linesearch = LineSearches.HagerZhang()`
 
 
-The Rosenbrock function can optimized using the `Optim.Newton()` as follows:
+The Rosenbrock function can be optimized using the `Optim.Newton()` as follows:
 
 ```@example Optim4
 using Optimization, OptimizationOptimJL, ModelingToolkit
@@ -345,7 +345,7 @@ special case when considering conditioning of the Hessian.
         * `rho_lower = 0.25`
         * `rho_upper = 0.75`
 
-The Rosenbrock function can optimized using the `Optim.KrylovTrustRegion()` as follows:
+The Rosenbrock function can be optimized using the `Optim.KrylovTrustRegion()` as follows:
 
 ```@example Optim5
 using Optimization, OptimizationOptimJL
@@ -372,7 +372,7 @@ box constraints. It works both with and without lower and upper bounds set by `l
     * defaults to: `lower = []`, `upper = []`, `n_particles = 0`
 
 
-The Rosenbrock function can optimized using the `Optim.ParticleSwarm()` as follows:
+The Rosenbrock function can be optimized using the `Optim.ParticleSwarm()` as follows:
 
 ```@example Optim6
 using Optimization, OptimizationOptimJL
@@ -401,7 +401,7 @@ box constraints.
       * `coverage_ok = false`
       * `verbosity = 0`
 
-The Rosenbrock function can optimized using the `Optim.SAMIN()` as follows:
+The Rosenbrock function can be optimized using the `Optim.SAMIN()` as follows:
 
 ```@example Optim7
 using Optimization, OptimizationOptimJL

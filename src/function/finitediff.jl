@@ -9,7 +9,7 @@ OptimizationFunction(f,AutoFiniteDiff();kwargs...)
 ```
 
 This uses [FiniteDiff.jl](https://github.com/JuliaDiff/FiniteDiff.jl).
-While to necessarily the most efficient in any case, this is the only
+While not necessarily the most efficient, this is the only
 choice that doesn't require the `f` function to be automatically
 differentiable, which means it applies to any choice. However, because
 it's using finite differencing, one needs to be careful as this procedure

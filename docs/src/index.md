@@ -1,11 +1,11 @@
 # Optimization.jl: A Unified Optimization Package
 
 Optimization.jl is a package with a scope that is beyond your normal global optimization
-package. Optimization.jl seeks to bring together all of the optimization packages
+package. Optimization.jl seeks to bring together all the optimization packages
 it can find, local and global, into one unified Julia interface. This means, you
-learn one package and you learn them all! Optimization.jl adds a few high-level
+learn one package, and you learn them all! Optimization.jl adds a few high-level
 features, such as integrating with automatic differentiation, to make its usage
-fairly simple for most cases, while allowing all of the options in a single
+fairly simple for most cases, while allowing all the options in a single
 unified interface.
 
 ## Installation

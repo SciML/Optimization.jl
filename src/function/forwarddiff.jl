@@ -11,7 +11,7 @@ OptimizationFunction(f,AutoForwardDiff();kwargs...)
 This uses the [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl)
 package. It is the fastest choice for small systems, especially with
 heavy scalar interactions. It is easy to use and compatible with most
-pure is Julia functions which have loose type restrictions. However,
+Julia functions which have loose type restrictions. However,
 because it's forward-mode, it scales poorly in comparison to other AD
 choices. Hessian construction is suboptimal as it uses the forward-over-forward
 approach.

@@ -1,5 +1,5 @@
 # GCMAES.jl
-[`GCMAES`](https://github.com/AStupidBear/GCMAES.jl) is a Julia package implementing the **Gradient-based Covariance Matrix Adaptation Evolutionary Strategy** which can utilize the gradient information to speed up the optimization process.
+[`GCMAES`](https://github.com/AStupidBear/GCMAES.jl) is a Julia package implementing the **Gradient-based Covariance Matrix Adaptation Evolutionary Strategy**, which can utilize the gradient information to speed up the optimization process.
 
 ## Installation: OptimizationGCMAES.jl
 
@@ -19,7 +19,7 @@ constraint equations. However, lower and upper constraints set by `lb` and `ub` 
 
 ## Example
 
-The Rosenbrock function can optimized using the `GCMAESOpt()` without utilizing the gradient information as follows:
+The Rosenbrock function can be optimized using the `GCMAESOpt()` without utilizing the gradient information as follows:
 
 ```@example GCMAES
 using Optimization, OptimizationGCMAES
@@ -31,7 +31,7 @@ prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.
 sol = solve(prob, GCMAESOpt())
 ```
 
-We can also utilise the gradient information of the optimization problem to aid the optimization as follows:
+We can also utilize the gradient information of the optimization problem to aid the optimization as follows:
 
 ```@example GCMAES
 f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())

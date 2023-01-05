@@ -1,5 +1,5 @@
 # Nonconvex.jl
-[`Nonconvex`](https://github.com/JuliaNonconvex/Nonconvex.jl) is a is a Julia package implementing and wrapping nonconvex constrained optimization algorithms.
+[`Nonconvex`](https://github.com/JuliaNonconvex/Nonconvex.jl) is a Julia package implementing and wrapping nonconvex constrained optimization algorithms.
 
 ## Installation: OptimizationNonconvex.jl
 
@@ -34,7 +34,7 @@ A `Nonconvex` algorithm is called using one of the following:
 * [Multiple Trajectory Search](https://julianonconvex.github.io/Nonconvex.jl/stable/algorithms/mts/)
     - `MTSAlg()`
 
-When performing optimizing a combination of integer and floating-point parameters the `integer` keyword has to be set. It takes a boolean vector indicating which parameter is an integer.
+When performing optimizing a combination of integer and floating-point parameters, the `integer` keyword has to be set. It takes a boolean vector indicating which parameter is an integer.
 
 ## Notes
 
@@ -46,7 +46,7 @@ The algorithms in [`Nonconvex`](https://julianonconvex.github.io/Nonconvex.jl/st
 
 ## Examples
 
-The Rosenbrock function can optimized using the Method of moving asymptotes algorithm `MMA02()` as follows:
+The Rosenbrock function can be optimized using the Method of moving asymptotes algorithm `MMA02()` as follows:
 
 ```julia
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
@@ -57,7 +57,7 @@ prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.
 sol = solve(prob, MMA02(), maxiters=100000, maxtime=1000.0)
 ```
 
-The options of for a sub-algorithm are passed simply as a NamedTuple and GalactcOptim infers the correct `Nonconvex` options struct:
+The options of for a sub-algorithm are passed simply as a NamedTuple and Optimization.jl infers the correct `Nonconvex` options struct:
 
 ```julia
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2

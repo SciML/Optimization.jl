@@ -1,7 +1,7 @@
 # MathOptInterface.jl
 
-[MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl) is Julia
-abstration layer to interface with variety of mathematical optimization solvers.
+[MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl) is a Julia
+abstraction layer to interface with a variety of mathematical optimization solvers.
 
 ## Installation: OptimizationMOI.jl
 
@@ -16,10 +16,10 @@ import Pkg; Pkg.add("OptimizationMOI")
 As of now, the `Optimization` interface to `MathOptInterface` implements only
 the `maxtime` common keyword argument. 
 
-An optimizer which supports the `MathOptInterface` API can be called be called
+An optimizer which supports the `MathOptInterface` API can be called
 directly if no optimizer options have to be defined. 
     
-For example using the [`Ipopt.jl`](https://github.com/jump-dev/Ipopt.jl)
+For example, using the [`Ipopt.jl`](https://github.com/jump-dev/Ipopt.jl)
 optimizer:
 
 
@@ -29,9 +29,9 @@ sol = solve(prob, Ipopt.Optimizer())
 ```
 
 The optimizer options are handled in one of two ways. They can either be set via
-`OptimizationMOI.MOI.OptimizerWithAttributes()` or as keyword argument to `solve`. 
+`OptimizationMOI.MOI.OptimizerWithAttributes()` or as keyword arguments to `solve`. 
 
-For example using the `Ipopt.jl` optimizer:
+For example, using the `Ipopt.jl` optimizer:
 
 ```julia
 using OptimizationMOI, Ipopt

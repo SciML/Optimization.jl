@@ -1,5 +1,5 @@
 # BlackBoxOptim.jl
-[`BlackBoxOptim`](https://github.com/robertfeldt/BlackBoxOptim.jl) is a is a Julia package implementing **(Meta-)heuristic/stochastic algorithms** that do not require for the optimized function to be differentiable.
+[`BlackBoxOptim`](https://github.com/robertfeldt/BlackBoxOptim.jl) is a Julia package implementing **(Meta-)heuristic/stochastic algorithms** that do not require for the optimized function to be differentiable.
 
 ## Installation: OptimizationBBO.jl
 
@@ -46,7 +46,7 @@ The currently available algorithms are listed [here](https://github.com/robertfe
 
 ## Example
 
-The Rosenbrock function can optimized using the `BBO_adaptive_de_rand_1_bin_radiuslimited()` as follows:
+The Rosenbrock function can be optimized using the `BBO_adaptive_de_rand_1_bin_radiuslimited()` as follows:
 
 ```@example BBO
 using Optimization, OptimizationBBO

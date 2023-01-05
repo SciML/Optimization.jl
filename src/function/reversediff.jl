@@ -12,7 +12,7 @@ This uses the [ReverseDiff.jl](https://github.com/JuliaDiff/ReverseDiff.jl)
 package. `AutoReverseDiff` has a default argument, `compile`, which
 denotes whether the reverse pass should be compiled. **`compile` should only
 be set to `true` if `f` contains no branches (if statements, while loops)
-otherwise it can produce incorrect derivatives!**.
+otherwise it can produce incorrect derivatives!**
 
 `AutoReverseDiff` is generally applicable to many pure Julia codes,
 and with `compile=true` it is one of the fastest options on code with
@@ -35,7 +35,7 @@ Hessian is not defined via ReverseDiff.
 AutoReverseDiff(;compile = false)
 ```
 
-#### Note: currently compilation is not defined/used!
+#### Note: currently, compilation is not defined/used!
 """
 struct AutoReverseDiff <: AbstractADType
     compile::Bool
