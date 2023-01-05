@@ -15,8 +15,8 @@ Also note that `QuadDIRECT` should (for now) be installed by doing:
 
 `] add https://github.com/timholy/QuadDIRECT.jl.git`
 
-Since QuadDIRECT is not a registered package in General registry, OptimizationQuadDIRECT is not registered as well hence it can't be installed with 
-the traditional command.
+Since QuadDIRECT is not a registered package in General registry, OptimizationQuadDIRECT is not registered as well,
+and hence it can't be installed with the traditional command.
 
 ## Global Optimizer
 ### Without Constraint Equations
@@ -28,7 +28,7 @@ Furthermore, `QuadDirect` requires `splits` which is a list of 3-vectors with in
 
 ## Example
 
-The Rosenbrock function can optimized using the `QuadDirect()` as follows:
+The Rosenbrock function can be optimized using the `QuadDirect()` as follows:
 
 ```julia
 rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2

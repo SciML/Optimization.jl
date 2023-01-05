@@ -1,5 +1,5 @@
 # Metaheuristics.jl
-[`Metaheuristics`](https://github.com/jmejia8/Metaheuristics.jl) is a is a Julia package implementing **metaheuristic algorithms** for global optiimization that do not require for the optimized function to be differentiable.
+[`Metaheuristics`](https://github.com/jmejia8/Metaheuristics.jl) is a Julia package implementing **metaheuristic algorithms** for global optimization that does not require for the optimized function to be differentiable.
 
 ## Installation: OptimizationMetaheuristics.jl
 
@@ -15,7 +15,7 @@ import Pkg; Pkg.add("OptimizationMetaheuristics")
 A `Metaheuristics` Single-Objective algorithm is called using one of the following:
 
 * Evolutionary Centers Algorithm: `ECA()`
-* Differential Evolution: `DE()` with 5 different stratgies
+* Differential Evolution: `DE()` with 5 different strategies
   - `DE(strategy=:rand1)` - default strategy
   - `DE(strategy=:rand2)`
   - `DE(strategy=:best1)`
@@ -27,13 +27,13 @@ A `Metaheuristics` Single-Objective algorithm is called using one of the followi
 * Simulated Annealing: `SA()`
 * Whale Optimization Algorithm: `WOA()`
 
-`Metaheuristics` also performs [`Multiobjective optimization`](https://jmejia8.github.io/Metaheuristics.jl/stable/examples/#Multiobjective-Optimization) but this is not yet supported by `Optimization`.
+`Metaheuristics` also performs [`Multiobjective optimization`](https://jmejia8.github.io/Metaheuristics.jl/stable/examples/#Multiobjective-Optimization), but this is not yet supported by `Optimization`.
 
-Each optimizer sets default settings based on the optimization problem but specific parameters can be set as shown in the original [`Documentation`](https://jmejia8.github.io/Metaheuristics.jl/stable/algorithms/) 
+Each optimizer sets default settings based on the optimization problem, but specific parameters can be set as shown in the original [`Documentation`](https://jmejia8.github.io/Metaheuristics.jl/stable/algorithms/) 
 
-Additionally, `Metaheuristics` common settings which would be defined by [`Metaheuristics.Options`](https://jmejia8.github.io/Metaheuristics.jl/stable/api/#Metaheuristics.Options) can be simply passed as special keywoard arguments to `solve` without the need to use the `Metaheuristics.Options` struct.
+Additionally, `Metaheuristics` common settings which would be defined by [`Metaheuristics.Options`](https://jmejia8.github.io/Metaheuristics.jl/stable/api/#Metaheuristics.Options) can be simply passed as special keyword arguments to `solve` without the need to use the `Metaheuristics.Options` struct.
 
-Lastly, information about the optimization problem such as the true optimum is set via [`Metaheuristics.Information`](https://jmejia8.github.io/Metaheuristics.jl/stable/api/#Metaheuristics.Information) and passed as part of the optimizer struct to `solve` e.g. `solve(prob, ECA(information=Metaheuristics.Inoformation(f_optimum = 0.0)))`
+Lastly, information about the optimization problem such as the true optimum is set via [`Metaheuristics.Information`](https://jmejia8.github.io/Metaheuristics.jl/stable/api/#Metaheuristics.Information) and passed as part of the optimizer struct to `solve` e.g., `solve(prob, ECA(information=Metaheuristics.Inoformation(f_optimum = 0.0)))`
 
 
 
@@ -46,7 +46,7 @@ constraint equations. However, lower and upper constraints set by `lb` and `ub` 
 
 ## Examples
 
-The Rosenbrock function can optimized using the Evolutionary Centers Algorithm `ECA()` as follows:
+The Rosenbrock function can be optimized using the Evolutionary Centers Algorithm `ECA()` as follows:
 
 ```@example Metaheuristics
 using Optimization, OptimizationMetaheuristics

@@ -19,7 +19,7 @@ constraint equations. However, lower and upper constraints set by `lb` and `ub` 
 
 ## Example
 
-The Rosenbrock function can optimized using the `CMAEvolutionStrategyOpt()` as follows:
+The Rosenbrock function can be optimized using the `CMAEvolutionStrategyOpt()` as follows:
 
 ```@example CMAEvolutionStrategy
 using Optimization, OptimizationCMAEvolutionStrategy

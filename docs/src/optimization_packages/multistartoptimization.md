@@ -1,5 +1,5 @@
 # MultiStartOptimization.jl
-[`MultistartOptimization`](https://github.com/tpapp/MultistartOptimization.jl) is a is a Julia package implementing a global optimization multistart method which performs local optimization after choosing multiple starting points.
+[`MultistartOptimization`](https://github.com/tpapp/MultistartOptimization.jl) is a Julia package implementing a global optimization multistart method which performs local optimization after choosing multiple starting points.
 
 `MultistartOptimization` requires both a global and local method to be defined. The global multistart method chooses a set of initial starting points from where local the local method starts from.
 
@@ -14,7 +14,7 @@ import Pkg; Pkg.add("OptimizationMultistartOptimization")
 ```
 !!! note
 
-  You also need to load the relevant subpackage for the local method of you choice, for example if you plan to use one of the NLopt.jl's optimizers, you'd install and load OptimizationNLopt as described in the [NLopt.jl](@ref)'s section.
+  You also need to load the relevant subpackage for the local method of your choice, for example if you plan to use one of the NLopt.jl's optimizers, you'd install and load OptimizationNLopt as described in the [NLopt.jl](@ref)'s section.
 
 ## Global Optimizer
 ### Without Constraint Equations
@@ -24,7 +24,7 @@ constraint equations. However, lower and upper constraints set by `lb` and `ub` 
 
 ## Examples 
 
-The Rosenbrock function can optimized using `MultistartOptimization.TikTak()` with 100 initial points and the local method `NLopt.LD_LBFGS()` as follows:
+The Rosenbrock function can be optimized using `MultistartOptimization.TikTak()` with 100 initial points and the local method `NLopt.LD_LBFGS()` as follows:
 
 ```@example MultiStart
 using Optimization, OptimizationMultistartOptimization, OptimizationNLopt
@@ -36,7 +36,7 @@ prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0,-1.0], ub = [1.0,1.
 sol = solve(prob, MultistartOptimization.TikTak(100), NLopt.LD_LBFGS())
 ```
 
-You can use any `Optimization` optimizers you like. The global method of the `MultistartOptimization` is a positional argument and followed by the local method. This for example means we can perform a multistartoptimization with LBFGS as the optimizer using either the `NLopt.jl` or `Optim.jl` implementation as follows. Moreover, this interface allows you access and adjust all the optimizer settings as you normally would:
+You can use any `Optimization` optimizers you like. The global method of the `MultistartOptimization` is a positional argument and followed by the local method. For example, we can perform a multistartoptimization with LBFGS as the optimizer using either the `NLopt.jl` or `Optim.jl` implementation as follows. Moreover, this interface allows you to access and adjust all the optimizer settings as you normally would:
 
 ```@example MultiStart
 using OptimizationOptimJL

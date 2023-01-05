@@ -25,11 +25,11 @@ A `Evolutionary` algorithm is called by one of the following:
 
 - [`Evolutionary.CMAES()`](https://wildart.github.io/Evolutionary.jl/stable/cmaes/): **Covariance Matrix Adaptation Evolution Strategy algorithm**
 
-Algorithm specific options are defined as `kwargs`. See the respective documentation for more detail.
+Algorithm-specific options are defined as `kwargs`. See the respective documentation for more detail.
 
 ## Example
 
-The Rosenbrock function can optimized using the `Evolutionary.CMAES()` as follows:
+The Rosenbrock function can be optimized using the `Evolutionary.CMAES()` as follows:
 
 ```@example Evolutionary
 using Optimization, OptimizationEvolutionary

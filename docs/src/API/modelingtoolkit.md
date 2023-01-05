@@ -14,6 +14,6 @@ details.
 
 Secondly, one can generate `OptimizationProblem`s for use in
 Optimization.jl from purely a symbolic front-end. This is the form
-users will encounter when using ModelingToolkit.jl directly, and its
+users will encounter when using ModelingToolkit.jl directly, and it is
 also the form supplied by domain-specific languages. For more information,
 see the [OptimizationSystem documentation](https://docs.sciml.ai/ModelingToolkit/stable/systems/OptimizationSystem/).
