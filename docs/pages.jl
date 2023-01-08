@@ -12,6 +12,7 @@ pages = ["index.md",
         "API/solve.md",
         "API/optimization_solution.md",
         "API/modelingtoolkit.md",
+        "API/FAQ.md",
     ],
     "Optimizer Packages" => [
         "BlackBoxOptim.jl" => "optimization_packages/blackboxoptim.md",
