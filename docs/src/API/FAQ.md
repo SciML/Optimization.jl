@@ -3,7 +3,7 @@
 ## The Solver Seems to Violate Constraints During the Optimization, Causing `DomainError`s, What Can I Do About That?
 
 During the optimization, optimizers use slack variables to relax the solution to the constraints. Because of this,
-there is no guarentee that for an arbitrary optimizer the steps will all satisfy the constraints during the 
+there is no guarantee that for an arbitrary optimizer the steps will all satisfy the constraints during the 
 optimization. In many cases, this can cause one's objective function code throw a `DomainError` if it is evaluated
 outside of its acceptable zone. For example, `log(-1)` gives:
 
@@ -16,7 +16,7 @@ log will only return a complex result if called with a complex argument. Try log
 To handle this, one should not assume that the variables will always satisfy the constraints on each step. There
 are three general ways to handle this better:
 
-1. Use NaNMath.jl
+1. Use [NaNMath.jl](https://github.com/JuliaMath/NaNMath.jl)
 2. Process variables before domain-restricted calls
 3. Use a domain transformation
 
@@ -29,9 +29,9 @@ reason for the difference.
 
 Alternatively, one can pre-process the values directly. For example, `log(abs(x))` is guaranteed to work. If one does
 this, there are two things to make note of. One is that the solution will not be transformed, and thus the transformation
-should be applied on `sol.u` as well. I.e., the solution could fine an optima for `x = -2`, and one should manually
+should be applied on `sol.u` as well. For example, the solution could find an optima for `x = -2`, and one should manually
 change this to `x = 2` if the `abs` version is used within the objective function. Note that many functions for this will
-introduce a disocontinuity in the derivative which can effect the optimization process.
+introduce a discontinuity in the derivative which can affect the optimization process.
 
 Finally and relatedly, one can write the optimization with domain transformations in order to allow the optimization to
 take place in the full real set. For example, instead of optimizing `x in [0,Inf]`, one can optimize `exp(x) in [0,Inf]`
