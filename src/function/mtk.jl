@@ -15,7 +15,7 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons = 0
                                                                               num_cons)))
     sys = ModelingToolkit.structural_simplify(sys)
     f = OptimizationProblem(sys, x, p, grad = true, hess = true,
-                            obj_sparse = adtype.obj_sparse, cons_j = true, cons_h = true,
+                            sparse = adtype.obj_sparse, cons_j = true, cons_h = true,
                             cons_sparse = adtype.cons_sparse).f
 
     grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
