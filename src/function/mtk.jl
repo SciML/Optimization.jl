@@ -8,7 +8,7 @@ AutoModelingToolkit() = AutoModelingToolkit(false, false)
 function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons = 0)
     p = isnothing(p) ? SciMLBase.NullParameters() : p
 
-    sys = ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, x, p), num_cons = num_cons)
+    sys = ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, x, p; lcons = fill(0.0, num_cons), ucons = fill(0.0, num_cons)))
     sys = ModelingToolkit.structural_simplify(sys)
     f = OptimizationProblem(sys, x, p, grad = true, hess = true, obj_sparse = adtype.obj_sparse, cons_j = true, cons_h = true, cons_sparse = adtype.cons_sparse).f
 
