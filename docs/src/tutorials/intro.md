@@ -8,20 +8,20 @@ code to get started is the following:
 ```@example intro
 # Import the package and define the problem to optimize
 using Optimization
-rosenbrock(u,p) =  (p[1] - u[1])^2 + p[2] * (u[2] - u[1]^2)^2
+rosenbrock(u, p) = (p[1] - u[1])^2 + p[2] * (u[2] - u[1]^2)^2
 u0 = zeros(2)
-p  = [1.0,100.0]
+p = [1.0, 100.0]
 
-prob = OptimizationProblem(rosenbrock,u0,p)
+prob = OptimizationProblem(rosenbrock, u0, p)
 
 # Import a solver package and solve the optimization problem
 using OptimizationOptimJL
-sol = solve(prob,NelderMead())
+sol = solve(prob, NelderMead())
 
 # Import a different solver package and solve the optimization problem a different way
 using OptimizationBBO
-prob = OptimizationProblem(rosenbrock, u0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
-sol = solve(prob,BBO_adaptive_de_rand_1_bin_radiuslimited())
+prob = OptimizationProblem(rosenbrock, u0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
 ```
 
 Notice that Optimization.jl is the core glue package that holds all the common
@@ -34,8 +34,8 @@ is given below:
 
 ```@example intro
 optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
-prob = OptimizationProblem(optf, u0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
-sol = solve(prob,NelderMead())
+prob = OptimizationProblem(optf, u0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+sol = solve(prob, NelderMead())
 ```
 
 The solution from the original solver can always be obtained via `original`:
@@ -51,7 +51,7 @@ gradients were required to do the optimization. However, often first order
 optimization (i.e., using gradients) is much more efficient. Defining gradients
 can be done in two ways. One way is to manually provide a gradient definition
 in the `OptimizationFunction` constructor. However, the more convenient way
-to obtain gradients is to provide an AD backend type. 
+to obtain gradients is to provide an AD backend type.
 
 For example, let's now use the OptimizationOptimJL `BFGS` method to solve the same
 problem. We will import the forward-mode automatic differentiation library
@@ -63,10 +63,10 @@ looks like:
 using ForwardDiff
 optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 prob = OptimizationProblem(optf, u0, p)
-sol = solve(prob,BFGS())
+sol = solve(prob, BFGS())
 ```
 
-We can inspect the `original` to see the statistics on the number of steps 
+We can inspect the `original` to see the statistics on the number of steps
 required and gradients computed:
 
 ```@example intro
@@ -86,7 +86,7 @@ We can demonstrate this via:
 using Zygote
 optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
 prob = OptimizationProblem(optf, u0, p)
-sol = solve(prob,BFGS())
+sol = solve(prob, BFGS())
 ```
 
 ## Setting Box Constraints
@@ -98,8 +98,8 @@ values with one per state variable. Let's now do our gradient-based
 optimization with box constraints by rebuilding the OptimizationProblem:
 
 ```@example intro
-prob = OptimizationProblem(optf, u0, p, lb = [-1.0,-1.0], ub = [1.0,1.0])
-sol = solve(prob,BFGS())
+prob = OptimizationProblem(optf, u0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+sol = solve(prob, BFGS())
 ```
 
 For more information on handling constraints, in particular equality and

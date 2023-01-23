@@ -27,7 +27,7 @@ _p = [1.0, 1.0]
 Next, we define the sum of squares and the product of the optimization variables as our constraint functions.
 
 ```@example constraints
-cons(res, x, p) = (res .= [x[1]^2+x[2]^2, x[1]*x[2]])
+cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[2]])
 ```
 
 We'll use the `IPNewton` solver from Optim to solve the problem.

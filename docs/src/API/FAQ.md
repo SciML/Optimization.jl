@@ -3,7 +3,7 @@
 ## The Solver Seems to Violate Constraints During the Optimization, Causing `DomainError`s, What Can I Do About That?
 
 During the optimization, optimizers use slack variables to relax the solution to the constraints. Because of this,
-there is no guarantee that for an arbitrary optimizer the steps will all satisfy the constraints during the 
+there is no guarantee that for an arbitrary optimizer the steps will all satisfy the constraints during the
 optimization. In many cases, this can cause one's objective function code throw a `DomainError` if it is evaluated
 outside of its acceptable zone. For example, `log(-1)` gives:
 
@@ -16,15 +16,15 @@ log will only return a complex result if called with a complex argument. Try log
 To handle this, one should not assume that the variables will always satisfy the constraints on each step. There
 are three general ways to handle this better:
 
-1. Use [NaNMath.jl](https://github.com/JuliaMath/NaNMath.jl)
-2. Process variables before domain-restricted calls
-3. Use a domain transformation
+ 1. Use [NaNMath.jl](https://github.com/JuliaMath/NaNMath.jl)
+ 2. Process variables before domain-restricted calls
+ 3. Use a domain transformation
 
 NaNMath.jl gives alternative implementations of standard math functions like `log` and `sqrt` in forms that do not
 throw `DomainError`s but rather return `NaN`s. The optimizers will be able to handle the NaNs gracefully and recover,
 allowing for many of these cases to be solved without further modification. Note that this is done [internally in
 JuMP.jl, and thus if a case is working with JuMP and not Optimization.jl
-](https://discourse.julialang.org/t/optimizationmoi-ipopt-violating-inequality-constraint/92608/) this may be the 
+](https://discourse.julialang.org/t/optimizationmoi-ipopt-violating-inequality-constraint/92608/) this may be the
 reason for the difference.
 
 Alternatively, one can pre-process the values directly. For example, `log(abs(x))` is guaranteed to work. If one does
@@ -68,7 +68,7 @@ example, the ModelingToolkit integration with Optimization.jl will do many simpl
 is called. One of them is tearing on the constraints. To understand the tearing process, assume that we had
 nonlinear constraints of the form:
 
-```julia
+```
     0 ~ u1 - sin(u5) * h,
     0 ~ u2 - cos(u1),
     0 ~ u3 - hypot(u1, u2),
@@ -86,7 +86,7 @@ u3 = f3(u1, u2)
 u4 = f4(u2, u3)
 ```
 
-and thus if the objective function was the function of these 5 variables and 4 constraints, ModelingToolkit.jl will 
+and thus if the objective function was the function of these 5 variables and 4 constraints, ModelingToolkit.jl will
 transform it into system of 1 variable with no constraints, allowing unconstrained optimization on a smaller system.
 This will both be faster and numerically easier.
 
