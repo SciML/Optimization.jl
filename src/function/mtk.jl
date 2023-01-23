@@ -23,7 +23,7 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p, num_cons = 0
     hess = (H, θ, args...) -> f.hess(H, θ, p, args...)
 
     hv = function (H, θ, v, args...)
-        res = adtype.obj_sparse ? hess_prototype : ArrayInterfaceCore.zeromatrix(θ)
+        res = adtype.obj_sparse ? (eltype(θ)).(f.hess_prototype) : ArrayInterfaceCore.zeromatrix(θ)
         hess(res, θ, args...)
         H .= res * v
     end
