@@ -5,7 +5,7 @@ An AbstractADType choice for use in OptimizationFunction for automatically
 generating the unspecified derivative functions. Usage:
 
 ```julia
-OptimizationFunction(f,AutoForwardDiff();kwargs...)
+OptimizationFunction(f, AutoForwardDiff(); kwargs...)
 ```
 
 This uses the [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl)
@@ -16,10 +16,10 @@ because it's forward-mode, it scales poorly in comparison to other AD
 choices. Hessian construction is suboptimal as it uses the forward-over-forward
 approach.
 
-- Compatible with GPUs
-- Compatible with Hessian-based optimization
-- Compatible with Hv-based optimization
-- Compatible with constraints
+  - Compatible with GPUs
+  - Compatible with Hessian-based optimization
+  - Compatible with Hv-based optimization
+  - Compatible with constraints
 
 Note that only the unspecified derivative functions are defined. For example,
 if a `hess` function is supplied to the `OptimizationFunction`, then the
