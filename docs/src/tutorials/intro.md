@@ -44,6 +44,15 @@ The solution from the original solver can always be obtained via `original`:
 sol.original
 ```
 
+## Defining the objective function
+Optimization.jl assumes that your objective function takes two arguments `objective(x, p)`
+1. The optimization variables `x`. 
+2. Other parameters `p`, such as hyper parameters of the cost function. 
+If you have no “other parameters”, you can  safely disregard this argument. If your objective function is defined by someone else, you can create an anonymous function that just discards the extra parameters like this
+```julia
+obj = (x, p) -> objective(x) # Pass this function into OptimizationFunction
+```
+
 ## Controlling Gradient Calculations (Automatic Differentiation)
 
 Notice that both of the above methods were derivative-free methods, and thus no
