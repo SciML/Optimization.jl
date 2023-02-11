@@ -21,8 +21,9 @@ function __map_optimizer_args(prob::OptimizationProblem,
                               maxiters::Union{Number, Nothing} = nothing,
                               maxtime::Union{Number, Nothing} = nothing,
                               abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing)
-    mapped_args = (;)
+                              reltol::Union{Number, Nothing} = nothing,
+                              kwargs...)
+    mapped_args = (;kwargs...)
 
     if !isnothing(callback)
         mapped_args = (; mapped_args..., callback = callback)
