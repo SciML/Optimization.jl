@@ -5,6 +5,7 @@ using Reexport
 using Optimization.SciMLBase
 
 SciMLBase.allowsbounds(opt::Evolutionary.AbstractOptimizer) = true
+SciMLBase.allowsconstraints(opt::Evolutionary.AbstractOptimizer) = true
 
 decompose_trace(trace::Evolutionary.OptimizationTrace) = last(trace)
 decompose_trace(trace::Evolutionary.OptimizationTraceRecord) = trace
@@ -74,6 +75,8 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Evolutionary.Abstract
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
     maxtime = Optimization._check_and_convert_maxtime(maxtime)
 
+    f = Optimization.instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p,
+                                          prob.ucons === nothing ? 0 : length(prob.ucons))
     _loss = function (θ)
         x = prob.f(θ, prob.p, cur...)
         return first(x)
@@ -85,9 +88,20 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Evolutionary.Abstract
 
     t0 = time()
     if isnothing(prob.ub) || isnothing(prob.ub)
-        opt_res = Evolutionary.optimize(_loss, prob.u0, opt, opt_args)
+        if !isnothing(f.cons)
+            c(x) = (res = zeros(length(prob.lcons)); f.cons(res, x); res)
+            cons = WorstFitnessConstraints(Float64[], Float64[], prob.lcons, prob.ucons, c)
+            opt_res = Evolutionary.optimize(_loss, cons, prob.u0, opt, opt_args)
+        else
+            opt_res = Evolutionary.optimize(_loss, prob.u0, opt, opt_args)
+        end
     else
-        cons = Evolutionary.BoxConstraints(prob.lb, prob.ub)
+        if !isnothing(f.cons)
+            c(x) = (res = zeros(length(prob.lcons)); f.cons(res, x); res)
+            cons = WorstFitnessConstraints(prob.lb, prob.ub, prob.lcons, prob.ucons, c)
+        else
+            cons = BoxConstraints(prob.lb, prob.ub)
+        end
         opt_res = Evolutionary.optimize(_loss, cons, prob.u0, opt, opt_args)
     end
     t1 = time()
