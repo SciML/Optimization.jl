@@ -88,9 +88,9 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Evolutionary.Abstract
                                     kwargs...)
 
     t0 = time()
-    if isnothing(prob.ub) || isnothing(prob.ub)
+    if isnothing(prob.lb) || isnothing(prob.ub)
         if !isnothing(f.cons)
-            c(x) = (res = zeros(length(prob.lcons)); f.cons(res, x); res)
+            c = x -> (res = zeros(length(prob.lcons)); f.cons(res, x); res)
             cons = WorstFitnessConstraints(Float64[], Float64[], prob.lcons, prob.ucons, c)
             opt_res = Evolutionary.optimize(_loss, cons, prob.u0, opt, opt_args)
         else
@@ -98,7 +98,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::Evolutionary.Abstract
         end
     else
         if !isnothing(f.cons)
-            c(x) = (res = zeros(length(prob.lcons)); f.cons(res, x); res)
+            c = x -> (res = zeros(length(prob.lcons)); f.cons(res, x); res)
             cons = WorstFitnessConstraints(prob.lb, prob.ub, prob.lcons, prob.ucons, c)
         else
             cons = BoxConstraints(prob.lb, prob.ub)
