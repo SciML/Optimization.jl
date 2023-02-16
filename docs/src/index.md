@@ -41,21 +41,21 @@ packages.
 
 ## Overview of the Optimizers
 
-| Package                 | Local Gradient-Based | Local Hessian-Based | Local Derivative-Free | Box Constraints | Local Constrained | Global Unconstrained | Global Constrained |
-|:----------------------- |:--------------------:|:-------------------:|:---------------------:|:---------------:|:-----------------:|:--------------------:|:------------------:|
-| BlackBoxOptim           | ❌                    | ❌                   | ❌                   |✅              | ❌                 | ✅                    | ❌                  |✅              
-| CMAEvolutionaryStrategy | ❌                    | ❌                   | ❌                   |✅                | ❌                 | ✅                    | ❌                  |
-| Evolutionary            | ❌                    | ❌                   | ❌                   |✅                | ❌                 | ✅                    | 🟡                  |
-| Flux                    | ✅                    | ❌                   | ❌                   |❌                | ❌                 | ❌                    | ❌                  |
-| GCMAES                  | ❌                    | ❌                   | ❌                   |✅                | ❌                 | ✅                    | ❌                  |
-| MathOptInterface        | ✅                    | ✅                   | ✅                   |✅                | ✅                 | ✅                    | 🟡                  |
-| MultistartOptimization  | ❌                    | ❌                   | ❌                   |✅                | ❌                 | ✅                    | ❌                  |
-| Metaheuristics          | ❌                    | ❌                   | ❌                   |✅                | ❌                 | ✅                    | 🟡                  |
-| NOMAD                   | ❌                    | ❌                   | ❌                   |✅                | ❌                 | ✅                    | 🟡                  |
-| NLopt                   | ✅                    | ❌                   | ✅                   |✅                | 🟡                 | ✅                    | 🟡                  |
-| Nonconvex               | ✅                    | ✅                   | ✅                   |✅                | 🟡                 | ✅                    | 🟡                  |
-| Optim                   | ✅                    | ✅                   | ✅                   |✅                | ✅                 | ✅                    | ✅                  |
-| QuadDIRECT              | ❌                    | ❌                   | ❌                   |✅                | ❌                 | ✅                    | ❌                  |
+| Package                 | Local Gradient-Based | Local Hessian-Based | Local Derivative-Free | Box Constraints | Local Constrained | Global Unconstrained | Global Constrained   |
+|:----------------------- |:--------------------:|:-------------------:|:---------------------:|:---------------:|:-----------------:|:--------------------:|:--------------------:|
+| BlackBoxOptim           | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | ❌                  ✅ |
+| CMAEvolutionaryStrategy | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | ❌                    |
+| Evolutionary            | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | 🟡                    |
+| Flux                    | ✅                    | ❌                   | ❌                     | ❌               | ❌                 | ❌                    | ❌                    |
+| GCMAES                  | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | ❌                    |
+| MathOptInterface        | ✅                    | ✅                   | ✅                     | ✅               | ✅                 | ✅                    | 🟡                    |
+| MultistartOptimization  | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | ❌                    |
+| Metaheuristics          | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | 🟡                    |
+| NOMAD                   | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | 🟡                    |
+| NLopt                   | ✅                    | ❌                   | ✅                     | ✅               | 🟡                 | ✅                    | 🟡                    |
+| Nonconvex               | ✅                    | ✅                   | ✅                     | ✅               | 🟡                 | ✅                    | 🟡                    |
+| Optim                   | ✅                    | ✅                   | ✅                     | ✅               | ✅                 | ✅                    | ✅                    |
+| QuadDIRECT              | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | ❌                    |
 
 ✅ = supported
 

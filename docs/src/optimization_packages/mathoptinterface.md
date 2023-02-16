@@ -76,3 +76,35 @@ opt = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer,
                                                                                                              "print_level" => 0))
 sol = solve(prob, opt)
 ```
+
+#### Using Integer Constraints
+
+The following shows how to use integer linear programming within `Optimization`. We will solve the classical Knapsack Problem using `Juniper.jl`.
+
+  - [`Juniper.Optimizer`](https://github.com/lanl-ansi/Juniper.jl)
+  - Juniper requires a nonlinear optimizer to be set via the `nl_solver` option,
+    which must be a MathOptInterface-based optimizer. See the
+    [Juniper documentation](https://github.com/lanl-ansi/Juniper.jl) for more
+    detail.
+  - Allows only for binary decisions
+
+```@example MOI
+v = [1.0, 2.0, 4.0, 3.0]
+w = [5.0, 4.0, 3.0, 2.0]
+W = 4.0
+u0 = [0.0, 0.0, 0.0, 1.0]
+
+optfun = OptimizationFunction((u, p) -> -v'u, cons = (res, u, p) -> res .= w'u,
+                              Optimization.AutoForwardDiff())
+
+optprob = OptimizationProblem(optfun, u0; lb = zero.(u0), ub = one.(u0),
+                              int = ones(Bool, length(u0)),
+                              lcons = [-Inf;], ucons = [W;])
+
+nl_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
+                                                        "print_level" => 0)
+minlp_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer,
+                                                           "nl_solver" => nl_solver)
+
+res = solve(optprob, minlp_solver)
+```
