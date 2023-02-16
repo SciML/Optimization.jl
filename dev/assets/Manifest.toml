@@ -406,9 +406,9 @@ version = "0.4.0"
 
 [[deps.DiffEqBase]]
 deps = ["ArrayInterfaceCore", "ChainRulesCore", "DataStructures", "Distributions", "DocStringExtensions", "FastBroadcast", "ForwardDiff", "FunctionWrappers", "FunctionWrappersWrappers", "LinearAlgebra", "Logging", "MuladdMacro", "Parameters", "PreallocationTools", "Printf", "RecursiveArrayTools", "Reexport", "Requires", "SciMLBase", "Setfield", "SparseArrays", "Static", "StaticArrays", "Statistics", "Tricks", "ZygoteRules"]
-git-tree-sha1 = "eb4002e64e33e49c1c5f36d9af7a867470821dca"
+git-tree-sha1 = "b91fef836ef8c2c4480bce90bb8981e1ac21b444"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "6.115.4"
+version = "6.117.0"
 
 [[deps.DiffEqCallbacks]]
 deps = ["DataStructures", "DiffEqBase", "ForwardDiff", "LinearAlgebra", "Markdown", "NLsolve", "Parameters", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArrays"]
@@ -815,9 +815,9 @@ version = "0.21.3"
 
 [[deps.JuliaFormatter]]
 deps = ["CSTParser", "CommonMark", "DataStructures", "Glob", "Pkg", "SnoopPrecompile", "Tokenize"]
-git-tree-sha1 = "94ce68aee6dbc066e39d5d2ca0b6b1ccd38d7e04"
+git-tree-sha1 = "f40e0db6b1494622c967b727110cac2010064a79"
 uuid = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
-version = "1.0.20"
+version = "1.0.21"
 
 [[deps.JuliaVariables]]
 deps = ["MLStyle", "NameResolution"]
@@ -1093,15 +1093,15 @@ version = "0.2.2"
 
 [[deps.MultivariatePolynomials]]
 deps = ["ChainRulesCore", "DataStructures", "LinearAlgebra", "MutableArithmetics"]
-git-tree-sha1 = "393fc4d82a73c6fe0e2963dd7c882b09257be537"
+git-tree-sha1 = "eaa98afe2033ffc0629f9d0d83961d66a021dfcc"
 uuid = "102ac46a-7ee4-5c85-9060-abc95bfdeaa3"
-version = "0.4.6"
+version = "0.4.7"
 
 [[deps.MutableArithmetics]]
 deps = ["LinearAlgebra", "SparseArrays", "Test"]
-git-tree-sha1 = "b8b5827b5939d926d3f5954d80bb5a8ab5ccd27a"
+git-tree-sha1 = "552fcfccfa01120a24311f33b94fd683606ce3bd"
 uuid = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
-version = "1.2.1"
+version = "1.2.2"
 
 [[deps.NLSolversBase]]
 deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
@@ -1153,9 +1153,9 @@ version = "4.3.1+0"
 
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
-git-tree-sha1 = "a7c3d1da1189a1c2fe843a3bfa04d18d20eb3211"
+git-tree-sha1 = "0877504529a3e5c3343c6f8b4c0381e57e4387e4"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
-version = "1.0.1"
+version = "1.0.2"
 
 [[deps.NameResolution]]
 deps = ["PrettyPrint"]
