@@ -95,27 +95,25 @@ end
     end
 end end
 
-@testset "MINLP" begin 
-v = [1.0, 2.0, 4.0, 3.0]
-w = [5.0, 4.0, 3.0, 2.0]
-W = 4.0
-u0 = [0.0, 0., 0., 1.0]
+@testset "MINLP" begin
+    v = [1.0, 2.0, 4.0, 3.0]
+    w = [5.0, 4.0, 3.0, 2.0]
+    W = 4.0
+    u0 = [0.0, 0.0, 0.0, 1.0]
 
-optfun = OptimizationFunction(
-    (u, p)-> -v'u, cons = (res, u,p)-> res .= w'u, Optimization.AutoForwardDiff()
-)
+    optfun = OptimizationFunction((u, p) -> -v'u, cons = (res, u, p) -> res .= w'u,
+                                  Optimization.AutoForwardDiff())
 
+    optprob = OptimizationProblem(optfun, u0; lb = zero.(u0), ub = one.(u0),
+                                  int = ones(Bool, length(u0)),
+                                  lcons = [-Inf;], ucons = [W;])
 
+    nl_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
+                                                            "print_level" => 0)
+    minlp_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer,
+                                                               "nl_solver" => nl_solver)
 
-optprob = OptimizationProblem(
-    optfun, u0; lb = zero.(u0), ub = one.(u0), int = ones(Bool, length(u0)), 
-    lcons = [-Inf;], ucons = [W;]
-)
-
-nl_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer, "print_level"=>0)
-minlp_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer, "nl_solver"=> nl_solver)
-
-res = solve(optprob, minlp_solver)
-@test res.u == [0., 0., 1., 0.]
-@test res.objective == -4.0
+    res = solve(optprob, minlp_solver)
+    @test res.u == [0.0, 0.0, 1.0, 0.0]
+    @test res.objective == -4.0
 end
