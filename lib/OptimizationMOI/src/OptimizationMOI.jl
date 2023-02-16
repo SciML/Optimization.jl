@@ -358,6 +358,16 @@ function SciMLBase.__solve(prob::OptimizationProblem,
             end
         end
     end
+
+    if prob.int !== nothing
+        @assert eachindex(prob.int) == Base.OneTo(num_variables)
+        for i in 1:num_variables
+            if prob.int[i]
+                MOI.add_constraint(opt_setup, θ[i], MOI.ZeroOne())
+            end
+        end
+    end
+
     if MOI.supports(opt_setup, MOI.VariablePrimalStart(), MOI.VariableIndex)
         @assert eachindex(prob.u0) == Base.OneTo(num_variables)
         for i in 1:num_variables

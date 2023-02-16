@@ -1,5 +1,5 @@
 using OptimizationMOI, Optimization, Ipopt, NLopt, Zygote, ModelingToolkit
-using AmplNLWriter, Ipopt_jll
+using AmplNLWriter, Ipopt_jll, Juniper
 using Test
 
 function _test_sparse_derivatives_hs071(backend, optimizer)
@@ -94,3 +94,26 @@ end
         _test_sparse_derivatives_hs071(backend, AmplNLWriter.Optimizer(Ipopt_jll.amplexe))
     end
 end end
+
+@testset "MINLP" begin
+    v = [1.0, 2.0, 4.0, 3.0]
+    w = [5.0, 4.0, 3.0, 2.0]
+    W = 4.0
+    u0 = [0.0, 0.0, 0.0, 1.0]
+
+    optfun = OptimizationFunction((u, p) -> -v'u, cons = (res, u, p) -> res .= w'u,
+                                  Optimization.AutoForwardDiff())
+
+    optprob = OptimizationProblem(optfun, u0; lb = zero.(u0), ub = one.(u0),
+                                  int = ones(Bool, length(u0)),
+                                  lcons = [-Inf;], ucons = [W;])
+
+    nl_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
+                                                            "print_level" => 0)
+    minlp_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer,
+                                                               "nl_solver" => nl_solver)
+
+    res = solve(optprob, minlp_solver)
+    @test res.u == [0.0, 0.0, 1.0, 0.0]
+    @test res.objective == -4.0
+end
