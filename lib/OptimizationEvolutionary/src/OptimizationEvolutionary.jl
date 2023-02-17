@@ -23,7 +23,7 @@ function __map_optimizer_args(prob::OptimizationProblem,
                               abstol::Union{Number, Nothing} = nothing,
                               reltol::Union{Number, Nothing} = nothing,
                               kwargs...)
-    mapped_args = (;kwargs...)
+    mapped_args = (; kwargs...)
 
     if !isnothing(callback)
         mapped_args = (; mapped_args..., callback = callback)
