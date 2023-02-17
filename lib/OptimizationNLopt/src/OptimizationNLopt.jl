@@ -79,23 +79,23 @@ end
 
 function __nlopt_status_to_ReturnCode(status::Symbol)
     if status in Symbol.([
-        NLopt.SUCCESS,
-        NLopt.STOPVAL_REACHED,
-        NLopt.FTOL_REACHED,
-        NLopt.XTOL_REACHED,
-    ])
+                             NLopt.SUCCESS,
+                             NLopt.STOPVAL_REACHED,
+                             NLopt.FTOL_REACHED,
+                             NLopt.XTOL_REACHED,
+                         ])
         return ReturnCode.Success
     elseif status == Symbol(NLopt.MAXEVAL_REACHED)
         return ReturnCode.MaxIters
     elseif status == Symbol(NLopt.MAXTIME_REACHED)
         return ReturnCode.MaxTime
     elseif status in Symbol.([
-        NLopt.OUT_OF_MEMORY,
-        NLopt.INVALID_ARGS,
-        NLopt.FAILURE,
-        NLopt.ROUNDOFF_LIMITED,
-        NLopt.FORCED_STOP,
-    ])
+                                 NLopt.OUT_OF_MEMORY,
+                                 NLopt.INVALID_ARGS,
+                                 NLopt.FAILURE,
+                                 NLopt.ROUNDOFF_LIMITED,
+                                 NLopt.FORCED_STOP,
+                             ])
         return ReturnCode.Failure
     else
         return ReturnCode.Default
