@@ -77,26 +77,26 @@ function __map_optimizer_args!(prob::OptimizationProblem, opt::NLopt.Opt;
     return nothing
 end
 
-function __nlopt_status_to_ReturnCode(status::NLOpt.Result)
+function __nlopt_status_to_ReturnCode(status::NLopt.Result)
     if status in [
-        NLOpt.SUCCESS,
-        NLOpt.STOPVAL_REACHED,
-        NLOpt.FTOL_REACHED,
-        NLOpt.XTOL_REACHED,
+        NLopt.SUCCESS,
+        NLopt.STOPVAL_REACHED,
+        NLopt.FTOL_REACHED,
+        NLopt.XTOL_REACHED,
     ]
         return ReturnCode.Success
     elseif status in [
-        NLOpt.MAXEVAL_REACHED,
+        NLopt.MAXEVAL_REACHED,
     ]
         return ReturnCode.MaxIters
-    elseif status == NLOpt.MAXTIME_REACHED
+    elseif status == NLopt.MAXTIME_REACHED
         return ReturnCode.MaxTime
     elseif status in [
-        NLOpt.OUT_OF_MEMORY,
-        NLOpt.INVALID_ARGS,
-        NLOpt.FAILURE,
-        NLOpt.ROUNDOFF_LIMITED,
-        NLOpt.FORCED_STOP,
+        NLopt.OUT_OF_MEMORY,
+        NLopt.INVALID_ARGS,
+        NLopt.FAILURE,
+        NLopt.ROUNDOFF_LIMITED,
+        NLopt.FORCED_STOP,
     ]
         return ReturnCode.Failure
     else
