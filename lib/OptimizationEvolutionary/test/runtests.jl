@@ -28,7 +28,8 @@ Random.seed!(1234)
     @test res[1]≈0.0625 atol=1e-5
     @test sol.objective < l1
 
-    prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [5.0], lb = [0.0, 1.0], ub = [Inf, Inf])
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [5.0],
+                               lb = [0.0, 1.0], ub = [Inf, Inf])
     sol = solve(prob, CMAES(μ = 40, λ = 100))
     res = zeros(1)
     cons_circ(res, sol.u, nothing)

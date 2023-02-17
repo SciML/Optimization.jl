@@ -40,11 +40,14 @@ using Test
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit();
                                    cons = cons)
 
-    prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [Inf])
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [-5.0], ucons = [10.0])
     sol = solve(prob, IPNewton())
     @test 10 * sol.objective < l1
 
-    prob = OptimizationProblem(optprob, x0, _p, lcons = [-5.0], ucons = [10.0])
+    optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();
+                                   cons = cons)
+
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [Inf])
     sol = solve(prob, IPNewton())
     @test 10 * sol.objective < l1
 
