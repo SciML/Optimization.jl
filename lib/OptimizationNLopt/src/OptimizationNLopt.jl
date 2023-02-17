@@ -77,6 +77,33 @@ function __map_optimizer_args!(prob::OptimizationProblem, opt::NLopt.Opt;
     return nothing
 end
 
+function __nlopt_status_to_ReturnCode(status::NLOpt.Result)
+    if status in [
+        NLOpt.SUCCESS,
+        NLOpt.STOPVAL_REACHED,
+        NLOpt.FTOL_REACHED,
+        NLOpt.XTOL_REACHED,
+    ]
+        return ReturnCode.Success
+    elseif status in [
+        NLOpt.MAXEVAL_REACHED,
+    ]
+        return ReturnCode.MaxIters
+    elseif status == NLOpt.MAXTIME_REACHED
+        return ReturnCode.MaxTime
+    elseif status in [
+        NLOpt.OUT_OF_MEMORY,
+        NLOpt.INVALID_ARGS,
+        NLOpt.FAILURE,
+        NLOpt.ROUNDOFF_LIMITED,
+        NLOpt.FORCED_STOP,
+    ]
+        return ReturnCode.Failure
+    else
+        return ReturnCode.Default
+    end
+end
+
 function SciMLBase.__solve(prob::OptimizationProblem,
                            opt::Union{NLopt.Algorithm, NLopt.Opt};
                            maxiters::Union{Number, Nothing} = nothing,
@@ -134,8 +161,9 @@ function SciMLBase.__solve(prob::OptimizationProblem,
     (minf, minx, ret) = NLopt.optimize(opt_setup, prob.u0)
     t1 = time()
 
+    retcode = __nlopt_status_to_ReturnCode(ret)
     SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt, minx,
-                             minf; original = opt_setup, retcode = ret,
+                             minf; original = opt_setup, retcode = retcode,
                              solve_time = t1 - t0)
 end
 
