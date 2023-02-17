@@ -79,6 +79,8 @@ function SciMLBase.__init(prob::OptimizationProblem, opt::GCMAESOpt;
                           progress = false,
                           σ0 = 0.2,
                           kwargs...)
+    maxiters = Optimization._check_and_convert_maxiters(maxiters)
+    maxtime = Optimization._check_and_convert_maxtime(maxtime)
     return GCMAESOptimizationCache(prob, opt; maxiters, maxtime, abstol, reltol, progress,
                                    sigma0 = σ0, kwargs...)
 end
@@ -86,9 +88,6 @@ end
 function SciMLBase.__solve(cache::GCMAESOptimizationCache)
     local x
     local G = similar(cache.u0)
-
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     _loss = function (θ)
         x = cache.f.f(θ, cache.p)
