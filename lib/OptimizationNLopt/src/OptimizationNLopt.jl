@@ -203,7 +203,7 @@ function SciMLBase.__solve(cache::NLoptOptimizationCache)
 
 
     retcode = __nlopt_status_to_ReturnCode(ret)
-    SciMLBase.build_solution(cache, opt, minx,
+    SciMLBase.build_solution(cache, cache.opt, minx,
                              minf; original = opt_setup, retcode = retcode,
 
                              solve_time = t1 - t0)
