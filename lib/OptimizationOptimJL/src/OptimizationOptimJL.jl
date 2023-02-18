@@ -44,7 +44,7 @@ function OptimJLOptimizationCache(prob::OptimizationProblem, opt, data; progress
         error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
     opt isa Optim.ConstrainedOptimizer && f.cons_j === nothing &&
-        error("This optimizer requires derivative definitions for nonlinear constraints. If the problem does not have nonlinear constraints, choose a different optimizer. Otherwise define the derivative for cons using OptimizationFunction either directly or automatically generate them with one of the autodiff backends"
+        error("This optimizer requires derivative definitions for nonlinear constraints. If the problem does not have nonlinear constraints, choose a different optimizer. Otherwise define the derivative for cons using OptimizationFunction either directly or automatically generate them with one of the autodiff backends")
 
     return OptimJLOptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons, prob.ucons, prob.sense,
                                     opt, data, progress, NamedTuple(kwargs))
