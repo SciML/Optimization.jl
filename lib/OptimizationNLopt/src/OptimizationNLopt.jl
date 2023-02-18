@@ -105,8 +105,34 @@ function __map_optimizer_args!(cache::NLoptOptimizationCache, opt::NLopt.Opt;
     return nothing
 end
 
+
 SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 
+function __nlopt_status_to_ReturnCode(status::Symbol)
+    if status in Symbol.([
+                             NLopt.SUCCESS,
+                             NLopt.STOPVAL_REACHED,
+                             NLopt.FTOL_REACHED,
+                             NLopt.XTOL_REACHED,
+                         ])
+        return ReturnCode.Success
+    elseif status == Symbol(NLopt.MAXEVAL_REACHED)
+        return ReturnCode.MaxIters
+    elseif status == Symbol(NLopt.MAXTIME_REACHED)
+        return ReturnCode.MaxTime
+    elseif status in Symbol.([
+                                 NLopt.OUT_OF_MEMORY,
+                                 NLopt.INVALID_ARGS,
+                                 NLopt.FAILURE,
+                                 NLopt.ROUNDOFF_LIMITED,
+                                 NLopt.FORCED_STOP,
+                             ])
+        return ReturnCode.Failure
+    else
+        return ReturnCode.Default
+    end
+end
+  
 function SciMLBase.__init(prob::OptimizationProblem, opt::Union{NLopt.Algorithm, NLopt.Opt};
                           maxiters::Union{Number, Nothing} = nothing,
                           maxtime::Union{Number, Nothing} = nothing,
@@ -119,6 +145,7 @@ function SciMLBase.__init(prob::OptimizationProblem, opt::Union{NLopt.Algorithm,
                           progress = false,
                           callback = (args...) -> (false),
                           kwargs...)
+
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
     maxtime = Optimization._check_and_convert_maxtime(maxtime)
     local_maxiters = Optimization._check_and_convert_maxiters(local_maxiters)
@@ -174,8 +201,11 @@ function SciMLBase.__solve(cache::NLoptOptimizationCache)
     (minf, minx, ret) = NLopt.optimize(opt_setup, cache.u0)
     t1 = time()
 
-    SciMLBase.build_solution(cache, cache.opt, minx,
-                             minf; original = opt_setup, retcode = ret,
+
+    retcode = __nlopt_status_to_ReturnCode(ret)
+    SciMLBase.build_solution(cache, opt, minx,
+                             minf; original = opt_setup, retcode = retcode,
+
                              solve_time = t1 - t0)
 end
 
