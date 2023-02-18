@@ -145,7 +145,7 @@ function instantiate_function(f::OptimizationFunction{true}, cache::ReInitCache,
     if f.cons === nothing
         cons = nothing
     else
-        cons = (res, θ) -> f.cons(res, θ, p)
+        cons = (res, θ) -> f.cons(res, θ, cache.p)
         cons_oop = (x) -> (_res = zeros(eltype(x), num_cons); cons(_res, x); _res)
     end
 
