@@ -13,12 +13,14 @@ SciMLBase.allowsbounds(opt::Optim.SimulatedAnnealing) = false
 SciMLBase.requiresbounds(opt::Optim.Fminbox) = true
 SciMLBase.requiresbounds(opt::Optim.SAMIN) = true
 
-struct OptimJLOptimizationCache{F, RC, LB, UB, S, O, D, P} <:
+struct OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P} <:
        SciMLBase.AbstractOptimizationCache
     f::F
     reinit_cache::RC
     lb::LB
     ub::UB
+    lcons::LC
+    ucons::UC
     sense::S
     opt::O
     data::D
@@ -40,7 +42,7 @@ function OptimJLOptimizationCache(prob::OptimizationProblem, opt, data; progress
     !(opt isa Optim.ZerothOrderOptimizer) && f.grad === nothing &&
         error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
-    return OptimJLOptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.sense,
+    return OptimJLOptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons, prob.ucons, prob.sense,
                                     opt, data, progress, NamedTuple(kwargs))
 end
 
@@ -117,11 +119,11 @@ function SciMLBase.__init(prob::OptimizationProblem, opt::Optim.AbstractOptimize
                                     kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, S, O, D, P}) where {
+function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P}) where {
                                                                                               F,
                                                                                               RC,
                                                                                               LB,
-                                                                                              UB,
+                                                                                              UB, LC, UC,
                                                                                               S,
                                                                                               O <:
                                                                                               Optim.AbstractOptimizer,
@@ -217,11 +219,11 @@ function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, S, O, 
                              solve_time = t1 - t0)
 end
 
-function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, S, O, D, P}) where {
+function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P}) where {
                                                                                               F,
                                                                                               RC,
                                                                                               LB,
-                                                                                              UB,
+                                                                                              UB, LC, UC,
                                                                                               S,
                                                                                               O <:
                                                                                               Union{
@@ -292,11 +294,11 @@ function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, S, O, 
                              original = opt_res, retcode = opt_ret, solve_time = t1 - t0)
 end
 
-function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, S, O, D, P}) where {
+function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P}) where {
                                                                                               F,
                                                                                               RC,
                                                                                               LB,
-                                                                                              UB,
+                                                                                              UB, LC, UC,
                                                                                               S,
                                                                                               O <:
                                                                                               Optim.ConstrainedOptimizer,
