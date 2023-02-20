@@ -1,6 +1,6 @@
 # Solving the Rosenbrock Problem in >10 Ways
 
-This tutorial is a demonstration of many different solvers to demonstrate the
+This example is a demonstration of many different solvers to demonstrate the
 flexibility of Optimization.jl. This is a gauntlet of many solvers to get a feel
 for common workflows of the package and give copy-pastable starting points.
 
