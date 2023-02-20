@@ -28,6 +28,3 @@ Requires = "1.0"
 SciMLBase = "1.79.0"
 TerminalLoggers = "0.1"
 julia = "1.6"
-
-[extras]
-ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
