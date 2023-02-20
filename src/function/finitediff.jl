@@ -76,7 +76,7 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p, num_cons = 0)
 
     if f.hv === nothing
         hv = function (H, θ, v, args...)
-            res = ArrayInterfaceCore.zeromatrix(θ)
+            res = ArrayInterface.zeromatrix(θ)
             hess(res, θ, args...)
             H .= res * v
         end

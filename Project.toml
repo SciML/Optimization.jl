@@ -3,7 +3,7 @@ uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 version = "3.11.2"
 
 [deps]
-ArrayInterfaceCore = "30b0a656-2188-435a-8636-2ec0e6a096e2"
+ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
 ConsoleProgressMonitor = "88cd18e8-d9cc-4ea6-8889-5259c0d15c8b"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
@@ -18,8 +18,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 TerminalLoggers = "5d786b92-1e48-4d6f-9151-6b4477ca9bed"
 
 [compat]
-ArrayInterface = "6"
-ArrayInterfaceCore = "0.1.1"
+ArrayInterface = "6, 7"
 ConsoleProgressMonitor = "0.1"
 DocStringExtensions = "0.8, 0.9"
 LoggingExtras = "0.4, 0.5, 1"
