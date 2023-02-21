@@ -368,11 +368,12 @@ function SciMLBase.__solve(prob::OptimizationProblem,
         end
     end
 
-    if prob.int !== nothing 
+    if prob.int !== nothing
         @assert eachindex(prob.int) == Base.OneTo(num_variables)
         for i in 1:num_variables
-            if prob.int[i] 
-                MOI.add_constraint(opt_setup, θ[i], _create_integer_domain(i, prob.lb, prob.ub))
+            if prob.int[i]
+                MOI.add_constraint(opt_setup, θ[i],
+                                   _create_integer_domain(i, prob.lb, prob.ub))
             end
         end
     end

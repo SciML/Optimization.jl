@@ -96,13 +96,12 @@ end
 end end
 
 @testset "Integer Support" begin
-
     nl_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
-        "print_level" => 0)
+                                                            "print_level" => 0)
     minlp_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer,
-        "nl_solver" => nl_solver)
+                                                               "nl_solver" => nl_solver)
 
-    @testset "Binary Domain" begin 
+    @testset "Binary Domain" begin
         v = [1.0, 2.0, 4.0, 3.0]
         w = [5.0, 4.0, 3.0, 2.0]
         W = 4.0
@@ -120,12 +119,12 @@ end end
         @test res.objective == -4.0
     end
 
-    @testset "Integer Domain" begin 
+    @testset "Integer Domain" begin
         x = [1.0, 2.0, 4.0, 3.0]
         y = [5.0, 10.0, 20.0, 15.0]
         u0 = [1.0]
 
-        optfun = OptimizationFunction((u, p) -> sum(abs2, x*u[1] .- y), 
+        optfun = OptimizationFunction((u, p) -> sum(abs2, x * u[1] .- y),
                                       Optimization.AutoForwardDiff())
 
         optprob = OptimizationProblem(optfun, u0; lb = one.(u0), ub = 6.0 .* u0,

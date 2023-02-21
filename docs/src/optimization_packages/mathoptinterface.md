@@ -82,13 +82,15 @@ sol = solve(prob, opt)
 The following shows how to use integer linear programming within `Optimization`. We will solve the classical Knapsack Problem using `Juniper.jl`.
 
   - [`Juniper.Optimizer`](https://github.com/lanl-ansi/Juniper.jl)
+
   - Juniper requires a nonlinear optimizer to be set via the `nl_solver` option,
     which must be a MathOptInterface-based optimizer. See the
     [Juniper documentation](https://github.com/lanl-ansi/Juniper.jl) for more
     detail.
   - The integer domain is infered based on the bounds of the variable:
-    - Setting the lower bound to zero and the upper bound to one corresponds to `MOI.ZeroOne()` or a binary decision variable
-    - Providing other or no bounds corresponds to `MOI.Integer()`
+    
+      + Setting the lower bound to zero and the upper bound to one corresponds to `MOI.ZeroOne()` or a binary decision variable
+      + Providing other or no bounds corresponds to `MOI.Integer()`
 
 ```@example MOI
 v = [1.0, 2.0, 4.0, 3.0]
