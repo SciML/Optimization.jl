@@ -86,7 +86,9 @@ The following shows how to use integer linear programming within `Optimization`.
     which must be a MathOptInterface-based optimizer. See the
     [Juniper documentation](https://github.com/lanl-ansi/Juniper.jl) for more
     detail.
-  - Allows only for binary decisions
+  - The integer domain is infered based on the bounds of the variable:
+    - Setting the lower bound to zero and the upper bound to one corresponds to `MOI.ZeroOne()` or a binary decision variable
+    - Providing other or no bounds corresponds to `MOI.Integer()`
 
 ```@example MOI
 v = [1.0, 2.0, 4.0, 3.0]
