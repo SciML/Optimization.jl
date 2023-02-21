@@ -1,4 +1,4 @@
-using DiffEqFlux, Optimization, OrdinaryDiffEq, OptimizationOptimisers
+using DiffEqFlux, Optimization, OrdinaryDiffEq, OptimizationOptimisers, ModelingToolkit
 
 function newtons_cooling(du, u, p, t)
     temp = u[1]
@@ -48,14 +48,45 @@ function loss_adjoint(fullp, batch, time_batch)
 end
 
 k = 10
-train_loader = Flux.Data.DataLoader((ode_data, t), batchsize = k)
+train_loader = Flux.Data.DataLoader((ode_data, t), batchsize = 30)
 
-numEpochs = 300
+numEpochs = 50
 l1 = loss_adjoint(pp, train_loader.data[1], train_loader.data[2])[1]
 
 optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
                                                                         time_batch),
                               Optimization.AutoZygote())
+optprob = OptimizationProblem(optfun, pp)
+using IterTools: ncycle
+res1 = Optimization.solve(optprob, Optimisers.ADAM(0.05), ncycle(train_loader, numEpochs),
+                          callback = callback, maxiters = numEpochs)
+@test 10res1.objective < l1
+
+optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
+                                                                        time_batch),
+                              Optimization.AutoForwardDiff())
+optprob = OptimizationProblem(optfun, pp)
+using IterTools: ncycle
+res1 = Optimization.solve(optprob, Optimisers.ADAM(0.05), ncycle(train_loader, numEpochs),
+                          callback = callback, maxiters = numEpochs)
+@test 10res1.objective < l1
+
+optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
+                                                                        time_batch),
+                              Optimization.AutoModelingToolkit())
+optprob = OptimizationProblem(optfun, pp)
+using IterTools: ncycle
+res1 = Optimization.solve(optprob, Optimisers.ADAM(0.05), ncycle(train_loader, numEpochs),
+                          callback = callback, maxiters = numEpochs)
+@test 10res1.objective < l1
+
+function loss_grad(res, fullp, _, batch, time_batch)
+    pred = predict_adjoint(fullp, time_batch)
+    res .= copy(sum(abs, 2 .* (batch .- pred)))
+end
+optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
+                                                                        time_batch),
+                               grad = loss_grad)
 optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
 res1 = Optimization.solve(optprob, Optimisers.ADAM(0.05), ncycle(train_loader, numEpochs),
