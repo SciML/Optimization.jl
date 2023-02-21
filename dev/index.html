@@ -7,7 +7,7 @@
 Pkg.add(&quot;Optimization&quot;)</code></pre><p>The packages relevant to the core functionality of Optimization.jl will be imported accordingly and, in most cases, you do not have to worry about the manual installation of dependencies. However, you will need to add the specific optimizer packages.</p><h2 id="Contributing"><a class="docs-heading-anchor" href="#Contributing">Contributing</a><a id="Contributing-1"></a><a class="docs-heading-anchor-permalink" href="#Contributing" title="Permalink"></a></h2><ul><li><p>Please refer to the <a href="https://github.com/SciML/ColPrac/blob/master/README.md">SciML ColPrac: Contributor&#39;s Guide on Collaborative Practices for Community Packages</a> for guidance on PRs, issues, and other matters relating to contributing to SciML.</p></li><li><p>See the <a href="https://github.com/SciML/SciMLStyle">SciML Style Guide</a> for common coding practices and other style decisions.</p></li><li><p>There are a few community forums:</p><ul><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.org/slack/">Julia Slack</a></li><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged">Julia Zulip</a></li><li>On the <a href="https://discourse.julialang.org">Julia Discourse forums</a></li><li>See also <a href="https://sciml.ai/community/">SciML Community page</a></li></ul></li></ul><h2 id="Overview-of-the-Optimizers"><a class="docs-heading-anchor" href="#Overview-of-the-Optimizers">Overview of the Optimizers</a><a id="Overview-of-the-Optimizers-1"></a><a class="docs-heading-anchor-permalink" href="#Overview-of-the-Optimizers" title="Permalink"></a></h2><table><tr><th style="text-align: left">Package</th><th style="text-align: center">Local Gradient-Based</th><th style="text-align: center">Local Hessian-Based</th><th style="text-align: center">Local Derivative-Free</th><th style="text-align: center">Box Constraints</th><th style="text-align: center">Local Constrained</th><th style="text-align: center">Global Unconstrained</th><th style="text-align: center">Global Constrained</th></tr><tr><td style="text-align: left">BlackBoxOptim</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">❌                  ✅</td></tr><tr><td style="text-align: left">CMAEvolutionaryStrategy</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">❌</td></tr><tr><td style="text-align: left">Evolutionary</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">🟡</td></tr><tr><td style="text-align: left">Flux</td><td style="text-align: center">✅</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td></tr><tr><td style="text-align: left">GCMAES</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">❌</td></tr><tr><td style="text-align: left">MathOptInterface</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">🟡</td></tr><tr><td style="text-align: left">MultistartOptimization</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">❌</td></tr><tr><td style="text-align: left">Metaheuristics</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">🟡</td></tr><tr><td style="text-align: left">NOMAD</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">🟡</td></tr><tr><td style="text-align: left">NLopt</td><td style="text-align: center">✅</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">🟡</td><td style="text-align: center">✅</td><td style="text-align: center">🟡</td></tr><tr><td style="text-align: left">Nonconvex</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">🟡</td><td style="text-align: center">✅</td><td style="text-align: center">🟡</td></tr><tr><td style="text-align: left">Optim</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td><td style="text-align: center">✅</td></tr><tr><td style="text-align: left">QuadDIRECT</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">❌</td><td style="text-align: center">✅</td><td style="text-align: center">❌</td></tr></table><p>✅ = supported</p><p>🟡 = supported in downstream library but not yet implemented in <code>Optimization</code>; PR to add this functionality are welcome</p><p>❌ = not supported</p><h2 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h2><details><summary>The documentation of this SciML package was built using these direct dependencies,</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Optimization.jl/Optimization.jl/docs/Project.toml`
   [7c4d4715] AmplNLWriter v1.0.1
   [e30172f5] Documenter v0.27.24
-⌃ [6a86dc24] FiniteDiff v2.17.0
+  [6a86dc24] FiniteDiff v2.18.0
   [587475ba] Flux v0.13.13
   [f6369f11] ForwardDiff v0.10.34
   [b6b21f68] Ipopt v1.1.0
@@ -15,7 +15,7 @@ Pkg.add(&quot;Optimization&quot;)</code></pre><p>The packages relevant to the co
   [2ddba703] Juniper v0.9.1
   [961ee093] ModelingToolkit v8.47.0
   [76087f3c] NLopt v0.6.5
-  [7f7a1694] Optimization v3.11.2 `~/work/Optimization.jl/Optimization.jl`
+  [7f7a1694] Optimization v3.12.0 `~/work/Optimization.jl/Optimization.jl`
   [3e6eede4] OptimizationBBO v0.1.4
   [bd407f91] OptimizationCMAEvolutionStrategy v0.1.3
   [cb963754] OptimizationEvolutionary v0.1.2
@@ -28,13 +28,13 @@ Pkg.add(&quot;Optimization&quot;)</code></pre><p>The packages relevant to the co
   [36348300] OptimizationOptimJL v0.1.5
   [42dfb2eb] OptimizationOptimisers v0.1.1
   [3d669222] OptimizationSpeedMapping v0.1.2
-  [1dea7af3] OrdinaryDiffEq v6.45.0
+  [1dea7af3] OrdinaryDiffEq v6.47.0
   [37e2e3b7] ReverseDiff v1.14.4
-  [1ed8b502] SciMLSensitivity v7.21.0
+  [1ed8b502] SciMLSensitivity v7.22.0
   [9f7883ad] Tracker v0.2.23
   [e88e6eb3] Zygote v0.6.55
 ⌅ [9cc047cb] Ipopt_jll v300.1400.400+0
-Info Packages marked with ⌃ and ⌅ have new versions available, but those with ⌅ are restricted by compatibility constraints from upgrading. To see why use `status --outdated`</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.8.5
+Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated`</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.8.5
 Commit 17cfb8e65ea (2023-01-08 06:45 UTC)
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
@@ -54,12 +54,8 @@ Platform Info:
   [7c4d4715] AmplNLWriter v1.0.1
   [dce04be8] ArgCheck v2.3.0
   [ec485272] ArnoldiMethod v0.2.0
-⌅ [4fba245c] ArrayInterface v6.0.25
+  [4fba245c] ArrayInterface v7.1.0
   [30b0a656] ArrayInterfaceCore v0.1.29
-  [6ba088a2] ArrayInterfaceGPUArrays v0.2.2
-  [015c0d05] ArrayInterfaceOffsetArrays v0.1.7
-  [b0d46f97] ArrayInterfaceStaticArrays v0.1.5
-  [dd5226c6] ArrayInterfaceStaticArraysCore v0.1.3
   [ab4f0b2a] BFloat16s v0.4.2
   [fbb218c0] BSON v0.3.6
   [198e06fe] BangBang v0.3.37
@@ -81,7 +77,7 @@ Platform Info:
   [082447d4] ChainRules v1.47.0
   [d360d2e6] ChainRulesCore v1.15.7
   [9e997f8a] ChangesOfVariables v0.1.6
-⌃ [fb6a15b2] CloseOpenIntervals v0.1.11
+  [fb6a15b2] CloseOpenIntervals v0.1.12
   [523fee87] CodecBzip2 v0.7.2
   [944b1d66] CodecZlib v0.7.1
   [861a8166] Combinatorics v1.0.2
@@ -103,33 +99,33 @@ Platform Info:
   [e2d170a0] DataValueInterfaces v1.0.0
   [244e2a9f] DefineSingletons v0.1.2
   [b429d917] DensityInterface v0.4.0
-⌃ [2b5f629d] DiffEqBase v6.119.0
+  [2b5f629d] DiffEqBase v6.120.0
   [459566f4] DiffEqCallbacks v2.26.0
   [77a26b50] DiffEqNoiseProcess v5.16.0
   [163ba53b] DiffResults v1.1.0
   [b552c78f] DiffRules v1.12.2
   [b4f34e82] Distances v0.10.7
-  [31c24e10] Distributions v0.25.80
+  [31c24e10] Distributions v0.25.81
   [ffbed154] DocStringExtensions v0.9.3
   [e30172f5] Documenter v0.27.24
   [35a29f4d] DocumenterTools v0.1.16
 ⌅ [5b8099bc] DomainSets v0.5.15
   [fa6b7ba4] DualNumbers v0.6.8
   [7c1d4256] DynamicPolynomials v0.4.6
-⌃ [da5c29d0] EllipsisNotation v1.6.0
+  [da5c29d0] EllipsisNotation v1.7.0
   [4e289a0a] EnumX v1.0.4
   [7da242da] Enzyme v0.10.18
 ⌅ [f151be2c] EnzymeCore v0.1.0
   [86b6b26d] Evolutionary v0.11.1
-⌃ [d4d017d3] ExponentialUtilities v1.23.0
+  [d4d017d3] ExponentialUtilities v1.24.0
   [e2ba6199] ExprTools v0.1.8
   [cc61a311] FLoops v0.2.1
   [b9860ae5] FLoopsBase v0.1.1
-⌃ [7034ab61] FastBroadcast v0.2.4
+  [7034ab61] FastBroadcast v0.2.5
   [9aa1b823] FastClosures v0.3.2
   [29a986be] FastLapackInterface v1.2.9
   [1a297f60] FillArrays v0.13.7
-⌃ [6a86dc24] FiniteDiff v2.17.0
+  [6a86dc24] FiniteDiff v2.18.0
   [587475ba] Flux v0.13.13
   [9c68100b] FoldsThreads v0.1.1
   [59287772] Formatting v0.4.2
@@ -177,10 +173,10 @@ Platform Info:
 ⌅ [40e66cde] LDLFactorizations v0.9.0
   [929cbde3] LLVM v4.16.0
   [b964fa9f] LaTeXStrings v1.3.0
-⌃ [2ee39098] LabelledArrays v1.13.0
+  [2ee39098] LabelledArrays v1.14.0
   [984bce1d] LambertW v0.4.6
   [23fbe1c1] Latexify v0.15.18
-⌃ [10f19ff3] LayoutPointers v0.1.13
+  [10f19ff3] LayoutPointers v0.1.14
   [50d2b5c4] Lazy v0.15.1
   [1d6d02ad] LeftChildRightSiblingTrees v0.2.0
   [2d8b4e74] LevyArea v1.0.0
@@ -189,7 +185,7 @@ Platform Info:
 ⌃ [7ed4a6bd] LinearSolve v1.29.1
   [2ab3a3ac] LogExpFunctions v0.3.23
   [e6f89c97] LoggingExtras v1.0.0
-  [bdcacae8] LoopVectorization v0.12.150
+  [bdcacae8] LoopVectorization v0.12.151
   [d8e11817] MLStyle v0.4.17
   [f1d291b0] MLUtils v0.4.1
   [1914dd2f] MacroTools v0.5.10
@@ -204,11 +200,11 @@ Platform Info:
   [46d2c3a1] MuladdMacro v0.2.4
   [3933049c] MultistartOptimization v0.2.2
   [102ac46a] MultivariatePolynomials v0.4.7
-  [d8a4904e] MutableArithmetics v1.2.2
+  [d8a4904e] MutableArithmetics v1.2.3
   [d41bc354] NLSolversBase v7.8.3
   [76087f3c] NLopt v0.6.5
   [2774e3e8] NLsolve v4.5.1
-  [872c559c] NNlib v0.8.18
+  [872c559c] NNlib v0.8.19
   [a00861dc] NNlibCUDA v0.2.7
   [02130f1c] NOMAD v2.4.0
   [77ba4419] NaNMath v1.0.2
@@ -220,7 +216,7 @@ Platform Info:
   [4d8831e6] OpenSSL v1.3.3
   [429524aa] Optim v1.7.4
   [3bd65402] Optimisers v0.2.14
-  [7f7a1694] Optimization v3.11.2 `~/work/Optimization.jl/Optimization.jl`
+  [7f7a1694] Optimization v3.12.0 `~/work/Optimization.jl/Optimization.jl`
   [3e6eede4] OptimizationBBO v0.1.4
   [bd407f91] OptimizationCMAEvolutionStrategy v0.1.3
   [cb963754] OptimizationEvolutionary v0.1.2
@@ -234,15 +230,15 @@ Platform Info:
   [42dfb2eb] OptimizationOptimisers v0.1.1
   [3d669222] OptimizationSpeedMapping v0.1.2
   [bac558e1] OrderedCollections v1.4.1
-  [1dea7af3] OrdinaryDiffEq v6.45.0
+  [1dea7af3] OrdinaryDiffEq v6.47.0
   [90014a1f] PDMats v0.11.16
   [d96e819e] Parameters v0.12.3
   [69de0a69] Parsers v2.5.7
   [e409e4f3] PoissonRandom v0.4.3
-⌃ [f517fe37] Polyester v0.7.2
+  [f517fe37] Polyester v0.7.3
   [1d0040c9] PolyesterWeave v0.2.1
   [85a6dd25] PositiveFactorizations v0.2.4
-⌃ [d236fae5] PreallocationTools v0.4.11
+  [d236fae5] PreallocationTools v0.4.12
   [21216c6a] Preferences v1.3.0
   [8162dcfd] PrettyPrint v0.2.0
   [27ebfcd6] Primes v0.5.3
@@ -255,7 +251,7 @@ Platform Info:
   [e6cf234a] RandomNumbers v1.5.3
   [c1ae055f] RealDot v0.1.0
   [3cdcf5f2] RecipesBase v1.3.3
-⌃ [731186ca] RecursiveArrayTools v2.37.0
+  [731186ca] RecursiveArrayTools v2.38.0
   [f2c3362d] RecursiveFactorization v0.2.18
   [189a3867] Reexport v1.2.2
   [ae029012] Requires v1.3.0
@@ -268,8 +264,8 @@ Platform Info:
   [322a6be2] Sass v0.2.0
   [0bca4576] SciMLBase v1.86.1
   [e9a6253c] SciMLNLSolve v0.1.3
-⌃ [c0aeaf25] SciMLOperators v0.1.21
-  [1ed8b502] SciMLSensitivity v7.21.0
+  [c0aeaf25] SciMLOperators v0.1.22
+  [1ed8b502] SciMLSensitivity v7.22.0
   [efcf1570] Setfield v1.1.1
   [605ecd9f] ShowCases v0.1.0
   [777ac1f9] SimpleBufferStream v1.1.0
@@ -278,20 +274,21 @@ Platform Info:
   [66db9d55] SnoopPrecompile v1.0.3
   [ed01d8cd] Sobol v1.5.0
   [a2af1166] SortingAlgorithms v1.1.0
-⌃ [47a9eef4] SparseDiffTools v1.30.0
+  [47a9eef4] SparseDiffTools v1.31.0
   [d4ead438] SpatialIndexing v0.1.3
   [276daf66] SpecialFunctions v2.1.7
   [f1835b91] SpeedMapping v0.3.0
   [171d559e] SplittablesBase v0.1.15
   [cae243ae] StackViews v0.1.1
   [aedffcd0] Static v0.8.4
+  [0d7ed370] StaticArrayInterface v1.2.1
   [90137ffa] StaticArrays v1.5.16
   [1e83bf80] StaticArraysCore v1.4.0
   [82ae8749] StatsAPI v1.5.0
   [2913bbd2] StatsBase v0.33.21
   [4c63d2b9] StatsFuns v1.1.1
   [789caeaf] StochasticDiffEq v6.58.0
-⌃ [7792a7ef] StrideArraysCore v0.4.7
+  [7792a7ef] StrideArraysCore v0.4.8
   [09ab397b] StructArrays v0.6.14
   [53d494c1] StructIO v0.3.0
   [2efcf032] SymbolicIndexingInterface v0.2.1
@@ -314,7 +311,7 @@ Platform Info:
   [3a884ed6] UnPack v1.0.2
   [1986cc42] Unitful v1.12.3
   [a7c27f48] Unityper v0.1.2
-⌃ [3d5dd08c] VectorizationBase v0.21.58
+  [3d5dd08c] VectorizationBase v0.21.59
   [19fa3120] VertexSafeGraphs v0.2.0
   [e88e6eb3] Zygote v0.6.55
   [700de1a5] ZygoteRules v0.2.2
@@ -387,5 +384,5 @@ Platform Info:
   [8e850ede] nghttp2_jll v1.48.0+0
   [3f19e933] p7zip_jll v17.4.0+0
 Info Packages marked with ⌃ and ⌅ have new versions available, but those with ⌅ are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details>You can also download the 
-<a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.11.2/assets/Manifest.toml">manifest</a> file and the
-<a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.11.2/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/">Getting Started with Optimization in Julia »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Monday 20 February 2023 17:42">Monday 20 February 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.12.0/assets/Manifest.toml">manifest</a> file and the
+<a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.12.0/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/">Getting Started with Optimization in Julia »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Tuesday 21 February 2023 08:58">Tuesday 21 February 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
