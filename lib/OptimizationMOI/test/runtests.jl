@@ -95,25 +95,44 @@ end
     end
 end end
 
-@testset "MINLP" begin
-    v = [1.0, 2.0, 4.0, 3.0]
-    w = [5.0, 4.0, 3.0, 2.0]
-    W = 4.0
-    u0 = [0.0, 0.0, 0.0, 1.0]
-
-    optfun = OptimizationFunction((u, p) -> -v'u, cons = (res, u, p) -> res .= w'u,
-                                  Optimization.AutoForwardDiff())
-
-    optprob = OptimizationProblem(optfun, u0; lb = zero.(u0), ub = one.(u0),
-                                  int = ones(Bool, length(u0)),
-                                  lcons = [-Inf;], ucons = [W;])
+@testset "Integer Support" begin
 
     nl_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
-                                                            "print_level" => 0)
+        "print_level" => 0)
     minlp_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer,
-                                                               "nl_solver" => nl_solver)
+        "nl_solver" => nl_solver)
 
-    res = solve(optprob, minlp_solver)
-    @test res.u == [0.0, 0.0, 1.0, 0.0]
-    @test res.objective == -4.0
+    @testset "Binary Domain" begin 
+        v = [1.0, 2.0, 4.0, 3.0]
+        w = [5.0, 4.0, 3.0, 2.0]
+        W = 4.0
+        u0 = [0.0, 0.0, 0.0, 1.0]
+
+        optfun = OptimizationFunction((u, p) -> -v'u, cons = (res, u, p) -> res .= w'u,
+                                      Optimization.AutoForwardDiff())
+
+        optprob = OptimizationProblem(optfun, u0; lb = zero.(u0), ub = one.(u0),
+                                      int = ones(Bool, length(u0)),
+                                      lcons = [-Inf;], ucons = [W;])
+
+        res = solve(optprob, minlp_solver)
+        @test res.u == [0.0, 0.0, 1.0, 0.0]
+        @test res.objective == -4.0
+    end
+
+    @testset "Integer Domain" begin 
+        x = [1.0, 2.0, 4.0, 3.0]
+        y = [5.0, 10.0, 20.0, 15.0]
+        u0 = [1.0]
+
+        optfun = OptimizationFunction((u, p) -> sum(abs2, x*u[1] .- y), 
+                                      Optimization.AutoForwardDiff())
+
+        optprob = OptimizationProblem(optfun, u0; lb = one.(u0), ub = 5.0 .* u0,
+                                      int = ones(Bool, length(u0)))
+
+        res = solve(optprob, minlp_solver)
+        @test res.u == [4.0]
+        @test res.objective ≈ 0.0
+    end
 end
