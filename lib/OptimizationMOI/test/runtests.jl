@@ -133,6 +133,6 @@ end end
 
         res = solve(optprob, minlp_solver)
         @test res.u ≈ [5.0]
-        @test res.objective ≈ 0.0
+        @test res.objective <= 5eps()
     end
 end
