@@ -132,7 +132,7 @@ end end
                                       int = ones(Bool, length(u0)))
 
         res = solve(optprob, minlp_solver)
-        @test res.u == [5.0]
+        @test res.u .≈ [5.0]
         @test res.objective ≈ 0.0
     end
 end
