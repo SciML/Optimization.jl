@@ -128,11 +128,11 @@ end end
         optfun = OptimizationFunction((u, p) -> sum(abs2, x*u[1] .- y), 
                                       Optimization.AutoForwardDiff())
 
-        optprob = OptimizationProblem(optfun, u0; lb = one.(u0), ub = 5.0 .* u0,
+        optprob = OptimizationProblem(optfun, u0; lb = one.(u0), ub = 6.0 .* u0,
                                       int = ones(Bool, length(u0)))
 
         res = solve(optprob, minlp_solver)
-        @test res.u == [4.0]
+        @test res.u == [5.0]
         @test res.objective ≈ 0.0
     end
 end
