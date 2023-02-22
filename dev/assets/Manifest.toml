@@ -1518,9 +1518,9 @@ version = "0.2.0"
 
 [[deps.SciMLBase]]
 deps = ["ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "Preferences", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables"]
-git-tree-sha1 = "fd2a15854af0ba1542b89efa24512b0377e7e37d"
+git-tree-sha1 = "33f031423eedc1f9e43f6112da6f13d5b49ea7da"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "1.86.1"
+version = "1.86.2"
 
 [[deps.SciMLNLSolve]]
 deps = ["DiffEqBase", "LineSearches", "NLsolve", "Reexport", "SciMLBase"]
@@ -1613,9 +1613,9 @@ version = "0.1.3"
 
 [[deps.SpecialFunctions]]
 deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
-git-tree-sha1 = "d75bda01f8c31ebb72df80a46c88b25d1c79c56d"
+git-tree-sha1 = "ef28127915f4229c971eb43f3fc075dd3fe91880"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "2.1.7"
+version = "2.2.0"
 
 [[deps.SpeedMapping]]
 deps = ["AccurateArithmetic", "BenchmarkTools", "Coverage", "DocumenterTools", "ForwardDiff", "LinearAlgebra", "MuladdMacro", "SparseArrays"]
