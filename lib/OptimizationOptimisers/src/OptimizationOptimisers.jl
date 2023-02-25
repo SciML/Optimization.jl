@@ -4,9 +4,9 @@ using Reexport, Printf, ProgressLogging
 @reexport using Optimisers, Optimization
 using Optimization.SciMLBase
 
-const OptimisersOptimizers = Union{Descent, Adam, Momentum, Nesterov, RMSProp,
-                                   AdaGrad, AdaMax, AdaDelta, AMSGrad, NAdam, RAdam, OAdam,
-                                   AdaBelief,
+const OptimisersOptimizers = Union{Optimisers.AbstractRule, Descent, Adam, Momentum,
+                                   Nesterov, RMSProp, AdaGrad, AdaMax, AdaDelta, AMSGrad,
+                                   NAdam, RAdam, OAdam, AdaBelief, Lion,
                                    WeightDecay, ClipGrad, ClipNorm, OptimiserChain}
 
 function SciMLBase.__solve(prob::OptimizationProblem, opt::OptimisersOptimizers,
