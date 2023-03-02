@@ -1,4 +1,4 @@
-# Basic usage
+# Getting Started with Optimization in Julia
 
 In this tutorial, we introduce the basics of Optimization.jl by showing
 how to easily mix local optimizers from Optim.jl and global optimizers

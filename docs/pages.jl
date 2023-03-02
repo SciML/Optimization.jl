@@ -1,10 +1,12 @@
 pages = ["index.md",
+    "getting_started.md",
     "Tutorials" => [
-        "tutorials/intro.md",
-        "tutorials/rosenbrock.md",
         "tutorials/minibatch.md",
         "tutorials/symbolic.md",
         "tutorials/constraints.md",
+    ],
+    "Examples" => [
+        "examples/rosenbrock.md",
     ],
     "Basics" => [
         "API/optimization_problem.md",

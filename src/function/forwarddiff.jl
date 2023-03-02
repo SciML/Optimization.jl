@@ -64,7 +64,7 @@ function instantiate_function(f::OptimizationFunction{true}, x,
 
     if f.hv === nothing
         hv = function (H, θ, v, args...)
-            res = ArrayInterfaceCore.zeromatrix(θ)
+            res = ArrayInterface.zeromatrix(θ)
             hess(res, θ, args...)
             H .= res * v
         end

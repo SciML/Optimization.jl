@@ -45,9 +45,9 @@ documentation of the `AbstractADType` types.
 """
 function instantiate_function(f, x, ::AbstractADType,
                               p, num_cons = 0)
-    grad = f.grad === nothing ? nothing : (G, x) -> f.grad(G, x, p)
-    hess = f.hess === nothing ? nothing : (H, x) -> f.hess(H, x, p)
-    hv = f.hv === nothing ? nothing : (H, x, v) -> f.hv(H, x, v, p)
+    grad = f.grad === nothing ? nothing : (G, x, args...) -> f.grad(G, x, p, args...)
+    hess = f.hess === nothing ? nothing : (H, x, args...) -> f.hess(H, x, p, args...)
+    hv = f.hv === nothing ? nothing : (H, x, v, args...) -> f.hv(H, x, v, p, args...)
     cons = f.cons === nothing ? nothing : (res, x) -> f.cons(res, x, p)
     cons_j = f.cons_j === nothing ? nothing : (res, x) -> f.cons_j(res, x, p)
     cons_h = f.cons_h === nothing ? nothing : (res, x) -> f.cons_h(res, x, p)

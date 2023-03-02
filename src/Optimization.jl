@@ -8,7 +8,7 @@ using Reexport
 @reexport using SciMLBase
 using Requires
 using Logging, ProgressLogging, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
-using ArrayInterfaceCore, Base.Iterators, SparseArrays
+using ArrayInterface, Base.Iterators, SparseArrays
 using Pkg
 
 import SciMLBase: OptimizationProblem, OptimizationFunction, AbstractADType, ObjSense,

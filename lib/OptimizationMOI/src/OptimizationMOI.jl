@@ -324,6 +324,15 @@ function __moi_status_to_ReturnCode(status::MOI.TerminationStatusCode)
     end
 end
 
+function _create_integer_domain(id::Int, lb::Nothing, ub::Nothing)
+    MOI.Integer()
+end
+
+function _create_integer_domain(id::Int, lb::Vector, ub::Vector)
+    (iszero(lb[id]) && isone(ub[id])) && return MOI.ZeroOne()
+    return _create_integer_domain(id, nothing, nothing)
+end
+
 function SciMLBase.__solve(prob::OptimizationProblem,
                            opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
                            maxiters::Union{Number, Nothing} = nothing,
@@ -363,7 +372,8 @@ function SciMLBase.__solve(prob::OptimizationProblem,
         @assert eachindex(prob.int) == Base.OneTo(num_variables)
         for i in 1:num_variables
             if prob.int[i]
-                MOI.add_constraint(opt_setup, θ[i], MOI.ZeroOne())
+                MOI.add_constraint(opt_setup, θ[i],
+                                   _create_integer_domain(i, prob.lb, prob.ub))
             end
         end
     end
