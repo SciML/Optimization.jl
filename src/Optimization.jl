@@ -17,6 +17,7 @@ export ObjSense, MaxSense, MinSense
 
 include("utils.jl")
 include("function/function.jl")
+include("function/enzyme.jl")
 
 function __init__()
     # AD backends
