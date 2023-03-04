@@ -43,4 +43,19 @@ using Test
     sol = solve(prob, NLopt.G_MLSL_LDS(), local_method = NLopt.LD_LBFGS(),
                 local_maxiters = 10000, maxiters = 10000, population = 10)
     @test 10 * sol.objective < l1
+
+    @testset "cache" begin
+        objective(x, p) = (p[1] - x[1])^2
+        x0 = zeros(1)
+        p = [1.0]
+
+        prob = OptimizationProblem(objective, x0, p)
+        cache = Optimization.init(prob, NLopt.Opt(:LN_BOBYQA, 2))
+        sol = Optimization.solve!(cache)
+        @test sol.u ≈ 1.0
+
+        cache = Optimization.reinit!(cache; p = [2.0])
+        sol = Optimization.solve!(cache)
+        @test sol.u ≈ 2.0
+    end
 end

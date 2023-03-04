@@ -36,6 +36,35 @@ function NLoptOptimizationCache(prob::OptimizationProblem, opt; progress, kwargs
                                   NamedTuple(kwargs))
 end
 
+SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
+SciMLBase.has_reinit(cache::NLoptOptimizationCache) = true
+function SciMLBase.reinit!(cache::NLoptOptimizationCache; p = missing, u0 = missing)
+    if p === missing && u0 === missing
+        p, u0 = cache.p, cache.u0
+    else # at least one of them has a value
+        if p === missing
+            p = cache.p
+        end
+        if u0 === missing
+            u0 = cache.u0
+        end
+        if (eltype(p) <: Pair && !isempty(p)) || (eltype(u0) <: Pair && !isempty(u0)) # one is a non-empty symbolic map
+            hasproperty(cache.f, :sys) && hasfield(typeof(cache.f.sys), :ps) ||
+                throw(ArgumentError("This cache does not support symbolic maps with `remake`, i.e. it does not have a symbolic origin." *
+                                    " Please use `remake` with the `p` keyword argument as a vector of values, paying attention to parameter order."))
+            hasproperty(cache.f, :sys) && hasfield(typeof(cache.f.sys), :states) ||
+                throw(ArgumentError("This cache does not support symbolic maps with `remake`, i.e. it does not have a symbolic origin." *
+                                    " Please use `remake` with the `u0` keyword argument as a vector of values, paying attention to state order."))
+            p, u0 = SciMLBase.process_p_u0_symbolic(cache, p, u0)
+        end
+    end
+
+    cache.reinit_cache.p = p
+    cache.reinit_cache.u0 = u0
+
+    return cache
+end
+
 function __map_optimizer_args!(cache::NLoptOptimizationCache, opt::NLopt.Opt;
                                callback = nothing,
                                maxiters::Union{Number, Nothing} = nothing,
@@ -104,8 +133,6 @@ function __map_optimizer_args!(cache::NLoptOptimizationCache, opt::NLopt.Opt;
 
     return nothing
 end
-
-SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 
 function __nlopt_status_to_ReturnCode(status::Symbol)
     if status in Symbol.([

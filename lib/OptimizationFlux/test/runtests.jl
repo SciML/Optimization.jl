@@ -17,4 +17,19 @@ using Test
     prob = OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, Flux.ADAM(), maxiters = 1000, progress = false)
     @test 10 * sol.objective < l1
+
+    @testset "cache" begin
+        objective(x, p) = (p[1] - x[1])^2
+        x0 = zeros(1)
+        p = [1.0]
+
+        prob = OptimizationProblem(objective, x0, p)
+        cache = Optimization.init(prob, Flux.ADAM())
+        sol = Optimization.solve!(cache)
+        @test sol.u ≈ 1.0
+
+        cache = Optimization.reinit!(cache; p = [2.0])
+        sol = Optimization.solve!(cache)
+        @test sol.u ≈ 2.0
+    end
 end
