@@ -52,10 +52,10 @@ using Test
         prob = OptimizationProblem(objective, x0, p)
         cache = Optimization.init(prob, NLopt.Opt(:LN_BOBYQA, 2))
         sol = Optimization.solve!(cache)
-        @test sol.u ≈ 1.0
+        @test sol.u ≈ [1.0]
 
         cache = Optimization.reinit!(cache; p = [2.0])
         sol = Optimization.solve!(cache)
-        @test sol.u ≈ 2.0
+        @test sol.u ≈ [2.0]
     end
 end
