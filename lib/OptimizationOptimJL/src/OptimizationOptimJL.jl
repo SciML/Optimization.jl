@@ -46,7 +46,8 @@ function OptimJLOptimizationCache(prob::OptimizationProblem, opt, data; progress
     opt isa Optim.ConstrainedOptimizer && f.cons_j === nothing &&
         error("This optimizer requires derivative definitions for nonlinear constraints. If the problem does not have nonlinear constraints, choose a different optimizer. Otherwise define the derivative for cons using OptimizationFunction either directly or automatically generate them with one of the autodiff backends")
 
-    return OptimJLOptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons, prob.ucons, prob.sense,
+    return OptimJLOptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons,
+                                    prob.ucons, prob.sense,
                                     opt, data, progress, NamedTuple(kwargs))
 end
 
@@ -123,17 +124,18 @@ function SciMLBase.__init(prob::OptimizationProblem, opt::Optim.AbstractOptimize
                                     kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P}) where {
-                                                                                              F,
-                                                                                              RC,
-                                                                                              LB,
-                                                                                              UB, LC, UC,
-                                                                                              S,
-                                                                                              O <:
-                                                                                              Optim.AbstractOptimizer,
-                                                                                              D,
-                                                                                              P
-                                                                                              }
+function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P
+                                                           }) where {
+                                                                     F,
+                                                                     RC,
+                                                                     LB,
+                                                                     UB, LC, UC,
+                                                                     S,
+                                                                     O <:
+                                                                     Optim.AbstractOptimizer,
+                                                                     D,
+                                                                     P
+                                                                     }
     local x, cur, state
 
     cur, state = iterate(cache.data)
@@ -223,20 +225,21 @@ function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC
                              solve_time = t1 - t0)
 end
 
-function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P}) where {
-                                                                                              F,
-                                                                                              RC,
-                                                                                              LB,
-                                                                                              UB, LC, UC,
-                                                                                              S,
-                                                                                              O <:
-                                                                                              Union{
-                                                                                                    Optim.Fminbox,
-                                                                                                    Optim.SAMIN
-                                                                                                    },
-                                                                                              D,
-                                                                                              P
-                                                                                              }
+function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P
+                                                           }) where {
+                                                                     F,
+                                                                     RC,
+                                                                     LB,
+                                                                     UB, LC, UC,
+                                                                     S,
+                                                                     O <:
+                                                                     Union{
+                                                                           Optim.Fminbox,
+                                                                           Optim.SAMIN
+                                                                           },
+                                                                     D,
+                                                                     P
+                                                                     }
     local x, cur, state
 
     cur, state = iterate(cache.data)
@@ -298,17 +301,18 @@ function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC
                              original = opt_res, retcode = opt_ret, solve_time = t1 - t0)
 end
 
-function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P}) where {
-                                                                                              F,
-                                                                                              RC,
-                                                                                              LB,
-                                                                                              UB, LC, UC,
-                                                                                              S,
-                                                                                              O <:
-                                                                                              Optim.ConstrainedOptimizer,
-                                                                                              D,
-                                                                                              P
-                                                                                              }
+function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P
+                                                           }) where {
+                                                                     F,
+                                                                     RC,
+                                                                     LB,
+                                                                     UB, LC, UC,
+                                                                     S,
+                                                                     O <:
+                                                                     Optim.ConstrainedOptimizer,
+                                                                     D,
+                                                                     P
+                                                                     }
     local x, cur, state
 
     cur, state = iterate(cache.data)
