@@ -69,7 +69,7 @@ sol = solve(prob, IPNewton())
 prob = OptimizationProblem(optf, x0, _p, lcons = [0.5], ucons = [0.5],
                            lb = [-500.0, -500.0], ub = [50.0, 50.0])
 sol = solve(prob, IPNewton()) # Notice now that x[1]^2 + x[2]^2 ≈ 0.5:
-# cons(sol.minimizer, _p) = 0.49999999999999994
+# cons(sol.u, _p) = 0.49999999999999994
 
 function con_c(res, x, p)
     res .= [x[1]^2 + x[2]^2]
@@ -77,7 +77,7 @@ end
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = con_c)
 prob = OptimizationProblem(optf, x0, _p, lcons = [-Inf], ucons = [0.25^2])
-sol = solve(prob, IPNewton()) # -Inf < cons_circ(sol.minimizer, _p) = 0.25^2
+sol = solve(prob, IPNewton()) # -Inf < cons_circ(sol.u, _p) = 0.25^2
 
 function con2_c(res, x, p)
     res .= [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
