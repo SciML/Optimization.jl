@@ -1,6 +1,6 @@
 name = "Optimization"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-version = "3.12.0"
+version = "3.12.1"
 
 [deps]
 ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
