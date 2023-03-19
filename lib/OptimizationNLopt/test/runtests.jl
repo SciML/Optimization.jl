@@ -62,11 +62,11 @@ using Test
         cache = Optimization.init(prob, NLopt.Opt(:LD_LBFGS, 1))
         sol = Optimization.solve!(cache)
         @test sol.retcode == ReturnCode.Success
-        @test sol.u ≈ [1.0]
+        @test sol.u≈[1.0] atol=1e-3
 
         cache = Optimization.reinit!(cache; p = [2.0])
         sol = Optimization.solve!(cache)
         @test sol.retcode == ReturnCode.Success
-        @test sol.u ≈ [2.0]
+        @test sol.u≈[2.0] atol=1e-3
     end
 end

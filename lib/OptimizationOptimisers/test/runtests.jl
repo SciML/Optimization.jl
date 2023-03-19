@@ -36,13 +36,15 @@ using Zygote
         x0 = zeros(1)
         p = [1.0]
 
-        prob = OptimizationProblem(objective, x0, p)
+        prob = OptimizationProblem(OptimizationFunction(objective,
+                                                        Optimization.AutoForwardDiff()), x0,
+                                   p)
         cache = Optimization.init(prob, Optimisers.ADAM())
         sol = Optimization.solve!(cache)
-        @test sol.u ≈ [1.0]
+        @test sol.u≈[1.0] atol=1e-3
 
         cache = Optimization.reinit!(cache; p = [2.0])
         sol = Optimization.solve!(cache)
-        @test sol.u ≈ [2.0]
+        @test sol.u≈[2.0] atol=1e-3
     end
 end

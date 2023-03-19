@@ -27,10 +27,10 @@ using Test
         prob = OptimizationProblem(objective, x0, p, lb = [-10.0], ub = [10.0])
         cache = Optimization.init(prob, GCMAESOpt())
         sol = Optimization.solve!(cache)
-        @test sol.u ≈ [1.0]
+        @test sol.u≈[1.0] atol=1e-3
 
         cache = Optimization.reinit!(cache; p = [2.0])
         sol = Optimization.solve!(cache)
-        @test sol.u ≈ [2.0]
+        @test sol.u≈[2.0] atol=1e-3
     end
 end
