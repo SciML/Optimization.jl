@@ -59,14 +59,14 @@ using Test
         p = [1.0]
 
         prob = OptimizationProblem(objective, x0, p)
-    cache = Optimization.init(prob, NLopt.Opt(:LD_LBFGS, 1))
-    sol = Optimization.solve!(cache)
-    @test sol.retcode == ReturnCode.Success
-    @test sol.u ≈ [1.0]
+        cache = Optimization.init(prob, NLopt.Opt(:LD_LBFGS, 1))
+        sol = Optimization.solve!(cache)
+        @test sol.retcode == ReturnCode.Success
+        @test sol.u ≈ [1.0]
 
-    cache = Optimization.reinit!(cache; p = [2.0])
-    sol = Optimization.solve!(cache)
-    @test sol.retcode == ReturnCode.Success
-    @test sol.u ≈ [2.0]
+        cache = Optimization.reinit!(cache; p = [2.0])
+        sol = Optimization.solve!(cache)
+        @test sol.retcode == ReturnCode.Success
+        @test sol.u ≈ [2.0]
     end
 end

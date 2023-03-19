@@ -125,7 +125,7 @@ using Test
         p = [1.0]
 
         prob = OptimizationProblem(objective, x0, p)
-        cache = Optimization.init(prob, Optim.BFGS())
+        cache = Optimization.init(prob, Optim.NelderMead())
         sol = Optimization.solve!(cache)
         @test sol.u ≈ [1.0]
 

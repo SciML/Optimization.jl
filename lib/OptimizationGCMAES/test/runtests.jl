@@ -24,7 +24,7 @@ using Test
         x0 = zeros(1)
         p = [1.0]
 
-        prob = OptimizationProblem(objective, x0, p)
+        prob = OptimizationProblem(objective, x0, p), lb = [-10.0], ub = [10.0]
         cache = Optimization.init(prob, GCMAESOpt())
         sol = Optimization.solve!(cache)
         @test sol.u ≈ [1.0]
