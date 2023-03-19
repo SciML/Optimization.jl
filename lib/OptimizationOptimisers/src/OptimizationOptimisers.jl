@@ -66,7 +66,7 @@ end
 
 function SciMLBase.__init(prob::OptimizationProblem, opt::OptimisersOptimizers,
                           data = Optimization.DEFAULT_DATA;
-                          maxiters::Number = 1, callback = (args...) -> (false),
+                          maxiters::Number = 0, callback = (args...) -> (false),
                           progress = false, save_best = true, kwargs...)
     return OptimisersOptimizationCache(prob, opt, data; maxiters, callback, progress,
                                        save_best, kwargs...)

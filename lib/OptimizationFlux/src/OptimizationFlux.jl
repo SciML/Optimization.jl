@@ -57,7 +57,7 @@ end
 
 function SciMLBase.__init(prob::OptimizationProblem, opt::Flux.Optimise.AbstractOptimiser,
                           data = Optimization.DEFAULT_DATA;
-                          maxiters::Number = 1, callback = (args...) -> (false),
+                          maxiters::Number = 0, callback = (args...) -> (false),
                           progress = false, save_best = true, kwargs...)
     return FluxOptimizationCache(prob, opt, data; maxiters, callback, progress, save_best,
                                  kwargs...)

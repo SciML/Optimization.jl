@@ -39,7 +39,7 @@ using Zygote
         prob = OptimizationProblem(OptimizationFunction(objective,
                                                         Optimization.AutoForwardDiff()), x0,
                                    p)
-        cache = Optimization.init(prob, Optimisers.ADAM())
+        cache = Optimization.init(prob, Optimisers.ADAM(), maxiters = 1000)
         sol = Optimization.solve!(cache)
         @test sol.u≈[1.0] atol=1e-3
 
