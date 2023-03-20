@@ -28,7 +28,7 @@ function instantiate_function(f::OptimizationFunction{true}, x,
             vdby = Tuple(zeros(1) for i in eachindex(θ))
 
             Enzyme.autodiff(Forward,
-                            (θ, y) -> Enzyme.autodiff_deferred(_f, θ, y),
+                            (θ, y) -> Enzyme.autodiff_deferred(Reverse, _f, θ, y),
                             BatchDuplicated(Duplicated(θ, bθ), Duplicated.(vdθ, vdbθ)),
                             BatchDuplicated(Duplicated(y, by), Duplicated.(vdy, vdby)))
 
@@ -70,27 +70,21 @@ function instantiate_function(f::OptimizationFunction{true}, x,
     end
 
     if cons !== nothing && f.cons_h === nothing
-        fncs = [(x,y) -> (y .= cons_oop(x)[i]; return nothing;) for i in 1:num_cons]
+        fncs = map(1:num_cons) do i
+            function (x)
+                res = zeros(eltype(x), num_cons)
+                f.cons(res, x, p)
+                return res[i]
+            end
+        end
+        function f2(fnc, x)
+            dx = zeros(length(x))
+            Enzyme.autodiff_deferred(Reverse, fnc, Duplicated(x, dx))
+            dx
+        end
         cons_h = function (res, θ)
             for i in 1:num_cons
-                y = zeros(1)
-
-                vdy = Tuple(zeros(1) for i in eachindex(θ))
-                vdθ = Tuple((Array(r) for r in eachrow(I(length(θ)) * 1.0)))
-
-                bθ = zeros(length(θ))
-                by = [1.0]
-                vdbθ = Tuple(zeros(length(θ)) for i in eachindex(θ))
-                vdby = Tuple(zeros(1) for i in eachindex(θ))
-
-                Enzyme.autodiff(Forward,
-                                (θ, y) -> Enzyme.autodiff_deferred(fncs[i], θ, y),
-                                BatchDuplicated(Duplicated(θ, bθ), Duplicated.(vdθ, vdbθ)),
-                                BatchDuplicated(Duplicated(y, by), Duplicated.(vdy, vdby)))
-
-                for j in eachindex(θ)
-                    res[i][j, :] .= vdbθ[j]
-                end
+                res[i] .= Enzyme.jacobian(Forward, x -> f2(fncs[i], x), θ)
             end
         end
     else
