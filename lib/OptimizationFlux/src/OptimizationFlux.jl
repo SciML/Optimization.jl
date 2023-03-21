@@ -76,7 +76,7 @@ function SciMLBase.__solve(cache::FluxOptimizationCache)
     # this is a Flux optimizer
     θ = copy(cache.u0)
     G = copy(θ)
-    opt = cache.opt
+    opt = deepcopy(cache.opt)
 
     local x, min_err, min_θ
     min_err = typemax(eltype(cache.u0)) #dummy variables
