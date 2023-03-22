@@ -16,7 +16,7 @@ using Zygote
     @test 10 * sol.objective < l1
 
     prob = OptimizationProblem(optprob, x0, _p)
-    sol = solve(prob, Optimisers.ADAM(), maxiters = 1000, progress = false)
+    sol = solve(prob, Optimisers.Adam(), maxiters = 1000, progress = false)
     @test 10 * sol.objective < l1
 
     x0 = 2 * ones(ComplexF64, 2)
@@ -28,7 +28,7 @@ using Zygote
 
     prob = OptimizationProblem(optprob, x0, _p)
 
-    sol = solve(prob, Optimisers.ADAM(), maxiters = 1000)
+    sol = solve(prob, Optimisers.Adam(), maxiters = 1000)
     @test 10 * sol.objective < l1
 
     @testset "cache" begin
@@ -39,7 +39,7 @@ using Zygote
         prob = OptimizationProblem(OptimizationFunction(objective,
                                                         Optimization.AutoForwardDiff()), x0,
                                    p)
-        cache = Optimization.init(prob, Optimisers.ADAM(), maxiters = 1000)
+        cache = Optimization.init(prob, Optimisers.Adam(0.1), maxiters = 1000)
         sol = Optimization.solve!(cache)
         @test sol.u≈[1.0] atol=1e-3
 
