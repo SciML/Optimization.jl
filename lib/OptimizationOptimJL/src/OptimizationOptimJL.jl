@@ -13,7 +13,7 @@ SciMLBase.allowsbounds(opt::Optim.SimulatedAnnealing) = false
 SciMLBase.requiresbounds(opt::Optim.Fminbox) = true
 SciMLBase.requiresbounds(opt::Optim.SAMIN) = true
 
-struct OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P} <:
+struct OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C} <:
        SciMLBase.AbstractOptimizationCache
     f::F
     reinit_cache::RC
@@ -25,6 +25,7 @@ struct OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P} <:
     opt::O
     data::D
     progress::P
+    callback::C
     solver_args::NamedTuple
 end
 
@@ -35,7 +36,7 @@ function Base.getproperty(cache::OptimJLOptimizationCache, x::Symbol)
     return getfield(cache, x)
 end
 
-function OptimJLOptimizationCache(prob::OptimizationProblem, opt, data; progress, kwargs...)
+function OptimJLOptimizationCache(prob::OptimizationProblem, opt, data; progress, callback, kwargs...)
     reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons)
@@ -48,7 +49,7 @@ function OptimJLOptimizationCache(prob::OptimizationProblem, opt, data; progress
 
     return OptimJLOptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons,
                                     prob.ucons, prob.sense,
-                                    opt, data, progress, NamedTuple(kwargs))
+                                    opt, data, progress, callback, NamedTuple(kwargs))
 end
 
 SciMLBase.supports_opt_cache_interface(opt::Optim.AbstractOptimizer) = true
@@ -169,9 +170,9 @@ function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC
 
     function _cb(trace)
         cb_call = cache.opt isa Optim.NelderMead ?
-                  cache.solver_args.callback(decompose_trace(trace).metadata["centroid"],
+                  cache.callback(decompose_trace(trace).metadata["centroid"],
                                              x...) :
-                  cache.solver_args.callback(decompose_trace(trace).metadata["x"], x...)
+                  cache.callback(decompose_trace(trace).metadata["x"], x...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -273,9 +274,9 @@ function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC
 
     function _cb(trace)
         cb_call = !(cache.opt isa Optim.SAMIN) && cache.opt.method == Optim.NelderMead() ?
-                  cache.solver_args.callback(decompose_trace(trace).metadata["centroid"],
+                  cache.callback(decompose_trace(trace).metadata["centroid"],
                                              x...) :
-                  cache.solver_args.callback(decompose_trace(trace).metadata["x"], x...)
+                  cache.callback(decompose_trace(trace).metadata["x"], x...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -345,7 +346,7 @@ function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC
     cur, state = iterate(cache.data)
 
     function _cb(trace)
-        cb_call = cache.solver_args.callback(decompose_trace(trace).metadata["x"], x...)
+        cb_call = cache.callback(decompose_trace(trace).metadata["x"], x...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
