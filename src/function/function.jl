@@ -73,9 +73,9 @@ end
 
 function instantiate_function(f, cache::ReInitCache, ::AbstractADType,
                               num_cons = 0)
-    grad = f.grad === nothing ? nothing : (G, x) -> f.grad(G, x, cache.p)
-    hess = f.hess === nothing ? nothing : (H, x) -> f.hess(H, x, cache.p)
-    hv = f.hv === nothing ? nothing : (H, x, v) -> f.hv(H, x, v, cache.p)
+    grad = f.grad === nothing ? nothing : (G, x, args...) -> f.grad(G, x, cache.p, args...)
+    hess = f.hess === nothing ? nothing : (H, x, args...) -> f.hess(H, x, cache.p, args...)
+    hv = f.hv === nothing ? nothing : (H, x, v, args...) -> f.hv(H, x, v, cache.p, args...)
     cons = f.cons === nothing ? nothing : (res, x) -> f.cons(res, x, cache.p)
     cons_j = f.cons_j === nothing ? nothing : (res, x) -> f.cons_j(res, x, cache.p)
     cons_h = f.cons_h === nothing ? nothing : (res, x) -> f.cons_h(res, x, cache.p)

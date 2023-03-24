@@ -59,7 +59,7 @@ optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, bat
                               Optimization.AutoZygote())
 optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
-res1 = Optimization.solve(optprob, Optimisers.ADAM(0.05), ncycle(train_loader, numEpochs),
+res1 = Optimization.solve(optprob, Optimisers.Adam(0.05), ncycle(train_loader, numEpochs),
                           callback = callback, maxiters = numEpochs)
 @test 10res1.objective < l1
 
@@ -68,7 +68,7 @@ optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, bat
                               Optimization.AutoForwardDiff())
 optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
-res1 = Optimization.solve(optprob, Optimisers.ADAM(0.05), ncycle(train_loader, numEpochs),
+res1 = Optimization.solve(optprob, Optimisers.Adam(0.05), ncycle(train_loader, numEpochs),
                           callback = callback, maxiters = numEpochs)
 @test 10res1.objective < l1
 
@@ -77,7 +77,7 @@ optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, bat
                               Optimization.AutoModelingToolkit())
 optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
-@test_broken res1 = Optimization.solve(optprob, Optimisers.ADAM(0.05),
+@test_broken res1 = Optimization.solve(optprob, Optimisers.Adam(0.05),
                                        ncycle(train_loader, numEpochs),
                                        callback = callback, maxiters = numEpochs)
 # @test 10res1.objective < l1
@@ -96,6 +96,6 @@ optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, bat
                               grad = loss_grad)
 optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
-res1 = Optimization.solve(optprob, Optimisers.ADAM(0.05), ncycle(train_loader, numEpochs),
+res1 = Optimization.solve(optprob, Optimisers.Adam(0.05), ncycle(train_loader, numEpochs),
                           callback = callback, maxiters = numEpochs)
 @test 10res1.objective < l1
