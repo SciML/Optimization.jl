@@ -109,11 +109,11 @@ function __map_optimizer_args!(cache::NLoptOptimizationCache, opt::NLopt.Opt;
     end
     
     if cache.ub !== nothing
-        NLopt.upper_bounds!(opt, cache.ub)
+        opt.upper_bounds = cache.ub
     end
 
     if cache.lb !== nothing
-        NLopt.lower_bounds!(opt, cache.lb)
+        opt.lower_bounds = cache.lb
     end
 
     if !(isnothing(maxiters))
