@@ -107,7 +107,7 @@ function __map_optimizer_args!(cache::NLoptOptimizationCache, opt::NLopt.Opt;
     for j in kwargs
         eval(Meta.parse("NLopt." * string(j.first) * "!"))(opt, j.second)
     end
-
+    
     if cache.ub !== nothing
         NLopt.upper_bounds!(opt, cache.ub)
     end
@@ -140,6 +140,7 @@ function __nlopt_status_to_ReturnCode(status::Symbol)
                              NLopt.STOPVAL_REACHED,
                              NLopt.FTOL_REACHED,
                              NLopt.XTOL_REACHED,
+                             NLopt.ROUNDOFF_LIMITED,
                          ])
         return ReturnCode.Success
     elseif status == Symbol(NLopt.MAXEVAL_REACHED)
@@ -150,7 +151,6 @@ function __nlopt_status_to_ReturnCode(status::Symbol)
                                  NLopt.OUT_OF_MEMORY,
                                  NLopt.INVALID_ARGS,
                                  NLopt.FAILURE,
-                                 NLopt.ROUNDOFF_LIMITED,
                                  NLopt.FORCED_STOP,
                              ])
         return ReturnCode.Failure
@@ -226,6 +226,12 @@ function SciMLBase.__solve(cache::NLoptOptimizationCache)
     (minf, minx, ret) = NLopt.optimize(opt_setup, cache.u0)
     t1 = time()
     retcode = __nlopt_status_to_ReturnCode(ret)
+    
+    if retcode == ReturnCode.Failure
+        @warn "NLopt failed to converge: $(ret)"
+        minx = fill(NaN, length(prob.u0))
+        minf = NaN
+    end
     SciMLBase.build_solution(cache, cache.opt, minx,
                              minf; original = opt_setup, retcode = retcode,
                              solve_time = t1 - t0)

@@ -20,11 +20,13 @@ using Test
     @test sol.retcode == ReturnCode.Success
     @test 10 * sol.objective < l1
 
+    prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+
     sol = solve(prob, NLopt.Opt(:LD_LBFGS, 2))
     @test sol.retcode == ReturnCode.Success
     @test 10 * sol.objective < l1
 
-    prob = OptimizationProblem(optprob, x0, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+
     sol = solve(prob, NLopt.Opt(:LD_LBFGS, 2))
     @test sol.retcode == ReturnCode.Success
     @test 10 * sol.objective < l1
@@ -34,7 +36,7 @@ using Test
     @test sol.retcode == ReturnCode.Success
     @test 10 * sol.objective < l1
 
-    prob = OptimizationProblem(optprob, x0)
+    prob = OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, NLopt.LN_BOBYQA())
     @test sol.retcode == ReturnCode.Success
     @test 10 * sol.objective < l1
@@ -43,7 +45,7 @@ using Test
     @test sol.retcode == ReturnCode.Success
     @test 10 * sol.objective < l1
 
-    prob = OptimizationProblem(optprob, x0, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+    prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
     sol = solve(prob, NLopt.LD_LBFGS())
     @test sol.retcode == ReturnCode.Success
     @test 10 * sol.objective < l1
