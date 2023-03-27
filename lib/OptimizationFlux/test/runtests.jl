@@ -11,10 +11,27 @@ using Test
 
     prob = OptimizationProblem(optprob, x0, _p)
 
-    sol = Optimization.solve(prob, Flux.ADAM(0.1), maxiters = 1000)
+    sol = Optimization.solve(prob, Flux.Adam(0.1), maxiters = 1000)
     @test 10 * sol.objective < l1
 
     prob = OptimizationProblem(optprob, x0, _p)
-    sol = solve(prob, Flux.ADAM(), maxiters = 1000, progress = false)
+    sol = solve(prob, Flux.Adam(), maxiters = 1000, progress = false)
     @test 10 * sol.objective < l1
+
+    @testset "cache" begin
+        objective(x, p) = (p[1] - x[1])^2
+        x0 = zeros(1)
+        p = [1.0]
+
+        prob = OptimizationProblem(OptimizationFunction(objective,
+                                                        Optimization.AutoForwardDiff()), x0,
+                                   p)
+        cache = Optimization.init(prob, Flux.Adam(0.1), maxiters = 1000)
+        sol = Optimization.solve!(cache)
+        @test sol.u≈[1.0] atol=1e-3
+
+        cache = Optimization.reinit!(cache; p = [2.0])
+        sol = Optimization.solve!(cache)
+        @test sol.u≈[2.0] atol=1e-3
+    end
 end

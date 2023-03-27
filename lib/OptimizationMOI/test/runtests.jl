@@ -22,9 +22,9 @@ function _test_sparse_derivatives_hs071(backend, optimizer)
     sol = solve(prob, optimizer)
     @test isapprox(sol.objective, 17.014017145179164; atol = 1e-6)
     x = [1.0, 4.7429996418092970, 3.8211499817883077, 1.3794082897556983]
-    @test isapprox(sol.minimizer, x; atol = 1e-6)
-    @test prod(sol.minimizer) >= 25.0 - 1e-6
-    @test isapprox(sum(sol.minimizer .^ 2), 40.0; atol = 1e-6)
+    @test isapprox(sol.u, x; atol = 1e-6)
+    @test prod(sol.u) >= 25.0 - 1e-6
+    @test isapprox(sum(sol.u .^ 2), 40.0; atol = 1e-6)
     return
 end
 
