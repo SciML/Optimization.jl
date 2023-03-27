@@ -33,7 +33,7 @@ using Test
 
     sol = solve(prob, NLopt.Opt(:G_MLSL_LDS, 2), local_method = NLopt.Opt(:LD_LBFGS, 2),
                 maxiters = 10000)
-    @test sol.retcode == ReturnCode.Success
+    @test sol.retcode == ReturnCode.MaxIters
     @test 10 * sol.objective < l1
 
     prob = OptimizationProblem(optprob, x0, _p)
@@ -52,7 +52,7 @@ using Test
 
     sol = solve(prob, NLopt.G_MLSL_LDS(), local_method = NLopt.LD_LBFGS(),
                 local_maxiters = 10000, maxiters = 10000, population = 10)
-    @test sol.retcode == ReturnCode.Success
+    @test sol.retcode == ReturnCode.MaxIters
     @test 10 * sol.objective < l1
 
     @testset "cache" begin
