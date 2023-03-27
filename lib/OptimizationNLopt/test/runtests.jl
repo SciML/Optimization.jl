@@ -60,7 +60,8 @@ using Test
         x0 = zeros(1)
         p = [1.0]
 
-        prob = OptimizationProblem(objective, x0, p)
+        optf = OptimizationFunction(objective, Optimization.AutoZygote())
+        prob = OptimizationProblem(optf, x0, p)
         cache = Optimization.init(prob, NLopt.Opt(:LD_LBFGS, 1))
         sol = Optimization.solve!(cache)
         @test sol.retcode == ReturnCode.Success
