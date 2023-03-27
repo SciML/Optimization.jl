@@ -1263,9 +1263,9 @@ version = "0.1.3"
 
 [[deps.OptimizationNLopt]]
 deps = ["NLopt", "Optimization", "Reexport"]
-git-tree-sha1 = "ab8939db0f2ca46dc4115936eacf9de609ecb234"
+git-tree-sha1 = "54311215da1fab6e81aabdbd91b4ffbbbca1b33f"
 uuid = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
-version = "0.1.2"
+version = "0.1.3"
 
 [[deps.OptimizationNOMAD]]
 deps = ["NOMAD", "Optimization", "Reexport"]
@@ -1292,9 +1292,9 @@ uuid = "3d669222-0d7d-4eb9-8a9f-d8528b0d9b91"
 version = "0.1.2"
 
 [[deps.OrderedCollections]]
-git-tree-sha1 = "85f8e6578bf1f9ee0d11e7bb1b1456435479d47c"
+git-tree-sha1 = "d78db6df34313deaca15c5c0b9ff562c704fe1ab"
 uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
-version = "1.4.1"
+version = "1.5.0"
 
 [[deps.OrdinaryDiffEq]]
 deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FiniteDiff", "ForwardDiff", "FunctionWrappersWrappers", "IfElse", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLNLSolve", "SimpleNonlinearSolve", "SimpleUnPack", "SnoopPrecompile", "SparseArrays", "SparseDiffTools", "StaticArrayInterface", "StaticArrays", "TruncatedStacktraces"]
@@ -1869,9 +1869,9 @@ version = "0.1.2"
 
 [[deps.VectorizationBase]]
 deps = ["ArrayInterface", "CPUSummary", "HostCPUFeatures", "IfElse", "LayoutPointers", "Libdl", "LinearAlgebra", "SIMDTypes", "Static", "StaticArrayInterface"]
-git-tree-sha1 = "a07b279148653974edd945c8c8e09af156bcb46e"
+git-tree-sha1 = "f78fc4c3abbf5ab65108a41664e88fb131ab8946"
 uuid = "3d5dd08c-fd9d-11e8-17fa-ed2836048c2f"
-version = "0.21.62"
+version = "0.21.63"
 
 [[deps.VertexSafeGraphs]]
 deps = ["Graphs"]
