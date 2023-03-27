@@ -36,7 +36,8 @@ function Base.getproperty(cache::OptimJLOptimizationCache, x::Symbol)
     return getfield(cache, x)
 end
 
-function OptimJLOptimizationCache(prob::OptimizationProblem, opt, data; progress, callback, kwargs...)
+function OptimJLOptimizationCache(prob::OptimizationProblem, opt, data; progress, callback,
+                                  kwargs...)
     reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons)
@@ -171,7 +172,7 @@ function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC
     function _cb(trace)
         cb_call = cache.opt isa Optim.NelderMead ?
                   cache.callback(decompose_trace(trace).metadata["centroid"],
-                                             x...) :
+                                 x...) :
                   cache.callback(decompose_trace(trace).metadata["x"], x...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
@@ -275,7 +276,7 @@ function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC
     function _cb(trace)
         cb_call = !(cache.opt isa Optim.SAMIN) && cache.opt.method == Optim.NelderMead() ?
                   cache.callback(decompose_trace(trace).metadata["centroid"],
-                                             x...) :
+                                 x...) :
                   cache.callback(decompose_trace(trace).metadata["x"], x...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")

@@ -107,7 +107,7 @@ function __map_optimizer_args!(cache::NLoptOptimizationCache, opt::NLopt.Opt;
     for j in kwargs
         eval(Meta.parse("NLopt." * string(j.first) * "!"))(opt, j.second)
     end
-    
+
     if cache.ub !== nothing
         opt.upper_bounds = cache.ub
     end
@@ -226,7 +226,7 @@ function SciMLBase.__solve(cache::NLoptOptimizationCache)
     (minf, minx, ret) = NLopt.optimize(opt_setup, cache.u0)
     t1 = time()
     retcode = __nlopt_status_to_ReturnCode(ret)
-    
+
     if retcode == ReturnCode.Failure
         @warn "NLopt failed to converge: $(ret)"
         minx = fill(NaN, length(cache.u0))

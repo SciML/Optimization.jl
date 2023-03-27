@@ -26,7 +26,6 @@ using Test
     @test sol.retcode == ReturnCode.Success
     @test 10 * sol.objective < l1
 
-
     sol = solve(prob, NLopt.Opt(:LD_LBFGS, 2))
     @test sol.retcode == ReturnCode.Success
     @test 10 * sol.objective < l1
