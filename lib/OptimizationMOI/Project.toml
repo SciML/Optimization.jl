@@ -17,6 +17,9 @@ Optimization = "3.9"
 Reexport = "1.2"
 julia = "1"
 
+[weakdeps]
+Ipopt_jll = "9cc047cb-c261-5740-88fc-0cf96f7bdcc7"
+
 [extras]
 Juniper = "2ddba703-00a4-53a7-87a5-e8b9971dde84"
 AmplNLWriter = "7c4d4715-977e-5154-bfe0-e096adeac482"
