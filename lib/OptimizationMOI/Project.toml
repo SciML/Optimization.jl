@@ -1,13 +1,14 @@
 name = "OptimizationMOI"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.1.10"
+version = "0.1.11"
 
 [deps]
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+Ipopt_jll = "9cc047cb-c261-5740-88fc-0cf96f7bdcc7"
 
 [compat]
 Ipopt_jll = "=300.1400.400"
@@ -16,9 +17,6 @@ Juniper = "0.9"
 Optimization = "3.9"
 Reexport = "1.2"
 julia = "1"
-
-[weakdeps]
-Ipopt_jll = "9cc047cb-c261-5740-88fc-0cf96f7bdcc7"
 
 [extras]
 Juniper = "2ddba703-00a4-53a7-87a5-e8b9971dde84"
