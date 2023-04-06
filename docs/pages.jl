@@ -31,5 +31,6 @@ pages = ["index.md",
         "Optim.jl" => "optimization_packages/optim.md",
         "Optimisers.jl" => "optimization_packages/optimisers.md",
         "QuadDIRECT.jl" => "optimization_packages/quaddirect.md",
+        "SpeedMapping.jl" => "optimization_packages/speedmapping.md",
     ],
 ]
