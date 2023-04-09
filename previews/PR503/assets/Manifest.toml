@@ -1239,9 +1239,9 @@ version = "0.1.2"
 
 [[deps.OptimizationGCMAES]]
 deps = ["GCMAES", "Optimization", "Reexport"]
-git-tree-sha1 = "a4f1c94dde6a09e224f82e1b58fad0981af52b19"
+git-tree-sha1 = "562e502f20bcbd74def422f6b8e0be286401e0ab"
 uuid = "6f0a0517-dbc2-4a7a-8a20-99ae7f27e911"
-version = "0.1.2"
+version = "0.1.3"
 
 [[deps.OptimizationMOI]]
 deps = ["Ipopt_jll", "MathOptInterface", "Optimization", "Reexport", "SparseArrays"]
@@ -1263,9 +1263,9 @@ version = "0.1.3"
 
 [[deps.OptimizationNLopt]]
 deps = ["NLopt", "Optimization", "Reexport"]
-git-tree-sha1 = "54311215da1fab6e81aabdbd91b4ffbbbca1b33f"
+git-tree-sha1 = "88d2bab3ed05ea9a142db50f977f9e6d89c61eb9"
 uuid = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
-version = "0.1.3"
+version = "0.1.4"
 
 [[deps.OptimizationNOMAD]]
 deps = ["NOMAD", "Optimization", "Reexport"]
@@ -1275,9 +1275,9 @@ version = "0.1.2"
 
 [[deps.OptimizationOptimJL]]
 deps = ["Optim", "Optimization", "Reexport", "SparseArrays"]
-git-tree-sha1 = "8de765af24432390000bc39e1efae51cf4dbdc5c"
+git-tree-sha1 = "a6e75f984a95c3295940b664796ba6157d9e7f04"
 uuid = "36348300-93cb-4f02-beb5-3c3902f8871e"
-version = "0.1.5"
+version = "0.1.6"
 
 [[deps.OptimizationOptimisers]]
 deps = ["Optimisers", "Optimization", "Printf", "ProgressLogging", "Reexport"]
@@ -1287,9 +1287,9 @@ version = "0.1.2"
 
 [[deps.OptimizationSpeedMapping]]
 deps = ["Optimization", "Reexport", "SpeedMapping"]
-git-tree-sha1 = "34c516f1a80f2797c34cf9fa6d2636c039fd37ea"
+git-tree-sha1 = "b70ed56d5c376d23721803270e5d72d3ff87c3fe"
 uuid = "3d669222-0d7d-4eb9-8a9f-d8528b0d9b91"
-version = "0.1.2"
+version = "0.1.3"
 
 [[deps.OrderedCollections]]
 git-tree-sha1 = "d321bf2de576bf25ec4d3e4360faca399afca282"
