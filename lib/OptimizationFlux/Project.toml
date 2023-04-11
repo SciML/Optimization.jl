@@ -15,7 +15,7 @@ julia = "1"
 Flux = "0.13"
 ProgressLogging = "0.1"
 Reexport = "1.2"
-Optimization = "3.9"
+Optimization = "3.13.1"
 
 [extras]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
