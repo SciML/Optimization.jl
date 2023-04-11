@@ -269,13 +269,13 @@ function __map_optimizer_args(prob::OptimizationProblem,
         MOI.set(optimizer, MOI.TimeLimitSec(), maxtime)
     end
     if !isnothing(reltol)
-        @warn "common reltol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword aguments."
+        @warn "common reltol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword arguments."
     end
     if !isnothing(abstol)
-        @warn "common abstol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword aguments."
+        @warn "common abstol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword arguments."
     end
     if !isnothing(maxiters)
-        @warn "common maxiters argument is currently not used by $(optimizer). Set number of interations via optimizer specific keyword aguments."
+        @warn "common maxiters argument is currently not used by $(optimizer). Set number of iterations via optimizer specific keyword arguments."
     end
     return optimizer
 end
