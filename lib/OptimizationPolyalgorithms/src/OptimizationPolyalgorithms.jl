@@ -19,7 +19,7 @@ function SciMLBase.__solve(prob::OptimizationProblem,
     end
 
     if isempty(args) && deterministic && prob.lb === nothing && prob.ub === nothing
-        # If determinsitic then ADAM -> finish with BFGS
+        # If deterministic then ADAM -> finish with BFGS
         if maxiters === nothing
             res1 = Optimization.solve(prob, Optimisers.ADAM(0.01), args...; maxiters = 300,
                                       kwargs...)
