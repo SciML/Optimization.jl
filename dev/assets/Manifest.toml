@@ -1239,15 +1239,15 @@ version = "0.1.2"
 
 [[deps.OptimizationGCMAES]]
 deps = ["GCMAES", "Optimization", "Reexport"]
-git-tree-sha1 = "a4f1c94dde6a09e224f82e1b58fad0981af52b19"
+git-tree-sha1 = "e474d251855ac8cce4f1879a17b36c6412e2c460"
 uuid = "6f0a0517-dbc2-4a7a-8a20-99ae7f27e911"
-version = "0.1.2"
+version = "0.1.4"
 
 [[deps.OptimizationMOI]]
-deps = ["MathOptInterface", "Optimization", "Reexport", "SparseArrays"]
-git-tree-sha1 = "76a1f36f35c3c7efc9069b1bfe4f3de3c173d879"
+deps = ["Ipopt_jll", "MathOptInterface", "Optimization", "Reexport", "SparseArrays"]
+git-tree-sha1 = "6078c5864fc3ab80e7fba1e0ea2258ac23fef56d"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
-version = "0.1.10"
+version = "0.1.12"
 
 [[deps.OptimizationMetaheuristics]]
 deps = ["Metaheuristics", "Optimization", "Reexport"]
@@ -1263,9 +1263,9 @@ version = "0.1.3"
 
 [[deps.OptimizationNLopt]]
 deps = ["NLopt", "Optimization", "Reexport"]
-git-tree-sha1 = "54311215da1fab6e81aabdbd91b4ffbbbca1b33f"
+git-tree-sha1 = "10d58c91cde18c6c576f6559d546d7c94971fa47"
 uuid = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
-version = "0.1.3"
+version = "0.1.5"
 
 [[deps.OptimizationNOMAD]]
 deps = ["NOMAD", "Optimization", "Reexport"]
@@ -1275,9 +1275,9 @@ version = "0.1.2"
 
 [[deps.OptimizationOptimJL]]
 deps = ["Optim", "Optimization", "Reexport", "SparseArrays"]
-git-tree-sha1 = "8de765af24432390000bc39e1efae51cf4dbdc5c"
+git-tree-sha1 = "d654b063a6c63e107d0a44a6a79430e2d0ab30d2"
 uuid = "36348300-93cb-4f02-beb5-3c3902f8871e"
-version = "0.1.5"
+version = "0.1.7"
 
 [[deps.OptimizationOptimisers]]
 deps = ["Optimisers", "Optimization", "Printf", "ProgressLogging", "Reexport"]
@@ -1287,9 +1287,9 @@ version = "0.1.2"
 
 [[deps.OptimizationSpeedMapping]]
 deps = ["Optimization", "Reexport", "SpeedMapping"]
-git-tree-sha1 = "34c516f1a80f2797c34cf9fa6d2636c039fd37ea"
+git-tree-sha1 = "0c852b2e2d00f913fee928ee0a9977928e669f92"
 uuid = "3d669222-0d7d-4eb9-8a9f-d8528b0d9b91"
-version = "0.1.2"
+version = "0.1.4"
 
 [[deps.OrderedCollections]]
 git-tree-sha1 = "d321bf2de576bf25ec4d3e4360faca399afca282"
