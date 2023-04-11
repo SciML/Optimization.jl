@@ -14,7 +14,7 @@ Ipopt_jll = "9cc047cb-c261-5740-88fc-0cf96f7bdcc7"
 Ipopt_jll = "=300.1400.400"
 MathOptInterface = "1"
 Juniper = "0.9"
-Optimization = "3.9"
+Optimization = "3.13.1"
 Reexport = "1.2"
 julia = "1"
 
