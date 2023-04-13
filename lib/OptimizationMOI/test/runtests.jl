@@ -152,6 +152,7 @@ end
 
     prob = OptimizationProblem(sys, [x => 0.0], []; grad = true, hess = true)
     cache = init(prob, Ipopt.Optimizer(); print_level = 0)
+    @test cache isa OptimizationMOI.MOIOptimizationNLPCache
     sol = solve!(cache)
     @test sol.u ≈ [1.0] # ≈ [1]
 
@@ -161,6 +162,7 @@ end
 
     prob = OptimizationProblem(sys, [x => 0.0], []; grad = false, hess = false)
     cache = init(prob, HiGHS.Optimizer())
+    @test cache isa OptimizationMOI.MOIOptimizationCache
     sol = solve!(cache)
     @test sol.u≈[1.0] rtol=1e-3 # ≈ [1]
 
