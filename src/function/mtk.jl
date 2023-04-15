@@ -78,7 +78,8 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p,
                                       cons_jac_prototype = f.cons_jac_prototype,
                                       cons_hess_prototype = f.cons_hess_prototype,
                                       expr = symbolify(f.expr),
-                                      cons_expr = symbolify.(f.cons_expr))
+                                      cons_expr = symbolify.(f.cons_expr),
+                                      observed = f.observed)
 end
 
 function instantiate_function(f, cache::ReInitCache,
@@ -117,5 +118,6 @@ function instantiate_function(f, cache::ReInitCache,
                                       cons_jac_prototype = f.cons_jac_prototype,
                                       cons_hess_prototype = f.cons_hess_prototype,
                                       expr = symbolify(f.expr),
-                                      cons_expr = symbolify.(f.cons_expr))
+                                      cons_expr = symbolify.(f.cons_expr),
+                                      observed = f.observed)
 end
