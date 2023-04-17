@@ -68,7 +68,8 @@ function instantiate_function(f, x, ::AbstractADType,
                                       cons_jac_prototype = cons_jac_prototype,
                                       cons_hess_prototype = cons_hess_prototype,
                                       expr = expr, cons_expr = cons_expr,
-                                      syms = f.syms, paramsyms = f.paramsyms)
+                                      syms = f.syms, paramsyms = f.paramsyms,
+                                      observed = f.observed)
 end
 
 function instantiate_function(f, cache::ReInitCache, ::AbstractADType,
@@ -96,5 +97,6 @@ function instantiate_function(f, cache::ReInitCache, ::AbstractADType,
                                       cons_jac_prototype = cons_jac_prototype,
                                       cons_hess_prototype = cons_hess_prototype,
                                       expr = expr, cons_expr = cons_expr,
-                                      syms = f.syms, paramsyms = f.paramsyms)
+                                      syms = f.syms, paramsyms = f.paramsyms,
+                                      observed = f.observed)
 end
