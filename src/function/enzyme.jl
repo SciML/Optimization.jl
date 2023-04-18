@@ -1,5 +1,3 @@
-using Enzyme, LinearAlgebra
-
 struct AutoEnzyme <: AbstractADType end
 
 function instantiate_function(f::OptimizationFunction{true}, x,
@@ -9,7 +7,7 @@ function instantiate_function(f::OptimizationFunction{true}, x,
 
     if f.grad === nothing
         function grad(res, θ, args...)
-            Enzyme.gradient!(Reverse, res, (θ) -> f.f(θ, p, args...), θ)
+            Enzyme.gradient!(Enzyme.Reverse, res, (θ) -> f.f(θ, p, args...), θ)
         end
     else
         grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
@@ -27,10 +25,10 @@ function instantiate_function(f::OptimizationFunction{true}, x,
             vdbθ = Tuple(zeros(length(θ)) for i in eachindex(θ))
             vdby = Tuple(zeros(1) for i in eachindex(θ))
 
-            Enzyme.autodiff(Forward,
-                            (θ, y) -> Enzyme.autodiff_deferred(Reverse, _f, θ, y),
-                            BatchDuplicated(Duplicated(θ, bθ), Duplicated.(vdθ, vdbθ)),
-                            BatchDuplicated(Duplicated(y, by), Duplicated.(vdy, vdby)))
+            Enzyme.autodiff(Enzyme.Forward,
+                            (θ, y) -> Enzyme.autodiff_deferred(Enzyme.Reverse, _f, θ, y),
+                            Enzyme.BatchDuplicated(Enzyme.Duplicated(θ, bθ), Enzyme.Duplicated.(vdθ, vdbθ)),
+                            Enzyme.BatchDuplicated(Enzyme.Duplicated(y, by), Enzyme.Duplicated.(vdy, vdby)))
 
             for i in eachindex(θ)
                 res[i, :] .= vdbθ[i]
@@ -53,16 +51,16 @@ function instantiate_function(f::OptimizationFunction{true}, x,
     if f.cons === nothing
         cons = nothing
     else
-        cons = (res, θ) -> (f.cons(res, θ, p); return nothing;)
+        cons = (res, θ) -> (f.cons(res, θ, p); return nothing)
         cons_oop = (x) -> (_res = zeros(eltype(x), num_cons); cons(_res, x); _res)
     end
 
     if cons !== nothing && f.cons_j === nothing
         cons_j = function (J, θ)
             if typeof(J) <: Vector
-                J .= Enzyme.jacobian(Forward, cons_oop, θ)[1,:]
+                J .= Enzyme.jacobian(Enzyme.Forward, cons_oop, θ)[1, :]
             else
-                J .= Enzyme.jacobian(Forward, cons_oop, θ)
+                J .= Enzyme.jacobian(Enzyme.Forward, cons_oop, θ)
             end
         end
     else
@@ -79,12 +77,12 @@ function instantiate_function(f::OptimizationFunction{true}, x,
         end
         function f2(fnc, x)
             dx = zeros(length(x))
-            Enzyme.autodiff_deferred(Reverse, fnc, Duplicated(x, dx))
+            Enzyme.autodiff_deferred(Enzyme.Reverse, fnc, Enzyme.Duplicated(x, dx))
             dx
         end
         cons_h = function (res, θ)
             for i in 1:num_cons
-                res[i] .= Enzyme.jacobian(Forward, x -> f2(fncs[i], x), θ)
+                res[i] .= Enzyme.jacobian(Enzyme.Forward, x -> f2(fncs[i], x), θ)
             end
         end
     else

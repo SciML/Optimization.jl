@@ -1,6 +1,6 @@
 using Optimization, OptimizationOptimJL, OptimizationOptimisers, Test
 using ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker
-using ModelingToolkit
+using ModelingToolkit, Enzyme
 
 x0 = zeros(2)
 rosenbrock(x, p = nothing) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
@@ -64,10 +64,7 @@ H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 @test H3 == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 
-
-G1 = Array{Float64}(undef, 2)
 G2 = Array{Float64}(undef, 2)
-H1 = Array{Float64}(undef, 2, 2)
 H2 = Array{Float64}(undef, 2, 2)
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoEnzyme(), cons = cons)
@@ -103,7 +100,6 @@ optprob.cons_j(J, [5.0, 3.0])
 H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 @test H3 == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
-
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(true, true),
                             cons = con2_c)

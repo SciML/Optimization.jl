@@ -1,6 +1,7 @@
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 DiffEqFlux = "aae7a2af-3d4f-5e19-a356-7da93b79d9d0"
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
@@ -20,6 +21,7 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
 DiffEqFlux = ">= 1.43.0"
+Enzyme = ">= 0.11.0"
 FiniteDiff = ">= 2.8.1"
 Optimisers = ">= 0.2.5"
 ForwardDiff = ">= 0.10.19"
