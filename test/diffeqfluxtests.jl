@@ -1,5 +1,5 @@
-using OrdinaryDiffEq, DiffEqFlux, Optimization, OptimizationOptimJL, OptimizationOptimisers,
-      ForwardDiff
+using OrdinaryDiffEq, DiffEqFlux, Lux, Optimization, OptimizationOptimJL,
+      OptimizationOptimisers, ForwardDiff
 
 function lotka_volterra!(du, u, p, t)
     x, y = u
@@ -68,14 +68,10 @@ end
 prob_trueode = ODEProblem(trueODEfunc, u0, tspan)
 ode_data = Array(solve(prob_trueode, Tsit5(), saveat = tsteps))
 
-dudt2 = FastChain((x, p) -> x .^ 3,
-                  FastDense(2, 50, tanh),
-                  FastDense(50, 2))
+dudt2 = Lux.Chain((x, p) -> x .^ 3,
+                  Lux.Dense(2, 50, tanh),
+                  Lux.Dense(50, 2))
 prob_neuralode = NeuralODE(dudt2, tspan, Tsit5(), saveat = tsteps)
-
-dudt2 = Chain(x -> x .^ 3,
-              Dense(2, 50, tanh),
-              Dense(50, 2))
 
 function predict_neuralode(p)
     Array(prob_neuralode(u0, p))
