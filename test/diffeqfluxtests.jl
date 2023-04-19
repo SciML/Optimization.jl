@@ -1,5 +1,5 @@
 using OrdinaryDiffEq, DiffEqFlux, Lux, Optimization, OptimizationOptimJL,
-      OptimizationOptimisers, ForwardDiff
+      OptimizationOptimisers, ForwardDiff, ComponentArrays
 
 function lotka_volterra!(du, u, p, t)
     x, y = u
@@ -94,7 +94,7 @@ end
 
 optprob = OptimizationFunction((p, x) -> loss_neuralode(p), Optimization.AutoForwardDiff())
 
-prob = Optimization.OptimizationProblem(optprob, prob_neuralode.p)
+prob = Optimization.OptimizationProblem(optprob, ComponentArray(prob_neuralode.p))
 
 result_neuralode = Optimization.solve(prob,
                                       OptimizationOptimisers.ADAM(), callback = callback,

@@ -1,5 +1,5 @@
 using DiffEqFlux, Optimization, OrdinaryDiffEq, OptimizationOptimisers, ModelingToolkit,
-      SciMLSensitivity, Lux, Random
+      SciMLSensitivity, Lux, Random, ComponentArrays
 
 rng = Random.default_rng()
 
@@ -39,6 +39,8 @@ ode_data = Array(solve(true_prob, Tsit5(), saveat = t))
 
 ann = Lux.Chain(Lux.Dense(1, 8, tanh), Lux.Dense(8, 1, tanh))
 pp, st = Lux.setup(rng, ann)
+pp = ComponentArray(pp)
+
 prob = ODEProblem{false}(dudt_, u0, tspan, pp)
 
 function predict_adjoint(fullp, time_batch)
