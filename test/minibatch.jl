@@ -1,5 +1,5 @@
 using DiffEqFlux, Optimization, OrdinaryDiffEq, OptimizationOptimisers, ModelingToolkit,
-      SciMLSensitivity
+      SciMLSensitivity, DiffEqFlux.Flux
 
 function newtons_cooling(du, u, p, t)
     temp = u[1]
@@ -35,7 +35,7 @@ t = range(tspan[1], tspan[2], length = datasize)
 true_prob = ODEProblem(true_sol, u0, tspan)
 ode_data = Array(solve(true_prob, Tsit5(), saveat = t))
 
-ann = FastChain(FastDense(1, 8, tanh), FastDense(8, 1, tanh))
+ann = Flux.Chain(Flux.Dense(1, 8, tanh), Flux.Dense(8, 1, tanh))
 pp = initial_params(ann)
 prob = ODEProblem{false}(dudt_, u0, tspan, pp)
 
