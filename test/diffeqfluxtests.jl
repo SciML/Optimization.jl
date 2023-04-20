@@ -69,7 +69,7 @@ end
 prob_trueode = ODEProblem(trueODEfunc, u0, tspan)
 ode_data = Array(solve(prob_trueode, Tsit5(), saveat = tsteps))
 
-dudt2 = Lux.Chain((x, p) -> x .^ 3,
+dudt2 = Lux.Chain(x -> x .^ 3,
                   Lux.Dense(2, 50, tanh),
                   Lux.Dense(50, 2))
 prob_neuralode = NeuralODE(dudt2, tspan, Tsit5(), saveat = tsteps)
