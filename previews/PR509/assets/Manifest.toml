@@ -1678,9 +1678,9 @@ version = "0.8.6"
 
 [[deps.StaticArrayInterface]]
 deps = ["ArrayInterface", "Compat", "IfElse", "LinearAlgebra", "Requires", "SnoopPrecompile", "SparseArrays", "Static", "SuiteSparse"]
-git-tree-sha1 = "59d01f440c78ad9046680688d6ad51812953a4a9"
+git-tree-sha1 = "33040351d2403b84afce74dae2e22d3f5b18edcb"
 uuid = "0d7ed370-da01-4f52-bd93-41d350b8b718"
-version = "1.3.1"
+version = "1.4.0"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
