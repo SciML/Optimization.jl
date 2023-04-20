@@ -77,7 +77,7 @@ pp, st = Lux.setup(rng, dudt2)
 pp = ComponentArray(pp)
 
 function predict_neuralode(p)
-    Array(prob_neuralode(u0, p))
+    Array(prob_neuralode(u0, p, st)[1])
 end
 
 function loss_neuralode(p)
