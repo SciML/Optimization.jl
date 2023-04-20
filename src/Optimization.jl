@@ -8,7 +8,7 @@ using Reexport
 @reexport using SciMLBase
 using Requires
 using Logging, ProgressLogging, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
-using ArrayInterface, Base.Iterators, SparseArrays
+using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 using Pkg
 
 import SciMLBase: OptimizationProblem, OptimizationFunction, AbstractADType, ObjSense,
@@ -26,6 +26,7 @@ function __init__()
     @require Tracker="9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c" include("function/tracker.jl")
     @require Zygote="e88e6eb3-aa80-5325-afca-941959d7151f" include("function/zygote.jl")
     @require ModelingToolkit="961ee093-0014-501f-94e3-6117800e7a78" include("function/mtk.jl")
+    @require Enzyme="7da242da-08ed-463a-9acd-ee780be4f1d9" include("function/enzyme.jl")
 end
 
 export solve
