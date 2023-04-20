@@ -27,8 +27,10 @@ function instantiate_function(f::OptimizationFunction{true}, x,
 
             Enzyme.autodiff(Enzyme.Forward,
                             (θ, y) -> Enzyme.autodiff_deferred(Enzyme.Reverse, _f, θ, y),
-                            Enzyme.BatchDuplicated(Enzyme.Duplicated(θ, bθ), Enzyme.Duplicated.(vdθ, vdbθ)),
-                            Enzyme.BatchDuplicated(Enzyme.Duplicated(y, by), Enzyme.Duplicated.(vdy, vdby)))
+                            Enzyme.BatchDuplicated(Enzyme.Duplicated(θ, bθ),
+                                                   Enzyme.Duplicated.(vdθ, vdbθ)),
+                            Enzyme.BatchDuplicated(Enzyme.Duplicated(y, by),
+                                                   Enzyme.Duplicated.(vdy, vdby)))
 
             for i in eachindex(θ)
                 res[i, :] .= vdbθ[i]
