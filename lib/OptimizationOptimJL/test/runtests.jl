@@ -70,7 +70,8 @@ using Test
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();
                                    cons = cons_circ)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [0.25^2])
-    sol = solve(prob, IPNewton())
+    cache = Optimization.init(prob, Optim.IPNewton())
+    sol = Optimization.solve!(cache)
     res = Array{Float64}(undef, 1)
     cons(res, sol.u, nothing)
     @test sqrt(res[1])≈0.25 rtol=1e-6
@@ -83,7 +84,8 @@ using Test
 
     Random.seed!(1234)
     prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
-    sol = solve(prob, Optim.SAMIN())
+    cache = Optimization.init(prob, Optim.SAMIN())
+    sol = Optimization.solve!(cache)
     @test 10 * sol.objective < l1
 
     optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), Optimization.AutoZygote())
