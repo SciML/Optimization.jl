@@ -1287,9 +1287,9 @@ version = "0.1.2"
 
 [[deps.OptimizationOptimJL]]
 deps = ["Optim", "Optimization", "Reexport", "SparseArrays"]
-git-tree-sha1 = "d654b063a6c63e107d0a44a6a79430e2d0ab30d2"
+git-tree-sha1 = "a3215e733b1a83e2fb4831b4c0301231a430287e"
 uuid = "36348300-93cb-4f02-beb5-3c3902f8871e"
-version = "0.1.7"
+version = "0.1.8"
 
 [[deps.OptimizationOptimisers]]
 deps = ["Optimisers", "Optimization", "Printf", "ProgressLogging", "Reexport"]
