@@ -1,5 +1,5 @@
 using OrdinaryDiffEq, DiffEqFlux, Lux, Optimization, OptimizationOptimJL,
-      OptimizationOptimisers, ForwardDiff, ComponentArrays
+      OptimizationOptimisers, ForwardDiff, ComponentArrays, Random
 
 function lotka_volterra!(du, u, p, t)
     x, y = u
@@ -72,6 +72,8 @@ dudt2 = Lux.Chain((x, p) -> x .^ 3,
                   Lux.Dense(2, 50, tanh),
                   Lux.Dense(50, 2))
 prob_neuralode = NeuralODE(dudt2, tspan, Tsit5(), saveat = tsteps)
+pp, st = Lux.setup(rng, dudt2)
+pp = ComponentArray(pp)
 
 function predict_neuralode(p)
     Array(prob_neuralode(u0, p))
@@ -94,7 +96,7 @@ end
 
 optprob = OptimizationFunction((p, x) -> loss_neuralode(p), Optimization.AutoForwardDiff())
 
-prob = Optimization.OptimizationProblem(optprob, ComponentArray(prob_neuralode.p))
+prob = Optimization.OptimizationProblem(optprob, pp)
 
 result_neuralode = Optimization.solve(prob,
                                       OptimizationOptimisers.ADAM(), callback = callback,
