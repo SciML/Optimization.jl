@@ -40,11 +40,14 @@ using Test
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit();
                                    cons = cons)
 
-    prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [Inf])
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [-5.0], ucons = [10.0])
     sol = solve(prob, IPNewton())
     @test 10 * sol.objective < l1
 
-    prob = OptimizationProblem(optprob, x0, _p, lcons = [-5.0], ucons = [10.0])
+    optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();
+                                   cons = cons)
+
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [Inf])
     sol = solve(prob, IPNewton())
     @test 10 * sol.objective < l1
 
@@ -67,7 +70,8 @@ using Test
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();
                                    cons = cons_circ)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [0.25^2])
-    sol = solve(prob, IPNewton())
+    cache = Optimization.init(prob, Optim.IPNewton())
+    sol = Optimization.solve!(cache)
     res = Array{Float64}(undef, 1)
     cons(res, sol.u, nothing)
     @test sqrt(res[1])≈0.25 rtol=1e-6
@@ -80,7 +84,8 @@ using Test
 
     Random.seed!(1234)
     prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
-    sol = solve(prob, Optim.SAMIN())
+    cache = Optimization.init(prob, Optim.SAMIN())
+    sol = Optimization.solve!(cache)
     @test 10 * sol.objective < l1
 
     optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), Optimization.AutoZygote())
@@ -115,4 +120,19 @@ using Test
 
     sol = solve(prob, Optim.KrylovTrustRegion())
     @test 10 * sol.objective < l1
+
+    @testset "cache" begin
+        objective(x, p) = (p[1] - x[1])^2
+        x0 = zeros(1)
+        p = [1.0]
+
+        prob = OptimizationProblem(objective, x0, p)
+        cache = Optimization.init(prob, Optim.NelderMead())
+        sol = Optimization.solve!(cache)
+        @test sol.u≈[1.0] atol=1e-3
+
+        cache = Optimization.reinit!(cache; p = [2.0])
+        sol = Optimization.solve!(cache)
+        @test sol.u≈[2.0] atol=1e-3
+    end
 end

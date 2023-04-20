@@ -9,6 +9,8 @@
 [![ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor%27s%20Guide-blueviolet)](https://github.com/SciML/ColPrac)
 [![SciML Code Style](https://img.shields.io/static/v1?label=code%20style&message=SciML&color=9558b2&labelColor=389826)](https://github.com/SciML/SciMLStyle)
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7738525.svg)](https://doi.org/10.5281/zenodo.7738525)
+
 Optimization.jl is a package with a scope that is beyond your normal global optimization
 package. Optimization.jl seeks to bring together all of the optimization packages
 it can find, local and global, into one unified Julia interface. This means, you

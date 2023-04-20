@@ -1,5 +1,5 @@
 using DiffEqFlux, OrdinaryDiffEq, Flux, CUDA
-CUDA.allowscalar(false) # Makes sure no slow operations are occuring
+CUDA.allowscalar(false) # Makes sure no slow operations are occurring
 
 # Generate Data
 u0 = Float32[2.0; 0.0]

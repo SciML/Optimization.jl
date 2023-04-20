@@ -1,7 +1,7 @@
 name = "OptimizationSpeedMapping"
 uuid = "3d669222-0d7d-4eb9-8a9f-d8528b0d9b91"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.1.2"
+version = "0.1.4"
 
 [deps]
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
@@ -10,7 +10,7 @@ SpeedMapping = "f1835b91-879b-4a3f-a438-e4baacf14412"
 
 [compat]
 julia = "1"
-Optimization = "3.9"
+Optimization = "3.13.1"
 Reexport = "1.2"
 SpeedMapping = "0.3"
 
