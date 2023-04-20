@@ -118,7 +118,10 @@ function __map_optimizer_args(cache::OptimJLOptimizationCache,
     return Optim.Options(; mapped_args...)
 end
 
-function SciMLBase.__init(prob::OptimizationProblem, opt::Optim.AbstractOptimizer,
+function SciMLBase.__init(prob::OptimizationProblem,
+                          opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
+                                     Optim.SAMIN, Optim.ConstrainedOptimizer
+                                     },
                           data = Optimization.DEFAULT_DATA;
                           callback = (args...) -> (false),
                           maxiters::Union{Number, Nothing} = nothing,
