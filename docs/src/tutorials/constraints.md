@@ -11,7 +11,7 @@ Let's define the rosenbrock function as our objective function and consider the 
 
 x_1^2 + x_2^2 \leq 0.8 \\
 
-0.0 \leq x_1 * x_2 \leq 5.0
+-1.0 \leq x_1 * x_2 \leq 2.0
 \end{aligned}
 ```
 
