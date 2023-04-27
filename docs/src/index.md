@@ -1,12 +1,8 @@
 # Optimization.jl: A Unified Optimization Package
 
-Optimization.jl is a package with a scope that is beyond your normal global optimization
-package. Optimization.jl seeks to bring together all the optimization packages
-it can find, local and global, into one unified Julia interface. This means, you
-learn one package, and you learn them all! Optimization.jl adds a few high-level
-features, such as integrating with automatic differentiation, to make its usage
-fairly simple for most cases, while allowing all the options in a single
-unified interface.
+Optimization.jl provides the easiest way to create an optimization problem and solve it. It enables rapid prototyping and experimentation with minimal syntax overhead by providing a uniform interface to >25 optimization libraries, hence 100+ optimization solvers encompassing almost all classes of optimization algorithms such as global, mixed-integer, non-convex, second-order local, constrained, etc. It allows you to choose an Automatic Differentiation (AD) backend by simply passing an argument to indicate the package to use and autmatically generates the efficient derivatives of the objective and constraints while giving you the flexibility to switch between different AD engines as per your problem. Additionally, Optimization.jl takes care of passing problem specific information to solvers that can leverage it such as the sparsity pattern of the hessian or constraint jacobian and the expression graph.
+
+It extends the common SciML interface making it very easy to use for anyone familiar with the SciML ecosystem. It is also very easy to extend to new solvers and new problem types. The package is actively maintained and new features are added regularly.
 
 ## Installation
 
@@ -31,7 +27,7 @@ packages.
 
   - See the [SciML Style Guide](https://github.com/SciML/SciMLStyle) for common coding practices and other style decisions.
   - There are a few community forums:
-    
+
       + The #diffeq-bridged and #sciml-bridged channels in the
         [Julia Slack](https://julialang.org/slack/)
       + The #diffeq-bridged and #sciml-bridged channels in the
@@ -105,7 +101,7 @@ Pkg.status(; mode = PKGMODE_MANIFEST) # hide
 ```
 
 ```@raw html
-You can also download the 
+You can also download the
 <a href="
 ```
 
