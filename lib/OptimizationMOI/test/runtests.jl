@@ -195,6 +195,19 @@ end
 
     cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[2]])
 
+    optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit();
+                                   cons = cons)
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, 0.5])
+    sol = solve(prob, AmplNLWriter.Optimizer(Ipopt_jll.amplexe))
+end
+
+@testset "tutorial" begin
+    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+    x0 = zeros(2)
+    _p = [1.0, 1.0]
+
+    cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[2]])
+
     function lagh(res, x, sigma, mu, p)
         lH = sigma * [2 + 8(x[1]^2) * p[2]-4(x[2] - (x[1]^2)) * p[2] -4p[2]*x[1]
               -4p[2]*x[1] 2p[2]] .+ [2mu[1] mu[2]
