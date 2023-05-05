@@ -102,11 +102,17 @@ function instantiate_function(f::OptimizationFunction{true}, x,
         cons_h = (res, θ) -> f.cons_h(res, θ, p)
     end
 
+    if f.lag_h === nothing
+        lag_h = nothing # Consider implementing this
+    else
+        lag_h = (res, θ, σ, μ) -> f.lag_h(res, θ, σ, μ, p)
+    end
     return OptimizationFunction{true}(f.f, adtype; grad = grad, hess = hess, hv = hv,
                                       cons = cons, cons_j = cons_j, cons_h = cons_h,
                                       hess_prototype = f.hess_prototype,
                                       cons_jac_prototype = f.cons_jac_prototype,
-                                      cons_hess_prototype = f.cons_hess_prototype)
+                                      cons_hess_prototype = f.cons_hess_prototype,
+                                      lag_h, f.lag_hess_prototype)
 end
 
 function instantiate_function(f::OptimizationFunction{true}, cache::ReInitCache,
@@ -173,9 +179,16 @@ function instantiate_function(f::OptimizationFunction{true}, cache::ReInitCache,
         cons_h = (res, θ) -> f.cons_h(res, θ, cache.p)
     end
 
+    if f.lag_h === nothing
+        lag_h = nothing # Consider implementing this
+    else
+        lag_h = (res, θ, σ, μ) -> f.lag_h(res, θ, σ, μ, cache.p)
+    end
+
     return OptimizationFunction{true}(f.f, adtype; grad = grad, hess = hess, hv = hv,
                                       cons = cons, cons_j = cons_j, cons_h = cons_h,
                                       hess_prototype = f.hess_prototype,
                                       cons_jac_prototype = f.cons_jac_prototype,
-                                      cons_hess_prototype = f.cons_hess_prototype)
+                                      cons_hess_prototype = f.cons_hess_prototype,
+                                      lag_h, f.lag_hess_prototype)
 end
