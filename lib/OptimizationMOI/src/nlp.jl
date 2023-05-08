@@ -94,12 +94,17 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem, opt; kwargs...)
     else
         convert.(T, f.cons_jac_prototype)
     end
-    H = if isnothing(f.hess_prototype)
-        zeros(T, n, n)
-    else
+    lagh = !isnothing(f.lag_hess_prototype)
+    H = if lagh # lag hessian takes precedence
+        convert.(T, f.lag_hess_prototype)
+    elseif !isnothing(f.hess_prototype)
         convert.(T, f.hess_prototype)
+    else
+        zeros(T, n, n)
     end
-    cons_H = if isnothing(f.cons_hess_prototype)
+    cons_H = if lagh
+        Matrix{T}[zeros(T, 0, 0) for i in 1:num_cons] # No need to allocate this up if using lag hessian
+    elseif isnothing(f.cons_hess_prototype)
         Matrix{T}[zeros(T, n, n) for i in 1:num_cons]
     else
         [convert.(T, f.cons_hess_prototype[i]) for i in 1:num_cons]
@@ -220,9 +225,10 @@ function MOI.eval_constraint_jacobian(evaluator::MOIOptimizationNLPEvaluator, j,
 end
 
 function MOI.hessian_lagrangian_structure(evaluator::MOIOptimizationNLPEvaluator)
+    lagh = evaluator.f.lag_h !== nothing
     sparse_obj = evaluator.H isa SparseMatrixCSC
     sparse_constraints = all(H -> H isa SparseMatrixCSC, evaluator.cons_H)
-    if !sparse_constraints && any(H -> H isa SparseMatrixCSC, evaluator.cons_H)
+    if !lagh && !sparse_constraints && any(H -> H isa SparseMatrixCSC, evaluator.cons_H)
         # Some constraint hessians are dense and some are sparse! :(
         error("Mix of sparse and dense constraint hessians are not supported")
     end
@@ -233,6 +239,7 @@ function MOI.hessian_lagrangian_structure(evaluator::MOIOptimizationNLPEvaluator
     else
         Tuple{Int, Int}[(row, col) for col in 1:N for row in 1:col]
     end
+    lagh && return inds
     if sparse_constraints
         for Hi in evaluator.cons_H
             r, c, _ = findnz(Hi)
@@ -257,6 +264,9 @@ function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
                                      x,
                                      σ,
                                      μ) where {T}
+    if evaluator.f.lag_h !== nothing
+        return evaluator.f.lag_h(h, x, σ, μ)
+    end
     fill!(h, zero(T))
     k = 0
     evaluator.f.hess(evaluator.H, x)
