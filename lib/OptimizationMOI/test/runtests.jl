@@ -1,6 +1,6 @@
 using OptimizationMOI, Optimization, Ipopt, NLopt, Zygote, ModelingToolkit
 using AmplNLWriter, Ipopt_jll, Juniper, HiGHS
-using Test
+using Test, SparseArrays
 
 function _test_sparse_derivatives_hs071(backend, optimizer)
     function objective(x, ::Any)
