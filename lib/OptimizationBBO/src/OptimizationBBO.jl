@@ -76,7 +76,7 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
 end
 
 function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO,
-                           data = Optimization.DEFAULT_DATA;
+                           data = nothing;
                            callback = nothing,
                            maxiters::Union{Number, Nothing} = nothing,
                            maxtime::Union{Number, Nothing} = nothing,
@@ -84,56 +84,54 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO,
                            reltol::Union{Number, Nothing} = nothing,
                            verbose::Bool = false,
                            progress = false, kwargs...)
-    if isnothing(callback) && data == Optimization.DEFAULT_DATA
-        _loss(θ) = first(prob.f(θ, prob.p))
+    local x, cur, state
 
-        maxiters = Optimization._check_and_convert_maxiters(maxiters)
-        maxtime = Optimization._check_and_convert_maxtime(maxtime)
-    
-        opt_args = __map_optimizer_args(prob, opt, maxiters = maxiters,
-                            maxtime = maxtime, abstol = abstol, reltol = reltol;
-                            verbose = verbose, kwargs...)
-    else
-        local x, cur, state
-
-        if data != Optimization.DEFAULT_DATA
-            maxiters = length(data)
-        end
-
+    if !isnothing(data)
+        maxiters = length(data)
         cur, state = iterate(data)
-
-        function _cb(trace)
-            if isnothing(callback)
-                cb_call = false
-            else
-                cb_call = callback(decompose_trace(trace, progress), x...)
-            end
-            if !(typeof(cb_call) <: Bool)
-                error("The callback should return a boolean `halt` for whether to stop the optimization process.")
-            end
-            if cb_call == true
-                BlackBoxOptim.shutdown_optimizer!(trace) #doesn't work
-            end
-            cur, state = iterate(data, state)
-            cb_call
-        end
-
-        maxiters = Optimization._check_and_convert_maxiters(maxiters)
-        maxtime = Optimization._check_and_convert_maxtime(maxtime)
-
-        _loss = function (θ)
-            if isnothing(callback)
-                return first(prob.f(θ, prob.p, cur...))
-            else
-                x = prob.f(θ, prob.p, cur...)
-                return first(x)
-            end
-        end
-
-        opt_args = __map_optimizer_args(prob, opt, callback = _cb, maxiters = maxiters,
-                                        maxtime = maxtime, abstol = abstol, reltol = reltol;
-                                        verbose = verbose, kwargs...)
     end
+
+    function _cb(trace)
+        if isnothing(callback)
+            cb_call = false
+        else
+            cb_call = callback(decompose_trace(trace, progress), x...)
+        end
+
+        if !(typeof(cb_call) <: Bool)
+            error("The callback should return a boolean `halt` for whether to stop the optimization process.")
+        end
+        if cb_call == true
+            BlackBoxOptim.shutdown_optimizer!(trace) #doesn't work
+        end
+
+        if !isnothing(data)
+            cur, state = iterate(data, state)
+        end
+        cb_call
+    end
+
+    maxiters = Optimization._check_and_convert_maxiters(maxiters)
+    maxtime = Optimization._check_and_convert_maxtime(maxtime)
+
+    _loss = function (θ)
+        if isnothing(callback) && isnothing(data)
+            return first(prob.f(θ, prob.p))
+        elseif isnothing(callback)
+            return first(prob.f(θ, prob.p, cur...))
+        elseif isnothing(data)
+            x = prob.f(θ, prob.p)
+            return first(x)
+        else
+            x = prob.f(θ, prob.p, cur...)
+            return first(x)
+        end
+    end
+
+    opt_args = __map_optimizer_args(prob, opt, callback = isnothing(callback) && isnothing(data) ? nothing : _cb, maxiters = maxiters,
+                                    maxtime = maxtime, abstol = abstol, reltol = reltol;
+                                    verbose = verbose, kwargs...)
+
     opt_setup = BlackBoxOptim.bbsetup(_loss; opt_args...)
 
     t0 = time()
