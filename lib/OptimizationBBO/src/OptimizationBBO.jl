@@ -77,45 +77,63 @@ end
 
 function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO,
                            data = Optimization.DEFAULT_DATA;
-                           callback = (args...) -> (false),
+                           callback = nothing,
                            maxiters::Union{Number, Nothing} = nothing,
                            maxtime::Union{Number, Nothing} = nothing,
                            abstol::Union{Number, Nothing} = nothing,
                            reltol::Union{Number, Nothing} = nothing,
                            verbose::Bool = false,
                            progress = false, kwargs...)
-    local x, cur, state
+    if isnothing(callback) && data == Optimization.DEFAULT_DATA
+        _loss(θ) = first(prob.f(θ, prob.p))
 
-    if data != Optimization.DEFAULT_DATA
-        maxiters = length(data)
-    end
+        maxiters = Optimization._check_and_convert_maxiters(maxiters)
+        maxtime = Optimization._check_and_convert_maxtime(maxtime)
+    
+        opt_args = __map_optimizer_args(prob, opt, maxiters = maxiters,
+                            maxtime = maxtime, abstol = abstol, reltol = reltol;
+                            verbose = verbose, kwargs...)
+    else
+        local x, cur, state
 
-    cur, state = iterate(data)
-
-    function _cb(trace)
-        cb_call = callback(decompose_trace(trace, progress), x...)
-        if !(typeof(cb_call) <: Bool)
-            error("The callback should return a boolean `halt` for whether to stop the optimization process.")
+        if data != Optimization.DEFAULT_DATA
+            maxiters = length(data)
         end
-        if cb_call == true
-            BlackBoxOptim.shutdown_optimizer!(trace) #doesn't work
+
+        cur, state = iterate(data)
+
+        function _cb(trace)
+            if isnothing(callback)
+                cb_call = false
+            else
+                cb_call = callback(decompose_trace(trace, progress), x...)
+            end
+            if !(typeof(cb_call) <: Bool)
+                error("The callback should return a boolean `halt` for whether to stop the optimization process.")
+            end
+            if cb_call == true
+                BlackBoxOptim.shutdown_optimizer!(trace) #doesn't work
+            end
+            cur, state = iterate(data, state)
+            cb_call
         end
-        cur, state = iterate(data, state)
-        cb_call
+
+        maxiters = Optimization._check_and_convert_maxiters(maxiters)
+        maxtime = Optimization._check_and_convert_maxtime(maxtime)
+
+        _loss = function (θ)
+            if isnothing(callback)
+                return first(prob.f(θ, prob.p, cur...))
+            else
+                x = prob.f(θ, prob.p, cur...)
+                return first(x)
+            end
+        end
+
+        opt_args = __map_optimizer_args(prob, opt, callback = _cb, maxiters = maxiters,
+                                        maxtime = maxtime, abstol = abstol, reltol = reltol;
+                                        verbose = verbose, kwargs...)
     end
-
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(maxtime)
-
-    _loss = function (θ)
-        x = prob.f(θ, prob.p, cur...)
-        return first(x)
-    end
-
-    opt_args = __map_optimizer_args(prob, opt, callback = _cb, maxiters = maxiters,
-                                    maxtime = maxtime, abstol = abstol, reltol = reltol;
-                                    verbose = verbose, kwargs...)
-
     opt_setup = BlackBoxOptim.bbsetup(_loss; opt_args...)
 
     t0 = time()
