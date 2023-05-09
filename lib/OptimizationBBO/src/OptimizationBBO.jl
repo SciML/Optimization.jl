@@ -128,7 +128,10 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO,
         end
     end
 
-    opt_args = __map_optimizer_args(prob, opt, callback = isnothing(callback) && isnothing(data) ? nothing : _cb, maxiters = maxiters,
+    opt_args = __map_optimizer_args(prob, opt,
+                                    callback = isnothing(callback) && isnothing(data) ?
+                                               nothing : _cb,
+                                    maxiters = maxiters,
                                     maxtime = maxtime, abstol = abstol, reltol = reltol;
                                     verbose = verbose, kwargs...)
 
