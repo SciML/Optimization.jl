@@ -13,6 +13,19 @@ using Test
     sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
     @test 10 * sol.objective < l1
 
+    sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(),
+                callback = (args...) -> false)
+    @test 10 * sol.objective < l1
+
+    fitness_progress_history = []
+    function cb(best_candidate, fitness)
+        push!(fitness_progress_history, [best_candidate, fitness])
+        return false
+    end
+    sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(), callback = cb)
+    # println(fitness_progress_history)
+    @test !isempty(fitness_progress_history)
+
     @test_logs begin
         (Base.LogLevel(-1), "loss: 0.0")
         min_level = Base.LogLevel(-1)
