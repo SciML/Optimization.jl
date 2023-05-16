@@ -10,6 +10,7 @@ struct GCMAESOpt end
 
 SciMLBase.requiresbounds(::GCMAESOpt) = true
 SciMLBase.allowsbounds(::GCMAESOpt) = true
+SciMLBase.allowscallback(::GCMAESOpt) = false
 
 struct GCMAESOptimizationCache{F <: OptimizationFunction, RC, LB, UB, S, O, P, S0} <:
        SciMLBase.AbstractOptimizationCache
