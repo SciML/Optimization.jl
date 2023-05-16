@@ -1,3 +1,4 @@
+module MTKExt
 """
 AutoModelingToolkit <: AbstractADType
 
@@ -42,7 +43,7 @@ end
 
 AutoModelingToolkit() = AutoModelingToolkit(false, false)
 
-function instantiate_function(f, x, adtype::AutoModelingToolkit, p,
+function Optimization.instantiate_function(f, x, adtype::AutoModelingToolkit, p,
                               num_cons = 0)
     p = isnothing(p) ? SciMLBase.NullParameters() : p
 
@@ -82,7 +83,7 @@ function instantiate_function(f, x, adtype::AutoModelingToolkit, p,
                                       observed = f.observed)
 end
 
-function instantiate_function(f, cache::ReInitCache,
+function Optimization.instantiate_function(f, cache::ReInitCache,
                               adtype::AutoModelingToolkit, num_cons = 0)
     p = isnothing(cache.p) ? SciMLBase.NullParameters() : cache.p
 
@@ -120,4 +121,7 @@ function instantiate_function(f, cache::ReInitCache,
                                       expr = symbolify(f.expr),
                                       cons_expr = symbolify.(f.cons_expr),
                                       observed = f.observed)
+end
+
+export AutoModelingToolkit
 end

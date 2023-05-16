@@ -1,6 +1,7 @@
+module EnzymeExt
 struct AutoEnzyme <: AbstractADType end
 
-function instantiate_function(f::OptimizationFunction{true}, x,
+function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
                               adtype::AutoEnzyme, p,
                               num_cons = 0)
     _f = (θ, y, args...) -> (y .= first(f.f(θ, p, args...)); return nothing)
@@ -96,4 +97,7 @@ function instantiate_function(f::OptimizationFunction{true}, x,
                                       hess_prototype = f.hess_prototype,
                                       cons_jac_prototype = f.cons_jac_prototype,
                                       cons_hess_prototype = f.cons_hess_prototype)
+end
+
+export AutoEnzyme
 end

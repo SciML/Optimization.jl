@@ -1,3 +1,4 @@
+module ZygoteExt
 """
 AutoZygote <: AbstractADType
 
@@ -24,7 +25,7 @@ Hessian is not defined via Zygote.
 """
 struct AutoZygote <: AbstractADType end
 
-function instantiate_function(f, x, adtype::AutoZygote, p,
+function Optimization.instantiate_function(f, x, adtype::AutoZygote, p,
                               num_cons = 0)
     num_cons != 0 && error("AutoZygote does not currently support constraints")
 
@@ -65,7 +66,7 @@ function instantiate_function(f, x, adtype::AutoZygote, p,
                                        cons_hess_prototype = nothing)
 end
 
-function instantiate_function(f, cache::ReInitCache,
+function Optimization.instantiate_function(f, cache::ReInitCache,
                               adtype::AutoZygote, num_cons = 0)
     num_cons != 0 && error("AutoZygote does not currently support constraints")
 
@@ -104,4 +105,7 @@ function instantiate_function(f, cache::ReInitCache,
                                        hess_prototype = f.hess_prototype,
                                        cons_jac_prototype = nothing,
                                        cons_hess_prototype = nothing)
+end
+
+export AutoZygote
 end

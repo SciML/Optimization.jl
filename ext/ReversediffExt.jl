@@ -1,3 +1,4 @@
+module ReversediffExt
 """
 AutoReverseDiff <: AbstractADType
 
@@ -43,7 +44,7 @@ end
 
 AutoReverseDiff(; compile = false) = AutoReverseDiff(compile)
 
-function instantiate_function(f, x, adtype::AutoReverseDiff,
+function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
                               p = SciMLBase.NullParameters(),
                               num_cons = 0)
     num_cons != 0 && error("AutoReverseDiff does not currently support constraints")
@@ -85,7 +86,7 @@ function instantiate_function(f, x, adtype::AutoReverseDiff,
                                        cons_hess_prototype = nothing)
 end
 
-function instantiate_function(f, cache::ReInitCache,
+function Optimization.instantiate_function(f, cache::ReInitCache,
                               adtype::AutoReverseDiff, num_cons = 0)
     num_cons != 0 && error("AutoReverseDiff does not currently support constraints")
 
@@ -124,4 +125,7 @@ function instantiate_function(f, cache::ReInitCache,
                                        hess_prototype = f.hess_prototype,
                                        cons_jac_prototype = nothing,
                                        cons_hess_prototype = nothing)
+end
+
+export AutoReverseDiff
 end

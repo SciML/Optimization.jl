@@ -1,3 +1,4 @@
+module FinitediffExt
 const FD = FiniteDiff
 """
 AutoFiniteDiff{T1,T2,T3} <: AbstractADType
@@ -49,7 +50,7 @@ function AutoFiniteDiff(; fdtype = Val(:forward), fdjtype = fdtype,
     AutoFiniteDiff(fdtype, fdjtype, fdhtype)
 end
 
-function instantiate_function(f, x, adtype::AutoFiniteDiff, p,
+function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
                               num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, p, args...))
     updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
@@ -150,7 +151,7 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p,
                                       lag_h, f.lag_hess_prototype)
 end
 
-function instantiate_function(f, cache::ReInitCache,
+function Optimization.instantiate_function(f, cache::ReInitCache,
                               adtype::AutoFiniteDiff, num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
     updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
@@ -255,4 +256,7 @@ function instantiate_function(f, cache::ReInitCache,
                                       cons_jac_prototype = f.cons_jac_prototype,
                                       cons_hess_prototype = f.cons_hess_prototype,
                                       lag_h, f.lag_hess_prototype)
+end
+
+export AutoFiniteDiff
 end

@@ -1,3 +1,4 @@
+module ForwarddiffExt
 """
 AutoForwardDiff{chunksize} <: AbstractADType
 
@@ -39,7 +40,7 @@ function default_chunk_size(len)
     end
 end
 
-function instantiate_function(f::OptimizationFunction{true}, x,
+function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
                               adtype::AutoForwardDiff{_chunksize}, p,
                               num_cons = 0) where {_chunksize}
     chunksize = _chunksize === nothing ? default_chunk_size(length(x)) : _chunksize
@@ -115,7 +116,7 @@ function instantiate_function(f::OptimizationFunction{true}, x,
                                       lag_h, f.lag_hess_prototype)
 end
 
-function instantiate_function(f::OptimizationFunction{true}, cache::ReInitCache,
+function Optimization.instantiate_function(f::OptimizationFunction{true}, cache::ReInitCache,
                               adtype::AutoForwardDiff{_chunksize},
                               num_cons = 0) where {_chunksize}
     chunksize = _chunksize === nothing ? default_chunk_size(length(cache.u0)) : _chunksize
@@ -191,4 +192,7 @@ function instantiate_function(f::OptimizationFunction{true}, cache::ReInitCache,
                                       cons_jac_prototype = f.cons_jac_prototype,
                                       cons_hess_prototype = f.cons_hess_prototype,
                                       lag_h, f.lag_hess_prototype)
+end
+
+export AutoForwardDiff
 end

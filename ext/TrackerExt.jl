@@ -1,3 +1,4 @@
+module TrackerExt
 """
 AutoTracker <: AbstractADType
 
@@ -23,7 +24,7 @@ Hessian is not defined via Tracker.
 """
 struct AutoTracker <: AbstractADType end
 
-function instantiate_function(f, x, adtype::AutoTracker, p,
+function Optimization.instantiate_function(f, x, adtype::AutoTracker, p,
                               num_cons = 0)
     num_cons != 0 && error("AutoTracker does not currently support constraints")
     _f = (θ, args...) -> first(f.f(θ, p, args...))
@@ -54,7 +55,7 @@ function instantiate_function(f, x, adtype::AutoTracker, p,
                                        cons_hess_prototype = nothing)
 end
 
-function instantiate_function(f, cache::ReInitCache,
+function Optimization.instantiate_function(f, cache::ReInitCache,
                               adtype::AutoTracker, num_cons = 0)
     num_cons != 0 && error("AutoTracker does not currently support constraints")
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
@@ -83,4 +84,7 @@ function instantiate_function(f, cache::ReInitCache,
                                        hess_prototype = f.hess_prototype,
                                        cons_jac_prototype = nothing,
                                        cons_hess_prototype = nothing)
+end
+
+export AutoTracker
 end
