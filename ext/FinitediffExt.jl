@@ -51,7 +51,7 @@ function AutoFiniteDiff(; fdtype = Val(:forward), fdjtype = fdtype,
 end
 
 function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
-                              num_cons = 0)
+                                           num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, p, args...))
     updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
 
@@ -152,7 +152,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
 end
 
 function Optimization.instantiate_function(f, cache::ReInitCache,
-                              adtype::AutoFiniteDiff, num_cons = 0)
+                                           adtype::AutoFiniteDiff, num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
     updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
 

@@ -44,7 +44,7 @@ end
 AutoModelingToolkit() = AutoModelingToolkit(false, false)
 
 function Optimization.instantiate_function(f, x, adtype::AutoModelingToolkit, p,
-                              num_cons = 0)
+                                           num_cons = 0)
     p = isnothing(p) ? SciMLBase.NullParameters() : p
 
     sys = ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, x, p;
@@ -84,7 +84,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoModelingToolkit, p,
 end
 
 function Optimization.instantiate_function(f, cache::ReInitCache,
-                              adtype::AutoModelingToolkit, num_cons = 0)
+                                           adtype::AutoModelingToolkit, num_cons = 0)
     p = isnothing(cache.p) ? SciMLBase.NullParameters() : cache.p
 
     sys = ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, cache.u0, cache.p;

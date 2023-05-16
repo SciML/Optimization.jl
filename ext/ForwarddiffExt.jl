@@ -41,8 +41,8 @@ function default_chunk_size(len)
 end
 
 function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
-                              adtype::AutoForwardDiff{_chunksize}, p,
-                              num_cons = 0) where {_chunksize}
+                                           adtype::AutoForwardDiff{_chunksize}, p,
+                                           num_cons = 0) where {_chunksize}
     chunksize = _chunksize === nothing ? default_chunk_size(length(x)) : _chunksize
 
     _f = (θ, args...) -> first(f.f(θ, p, args...))
@@ -116,9 +116,10 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
                                       lag_h, f.lag_hess_prototype)
 end
 
-function Optimization.instantiate_function(f::OptimizationFunction{true}, cache::ReInitCache,
-                              adtype::AutoForwardDiff{_chunksize},
-                              num_cons = 0) where {_chunksize}
+function Optimization.instantiate_function(f::OptimizationFunction{true},
+                                           cache::ReInitCache,
+                                           adtype::AutoForwardDiff{_chunksize},
+                                           num_cons = 0) where {_chunksize}
     chunksize = _chunksize === nothing ? default_chunk_size(length(cache.u0)) : _chunksize
 
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))

@@ -45,8 +45,8 @@ end
 AutoReverseDiff(; compile = false) = AutoReverseDiff(compile)
 
 function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
-                              p = SciMLBase.NullParameters(),
-                              num_cons = 0)
+                                           p = SciMLBase.NullParameters(),
+                                           num_cons = 0)
     num_cons != 0 && error("AutoReverseDiff does not currently support constraints")
 
     _f = (θ, args...) -> first(f.f(θ, p, args...))
@@ -87,7 +87,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
 end
 
 function Optimization.instantiate_function(f, cache::ReInitCache,
-                              adtype::AutoReverseDiff, num_cons = 0)
+                                           adtype::AutoReverseDiff, num_cons = 0)
     num_cons != 0 && error("AutoReverseDiff does not currently support constraints")
 
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))

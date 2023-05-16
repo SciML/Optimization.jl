@@ -25,7 +25,7 @@ Hessian is not defined via Tracker.
 struct AutoTracker <: AbstractADType end
 
 function Optimization.instantiate_function(f, x, adtype::AutoTracker, p,
-                              num_cons = 0)
+                                           num_cons = 0)
     num_cons != 0 && error("AutoTracker does not currently support constraints")
     _f = (θ, args...) -> first(f.f(θ, p, args...))
 
@@ -56,7 +56,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoTracker, p,
 end
 
 function Optimization.instantiate_function(f, cache::ReInitCache,
-                              adtype::AutoTracker, num_cons = 0)
+                                           adtype::AutoTracker, num_cons = 0)
     num_cons != 0 && error("AutoTracker does not currently support constraints")
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
 

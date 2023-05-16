@@ -26,7 +26,7 @@ Hessian is not defined via Zygote.
 struct AutoZygote <: AbstractADType end
 
 function Optimization.instantiate_function(f, x, adtype::AutoZygote, p,
-                              num_cons = 0)
+                                           num_cons = 0)
     num_cons != 0 && error("AutoZygote does not currently support constraints")
 
     _f = (θ, args...) -> f(θ, p, args...)[1]
@@ -67,7 +67,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoZygote, p,
 end
 
 function Optimization.instantiate_function(f, cache::ReInitCache,
-                              adtype::AutoZygote, num_cons = 0)
+                                           adtype::AutoZygote, num_cons = 0)
     num_cons != 0 && error("AutoZygote does not currently support constraints")
 
     _f = (θ, args...) -> f(θ, cache.p, args...)[1]

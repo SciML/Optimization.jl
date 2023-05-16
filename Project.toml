@@ -29,12 +29,15 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extensions]
 EnzymeExt = "Enzyme"
-FiniteDiffExt = "FiniteDiff"
-ForwardDiffExt = "ForwardDiff"
+FinitediffExt = "FiniteDiff"
+ForwarddiffExt = "ForwardDiff"
 MTKExt = "ModelingToolkit"
-ReverseDiffExt = "ReverseDiff"
+ReversediffExt = "ReverseDiff"
 TrackerExt = "Tracker"
 ZygoteExt = "Zygote"
+
+[extras]
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 
 [compat]
 ArrayInterface = "6, 7"
