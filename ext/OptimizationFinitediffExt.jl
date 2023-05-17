@@ -1,4 +1,4 @@
-module FinitediffExt
+module OptimizationFinitediffExt
 
 import SciMLBase: OptimizationFunction, AbstractADType
 import Optimization

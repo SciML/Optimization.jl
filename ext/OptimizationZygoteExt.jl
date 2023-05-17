@@ -1,4 +1,4 @@
-module ZygoteExt
+module OptimizationZygoteExt
 
 import SciMLBase: OptimizationFunction, AbstractADType
 import Optimization

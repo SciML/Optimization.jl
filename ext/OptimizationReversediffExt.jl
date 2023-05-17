@@ -1,4 +1,4 @@
-module ReversediffExt
+module OptimizationReversediffExt
 
 import SciMLBase: OptimizationFunction, AbstractADType
 import Optimization

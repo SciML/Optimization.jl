@@ -1,4 +1,4 @@
-module TrackerExt
+module OptimizationTrackerExt
 
 import SciMLBase: OptimizationFunction, AbstractADType
 import Optimization

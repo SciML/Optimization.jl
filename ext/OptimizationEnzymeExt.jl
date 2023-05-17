@@ -1,4 +1,4 @@
-module EnzymeExt
+module OptimizationEnzymeExt
 
 import SciMLBase: OptimizationFunction, AbstractADType
 import Optimization

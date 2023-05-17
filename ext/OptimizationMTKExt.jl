@@ -1,4 +1,4 @@
-module MTKExt
+module OptimizationMTKExt
 
 import SciMLBase: OptimizationFunction, AbstractADType
 import Optimization

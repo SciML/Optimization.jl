@@ -1,4 +1,4 @@
-module ForwarddiffExt
+module OptimizationForwarddiffExt
 
 import SciMLBase: OptimizationFunction, AbstractADType
 import Optimization
