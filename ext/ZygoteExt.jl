@@ -1,4 +1,7 @@
 module ZygoteExt
+
+isdefined(Base, :get_extension) ? (using Zygote) : (using ..Zygote)
+
 """
 AutoZygote <: AbstractADType
 

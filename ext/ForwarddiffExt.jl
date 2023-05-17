@@ -1,4 +1,7 @@
 module ForwarddiffExt
+
+isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
+
 """
 AutoForwardDiff{chunksize} <: AbstractADType
 

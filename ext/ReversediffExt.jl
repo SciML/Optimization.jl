@@ -1,4 +1,7 @@
 module ReversediffExt
+
+isdefined(Base, :get_extension) ? (using ReverseDiff) : (using ..ReverseDiff)
+
 """
 AutoReverseDiff <: AbstractADType
 

@@ -1,4 +1,7 @@
 module TrackerExt
+
+isdefined(Base, :get_extension) ? (using Tracker) : (using ..Tracker)
+
 """
 AutoTracker <: AbstractADType
 

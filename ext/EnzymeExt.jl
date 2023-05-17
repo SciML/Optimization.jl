@@ -1,4 +1,7 @@
 module EnzymeExt
+
+isdefined(Base, :get_extension) ? (using Enzyme) : (using ..Enzyme)
+
 """
 AutoEnzyme <: AbstractADType
 An AbstractADType choice for use in OptimizationFunction for automatically

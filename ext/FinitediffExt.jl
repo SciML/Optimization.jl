@@ -1,4 +1,7 @@
 module FinitediffExt
+
+isdefined(Base, :get_extension) ? (using FiniteDiff) : (using ..FiniteDiff)
+
 const FD = FiniteDiff
 """
 AutoFiniteDiff{T1,T2,T3} <: AbstractADType

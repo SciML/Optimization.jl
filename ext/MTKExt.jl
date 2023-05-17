@@ -1,4 +1,7 @@
 module MTKExt
+
+isdefined(Base, :get_extension) ? (using ModelingToolkit) : (using ..ModelingToolkit)
+
 """
 AutoModelingToolkit <: AbstractADType
 
