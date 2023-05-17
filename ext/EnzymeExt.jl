@@ -1,5 +1,7 @@
 module EnzymeExt
 
+import SciMLBase: OptimizationFunction, AbstractADType
+import Optimization
 isdefined(Base, :get_extension) ? (using Enzyme) : (using ..Enzyme)
 
 """

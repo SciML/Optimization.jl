@@ -1,5 +1,7 @@
 module ForwarddiffExt
 
+import SciMLBase: OptimizationFunction, AbstractADType
+import Optimization
 isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 
 """
@@ -120,7 +122,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
 end
 
 function Optimization.instantiate_function(f::OptimizationFunction{true},
-                                           cache::ReInitCache,
+                                           cache::Optimization.ReInitCache,
                                            adtype::AutoForwardDiff{_chunksize},
                                            num_cons = 0) where {_chunksize}
     chunksize = _chunksize === nothing ? default_chunk_size(length(cache.u0)) : _chunksize

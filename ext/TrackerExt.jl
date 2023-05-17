@@ -1,5 +1,7 @@
 module TrackerExt
 
+import SciMLBase: OptimizationFunction, AbstractADType
+import Optimization
 isdefined(Base, :get_extension) ? (using Tracker) : (using ..Tracker)
 
 """
@@ -58,7 +60,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoTracker, p,
                                        cons_hess_prototype = nothing)
 end
 
-function Optimization.instantiate_function(f, cache::ReInitCache,
+function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
                                            adtype::AutoTracker, num_cons = 0)
     num_cons != 0 && error("AutoTracker does not currently support constraints")
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))

@@ -1,5 +1,7 @@
 module ReversediffExt
 
+import SciMLBase: OptimizationFunction, AbstractADType
+import Optimization
 isdefined(Base, :get_extension) ? (using ReverseDiff) : (using ..ReverseDiff)
 
 """
@@ -89,7 +91,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
                                        cons_hess_prototype = nothing)
 end
 
-function Optimization.instantiate_function(f, cache::ReInitCache,
+function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
                                            adtype::AutoReverseDiff, num_cons = 0)
     num_cons != 0 && error("AutoReverseDiff does not currently support constraints")
 

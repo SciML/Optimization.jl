@@ -1,5 +1,7 @@
 module ZygoteExt
 
+import SciMLBase: OptimizationFunction, AbstractADType
+import Optimization
 isdefined(Base, :get_extension) ? (using Zygote) : (using ..Zygote)
 
 """
@@ -69,7 +71,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoZygote, p,
                                        cons_hess_prototype = nothing)
 end
 
-function Optimization.instantiate_function(f, cache::ReInitCache,
+function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
                                            adtype::AutoZygote, num_cons = 0)
     num_cons != 0 && error("AutoZygote does not currently support constraints")
 

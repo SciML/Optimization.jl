@@ -1,5 +1,7 @@
 module MTKExt
 
+import SciMLBase: OptimizationFunction, AbstractADType
+import Optimization
 isdefined(Base, :get_extension) ? (using ModelingToolkit) : (using ..ModelingToolkit)
 
 """
@@ -86,7 +88,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoModelingToolkit, p,
                                       observed = f.observed)
 end
 
-function Optimization.instantiate_function(f, cache::ReInitCache,
+function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
                                            adtype::AutoModelingToolkit, num_cons = 0)
     p = isnothing(cache.p) ? SciMLBase.NullParameters() : cache.p
 

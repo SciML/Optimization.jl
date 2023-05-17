@@ -1,5 +1,7 @@
 module FinitediffExt
 
+import SciMLBase: OptimizationFunction, AbstractADType
+import Optimization
 isdefined(Base, :get_extension) ? (using FiniteDiff) : (using ..FiniteDiff)
 
 const FD = FiniteDiff
@@ -154,7 +156,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
                                       lag_h, f.lag_hess_prototype)
 end
 
-function Optimization.instantiate_function(f, cache::ReInitCache,
+function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
                                            adtype::AutoFiniteDiff, num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
     updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
