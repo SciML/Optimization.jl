@@ -43,7 +43,7 @@ function that is not defined, an error is thrown.
 For more information on the use of automatic differentiation, see the
 documentation of the `AbstractADType` types.
 """
-function instantiate_function(f, x, ::AbstractADType,
+function instantiate_function(f, x, ::SciMLBase.NoAD,
                               p, num_cons = 0)
     grad = f.grad === nothing ? nothing : (G, x, args...) -> f.grad(G, x, p, args...)
     hess = f.hess === nothing ? nothing : (H, x, args...) -> f.hess(H, x, p, args...)
@@ -72,7 +72,7 @@ function instantiate_function(f, x, ::AbstractADType,
                                       observed = f.observed)
 end
 
-function instantiate_function(f, cache::ReInitCache, ::AbstractADType,
+function instantiate_function(f, cache::ReInitCache, ::SciMLBase.NoAD,
                               num_cons = 0)
     grad = f.grad === nothing ? nothing : (G, x, args...) -> f.grad(G, x, cache.p, args...)
     hess = f.hess === nothing ? nothing : (H, x, args...) -> f.hess(H, x, cache.p, args...)
@@ -99,4 +99,10 @@ function instantiate_function(f, cache::ReInitCache, ::AbstractADType,
                                       expr = expr, cons_expr = cons_expr,
                                       syms = f.syms, paramsyms = f.paramsyms,
                                       observed = f.observed)
+end
+
+function instantiate_function(f, x, adtype::AbstractADType,
+                              p, num_cons = 0)
+    adpkg = string(adtype)[5:(end - 2)]
+    throw(ArgumentError("The passed automatic differentiation backend choice is not available. Please load the corresponding AD package $adpkg."))
 end

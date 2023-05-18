@@ -5,7 +5,7 @@ module Optimization
 
 using DocStringExtensions
 using Reexport
-@reexport using SciMLBase
+@reexport using SciMLBase, ADTypes
 
 if !isdefined(Base, :get_extension)
     using Requires

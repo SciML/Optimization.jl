@@ -2,32 +2,8 @@ module OptimizationTrackerExt
 
 import SciMLBase: OptimizationFunction, AbstractADType
 import Optimization
+import ADTypes: AutoTracker
 isdefined(Base, :get_extension) ? (using Tracker) : (using ..Tracker)
-
-"""
-AutoTracker <: AbstractADType
-
-An AbstractADType choice for use in OptimizationFunction for automatically
-generating the unspecified derivative functions. Usage:
-
-```julia
-OptimizationFunction(f, AutoTracker(); kwargs...)
-```
-
-This uses the [Tracker.jl](https://github.com/FluxML/Tracker.jl) package.
-Generally slower than ReverseDiff, it is generally applicable to many
-pure Julia codes.
-
-  - Compatible with GPUs
-  - Not compatible with Hessian-based optimization
-  - Not compatible with Hv-based optimization
-  - Not compatible with constraint functions
-
-Note that only the unspecified derivative functions are defined. For example,
-if a `hess` function is supplied to the `OptimizationFunction`, then the
-Hessian is not defined via Tracker.
-"""
-struct AutoTracker <: AbstractADType end
 
 function Optimization.instantiate_function(f, x, adtype::AutoTracker, p,
                                            num_cons = 0)
@@ -91,5 +67,4 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
                                        cons_hess_prototype = nothing)
 end
 
-export AutoTracker
 end
