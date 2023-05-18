@@ -15,12 +15,13 @@ using Logging, ProgressLogging, ConsoleProgressMonitor, TerminalLoggers, Logging
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 using Pkg
 
-import SciMLBase: OptimizationProblem, OptimizationFunction, AbstractADType, ObjSense,
+import SciMLBase: OptimizationProblem, OptimizationFunction, ObjSense,
                   MaxSense, MinSense
 export ObjSense, MaxSense, MinSense
 
 include("utils.jl")
 include("function.jl")
+include("adtypes.jl")
 
 @static if !isdefined(Base, :get_extension)
     function __init__()

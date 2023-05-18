@@ -101,7 +101,7 @@ function instantiate_function(f, cache::ReInitCache, ::SciMLBase.NoAD,
                                       observed = f.observed)
 end
 
-function instantiate_function(f, x, adtype::AbstractADType,
+function instantiate_function(f, x, adtype::ADTypes.AbstractADType,
                               p, num_cons = 0)
     adpkg = string(adtype)[5:(end - 2)]
     throw(ArgumentError("The passed automatic differentiation backend choice is not available. Please load the corresponding AD package $adpkg."))
