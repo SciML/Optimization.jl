@@ -1,7 +1,7 @@
 module OptimizationFinitediffExt
 
 import SciMLBase: OptimizationFunction, AbstractADType
-import Optimization
+import Optimization, ArrayInterface
 import ADTypes: AutoFiniteDiff
 isdefined(Base, :get_extension) ? (using FiniteDiff) : (using ..FiniteDiff)
 

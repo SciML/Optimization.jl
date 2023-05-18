@@ -2,7 +2,7 @@ module OptimizationMTKExt
 
 import SciMLBase
 import SciMLBase: OptimizationFunction, AbstractADType
-import Optimization
+import Optimization, ArrayInterface
 import ADTypes: AutoModelingToolkit
 isdefined(Base, :get_extension) ? (using ModelingToolkit) : (using ..ModelingToolkit)
 
@@ -41,8 +41,8 @@ function Optimization.instantiate_function(f, x, adtype::AutoModelingToolkit, p,
                                       hess_prototype = f.hess_prototype,
                                       cons_jac_prototype = f.cons_jac_prototype,
                                       cons_hess_prototype = f.cons_hess_prototype,
-                                      expr = symbolify(f.expr),
-                                      cons_expr = symbolify.(f.cons_expr),
+                                      expr = Optimization.symbolify(f.expr),
+                                      cons_expr = Optimization.symbolify.(f.cons_expr),
                                       observed = f.observed)
 end
 
@@ -81,8 +81,8 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
                                       hess_prototype = f.hess_prototype,
                                       cons_jac_prototype = f.cons_jac_prototype,
                                       cons_hess_prototype = f.cons_hess_prototype,
-                                      expr = symbolify(f.expr),
-                                      cons_expr = symbolify.(f.cons_expr),
+                                      expr = Optimization.symbolify(f.expr),
+                                      cons_expr = Optimization.symbolify.(f.cons_expr),
                                       observed = f.observed)
 end
 
