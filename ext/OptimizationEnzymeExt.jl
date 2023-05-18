@@ -2,6 +2,7 @@ module OptimizationEnzymeExt
 
 import SciMLBase: OptimizationFunction, AbstractADType
 import Optimization, ArrayInterface
+import LinearAlgebra: I
 import ADTypes: AutoEnzyme
 isdefined(Base, :get_extension) ? (using Enzyme) : (using ..Enzyme)
 

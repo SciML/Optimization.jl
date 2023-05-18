@@ -4,6 +4,7 @@ import SciMLBase: OptimizationFunction, AbstractADType
 import Optimization
 import ADTypes: AutoZygote
 isdefined(Base, :get_extension) ? (using Zygote) : (using ..Zygote)
+import ForwardDiff
 
 function Optimization.instantiate_function(f, x, adtype::AutoZygote, p,
                                            num_cons = 0)
