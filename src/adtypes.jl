@@ -1,5 +1,6 @@
 """
 AutoEnzyme <: AbstractADType
+
 An AbstractADType choice for use in OptimizationFunction for automatically
 generating the unspecified derivative functions. Usage:
 ```julia
@@ -153,11 +154,6 @@ performance can falter when `compile=false`.
   - Compatible with Hv-based optimization by mixing with ForwardDiff
   - Not compatible with constraint functions
 
-!!! note
-    If you are using `AutoReverseDiff` with a second order method (one that requires hessian)
-    then you need to load ForwardDiff as well since the hessian implementation relies on
-    forward-over-reverse mode method for efficiency.
-
 Note that only the unspecified derivative functions are defined. For example,
 if a `hess` function is supplied to the `OptimizationFunction`, then the
 Hessian is not defined via ReverseDiff.
@@ -216,11 +212,6 @@ forward-over-reverse mixing ForwardDiff.jl with Zygote.jl
   - Compatible with Hessian-based optimization via ForwardDiff
   - Compatible with Hv-based optimization via ForwardDiff
   - Not compatible with constraint functions
-
-!!! note
-    If you are using `AutoZygote` with a second order method (one that requires hessian)
-    then you need to load ForwardDiff as well since the hessian implementation relies on
-    forward-over-reverse mode method for efficiency.
 
 Note that only the unspecified derivative functions are defined. For example,
 if a `hess` function is supplied to the `OptimizationFunction`, then the
