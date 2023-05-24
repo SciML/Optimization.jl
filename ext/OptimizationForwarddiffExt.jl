@@ -1,35 +1,9 @@
-"""
-AutoForwardDiff{chunksize} <: AbstractADType
+module OptimizationForwarddiffExt
 
-An AbstractADType choice for use in OptimizationFunction for automatically
-generating the unspecified derivative functions. Usage:
-
-```julia
-OptimizationFunction(f, AutoForwardDiff(); kwargs...)
-```
-
-This uses the [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl)
-package. It is the fastest choice for small systems, especially with
-heavy scalar interactions. It is easy to use and compatible with most
-Julia functions which have loose type restrictions. However,
-because it's forward-mode, it scales poorly in comparison to other AD
-choices. Hessian construction is suboptimal as it uses the forward-over-forward
-approach.
-
-  - Compatible with GPUs
-  - Compatible with Hessian-based optimization
-  - Compatible with Hv-based optimization
-  - Compatible with constraints
-
-Note that only the unspecified derivative functions are defined. For example,
-if a `hess` function is supplied to the `OptimizationFunction`, then the
-Hessian is not defined via ForwardDiff.
-"""
-struct AutoForwardDiff{chunksize} <: AbstractADType end
-
-function AutoForwardDiff(chunksize = nothing)
-    AutoForwardDiff{chunksize}()
-end
+import SciMLBase: OptimizationFunction, AbstractADType
+import Optimization, ArrayInterface
+import ADTypes: AutoForwardDiff
+isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 
 function default_chunk_size(len)
     if len < ForwardDiff.DEFAULT_CHUNK_THRESHOLD
@@ -39,9 +13,9 @@ function default_chunk_size(len)
     end
 end
 
-function instantiate_function(f::OptimizationFunction{true}, x,
-                              adtype::AutoForwardDiff{_chunksize}, p,
-                              num_cons = 0) where {_chunksize}
+function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
+                                           adtype::AutoForwardDiff{_chunksize}, p,
+                                           num_cons = 0) where {_chunksize}
     chunksize = _chunksize === nothing ? default_chunk_size(length(x)) : _chunksize
 
     _f = (θ, args...) -> first(f.f(θ, p, args...))
@@ -115,9 +89,10 @@ function instantiate_function(f::OptimizationFunction{true}, x,
                                       lag_h, f.lag_hess_prototype)
 end
 
-function instantiate_function(f::OptimizationFunction{true}, cache::ReInitCache,
-                              adtype::AutoForwardDiff{_chunksize},
-                              num_cons = 0) where {_chunksize}
+function Optimization.instantiate_function(f::OptimizationFunction{true},
+                                           cache::Optimization.ReInitCache,
+                                           adtype::AutoForwardDiff{_chunksize},
+                                           num_cons = 0) where {_chunksize}
     chunksize = _chunksize === nothing ? default_chunk_size(length(cache.u0)) : _chunksize
 
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
@@ -191,4 +166,6 @@ function instantiate_function(f::OptimizationFunction{true}, cache::ReInitCache,
                                       cons_jac_prototype = f.cons_jac_prototype,
                                       cons_hess_prototype = f.cons_hess_prototype,
                                       lag_h, f.lag_hess_prototype)
+end
+
 end

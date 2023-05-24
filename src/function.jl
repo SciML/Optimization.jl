@@ -43,7 +43,7 @@ function that is not defined, an error is thrown.
 For more information on the use of automatic differentiation, see the
 documentation of the `AbstractADType` types.
 """
-function instantiate_function(f, x, ::AbstractADType,
+function instantiate_function(f, x, ::SciMLBase.NoAD,
                               p, num_cons = 0)
     grad = f.grad === nothing ? nothing : (G, x, args...) -> f.grad(G, x, p, args...)
     hess = f.hess === nothing ? nothing : (H, x, args...) -> f.hess(H, x, p, args...)
@@ -72,7 +72,7 @@ function instantiate_function(f, x, ::AbstractADType,
                                       observed = f.observed)
 end
 
-function instantiate_function(f, cache::ReInitCache, ::AbstractADType,
+function instantiate_function(f, cache::ReInitCache, ::SciMLBase.NoAD,
                               num_cons = 0)
     grad = f.grad === nothing ? nothing : (G, x, args...) -> f.grad(G, x, cache.p, args...)
     hess = f.hess === nothing ? nothing : (H, x, args...) -> f.hess(H, x, cache.p, args...)
@@ -99,4 +99,15 @@ function instantiate_function(f, cache::ReInitCache, ::AbstractADType,
                                       expr = expr, cons_expr = cons_expr,
                                       syms = f.syms, paramsyms = f.paramsyms,
                                       observed = f.observed)
+end
+
+function instantiate_function(f, x, adtype::ADTypes.AbstractADType,
+                              p, num_cons = 0)
+    adtypestr = string(adtype)
+    open_nrmlbrkt_ind = findfirst('(', adtypestr)
+    open_squigllybrkt_ind = findfirst('{', adtypestr)
+    open_brkt_ind = isnothing(open_squigllybrkt_ind) ? open_nrmlbrkt_ind :
+                    min(open_nrmlbrkt_ind, open_squigllybrkt_ind)
+    adpkg = adtypestr[5:(open_brkt_ind - 1)]
+    throw(ArgumentError("The passed automatic differentiation backend choice is not available. Please load the corresponding AD package $adpkg."))
 end

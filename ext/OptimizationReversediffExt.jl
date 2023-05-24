@@ -1,51 +1,14 @@
-"""
-AutoReverseDiff <: AbstractADType
+module OptimizationReversediffExt
 
-An AbstractADType choice for use in OptimizationFunction for automatically
-generating the unspecified derivative functions. Usage:
+import SciMLBase: OptimizationFunction, AbstractADType
+import Optimization
+import ADTypes: AutoReverseDiff
+isdefined(Base, :get_extension) ? (using ReverseDiff) : (using ..ReverseDiff)
+import ReverseDiff.ForwardDiff
 
-```julia
-OptimizationFunction(f, AutoReverseDiff(); kwargs...)
-```
-
-This uses the [ReverseDiff.jl](https://github.com/JuliaDiff/ReverseDiff.jl)
-package. `AutoReverseDiff` has a default argument, `compile`, which
-denotes whether the reverse pass should be compiled. **`compile` should only
-be set to `true` if `f` contains no branches (if statements, while loops)
-otherwise it can produce incorrect derivatives!**
-
-`AutoReverseDiff` is generally applicable to many pure Julia codes,
-and with `compile=true` it is one of the fastest options on code with
-heavy scalar interactions. Hessian calculations are fast by mixing
-ForwardDiff with ReverseDiff for forward-over-reverse. However, its
-performance can falter when `compile=false`.
-
-  - Not compatible with GPUs
-  - Compatible with Hessian-based optimization by mixing with ForwardDiff
-  - Compatible with Hv-based optimization by mixing with ForwardDiff
-  - Not compatible with constraint functions
-
-Note that only the unspecified derivative functions are defined. For example,
-if a `hess` function is supplied to the `OptimizationFunction`, then the
-Hessian is not defined via ReverseDiff.
-
-## Constructor
-
-```julia
-AutoReverseDiff(; compile = false)
-```
-
-#### Note: currently, compilation is not defined/used!
-"""
-struct AutoReverseDiff <: AbstractADType
-    compile::Bool
-end
-
-AutoReverseDiff(; compile = false) = AutoReverseDiff(compile)
-
-function instantiate_function(f, x, adtype::AutoReverseDiff,
-                              p = SciMLBase.NullParameters(),
-                              num_cons = 0)
+function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
+                                           p = SciMLBase.NullParameters(),
+                                           num_cons = 0)
     num_cons != 0 && error("AutoReverseDiff does not currently support constraints")
 
     _f = (θ, args...) -> first(f.f(θ, p, args...))
@@ -85,8 +48,8 @@ function instantiate_function(f, x, adtype::AutoReverseDiff,
                                        cons_hess_prototype = nothing)
 end
 
-function instantiate_function(f, cache::ReInitCache,
-                              adtype::AutoReverseDiff, num_cons = 0)
+function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
+                                           adtype::AutoReverseDiff, num_cons = 0)
     num_cons != 0 && error("AutoReverseDiff does not currently support constraints")
 
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
@@ -124,4 +87,6 @@ function instantiate_function(f, cache::ReInitCache,
                                        hess_prototype = f.hess_prototype,
                                        cons_jac_prototype = nothing,
                                        cons_hess_prototype = nothing)
+end
+
 end

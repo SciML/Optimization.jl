@@ -1,56 +1,14 @@
+module OptimizationFinitediffExt
+
+import SciMLBase: OptimizationFunction, AbstractADType
+import Optimization, ArrayInterface
+import ADTypes: AutoFiniteDiff
+isdefined(Base, :get_extension) ? (using FiniteDiff) : (using ..FiniteDiff)
+
 const FD = FiniteDiff
-"""
-AutoFiniteDiff{T1,T2,T3} <: AbstractADType
 
-An AbstractADType choice for use in OptimizationFunction for automatically
-generating the unspecified derivative functions. Usage:
-
-```julia
-OptimizationFunction(f, AutoFiniteDiff(); kwargs...)
-```
-
-This uses [FiniteDiff.jl](https://github.com/JuliaDiff/FiniteDiff.jl).
-While not necessarily the most efficient, this is the only
-choice that doesn't require the `f` function to be automatically
-differentiable, which means it applies to any choice. However, because
-it's using finite differencing, one needs to be careful as this procedure
-introduces numerical error into the derivative estimates.
-
-  - Compatible with GPUs
-  - Compatible with Hessian-based optimization
-  - Compatible with Hv-based optimization
-  - Compatible with constraint functions
-
-Note that only the unspecified derivative functions are defined. For example,
-if a `hess` function is supplied to the `OptimizationFunction`, then the
-Hessian is not defined via FiniteDiff.
-
-## Constructor
-
-```julia
-AutoFiniteDiff(; fdtype = Val(:forward)fdjtype = fdtype, fdhtype = Val(:hcentral))
-```
-
-  - `fdtype`: the method used for defining the gradient
-  - `fdjtype`: the method used for defining the Jacobian of constraints.
-  - `fdhtype`: the method used for defining the Hessian
-
-For more information on the derivative type specifiers, see the
-[FiniteDiff.jl documentation](https://github.com/JuliaDiff/FiniteDiff.jl).
-"""
-struct AutoFiniteDiff{T1, T2, T3} <: AbstractADType
-    fdtype::T1
-    fdjtype::T2
-    fdhtype::T3
-end
-
-function AutoFiniteDiff(; fdtype = Val(:forward), fdjtype = fdtype,
-                        fdhtype = Val(:hcentral))
-    AutoFiniteDiff(fdtype, fdjtype, fdhtype)
-end
-
-function instantiate_function(f, x, adtype::AutoFiniteDiff, p,
-                              num_cons = 0)
+function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
+                                           num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, p, args...))
     updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
 
@@ -150,8 +108,8 @@ function instantiate_function(f, x, adtype::AutoFiniteDiff, p,
                                       lag_h, f.lag_hess_prototype)
 end
 
-function instantiate_function(f, cache::ReInitCache,
-                              adtype::AutoFiniteDiff, num_cons = 0)
+function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
+                                           adtype::AutoFiniteDiff, num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
     updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
 
@@ -255,4 +213,6 @@ function instantiate_function(f, cache::ReInitCache,
                                       cons_jac_prototype = f.cons_jac_prototype,
                                       cons_hess_prototype = f.cons_hess_prototype,
                                       lag_h, f.lag_hess_prototype)
+end
+
 end
