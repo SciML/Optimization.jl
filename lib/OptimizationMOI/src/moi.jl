@@ -44,34 +44,6 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
                                 NamedTuple(kwargs))
 end
 
-SciMLBase.has_reinit(cache::MOIOptimizationCache) = true
-function SciMLBase.reinit!(cache::MOIOptimizationCache; p = missing, u0 = missing)
-    if p === missing && u0 === missing
-        p, u0 = cache.p, cache.u0
-    else # at least one of them has a value
-        if p === missing
-            p = cache.p
-        end
-        if u0 === missing
-            u0 = cache.u0
-        end
-        if (eltype(p) <: Pair && !isempty(p)) || (eltype(u0) <: Pair && !isempty(u0)) # one is a non-empty symbolic map
-            hasproperty(cache.f, :sys) && hasfield(typeof(cache.f.sys), :ps) ||
-                throw(ArgumentError("This cache does not support symbolic maps with `remake`, i.e. it does not have a symbolic origin." *
-                                    " Please use `remake` with the `p` keyword argument as a vector of values, paying attention to parameter order."))
-            hasproperty(cache.f, :sys) && hasfield(typeof(cache.f.sys), :states) ||
-                throw(ArgumentError("This cache does not support symbolic maps with `remake`, i.e. it does not have a symbolic origin." *
-                                    " Please use `remake` with the `u0` keyword argument as a vector of values, paying attention to state order."))
-            p, u0 = SciMLBase.process_p_u0_symbolic(cache, p, u0)
-        end
-    end
-
-    cache.p = p
-    cache.u0 = u0
-
-    return cache
-end
-
 struct MalformedExprException <: Exception
     msg::String
 end
@@ -210,7 +182,7 @@ simplify_and_expand!(expr::T) where {T} = expr
 simplify_and_expand!(expr::Rational) = Float64(expr)
 
 """
-Simplify and expands the given expression. All computations on numbers are evaluated and simplified. 
+Simplify and expands the given expression. All computations on numbers are evaluated and simplified.
 After successive application the resulting expression should only contain terms of the form `:(a * x[i])` or `:(a * x[i] * x[j])`.
 Also mutates the given expression in-place, however incorrectly!
 """
@@ -230,13 +202,13 @@ function simplify_and_expand!(expr::Expr) # looks awful but this is actually muc
             return expr.args[3]
         elseif expr.args[1] == :(*) && isa(expr.args[3], Real) && isone(expr.args[3]) # x * 1 => x
             return expr.args[2]
-        elseif expr.args[1] == :(*) && isa(expr.args[2], Real) && iszero(expr.args[2]) # 0 * x => 0 
+        elseif expr.args[1] == :(*) && isa(expr.args[2], Real) && iszero(expr.args[2]) # 0 * x => 0
             return 0
         elseif expr.args[1] == :(*) && isa(expr.args[3], Real) && iszero(expr.args[3]) # x * 0 => x
             return 0
-        elseif expr.args[1] == :(+) && isa(expr.args[2], Real) && iszero(expr.args[2]) # 0 + x => x 
+        elseif expr.args[1] == :(+) && isa(expr.args[2], Real) && iszero(expr.args[2]) # 0 + x => x
             return expr.args[3]
-        elseif expr.args[1] == :(+) && isa(expr.args[3], Real) && iszero(expr.args[3]) # x + 0 => x 
+        elseif expr.args[1] == :(+) && isa(expr.args[3], Real) && iszero(expr.args[3]) # x + 0 => x
             return expr.args[2]
         elseif expr.args[1] == :(/) && isa(expr.args[3], Real) && isone(expr.args[3]) # x / 1 => x
             return expr.args[2]
@@ -340,7 +312,7 @@ function collect_moi_terms!(expr::Expr, affine_terms, quadratic_terms, constant)
                     c = factor * Float64(expr.args[2])
                     (isnan(c) || isinf(c)) && throw(MalformedExprException("$expr"))
                     push!(quadratic_terms, MOI.ScalarQuadraticTerm(c, x1, x2))
-                elseif expr.args[3].head == :ref # a::Number * x[i] 
+                elseif expr.args[3].head == :ref # a::Number * x[i]
                     x = _get_variable_index_from_expr(expr.args[3])
                     c = Float64(expr.args[2])
                     (isnan(c) || isinf(c)) && throw(MalformedExprException("$expr"))
@@ -410,11 +382,11 @@ end
 """
     rep_pars_vals!(expr::T, expr_map)
 
-Replaces variable expressions of the form `:some_variable` or `:(getindex, :some_variable, j)` with 
-`x[i]` were `i` is the corresponding index in the state vector. Same for the parameters. The 
+Replaces variable expressions of the form `:some_variable` or `:(getindex, :some_variable, j)` with
+`x[i]` were `i` is the corresponding index in the state vector. Same for the parameters. The
 variable/parameter pairs are provided via the `expr_map`.
 
-Expects only expressions where the variables and parameters are of the form `:some_variable` 
+Expects only expressions where the variables and parameters are of the form `:some_variable`
 or `:(getindex, :some_variable, j)` or :(some_variable[j]).
 """
 rep_pars_vals!(expr::T, expr_map) where {T} = expr
@@ -454,7 +426,7 @@ end
 """
     get_expr_map(sys)
 
-Make a map from every parameter and state of the given system to an expression indexing its position 
+Make a map from every parameter and state of the given system to an expression indexing its position
 in the state or parameter vector.
 """
 function get_expr_map(sys)
@@ -469,7 +441,7 @@ end
 """
     convert_to_expr(eq, sys; expand_expr = false, pairs_arr = expr_map(sys))
 
-Converts the given symbolic expression to a Julia `Expr` and replaces all symbols, i.e. states and 
+Converts the given symbolic expression to a Julia `Expr` and replaces all symbols, i.e. states and
 parameters with `x[i]` and `p[i]`.
 
 # Arguments:
