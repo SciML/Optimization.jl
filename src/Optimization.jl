@@ -57,15 +57,16 @@ include("adtypes.jl")
     end
 end
 
-function Base.getproperty(cache::AbstractOptimizationCache, x::Symbol)
+function Base.getproperty(cache::SciMLBase.AbstractOptimizationCache, x::Symbol)
     if x in fieldnames(Optimization.ReInitCache)
         return getfield(cache.reinit_cache, x)
     end
     return getfield(cache, x)
 end
 
-SciMLBase.has_reinit(cache::AbstractOptimizationCache) = true
-function SciMLBase.reinit!(cache::AbstractOptimizationCache; p = missing, u0 = missing)
+SciMLBase.has_reinit(cache::SciMLBase.AbstractOptimizationCache) = true
+function SciMLBase.reinit!(cache::SciMLBase.AbstractOptimizationCache; p = missing,
+                           u0 = missing)
     if p === missing && u0 === missing
         p, u0 = cache.p, cache.u0
     else # at least one of them has a value
