@@ -1,6 +1,6 @@
 module OptimizationEnzymeExt
 
-import SciMLBase: OptimizationFunction, AbstractADType
+import SciMLBase: OptimizationFunction
 import Optimization, ArrayInterface
 import LinearAlgebra: I
 import ADTypes: AutoEnzyme
@@ -106,7 +106,8 @@ end
 
 end
 
-function Optimization.instantiate_function(f::OptimizationFunction{true}, cache::ReInitCache,
+function Optimization.instantiate_function(f::OptimizationFunction{true},
+                                           cache::ReInitCache,
                                            adtype::AutoEnzyme,
                                            num_cons = 0)
     _f = (θ, y, args...) -> (y .= first(f.f(θ, cache.p, args...)); return nothing)
@@ -203,4 +204,3 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, cache:
                                       cons_jac_prototype = f.cons_jac_prototype,
                                       cons_hess_prototype = f.cons_hess_prototype)
 end
-

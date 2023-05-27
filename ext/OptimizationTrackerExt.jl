@@ -1,6 +1,6 @@
 module OptimizationTrackerExt
 
-import SciMLBase: OptimizationFunction, AbstractADType
+import SciMLBase: OptimizationFunction
 import Optimization
 import ADTypes: AutoTracker
 isdefined(Base, :get_extension) ? (using Tracker) : (using ..Tracker)

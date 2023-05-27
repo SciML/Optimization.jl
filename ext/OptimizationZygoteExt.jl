@@ -1,6 +1,6 @@
 module OptimizationZygoteExt
 
-import SciMLBase: OptimizationFunction, AbstractADType
+import SciMLBase: OptimizationFunction
 import Optimization
 import ADTypes: AutoZygote
 isdefined(Base, :get_extension) ? (using Zygote) : (using ..Zygote)
