@@ -15,7 +15,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoModelingToolkit, p,
                                                                               num_cons),
                                                                  ucons = fill(0.0,
                                                                               num_cons)))
-    sys = ModelingToolkit.structural_simplify(sys)
+    #sys = ModelingToolkit.structural_simplify(sys)
     f = OptimizationProblem(sys, x, p, grad = true, hess = true,
                             sparse = adtype.obj_sparse, cons_j = true, cons_h = true,
                             cons_sparse = adtype.cons_sparse).f
@@ -55,7 +55,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
                                                                               num_cons),
                                                                  ucons = fill(0.0,
                                                                               num_cons)))
-    sys = ModelingToolkit.structural_simplify(sys)
+    #sys = ModelingToolkit.structural_simplify(sys)
     f = OptimizationProblem(sys, cache.u0, cache.p, grad = true, hess = true,
                             sparse = adtype.obj_sparse, cons_j = true, cons_h = true,
                             cons_sparse = adtype.cons_sparse).f
