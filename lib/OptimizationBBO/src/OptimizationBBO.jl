@@ -139,7 +139,11 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO,
 
     t0 = time()
 
-    opt_res = BlackBoxOptim.bboptimize(opt_setup)
+    if isnothing(prob.u0)
+        opt_res = BlackBoxOptim.bboptimize(opt_setup)
+    else
+        opt_res = BlackBoxOptim.bboptimize(opt_setup, prob.u0)
+    end
 
     if progress
         # Set progressbar to 1 to finish it
