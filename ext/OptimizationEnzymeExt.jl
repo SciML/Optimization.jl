@@ -104,10 +104,8 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
                                       cons_hess_prototype = f.cons_hess_prototype)
 end
 
-end
-
 function Optimization.instantiate_function(f::OptimizationFunction{true},
-                                           cache::ReInitCache,
+                                           cache::Optimization.ReInitCache,
                                            adtype::AutoEnzyme,
                                            num_cons = 0)
     _f = (θ, y, args...) -> (y .= first(f.f(θ, cache.p, args...)); return nothing)
@@ -203,4 +201,6 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
                                       hess_prototype = f.hess_prototype,
                                       cons_jac_prototype = f.cons_jac_prototype,
                                       cons_hess_prototype = f.cons_hess_prototype)
+end
+
 end
