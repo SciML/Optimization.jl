@@ -1,7 +1,7 @@
 module OptimizationMTKExt
 
 import SciMLBase
-import SciMLBase: OptimizationFunction, AbstractADType
+import SciMLBase: OptimizationFunction
 import Optimization, ArrayInterface
 import ADTypes: AutoModelingToolkit
 isdefined(Base, :get_extension) ? (using ModelingToolkit) : (using ..ModelingToolkit)
