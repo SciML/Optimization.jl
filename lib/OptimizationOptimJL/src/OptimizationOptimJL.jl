@@ -104,7 +104,7 @@ function __map_optimizer_args(cache::OptimJLOptimizationCache,
     end
 
     if !isnothing(maxiters)
-        mapped_args = (; mapped_args..., iterations = maxiters)
+        mapped_args = (; mapped_args..., outer_iterations = maxiters)
     end
 
     if !isnothing(maxtime)
