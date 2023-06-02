@@ -4,7 +4,7 @@ import SciMLBase: OptimizationFunction
 import Optimization
 import ADTypes: AutoReverseDiff
 isdefined(Base, :get_extension) ? (using ReverseDiff) : (using ..ReverseDiff)
-import ReverseDiff.ForwardDiff
+const ForwardDiff = ReverseDiff.ForwardDiff
 
 function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
                                            p = SciMLBase.NullParameters(),
