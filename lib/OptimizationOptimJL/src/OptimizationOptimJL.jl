@@ -104,7 +104,7 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
 
     cur, state = iterate(cache.data)
 
-    !(cache.opt isa Optim.ZerothOrderOptimizer) && f.grad === nothing &&
+    !(cache.opt isa Optim.ZerothOrderOptimizer) && cache.f.grad === nothing &&
         error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
     function _cb(trace)
@@ -284,7 +284,7 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
 
     cur, state = iterate(cache.data)
 
-    opt isa Optim.ConstrainedOptimizer && f.cons_j === nothing &&
+    opt isa Optim.ConstrainedOptimizer && cache.f.cons_j === nothing &&
         error("This optimizer requires derivative definitions for nonlinear constraints. If the problem does not have nonlinear constraints, choose a different optimizer. Otherwise define the derivative for cons using OptimizationFunction either directly or automatically generate them with one of the autodiff backends")
 
     function _cb(trace)

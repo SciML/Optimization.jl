@@ -77,8 +77,9 @@ function SciMLBase.__solve(cache::OptimizationCache)
         return first(x)
     end
 
-    opt_args = __map_optimizer_args(cache, opt, callback = _cb, maxiters = maxiters,
-                                    maxtime = maxtime, abstol = abstol, reltol = reltol;
+    opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb, maxiters = maxiters,
+                                    maxtime = maxtime, abstol = cache.abstol,
+                                    reltol = cache.reltol;
                                     kwargs...)
 
     t0 = time()
@@ -86,9 +87,9 @@ function SciMLBase.__solve(cache::OptimizationCache)
         if !isnothing(f.cons)
             c = x -> (res = zeros(length(cache.lcons)); f.cons(res, x); res)
             cons = WorstFitnessConstraints(Float64[], Float64[], cache.lcons, cache.ucons, c)
-            opt_res = Evolutionary.optimize(_loss, cons, cache.u0, opt, opt_args)
+            opt_res = Evolutionary.optimize(_loss, cons, cache.u0, cache.opt, opt_args)
         else
-            opt_res = Evolutionary.optimize(_loss, cache.u0, opt, opt_args)
+            opt_res = Evolutionary.optimize(_loss, cache.u0, cache.opt, opt_args)
         end
     else
         if !isnothing(f.cons)
@@ -97,12 +98,12 @@ function SciMLBase.__solve(cache::OptimizationCache)
         else
             cons = BoxConstraints(cache.lb, cache.ub)
         end
-        opt_res = Evolutionary.optimize(_loss, cons, cache.u0, opt, opt_args)
+        opt_res = Evolutionary.optimize(_loss, cons, cache.u0, cache.opt, opt_args)
     end
     t1 = time()
     opt_ret = Symbol(Evolutionary.converged(opt_res))
 
-    SciMLBase.build_solution(cache, opt,
+    SciMLBase.build_solution(cache, cache.opt,
                              Evolutionary.minimizer(opt_res),
                              Evolutionary.minimum(opt_res); original = opt_res,
                              retcode = opt_ret, solve_time = t1 - t0)

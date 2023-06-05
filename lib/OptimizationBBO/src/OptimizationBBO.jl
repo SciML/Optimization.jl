@@ -121,12 +121,14 @@ function SciMLBase.__solve(cache::OptimizationCache)
         end
     end
 
-    opt_args = __map_optimizer_args(cache.data, opt,
-                                    callback = isnothing(callback) && isnothing(cache.data) ?
+    opt_args = __map_optimizer_args(cache.data, cache.opt,
+                                    callback = isnothing(cache.callback) &&
+                                               isnothing(cache.data) ?
                                                nothing : _cb,
                                     maxiters = maxiters,
-                                    maxtime = maxtime, abstol = abstol, reltol = reltol;
-                                    verbose = verbose, kwargs...)
+                                    maxtime = maxtime, abstol = cache.abstol,
+                                    reltol = cache.reltol;
+                                    verbose = cache.solver_args.verbose, kwargs...)
 
     opt_setup = BlackBoxOptim.bbsetup(_loss; opt_args...)
 
@@ -143,7 +145,7 @@ function SciMLBase.__solve(cache::OptimizationCache)
 
     opt_ret = Symbol(opt_res.stop_reason)
 
-    SciMLBase.build_solution(cache, opt,
+    SciMLBase.build_solution(cache, cache.opt,
                              BlackBoxOptim.best_candidate(opt_res),
                              BlackBoxOptim.best_fitness(opt_res); original = opt_res,
                              retcode = opt_ret, solve_time = t1 - t0)

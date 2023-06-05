@@ -71,6 +71,6 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt,
                           progress = false,
                           kwargs...)
     return OptimizationCache(prob, opt, data; maxiters, maxtime, abstol, callback,
-                                reltol, verbose, progress,
+                                reltol, progress,
                                 kwargs...)
 end

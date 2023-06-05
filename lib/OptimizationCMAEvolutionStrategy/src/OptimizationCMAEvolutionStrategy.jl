@@ -65,8 +65,9 @@ function SciMLBase.__solve(cache::OptimizationCache)
         return first(x)
     end
 
-    opt_args = __map_optimizer_args(cache, opt, callback = _cb, maxiters = maxiters,
-                                    maxtime = maxtime, abstol = abstol, reltol = reltol;
+    opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb, maxiters = maxiters,
+                                    maxtime = maxtime, abstol = cache.abstol,
+                                    reltol = cache.reltol;
                                     kwargs...)
 
     t0 = time()
@@ -75,7 +76,7 @@ function SciMLBase.__solve(cache::OptimizationCache)
 
     opt_ret = opt_res.stop.reason
 
-    SciMLBase.build_solution(cache, opt,
+    SciMLBase.build_solution(cache, cache.opt,
                              opt_res.logger.xbest[end],
                              opt_res.logger.fbest[end]; original = opt_res,
                              retcode = opt_ret, solve_time = t1 - t0)

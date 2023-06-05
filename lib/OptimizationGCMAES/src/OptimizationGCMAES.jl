@@ -60,7 +60,7 @@ function SciMLBase.__solve(cache::GCMAESOptimizationCache)
     local G = similar(cache.u0)
 
     _loss = function (θ)
-        x = cache.f.f(θ, cache.p)
+        x = cache.f(θ, cache.p)
         return x[1]
     end
 

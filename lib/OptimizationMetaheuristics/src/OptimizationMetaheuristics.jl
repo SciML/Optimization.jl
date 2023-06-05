@@ -90,20 +90,20 @@ function SciMLBase.__solve(cache::OptimizationCache)
         @warn "Inequality constraints are current not passed on by Optimization"
     end
 
-    __map_optimizer_args!(cache, opt, callback = cache.callback, maxiters = maxiters,
+    __map_optimizer_args!(cache, cache.opt, callback = cache.callback, maxiters = maxiters,
                           maxtime = maxtime, abstol = cache.abstol,
                           reltol = cache.reltol;
                           kwargs...)
 
     if use_initial
-        initial_population!(opt, cache, opt_bounds, _loss)
+        initial_population!(cache.opt, cache, opt_bounds, _loss)
     end
 
     t0 = time()
-    opt_res = Metaheuristics.optimize(_loss, opt_bounds, opt)
+    opt_res = Metaheuristics.optimize(_loss, opt_bounds, cache.opt)
     t1 = time()
 
-    SciMLBase.build_solution(cache, opt,
+    SciMLBase.build_solution(cache, cache.opt,
                              Metaheuristics.minimizer(opt_res),
                              Metaheuristics.minimum(opt_res); original = opt_res,
                              solve_time = t1 - t0)
