@@ -33,7 +33,7 @@ jobs:
           - OptimizationPolyalgorithms
         version:
           - '1'
-          - '1.6'
+          - '1.8'
     steps:
       - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@v1
