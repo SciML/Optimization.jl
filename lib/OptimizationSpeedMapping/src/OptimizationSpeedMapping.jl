@@ -10,25 +10,6 @@ struct SpeedMappingOpt end
 
 SciMLBase.allowsbounds(::SpeedMappingOpt) = true
 SciMLBase.allowscallback(::SpeedMappingOpt) = false
-
-struct SpeedMappingOptimizationCache{F <: OptimizationFunction, RC, LB, UB, O, P} <:
-       SciMLBase.AbstractOptimizationCache
-    f::F
-    reinit_cache::RC
-    lb::LB
-    ub::UB
-    opt::O
-    progress::P
-    solver_args::NamedTuple
-end
-
-function SpeedMappingOptimizationCache(prob::OptimizationProblem, opt; progress, kwargs...)
-    reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
-    f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype)
-    return SpeedMappingOptimizationCache(f, reinit_cache, prob.lb, prob.ub, opt, progress,
-                                         NamedTuple(kwargs))
-end
-
 SciMLBase.supports_opt_cache_interface(opt::SpeedMappingOpt) = true
 
 function __map_optimizer_args(cache::SpeedMappingOptimizationCache, opt::SpeedMappingOpt;
@@ -72,7 +53,7 @@ function SciMLBase.__init(prob::OptimizationProblem, opt::SpeedMappingOpt;
                                          progress, kwargs...)
 end
 
-function SciMLBase.__solve(cache::SpeedMappingOptimizationCache)
+function SciMLBase.__solve(cache::OptimizationCache)
     local x
 
     _loss = function (θ)

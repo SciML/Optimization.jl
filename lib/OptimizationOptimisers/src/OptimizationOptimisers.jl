@@ -9,36 +9,9 @@ const OptimisersOptimizers = Union{Descent, Adam, Momentum, Nesterov, RMSProp,
                                    AdaBelief,
                                    WeightDecay, ClipGrad, ClipNorm, OptimiserChain}
 
-struct OptimisersOptimizationCache{F <: OptimizationFunction, RC, LB, UB, S, D, O} <:
-       SciMLBase.AbstractOptimizationCache
-    f::F
-    reinit_cache::RC
-    lb::LB
-    ub::UB
-    sense::S
-    opt::O
-    data::D
-    solver_args::NamedTuple
-end
-
-function OptimisersOptimizationCache(prob::OptimizationProblem, opt, data; kwargs...)
-    reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
-    f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype)
-    return OptimisersOptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.sense, opt,
-                                       data, NamedTuple(kwargs))
-end
-
 SciMLBase.supports_opt_cache_interface(opt::OptimisersOptimizers) = true
 
-function SciMLBase.__init(prob::OptimizationProblem, opt::OptimisersOptimizers,
-                          data = Optimization.DEFAULT_DATA;
-                          maxiters::Number = 0, callback = (args...) -> (false),
-                          progress = false, save_best = true, kwargs...)
-    return OptimisersOptimizationCache(prob, opt, data; maxiters, callback, progress,
-                                       save_best, kwargs...)
-end
-
-function SciMLBase.__solve(cache::OptimisersOptimizationCache)
+function SciMLBase.__solve(cache::OptimizationCache)
     if cache.data != Optimization.DEFAULT_DATA
         maxiters = length(cache.data)
         data = cache.data

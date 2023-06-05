@@ -6,19 +6,17 @@ using Optimization.SciMLBase
 
 SciMLBase.requiresbounds(opt::MultistartOptimization.TikTak) = true
 SciMLBase.allowsbounds(opt::MultistartOptimization.TikTak) = true
+SciMLBase.supports_opt_cache_interface(opt::MultistartOptimization.TikTak) = true
 
-function SciMLBase.__solve(prob::OptimizationProblem,
-                           multiopt::MultistartOptimization.TikTak, opt;
-                           use_threads = true,
-                           kwargs...)
+function SciMLBase.__solve(cache::OptimizationCache)
     local x, _loss
 
     _loss = function (θ)
-        x = prob.f(θ, prob.p)
+        x = cache.f(θ, cache.p)
         return first(x)
     end
 
-    opt_setup = MultistartOptimization.MinimizationProblem(_loss, prob.lb, prob.ub)
+    opt_setup = MultistartOptimization.MinimizationProblem(_loss, cache.lb, cache.ub)
 
     _local_optimiser = function (pb, θ0, prob)
         prob_tmp = remake(prob, u0 = θ0)
@@ -36,7 +34,7 @@ function SciMLBase.__solve(prob::OptimizationProblem,
     t1 = time()
     opt_ret = hasproperty(opt_res, :ret) ? opt_res.ret : nothing
 
-    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p),
+    SciMLBase.build_solution(cache,
                              (multiopt, opt), opt_res.location, opt_res.value;
                              (isnothing(opt_ret) ? (; original = opt_res) :
                               (; original = opt_res, retcode = opt_ret,

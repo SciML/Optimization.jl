@@ -12,40 +12,6 @@ SciMLBase.allowsbounds(opt::Optim.AbstractOptimizer) = true
 SciMLBase.allowsbounds(opt::Optim.SimulatedAnnealing) = false
 SciMLBase.requiresbounds(opt::Optim.Fminbox) = true
 SciMLBase.requiresbounds(opt::Optim.SAMIN) = true
-
-struct OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C} <:
-       SciMLBase.AbstractOptimizationCache
-    f::F
-    reinit_cache::RC
-    lb::LB
-    ub::UB
-    lcons::LC
-    ucons::UC
-    sense::S
-    opt::O
-    data::D
-    progress::P
-    callback::C
-    solver_args::NamedTuple
-end
-
-function OptimJLOptimizationCache(prob::OptimizationProblem, opt, data; progress, callback,
-                                  kwargs...)
-    reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
-    num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
-    f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons)
-
-    !(opt isa Optim.ZerothOrderOptimizer) && f.grad === nothing &&
-        error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
-
-    opt isa Optim.ConstrainedOptimizer && f.cons_j === nothing &&
-        error("This optimizer requires derivative definitions for nonlinear constraints. If the problem does not have nonlinear constraints, choose a different optimizer. Otherwise define the derivative for cons using OptimizationFunction either directly or automatically generate them with one of the autodiff backends")
-
-    return OptimJLOptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons,
-                                    prob.ucons, prob.sense,
-                                    opt, data, progress, callback, NamedTuple(kwargs))
-end
-
 SciMLBase.supports_opt_cache_interface(opt::Optim.AbstractOptimizer) = true
 SciMLBase.supports_opt_cache_interface(opt::Union{Optim.Fminbox, Optim.SAMIN}) = true
 SciMLBase.supports_opt_cache_interface(opt::Optim.ConstrainedOptimizer) = true
@@ -117,12 +83,12 @@ function SciMLBase.__init(prob::OptimizationProblem,
 
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
     maxtime = Optimization._check_and_convert_maxtime(maxtime)
-    return OptimJLOptimizationCache(prob, opt, data; callback, maxiters, maxtime, abstol,
+    return OptimizationCache(prob, opt, data; callback, maxiters, maxtime, abstol,
                                     reltol, progress,
                                     kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P
                                                            }) where {
                                                                      F,
                                                                      RC,
@@ -137,6 +103,9 @@ function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC
     local x, cur, state
 
     cur, state = iterate(cache.data)
+
+    !(cache.opt isa Optim.ZerothOrderOptimizer) && f.grad === nothing &&
+        error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
     function _cb(trace)
         cb_call = cache.opt isa Optim.NelderMead ?
@@ -223,7 +192,7 @@ function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC
                              solve_time = t1 - t0)
 end
 
-function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P
                                                            }) where {
                                                                      F,
                                                                      RC,
@@ -299,7 +268,7 @@ function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC
                              original = opt_res, retcode = opt_ret, solve_time = t1 - t0)
 end
 
-function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P
                                                            }) where {
                                                                      F,
                                                                      RC,
@@ -314,6 +283,9 @@ function SciMLBase.__solve(cache::OptimJLOptimizationCache{F, RC, LB, UB, LC, UC
     local x, cur, state
 
     cur, state = iterate(cache.data)
+
+    opt isa Optim.ConstrainedOptimizer && f.cons_j === nothing &&
+        error("This optimizer requires derivative definitions for nonlinear constraints. If the problem does not have nonlinear constraints, choose a different optimizer. Otherwise define the derivative for cons using OptimizationFunction either directly or automatically generate them with one of the autodiff backends")
 
     function _cb(trace)
         cb_call = cache.callback(decompose_trace(trace).metadata["x"], x...)

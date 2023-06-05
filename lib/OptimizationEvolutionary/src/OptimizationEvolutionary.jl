@@ -6,6 +6,7 @@ using Optimization.SciMLBase
 
 SciMLBase.allowsbounds(opt::Evolutionary.AbstractOptimizer) = true
 SciMLBase.allowsconstraints(opt::Evolutionary.AbstractOptimizer) = true
+SciMLBase.supports_opt_cache_interface(opt::Evolutionary.AbstractOptimizer) = true
 
 decompose_trace(trace::Evolutionary.OptimizationTrace) = last(trace)
 decompose_trace(trace::Evolutionary.OptimizationTraceRecord) = trace
@@ -15,7 +16,7 @@ function Evolutionary.trace!(record::Dict{String, Any}, objfun, state, populatio
     record["x"] = population
 end
 
-function __map_optimizer_args(prob::OptimizationProblem,
+function __map_optimizer_args(cache::OptimizationCache,
                               opt::Evolutionary.AbstractOptimizer;
                               callback = nothing,
                               maxiters::Union{Number, Nothing} = nothing,
@@ -48,67 +49,60 @@ function __map_optimizer_args(prob::OptimizationProblem,
     return Evolutionary.Options(; mapped_args...)
 end
 
-function SciMLBase.__solve(prob::OptimizationProblem, opt::Evolutionary.AbstractOptimizer,
-                           data = Optimization.DEFAULT_DATA;
-                           callback = (args...) -> (false),
-                           maxiters::Union{Number, Nothing} = nothing,
-                           maxtime::Union{Number, Nothing} = nothing,
-                           abstol::Union{Number, Nothing} = nothing,
-                           reltol::Union{Number, Nothing} = nothing,
-                           progress = false, kwargs...)
+function SciMLBase.__solve(cache::OptimizationCache)
     local x, cur, state
 
-    if data != Optimization.DEFAULT_DATA
-        maxiters = length(data)
+    if cache.data != Optimization.DEFAULT_DATA
+        maxiters = length(cache.data)
     end
 
-    cur, state = iterate(data)
+    cur, state = iterate(cache.data)
 
     function _cb(trace)
-        cb_call = callback(decompose_trace(trace).metadata["x"], trace.value...)
+        cb_call = cache.callback(decompose_trace(trace).metadata["x"], trace.value...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
-        cur, state = iterate(data, state)
+        cur, state = iterate(cache.data, state)
         cb_call
     end
 
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(maxtime)
+    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
-    f = Optimization.instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p,
-                                          prob.ucons === nothing ? 0 : length(prob.ucons))
+    f = cache.f
+
     _loss = function (θ)
-        x = prob.f(θ, prob.p, cur...)
+        x = f(θ, cache.p, cur...)
         return first(x)
     end
 
-    opt_args = __map_optimizer_args(prob, opt, callback = _cb, maxiters = maxiters,
+    opt_args = __map_optimizer_args(cache, opt, callback = _cb, maxiters = maxiters,
                                     maxtime = maxtime, abstol = abstol, reltol = reltol;
                                     kwargs...)
 
     t0 = time()
-    if isnothing(prob.lb) || isnothing(prob.ub)
+    if isnothing(cache.lb) || isnothing(cache.ub)
         if !isnothing(f.cons)
-            c = x -> (res = zeros(length(prob.lcons)); f.cons(res, x); res)
-            cons = WorstFitnessConstraints(Float64[], Float64[], prob.lcons, prob.ucons, c)
-            opt_res = Evolutionary.optimize(_loss, cons, prob.u0, opt, opt_args)
+            c = x -> (res = zeros(length(cache.lcons)); f.cons(res, x); res)
+            cons = WorstFitnessConstraints(Float64[], Float64[], cache.lcons, cache.ucons, c)
+            opt_res = Evolutionary.optimize(_loss, cons, cache.u0, opt, opt_args)
         else
-            opt_res = Evolutionary.optimize(_loss, prob.u0, opt, opt_args)
+            opt_res = Evolutionary.optimize(_loss, cache.u0, opt, opt_args)
         end
     else
         if !isnothing(f.cons)
-            c = x -> (res = zeros(length(prob.lcons)); f.cons(res, x); res)
-            cons = WorstFitnessConstraints(prob.lb, prob.ub, prob.lcons, prob.ucons, c)
+            c = x -> (res = zeros(length(cache.lcons)); f.cons(res, x); res)
+            cons = WorstFitnessConstraints(cache.lb, cache.ub, cache.lcons, cache.ucons, c)
         else
-            cons = BoxConstraints(prob.lb, prob.ub)
+            cons = BoxConstraints(cache.lb, cache.ub)
         end
-        opt_res = Evolutionary.optimize(_loss, cons, prob.u0, opt, opt_args)
+        opt_res = Evolutionary.optimize(_loss, cons, cache.u0, opt, opt_args)
     end
     t1 = time()
     opt_ret = Symbol(Evolutionary.converged(opt_res))
 
-    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
+    SciMLBase.build_solution(cache, opt,
                              Evolutionary.minimizer(opt_res),
                              Evolutionary.minimum(opt_res); original = opt_res,
                              retcode = opt_ret, solve_time = t1 - t0)

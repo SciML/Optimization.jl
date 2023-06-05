@@ -7,17 +7,18 @@ using Optimization.SciMLBase
 SciMLBase.requiresbounds(opt::Metaheuristics.AbstractAlgorithm) = true
 SciMLBase.allowsbounds(opt::Metaheuristics.AbstractAlgorithm) = true
 SciMLBase.allowscallback(opt::Metaheuristics.AbstractAlgorithm) = false
+SciMLBase.supports_opt_cache_interface(opt::Metaheuristics.AbstractAlgorithm) = true
 
-function initial_population!(opt, prob, bounds, f)
+function initial_population!(opt, cache, bounds, f)
     opt_init = deepcopy(opt)
     opt_init.options.iterations = 2
     Metaheuristics.optimize(f, bounds, opt_init)
 
     pop_size = opt_init.parameters.N
     population_rand = [bounds[1, :] +
-                       rand(length(prob.u0)) .* (bounds[2, :] - bounds[1, :])
+                       rand(length(cache.u0)) .* (bounds[2, :] - bounds[1, :])
                        for i in 1:(pop_size - 1)]
-    push!(population_rand, prob.u0)
+    push!(population_rand, cache.u0)
     population_init = [Metaheuristics.create_child(x, f(x)) for x in population_rand]
     prev_status = Metaheuristics.State(Metaheuristics.get_best(population_init),
                                        population_init)
@@ -26,7 +27,7 @@ function initial_population!(opt, prob, bounds, f)
     return nothing
 end
 
-function __map_optimizer_args!(prob::OptimizationProblem,
+function __map_optimizer_args!(cache::OptimizationCache,
                                opt::Metaheuristics.AbstractAlgorithm;
                                callback = nothing,
                                maxiters::Union{Number, Nothing} = nothing,
@@ -62,53 +63,47 @@ function __map_optimizer_args!(prob::OptimizationProblem,
     return nothing
 end
 
-function SciMLBase.__solve(prob::OptimizationProblem, opt::Metaheuristics.AbstractAlgorithm;
-                           callback = nothing,
-                           maxiters::Union{Number, Nothing} = nothing,
-                           maxtime::Union{Number, Nothing} = nothing,
-                           abstol::Union{Number, Nothing} = nothing,
-                           reltol::Union{Number, Nothing} = nothing,
-                           progress = false,
-                           use_initial::Bool = false,
-                           kwargs...)
+function SciMLBase.__solve(cache::OptimizationCache)
     local x
 
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(maxtime)
+    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     _loss = function (θ)
-        x = prob.f(θ, prob.p)
+        x = cache.f(θ, cache.p)
         return first(x)
     end
 
-    if !isnothing(prob.lb) & !isnothing(prob.ub)
-        opt_bounds = [prob.lb prob.ub]'
+    if !isnothing(cache.lb) & !isnothing(cache.ub)
+        opt_bounds = [cache.lb cache.ub]'
     end
 
-    if !isnothing(prob.f.cons)
+    if !isnothing(cache.f.cons)
         @warn "Equality constraints are current not passed on by Optimization"
     end
 
-    if !isnothing(prob.lcons)
+    if !isnothing(cache.lcons)
         @warn "Inequality constraints are current not passed on by Optimization"
     end
 
-    if !isnothing(prob.ucons)
+    if !isnothing(cache.ucons)
         @warn "Inequality constraints are current not passed on by Optimization"
     end
 
-    __map_optimizer_args!(prob, opt, callback = callback, maxiters = maxiters,
-                          maxtime = maxtime, abstol = abstol, reltol = reltol; kwargs...)
+    __map_optimizer_args!(cache, opt, callback = cache.callback, maxiters = maxiters,
+                          maxtime = maxtime, abstol = cache.abstol,
+                          reltol = cache.reltol;
+                          kwargs...)
 
     if use_initial
-        initial_population!(opt, prob, opt_bounds, _loss)
+        initial_population!(opt, cache, opt_bounds, _loss)
     end
 
     t0 = time()
     opt_res = Metaheuristics.optimize(_loss, opt_bounds, opt)
     t1 = time()
 
-    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
+    SciMLBase.build_solution(cache, opt,
                              Metaheuristics.minimizer(opt_res),
                              Metaheuristics.minimum(opt_res); original = opt_res,
                              solve_time = t1 - t0)
