@@ -31,7 +31,7 @@ function SciMLBase.__solve(cache::OptimizationCache)
     state = Optimisers.setup(opt, θ)
 
     t0 = time()
-    Optimization.@withprogress cache.solver_args.progress name="Training" begin for (i, d) in enumerate(data)
+    Optimization.@withprogress cache.progress name="Training" begin for (i, d) in enumerate(data)
         cache.f.grad(G, θ, d...)
         x = cache.f(θ, cache.p, d...)
         cb_call = cache.callback(θ, x...)

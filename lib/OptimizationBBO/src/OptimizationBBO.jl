@@ -88,7 +88,7 @@ function SciMLBase.__solve(cache::OptimizationCache)
         if isnothing(cache.callback)
             cb_call = false
         else
-            cb_call = cache.callback(decompose_trace(trace, progress), x...)
+            cb_call = cache.callback(decompose_trace(trace, cache.progress), x...)
         end
 
         if !(typeof(cb_call) <: Bool)
