@@ -16,7 +16,7 @@ SciMLBase.supports_opt_cache_interface(opt::Optim.AbstractOptimizer) = true
 SciMLBase.supports_opt_cache_interface(opt::Union{Optim.Fminbox, Optim.SAMIN}) = true
 SciMLBase.supports_opt_cache_interface(opt::Optim.ConstrainedOptimizer) = true
 
-function __map_optimizer_args(cache::OptimJLOptimizationCache,
+function __map_optimizer_args(cache::OptimizationCache,
                               opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
                                          Optim.SAMIN, Optim.ConstrainedOptimizer};
                               callback = nothing,
