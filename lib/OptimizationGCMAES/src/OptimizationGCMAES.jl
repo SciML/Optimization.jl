@@ -18,7 +18,8 @@ function __map_optimizer_args(cache::OptimizationCache, opt::GCMAESOpt;
                               maxiters::Union{Number, Nothing} = nothing,
                               maxtime::Union{Number, Nothing} = nothing,
                               abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing)
+                              reltol::Union{Number, Nothing} = nothing,
+                              kwargs...)
 
     # add optimiser options from kwargs
     mapped_args = (;)
