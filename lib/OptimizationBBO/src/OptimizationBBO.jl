@@ -136,7 +136,7 @@ function SciMLBase.__solve(cache::OptimizationCache)
 
     opt_res = BlackBoxOptim.bboptimize(opt_setup)
 
-    if progress
+    if cache.progress
         # Set progressbar to 1 to finish it
         Base.@logmsg(Base.LogLevel(-1), "", progress=1, _id=:OptimizationBBO)
     end
