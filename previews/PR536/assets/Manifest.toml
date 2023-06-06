@@ -1969,9 +1969,9 @@ version = "1.0.5"
 
 [[deps.Symbolics]]
 deps = ["ArrayInterface", "ConstructionBase", "DataStructures", "DiffRules", "Distributions", "DocStringExtensions", "DomainSets", "Groebner", "IfElse", "LaTeXStrings", "LambertW", "Latexify", "Libdl", "LinearAlgebra", "MacroTools", "Markdown", "NaNMath", "RecipesBase", "Reexport", "Requires", "RuntimeGeneratedFunctions", "SciMLBase", "Setfield", "SparseArrays", "SpecialFunctions", "StaticArrays", "SymbolicUtils", "TreeViews"]
-git-tree-sha1 = "e23ec62c083ca8f15a4b7174331b3b8d1c511e47"
+git-tree-sha1 = "c4e5688a9a5a2f4088cd1a779b0742be31cbe9aa"
 uuid = "0c5d862f-8b57-4792-8d23-62f2024744c7"
-version = "5.3.1"
+version = "5.5.0"
 
 [[deps.TOML]]
 deps = ["Dates"]
