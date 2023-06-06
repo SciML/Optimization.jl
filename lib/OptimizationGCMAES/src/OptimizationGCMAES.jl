@@ -44,7 +44,7 @@ end
 
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
-                          opt::Flux.Optimise.AbstractOptimiser,
+                          opt::GCMAESOpt,
                           data = Optimization.DEFAULT_DATA; σ0 = 0.2, kwargs...)
     return OptimizationCache(prob, opt, data; σ0 = σ0,
                              kwargs...)

@@ -13,8 +13,7 @@ SciMLBase.supports_opt_cache_interface(opt::OptimisersOptimizers) = true
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::OptimisersOptimizers,
                           data = Optimization.DEFAULT_DATA; save_best = true, kwargs...)
-    return OptimizationCache(prob, opt, data; maxiters, maxtime, abstol, callback,
-                             reltol, progress, save_best,
+    return OptimizationCache(prob, opt, data; save_best,
                              kwargs...)
 end
 

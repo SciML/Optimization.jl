@@ -122,7 +122,7 @@ function SciMLBase.__solve(cache::OptimizationCache)
         end
     end
 
-    opt_args = __map_optimizer_args(cache.data, cache.opt;
+    opt_args = __map_optimizer_args(cache, cache.opt;
                                     callback = isnothing(cache.callback) &&
                                                isnothing(cache.data) ?
                                                nothing : _cb,
