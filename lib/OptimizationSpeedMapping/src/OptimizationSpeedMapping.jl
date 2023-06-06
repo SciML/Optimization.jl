@@ -12,7 +12,7 @@ SciMLBase.allowsbounds(::SpeedMappingOpt) = true
 SciMLBase.allowscallback(::SpeedMappingOpt) = false
 SciMLBase.supports_opt_cache_interface(opt::SpeedMappingOpt) = true
 
-function __map_optimizer_args(cache::SpeedMappingOptimizationCache, opt::SpeedMappingOpt;
+function __map_optimizer_args(cache::OptimizationCache, opt::SpeedMappingOpt;
                               callback = nothing,
                               maxiters::Union{Number, Nothing} = nothing,
                               maxtime::Union{Number, Nothing} = nothing,
@@ -40,17 +40,6 @@ function __map_optimizer_args(cache::SpeedMappingOptimizationCache, opt::SpeedMa
     end
 
     return mapped_args
-end
-
-function SciMLBase.__init(prob::OptimizationProblem, opt::SpeedMappingOpt;
-                          maxiters::Union{Number, Nothing} = nothing,
-                          maxtime::Union{Number, Nothing} = nothing,
-                          abstol::Union{Number, Nothing} = nothing,
-                          reltol::Union{Number, Nothing} = nothing,
-                          progress = false,
-                          kwargs...)
-    return SpeedMappingOptimizationCache(prob, opt; maxiters, maxtime, abstol, reltol,
-                                         progress, kwargs...)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache)

@@ -55,7 +55,7 @@ function SciMLBase.__init(prob::OptimizationProblem, opt::GCMAESOpt;
                                    sigma0 = σ0, kwargs...)
 end
 
-function SciMLBase.__solve(cache::GCMAESOptimizationCache)
+function SciMLBase.__solve(cache::OptimizationCache)
     local x
     local G = similar(cache.u0)
 

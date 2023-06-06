@@ -1,6 +1,7 @@
 
 function Base.getproperty(cache::SciMLBase.AbstractOptimizationCache, x::Symbol)
-    if x in fieldnames(Optimization.ReInitCache)
+    if hasfield(typeof(cache), :reinit_cache) &&
+        x in fieldnames(Optimization.ReInitCache)
         return getfield(cache.reinit_cache, x)
     end
     return getfield(cache, x)

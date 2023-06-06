@@ -79,10 +79,11 @@ end
 function SciMLBase.__solve(cache::OptimizationCache)
     local x, cur, state
 
-    if !isnothing(cache.data)
+    if cache.data != Optimization.DEFAULT_DATA
         maxiters = length(cache.data)
-        cur, state = iterate(cache.data)
     end
+
+    cur, state = iterate(cache.data)
 
     function _cb(trace)
         if isnothing(cache.callback)

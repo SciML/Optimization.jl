@@ -27,7 +27,7 @@ function SciMLBase.__solve(cache::OptimizationCache)
     min_θ = cache.u0
 
     t0 = time()
-    Optimization.@withprogress cache.solver_args.progress name="Training" begin for (i, d) in enumerate(data)
+    Optimization.@withprogress cache.progress name="Training" begin for (i, d) in enumerate(data)
         cache.f.grad(G, θ, d...)
         x = cache.f(θ, cache.p, d...)
         cb_call = cache.callback(θ, x...)
@@ -37,7 +37,7 @@ function SciMLBase.__solve(cache::OptimizationCache)
             break
         end
         msg = @sprintf("loss: %.3g", x[1])
-        cache.solver_args.progress && ProgressLogging.@logprogress msg i/maxiters
+        cache.progress && ProgressLogging.@logprogress msg i/maxiters
 
         if cache.solver_args.save_best
             if first(x) < first(min_err)  #found a better solution

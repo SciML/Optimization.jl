@@ -91,8 +91,8 @@ function SciMLBase.__solve(cache::OptimizationCache)
     end
 
     __map_optimizer_args!(cache, cache.opt, callback = cache.callback, maxiters = maxiters,
-                          maxtime = maxtime, abstol = cache.abstol,
-                          reltol = cache.reltol;
+                          maxtime = maxtime, abstol = cache.solver_args.abstol,
+                          reltol = cache.solver_args.reltol;
                           kwargs...)
 
     if use_initial

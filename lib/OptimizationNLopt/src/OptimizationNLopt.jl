@@ -135,13 +135,11 @@ function SciMLBase.__solve(cache::OptimizationCache)
         NLopt.min_objective!(opt_setup, fg!)
     end
 
-    __map_optimizer_args!(cache, opt_setup, maxiters = cache.solver_args.maxiters,
-                          maxtime = cache.solver_args.maxtime,
-                          abstol = cache.solver_args.abstol,
-                          reltol = cache.solver_args.reltol,
-                          local_method = cache.solver_args.local_method,
-                          local_maxiters = cache.solver_args.local_maxiters,
-                          local_options = cache.solver_args.local_options;
+    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
+
+    __map_optimizer_args!(cache, opt_setup, maxiters = maxiters,
+                          maxtime = maxtime,
                           cache.solver_args...)
 
     t0 = time()

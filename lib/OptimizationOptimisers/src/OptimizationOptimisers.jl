@@ -11,6 +11,12 @@ const OptimisersOptimizers = Union{Descent, Adam, Momentum, Nesterov, RMSProp,
 
 SciMLBase.supports_opt_cache_interface(opt::OptimisersOptimizers) = true
 
+function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::OptimisersOptimizers,
+                          data = Optimization.DEFAULT_DATA; save_best = true, kwargs...)
+    SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt,
+                     data = Optimization.DEFAULT_DATA; save_best, kwargs...)
+end
+
 function SciMLBase.__solve(cache::OptimizationCache)
     if cache.data != Optimization.DEFAULT_DATA
         maxiters = length(cache.data)
@@ -41,7 +47,7 @@ function SciMLBase.__solve(cache::OptimizationCache)
             break
         end
         msg = @sprintf("loss: %.3g", x[1])
-        cache.solver_args.progress && ProgressLogging.@logprogress msg i/maxiters
+        cache.progress && ProgressLogging.@logprogress msg i/maxiters
 
         if cache.solver_args.save_best
             if first(x) < first(min_err)  #found a better solution
