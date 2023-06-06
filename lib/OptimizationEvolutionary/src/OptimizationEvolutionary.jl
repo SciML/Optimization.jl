@@ -77,10 +77,8 @@ function SciMLBase.__solve(cache::OptimizationCache)
         return first(x)
     end
 
-    opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb, maxiters = maxiters,
-                                    maxtime = maxtime, abstol = cache.solver_args.abstol,
-                                    reltol = cache.solver_args.reltol;
-                                    kwargs...)
+    opt_args = __map_optimizer_args(cache, cache.opt; callback = _cb, cache.solver_args..., maxiters = maxiters,
+                                    maxtime = maxtime)
 
     t0 = time()
     if isnothing(cache.lb) || isnothing(cache.ub)

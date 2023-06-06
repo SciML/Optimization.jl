@@ -90,10 +90,8 @@ function SciMLBase.__solve(cache::OptimizationCache)
         @warn "Inequality constraints are current not passed on by Optimization"
     end
 
-    __map_optimizer_args!(cache, cache.opt, callback = cache.callback, maxiters = maxiters,
-                          maxtime = maxtime, abstol = cache.solver_args.abstol,
-                          reltol = cache.solver_args.reltol;
-                          kwargs...)
+    __map_optimizer_args!(cache, cache.opt, callback = cache.callback, cache.solver_args..., maxiters = maxiters,
+                          maxtime = maxtime)
 
     if use_initial
         initial_population!(cache.opt, cache, opt_bounds, _loss)

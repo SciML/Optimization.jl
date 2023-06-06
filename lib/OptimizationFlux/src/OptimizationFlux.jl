@@ -6,6 +6,14 @@ using Optimization.SciMLBase
 
 SciMLBase.supports_opt_cache_interface(opt::Flux.Optimise.AbstractOptimiser) = true
 
+function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
+                          opt::Flux.Optimise.AbstractOptimiser,
+                          data = Optimization.DEFAULT_DATA; save_best = true, kwargs...)
+    return OptimizationCache(prob, opt, data; maxiters, maxtime, abstol, callback,
+                             reltol, progress, save_best,
+                             kwargs...)
+end
+
 function SciMLBase.__solve(cache::OptimizationCache)
     if cache.data != Optimization.DEFAULT_DATA
         maxiters = length(cache.data)

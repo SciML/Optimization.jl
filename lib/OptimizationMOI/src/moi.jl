@@ -1,8 +1,7 @@
-mutable struct MOIOptimizationCache{F <: OptimizationFunction, uType, P, LB, UB, I, S, EX,
+struct MOIOptimizationCache{F <: OptimizationFunction, uType, P, LB, UB, I, S, EX,
                                     CEX, O} <: SciMLBase.AbstractOptimizationCache
     f::F
-    u0::uType
-    p::P
+    reinit_cache::RC
     lb::LB
     ub::UB
     int::I
@@ -32,8 +31,7 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
     end
 
     return MOIOptimizationCache(prob.f,
-                                prob.u0,
-                                prob.p,
+                                Optimization.ReInitCache(prob.u0, prob.p),
                                 prob.lb,
                                 prob.ub,
                                 prob.int,

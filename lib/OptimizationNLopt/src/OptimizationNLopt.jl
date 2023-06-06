@@ -138,7 +138,7 @@ function SciMLBase.__solve(cache::OptimizationCache)
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
-    __map_optimizer_args!(cache, opt_setup, maxiters = maxiters,
+    __map_optimizer_args!(cache, opt_setup; callback = cache.callback, maxiters = maxiters,
                           maxtime = maxtime,
                           cache.solver_args...)
 

@@ -42,17 +42,12 @@ function __map_optimizer_args(cache::OptimizationCache, opt::GCMAESOpt;
     return mapped_args
 end
 
-function SciMLBase.__init(prob::OptimizationProblem, opt::GCMAESOpt;
-                          maxiters::Union{Number, Nothing} = nothing,
-                          maxtime::Union{Number, Nothing} = nothing,
-                          abstol::Union{Number, Nothing} = nothing,
-                          reltol::Union{Number, Nothing} = nothing,
-                          progress = false,
-                          σ0 = 0.2,
-                          kwargs...)
 
-    return OptimizationCache(prob, opt; maxiters, maxtime, abstol, reltol, progress,
-                                   sigma0 = σ0, kwargs...)
+function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
+                          opt::Flux.Optimise.AbstractOptimiser,
+                          data = Optimization.DEFAULT_DATA; σ0 = 0.2, kwargs...)
+    return OptimizationCache(prob, opt, data; σ0 = σ0,
+                             kwargs...)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache)

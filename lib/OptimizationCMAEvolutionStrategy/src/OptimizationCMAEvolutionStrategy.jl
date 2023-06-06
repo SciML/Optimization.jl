@@ -10,6 +10,7 @@ struct CMAEvolutionStrategyOpt end
 
 SciMLBase.allowsbounds(::CMAEvolutionStrategyOpt) = true
 SciMLBase.allowscallback(::CMAEvolutionStrategyOpt) = false #looks like `logger` kwarg can be used to pass it, so should be implemented
+SciMLBase.supports_opt_cache_interface(opt::CMAEvolutionStrategyOpt) = true
 
 function __map_optimizer_args(prob::OptimizationCache, opt::CMAEvolutionStrategyOpt;
                               callback = nothing,
@@ -65,10 +66,8 @@ function SciMLBase.__solve(cache::OptimizationCache)
         return first(x)
     end
 
-    opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb, maxiters = maxiters,
-                                    maxtime = maxtime, abstol = cache.abstol,
-                                    reltol = cache.reltol;
-                                    kwargs...)
+    opt_args = __map_optimizer_args(cache, cache.opt; callback = _cb, cache.solver_args..., maxiters = maxiters,
+                                    maxtime = maxtime)
 
     t0 = time()
     opt_res = CMAEvolutionStrategy.minimize(_loss, cache.u0, 0.1; opt_args...)
