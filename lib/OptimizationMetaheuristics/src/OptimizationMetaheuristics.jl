@@ -63,6 +63,16 @@ function __map_optimizer_args!(cache::OptimizationCache,
     return nothing
 end
 
+function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
+                          opt::Metaheuristics.AbstractAlgorithm,
+                          data = Optimization.DEFAULT_DATA; use_initial = false,
+                          callback = (args...) -> (false),
+                          progress = false, kwargs...)
+    return OptimizationCache(prob, opt, data; use_initial = use_initial, callback = callback,
+                             progress = progress,
+                             kwargs...)
+end
+
 function SciMLBase.__solve(cache::OptimizationCache)
     local x
 
@@ -93,7 +103,7 @@ function SciMLBase.__solve(cache::OptimizationCache)
     __map_optimizer_args!(cache, cache.opt; callback = cache.callback, cache.solver_args..., maxiters = maxiters,
                           maxtime = maxtime)
 
-    if use_initial
+    if cache.solver_args.use_initial
         initial_population!(cache.opt, cache, opt_bounds, _loss)
     end
 

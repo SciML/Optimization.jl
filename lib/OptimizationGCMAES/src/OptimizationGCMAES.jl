@@ -45,8 +45,10 @@ end
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
                           opt::GCMAESOpt,
-                          data = Optimization.DEFAULT_DATA; σ0 = 0.2, kwargs...)
-    return OptimizationCache(prob, opt, data; σ0 = σ0,
+                          data = Optimization.DEFAULT_DATA; σ0 = 0.2,
+                          callback = (args...) -> (false),
+                          progress = false, kwargs...)
+    return OptimizationCache(prob, opt, data; σ0 = σ0, callback = callback, progress = progress,
                              kwargs...)
 end
 

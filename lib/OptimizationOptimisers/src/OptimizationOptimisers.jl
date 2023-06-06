@@ -12,8 +12,10 @@ const OptimisersOptimizers = Union{Descent, Adam, Momentum, Nesterov, RMSProp,
 SciMLBase.supports_opt_cache_interface(opt::OptimisersOptimizers) = true
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::OptimisersOptimizers,
-                          data = Optimization.DEFAULT_DATA; save_best = true, kwargs...)
-    return OptimizationCache(prob, opt, data; save_best,
+                          data = Optimization.DEFAULT_DATA; save_best = true,
+                          callback = (args...) -> (false),
+                          progress = false, kwargs...)
+    return OptimizationCache(prob, opt, data; save_best, callback, progress,
                              kwargs...)
 end
 
