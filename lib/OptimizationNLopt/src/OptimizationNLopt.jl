@@ -107,8 +107,8 @@ function SciMLBase.__solve(cache::OptimizationCache)
     local x
 
     _loss = function (θ)
-        x = cache.f.f(θ, cache.p)
-        cache.solver_args.callback(θ, x...)
+        x = cache.f(θ, cache.p)
+        cache.callback(θ, x...)
         return x[1]
     end
 

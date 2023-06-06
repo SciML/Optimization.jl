@@ -73,8 +73,8 @@ function SciMLBase.__solve(cache::OptimizationCache)
 
     opt_args = __map_optimizer_args(cache, cache.opt, maxiters = maxiters,
                                     maxtime = maxtime,
-                                    abstol = cache.abstol,
-                                    reltol = cache.reltol; cache.solver_args...)
+                                    abstol = cache.solver_args.abstol,
+                                    reltol = cache.solver_args.reltol; cache.solver_args...)
 
     t0 = time()
     if cache.sense === Optimization.MaxSense

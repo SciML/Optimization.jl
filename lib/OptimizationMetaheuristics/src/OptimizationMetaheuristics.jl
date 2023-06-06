@@ -40,6 +40,8 @@ function __map_optimizer_args!(cache::OptimizationCache,
             error("Set $(j.first) by directly passing it to Information Structure which is passed to $(typeof(opt)) algorithms when calling solve().")
         elseif j.first .∈ Ref(propertynames(Metaheuristics.Options()))
             setproperty!(opt.options, j.first, j.second)
+        elseif j.first == :use_initial
+            continue
         else
             error("$(j.first) keyword is not a valid option for $(typeof(opt).super) algorithm.")
         end
