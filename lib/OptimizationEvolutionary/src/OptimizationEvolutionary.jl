@@ -90,14 +90,16 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
         return first(x)
     end
 
-    opt_args = __map_optimizer_args(cache, cache.opt; callback = _cb, cache.solver_args..., maxiters = maxiters,
+    opt_args = __map_optimizer_args(cache, cache.opt; callback = _cb, cache.solver_args...,
+                                    maxiters = maxiters,
                                     maxtime = maxtime)
 
     t0 = time()
     if isnothing(cache.lb) || isnothing(cache.ub)
         if !isnothing(f.cons)
             c = x -> (res = zeros(length(cache.lcons)); f.cons(res, x); res)
-            cons = WorstFitnessConstraints(Float64[], Float64[], cache.lcons, cache.ucons, c)
+            cons = WorstFitnessConstraints(Float64[], Float64[], cache.lcons, cache.ucons,
+                                           c)
             opt_res = Evolutionary.optimize(_loss, cons, cache.u0, cache.opt, opt_args)
         else
             opt_res = Evolutionary.optimize(_loss, cache.u0, cache.opt, opt_args)

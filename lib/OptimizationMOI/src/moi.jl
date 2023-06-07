@@ -1,5 +1,5 @@
 struct MOIOptimizationCache{F <: OptimizationFunction, RC, LB, UB, I, S, EX,
-                                    CEX, O} <: SciMLBase.AbstractOptimizationCache
+                            CEX, O} <: SciMLBase.AbstractOptimizationCache
     f::F
     reinit_cache::RC
     lb::LB

@@ -113,9 +113,9 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
                                                                                                   S,
                                                                                                   O <:
                                                                                                   Union{
-                                                                                                          NLopt.Algorithm,
-                                                                                                          NLopt.Opt
-                                                                                                          },
+                                                                                                        NLopt.Algorithm,
+                                                                                                        NLopt.Opt
+                                                                                                        },
                                                                                                   D,
                                                                                                   P,
                                                                                                   C

@@ -84,22 +84,22 @@ function SciMLBase.__init(prob::OptimizationProblem,
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
     maxtime = Optimization._check_and_convert_maxtime(maxtime)
     return OptimizationCache(prob, opt, data; callback, maxiters, maxtime, abstol,
-                                    reltol, progress,
-                                    kwargs...)
+                             reltol, progress,
+                             kwargs...)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P
-                                                           }) where {
-                                                                     F,
-                                                                     RC,
-                                                                     LB,
-                                                                     UB, LC, UC,
-                                                                     S,
-                                                                     O <:
-                                                                     Optim.AbstractOptimizer,
-                                                                     D,
-                                                                     P
-                                                                     }
+                                                    }) where {
+                                                              F,
+                                                              RC,
+                                                              LB,
+                                                              UB, LC, UC,
+                                                              S,
+                                                              O <:
+                                                              Optim.AbstractOptimizer,
+                                                              D,
+                                                              P
+                                                              }
     local x, cur, state
 
     cur, state = iterate(cache.data)
@@ -193,20 +193,20 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P
-                                                           }) where {
-                                                                     F,
-                                                                     RC,
-                                                                     LB,
-                                                                     UB, LC, UC,
-                                                                     S,
-                                                                     O <:
-                                                                     Union{
-                                                                           Optim.Fminbox,
-                                                                           Optim.SAMIN
-                                                                           },
-                                                                     D,
-                                                                     P
-                                                                     }
+                                                    }) where {
+                                                              F,
+                                                              RC,
+                                                              LB,
+                                                              UB, LC, UC,
+                                                              S,
+                                                              O <:
+                                                              Union{
+                                                                    Optim.Fminbox,
+                                                                    Optim.SAMIN
+                                                                    },
+                                                              D,
+                                                              P
+                                                              }
     local x, cur, state
 
     cur, state = iterate(cache.data)
@@ -269,17 +269,17 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P
-                                                           }) where {
-                                                                     F,
-                                                                     RC,
-                                                                     LB,
-                                                                     UB, LC, UC,
-                                                                     S,
-                                                                     O <:
-                                                                     Optim.ConstrainedOptimizer,
-                                                                     D,
-                                                                     P
-                                                                     }
+                                                    }) where {
+                                                              F,
+                                                              RC,
+                                                              LB,
+                                                              UB, LC, UC,
+                                                              S,
+                                                              O <:
+                                                              Optim.ConstrainedOptimizer,
+                                                              D,
+                                                              P
+                                                              }
     local x, cur, state
 
     cur, state = iterate(cache.data)

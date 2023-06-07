@@ -70,7 +70,8 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
                           data = Optimization.DEFAULT_DATA; use_initial = false,
                           callback = (args...) -> (false),
                           progress = false, kwargs...)
-    return OptimizationCache(prob, opt, data; use_initial = use_initial, callback = callback,
+    return OptimizationCache(prob, opt, data; use_initial = use_initial,
+                             callback = callback,
                              progress = progress,
                              kwargs...)
 end
@@ -115,7 +116,8 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
         @warn "Inequality constraints are current not passed on by Optimization"
     end
 
-    __map_optimizer_args!(cache, cache.opt; callback = cache.callback, cache.solver_args..., maxiters = maxiters,
+    __map_optimizer_args!(cache, cache.opt; callback = cache.callback, cache.solver_args...,
+                          maxiters = maxiters,
                           maxtime = maxtime)
 
     if cache.solver_args.use_initial

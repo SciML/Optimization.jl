@@ -43,13 +43,13 @@ function __map_optimizer_args(cache::OptimizationCache, opt::GCMAESOpt;
     return mapped_args
 end
 
-
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
                           opt::GCMAESOpt,
                           data = Optimization.DEFAULT_DATA; σ0 = 0.2,
                           callback = (args...) -> (false),
                           progress = false, kwargs...)
-    return OptimizationCache(prob, opt, data; σ0 = σ0, callback = callback, progress = progress,
+    return OptimizationCache(prob, opt, data; σ0 = σ0, callback = callback,
+                             progress = progress,
                              kwargs...)
 end
 
@@ -85,7 +85,8 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
-    opt_args = __map_optimizer_args(cache, cache.opt; cache.solver_args..., maxiters = maxiters,
+    opt_args = __map_optimizer_args(cache, cache.opt; cache.solver_args...,
+                                    maxiters = maxiters,
                                     maxtime = maxtime)
 
     t0 = time()

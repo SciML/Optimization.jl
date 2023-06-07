@@ -63,9 +63,10 @@ function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt, data;
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons)
     return OptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons,
-                                prob.ucons, prob.sense,
-                                opt, data, progress, callback,
-                                merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs)))
+                             prob.ucons, prob.sense,
+                             opt, data, progress, callback,
+                             merge((; maxiters, maxtime, abstol, reltol),
+                                   NamedTuple(kwargs)))
 end
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt,
@@ -78,6 +79,6 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt,
                           progress = false,
                           kwargs...)
     return OptimizationCache(prob, opt, data; maxiters, maxtime, abstol, callback,
-                                reltol, progress,
-                                kwargs...)
+                             reltol, progress,
+                             kwargs...)
 end

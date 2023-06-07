@@ -8,7 +8,8 @@ SciMLBase.supports_opt_cache_interface(opt::Flux.Optimise.AbstractOptimiser) = t
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
                           opt::Flux.Optimise.AbstractOptimiser,
-                          data = Optimization.DEFAULT_DATA; save_best = true, callback = (args...) -> (false),
+                          data = Optimization.DEFAULT_DATA; save_best = true,
+                          callback = (args...) -> (false),
                           progress = false, kwargs...)
     return OptimizationCache(prob, opt, data; save_best, callback, progress,
                              kwargs...)
