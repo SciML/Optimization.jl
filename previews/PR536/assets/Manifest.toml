@@ -1152,9 +1152,9 @@ uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
 [[deps.MathOptInterface]]
 deps = ["BenchmarkTools", "CodecBzip2", "CodecZlib", "DataStructures", "ForwardDiff", "JSON", "LinearAlgebra", "MutableArithmetics", "NaNMath", "OrderedCollections", "PrecompileTools", "Printf", "SparseArrays", "SpecialFunctions", "Test", "Unicode"]
-git-tree-sha1 = "b5d162b61be1ab67de1311ae651b56729fd1b858"
+git-tree-sha1 = "19a3636968e802918f8891d729c74bd64dff6d00"
 uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
-version = "1.17.0"
+version = "1.17.1"
 
 [[deps.MathProgBase]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1714,15 +1714,15 @@ version = "0.2.0"
 
 [[deps.SciMLBase]]
 deps = ["ADTypes", "ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "PrecompileTools", "Preferences", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables", "TruncatedStacktraces"]
-git-tree-sha1 = "e85dbca56252bda2f27b43ec51db7394a9245583"
+git-tree-sha1 = "afaf97ee668461d836dd00e69528c7759eddc163"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "1.92.3"
+version = "1.92.4"
 
 [[deps.SciMLNLSolve]]
 deps = ["DiffEqBase", "LineSearches", "NLsolve", "Reexport", "SciMLBase"]
-git-tree-sha1 = "a8eb97c56cac50c21096582afb2a0110784dc36e"
+git-tree-sha1 = "2d00015fa0a190220dc5605406b85073f6634391"
 uuid = "e9a6253c-8580-4d32-9898-8661bb511710"
-version = "0.1.6"
+version = "0.1.7"
 
 [[deps.SciMLOperators]]
 deps = ["ArrayInterface", "DocStringExtensions", "Lazy", "LinearAlgebra", "Setfield", "SparseArrays", "StaticArraysCore", "Tricks"]
