@@ -49,7 +49,20 @@ function __map_optimizer_args(cache::OptimizationCache,
     return Evolutionary.Options(; mapped_args...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache)
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C}) where {
+                                                                                                  F,
+                                                                                                  RC,
+                                                                                                  LB,
+                                                                                                  UB,
+                                                                                                  LC,
+                                                                                                  UC,
+                                                                                                  S,
+                                                                                                  O <:
+                                                                                                  Evolutionary.AbstractOptimizer,
+                                                                                                  D,
+                                                                                                  P,
+                                                                                                  C
+                                                                                                  }
     local x, cur, state
 
     if cache.data != Optimization.DEFAULT_DATA

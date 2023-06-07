@@ -42,7 +42,20 @@ function __map_optimizer_args(cache::OptimizationCache, opt::SpeedMappingOpt;
     return mapped_args
 end
 
-function SciMLBase.__solve(cache::OptimizationCache)
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C}) where {
+                                                                                                  F,
+                                                                                                  RC,
+                                                                                                  LB,
+                                                                                                  UB,
+                                                                                                  LC,
+                                                                                                  UC,
+                                                                                                  S,
+                                                                                                  O <:
+                                                                                                  SpeedMappingOpt,
+                                                                                                  D,
+                                                                                                  P,
+                                                                                                  C
+                                                                                                  }
     local x
 
     _loss = function (θ)

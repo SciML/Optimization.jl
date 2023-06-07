@@ -12,11 +12,24 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::MultistartOp
                           local_opt,
                           data = Optimization.DEFAULT_DATA;
                           kwargs...)
-    return OptimizationCache(prob, opt, data; local_opt = local_opt,
+    return OptimizationCache(prob, opt, data; local_opt = local_opt, prob = prob,
                              kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache)
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C}) where {
+                                                                                                  F,
+                                                                                                  RC,
+                                                                                                  LB,
+                                                                                                  UB,
+                                                                                                  LC,
+                                                                                                  UC,
+                                                                                                  S,
+                                                                                                  O <:
+                                                                                                  MultistartOptimization.TikTak,
+                                                                                                  D,
+                                                                                                  P,
+                                                                                                  C
+                                                                                                  }
     local x, _loss
 
     _loss = function (θ)
@@ -28,12 +41,12 @@ function SciMLBase.__solve(cache::OptimizationCache)
 
     _local_optimiser = function (pb, θ0, prob)
         prob_tmp = remake(prob, u0 = θ0)
-        res = SciMLBase.__solve(prob_tmp, cache.solver_args.local_opt;
+        res = solve(prob_tmp, cache.solver_args.local_opt;
                     kwargs...)
         return (value = res.minimum, location = res.minimizer, ret = res.retcode)
     end
 
-    local_optimiser(pb, θ0) = _local_optimiser(pb, θ0, prob)
+    local_optimiser(pb, θ0) = _local_optimiser(pb, θ0, cache.solver_args.prob)
 
     t0 = time()
     opt_res = MultistartOptimization.multistart_minimization(cache.opt, local_optimiser,

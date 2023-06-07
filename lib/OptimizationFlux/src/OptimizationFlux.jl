@@ -14,7 +14,20 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
                              kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache)
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C}) where {
+                                                                                                  F,
+                                                                                                  RC,
+                                                                                                  LB,
+                                                                                                  UB,
+                                                                                                  LC,
+                                                                                                  UC,
+                                                                                                  S,
+                                                                                                  O <:
+                                                                                                  Flux.Optimise.AbstractOptimiser,
+                                                                                                  D,
+                                                                                                  P,
+                                                                                                  C
+                                                                                                  }
     if cache.data != Optimization.DEFAULT_DATA
         maxiters = length(cache.data)
         data = cache.data

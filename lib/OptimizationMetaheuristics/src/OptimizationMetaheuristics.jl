@@ -75,7 +75,20 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
                              kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache)
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C}) where {
+                                                                                                  F,
+                                                                                                  RC,
+                                                                                                  LB,
+                                                                                                  UB,
+                                                                                                  LC,
+                                                                                                  UC,
+                                                                                                  S,
+                                                                                                  O <:
+                                                                                                  Metaheuristics.AbstractAlgorithm,
+                                                                                                  D,
+                                                                                                  P,
+                                                                                                  C
+                                                                                                  }
     local x
 
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)

@@ -103,7 +103,23 @@ function __nlopt_status_to_ReturnCode(status::Symbol)
     end
 end
 
-function SciMLBase.__solve(cache::OptimizationCache)
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C}) where {
+                                                                                                  F,
+                                                                                                  RC,
+                                                                                                  LB,
+                                                                                                  UB,
+                                                                                                  LC,
+                                                                                                  UC,
+                                                                                                  S,
+                                                                                                  O <:
+                                                                                                  Union{
+                                                                                                          NLopt.Algorithm,
+                                                                                                          NLopt.Opt
+                                                                                                          },
+                                                                                                  D,
+                                                                                                  P,
+                                                                                                  C
+                                                                                                  }
     local x
 
     _loss = function (θ)
