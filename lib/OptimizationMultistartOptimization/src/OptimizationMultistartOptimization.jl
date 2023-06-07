@@ -28,7 +28,7 @@ function SciMLBase.__solve(cache::OptimizationCache)
 
     _local_optimiser = function (pb, θ0, prob)
         prob_tmp = remake(prob, u0 = θ0)
-        res = solve(prob_tmp, cache.solver_args.local_opt;
+        res = SciMLBase.__solve(prob_tmp, cache.solver_args.local_opt;
                     kwargs...)
         return (value = res.minimum, location = res.minimizer, ret = res.retcode)
     end
@@ -36,14 +36,14 @@ function SciMLBase.__solve(cache::OptimizationCache)
     local_optimiser(pb, θ0) = _local_optimiser(pb, θ0, prob)
 
     t0 = time()
-    opt_res = MultistartOptimization.multistart_minimization(multiopt, local_optimiser,
+    opt_res = MultistartOptimization.multistart_minimization(cache.opt, local_optimiser,
                                                              opt_setup;
                                                              use_threads = use_threads)
     t1 = time()
     opt_ret = hasproperty(opt_res, :ret) ? opt_res.ret : nothing
 
     SciMLBase.build_solution(cache,
-                             (multiopt, cache.solver_args.local_opt), opt_res.location,
+                             (cache.opt, cache.solver_args.local_opt), opt_res.location,
                              opt_res.value;
                              (isnothing(opt_ret) ? (; original = opt_res) :
                               (; original = opt_res, retcode = opt_ret,

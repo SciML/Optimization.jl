@@ -72,21 +72,19 @@ function SciMLBase.__solve(cache::OptimizationCache)
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
-    opt_args = __map_optimizer_args(cache, cache.opt, maxiters = maxiters,
-                                    maxtime = maxtime,
-                                    abstol = cache.solver_args.abstol,
-                                    reltol = cache.solver_args.reltol; cache.solver_args...)
+    opt_args = __map_optimizer_args(cache, cache.opt; cache.solver_args..., maxiters = maxiters,
+                                    maxtime = maxtime)
 
     t0 = time()
     if cache.sense === Optimization.MaxSense
         opt_xmin, opt_fmin, opt_ret = GCMAES.maximize(isnothing(cache.f.grad) ? _loss :
                                                       (_loss, g), cache.u0,
-                                                      cache.solver_args.sigma0, cache.lb,
+                                                      cache.solver_args.σ0, cache.lb,
                                                       cache.ub; opt_args...)
     else
         opt_xmin, opt_fmin, opt_ret = GCMAES.minimize(isnothing(cache.f.grad) ? _loss :
                                                       (_loss, g), cache.u0,
-                                                      cache.sigma0, cache.lb,
+                                                      cache.solver_args.σ0, cache.lb,
                                                       cache.ub; opt_args...)
     end
     t1 = time()
