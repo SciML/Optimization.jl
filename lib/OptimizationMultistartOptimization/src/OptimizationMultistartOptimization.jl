@@ -45,7 +45,7 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     _local_optimiser = function (pb, θ0, prob)
         prob_tmp = remake(prob, u0 = θ0)
         res = solve(prob_tmp, cache.solver_args.local_opt;
-                    kwargs...)
+                    cache.solver_args...)
         return (value = res.minimum, location = res.minimizer, ret = res.retcode)
     end
 
