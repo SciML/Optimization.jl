@@ -2,7 +2,7 @@ module OptimizationBBO
 
 using Reexport
 @reexport using Optimization
-using BlackBoxOptim, Optimization.SciMLBase
+import BlackBoxOptim, Optimization.SciMLBase
 
 abstract type BBO end
 
