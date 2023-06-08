@@ -2,12 +2,13 @@ module OptimizationBBO
 
 using Reexport
 @reexport using Optimization
-using BlackBoxOptim, Optimization.SciMLBase
+import BlackBoxOptim, Optimization.SciMLBase
 
 abstract type BBO end
 
 SciMLBase.requiresbounds(::BBO) = true
 SciMLBase.allowsbounds(::BBO) = true
+SciMLBase.supports_opt_cache_interface(opt::BBO) = true
 
 for j in string.(BlackBoxOptim.SingleObjectiveMethodNames)
     eval(Meta.parse("Base.@kwdef struct BBO_" * j * " <: BBO method=:" * j * " end"))
@@ -34,7 +35,7 @@ function decompose_trace(opt::BlackBoxOptim.OptRunController, progress)
     return BlackBoxOptim.best_candidate(opt)
 end
 
-function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
+function __map_optimizer_args(prob::OptimizationCache, opt::BBO;
                               callback = nothing,
                               maxiters::Union{Number, Nothing} = nothing,
                               maxtime::Union{Number, Nothing} = nothing,
@@ -75,27 +76,33 @@ function __map_optimizer_args(prob::SciMLBase.OptimizationProblem, opt::BBO;
     return mapped_args
 end
 
-function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO,
-                           data = nothing;
-                           callback = nothing,
-                           maxiters::Union{Number, Nothing} = nothing,
-                           maxtime::Union{Number, Nothing} = nothing,
-                           abstol::Union{Number, Nothing} = nothing,
-                           reltol::Union{Number, Nothing} = nothing,
-                           verbose::Bool = false,
-                           progress = false, kwargs...)
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C}) where {
+                                                                                                  F,
+                                                                                                  RC,
+                                                                                                  LB,
+                                                                                                  UB,
+                                                                                                  LC,
+                                                                                                  UC,
+                                                                                                  S,
+                                                                                                  O <:
+                                                                                                  BBO,
+                                                                                                  D,
+                                                                                                  P,
+                                                                                                  C
+                                                                                                  }
     local x, cur, state
 
-    if !isnothing(data)
-        maxiters = length(data)
-        cur, state = iterate(data)
+    if cache.data != Optimization.DEFAULT_DATA
+        maxiters = length(cache.data)
     end
 
+    cur, state = iterate(cache.data)
+
     function _cb(trace)
-        if isnothing(callback)
+        if isnothing(cache.callback)
             cb_call = false
         else
-            cb_call = callback(decompose_trace(trace, progress), x...)
+            cb_call = cache.callback(decompose_trace(trace, cache.progress), x...)
         end
 
         if !(typeof(cb_call) <: Bool)
@@ -105,35 +112,36 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO,
             BlackBoxOptim.shutdown_optimizer!(trace) #doesn't work
         end
 
-        if !isnothing(data)
-            cur, state = iterate(data, state)
+        if !isnothing(cache.data)
+            cur, state = iterate(cache.data, state)
         end
         cb_call
     end
 
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(maxtime)
+    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     _loss = function (θ)
-        if isnothing(callback) && isnothing(data)
-            return first(prob.f(θ, prob.p))
-        elseif isnothing(callback)
-            return first(prob.f(θ, prob.p, cur...))
-        elseif isnothing(data)
-            x = prob.f(θ, prob.p)
+        if isnothing(cache.callback) && isnothing(cache.data)
+            return first(cache.f(θ, cache.p))
+        elseif isnothing(cache.callback)
+            return first(cache.f(θ, cache.p, cur...))
+        elseif isnothing(cache.data)
+            x = cache.f(θ, cache.p)
             return first(x)
         else
-            x = prob.f(θ, prob.p, cur...)
+            x = cache.f(θ, cache.p, cur...)
             return first(x)
         end
     end
 
-    opt_args = __map_optimizer_args(prob, opt,
-                                    callback = isnothing(callback) && isnothing(data) ?
+    opt_args = __map_optimizer_args(cache, cache.opt;
+                                    callback = isnothing(cache.callback) &&
+                                               isnothing(cache.data) ?
                                                nothing : _cb,
+                                    cache.solver_args...,
                                     maxiters = maxiters,
-                                    maxtime = maxtime, abstol = abstol, reltol = reltol;
-                                    verbose = verbose, kwargs...)
+                                    maxtime = maxtime)
 
     opt_setup = BlackBoxOptim.bbsetup(_loss; opt_args...)
 
@@ -145,7 +153,7 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO,
         opt_res = BlackBoxOptim.bboptimize(opt_setup, prob.u0)
     end
 
-    if progress
+    if cache.progress
         # Set progressbar to 1 to finish it
         Base.@logmsg(Base.LogLevel(-1), "", progress=1, _id=:OptimizationBBO)
     end
@@ -154,7 +162,7 @@ function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, opt::BBO,
 
     opt_ret = Symbol(opt_res.stop_reason)
 
-    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
+    SciMLBase.build_solution(cache, cache.opt,
                              BlackBoxOptim.best_candidate(opt_res),
                              BlackBoxOptim.best_fitness(opt_res); original = opt_res,
                              retcode = opt_ret, solve_time = t1 - t0)

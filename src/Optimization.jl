@@ -22,6 +22,7 @@ export ObjSense, MaxSense, MinSense
 include("utils.jl")
 include("function.jl")
 include("adtypes.jl")
+include("cache.jl")
 
 @static if !isdefined(Base, :get_extension)
     function __init__()
@@ -57,6 +58,6 @@ include("adtypes.jl")
     end
 end
 
-export solve
+export solve, OptimizationCache
 
 end # module
