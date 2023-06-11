@@ -1,4 +1,4 @@
-# Linear Optimization Problems
+# Linear and Integer Optimization Problems
 
 ## Example: Short-Term Financing
 
@@ -76,10 +76,9 @@ sol = solve(optprob, HiGHS.Optimizer())
 ```
 -->
 
-<!--
 ## Mixed Integer Nonlinear Optimization
 
-
+<!--
 ```julia
     using Juniper, Ipopt, HiGHS
 
@@ -157,11 +156,12 @@ sol = solve(optprob, HiGHS.Optimizer())
                                                                "mip_solver" => mip_solver)
     sol = solve(optprob, opt)
 ```
-
+-->
+<!--
 ```julia
-using Juniper, Ipopt, Alpine
+using Juniper, Ipopt
 
-LB = [100, 1000, 1000, 10, 10, 10, 10, 10]
+    LB = [100, 1000, 1000, 10, 10, 10, 10, 10]
     UB = [10000, 10000, 10000, 1000, 1000, 1000, 1000, 1000]
 
     ModelingToolkit.@variables x[1:8]
@@ -171,19 +171,25 @@ LB = [100, 1000, 1000, 10, 10, 10, 10, 10]
         ModelingToolkit.setmetadata(x[j], ModelingToolkit.VariableBounds, (LB[j], UB[j]))
     end
 
-    constraints =  [0.0025 * (x[4] * y[1] + x[6] * y[2]) ≲ 1
-                    ,0.0025 * (x[5] - x[4] * y[1] + x[7]) ≲ 1
-                    , 0.01(x[8] - x[5] * y[3]) ≲ 1,
-
-        100 * x[1] - x[1] * x[6] * y[1] + 833.33252 * x[4] * y[1] ≲ 83333.333
-    , x[2] * x[4] * y[4] - x[2] * x[7] - 1250 * x[4] + 1250 * x[5] ≲ 0,
-        x[3] * x[5] * y[2] * y[5] - x[3] * x[8] * y[5] - 2500 * x[5] * y[1] * y[4] +
-        1250000 ≲ 0, y[1] * y[2] * y[3] ≲ 0, y[4] * y[5] ≲ y[2] * y[3], y[1] * y[5] ≲ y[2] * y[4]]
-
-    objective =  x[1] + x[2] + x[3]
-
-@named optsys = OptimizationSystem(objective, [x..., y...], [], constraints = constraints)
-optprob = OptimizationProblem(optsys, vcat((LB + UB) ./ 2,zeros(5)); int = vcat(fill(false, 8), fill(true, 5)), grad = true, cons_j = true, hess = true, cons_h = true)
+    function cons(res, u, p)
+        x, y = u[1:8], u[9:13]
+        res .= [0.0025 * (x[4] * y[1] + x[6] * y[2])
+                        ,0.0025 * (x[5] - x[4] * y[1] + x[7])
+                        , 0.01(x[8] - x[5] * y[3]),
+                        100 * x[1] - x[1] * x[6] * y[1] + 833.33252 * x[4] * y[1]
+                        ,x[2] * x[4] * y[4] - x[2] * x[7] - 1250 * x[4] + 1250 * x[5],
+                        x[3] * x[5] * y[2] * y[5] - x[3] * x[8] * y[5] - 2500 * x[5] * y[1] * y[4] + 1250000,
+                        y[1] * y[2] * y[3],
+                        y[4] * y[5] - (y[2] * y[3]),
+                        y[1] * y[5] - (y[2] * y[4]),
+                        ]
+    end
+    lcons = fill(-Inf, 9)
+    ucons = [1, 1, 1, 83333.333, 0, 0, 0, 0, 0]
+    objective = (u,p) -> u[1] + u[2] + u[3]
+    optf = OptimizationFunction(objective, Optimization.AutoForwardDiff(), cons = cons)
+# @named optsys = OptimizationSystem(objective, [x..., y...], [], constraints = constraints)
+optprob = OptimizationProblem(optf, vcat((LB + UB) ./ 2,zeros(5));lb = vcat(LB, fill(0, 5)), ub = vcat(UB, fill(1, 5)), lcons, ucons, int = vcat(fill(false, 8), fill(true, 5)))
 
 nl_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
                                                             "print_level" => 0)
@@ -198,19 +204,46 @@ opt = OptimizationMOI.MOI.OptimizerWithAttributes(Alpine.Optimizer,
                                                             "minlp_solver" => minlp_solver,
                                                             "nlp_solver" => nl_solver,
                                                             "mip_solver" => mi_solver)
-sol = solve(optprob, opt)
-```
-
-```julia
-
-ModelingToolkit.@variables v[1:5]
-ModelingToolkit.@variables w[1:5]
-ModelingToolkit.@variables x[1:5] [bounds = (0,1)]
-
-objective =  dot(v,x)
-
-constraints =  [sum(w[i]*x[i]^2 for i=1:5) ≲ 45]
-@named optsys = OptimizationSystem(objective, [x...], [v..., w...], constraints = constraints)
-optprob = OptimizationProblem(optsys, zeros(5), vcat([10,20,12,23,42], [12,45,12,22,21]); sense = Optimization.MaxSense ,int = fill(true, 5), grad = true, cons_j = true, hess = true, cons_h = true)
+sol = solve(optprob, minlp_solver)
 ```
 -->
+
+We choose an example from the [Juniper.jl readme](https://github.com/lanl-ansi/Juniper.jl#use-with-jump) to demonstrate mixed integer nonlinear optimization with Optimization.jl. The problem can be stated as follows:
+
+```math
+\begin{aligned}
+
+v &= [10,20,12,23,42] \\
+w &= [12,45,12,22,21] \\
+
+\text{maximize} \quad & \sum_{i=1}^5 v_i u_i \\
+
+\text{subject to} \quad & \sum_{i=1}^5 w_i u_i^2 \leq 45 \\
+
+& u_i \in \{0,1\} \quad \forall i \in \{1,2,3,4,5\}
+
+\end{aligned}
+```
+
+which implies a maximization problem of binary variables $u_i$ with the objective as the dot product of `v` and `u` subject to a quadratic constraint on `u`.
+
+```@example linear
+using Juniper
+
+v = [10,20,12,23,42]
+w = [12,45,12,22,21]
+
+objective = (u, p) -> (v = p[1:5]; dot(v,u))
+
+cons = (res, u,p) -> (w = p[6:10]; res .= [sum(w[i]*u[i]^2 for i=1:5)])
+
+optf = OptimizationFunction(objective, Optimization.AutoModelingToolkit(), cons = cons)
+optprob = OptimizationProblem(optf, zeros(5), vcat(v, w); sense = Optimization.MaxSense, lb = zeros(5), ub = ones(5), lcons = [-Inf], ucons = [45.0], int = fill(true, 5))
+
+nl_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
+                                                            "print_level" => 0)
+minlp_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer,
+                                                            "nl_solver" => nl_solver)
+
+sol = solve(optprob, minlp_solver)
+```
