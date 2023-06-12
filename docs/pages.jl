@@ -4,6 +4,7 @@ pages = ["index.md",
         "tutorials/minibatch.md",
         "tutorials/symbolic.md",
         "tutorials/constraints.md",
+        "tutorials/linearandinteger.md",
     ],
     "Examples" => [
         "examples/rosenbrock.md",
