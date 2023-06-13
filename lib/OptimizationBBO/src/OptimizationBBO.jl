@@ -77,7 +77,7 @@ function __map_optimizer_args(prob::Optimization.OptimizationCache, opt::BBO;
     return mapped_args
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     F,
     RC,
     LB,
