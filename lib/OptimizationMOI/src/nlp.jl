@@ -1,7 +1,7 @@
 mutable struct MOIOptimizationNLPEvaluator{T, F <: OptimizationFunction, RC, LB, UB,
-                                           I,
-                                           JT <: DenseOrSparse{T}, HT <: DenseOrSparse{T},
-                                           CHT <: DenseOrSparse{T}, S} <:
+    I,
+    JT <: DenseOrSparse{T}, HT <: DenseOrSparse{T},
+    CHT <: DenseOrSparse{T}, S} <:
                MOI.AbstractNLPEvaluator
     f::F
     reinit_cache::RC
@@ -47,37 +47,57 @@ function Base.setproperty!(cache::MOIOptimizationNLPCache{E}, name::Symbol, x) w
     return setfield!(cache, name, x)
 end
 
-function SciMLBase.get_p(sol::SciMLBase.OptimizationSolution{T, N, uType, C}) where {T, N,
-                                                                                     uType,
-                                                                                     C <:
-                                                                                     MOIOptimizationNLPCache
-                                                                                     }
+function SciMLBase.get_p(sol::SciMLBase.OptimizationSolution{
+    T,
+    N,
+    uType,
+    C,
+}) where {T, N,
+    uType,
+    C <:
+    MOIOptimizationNLPCache,
+}
     sol.cache.evaluator.p
 end
-function SciMLBase.get_observed(sol::SciMLBase.OptimizationSolution{T, N, uType, C}) where {
-                                                                                            T,
-                                                                                            N,
-                                                                                            uType,
-                                                                                            C <:
-                                                                                            MOIOptimizationNLPCache
-                                                                                            }
+function SciMLBase.get_observed(sol::SciMLBase.OptimizationSolution{
+    T,
+    N,
+    uType,
+    C,
+}) where {
+    T,
+    N,
+    uType,
+    C <:
+    MOIOptimizationNLPCache,
+}
     sol.cache.evaluator.f.observed
 end
-function SciMLBase.get_syms(sol::SciMLBase.OptimizationSolution{T, N, uType, C}) where {T,
-                                                                                        N,
-                                                                                        uType,
-                                                                                        C <:
-                                                                                        MOIOptimizationNLPCache
-                                                                                        }
+function SciMLBase.get_syms(sol::SciMLBase.OptimizationSolution{
+    T,
+    N,
+    uType,
+    C,
+}) where {T,
+    N,
+    uType,
+    C <:
+    MOIOptimizationNLPCache,
+}
     sol.cache.evaluator.f.syms
 end
-function SciMLBase.get_paramsyms(sol::SciMLBase.OptimizationSolution{T, N, uType, C}) where {
-                                                                                             T,
-                                                                                             N,
-                                                                                             uType,
-                                                                                             C <:
-                                                                                             MOIOptimizationNLPCache
-                                                                                             }
+function SciMLBase.get_paramsyms(sol::SciMLBase.OptimizationSolution{
+    T,
+    N,
+    uType,
+    C,
+}) where {
+    T,
+    N,
+    uType,
+    C <:
+    MOIOptimizationNLPCache,
+}
     sol.cache.evaluator.f.paramsyms
 end
 
@@ -113,16 +133,16 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem, opt; kwargs...)
     ucons = prob.ucons === nothing ? fill(Inf, num_cons) : prob.ucons
 
     evaluator = MOIOptimizationNLPEvaluator(f,
-                                            reinit_cache,
-                                            prob.lb,
-                                            prob.ub,
-                                            prob.int,
-                                            lcons,
-                                            ucons,
-                                            prob.sense,
-                                            J,
-                                            H,
-                                            cons_H)
+        reinit_cache,
+        prob.lb,
+        prob.ub,
+        prob.int,
+        lcons,
+        ucons,
+        prob.sense,
+        J,
+        H,
+        cons_H)
     return MOIOptimizationNLPCache(evaluator, opt, NamedTuple(kwargs))
 end
 
@@ -136,7 +156,7 @@ function MOI.features_available(evaluator::MOIOptimizationNLPEvaluator)
 end
 
 function MOI.initialize(evaluator::MOIOptimizationNLPEvaluator,
-                        requested_features::Vector{Symbol})
+    requested_features::Vector{Symbol})
     available_features = MOI.features_available(evaluator)
     for feat in requested_features
         if !(feat in available_features)
@@ -158,6 +178,11 @@ function MOI.eval_constraint(evaluator::MOIOptimizationNLPEvaluator, g, x)
 end
 
 function MOI.eval_objective_gradient(evaluator::MOIOptimizationNLPEvaluator, G, x)
+    if evaluator.f.grad === nothing
+        error("Use OptimizationFunction to pass the objective gradient or " *
+              "automatically generate it with one of the autodiff backends." *
+              "If you are using the ModelingToolkit sybolic interface, pass the `grad` kwarg set to `true` in `OptimizationProblem`.")
+    end
     evaluator.f.grad(G, x)
     return
 end
@@ -178,8 +203,9 @@ function MOI.eval_constraint_jacobian(evaluator::MOIOptimizationNLPEvaluator, j,
     if isempty(j)
         return
     elseif evaluator.f.cons_j === nothing
-        error("Use OptimizationFunction to pass the derivatives or " *
-              "automatically generate them with one of the autodiff backends")
+        error("Use OptimizationFunction to pass the constraints' jacobian or " *
+              "automatically generate i with one of the autodiff backends." *
+              "If you are using the ModelingToolkit sybolic interface, pass the `cons_j` kwarg set to `true` in `OptimizationProblem`.")
     end
     evaluator.f.cons_j(evaluator.J, x)
     if evaluator.J isa SparseMatrixCSC
@@ -232,12 +258,17 @@ function MOI.hessian_lagrangian_structure(evaluator::MOIOptimizationNLPEvaluator
 end
 
 function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
-                                     h,
-                                     x,
-                                     σ,
-                                     μ) where {T}
+    h,
+    x,
+    σ,
+    μ) where {T}
     if evaluator.f.lag_h !== nothing
         return evaluator.f.lag_h(h, x, σ, μ)
+    end
+    if evaluator.f.hess === nothing
+        error("Use OptimizationFunction to pass the objective hessian or " *
+              "automatically generate it with one of the autodiff backends." *
+              "If you are using the ModelingToolkit sybolic interface, pass the `hess` kwarg set to `true` in `OptimizationProblem`.")
     end
     fill!(h, zero(T))
     k = 0
@@ -261,6 +292,11 @@ function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
     # the constraints are dense.
     nnz_objective = k
     if !isempty(μ) && !all(iszero, μ)
+        if evaluator.f.cons_h === nothing
+            error("Use OptimizationFunction to pass the constraints' hessian or " *
+                  "automatically generate it with one of the autodiff backends." *
+                  "If you are using the ModelingToolkit sybolic interface, pass the `cons_h` kwarg set to `true` in `OptimizationProblem`.")
+        end
         evaluator.f.cons_h(evaluator.cons_H, x)
         for (μi, Hi) in zip(μ, evaluator.cons_H)
             if Hi isa SparseMatrixCSC
@@ -348,28 +384,28 @@ function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
     opt_setup = __map_optimizer_args(cache,
-                                     cache.opt;
-                                     abstol = cache.solver_args.abstol,
-                                     reltol = cache.solver_args.reltol,
-                                     maxiters = maxiters,
-                                     maxtime = maxtime,
-                                     cache.solver_args...)
+        cache.opt;
+        abstol = cache.solver_args.abstol,
+        reltol = cache.solver_args.reltol,
+        maxiters = maxiters,
+        maxtime = maxtime,
+        cache.solver_args...)
 
     θ = _add_moi_variables!(opt_setup, cache.evaluator)
     MOI.set(opt_setup,
-            MOI.ObjectiveSense(),
-            cache.evaluator.sense === Optimization.MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE)
+        MOI.ObjectiveSense(),
+        cache.evaluator.sense === Optimization.MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE)
     xor(isnothing(cache.evaluator.lcons), isnothing(cache.evaluator.ucons)) &&
         throw(ArgumentError("Expected `cache.evaluator.lcons` and `cache.evaluator.lcons` to be supplied both or none."))
     if isnothing(cache.evaluator.lcons) && isnothing(cache.evaluator.ucons)
         con_bounds = MOI.NLPBoundsPair[]
     else
         con_bounds = MOI.NLPBoundsPair.(Float64.(cache.evaluator.lcons),
-                                        Float64.(cache.evaluator.ucons))
+            Float64.(cache.evaluator.ucons))
     end
     MOI.set(opt_setup,
-            MOI.NLPBlock(),
-            MOI.NLPBlockData(con_bounds, cache.evaluator, true))
+        MOI.NLPBlock(),
+        MOI.NLPBlockData(con_bounds, cache.evaluator, true))
     MOI.optimize!(opt_setup)
     if MOI.get(opt_setup, MOI.ResultCount()) >= 1
         minimizer = MOI.get(opt_setup, MOI.VariablePrimal(), θ)
@@ -381,9 +417,9 @@ function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
         opt_ret = SciMLBase.ReturnCode.Default
     end
     return SciMLBase.build_solution(cache,
-                                    cache.opt,
-                                    minimizer,
-                                    minimum;
-                                    original = opt_setup,
-                                    retcode = opt_ret)
+        cache.opt,
+        minimizer,
+        minimum;
+        original = opt_setup,
+        retcode = opt_ret)
 end
