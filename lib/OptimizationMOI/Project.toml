@@ -1,7 +1,7 @@
 name = "OptimizationMOI"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.1.13"
+version = "0.1.14"
 
 [deps]
 Ipopt_jll = "9cc047cb-c261-5740-88fc-0cf96f7bdcc7"
@@ -17,7 +17,7 @@ Ipopt_jll = "=300.1400.400"
 Juniper = "0.9"
 MathOptInterface = "1"
 ModelingToolkit = "8"
-Optimization = "3.13.1"
+Optimization = "3.15"
 Reexport = "1.2"
 Symbolics = "5"
 julia = "1"

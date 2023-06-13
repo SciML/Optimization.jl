@@ -1,7 +1,7 @@
 name = "OptimizationMultistartOptimization"
 uuid = "e4316d97-8bbb-4fd3-a7d8-3851d2a72823"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.1.3"
+version = "0.1.4"
 
 [deps]
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
@@ -11,7 +11,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 [compat]
 julia = "1"
 MultistartOptimization = "0.2"
-Optimization = "3.9"
+Optimization = "3.15"
 Reexport = "1.2"
 
 [extras]
