@@ -16,7 +16,7 @@ using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 using Pkg
 
 import SciMLBase: OptimizationProblem, OptimizationFunction, ObjSense,
-                  MaxSense, MinSense
+    MaxSense, MinSense
 export ObjSense, MaxSense, MinSense
 
 include("utils.jl")

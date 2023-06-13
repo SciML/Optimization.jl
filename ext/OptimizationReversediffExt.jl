@@ -3,19 +3,19 @@ module OptimizationReversediffExt
 import SciMLBase: OptimizationFunction
 import Optimization
 import ADTypes: AutoReverseDiff
-isdefined(Base, :get_extension) ? (using ReverseDiff, ReverseDiff.ForwardDiff) : (using ..ReverseDiff, ..ReverseDiff.ForwardDiff)
-
+isdefined(Base, :get_extension) ? (using ReverseDiff, ReverseDiff.ForwardDiff) :
+(using ..ReverseDiff, ..ReverseDiff.ForwardDiff)
 
 function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
-                                           p = SciMLBase.NullParameters(),
-                                           num_cons = 0)
+    p = SciMLBase.NullParameters(),
+    num_cons = 0)
     num_cons != 0 && error("AutoReverseDiff does not currently support constraints")
 
     _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
         grad = (res, θ, args...) -> ReverseDiff.gradient!(res, x -> _f(x, args...), θ,
-                                                          ReverseDiff.GradientConfig(θ))
+            ReverseDiff.GradientConfig(θ))
     else
         grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
     end
@@ -42,21 +42,21 @@ function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
     end
 
     return OptimizationFunction{false}(f, adtype; grad = grad, hess = hess, hv = hv,
-                                       cons = nothing, cons_j = nothing, cons_h = nothing,
-                                       hess_prototype = f.hess_prototype,
-                                       cons_jac_prototype = nothing,
-                                       cons_hess_prototype = nothing)
+        cons = nothing, cons_j = nothing, cons_h = nothing,
+        hess_prototype = f.hess_prototype,
+        cons_jac_prototype = nothing,
+        cons_hess_prototype = nothing)
 end
 
 function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
-                                           adtype::AutoReverseDiff, num_cons = 0)
+    adtype::AutoReverseDiff, num_cons = 0)
     num_cons != 0 && error("AutoReverseDiff does not currently support constraints")
 
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
 
     if f.grad === nothing
         grad = (res, θ, args...) -> ReverseDiff.gradient!(res, x -> _f(x, args...), θ,
-                                                          ReverseDiff.GradientConfig(θ))
+            ReverseDiff.GradientConfig(θ))
     else
         grad = (G, θ, args...) -> f.grad(G, θ, cache.p, args...)
     end
@@ -83,10 +83,10 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     end
 
     return OptimizationFunction{false}(f, adtype; grad = grad, hess = hess, hv = hv,
-                                       cons = nothing, cons_j = nothing, cons_h = nothing,
-                                       hess_prototype = f.hess_prototype,
-                                       cons_jac_prototype = nothing,
-                                       cons_hess_prototype = nothing)
+        cons = nothing, cons_j = nothing, cons_h = nothing,
+        hess_prototype = f.hess_prototype,
+        cons_jac_prototype = nothing,
+        cons_hess_prototype = nothing)
 end
 
 end

@@ -7,10 +7,10 @@ using Optimization.SciMLBase, OptimizationOptimJL, OptimizationOptimisers
 struct PolyOpt end
 
 function SciMLBase.__solve(prob::OptimizationProblem,
-                           opt::PolyOpt,
-                           args...;
-                           maxiters = nothing,
-                           kwargs...)
+    opt::PolyOpt,
+    args...;
+    maxiters = nothing,
+    kwargs...)
     loss, θ = x -> prob.f(x, prob.p), prob.u0
     deterministic = first(loss(θ)) == first(loss(θ))
 
@@ -22,18 +22,18 @@ function SciMLBase.__solve(prob::OptimizationProblem,
         # If deterministic then ADAM -> finish with BFGS
         if maxiters === nothing
             res1 = Optimization.solve(prob, Optimisers.ADAM(0.01), args...; maxiters = 300,
-                                      kwargs...)
+                kwargs...)
         else
             res1 = Optimization.solve(prob, Optimisers.ADAM(0.01), args...; maxiters,
-                                      kwargs...)
+                kwargs...)
         end
 
         optprob2 = remake(prob, u0 = res1.u)
         res1 = Optimization.solve(optprob2, BFGS(initial_stepnorm = 0.01), args...;
-                                  maxiters, kwargs...)
+            maxiters, kwargs...)
     elseif isempty(args) && deterministic
         res1 = Optimization.solve(prob, BFGS(initial_stepnorm = 0.01), args...; maxiters,
-                                  kwargs...)
+            kwargs...)
     else
         res1 = Optimization.solve(prob, Optimisers.ADAM(0.1), args...; maxiters, kwargs...)
     end

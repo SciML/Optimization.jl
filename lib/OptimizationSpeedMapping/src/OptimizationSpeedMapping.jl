@@ -13,11 +13,11 @@ SciMLBase.allowscallback(::SpeedMappingOpt) = false
 SciMLBase.supports_opt_cache_interface(opt::SpeedMappingOpt) = true
 
 function __map_optimizer_args(cache::OptimizationCache, opt::SpeedMappingOpt;
-                              callback = nothing,
-                              maxiters::Union{Number, Nothing} = nothing,
-                              maxtime::Union{Number, Nothing} = nothing,
-                              abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing)
+    callback = nothing,
+    maxiters::Union{Number, Nothing} = nothing,
+    maxtime::Union{Number, Nothing} = nothing,
+    abstol::Union{Number, Nothing} = nothing,
+    reltol::Union{Number, Nothing} = nothing)
 
     # add optimiser options from kwargs
     mapped_args = (;)
@@ -42,20 +42,32 @@ function __map_optimizer_args(cache::OptimizationCache, opt::SpeedMappingOpt;
     return mapped_args
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C}) where {
-                                                                                                  F,
-                                                                                                  RC,
-                                                                                                  LB,
-                                                                                                  UB,
-                                                                                                  LC,
-                                                                                                  UC,
-                                                                                                  S,
-                                                                                                  O <:
-                                                                                                  SpeedMappingOpt,
-                                                                                                  D,
-                                                                                                  P,
-                                                                                                  C
-                                                                                                  }
+function SciMLBase.__solve(cache::OptimizationCache{
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O,
+    D,
+    P,
+    C,
+}) where {
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O <:
+    SpeedMappingOpt,
+    D,
+    P,
+    C,
+}
     local x
 
     _loss = function (θ)
@@ -70,20 +82,20 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
     opt_args = __map_optimizer_args(cache, cache.opt, maxiters = maxiters,
-                                    maxtime = maxtime,
-                                    abstol = cache.solver_args.abstol,
-                                    reltol = cache.solver_args.reltol; cache.solver_args...)
+        maxtime = maxtime,
+        abstol = cache.solver_args.abstol,
+        reltol = cache.solver_args.reltol; cache.solver_args...)
 
     t0 = time()
     opt_res = SpeedMapping.speedmapping(cache.u0; f = _loss, (g!) = cache.f.grad,
-                                        lower = cache.lb,
-                                        upper = cache.ub, opt_args...)
+        lower = cache.lb,
+        upper = cache.ub, opt_args...)
     t1 = time()
     opt_ret = Symbol(opt_res.converged)
 
     SciMLBase.build_solution(cache, cache.opt,
-                             opt_res.minimizer, _loss(opt_res.minimizer);
-                             original = opt_res, retcode = opt_ret, solve_time = t1 - t0)
+        opt_res.minimizer, _loss(opt_res.minimizer);
+        original = opt_res, retcode = opt_ret, solve_time = t1 - t0)
 end
 
 end

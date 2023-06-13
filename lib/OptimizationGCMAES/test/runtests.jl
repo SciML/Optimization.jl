@@ -10,12 +10,12 @@ using Test
     f_noad = OptimizationFunction(rosenbrock)
 
     prob = Optimization.OptimizationProblem(f_ad, x0, _p, lb = [-1.0, -1.0],
-                                            ub = [1.0, 1.0])
+        ub = [1.0, 1.0])
     sol = solve(prob, GCMAESOpt(), maxiters = 1000)
     @test 10 * sol.objective < l1
 
     prob = Optimization.OptimizationProblem(f_noad, x0, _p, lb = [-1.0, -1.0],
-                                            ub = [1.0, 1.0])
+        ub = [1.0, 1.0])
     sol = solve(prob, GCMAESOpt(), maxiters = 1000)
     @test 10 * sol.objective < l1
 

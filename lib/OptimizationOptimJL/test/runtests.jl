@@ -1,5 +1,6 @@
-using OptimizationOptimJL, OptimizationOptimJL.Optim, Optimization, ForwardDiff, Zygote,
-      Random, ModelingToolkit
+using OptimizationOptimJL,
+    OptimizationOptimJL.Optim, Optimization, ForwardDiff, Zygote,
+    Random, ModelingToolkit
 using Test
 
 @testset "OptimizationOptimJL.jl" begin
@@ -10,9 +11,9 @@ using Test
 
     prob = OptimizationProblem(rosenbrock, x0, _p)
     sol = solve(prob,
-                Optim.NelderMead(;
-                                 initial_simplex = Optim.AffineSimplexer(; a = 0.025,
-                                                                         b = 0.5)))
+        Optim.NelderMead(;
+            initial_simplex = Optim.AffineSimplexer(; a = 0.025,
+                b = 0.5)))
     @test 10 * sol.objective < l1
 
     f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
@@ -38,21 +39,21 @@ using Test
 
     cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit();
-                                   cons = cons)
+        cons = cons)
 
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-5.0], ucons = [10.0])
     sol = solve(prob, IPNewton())
     @test 10 * sol.objective < l1
 
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();
-                                   cons = cons)
+        cons = cons)
 
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [Inf])
     sol = solve(prob, IPNewton())
     @test 10 * sol.objective < l1
 
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [Inf],
-                               lb = [-500.0, -500.0], ub = [50.0, 50.0])
+        lb = [-500.0, -500.0], ub = [50.0, 50.0])
     sol = solve(prob, IPNewton())
     @test sol.objective < l1
 
@@ -61,14 +62,14 @@ using Test
     end
 
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();
-                                   cons = con2_c)
+        cons = con2_c)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf, -Inf], ucons = [Inf, Inf])
     sol = solve(prob, IPNewton())
     @test 10 * sol.objective < l1
 
     cons_circ = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();
-                                   cons = cons_circ)
+        cons = cons_circ)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [0.25^2])
     cache = Optimization.init(prob, Optim.IPNewton())
     sol = Optimization.solve!(cache)
@@ -102,7 +103,7 @@ using Test
         G[2] = 200.0 * (x[2] - x[1]^2)
     end
     optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), Optimization.AutoZygote(),
-                                   grad = g!)
+        grad = g!)
     prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MaxSense)
     sol = solve(prob, BFGS())
     @test 10 * sol.objective < l1
@@ -113,7 +114,7 @@ using Test
     @test 10 * sol.objective < l1
 
     optprob = OptimizationFunction(rosenbrock,
-                                   Optimization.AutoModelingToolkit(true, false))
+        Optimization.AutoModelingToolkit(true, false))
     prob = OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, Optim.Newton())
     @test 10 * sol.objective < l1

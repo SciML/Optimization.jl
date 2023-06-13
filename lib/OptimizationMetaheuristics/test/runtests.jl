@@ -8,7 +8,7 @@ using Test
     l1 = rosenbrock(x0, _p)
     optprob = OptimizationFunction(rosenbrock)
     prob = Optimization.OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0],
-                                            ub = [1.5, 1.5])
+        ub = [1.5, 1.5])
     sol = solve(prob, ECA())
     @test 10 * sol.objective < l1
 

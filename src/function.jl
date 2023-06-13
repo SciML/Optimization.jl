@@ -44,7 +44,7 @@ For more information on the use of automatic differentiation, see the
 documentation of the `AbstractADType` types.
 """
 function instantiate_function(f, x, ::SciMLBase.NoAD,
-                              p, num_cons = 0)
+    p, num_cons = 0)
     grad = f.grad === nothing ? nothing : (G, x, args...) -> f.grad(G, x, p, args...)
     hess = f.hess === nothing ? nothing : (H, x, args...) -> f.hess(H, x, p, args...)
     hv = f.hv === nothing ? nothing : (H, x, v, args...) -> f.hv(H, x, v, p, args...)
@@ -62,18 +62,18 @@ function instantiate_function(f, x, ::SciMLBase.NoAD,
     cons_expr = symbolify.(f.cons_expr)
 
     return OptimizationFunction{true}(f.f, SciMLBase.NoAD(); grad = grad, hess = hess,
-                                      hv = hv,
-                                      cons = cons, cons_j = cons_j, cons_h = cons_h,
-                                      hess_prototype = hess_prototype,
-                                      cons_jac_prototype = cons_jac_prototype,
-                                      cons_hess_prototype = cons_hess_prototype,
-                                      expr = expr, cons_expr = cons_expr,
-                                      syms = f.syms, paramsyms = f.paramsyms,
-                                      observed = f.observed)
+        hv = hv,
+        cons = cons, cons_j = cons_j, cons_h = cons_h,
+        hess_prototype = hess_prototype,
+        cons_jac_prototype = cons_jac_prototype,
+        cons_hess_prototype = cons_hess_prototype,
+        expr = expr, cons_expr = cons_expr,
+        syms = f.syms, paramsyms = f.paramsyms,
+        observed = f.observed)
 end
 
 function instantiate_function(f, cache::ReInitCache, ::SciMLBase.NoAD,
-                              num_cons = 0)
+    num_cons = 0)
     grad = f.grad === nothing ? nothing : (G, x, args...) -> f.grad(G, x, cache.p, args...)
     hess = f.hess === nothing ? nothing : (H, x, args...) -> f.hess(H, x, cache.p, args...)
     hv = f.hv === nothing ? nothing : (H, x, v, args...) -> f.hv(H, x, v, cache.p, args...)
@@ -91,18 +91,18 @@ function instantiate_function(f, cache::ReInitCache, ::SciMLBase.NoAD,
     cons_expr = symbolify.(f.cons_expr)
 
     return OptimizationFunction{true}(f.f, SciMLBase.NoAD(); grad = grad, hess = hess,
-                                      hv = hv,
-                                      cons = cons, cons_j = cons_j, cons_h = cons_h,
-                                      hess_prototype = hess_prototype,
-                                      cons_jac_prototype = cons_jac_prototype,
-                                      cons_hess_prototype = cons_hess_prototype,
-                                      expr = expr, cons_expr = cons_expr,
-                                      syms = f.syms, paramsyms = f.paramsyms,
-                                      observed = f.observed)
+        hv = hv,
+        cons = cons, cons_j = cons_j, cons_h = cons_h,
+        hess_prototype = hess_prototype,
+        cons_jac_prototype = cons_jac_prototype,
+        cons_hess_prototype = cons_hess_prototype,
+        expr = expr, cons_expr = cons_expr,
+        syms = f.syms, paramsyms = f.paramsyms,
+        observed = f.observed)
 end
 
 function instantiate_function(f, x, adtype::ADTypes.AbstractADType,
-                              p, num_cons = 0)
+    p, num_cons = 0)
     adtypestr = string(adtype)
     _strtind = findfirst('.', adtypestr)
     strtind = isnothing(_strtind) ? 5 : _strtind + 5

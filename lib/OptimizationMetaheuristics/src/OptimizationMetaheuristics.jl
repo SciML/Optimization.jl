@@ -21,20 +21,20 @@ function initial_population!(opt, cache, bounds, f)
     push!(population_rand, cache.u0)
     population_init = [Metaheuristics.create_child(x, f(x)) for x in population_rand]
     prev_status = Metaheuristics.State(Metaheuristics.get_best(population_init),
-                                       population_init)
+        population_init)
     opt.parameters.N = pop_size
     opt.status = prev_status
     return nothing
 end
 
 function __map_optimizer_args!(cache::OptimizationCache,
-                               opt::Metaheuristics.AbstractAlgorithm;
-                               callback = nothing,
-                               maxiters::Union{Number, Nothing} = nothing,
-                               maxtime::Union{Number, Nothing} = nothing,
-                               abstol::Union{Number, Nothing} = nothing,
-                               reltol::Union{Number, Nothing} = nothing,
-                               kwargs...)
+    opt::Metaheuristics.AbstractAlgorithm;
+    callback = nothing,
+    maxiters::Union{Number, Nothing} = nothing,
+    maxtime::Union{Number, Nothing} = nothing,
+    abstol::Union{Number, Nothing} = nothing,
+    reltol::Union{Number, Nothing} = nothing,
+    kwargs...)
     for j in kwargs
         if j.first .∈ Ref(propertynames(Metaheuristics.Information()))
             error("Set $(j.first) by directly passing it to Information Structure which is passed to $(typeof(opt)) algorithms when calling solve().")
@@ -66,30 +66,42 @@ function __map_optimizer_args!(cache::OptimizationCache,
 end
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
-                          opt::Metaheuristics.AbstractAlgorithm,
-                          data = Optimization.DEFAULT_DATA; use_initial = false,
-                          callback = (args...) -> (false),
-                          progress = false, kwargs...)
+    opt::Metaheuristics.AbstractAlgorithm,
+    data = Optimization.DEFAULT_DATA; use_initial = false,
+    callback = (args...) -> (false),
+    progress = false, kwargs...)
     return OptimizationCache(prob, opt, data; use_initial = use_initial,
-                             callback = callback,
-                             progress = progress,
-                             kwargs...)
+        callback = callback,
+        progress = progress,
+        kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C}) where {
-                                                                                                  F,
-                                                                                                  RC,
-                                                                                                  LB,
-                                                                                                  UB,
-                                                                                                  LC,
-                                                                                                  UC,
-                                                                                                  S,
-                                                                                                  O <:
-                                                                                                  Metaheuristics.AbstractAlgorithm,
-                                                                                                  D,
-                                                                                                  P,
-                                                                                                  C
-                                                                                                  }
+function SciMLBase.__solve(cache::OptimizationCache{
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O,
+    D,
+    P,
+    C,
+}) where {
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O <:
+    Metaheuristics.AbstractAlgorithm,
+    D,
+    P,
+    C,
+}
     local x
 
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
@@ -117,8 +129,8 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     end
 
     __map_optimizer_args!(cache, cache.opt; callback = cache.callback, cache.solver_args...,
-                          maxiters = maxiters,
-                          maxtime = maxtime)
+        maxiters = maxiters,
+        maxtime = maxtime)
 
     if cache.solver_args.use_initial
         initial_population!(cache.opt, cache, opt_bounds, _loss)
@@ -129,9 +141,9 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     t1 = time()
 
     SciMLBase.build_solution(cache, cache.opt,
-                             Metaheuristics.minimizer(opt_res),
-                             Metaheuristics.minimum(opt_res); original = opt_res,
-                             solve_time = t1 - t0)
+        Metaheuristics.minimizer(opt_res),
+        Metaheuristics.minimum(opt_res); original = opt_res,
+        solve_time = t1 - t0)
 end
 
 end

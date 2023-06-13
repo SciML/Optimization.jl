@@ -13,7 +13,7 @@ Consider the following monthly net cash flow requirements, presented in thousand
 |:------------- |:---- |:---- |:--- |:---- |:--- |:--- |
 | Net Cash Flow | -150 | -100 | 200 | -200 | 50  | 300 |
 
-To address these financial needs, our hypothetical company has access to various funding sources[^1]:
+To address these financial needs, our hypothetical company has access to various funding sources:
 
  1. A line of credit: The company can utilize a line of credit of up to $100,000, subject to a monthly interest rate of 1%.
  2. Commercial paper issuance: In any of the first three months, the company has the option to issue 90-day commercial paper with a cumulative interest rate of 2% for the three-month period.

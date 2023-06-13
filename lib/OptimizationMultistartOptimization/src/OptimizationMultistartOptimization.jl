@@ -9,30 +9,42 @@ SciMLBase.allowsbounds(opt::MultistartOptimization.TikTak) = true
 SciMLBase.supports_opt_cache_interface(opt::MultistartOptimization.TikTak) = true
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
-                          opt::MultistartOptimization.TikTak,
-                          local_opt,
-                          data = Optimization.DEFAULT_DATA;
-                          use_threads = true,
-                          kwargs...)
+    opt::MultistartOptimization.TikTak,
+    local_opt,
+    data = Optimization.DEFAULT_DATA;
+    use_threads = true,
+    kwargs...)
     return OptimizationCache(prob, opt, data; local_opt = local_opt, prob = prob,
-                             use_threads = use_threads,
-                             kwargs...)
+        use_threads = use_threads,
+        kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C}) where {
-                                                                                                  F,
-                                                                                                  RC,
-                                                                                                  LB,
-                                                                                                  UB,
-                                                                                                  LC,
-                                                                                                  UC,
-                                                                                                  S,
-                                                                                                  O <:
-                                                                                                  MultistartOptimization.TikTak,
-                                                                                                  D,
-                                                                                                  P,
-                                                                                                  C
-                                                                                                  }
+function SciMLBase.__solve(cache::OptimizationCache{
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O,
+    D,
+    P,
+    C,
+}) where {
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O <:
+    MultistartOptimization.TikTak,
+    D,
+    P,
+    C,
+}
     local x, _loss
 
     _loss = function (θ)
@@ -52,17 +64,17 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
 
     t0 = time()
     opt_res = MultistartOptimization.multistart_minimization(cache.opt, local_optimiser,
-                                                             opt_setup;
-                                                             use_threads = cache.solver_args.use_threads)
+        opt_setup;
+        use_threads = cache.solver_args.use_threads)
     t1 = time()
     opt_ret = hasproperty(opt_res, :ret) ? opt_res.ret : nothing
 
     SciMLBase.build_solution(cache,
-                             (cache.opt, cache.solver_args.local_opt), opt_res.location,
-                             opt_res.value;
-                             (isnothing(opt_ret) ? (; original = opt_res) :
-                              (; original = opt_res, retcode = opt_ret,
-                               solve_time = t1 - t0))...)
+        (cache.opt, cache.solver_args.local_opt), opt_res.location,
+        opt_res.value;
+        (isnothing(opt_ret) ? (; original = opt_res) :
+         (; original = opt_res, retcode = opt_ret,
+            solve_time = t1 - t0))...)
 end
 
 end

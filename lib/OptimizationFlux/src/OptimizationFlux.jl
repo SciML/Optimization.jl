@@ -7,28 +7,40 @@ using Optimization.SciMLBase
 SciMLBase.supports_opt_cache_interface(opt::Flux.Optimise.AbstractOptimiser) = true
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
-                          opt::Flux.Optimise.AbstractOptimiser,
-                          data = Optimization.DEFAULT_DATA; save_best = true,
-                          callback = (args...) -> (false),
-                          progress = false, kwargs...)
+    opt::Flux.Optimise.AbstractOptimiser,
+    data = Optimization.DEFAULT_DATA; save_best = true,
+    callback = (args...) -> (false),
+    progress = false, kwargs...)
     return OptimizationCache(prob, opt, data; save_best, callback, progress,
-                             kwargs...)
+        kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C}) where {
-                                                                                                  F,
-                                                                                                  RC,
-                                                                                                  LB,
-                                                                                                  UB,
-                                                                                                  LC,
-                                                                                                  UC,
-                                                                                                  S,
-                                                                                                  O <:
-                                                                                                  Flux.Optimise.AbstractOptimiser,
-                                                                                                  D,
-                                                                                                  P,
-                                                                                                  C
-                                                                                                  }
+function SciMLBase.__solve(cache::OptimizationCache{
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O,
+    D,
+    P,
+    C,
+}) where {
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O <:
+    Flux.Optimise.AbstractOptimiser,
+    D,
+    P,
+    C,
+}
     if cache.data != Optimization.DEFAULT_DATA
         maxiters = length(cache.data)
         data = cache.data
@@ -49,34 +61,36 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     min_θ = cache.u0
 
     t0 = time()
-    Optimization.@withprogress cache.progress name="Training" begin for (i, d) in enumerate(data)
-        cache.f.grad(G, θ, d...)
-        x = cache.f(θ, cache.p, d...)
-        cb_call = cache.callback(θ, x...)
-        if !(typeof(cb_call) <: Bool)
-            error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
-        elseif cb_call
-            break
-        end
-        msg = @sprintf("loss: %.3g", x[1])
-        cache.progress && ProgressLogging.@logprogress msg i/maxiters
-
-        if cache.solver_args.save_best
-            if first(x) < first(min_err)  #found a better solution
-                min_opt = opt
-                min_err = x
-                min_θ = copy(θ)
-            end
-            if i == maxiters  #Last iteration, revert to best.
-                opt = min_opt
-                x = min_err
-                θ = min_θ
-                cache.callback(θ, x...)
+    Optimization.@withprogress cache.progress name="Training" begin
+        for (i, d) in enumerate(data)
+            cache.f.grad(G, θ, d...)
+            x = cache.f(θ, cache.p, d...)
+            cb_call = cache.callback(θ, x...)
+            if !(typeof(cb_call) <: Bool)
+                error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
+            elseif cb_call
                 break
             end
+            msg = @sprintf("loss: %.3g", x[1])
+            cache.progress && ProgressLogging.@logprogress msg i/maxiters
+
+            if cache.solver_args.save_best
+                if first(x) < first(min_err)  #found a better solution
+                    min_opt = opt
+                    min_err = x
+                    min_θ = copy(θ)
+                end
+                if i == maxiters  #Last iteration, revert to best.
+                    opt = min_opt
+                    x = min_err
+                    θ = min_θ
+                    cache.callback(θ, x...)
+                    break
+                end
+            end
+            Flux.update!(opt, θ, G)
         end
-        Flux.update!(opt, θ, G)
-    end end
+    end
 
     t1 = time()
 
