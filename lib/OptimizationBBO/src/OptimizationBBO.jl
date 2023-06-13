@@ -24,35 +24,35 @@ function decompose_trace(opt::BlackBoxOptim.OptRunController, progress)
             # we stop at either convergence or max_steps
             n_steps = BlackBoxOptim.num_steps(opt)
             Base.@logmsg(Base.LogLevel(-1), msg, progress=n_steps / maxiters,
-                         _id=:OptimizationBBO)
+                _id=:OptimizationBBO)
         else
             # we stop at either convergence or max_time
             elapsed = BlackBoxOptim.elapsed_time(opt)
             Base.@logmsg(Base.LogLevel(-1), msg, progress=elapsed / max_time,
-                         _id=:OptimizationBBO)
+                _id=:OptimizationBBO)
         end
     end
     return BlackBoxOptim.best_candidate(opt)
 end
 
 function __map_optimizer_args(prob::OptimizationCache, opt::BBO;
-                              callback = nothing,
-                              maxiters::Union{Number, Nothing} = nothing,
-                              maxtime::Union{Number, Nothing} = nothing,
-                              abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing,
-                              verbose::Bool = false,
-                              kwargs...)
+    callback = nothing,
+    maxiters::Union{Number, Nothing} = nothing,
+    maxtime::Union{Number, Nothing} = nothing,
+    abstol::Union{Number, Nothing} = nothing,
+    reltol::Union{Number, Nothing} = nothing,
+    verbose::Bool = false,
+    kwargs...)
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
     mapped_args = (; kwargs...)
     mapped_args = (; mapped_args..., Method = opt.method,
-                   SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)])
+        SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)])
 
     if !isnothing(callback)
         mapped_args = (; mapped_args..., CallbackFunction = callback,
-                       CallbackInterval = 0.0)
+            CallbackInterval = 0.0)
     end
 
     if !isnothing(maxiters)
@@ -76,20 +76,32 @@ function __map_optimizer_args(prob::OptimizationCache, opt::BBO;
     return mapped_args
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C}) where {
-                                                                                                  F,
-                                                                                                  RC,
-                                                                                                  LB,
-                                                                                                  UB,
-                                                                                                  LC,
-                                                                                                  UC,
-                                                                                                  S,
-                                                                                                  O <:
-                                                                                                  BBO,
-                                                                                                  D,
-                                                                                                  P,
-                                                                                                  C
-                                                                                                  }
+function SciMLBase.__solve(cache::OptimizationCache{
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O,
+    D,
+    P,
+    C,
+}) where {
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O <:
+    BBO,
+    D,
+    P,
+    C,
+}
     local x, cur, state
 
     if cache.data != Optimization.DEFAULT_DATA
@@ -136,12 +148,12 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     end
 
     opt_args = __map_optimizer_args(cache, cache.opt;
-                                    callback = isnothing(cache.callback) &&
-                                               isnothing(cache.data) ?
-                                               nothing : _cb,
-                                    cache.solver_args...,
-                                    maxiters = maxiters,
-                                    maxtime = maxtime)
+        callback = isnothing(cache.callback) &&
+                   isnothing(cache.data) ?
+                   nothing : _cb,
+        cache.solver_args...,
+        maxiters = maxiters,
+        maxtime = maxtime)
 
     opt_setup = BlackBoxOptim.bbsetup(_loss; opt_args...)
 
@@ -163,9 +175,9 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     opt_ret = Symbol(opt_res.stop_reason)
 
     SciMLBase.build_solution(cache, cache.opt,
-                             BlackBoxOptim.best_candidate(opt_res),
-                             BlackBoxOptim.best_fitness(opt_res); original = opt_res,
-                             retcode = opt_ret, solve_time = t1 - t0)
+        BlackBoxOptim.best_candidate(opt_res),
+        BlackBoxOptim.best_fitness(opt_res); original = opt_res,
+        retcode = opt_ret, solve_time = t1 - t0)
 end
 
 end

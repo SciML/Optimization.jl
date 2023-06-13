@@ -7,8 +7,8 @@ import ADTypes: AutoEnzyme
 isdefined(Base, :get_extension) ? (using Enzyme) : (using ..Enzyme)
 
 function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
-                                           adtype::AutoEnzyme, p,
-                                           num_cons = 0)
+    adtype::AutoEnzyme, p,
+    num_cons = 0)
     _f = (θ, y, args...) -> (y .= first(f.f(θ, p, args...)); return nothing)
 
     if f.grad === nothing
@@ -32,11 +32,11 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
             vdby = Tuple(zeros(1) for i in eachindex(θ))
 
             Enzyme.autodiff(Enzyme.Forward,
-                            (θ, y) -> Enzyme.autodiff_deferred(Enzyme.Reverse, _f, θ, y),
-                            Enzyme.BatchDuplicated(Enzyme.Duplicated(θ, bθ),
-                                                   Enzyme.Duplicated.(vdθ, vdbθ)),
-                            Enzyme.BatchDuplicated(Enzyme.Duplicated(y, by),
-                                                   Enzyme.Duplicated.(vdy, vdby)))
+                (θ, y) -> Enzyme.autodiff_deferred(Enzyme.Reverse, _f, θ, y),
+                Enzyme.BatchDuplicated(Enzyme.Duplicated(θ, bθ),
+                    Enzyme.Duplicated.(vdθ, vdbθ)),
+                Enzyme.BatchDuplicated(Enzyme.Duplicated(y, by),
+                    Enzyme.Duplicated.(vdy, vdby)))
 
             for i in eachindex(θ)
                 res[i, :] .= vdbθ[i]
@@ -98,16 +98,16 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
     end
 
     return OptimizationFunction{true}(f.f, adtype; grad = grad, hess = hess, hv = hv,
-                                      cons = cons, cons_j = cons_j, cons_h = cons_h,
-                                      hess_prototype = f.hess_prototype,
-                                      cons_jac_prototype = f.cons_jac_prototype,
-                                      cons_hess_prototype = f.cons_hess_prototype)
+        cons = cons, cons_j = cons_j, cons_h = cons_h,
+        hess_prototype = f.hess_prototype,
+        cons_jac_prototype = f.cons_jac_prototype,
+        cons_hess_prototype = f.cons_hess_prototype)
 end
 
 function Optimization.instantiate_function(f::OptimizationFunction{true},
-                                           cache::Optimization.ReInitCache,
-                                           adtype::AutoEnzyme,
-                                           num_cons = 0)
+    cache::Optimization.ReInitCache,
+    adtype::AutoEnzyme,
+    num_cons = 0)
     _f = (θ, y, args...) -> (y .= first(f.f(θ, cache.p, args...)); return nothing)
 
     if f.grad === nothing
@@ -131,11 +131,11 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
             vdby = Tuple(zeros(1) for i in eachindex(θ))
 
             Enzyme.autodiff(Enzyme.Forward,
-                            (θ, y) -> Enzyme.autodiff_deferred(Enzyme.Reverse, _f, θ, y),
-                            Enzyme.BatchDuplicated(Enzyme.Duplicated(θ, bθ),
-                                                   Enzyme.Duplicated.(vdθ, vdbθ)),
-                            Enzyme.BatchDuplicated(Enzyme.Duplicated(y, by),
-                                                   Enzyme.Duplicated.(vdy, vdby)))
+                (θ, y) -> Enzyme.autodiff_deferred(Enzyme.Reverse, _f, θ, y),
+                Enzyme.BatchDuplicated(Enzyme.Duplicated(θ, bθ),
+                    Enzyme.Duplicated.(vdθ, vdbθ)),
+                Enzyme.BatchDuplicated(Enzyme.Duplicated(y, by),
+                    Enzyme.Duplicated.(vdy, vdby)))
 
             for i in eachindex(θ)
                 res[i, :] .= vdbθ[i]
@@ -197,10 +197,10 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
     end
 
     return OptimizationFunction{true}(f.f, adtype; grad = grad, hess = hess, hv = hv,
-                                      cons = cons, cons_j = cons_j, cons_h = cons_h,
-                                      hess_prototype = f.hess_prototype,
-                                      cons_jac_prototype = f.cons_jac_prototype,
-                                      cons_hess_prototype = f.cons_hess_prototype)
+        cons = cons, cons_j = cons_j, cons_h = cons_h,
+        hess_prototype = f.hess_prototype,
+        cons_jac_prototype = f.cons_jac_prototype,
+        cons_hess_prototype = f.cons_hess_prototype)
 end
 
 end

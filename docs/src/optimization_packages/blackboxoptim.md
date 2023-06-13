@@ -65,5 +65,5 @@ p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
 prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(), maxiters = 100000,
-            maxtime = 1000.0)
+    maxtime = 1000.0)
 ```

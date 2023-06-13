@@ -15,8 +15,8 @@ prob_trueode = ODEProblem(trueODEfunc, u0, tspan)
 ode_data = gpu(solve(prob_trueode, Tsit5(), saveat = tsteps))
 
 dudt2 = FastChain((x, p) -> x .^ 3,
-                  FastDense(2, 50, tanh),
-                  FastDense(50, 2))
+    FastDense(2, 50, tanh),
+    FastDense(50, 2))
 u0 = Float32[2.0; 0.0] |> gpu
 p = initial_params(dudt2) |> gpu
 prob_neuralode = NeuralODE(dudt2, tspan, Tsit5(), saveat = tsteps)
@@ -49,5 +49,5 @@ callback = function (p, l, pred; doplot = false)
     return false
 end
 result_neuralode = DiffEqFlux.sciml_train(loss_neuralode, p,
-                                          ADAM(0.05), callback = callback,
-                                          maxiters = 300)
+    ADAM(0.05), callback = callback,
+    maxiters = 300)

@@ -1,10 +1,10 @@
 using NonconvexPercival
 function convert_common_kwargs(opt::NonconvexPercival.AugLag, opt_kwargs;
-                               callback = nothing,
-                               maxiters = nothing,
-                               maxtime = nothing,
-                               abstol = nothing,
-                               reltol = nothing)
+    callback = nothing,
+    maxiters = nothing,
+    maxtime = nothing,
+    abstol = nothing,
+    reltol = nothing)
     conv_opt_kwargs = (; opt_kwargs...)
 
     if !isnothing(callback)
@@ -31,7 +31,7 @@ function convert_common_kwargs(opt::NonconvexPercival.AugLag, opt_kwargs;
 end
 
 function __create_options(opt::NonconvexPercival.AugLag;
-                          opt_kwargs = nothing)
+    opt_kwargs = nothing)
     options = !isnothing(opt_kwargs) ? NonconvexPercival.AugLagOptions(; opt_kwargs...) :
               NonconvexPercival.AugLagOptions()
 
@@ -39,9 +39,9 @@ function __create_options(opt::NonconvexPercival.AugLag;
 end
 
 function _create_options(opt::NonconvexPercival.AugLag;
-                         opt_kwargs = nothing,
-                         sub_options = nothing,
-                         convergence_criteria = nothing)
+    opt_kwargs = nothing,
+    sub_options = nothing,
+    convergence_criteria = nothing)
     options = (; options = __create_options(opt, opt_kwargs = opt_kwargs))
 
     return options

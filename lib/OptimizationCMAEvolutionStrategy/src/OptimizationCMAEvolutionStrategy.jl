@@ -13,17 +13,17 @@ SciMLBase.allowscallback(::CMAEvolutionStrategyOpt) = false #looks like `logger`
 SciMLBase.supports_opt_cache_interface(opt::CMAEvolutionStrategyOpt) = true
 
 function __map_optimizer_args(prob::OptimizationCache, opt::CMAEvolutionStrategyOpt;
-                              callback = nothing,
-                              maxiters::Union{Number, Nothing} = nothing,
-                              maxtime::Union{Number, Nothing} = nothing,
-                              abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing)
+    callback = nothing,
+    maxiters::Union{Number, Nothing} = nothing,
+    maxtime::Union{Number, Nothing} = nothing,
+    abstol::Union{Number, Nothing} = nothing,
+    reltol::Union{Number, Nothing} = nothing)
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
 
     mapped_args = (; lower = prob.lb,
-                   upper = prob.ub)
+        upper = prob.ub)
 
     if !isnothing(maxiters)
         mapped_args = (; mapped_args..., maxiter = maxiters)
@@ -40,20 +40,32 @@ function __map_optimizer_args(prob::OptimizationCache, opt::CMAEvolutionStrategy
     return mapped_args
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C}) where {
-                                                                                                  F,
-                                                                                                  RC,
-                                                                                                  LB,
-                                                                                                  UB,
-                                                                                                  LC,
-                                                                                                  UC,
-                                                                                                  S,
-                                                                                                  O <:
-                                                                                                  CMAEvolutionStrategyOpt,
-                                                                                                  D,
-                                                                                                  P,
-                                                                                                  C
-                                                                                                  }
+function SciMLBase.__solve(cache::OptimizationCache{
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O,
+    D,
+    P,
+    C,
+}) where {
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O <:
+    CMAEvolutionStrategyOpt,
+    D,
+    P,
+    C,
+}
     local x, cur, state
 
     if cache.data != Optimization.DEFAULT_DATA
@@ -80,8 +92,8 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     end
 
     opt_args = __map_optimizer_args(cache, cache.opt; callback = _cb, cache.solver_args...,
-                                    maxiters = maxiters,
-                                    maxtime = maxtime)
+        maxiters = maxiters,
+        maxtime = maxtime)
 
     t0 = time()
     opt_res = CMAEvolutionStrategy.minimize(_loss, cache.u0, 0.1; opt_args...)
@@ -90,9 +102,9 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     opt_ret = opt_res.stop.reason
 
     SciMLBase.build_solution(cache, cache.opt,
-                             opt_res.logger.xbest[end],
-                             opt_res.logger.fbest[end]; original = opt_res,
-                             retcode = opt_ret, solve_time = t1 - t0)
+        opt_res.logger.xbest[end],
+        opt_res.logger.fbest[end]; original = opt_res,
+        retcode = opt_ret, solve_time = t1 - t0)
 end
 
 end

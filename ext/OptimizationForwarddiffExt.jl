@@ -14,8 +14,8 @@ function default_chunk_size(len)
 end
 
 function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
-                                           adtype::AutoForwardDiff{_chunksize}, p,
-                                           num_cons = 0) where {_chunksize}
+    adtype::AutoForwardDiff{_chunksize}, p,
+    num_cons = 0) where {_chunksize}
     chunksize = _chunksize === nothing ? default_chunk_size(length(x)) : _chunksize
 
     _f = (θ, args...) -> first(f.f(θ, p, args...))
@@ -23,7 +23,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
     if f.grad === nothing
         gradcfg = ForwardDiff.GradientConfig(_f, x, ForwardDiff.Chunk{chunksize}())
         grad = (res, θ, args...) -> ForwardDiff.gradient!(res, x -> _f(x, args...), θ,
-                                                          gradcfg, Val{false}())
+            gradcfg, Val{false}())
     else
         grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
     end
@@ -31,7 +31,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
     if f.hess === nothing
         hesscfg = ForwardDiff.HessianConfig(_f, x, ForwardDiff.Chunk{chunksize}())
         hess = (res, θ, args...) -> ForwardDiff.hessian!(res, x -> _f(x, args...), θ,
-                                                         hesscfg, Val{false}())
+            hesscfg, Val{false}())
     else
         hess = (H, θ, args...) -> f.hess(H, θ, p, args...)
     end
@@ -65,7 +65,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
     if cons !== nothing && f.cons_h === nothing
         fncs = [(x) -> cons_oop(x)[i] for i in 1:num_cons]
         hess_config_cache = [ForwardDiff.HessianConfig(fncs[i], x,
-                                                       ForwardDiff.Chunk{chunksize}())
+            ForwardDiff.Chunk{chunksize}())
                              for i in 1:num_cons]
         cons_h = function (res, θ)
             for i in 1:num_cons
@@ -82,17 +82,17 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
         lag_h = (res, θ, σ, μ) -> f.lag_h(res, θ, σ, μ, p)
     end
     return OptimizationFunction{true}(f.f, adtype; grad = grad, hess = hess, hv = hv,
-                                      cons = cons, cons_j = cons_j, cons_h = cons_h,
-                                      hess_prototype = f.hess_prototype,
-                                      cons_jac_prototype = f.cons_jac_prototype,
-                                      cons_hess_prototype = f.cons_hess_prototype,
-                                      lag_h, f.lag_hess_prototype)
+        cons = cons, cons_j = cons_j, cons_h = cons_h,
+        hess_prototype = f.hess_prototype,
+        cons_jac_prototype = f.cons_jac_prototype,
+        cons_hess_prototype = f.cons_hess_prototype,
+        lag_h, f.lag_hess_prototype)
 end
 
 function Optimization.instantiate_function(f::OptimizationFunction{true},
-                                           cache::Optimization.ReInitCache,
-                                           adtype::AutoForwardDiff{_chunksize},
-                                           num_cons = 0) where {_chunksize}
+    cache::Optimization.ReInitCache,
+    adtype::AutoForwardDiff{_chunksize},
+    num_cons = 0) where {_chunksize}
     chunksize = _chunksize === nothing ? default_chunk_size(length(cache.u0)) : _chunksize
 
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
@@ -100,7 +100,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
     if f.grad === nothing
         gradcfg = ForwardDiff.GradientConfig(_f, cache.u0, ForwardDiff.Chunk{chunksize}())
         grad = (res, θ, args...) -> ForwardDiff.gradient!(res, x -> _f(x, args...), θ,
-                                                          gradcfg, Val{false}())
+            gradcfg, Val{false}())
     else
         grad = (G, θ, args...) -> f.grad(G, θ, cache.p, args...)
     end
@@ -108,7 +108,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
     if f.hess === nothing
         hesscfg = ForwardDiff.HessianConfig(_f, cache.u0, ForwardDiff.Chunk{chunksize}())
         hess = (res, θ, args...) -> ForwardDiff.hessian!(res, x -> _f(x, args...), θ,
-                                                         hesscfg, Val{false}())
+            hesscfg, Val{false}())
     else
         hess = (H, θ, args...) -> f.hess(H, θ, cache.p, args...)
     end
@@ -132,7 +132,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
 
     if cons !== nothing && f.cons_j === nothing
         cjconfig = ForwardDiff.JacobianConfig(cons_oop, cache.u0,
-                                              ForwardDiff.Chunk{chunksize}())
+            ForwardDiff.Chunk{chunksize}())
         cons_j = function (J, θ)
             ForwardDiff.jacobian!(J, cons_oop, θ, cjconfig)
         end
@@ -143,7 +143,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
     if cons !== nothing && f.cons_h === nothing
         fncs = [(x) -> cons_oop(x)[i] for i in 1:num_cons]
         hess_config_cache = [ForwardDiff.HessianConfig(fncs[i], cache.u0,
-                                                       ForwardDiff.Chunk{chunksize}())
+            ForwardDiff.Chunk{chunksize}())
                              for i in 1:num_cons]
         cons_h = function (res, θ)
             for i in 1:num_cons
@@ -161,11 +161,11 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
     end
 
     return OptimizationFunction{true}(f.f, adtype; grad = grad, hess = hess, hv = hv,
-                                      cons = cons, cons_j = cons_j, cons_h = cons_h,
-                                      hess_prototype = f.hess_prototype,
-                                      cons_jac_prototype = f.cons_jac_prototype,
-                                      cons_hess_prototype = f.cons_hess_prototype,
-                                      lag_h, f.lag_hess_prototype)
+        cons = cons, cons_j = cons_j, cons_h = cons_h,
+        hess_prototype = f.hess_prototype,
+        cons_jac_prototype = f.cons_jac_prototype,
+        cons_hess_prototype = f.cons_hess_prototype,
+        lag_h, f.lag_hess_prototype)
 end
 
 end

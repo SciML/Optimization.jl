@@ -10,16 +10,16 @@ SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 
 function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
-                               callback = nothing,
-                               maxiters::Union{Number, Nothing} = nothing,
-                               maxtime::Union{Number, Nothing} = nothing,
-                               abstol::Union{Number, Nothing} = nothing,
-                               reltol::Union{Number, Nothing} = nothing,
-                               local_method::Union{NLopt.Algorithm, NLopt.Opt, Nothing} = nothing,
-                               local_maxiters::Union{Number, Nothing} = nothing,
-                               local_maxtime::Union{Number, Nothing} = nothing,
-                               local_options::Union{NamedTuple, Nothing} = nothing,
-                               kwargs...)
+    callback = nothing,
+    maxiters::Union{Number, Nothing} = nothing,
+    maxtime::Union{Number, Nothing} = nothing,
+    abstol::Union{Number, Nothing} = nothing,
+    reltol::Union{Number, Nothing} = nothing,
+    local_method::Union{NLopt.Algorithm, NLopt.Opt, Nothing} = nothing,
+    local_maxiters::Union{Number, Nothing} = nothing,
+    local_maxtime::Union{Number, Nothing} = nothing,
+    local_options::Union{NamedTuple, Nothing} = nothing,
+    kwargs...)
     if local_method !== nothing
         if isa(local_method, NLopt.Opt)
             if ndims(local_method) != length(cache.u0)
@@ -80,46 +80,58 @@ end
 
 function __nlopt_status_to_ReturnCode(status::Symbol)
     if status in Symbol.([
-                             NLopt.SUCCESS,
-                             NLopt.STOPVAL_REACHED,
-                             NLopt.FTOL_REACHED,
-                             NLopt.XTOL_REACHED,
-                             NLopt.ROUNDOFF_LIMITED,
-                         ])
+        NLopt.SUCCESS,
+        NLopt.STOPVAL_REACHED,
+        NLopt.FTOL_REACHED,
+        NLopt.XTOL_REACHED,
+        NLopt.ROUNDOFF_LIMITED,
+    ])
         return ReturnCode.Success
     elseif status == Symbol(NLopt.MAXEVAL_REACHED)
         return ReturnCode.MaxIters
     elseif status == Symbol(NLopt.MAXTIME_REACHED)
         return ReturnCode.MaxTime
     elseif status in Symbol.([
-                                 NLopt.OUT_OF_MEMORY,
-                                 NLopt.INVALID_ARGS,
-                                 NLopt.FAILURE,
-                                 NLopt.FORCED_STOP,
-                             ])
+        NLopt.OUT_OF_MEMORY,
+        NLopt.INVALID_ARGS,
+        NLopt.FAILURE,
+        NLopt.FORCED_STOP,
+    ])
         return ReturnCode.Failure
     else
         return ReturnCode.Default
     end
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C}) where {
-                                                                                                  F,
-                                                                                                  RC,
-                                                                                                  LB,
-                                                                                                  UB,
-                                                                                                  LC,
-                                                                                                  UC,
-                                                                                                  S,
-                                                                                                  O <:
-                                                                                                  Union{
-                                                                                                        NLopt.Algorithm,
-                                                                                                        NLopt.Opt
-                                                                                                        },
-                                                                                                  D,
-                                                                                                  P,
-                                                                                                  C
-                                                                                                  }
+function SciMLBase.__solve(cache::OptimizationCache{
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O,
+    D,
+    P,
+    C,
+}) where {
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O <:
+    Union{
+        NLopt.Algorithm,
+        NLopt.Opt,
+    },
+    D,
+    P,
+    C,
+}
     local x
 
     _loss = function (θ)
@@ -155,8 +167,8 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     __map_optimizer_args!(cache, opt_setup; callback = cache.callback, maxiters = maxiters,
-                          maxtime = maxtime,
-                          cache.solver_args...)
+        maxtime = maxtime,
+        cache.solver_args...)
 
     t0 = time()
     (minf, minx, ret) = NLopt.optimize(opt_setup, cache.u0)
@@ -169,8 +181,8 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
         minf = NaN
     end
     SciMLBase.build_solution(cache, cache.opt, minx,
-                             minf; original = opt_setup, retcode = retcode,
-                             solve_time = t1 - t0)
+        minf; original = opt_setup, retcode = retcode,
+        solve_time = t1 - t0)
 end
 
 end

@@ -17,14 +17,14 @@ SciMLBase.supports_opt_cache_interface(opt::Union{Optim.Fminbox, Optim.SAMIN}) =
 SciMLBase.supports_opt_cache_interface(opt::Optim.ConstrainedOptimizer) = true
 
 function __map_optimizer_args(cache::OptimizationCache,
-                              opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
-                                         Optim.SAMIN, Optim.ConstrainedOptimizer};
-                              callback = nothing,
-                              maxiters::Union{Number, Nothing} = nothing,
-                              maxtime::Union{Number, Nothing} = nothing,
-                              abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing,
-                              kwargs...)
+    opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
+        Optim.SAMIN, Optim.ConstrainedOptimizer};
+    callback = nothing,
+    maxiters::Union{Number, Nothing} = nothing,
+    maxtime::Union{Number, Nothing} = nothing,
+    abstol::Union{Number, Nothing} = nothing,
+    reltol::Union{Number, Nothing} = nothing,
+    kwargs...)
     if !isnothing(abstol)
         @warn "common abstol is currently not used by $(opt)"
     end
@@ -51,22 +51,22 @@ function __map_optimizer_args(cache::OptimizationCache,
 end
 
 function SciMLBase.__init(prob::OptimizationProblem,
-                          opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
-                                     Optim.SAMIN, Optim.ConstrainedOptimizer
-                                     },
-                          data = Optimization.DEFAULT_DATA;
-                          callback = (args...) -> (false),
-                          maxiters::Union{Number, Nothing} = nothing,
-                          maxtime::Union{Number, Nothing} = nothing,
-                          abstol::Union{Number, Nothing} = nothing,
-                          reltol::Union{Number, Nothing} = nothing,
-                          progress = false,
-                          kwargs...)
+    opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
+        Optim.SAMIN, Optim.ConstrainedOptimizer,
+    },
+    data = Optimization.DEFAULT_DATA;
+    callback = (args...) -> (false),
+    maxiters::Union{Number, Nothing} = nothing,
+    maxtime::Union{Number, Nothing} = nothing,
+    abstol::Union{Number, Nothing} = nothing,
+    reltol::Union{Number, Nothing} = nothing,
+    progress = false,
+    kwargs...)
     if !isnothing(prob.lb) || !isnothing(prob.ub)
         if !(opt isa Union{Optim.Fminbox, Optim.SAMIN, Optim.AbstractConstrainedOptimizer})
             if opt isa Optim.ParticleSwarm
                 opt = Optim.ParticleSwarm(; lower = prob.lb, upper = prob.ub,
-                                          n_particles = opt.n_particles)
+                    n_particles = opt.n_particles)
             elseif opt isa Optim.SimulatedAnnealing
                 @warn "$(opt) can currently not be wrapped in Fminbox(). The lower and upper bounds thus will be ignored. Consider using a different optimizer or open an issue with Optim.jl"
             else
@@ -84,22 +84,32 @@ function SciMLBase.__init(prob::OptimizationProblem,
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
     maxtime = Optimization._check_and_convert_maxtime(maxtime)
     return OptimizationCache(prob, opt, data; callback, maxiters, maxtime, abstol,
-                             reltol, progress,
-                             kwargs...)
+        reltol, progress,
+        kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P
-                                                    }) where {
-                                                              F,
-                                                              RC,
-                                                              LB,
-                                                              UB, LC, UC,
-                                                              S,
-                                                              O <:
-                                                              Optim.AbstractOptimizer,
-                                                              D,
-                                                              P
-                                                              }
+function SciMLBase.__solve(cache::OptimizationCache{
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O,
+    D,
+    P,
+}) where {
+    F,
+    RC,
+    LB,
+    UB, LC, UC,
+    S,
+    O <:
+    Optim.AbstractOptimizer,
+    D,
+    P,
+}
     local x, cur, state
 
     cur, state = iterate(cache.data)
@@ -110,7 +120,7 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     function _cb(trace)
         cb_call = cache.opt isa Optim.NelderMead ?
                   cache.callback(decompose_trace(trace).metadata["centroid"],
-                                 x...) :
+            x...) :
                   cache.callback(decompose_trace(trace).metadata["x"], x...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
@@ -164,21 +174,21 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
         end
         u0_type = eltype(cache.u0)
         optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, cache.u0,
-                                            real(zero(u0_type)),
-                                            Optim.NLSolversBase.alloc_DF(cache.u0,
-                                                                         real(zero(u0_type))),
-                                            isnothing(cache.f.hess_prototype) ?
-                                            Optim.NLSolversBase.alloc_H(cache.u0,
-                                                                        real(zero(u0_type))) :
-                                            convert.(u0_type, cache.f.hess_prototype))
+            real(zero(u0_type)),
+            Optim.NLSolversBase.alloc_DF(cache.u0,
+                real(zero(u0_type))),
+            isnothing(cache.f.hess_prototype) ?
+            Optim.NLSolversBase.alloc_H(cache.u0,
+                real(zero(u0_type))) :
+            convert.(u0_type, cache.f.hess_prototype))
     end
 
     opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb,
-                                    maxiters = cache.solver_args.maxiters,
-                                    maxtime = cache.solver_args.maxtime,
-                                    abstol = cache.solver_args.abstol,
-                                    reltol = cache.solver_args.reltol;
-                                    cache.solver_args...)
+        maxiters = cache.solver_args.maxiters,
+        maxtime = cache.solver_args.maxtime,
+        abstol = cache.solver_args.abstol,
+        reltol = cache.solver_args.reltol;
+        cache.solver_args...)
 
     t0 = time()
     opt_res = Optim.optimize(optim_f, cache.u0, cache.opt, opt_args)
@@ -186,27 +196,37 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     opt_ret = Symbol(Optim.converged(opt_res))
 
     SciMLBase.build_solution(cache, cache.opt,
-                             opt_res.minimizer,
-                             cache.sense === Optimization.MaxSense ? -opt_res.minimum :
-                             opt_res.minimum; original = opt_res, retcode = opt_ret,
-                             solve_time = t1 - t0)
+        opt_res.minimizer,
+        cache.sense === Optimization.MaxSense ? -opt_res.minimum :
+        opt_res.minimum; original = opt_res, retcode = opt_ret,
+        solve_time = t1 - t0)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P
-                                                    }) where {
-                                                              F,
-                                                              RC,
-                                                              LB,
-                                                              UB, LC, UC,
-                                                              S,
-                                                              O <:
-                                                              Union{
-                                                                    Optim.Fminbox,
-                                                                    Optim.SAMIN
-                                                                    },
-                                                              D,
-                                                              P
-                                                              }
+function SciMLBase.__solve(cache::OptimizationCache{
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O,
+    D,
+    P,
+}) where {
+    F,
+    RC,
+    LB,
+    UB, LC, UC,
+    S,
+    O <:
+    Union{
+        Optim.Fminbox,
+        Optim.SAMIN,
+    },
+    D,
+    P,
+}
     local x, cur, state
 
     cur, state = iterate(cache.data)
@@ -214,7 +234,7 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     function _cb(trace)
         cb_call = !(cache.opt isa Optim.SAMIN) && cache.opt.method == Optim.NelderMead() ?
                   cache.callback(decompose_trace(trace).metadata["centroid"],
-                                 x...) :
+            x...) :
                   cache.callback(decompose_trace(trace).metadata["x"], x...)
         if !(typeof(cb_call) <: Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
@@ -252,11 +272,11 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     optim_f = Optim.OnceDifferentiable(_loss, gg, fg!, cache.u0)
 
     opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb,
-                                    maxiters = cache.solver_args.maxiters,
-                                    maxtime = cache.solver_args.maxtime,
-                                    abstol = cache.solver_args.abstol,
-                                    reltol = cache.solver_args.reltol;
-                                    cache.solver_args...)
+        maxiters = cache.solver_args.maxiters,
+        maxtime = cache.solver_args.maxtime,
+        abstol = cache.solver_args.abstol,
+        reltol = cache.solver_args.reltol;
+        cache.solver_args...)
 
     t0 = time()
     opt_res = Optim.optimize(optim_f, cache.lb, cache.ub, cache.u0, cache.opt, opt_args)
@@ -264,22 +284,32 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     opt_ret = Symbol(Optim.converged(opt_res))
 
     SciMLBase.build_solution(cache, cache.opt,
-                             opt_res.minimizer, opt_res.minimum;
-                             original = opt_res, retcode = opt_ret, solve_time = t1 - t0)
+        opt_res.minimizer, opt_res.minimum;
+        original = opt_res, retcode = opt_ret, solve_time = t1 - t0)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P
-                                                    }) where {
-                                                              F,
-                                                              RC,
-                                                              LB,
-                                                              UB, LC, UC,
-                                                              S,
-                                                              O <:
-                                                              Optim.ConstrainedOptimizer,
-                                                              D,
-                                                              P
-                                                              }
+function SciMLBase.__solve(cache::OptimizationCache{
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O,
+    D,
+    P,
+}) where {
+    F,
+    RC,
+    LB,
+    UB, LC, UC,
+    S,
+    O <:
+    Optim.ConstrainedOptimizer,
+    D,
+    P,
+}
     local x, cur, state
 
     cur, state = iterate(cache.data)
@@ -330,13 +360,13 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     end
     u0_type = eltype(cache.u0)
     optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, cache.u0,
-                                        real(zero(u0_type)),
-                                        Optim.NLSolversBase.alloc_DF(cache.u0,
-                                                                     real(zero(u0_type))),
-                                        isnothing(cache.f.hess_prototype) ?
-                                        Optim.NLSolversBase.alloc_H(cache.u0,
-                                                                    real(zero(u0_type))) :
-                                        convert.(u0_type, cache.f.hess_prototype))
+        real(zero(u0_type)),
+        Optim.NLSolversBase.alloc_DF(cache.u0,
+            real(zero(u0_type))),
+        isnothing(cache.f.hess_prototype) ?
+        Optim.NLSolversBase.alloc_H(cache.u0,
+            real(zero(u0_type))) :
+        convert.(u0_type, cache.f.hess_prototype))
 
     cons_hl! = function (h, θ, λ)
         res = [similar(h) for i in 1:length(λ)]
@@ -349,15 +379,15 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     lb = cache.lb === nothing ? [] : cache.lb
     ub = cache.ub === nothing ? [] : cache.ub
     optim_fc = Optim.TwiceDifferentiableConstraints(cache.f.cons, cache.f.cons_j, cons_hl!,
-                                                    lb, ub,
-                                                    cache.lcons, cache.ucons)
+        lb, ub,
+        cache.lcons, cache.ucons)
 
     opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb,
-                                    maxiters = cache.solver_args.maxiters,
-                                    maxtime = cache.solver_args.maxtime,
-                                    abstol = cache.solver_args.abstol,
-                                    reltol = cache.solver_args.reltol;
-                                    cache.solver_args...)
+        maxiters = cache.solver_args.maxiters,
+        maxtime = cache.solver_args.maxtime,
+        abstol = cache.solver_args.abstol,
+        reltol = cache.solver_args.reltol;
+        cache.solver_args...)
 
     t0 = time()
     opt_res = Optim.optimize(optim_f, optim_fc, cache.u0, cache.opt, opt_args)
@@ -365,8 +395,8 @@ function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O,
     opt_ret = Symbol(Optim.converged(opt_res))
 
     SciMLBase.build_solution(cache, cache.opt,
-                             opt_res.minimizer, opt_res.minimum;
-                             original = opt_res, retcode = opt_ret)
+        opt_res.minimizer, opt_res.minimum;
+        original = opt_res, retcode = opt_ret)
 end
 
 end

@@ -58,7 +58,7 @@ function _check_and_convert_maxtime(maxtime)
 end
 
 function check_pkg_version(pkg::String, ver::String;
-                           branch::Union{String, Nothing} = nothing)
+    branch::Union{String, Nothing} = nothing)
     deps = Pkg.dependencies()
     pkg_info = Dict{String, Pkg.Types.PackageInfo}()
     for (uuid, dep) in deps
