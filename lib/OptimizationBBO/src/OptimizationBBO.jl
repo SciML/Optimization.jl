@@ -1,7 +1,7 @@
 module OptimizationBBO
 
 using Reexport
-@reexport using Optimization
+import Optimization
 import BlackBoxOptim, Optimization.SciMLBase
 
 abstract type BBO end
@@ -19,7 +19,8 @@ function decompose_trace(opt::BlackBoxOptim.OptRunController, progress)
     if progress
         maxiters = opt.max_steps
         max_time = opt.max_time
-        msg = "loss: " * sprint(show, best_fitness(opt), context = :compact => true)
+        msg = "loss: " *
+              sprint(show, BlackBoxOptim.best_fitness(opt), context = :compact => true)
         if iszero(max_time)
             # we stop at either convergence or max_steps
             n_steps = BlackBoxOptim.num_steps(opt)
@@ -35,7 +36,7 @@ function decompose_trace(opt::BlackBoxOptim.OptRunController, progress)
     return BlackBoxOptim.best_candidate(opt)
 end
 
-function __map_optimizer_args(prob::OptimizationCache, opt::BBO;
+function __map_optimizer_args(prob::Optimization.OptimizationCache, opt::BBO;
     callback = nothing,
     maxiters::Union{Number, Nothing} = nothing,
     maxtime::Union{Number, Nothing} = nothing,
@@ -76,7 +77,7 @@ function __map_optimizer_args(prob::OptimizationCache, opt::BBO;
     return mapped_args
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     F,
     RC,
     LB,
@@ -159,10 +160,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     t0 = time()
 
-    if isnothing(prob.u0)
+    if isnothing(cache.u0)
         opt_res = BlackBoxOptim.bboptimize(opt_setup)
     else
-        opt_res = BlackBoxOptim.bboptimize(opt_setup, prob.u0)
+        opt_res = BlackBoxOptim.bboptimize(opt_setup, cache.u0)
     end
 
     if cache.progress
