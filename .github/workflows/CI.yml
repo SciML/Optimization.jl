@@ -16,21 +16,21 @@ jobs:
         group:
           - Core
           - OptimizationBBO
-          # - OptimizationCMAEvolutionStrategy
-          # - OptimizationEvolutionary
-          # - OptimizationFlux
-          # - OptimizationGCMAES
-          # - OptimizationMetaheuristics
-          # - OptimizationMOI
-          # - OptimizationMultistartOptimization
-          # - OptimizationNLopt
-          # #- OptimizationNonconvex
-          # - OptimizationNOMAD
-          # - OptimizationOptimJL
-          # - OptimizationOptimisers
-          # - OptimizationQuadDIRECT
-          # - OptimizationSpeedMapping
-          # - OptimizationPolyalgorithms
+          - OptimizationCMAEvolutionStrategy
+          - OptimizationEvolutionary
+          - OptimizationFlux
+          - OptimizationGCMAES
+          - OptimizationMetaheuristics
+          - OptimizationMOI
+          - OptimizationMultistartOptimization
+          - OptimizationNLopt
+          #- OptimizationNonconvex
+          - OptimizationNOMAD
+          - OptimizationOptimJL
+          - OptimizationOptimisers
+          - OptimizationQuadDIRECT
+          - OptimizationSpeedMapping
+          - OptimizationPolyalgorithms
         version:
           - '1'
           - '1.6'
