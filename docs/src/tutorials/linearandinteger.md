@@ -5,7 +5,7 @@
 Below we show how to solve a linear optimization problem using the HiGHS optimizer.
 This example has been taken from the [JuMP documentation](https://jump.dev/JuMP.jl/stable/tutorials/linear/finance/#Short-term-financing).
 
-Short-term cash commitments present an ongoing challenge for corporations[^1]. Let's explore an example scenario to understand this better:
+Short-term cash commitments present an ongoing challenge for corporations. Let's explore an example scenario to understand this better:
 
 Consider the following monthly net cash flow requirements, presented in thousands of dollars:
 
@@ -15,7 +15,7 @@ Consider the following monthly net cash flow requirements, presented in thousand
 
 To address these financial needs, our hypothetical company has access to various funding sources:
 
- 1. A line of credit: The company can utilize a line of credit of up to $100,000, subject to a monthly interest rate of 1%.
+ 1. A line of credit: The company can utilize a line of credit of up to \$100,000, subject to a monthly interest rate of 1%.
  2. Commercial paper issuance: In any of the first three months, the company has the option to issue 90-day commercial paper with a cumulative interest rate of 2% for the three-month period.
  3. Surplus fund investment: Any excess funds can be invested, earning a monthly interest rate of 0.3%.
 
