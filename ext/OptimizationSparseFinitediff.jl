@@ -3,14 +3,14 @@ module OptimizationFinitediffExt
 import SciMLBase: OptimizationFunction
 import Optimization, ArrayInterface
 import ADTypes: AutoFiniteDiff
-isdefined(Base, :get_extension) ? (using FiniteDiff) : (using ..FiniteDiff)
+import Symbolics
+isdefined(Base, :get_extension) ? (using FiniteDiff, SparseDiffTools) : (using ..FiniteDiff, ..SparseDiffTools)
 
 const FD = FiniteDiff
 
 function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
     num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, p, args...))
-    updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
 
     if f.grad === nothing
         gradcache = FD.GradientCache(x, x, adtype.fdtype)
@@ -21,26 +21,17 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
     end
 
     if f.hess === nothing
-        hesscache = FD.HessianCache(x, adtype.fdhtype)
-        hess = (res, θ, args...) -> FD.finite_difference_hessian!(res,
-            x -> _f(x, args...), θ,
-            updatecache(hesscache, θ))
+        sparsity = Symbolics.hessian_sparsity(_f, x)
+        colors = matrix_colors(tril(sparsity))
+        hesscache = ForwardColorHesCache(_f, x, colors, sparsity, grad)
+        hess = (res, θ, args...) -> numauto_color_hessian!(res, x -> _f(x, args...), θ, hesscache)
     else
         hess = (H, θ, args...) -> f.hess(H, θ, p, args...)
     end
 
     if f.hv === nothing
         hv = function (H, θ, v, args...)
-            T = eltype(θ)
-            ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(θ)))
-            @. θ += ϵ * v
-            cache2 = similar(θ)
-            grad(cache2, θ, args...)
-            @. x -= 2ϵ * v
-            cache3 = similar(θ)
-            g(cache3, θ, args...)
-            @. x += ϵ * v
-            @. H = (cache2 - cache3) / (2ϵ)
+            num_hesvec!(H, x -> _f(x, args...), θ, v)
         end
     else
         hv = f.hv
@@ -52,15 +43,17 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
         cons = (res, θ) -> f.cons(res, θ, p)
     end
 
-    cons_jac_colorvec = f.cons_jac_colorvec === nothing ? (1:length(x)) :
-                        f.cons_jac_colorvec
-
     if cons !== nothing && f.cons_j === nothing
+        cons_jac_prototype = f.cons_jac_prototype === nothing ?
+                             Symbolics.jacobian_sparsity(con, zeros(eltype(x), num_cons), x) :
+                             f.cons_jac_prototype
+        cons_jac_colorvec = f.cons_jac_colorvec === nothing ? matrix_colors(tril(cons_jac_prototype)) :
+                            f.cons_jac_colorvec
         cons_j = function (J, θ)
             y0 = zeros(num_cons)
             jaccache = FD.JacobianCache(copy(x), copy(y0), copy(y0), adtype.fdjtype;
                 colorvec = cons_jac_colorvec,
-                sparsity = f.cons_jac_prototype)
+                sparsity = cons_jac_prototype)
             FD.finite_difference_jacobian!(J, cons, θ, jaccache)
         end
     else
@@ -68,15 +61,21 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
     end
 
     if cons !== nothing && f.cons_h === nothing
-        hess_cons_cache = [FD.HessianCache(copy(x), adtype.fdhtype)
+        function gen_conshess_cache(_f)
+            sparsity = Symbolics.hessian_sparsity(_f, x)
+            colors = matrix_colors(tril(sparsity))
+            hesscache = ForwardColorHesCache(_f, x, colors, sparsity, grad)
+            return hesscache
+        end
+
+        fcons = [(x) -> (_res = zeros(eltype(θ), num_cons);
+                    cons(_res, x);
+                    _res[i]) for i in 1:num_cons]
+        hess_cons_cache = [gen_conshess_cache(fcons[i])
                            for i in 1:num_cons]
         cons_h = function (res, θ)
-            for i in 1:num_cons#note: colorvecs not yet supported by FiniteDiff for Hessians
-                FD.finite_difference_hessian!(res[i],
-                    (x) -> (_res = zeros(eltype(θ), num_cons);
-                    cons(_res, x);
-                    _res[i]), θ,
-                    updatecache(hess_cons_cache[i], θ))
+            for i in 1:num_cons
+                numauto_color_hessian!(res[i], fcons[i], θ, hess_cons_cache[i])
             end
         end
     else
@@ -129,26 +128,18 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     end
 
     if f.hess === nothing
-        hesscache = FD.HessianCache(cache.u0, adtype.fdhtype)
-        hess = (res, θ, args...) -> FD.finite_difference_hessian!(res, x -> _f(x, args...),
-            θ,
-            updatecache(hesscache, θ))
+        sparsity = Symbolics.hessian_sparsity(_f, x)
+        colors = matrix_colors(tril(sparsity))
+        hesscache = ForwardColorHesCache(_f, x, colors, sparsity, grad)
+        hess = (res, θ, args...) -> numauto_color_hessian!(res, x -> _f(x, args...), θ,
+                                                           hesscache)
     else
         hess = (H, θ, args...) -> f.hess(H, θ, cache.p, args...)
     end
 
     if f.hv === nothing
         hv = function (H, θ, v, args...)
-            T = eltype(θ)
-            ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(θ)))
-            @. θ += ϵ * v
-            cache2 = similar(θ)
-            grad(cache2, θ, args...)
-            @. x -= 2ϵ * v
-            cache3 = similar(θ)
-            g(cache3, θ, args...)
-            @. x += ϵ * v
-            @. H = (cache2 - cache3) / (2ϵ)
+            num_hesvec!(H, x -> _f(x, args...), θ, v)
         end
     else
         hv = f.hv
@@ -164,12 +155,18 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
                         f.cons_jac_colorvec
 
     if cons !== nothing && f.cons_j === nothing
+        cons_jac_prototype = f.cons_jac_prototype === nothing ?
+                             Symbolics.jacobian_sparsity(con, zeros(eltype(x), num_cons),
+                                                         x) :
+                             f.cons_jac_prototype
+        cons_jac_colorvec = f.cons_jac_colorvec === nothing ?
+                            matrix_colors(tril(cons_jac_prototype)) :
+                            f.cons_jac_colorvec
         cons_j = function (J, θ)
             y0 = zeros(num_cons)
-            jaccache = FD.JacobianCache(copy(cache.u0), copy(y0), copy(y0),
-                adtype.fdjtype;
-                colorvec = cons_jac_colorvec,
-                sparsity = f.cons_jac_prototype)
+            jaccache = FD.JacobianCache(copy(x), copy(y0), copy(y0), adtype.fdjtype;
+                                        colorvec = cons_jac_colorvec,
+                                        sparsity = cons_jac_prototype)
             FD.finite_difference_jacobian!(J, cons, θ, jaccache)
         end
     else
@@ -177,16 +174,21 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     end
 
     if cons !== nothing && f.cons_h === nothing
-        hess_cons_cache = [FD.HessianCache(copy(cache.u0), adtype.fdhtype)
+        function gen_conshess_cache(_f)
+            sparsity = Symbolics.hessian_sparsity(_f, x)
+            colors = matrix_colors(tril(sparsity))
+            hesscache = ForwardColorHesCache(_f, x, colors, sparsity, grad)
+            return hesscache
+        end
+
+        fcons = [(x) -> (_res = zeros(eltype(θ), num_cons);
+                         cons(_res, x);
+                         _res[i]) for i in 1:num_cons]
+        hess_cons_cache = [gen_conshess_cache(fcons[i])
                            for i in 1:num_cons]
         cons_h = function (res, θ)
-            for i in 1:num_cons#note: colorvecs not yet supported by FiniteDiff for Hessians
-                FD.finite_difference_hessian!(res[i],
-                    (x) -> (_res = zeros(eltype(θ), num_cons);
-                    cons(_res,
-                        x);
-                    _res[i]),
-                    θ, updatecache(hess_cons_cache[i], θ))
+            for i in 1:num_cons
+                numauto_color_hessian!(res[i], fcons[i], θ, hess_cons_cache[i])
             end
         end
     else
