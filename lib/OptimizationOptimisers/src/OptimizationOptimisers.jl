@@ -4,14 +4,9 @@ using Reexport, Printf, ProgressLogging
 @reexport using Optimisers, Optimization
 using Optimization.SciMLBase
 
-const OptimisersOptimizers = Union{Descent, Adam, Momentum, Nesterov, RMSProp,
-    AdaGrad, AdaMax, AdaDelta, AMSGrad, NAdam, RAdam, OAdam,
-    AdaBelief,
-    WeightDecay, ClipGrad, ClipNorm, OptimiserChain}
+SciMLBase.supports_opt_cache_interface(opt::AbstractRule) = true
 
-SciMLBase.supports_opt_cache_interface(opt::OptimisersOptimizers) = true
-
-function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::OptimisersOptimizers,
+function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::AbstractRule,
     data = Optimization.DEFAULT_DATA; save_best = true,
     callback = (args...) -> (false),
     progress = false, kwargs...)
@@ -40,7 +35,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     UC,
     S,
     O <:
-    OptimisersOptimizers,
+    AbstractRule,
     D,
     P,
     C,
