@@ -51,7 +51,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
             function f2(x, v)::Float64
                 dx = zeros(length(x))
                 Enzyme.autodiff_deferred(Enzyme.Reverse, (θ) -> f.f(θ, p, args...),
-                                         Enzyme.Duplicated(x, dx))
+                    Enzyme.Duplicated(x, dx))
                 Float64(dot(dx, v))
             end
             H .= Enzyme.gradient(Enzyme.Forward, x -> f2(x, v), θ)
@@ -153,10 +153,12 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
         hv = function (H, θ, v, args...)
             function f2(x, v)::Float64
                 dx = zeros(length(x))
-                Enzyme.autodiff_deferred(Enzyme.Reverse, (θ) -> f.f(θ, cache.p, args...), Enzyme.Duplicated(x, dx))
+                Enzyme.autodiff_deferred(Enzyme.Reverse,
+                    (θ) -> f.f(θ, cache.p, args...),
+                    Enzyme.Duplicated(x, dx))
                 Float64(dot(dx, v))
             end
-            H .= Enzyme.gradient(Enzyme.Forward, x -> f2(x,v), θ)
+            H .= Enzyme.gradient(Enzyme.Forward, x -> f2(x, v), θ)
         end
     else
         hv = f.hv

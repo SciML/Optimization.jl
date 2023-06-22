@@ -3,6 +3,7 @@ module OptimizationFinitediffExt
 import SciMLBase: OptimizationFunction
 import Optimization, ArrayInterface
 import ADTypes: AutoFiniteDiff
+using LinearAlgebra
 isdefined(Base, :get_extension) ? (using FiniteDiff) : (using ..FiniteDiff)
 
 const FD = FiniteDiff
@@ -36,10 +37,10 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
             @. θ += ϵ * v
             cache2 = similar(θ)
             grad(cache2, θ, args...)
-            @. x -= 2ϵ * v
+            @. θ -= 2ϵ * v
             cache3 = similar(θ)
-            g(cache3, θ, args...)
-            @. x += ϵ * v
+            grad(cache3, θ, args...)
+            @. θ += ϵ * v
             @. H = (cache2 - cache3) / (2ϵ)
         end
     else
@@ -144,10 +145,10 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
             @. θ += ϵ * v
             cache2 = similar(θ)
             grad(cache2, θ, args...)
-            @. x -= 2ϵ * v
+            @. θ -= 2ϵ * v
             cache3 = similar(θ)
-            g(cache3, θ, args...)
-            @. x += ϵ * v
+            grad(cache3, θ, args...)
+            @. θ += ϵ * v
             @. H = (cache2 - cache3) / (2ϵ)
         end
     else
