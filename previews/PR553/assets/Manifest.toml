@@ -714,9 +714,9 @@ version = "0.1.32"
 
 [[deps.GPUArrays]]
 deps = ["Adapt", "GPUArraysCore", "LLVM", "LinearAlgebra", "Printf", "Random", "Reexport", "Serialization", "Statistics"]
-git-tree-sha1 = "a3351bc577a6b49297248aadc23a4add1097c2ac"
+git-tree-sha1 = "745847e65e72a475716952f0a8a7258d42338ce9"
 uuid = "0c68f7d7-f131-5f86-a1c3-88cf8149b2d7"
-version = "8.7.1"
+version = "8.8.0"
 
 [[deps.GPUArraysCore]]
 deps = ["Adapt"]
