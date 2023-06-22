@@ -1,4 +1,4 @@
-module OptimizationFinitediffExt
+module OptimizationSparseFinitediffExt
 
 import SciMLBase: OptimizationFunction
 import Optimization, ArrayInterface
@@ -23,8 +23,11 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
     if f.hess === nothing
         sparsity = Symbolics.hessian_sparsity(_f, x)
         colors = matrix_colors(tril(sparsity))
-        hesscache = ForwardColorHesCache(_f, x, colors, sparsity, grad)
-        hess = (res, θ, args...) -> numauto_color_hessian!(res, x -> _f(x, args...), θ, hesscache)
+        hess = (res, θ, args...) -> numauto_color_hessian!(res, x -> _f(x, args...), θ,
+                                                           ForwardColorHesCache(_f, x,
+                                                                                colors,
+                                                                                sparsity,
+                                                                                (res, x) -> grad(res, x, args...)))
     else
         hess = (H, θ, args...) -> f.hess(H, θ, p, args...)
     end
@@ -64,7 +67,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
         function gen_conshess_cache(_f)
             sparsity = Symbolics.hessian_sparsity(_f, x)
             colors = matrix_colors(tril(sparsity))
-            hesscache = ForwardColorHesCache(_f, x, colors, sparsity, grad)
+            hesscache = ForwardColorHesCache(_f, x, colors, sparsity)
             return hesscache
         end
 
@@ -130,9 +133,13 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     if f.hess === nothing
         sparsity = Symbolics.hessian_sparsity(_f, x)
         colors = matrix_colors(tril(sparsity))
-        hesscache = ForwardColorHesCache(_f, x, colors, sparsity, grad)
         hess = (res, θ, args...) -> numauto_color_hessian!(res, x -> _f(x, args...), θ,
-                                                           hesscache)
+                                                           ForwardColorHesCache(_f, x,
+                                                                                colors,
+                                                                                sparsity,
+                                                                                (res, x) -> grad(res,
+                                                                                                 x,
+                                                                                                 args...)))
     else
         hess = (H, θ, args...) -> f.hess(H, θ, cache.p, args...)
     end
@@ -156,7 +163,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
 
     if cons !== nothing && f.cons_j === nothing
         cons_jac_prototype = f.cons_jac_prototype === nothing ?
-                             Symbolics.jacobian_sparsity(con, zeros(eltype(x), num_cons),
+                             Symbolics.jacobian_sparsity(cons, zeros(eltype(x), num_cons),
                                                          x) :
                              f.cons_jac_prototype
         cons_jac_colorvec = f.cons_jac_colorvec === nothing ?
@@ -177,7 +184,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
         function gen_conshess_cache(_f)
             sparsity = Symbolics.hessian_sparsity(_f, x)
             colors = matrix_colors(tril(sparsity))
-            hesscache = ForwardColorHesCache(_f, x, colors, sparsity, grad)
+            hesscache = ForwardColorHesCache(_f, x, colors, sparsity)
             return hesscache
         end
 
