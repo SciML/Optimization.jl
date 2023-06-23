@@ -116,7 +116,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
     end
     return OptimizationFunction{true}(f, adtype; grad = grad, hess = hess, hv = hv,
         cons = cons, cons_j = cons_j, cons_h = cons_h,
-        cons_jac_colorvec = cons_jac_colorvec,
+        cons_jac_colorvec = f.cons_jac_colorvec,
         hess_prototype = f.hess_prototype,
         cons_jac_prototype = f.cons_jac_prototype,
         cons_hess_prototype = f.cons_hess_prototype,
@@ -137,10 +137,10 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     end
 
     if f.hess === nothing
-        hess_sparsity = Symbolics.hessian_sparsity(_f, x)
+        hess_sparsity = Symbolics.hessian_sparsity(_f, cache.u0)
         hess_colors = matrix_colors(tril(hess_sparsity))
         hess = (res, θ, args...) -> numauto_color_hessian!(res, x -> _f(x, args...), θ,
-            ForwardColorHesCache(_f, x,
+            ForwardColorHesCache(_f, θ,
                 hess_colors,
                 hess_sparsity,
                 (res, θ) -> grad(res,
@@ -233,7 +233,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     end
     return OptimizationFunction{true}(f, adtype; grad = grad, hess = hess, hv = hv,
         cons = cons, cons_j = cons_j, cons_h = cons_h,
-        cons_jac_colorvec = cons_jac_colorvec,
+        cons_jac_colorvec = f.cons_jac_colorvec,
         hess_prototype = f.hess_prototype,
         cons_jac_prototype = f.cons_jac_prototype,
         cons_hess_prototype = f.cons_hess_prototype,

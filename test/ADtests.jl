@@ -130,7 +130,7 @@ optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoForwardDi
 optprob.grad(G2, x0)
 @test G1 == G2
 optprob.hess(H2, x0)
-@test H1 == H2
+@test H1 ≈ H2
 
 prob = OptimizationProblem(optf, x0)
 
@@ -391,6 +391,29 @@ H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 @test H3 ≈ [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 
+optf = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff())
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoFiniteDiff(),
+    nothing)
+optprob.grad(G2, x0)
+@test G1≈G2 rtol=1e-6
+optprob.hess(H2, x0)
+@test H1≈H2 rtol=1e-4
+
+prob = OptimizationProblem(optf, x0)
+sol = solve(prob, Optim.BFGS())
+@test 10 * sol.objective < l1
+
+sol = solve(prob, Optim.Newton())
+@test 10 * sol.objective < l1
+
+#at 0,0 it gives error because of the inaccuracy of the hessian and hv calculations
+prob = OptimizationProblem(optf, x0 + rand(2))
+sol = solve(prob, Optim.KrylovTrustRegion())
+@test sol.objective < l1
+
+sol = solve(prob, Optimisers.ADAM(0.1), maxiters = 1000)
+@test 10 * sol.objective < l1
+
 optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(), cons = con2_c)
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoForwardDiff(),
     nothing, 2)
@@ -411,3 +434,24 @@ optprob.cons_j(J, [5.0, 3.0])
 H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 @test H3 ≈ [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
+
+optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoForwardDiff(),
+    nothing)
+optprob.grad(G2, x0)
+@test G1≈G2 rtol=1e-6
+optprob.hess(H2, x0)
+@test H1≈H2 rtol=1e-6
+
+prob = OptimizationProblem(optf, x0)
+sol = solve(prob, Optim.BFGS())
+@test 10 * sol.objective < l1
+
+sol = solve(prob, Optim.Newton())
+@test 10 * sol.objective < l1
+
+sol = solve(prob, Optim.KrylovTrustRegion())
+@test sol.objective < l1 #the loss doesn't go below 5e-1 here
+
+sol = solve(prob, Optimisers.ADAM(0.1), maxiters = 1000)
+@test 10 * sol.objective < l1

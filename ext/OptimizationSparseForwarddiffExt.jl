@@ -77,21 +77,20 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
     end
 
     if cons !== nothing && f.cons_h === nothing
-        function gen_conshess_cache(_f)
-            conshess_sparsity = Symbolics.hessian_sparsity(_f, x)
+        function gen_conshess_cache(_f, x)
+            conshess_sparsity = copy(Symbolics.hessian_sparsity(_f, x))
             conshess_colors = matrix_colors(conshess_sparsity)
-            hesscache = ForwardColorHesCache(_f, x, conshess_colors, conshess_sparsity)
+            hesscache = ForwardColorHesCache(_f, x, conshess_colors,
+                conshess_sparsity)
             return hesscache
         end
 
         fcons = [(x) -> (_res = zeros(eltype(x), num_cons);
         cons(_res, x);
         _res[i]) for i in 1:num_cons]
-        hess_cons_cache = [gen_conshess_cache(fcons[i])
-                           for i in 1:num_cons]
         cons_h = function (res, θ)
             for i in 1:num_cons
-                numauto_color_hessian!(res[i], fcons[i], θ, hess_cons_cache[i])
+                numauto_color_hessian!(res[i], fcons[i], θ, gen_conshess_cache(fcons[i], θ))
             end
         end
     else
@@ -128,10 +127,10 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
     end
 
     if f.hess === nothing
-        hess_sparsity = Symbolics.hessian_sparsity(_f, x)
+        hess_sparsity = Symbolics.hessian_sparsity(_f, cache.u0)
         hess_colors = matrix_colors(tril(hess_sparsity))
         hess = (res, θ, args...) -> numauto_color_hessian!(res, x -> _f(x, args...), θ,
-            ForwardColorHesCache(_f, x,
+            ForwardColorHesCache(_f, θ,
                 hess_colors,
                 hess_sparsity,
                 (res, θ) -> grad(res,
@@ -157,10 +156,12 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
     end
 
     if cons !== nothing && f.cons_j === nothing
-        cons_jac_prototype = Symbolics.jacobian_sparsity(cons, zeros(eltype(x), num_cons),
-            x)
+        cons_jac_prototype = Symbolics.jacobian_sparsity(cons,
+            zeros(eltype(cache.u0), num_cons),
+            cache.u0)
         cons_jac_colorvec = matrix_colors(tril(cons_jac_prototype))
-        jaccache = ForwardColorJacCache(cons, x, chunksize; colorvec = cons_jac_colorvec,
+        jaccache = ForwardColorJacCache(cons, cache.u0, chunksize;
+            colorvec = cons_jac_colorvec,
             sparsity = cons_jac_prototype)
         cons_j = function (J, θ)
             forwarddiff_color_jacobian!(J, cons, θ, jaccache)
@@ -170,21 +171,20 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
     end
 
     if cons !== nothing && f.cons_h === nothing
-        function gen_conshess_cache(_f)
-            conshess_sparsity = Symbolics.hessian_sparsity(_f, x)
+        function gen_conshess_cache(_f, x)
+            conshess_sparsity = copy(Symbolics.hessian_sparsity(_f, x))
             conshess_colors = matrix_colors(conshess_sparsity)
-            hesscache = ForwardColorHesCache(_f, x, conshess_colors, conshess_sparsity)
+            hesscache = ForwardColorHesCache(_f, x, conshess_colors,
+                conshess_sparsity)
             return hesscache
         end
 
         fcons = [(x) -> (_res = zeros(eltype(x), num_cons);
         cons(_res, x);
         _res[i]) for i in 1:num_cons]
-        hess_cons_cache = [gen_conshess_cache(fcons[i])
-                           for i in 1:num_cons]
         cons_h = function (res, θ)
             for i in 1:num_cons
-                numauto_color_hessian!(res[i], fcons[i], θ, hess_cons_cache[i])
+                numauto_color_hessian!(res[i], fcons[i], θ, gen_conshess_cache(fcons[i], θ))
             end
         end
     else
