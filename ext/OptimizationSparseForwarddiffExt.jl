@@ -19,6 +19,9 @@ end
 function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
     adtype::AutoForwardDiff{_chunksize}, p,
     num_cons = 0) where {_chunksize}
+    if maximum(getfield.(methods(f.f), :nargs)) > 2
+        error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")
+    end
     chunksize = _chunksize === nothing ? default_chunk_size(length(x)) : _chunksize
 
     _f = (θ, args...) -> first(f.f(θ, p, args...))
@@ -114,6 +117,9 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
     cache::Optimization.ReInitCache,
     adtype::AutoForwardDiff{_chunksize},
     num_cons = 0) where {_chunksize}
+    if maximum(getfield.(methods(f.f), :nargs)) > 2
+        error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")
+    end
     chunksize = _chunksize === nothing ? default_chunk_size(length(cache.u0)) : _chunksize
 
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))

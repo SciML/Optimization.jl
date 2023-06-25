@@ -12,6 +12,11 @@ const FD = FiniteDiff
 
 function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
     num_cons = 0)
+
+    if maximum(getfield.(methods(f.f), :nargs)) > 2
+        error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")
+    end
+
     _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
@@ -125,6 +130,9 @@ end
 
 function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     adtype::AutoFiniteDiff, num_cons = 0)
+    if maximum(getfield.(methods(f.f), :nargs)) > 2
+        error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")
+    end
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
     updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
 

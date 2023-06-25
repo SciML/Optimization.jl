@@ -37,11 +37,11 @@ julia = "1.6"
 [extensions]
 OptimizationEnzymeExt = "Enzyme"
 OptimizationFinitediffExt = "FiniteDiff"
-OptimizationSparseFinitediffExt = ["SparseDiffTools", "FiniteDiff"]
 OptimizationForwarddiffExt = "ForwardDiff"
-OptimizationSparseForwarddiffExt = ["SparseDiffTools", "ForwardDiff"]
 OptimizationMTKExt = "ModelingToolkit"
 OptimizationReversediffExt = "ReverseDiff"
+OptimizationSparseFinitediffExt = ["SparseDiffTools", "FiniteDiff"]
+OptimizationSparseForwarddiffExt = ["SparseDiffTools", "ForwardDiff"]
 OptimizationTrackerExt = "Tracker"
 OptimizationZygoteExt = "Zygote"
 

@@ -31,6 +31,9 @@ end
         @safetestset "DiffEqFlux" begin
             include("diffeqfluxtests.jl")
         end
+        @safetestset "SparseDiffTools" begin
+            include("sparsedifftests.jl")
+        end
     elseif GROUP == "GPU"
         activate_downstream_env()
         @safetestset "DiffEqFlux GPU" begin
