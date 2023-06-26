@@ -2,7 +2,7 @@ module OptimizationSparseForwarddiffExt
 
 import SciMLBase: OptimizationFunction
 import Optimization, ArrayInterface
-import ADTypes: AutoForwardDiff
+import ADTypes: AutoSparseForwardDiff
 import Symbolics
 using LinearAlgebra
 isdefined(Base, :get_extension) ? (using ForwardDiff, SparseDiffTools) :
@@ -17,7 +17,7 @@ function default_chunk_size(len)
 end
 
 function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
-    adtype::AutoForwardDiff{_chunksize}, p,
+    adtype::AutoSparseForwardDiff{_chunksize}, p,
     num_cons = 0) where {_chunksize}
     if maximum(getfield.(methods(f.f), :nargs)) > 2
         error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")
@@ -115,7 +115,7 @@ end
 
 function Optimization.instantiate_function(f::OptimizationFunction{true},
     cache::Optimization.ReInitCache,
-    adtype::AutoForwardDiff{_chunksize},
+    adtype::AutoSparseForwardDiff{_chunksize},
     num_cons = 0) where {_chunksize}
     if maximum(getfield.(methods(f.f), :nargs)) > 2
         error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")

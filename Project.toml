@@ -21,7 +21,7 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 TerminalLoggers = "5d786b92-1e48-4d6f-9151-6b4477ca9bed"
 
 [compat]
-ADTypes = "0.1"
+ADTypes = "0.1.5"
 ArrayInterface = "6, 7"
 ConsoleProgressMonitor = "0.1"
 DocStringExtensions = "0.8, 0.9"

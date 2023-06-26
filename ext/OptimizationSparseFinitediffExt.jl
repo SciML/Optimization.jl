@@ -2,7 +2,7 @@ module OptimizationSparseFinitediffExt
 
 import SciMLBase: OptimizationFunction
 import Optimization, ArrayInterface
-import ADTypes: AutoFiniteDiff
+import ADTypes: AutoSparseFiniteDiff
 import Symbolics
 using LinearAlgebra
 isdefined(Base, :get_extension) ? (using FiniteDiff, SparseDiffTools) :
@@ -10,9 +10,8 @@ isdefined(Base, :get_extension) ? (using FiniteDiff, SparseDiffTools) :
 
 const FD = FiniteDiff
 
-function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
+function Optimization.instantiate_function(f, x, adtype::AutoSparseFiniteDiff, p,
     num_cons = 0)
-
     if maximum(getfield.(methods(f.f), :nargs)) > 2
         error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")
     end
@@ -129,7 +128,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
 end
 
 function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
-    adtype::AutoFiniteDiff, num_cons = 0)
+    adtype::AutoSparseFiniteDiff, num_cons = 0)
     if maximum(getfield.(methods(f.f), :nargs)) > 2
         error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")
     end
