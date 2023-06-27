@@ -55,6 +55,17 @@ include("cache.jl")
             include("../ext/OptimizationEnzymeExt.jl")
             using .OptimizationEnzymeExt
         end
+        @require SparseDiffTools="47a9eef4-7e08-11e9-0b38-333d64bd3804" begin
+            @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" begin
+                include("../ext/OptimizationSparseForwarddiffExt.jl")
+                using .OptimizationSparseForwarddiffExt
+            end
+
+            @require FiniteDiff="6a86dc24-6348-571c-b903-95158fe2bd41" begin
+                include("../ext/OptimizationSparseFinitediffExt.jl")
+                using .OptimizationSparseFinitediffExt
+            end
+        end
     end
 end
 

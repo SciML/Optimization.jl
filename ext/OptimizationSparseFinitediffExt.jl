@@ -1,20 +1,25 @@
-module OptimizationFinitediffExt
+module OptimizationSparseFinitediffExt
 
 import SciMLBase: OptimizationFunction
 import Optimization, ArrayInterface
-import ADTypes: AutoFiniteDiff
+import ADTypes: AutoSparseFiniteDiff
+import Symbolics
 using LinearAlgebra
-isdefined(Base, :get_extension) ? (using FiniteDiff) : (using ..FiniteDiff)
+isdefined(Base, :get_extension) ? (using FiniteDiff, SparseDiffTools) :
+(using ..FiniteDiff, ..SparseDiffTools)
 
 const FD = FiniteDiff
 
-function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
+function Optimization.instantiate_function(f, x, adtype::AutoSparseFiniteDiff, p,
     num_cons = 0)
+    if maximum(getfield.(methods(f.f), :nargs)) > 3
+        error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")
+    end
+
     _f = (θ, args...) -> first(f.f(θ, p, args...))
-    updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
 
     if f.grad === nothing
-        gradcache = FD.GradientCache(x, x, adtype.fdtype)
+        gradcache = FD.GradientCache(x, x)
         grad = (res, θ, args...) -> FD.finite_difference_gradient!(res, x -> _f(x, args...),
             θ, gradcache)
     else
@@ -22,26 +27,22 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
     end
 
     if f.hess === nothing
-        hesscache = FD.HessianCache(x, adtype.fdhtype)
-        hess = (res, θ, args...) -> FD.finite_difference_hessian!(res,
-            x -> _f(x, args...), θ,
-            updatecache(hesscache, θ))
+        hess_sparsity = Symbolics.hessian_sparsity(_f, x)
+        hess_colors = matrix_colors(tril(hess_sparsity))
+        hess = (res, θ, args...) -> numauto_color_hessian!(res, x -> _f(x, args...), θ,
+            ForwardColorHesCache(_f, x,
+                hess_colors,
+                hess_sparsity,
+                (res, θ) -> grad(res,
+                    θ,
+                    args...)))
     else
         hess = (H, θ, args...) -> f.hess(H, θ, p, args...)
     end
 
     if f.hv === nothing
         hv = function (H, θ, v, args...)
-            T = eltype(θ)
-            ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(θ)))
-            @. θ += ϵ * v
-            cache2 = similar(θ)
-            grad(cache2, θ, args...)
-            @. θ -= 2ϵ * v
-            cache3 = similar(θ)
-            grad(cache3, θ, args...)
-            @. θ += ϵ * v
-            @. H = (cache2 - cache3) / (2ϵ)
+            num_hesvec!(H, x -> _f(x, args...), θ, v)
         end
     else
         hv = f.hv
@@ -53,15 +54,20 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
         cons = (res, θ) -> f.cons(res, θ, p)
     end
 
-    cons_jac_colorvec = f.cons_jac_colorvec === nothing ? (1:length(x)) :
-                        f.cons_jac_colorvec
-
     if cons !== nothing && f.cons_j === nothing
+        cons_jac_prototype = f.cons_jac_prototype === nothing ?
+                             Symbolics.jacobian_sparsity(cons,
+            zeros(eltype(x), num_cons),
+            x) :
+                             f.cons_jac_prototype
+        cons_jac_colorvec = f.cons_jac_colorvec === nothing ?
+                            matrix_colors(tril(cons_jac_prototype)) :
+                            f.cons_jac_colorvec
         cons_j = function (J, θ)
             y0 = zeros(num_cons)
-            jaccache = FD.JacobianCache(copy(x), copy(y0), copy(y0), adtype.fdjtype;
+            jaccache = FD.JacobianCache(copy(x), copy(y0), copy(y0);
                 colorvec = cons_jac_colorvec,
-                sparsity = f.cons_jac_prototype)
+                sparsity = cons_jac_prototype)
             FD.finite_difference_jacobian!(J, cons, θ, jaccache)
         end
     else
@@ -69,15 +75,20 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
     end
 
     if cons !== nothing && f.cons_h === nothing
-        hess_cons_cache = [FD.HessianCache(copy(x), adtype.fdhtype)
-                           for i in 1:num_cons]
+        function gen_conshess_cache(_f, x)
+            conshess_sparsity = Symbolics.hessian_sparsity(_f, x)
+            conshess_colors = matrix_colors(conshess_sparsity)
+            hesscache = ForwardColorHesCache(_f, x, conshess_colors, conshess_sparsity)
+            return hesscache
+        end
+
+        fcons = [(x) -> (_res = zeros(eltype(x), num_cons);
+        cons(_res, x);
+        _res[i]) for i in 1:num_cons]
+
         cons_h = function (res, θ)
-            for i in 1:num_cons#note: colorvecs not yet supported by FiniteDiff for Hessians
-                FD.finite_difference_hessian!(res[i],
-                    (x) -> (_res = zeros(eltype(θ), num_cons);
-                    cons(_res, x);
-                    _res[i]), θ,
-                    updatecache(hess_cons_cache[i], θ))
+            for i in 1:num_cons
+                numauto_color_hessian!(res[i], fcons[i], θ, gen_conshess_cache(fcons[i], θ))
             end
         end
     else
@@ -85,7 +96,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
     end
 
     if f.lag_h === nothing
-        lag_hess_cache = FD.HessianCache(copy(x), adtype.fdhtype)
+        lag_hess_cache = FD.HessianCache(copy(x))
         c = zeros(num_cons)
         h = zeros(length(x), length(x))
         lag_h = let c = c, h = h
@@ -109,7 +120,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
     end
     return OptimizationFunction{true}(f, adtype; grad = grad, hess = hess, hv = hv,
         cons = cons, cons_j = cons_j, cons_h = cons_h,
-        cons_jac_colorvec = cons_jac_colorvec,
+        cons_jac_colorvec = f.cons_jac_colorvec,
         hess_prototype = f.hess_prototype,
         cons_jac_prototype = f.cons_jac_prototype,
         cons_hess_prototype = f.cons_hess_prototype,
@@ -117,12 +128,15 @@ function Optimization.instantiate_function(f, x, adtype::AutoFiniteDiff, p,
 end
 
 function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
-    adtype::AutoFiniteDiff, num_cons = 0)
+    adtype::AutoSparseFiniteDiff, num_cons = 0)
+    if maximum(getfield.(methods(f.f), :nargs)) > 3
+        error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")
+    end
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
     updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
 
     if f.grad === nothing
-        gradcache = FD.GradientCache(cache.u0, cache.u0, adtype.fdtype)
+        gradcache = FD.GradientCache(cache.u0, cache.u0)
         grad = (res, θ, args...) -> FD.finite_difference_gradient!(res, x -> _f(x, args...),
             θ, gradcache)
     else
@@ -130,26 +144,22 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     end
 
     if f.hess === nothing
-        hesscache = FD.HessianCache(cache.u0, adtype.fdhtype)
-        hess = (res, θ, args...) -> FD.finite_difference_hessian!(res, x -> _f(x, args...),
-            θ,
-            updatecache(hesscache, θ))
+        hess_sparsity = Symbolics.hessian_sparsity(_f, cache.u0)
+        hess_colors = matrix_colors(tril(hess_sparsity))
+        hess = (res, θ, args...) -> numauto_color_hessian!(res, x -> _f(x, args...), θ,
+            ForwardColorHesCache(_f, θ,
+                hess_colors,
+                hess_sparsity,
+                (res, θ) -> grad(res,
+                    θ,
+                    args...)))
     else
         hess = (H, θ, args...) -> f.hess(H, θ, cache.p, args...)
     end
 
     if f.hv === nothing
         hv = function (H, θ, v, args...)
-            T = eltype(θ)
-            ϵ = sqrt(eps(real(T))) * max(one(real(T)), abs(norm(θ)))
-            @. θ += ϵ * v
-            cache2 = similar(θ)
-            grad(cache2, θ, args...)
-            @. θ -= 2ϵ * v
-            cache3 = similar(θ)
-            grad(cache3, θ, args...)
-            @. θ += ϵ * v
-            @. H = (cache2 - cache3) / (2ϵ)
+            num_hesvec!(H, x -> _f(x, args...), θ, v)
         end
     else
         hv = f.hv
@@ -161,16 +171,19 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
         cons = (res, θ) -> f.cons(res, θ, cache.p)
     end
 
-    cons_jac_colorvec = f.cons_jac_colorvec === nothing ? (1:length(cache.u0)) :
-                        f.cons_jac_colorvec
-
     if cons !== nothing && f.cons_j === nothing
+        cons_jac_prototype = f.cons_jac_prototype === nothing ?
+                             Symbolics.jacobian_sparsity(cons, zeros(eltype(x), num_cons),
+            x) :
+                             f.cons_jac_prototype
+        cons_jac_colorvec = f.cons_jac_colorvec === nothing ?
+                            matrix_colors(tril(cons_jac_prototype)) :
+                            f.cons_jac_colorvec
         cons_j = function (J, θ)
             y0 = zeros(num_cons)
-            jaccache = FD.JacobianCache(copy(cache.u0), copy(y0), copy(y0),
-                adtype.fdjtype;
+            jaccache = FD.JacobianCache(copy(x), copy(y0), copy(y0);
                 colorvec = cons_jac_colorvec,
-                sparsity = f.cons_jac_prototype)
+                sparsity = cons_jac_prototype)
             FD.finite_difference_jacobian!(J, cons, θ, jaccache)
         end
     else
@@ -178,23 +191,27 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     end
 
     if cons !== nothing && f.cons_h === nothing
-        hess_cons_cache = [FD.HessianCache(copy(cache.u0), adtype.fdhtype)
-                           for i in 1:num_cons]
+        function gen_conshess_cache(_f, x)
+            conshess_sparsity = copy(Symbolics.hessian_sparsity(_f, x))
+            conshess_colors = matrix_colors(conshess_sparsity)
+            hesscache = ForwardColorHesCache(_f, x, conshess_colors,
+                conshess_sparsity)
+            return hesscache
+        end
+
+        fcons = [(x) -> (_res = zeros(eltype(x), num_cons);
+        cons(_res, x);
+        _res[i]) for i in 1:num_cons]
         cons_h = function (res, θ)
-            for i in 1:num_cons#note: colorvecs not yet supported by FiniteDiff for Hessians
-                FD.finite_difference_hessian!(res[i],
-                    (x) -> (_res = zeros(eltype(θ), num_cons);
-                    cons(_res,
-                        x);
-                    _res[i]),
-                    θ, updatecache(hess_cons_cache[i], θ))
+            for i in 1:num_cons
+                numauto_color_hessian!(res[i], fcons[i], θ, gen_conshess_cache(fcons[i], θ))
             end
         end
     else
         cons_h = (res, θ) -> f.cons_h(res, θ, cache.p)
     end
     if f.lag_h === nothing
-        lag_hess_cache = FD.HessianCache(copy(cache.u0), adtype.fdhtype)
+        lag_hess_cache = FD.HessianCache(copy(cache.u0))
         c = zeros(num_cons)
         h = zeros(length(cache.u0), length(cache.u0))
         lag_h = let c = c, h = h
@@ -223,7 +240,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     end
     return OptimizationFunction{true}(f, adtype; grad = grad, hess = hess, hv = hv,
         cons = cons, cons_j = cons_j, cons_h = cons_h,
-        cons_jac_colorvec = cons_jac_colorvec,
+        cons_jac_colorvec = f.cons_jac_colorvec,
         hess_prototype = f.hess_prototype,
         cons_jac_prototype = f.cons_jac_prototype,
         cons_hess_prototype = f.cons_hess_prototype,

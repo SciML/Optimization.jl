@@ -48,9 +48,13 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
 
     if f.hv === nothing
         hv = function (H, θ, v, args...)
-            res = ArrayInterface.zeromatrix(θ)
-            hess(res, θ, args...)
-            H .= res * v
+            function f2(x, v)::Float64
+                dx = zeros(length(x))
+                Enzyme.autodiff_deferred(Enzyme.Reverse, (θ) -> f.f(θ, p, args...),
+                    Enzyme.Duplicated(x, dx))
+                Float64(dot(dx, v))
+            end
+            H .= Enzyme.gradient(Enzyme.Forward, x -> f2(x, v), θ)
         end
     else
         hv = f.hv
@@ -147,9 +151,14 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
 
     if f.hv === nothing
         hv = function (H, θ, v, args...)
-            res = ArrayInterface.zeromatrix(θ)
-            hess(res, θ, args...)
-            H .= res * v
+            function f2(x, v)::Float64
+                dx = zeros(length(x))
+                Enzyme.autodiff_deferred(Enzyme.Reverse,
+                    (θ) -> f.f(θ, cache.p, args...),
+                    Enzyme.Duplicated(x, dx))
+                Float64(dot(dx, v))
+            end
+            H .= Enzyme.gradient(Enzyme.Forward, x -> f2(x, v), θ)
         end
     else
         hv = f.hv
