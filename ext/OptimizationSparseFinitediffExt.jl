@@ -12,14 +12,14 @@ const FD = FiniteDiff
 
 function Optimization.instantiate_function(f, x, adtype::AutoSparseFiniteDiff, p,
     num_cons = 0)
-    if maximum(getfield.(methods(f.f), :nargs)) > 2
+    if maximum(getfield.(methods(f.f), :nargs)) > 3
         error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")
     end
 
     _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
-        gradcache = FD.GradientCache(x, x, adtype.fdtype)
+        gradcache = FD.GradientCache(x, x)
         grad = (res, θ, args...) -> FD.finite_difference_gradient!(res, x -> _f(x, args...),
             θ, gradcache)
     else
@@ -65,7 +65,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoSparseFiniteDiff, p
                             f.cons_jac_colorvec
         cons_j = function (J, θ)
             y0 = zeros(num_cons)
-            jaccache = FD.JacobianCache(copy(x), copy(y0), copy(y0), adtype.fdjtype;
+            jaccache = FD.JacobianCache(copy(x), copy(y0), copy(y0);
                 colorvec = cons_jac_colorvec,
                 sparsity = cons_jac_prototype)
             FD.finite_difference_jacobian!(J, cons, θ, jaccache)
@@ -96,7 +96,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoSparseFiniteDiff, p
     end
 
     if f.lag_h === nothing
-        lag_hess_cache = FD.HessianCache(copy(x), adtype.fdhtype)
+        lag_hess_cache = FD.HessianCache(copy(x))
         c = zeros(num_cons)
         h = zeros(length(x), length(x))
         lag_h = let c = c, h = h
@@ -129,14 +129,14 @@ end
 
 function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     adtype::AutoSparseFiniteDiff, num_cons = 0)
-    if maximum(getfield.(methods(f.f), :nargs)) > 2
+    if maximum(getfield.(methods(f.f), :nargs)) > 3
         error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")
     end
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
     updatecache = (cache, x) -> (cache.xmm .= x; cache.xmp .= x; cache.xpm .= x; cache.xpp .= x; return cache)
 
     if f.grad === nothing
-        gradcache = FD.GradientCache(cache.u0, cache.u0, adtype.fdtype)
+        gradcache = FD.GradientCache(cache.u0, cache.u0)
         grad = (res, θ, args...) -> FD.finite_difference_gradient!(res, x -> _f(x, args...),
             θ, gradcache)
     else
@@ -181,7 +181,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
                             f.cons_jac_colorvec
         cons_j = function (J, θ)
             y0 = zeros(num_cons)
-            jaccache = FD.JacobianCache(copy(x), copy(y0), copy(y0), adtype.fdjtype;
+            jaccache = FD.JacobianCache(copy(x), copy(y0), copy(y0);
                 colorvec = cons_jac_colorvec,
                 sparsity = cons_jac_prototype)
             FD.finite_difference_jacobian!(J, cons, θ, jaccache)
@@ -211,7 +211,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
         cons_h = (res, θ) -> f.cons_h(res, θ, cache.p)
     end
     if f.lag_h === nothing
-        lag_hess_cache = FD.HessianCache(copy(cache.u0), adtype.fdhtype)
+        lag_hess_cache = FD.HessianCache(copy(cache.u0))
         c = zeros(num_cons)
         h = zeros(length(cache.u0), length(cache.u0))
         lag_h = let c = c, h = h

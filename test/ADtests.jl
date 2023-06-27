@@ -1,6 +1,6 @@
 using Optimization, OptimizationOptimJL, OptimizationOptimisers, Test
 using ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker
-using ModelingToolkit, Enzyme
+using ModelingToolkit, Enzyme, Random
 
 x0 = zeros(2)
 rosenbrock(x, p = nothing) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
@@ -210,7 +210,7 @@ sol = solve(prob, Optim.Newton())
 sol = solve(prob, Optim.KrylovTrustRegion())
 @test sol.objective < l1 #the loss doesn't go below 5e-1 here
 
-sol = solve(prob, Optimisers.ADAM(0.1), maxiters = 1000)
+sol = solve(prob, Optimisers.Adam(0.1), maxiters = 1000)
 @test 10 * sol.objective < l1
 
 # Test new constraints
@@ -406,6 +406,7 @@ sol = solve(prob, Optim.BFGS())
 sol = solve(prob, Optim.Newton())
 @test 10 * sol.objective < l1
 
+Random.seed!(1234)
 #at 0,0 it gives error because of the inaccuracy of the hessian and hv calculations
 prob = OptimizationProblem(optf, x0 + rand(2))
 sol = solve(prob, Optim.KrylovTrustRegion())
