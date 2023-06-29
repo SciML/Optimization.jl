@@ -105,7 +105,11 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem, opt; kwargs...)
     reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
-    f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, prob.p, num_cons)
+    f = Optimization.instantiate_function(prob.f,
+        reinit_cache,
+        prob.f.adtype,
+        prob.p,
+        num_cons)
     T = eltype(prob.u0)
     n = length(prob.u0)
 
