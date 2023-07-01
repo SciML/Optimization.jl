@@ -39,16 +39,16 @@ Info Packages marked with ⌅ have new versions available but compatibility cons
 Commit 147bdf428cd (2023-06-07 08:27 UTC)
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 2 × Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz
+  CPU: 2 × Intel(R) Xeon(R) Platinum 8171M CPU @ 2.60GHz
   WORD_SIZE: 64
   LIBM: libopenlibm
-  LLVM: libLLVM-14.0.6 (ORCJIT, icelake-server)
+  LLVM: libLLVM-14.0.6 (ORCJIT, skylake-avx512)
   Threads: 1 on 2 virtual cores</code></pre></details><details><summary>A more complete overview of all dependencies and their versions is also provided.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Optimization.jl/Optimization.jl/docs/Manifest.toml`
   [47edcb42] ADTypes v0.1.5
   [14f7f29c] AMD v0.5.0
   [a4c015fc] ANSIColoredPrinters v0.0.1
   [c3fe647b] AbstractAlgebra v0.30.9
-  [621f4979] AbstractFFTs v1.3.1
+  [621f4979] AbstractFFTs v1.3.2
   [1520ce14] AbstractTrees v0.4.4
   [22286c92] AccurateArithmetic v0.3.8
   [79e6a3ab] Adapt v3.6.2
@@ -76,7 +76,7 @@ Platform Info:
   [1af6417a] CUDA_Runtime_Discovery v0.2.2
   [49dc2e85] Calculus v0.5.1
   [7057c7e9] Cassette v0.3.11
-  [082447d4] ChainRules v1.51.0
+  [082447d4] ChainRules v1.51.1
   [d360d2e6] ChainRulesCore v1.16.0
   [fb6a15b2] CloseOpenIntervals v0.1.12
   [523fee87] CodecBzip2 v0.7.2
@@ -97,7 +97,7 @@ Platform Info:
   [adafc99b] CpuId v0.3.1
   [a8cc5b0e] Crayons v4.1.1
   [9a962f9c] DataAPI v1.15.0
-  [864edb3b] DataStructures v0.18.13
+  [864edb3b] DataStructures v0.18.14
   [e2d170a0] DataValueInterfaces v1.0.0
   [244e2a9f] DefineSingletons v0.1.2
   [8bb1440f] DelimitedFiles v1.9.1
@@ -107,11 +107,11 @@ Platform Info:
   [163ba53b] DiffResults v1.1.0
   [b552c78f] DiffRules v1.15.1
   [b4f34e82] Distances v0.10.8
-  [31c24e10] Distributions v0.25.97
+  [31c24e10] Distributions v0.25.98
   [ffbed154] DocStringExtensions v0.9.3
   [e30172f5] Documenter v0.27.24
-  [35a29f4d] DocumenterTools v0.1.16
-  [5b8099bc] DomainSets v0.6.6
+  [35a29f4d] DocumenterTools v0.1.17
+  [5b8099bc] DomainSets v0.6.7
   [fa6b7ba4] DualNumbers v0.6.8
 ⌅ [7c1d4256] DynamicPolynomials v0.4.6
   [da5c29d0] EllipsisNotation v1.7.0
@@ -126,7 +126,7 @@ Platform Info:
   [b9860ae5] FLoopsBase v0.1.1
   [7034ab61] FastBroadcast v0.2.5
   [9aa1b823] FastClosures v0.3.2
-  [29a986be] FastLapackInterface v1.2.9
+⌅ [29a986be] FastLapackInterface v1.2.9
   [1a297f60] FillArrays v1.2.1
   [6a86dc24] FiniteDiff v2.21.1
   [587475ba] Flux v0.13.17
@@ -145,7 +145,7 @@ Platform Info:
   [0b43b601] Groebner v0.3.6
   [d5909c97] GroupsCore v0.4.0
   [708ec375] Gumbo v0.8.2
-  [cd3eb016] HTTP v1.9.7
+  [cd3eb016] HTTP v1.9.8
   [87dc4568] HiGHS v1.5.2
   [3e5b6fbb] HostCPUFeatures v0.1.15
   [34004b35] HypergeometricFunctions v0.3.17
@@ -154,7 +154,7 @@ Platform Info:
   [615f187c] IfElse v0.1.1
   [d25df0c9] Inflate v0.1.3
   [22cec73e] InitialValues v0.3.1
-  [18e54dd8] IntegerMathUtils v0.1.1
+  [18e54dd8] IntegerMathUtils v0.1.2
   [8197267c] IntervalSets v0.7.4
   [b6b21f68] Ipopt v1.4.1
   [92d709cd] IrrationalConstants v0.2.2
@@ -293,7 +293,7 @@ Platform Info:
 ⌅ [2913bbd2] StatsBase v0.33.21
   [4c63d2b9] StatsFuns v1.3.0
   [789caeaf] StochasticDiffEq v6.61.1
-  [7792a7ef] StrideArraysCore v0.4.15
+  [7792a7ef] StrideArraysCore v0.4.16
   [09ab397b] StructArrays v0.6.15
   [53d494c1] StructIO v0.3.0
   [2efcf032] SymbolicIndexingInterface v0.2.2
@@ -302,7 +302,7 @@ Platform Info:
   [3783bdb8] TableTraits v1.0.1
   [bd369af6] Tables v1.10.1
   [5d786b92] TerminalLoggers v0.1.7
-  [8290d209] ThreadingUtilities v0.5.1
+  [8290d209] ThreadingUtilities v0.5.2
   [a759f4b9] TimerOutputs v0.5.23
   [0796e94c] Tokenize v0.5.25
   [9f7883ad] Tracker v0.2.25
@@ -393,4 +393,4 @@ Platform Info:
   [3f19e933] p7zip_jll v17.4.0+0
 Info Packages marked with ⌃ and ⌅ have new versions available, but those with ⌅ are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details>You can also download the
 <a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.15.2/assets/Manifest.toml">manifest</a> file and the
-<a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.15.2/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/">Getting Started with Optimization in Julia »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Tuesday 27 June 2023 16:15">Tuesday 27 June 2023</span>. Using Julia version 1.9.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.15.2/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/">Getting Started with Optimization in Julia »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Saturday 1 July 2023 07:34">Saturday 1 July 2023</span>. Using Julia version 1.9.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
