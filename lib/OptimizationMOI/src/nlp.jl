@@ -129,8 +129,8 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem, opt; kwargs...)
     else
         [convert.(T, f.cons_hess_prototype[i]) for i in 1:num_cons]
     end
-    lcons = prob.lcons === nothing ? fill(-Inf, num_cons) : prob.lcons
-    ucons = prob.ucons === nothing ? fill(Inf, num_cons) : prob.ucons
+    lcons = prob.lcons === nothing ? fill(T(-Inf), num_cons) : prob.lcons
+    ucons = prob.ucons === nothing ? fill(T(Inf), num_cons) : prob.ucons
 
     evaluator = MOIOptimizationNLPEvaluator(f,
         reinit_cache,
