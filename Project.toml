@@ -20,19 +20,15 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 TerminalLoggers = "5d786b92-1e48-4d6f-9151-6b4477ca9bed"
 
-[compat]
-ADTypes = "0.1.5"
-ArrayInterface = "6, 7"
-ConsoleProgressMonitor = "0.1"
-DocStringExtensions = "0.8, 0.9"
-Enzyme = "=0.11.0"
-LoggingExtras = "0.4, 0.5, 1"
-ProgressLogging = "0.1"
-Reexport = "0.2, 1.0"
-Requires = "1.0"
-SciMLBase = "1.79.0"
-TerminalLoggers = "0.1"
-julia = "1.6"
+[weakdeps]
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
+ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
+SparseDiffTools = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
+Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extensions]
 OptimizationEnzymeExt = "Enzyme"
@@ -45,15 +41,20 @@ OptimizationSparseForwarddiffExt = ["SparseDiffTools", "ForwardDiff"]
 OptimizationTrackerExt = "Tracker"
 OptimizationZygoteExt = "Zygote"
 
+[compat]
+ADTypes = "0.1.5"
+ArrayInterface = "6, 7"
+ConsoleProgressMonitor = "0.1"
+DocStringExtensions = "0.8, 0.9"
+Enzyme = "=0.11.0"
+LoggingExtras = "0.4, 0.5, 1"
+ProgressLogging = "0.1"
+Reexport = "0.2, 1.0"
+Requires = "1.0"
+SciMLBase = "1.79.0"
+Symbolics = "5"
+TerminalLoggers = "0.1"
+julia = "1.6"
+
 [extras]
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
-
-[weakdeps]
-Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
-FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
-ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
-ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
-SparseDiffTools = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
-Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
-Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
