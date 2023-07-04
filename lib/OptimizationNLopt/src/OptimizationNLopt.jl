@@ -177,8 +177,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     if retcode == ReturnCode.Failure
         @warn "NLopt failed to converge: $(ret)"
-        minx = fill(NaN, length(cache.u0))
-        minf = NaN
     end
     SciMLBase.build_solution(cache, cache.opt, minx,
         minf; original = opt_setup, retcode = retcode,
