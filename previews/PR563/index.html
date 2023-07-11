@@ -39,10 +39,10 @@ Info Packages marked with ⌅ have new versions available but compatibility cons
 Commit e4ee485e909 (2023-07-05 09:39 UTC)
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 2 × Intel(R) Xeon(R) Platinum 8171M CPU @ 2.60GHz
+  CPU: 2 × Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz
   WORD_SIZE: 64
   LIBM: libopenlibm
-  LLVM: libLLVM-14.0.6 (ORCJIT, skylake-avx512)
+  LLVM: libLLVM-14.0.6 (ORCJIT, icelake-server)
   Threads: 1 on 2 virtual cores</code></pre></details><details><summary>A more complete overview of all dependencies and their versions is also provided.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Optimization.jl/Optimization.jl/docs/Manifest.toml`
   [47edcb42] ADTypes v0.1.5
   [14f7f29c] AMD v0.5.0
@@ -72,7 +72,7 @@ Platform Info:
   [2a0fbf3d] CPUSummary v0.2.3
   [a9c8d775] CPUTime v1.0.0
   [00ebfdb7] CSTParser v3.3.6
-⌅ [052768ef] CUDA v4.3.2
+⌅ [052768ef] CUDA v4.2.0
   [1af6417a] CUDA_Runtime_Discovery v0.2.2
   [49dc2e85] Calculus v0.5.1
   [7057c7e9] Cassette v0.3.11
@@ -116,8 +116,8 @@ Platform Info:
 ⌅ [7c1d4256] DynamicPolynomials v0.4.6
   [da5c29d0] EllipsisNotation v1.7.0
   [4e289a0a] EnumX v1.0.4
-⌃ [7da242da] Enzyme v0.11.3
-  [f151be2c] EnzymeCore v0.5.0
+⌃ [7da242da] Enzyme v0.11.2
+⌅ [f151be2c] EnzymeCore v0.3.0
   [86b6b26d] Evolutionary v0.11.1
   [460bff9d] ExceptionUnwrapping v0.1.9
   [d4d017d3] ExponentialUtilities v1.24.0
@@ -138,7 +138,7 @@ Platform Info:
   [4aa9d100] GCMAES v0.1.32
   [0c68f7d7] GPUArrays v8.8.1
   [46192b85] GPUArraysCore v0.1.5
-⌅ [61eb1bfa] GPUCompiler v0.20.4
+⌅ [61eb1bfa] GPUCompiler v0.19.4
   [c145ed77] GenericSchur v0.5.3
   [c27321d9] Glob v1.3.1
   [86223c79] Graphs v1.8.0
@@ -168,7 +168,7 @@ Platform Info:
   [ccbc3e58] JumpProcesses v9.6.4
   [2ddba703] Juniper v0.9.1
   [ef3ab10e] KLU v0.4.0
-  [63c18a36] KernelAbstractions v0.9.7
+⌃ [63c18a36] KernelAbstractions v0.9.6
   [ba0b0d4f] Krylov v0.9.1
   [40e66cde] LDLFactorizations v0.10.0
 ⌅ [929cbde3] LLVM v5.2.0
@@ -210,7 +210,7 @@ Platform Info:
   [77ba4419] NaNMath v1.0.2
   [71a1bf82] NameResolution v0.1.5
   [8913a72c] NonlinearSolve v1.8.0
-  [d8793406] ObjectFile v0.4.0
+⌅ [d8793406] ObjectFile v0.3.7
   [6fe1bfb0] OffsetArrays v1.12.10
   [0b1bfda6] OneHotArrays v0.2.4
   [4d8831e6] OpenSSL v1.4.1
@@ -323,13 +323,13 @@ Platform Info:
   [19fa3120] VertexSafeGraphs v0.2.0
   [e88e6eb3] Zygote v0.6.62
   [700de1a5] ZygoteRules v0.2.3
-⌃ [02a925ec] cuDNN v1.0.4
+⌃ [02a925ec] cuDNN v1.0.3
   [ae81ac8f] ASL_jll v0.1.3+0
   [6e34b625] Bzip2_jll v1.0.8+0
   [4ee394cb] CUDA_Driver_jll v0.5.0+1
   [76a88914] CUDA_Runtime_jll v0.6.0+0
 ⌅ [62b44479] CUDNN_jll v8.8.1+0
-  [7cc45869] Enzyme_jll v0.0.74+0
+⌅ [7cc45869] Enzyme_jll v0.0.71+0
   [528830af] Gumbo_jll v0.10.2+0
   [8fd58aa0] HiGHS_jll v1.5.3+0
 ⌅ [9cc047cb] Ipopt_jll v300.1400.400+0
@@ -393,4 +393,4 @@ Platform Info:
   [3f19e933] p7zip_jll v17.4.0+0
 Info Packages marked with ⌃ and ⌅ have new versions available, but those with ⌅ are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details>You can also download the
 <a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.15.2/assets/Manifest.toml">manifest</a> file and the
-<a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.15.2/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/">Getting Started with Optimization in Julia »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Tuesday 11 July 2023 10:31">Tuesday 11 July 2023</span>. Using Julia version 1.9.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.15.2/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/">Getting Started with Optimization in Julia »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Tuesday 11 July 2023 12:20">Tuesday 11 July 2023</span>. Using Julia version 1.9.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
