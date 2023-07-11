@@ -84,6 +84,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
     hₜ = zero(θ)
     for (i, d) in enumerate(data)
         f.grad(gₜ, θ, d...)
+        x = cache.f(θ, cache.p, d...)
+        cb_call = cache.callback(θ, x...)
+        if !(typeof(cb_call) <: Bool)
+            error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
+        elseif cb_call
+            break
+        end
         mₜ = cache.opt.betas[1] .* mₜ + (1 - cache.opt.betas[1]) .* gₜ
         if i % cache.opt.k == 1
             hₜ₋₁ = copy(hₜ)
