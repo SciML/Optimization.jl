@@ -562,9 +562,9 @@ version = "1.0.4"
 
 [[deps.Enzyme]]
 deps = ["CEnum", "EnzymeCore", "Enzyme_jll", "GPUCompiler", "LLVM", "Libdl", "LinearAlgebra", "ObjectFile", "Printf", "Random"]
-git-tree-sha1 = "e96ee79952fee7f26e6d5b9b45f43e4b249743eb"
+git-tree-sha1 = "064ffaa8de4632243d8af19e4ff1bdc7086ac445"
 uuid = "7da242da-08ed-463a-9acd-ee780be4f1d9"
-version = "0.11.4"
+version = "0.11.3"
 
 [[deps.EnzymeCore]]
 deps = ["Adapt"]
@@ -773,9 +773,9 @@ version = "0.10.2+0"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
-git-tree-sha1 = "2ee0eb8746650f498ed9a109383aa399b2a0c515"
+git-tree-sha1 = "c206f345c5cee9da7bdf87cb540085a43acffca4"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "1.9.10"
+version = "1.9.11"
 
 [[deps.HiGHS]]
 deps = ["HiGHS_jll", "MathOptInterface", "PrecompileTools", "SparseArrays"]
@@ -919,10 +919,14 @@ uuid = "ef3ab10e-7fda-4108-b977-705223b18434"
 version = "0.4.0"
 
 [[deps.KernelAbstractions]]
-deps = ["Adapt", "Atomix", "InteractiveUtils", "LinearAlgebra", "MacroTools", "PrecompileTools", "SparseArrays", "StaticArrays", "UUIDs", "UnsafeAtomics", "UnsafeAtomicsLLVM"]
-git-tree-sha1 = "b48617c5d764908b5fac493cd907cf33cc11eec1"
+deps = ["Adapt", "Atomix", "InteractiveUtils", "LinearAlgebra", "MacroTools", "PrecompileTools", "Requires", "SparseArrays", "StaticArrays", "UUIDs", "UnsafeAtomics", "UnsafeAtomicsLLVM"]
+git-tree-sha1 = "6d08ca80b621635fed9cdfeb9a4280a574020bf3"
 uuid = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
-version = "0.9.6"
+version = "0.9.7"
+weakdeps = ["EnzymeCore"]
+
+    [deps.KernelAbstractions.extensions]
+    EnzymeExt = "EnzymeCore"
 
 [[deps.Krylov]]
 deps = ["LinearAlgebra", "Printf", "SparseArrays"]
