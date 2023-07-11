@@ -1,19 +1,19 @@
 using Optimization.LinearAlgebra
 
 struct Sophia
-    lr::Float64
-    betas::Tuple{Float64, Float64}
-    eps::Float64
-    weight_decay::Float64
+    η::Float64
+    βs::Tuple{Float64, Float64}
+    ϵ::Float64
+    λ::Float64
     k::Integer
-    rho::Float64
+    ρ::Float64
 end
 
 SciMLBase.supports_opt_cache_interface(opt::Sophia) = true
 
-function Sophia(; lr = 1e-3, betas = (0.9, 0.999), eps = 1e-8, weight_decay = 1e-1, k = 10,
-    rho = 0.04)
-    Sophia(lr, betas, eps, weight_decay, k, rho)
+function Sophia(; η = 1e-3, βs = (0.9, 0.999), ϵ = 1e-8, λ = 1e-1, k = 10,
+    ρ = 0.04)
+    Sophia(η, βs, ϵ, λ, k, ρ)
 end
 
 clip(z, ρ) = max(min(z, ρ), -ρ)
@@ -54,11 +54,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
 }
     local x, cur, state
     uType = eltype(cache.u0)
-    lr = uType(cache.opt.lr)
-    betas = uType.(cache.opt.betas)
-    eps = uType(cache.opt.eps)
-    weight_decay = uType(cache.opt.weight_decay)
-    rho = uType(cache.opt.rho)
+    η = uType(cache.opt.η)
+    βs = uType.(cache.opt.βs)
+    ϵ = uType(cache.opt.ϵ)
+    λ = uType(cache.opt.λ)
+    ρ = uType(cache.opt.ρ)
 
     if cache.data != Optimization.DEFAULT_DATA
         maxiters = length(cache.data)
@@ -97,17 +97,17 @@ function SciMLBase.__solve(cache::OptimizationCache{
         elseif cb_call
             break
         end
-        mₜ = betas[1] .* mₜ + (1 - betas[1]) .* gₜ
+        mₜ = βs[1] .* mₜ + (1 - βs[1]) .* gₜ
 
         if i % cache.opt.k == 1
             hₜ₋₁ = copy(hₜ)
             u = randn(uType, length(θ))
             f.hv(hₜ, θ, u, d...)
-            hₜ = betas[2] .* hₜ₋₁ + (1 - betas[2]) .* (u .* hₜ)
+            hₜ = βs[2] .* hₜ₋₁ + (1 - βs[2]) .* (u .* hₜ)
         end
-        θ = θ .- lr * weight_decay .* θ
+        θ = θ .- η * λ .* θ
         θ = θ .-
-            lr .* clip.(mₜ ./ max.(hₜ, Ref(eps)), Ref(rho))
+            η .* clip.(mₜ ./ max.(hₜ, Ref(ϵ)), Ref(ρ))
     end
 
     return SciMLBase.build_solution(cache, cache.opt,

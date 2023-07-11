@@ -13,8 +13,8 @@ using Zygote
     prob = OptimizationProblem(optprob, x0, _p)
 
     sol = Optimization.solve(prob,
-        OptimizationOptimisers.Sophia(; lr = 0.5,
-            weight_decay = 0.0),
+        OptimizationOptimisers.Sophia(; η = 0.5,
+            λ = 0.0),
         maxiters = 1000)
     @test 10 * sol.objective < l1
 
