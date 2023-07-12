@@ -1,4 +1,4 @@
-using OptimizationOptimisers, Optimization, ForwardDiff
+using OptimizationOptimisers, ForwardDiff, Optimization
 using Test
 using Zygote
 
@@ -8,11 +8,14 @@ using Zygote
     _p = [1.0, 100.0]
     l1 = rosenbrock(x0, _p)
 
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+    optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
 
     prob = OptimizationProblem(optprob, x0, _p)
 
-    sol = Optimization.solve(prob, Optimisers.ADAM(0.1), maxiters = 1000)
+    sol = Optimization.solve(prob,
+        OptimizationOptimisers.Sophia(; η = 0.5,
+            λ = 0.0),
+        maxiters = 1000)
     @test 10 * sol.objective < l1
 
     prob = OptimizationProblem(optprob, x0, _p)
