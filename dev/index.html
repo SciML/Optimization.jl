@@ -24,25 +24,25 @@ Pkg.add(&quot;Optimization&quot;)</code></pre><p>The packages relevant to the co
   [fd9f6733] OptimizationMOI v0.1.14
   [3aafef2f] OptimizationMetaheuristics v0.1.2
   [e4316d97] OptimizationMultistartOptimization v0.1.4
-  [4e6fcdb7] OptimizationNLopt v0.1.6
+  [4e6fcdb7] OptimizationNLopt v0.1.7
   [2cab0595] OptimizationNOMAD v0.1.3
   [36348300] OptimizationOptimJL v0.1.9
   [42dfb2eb] OptimizationOptimisers v0.1.4
   [3d669222] OptimizationSpeedMapping v0.1.5
   [1dea7af3] OrdinaryDiffEq v6.53.3
   [37e2e3b7] ReverseDiff v1.14.6
-  [1ed8b502] SciMLSensitivity v7.35.0
+⌃ [1ed8b502] SciMLSensitivity v7.34.0
   [9f7883ad] Tracker v0.2.26
   [e88e6eb3] Zygote v0.6.62
 ⌅ [9cc047cb] Ipopt_jll v300.1400.400+0
-Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated`</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.9.2
+Info Packages marked with ⌃ and ⌅ have new versions available, but those with ⌅ are restricted by compatibility constraints from upgrading. To see why use `status --outdated`</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.9.2
 Commit e4ee485e909 (2023-07-05 09:39 UTC)
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 2 × Intel(R) Xeon(R) CPU E5-2673 v4 @ 2.30GHz
+  CPU: 2 × Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz
   WORD_SIZE: 64
   LIBM: libopenlibm
-  LLVM: libLLVM-14.0.6 (ORCJIT, broadwell)
+  LLVM: libLLVM-14.0.6 (ORCJIT, icelake-server)
   Threads: 1 on 2 virtual cores</code></pre></details><details><summary>A more complete overview of all dependencies and their versions is also provided.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Optimization.jl/Optimization.jl/docs/Manifest.toml`
   [47edcb42] ADTypes v0.1.5
   [14f7f29c] AMD v0.5.0
@@ -76,7 +76,7 @@ Platform Info:
   [1af6417a] CUDA_Runtime_Discovery v0.2.2
   [49dc2e85] Calculus v0.5.1
   [7057c7e9] Cassette v0.3.11
-  [082447d4] ChainRules v1.52.0
+  [082447d4] ChainRules v1.52.1
   [d360d2e6] ChainRulesCore v1.16.0
   [fb6a15b2] CloseOpenIntervals v0.1.12
   [523fee87] CodecBzip2 v0.7.2
@@ -116,7 +116,7 @@ Platform Info:
 ⌅ [7c1d4256] DynamicPolynomials v0.4.6
   [da5c29d0] EllipsisNotation v1.7.0
   [4e289a0a] EnumX v1.0.4
-⌃ [7da242da] Enzyme v0.11.2
+⌅ [7da242da] Enzyme v0.11.0
 ⌅ [f151be2c] EnzymeCore v0.3.0
   [86b6b26d] Evolutionary v0.11.1
   [460bff9d] ExceptionUnwrapping v0.1.9
@@ -224,7 +224,7 @@ Platform Info:
   [fd9f6733] OptimizationMOI v0.1.14
   [3aafef2f] OptimizationMetaheuristics v0.1.2
   [e4316d97] OptimizationMultistartOptimization v0.1.4
-  [4e6fcdb7] OptimizationNLopt v0.1.6
+  [4e6fcdb7] OptimizationNLopt v0.1.7
   [2cab0595] OptimizationNOMAD v0.1.3
   [36348300] OptimizationOptimJL v0.1.9
   [42dfb2eb] OptimizationOptimisers v0.1.4
@@ -263,10 +263,10 @@ Platform Info:
   [94e857df] SIMDTypes v0.1.0
   [476501e8] SLEEFPirates v0.6.39
   [322a6be2] Sass v0.2.0
-  [0bca4576] SciMLBase v1.93.0
+  [0bca4576] SciMLBase v1.93.1
   [e9a6253c] SciMLNLSolve v0.1.8
   [c0aeaf25] SciMLOperators v0.3.3
-  [1ed8b502] SciMLSensitivity v7.35.0
+⌃ [1ed8b502] SciMLSensitivity v7.34.0
   [6c6a2e73] Scratch v1.2.0
   [eb7571c6] SearchSpaces v0.2.0
   [efcf1570] Setfield v1.1.1
@@ -316,7 +316,7 @@ Platform Info:
   [5c2747f8] URIs v1.4.2
   [3a884ed6] UnPack v1.0.2
   [1986cc42] Unitful v1.15.0
-  [a7c27f48] Unityper v0.1.3
+  [a7c27f48] Unityper v0.1.4
   [013be700] UnsafeAtomics v0.2.1
 ⌃ [d80eeb9a] UnsafeAtomicsLLVM v0.1.2
   [3d5dd08c] VectorizationBase v0.21.64
@@ -329,7 +329,7 @@ Platform Info:
   [4ee394cb] CUDA_Driver_jll v0.5.0+1
   [76a88914] CUDA_Runtime_jll v0.6.0+0
 ⌅ [62b44479] CUDNN_jll v8.8.1+0
-⌅ [7cc45869] Enzyme_jll v0.0.71+0
+⌅ [7cc45869] Enzyme_jll v0.0.53+0
   [528830af] Gumbo_jll v0.10.2+0
   [8fd58aa0] HiGHS_jll v1.5.3+0
 ⌅ [9cc047cb] Ipopt_jll v300.1400.400+0
@@ -393,4 +393,4 @@ Platform Info:
   [3f19e933] p7zip_jll v17.4.0+0
 Info Packages marked with ⌃ and ⌅ have new versions available, but those with ⌅ are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details>You can also download the
 <a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.15.2/assets/Manifest.toml">manifest</a> file and the
-<a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.15.2/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/">Getting Started with Optimization in Julia »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Tuesday 11 July 2023 16:13">Tuesday 11 July 2023</span>. Using Julia version 1.9.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.15.2/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/">Getting Started with Optimization in Julia »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Wednesday 12 July 2023 07:09">Wednesday 12 July 2023</span>. Using Julia version 1.9.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
