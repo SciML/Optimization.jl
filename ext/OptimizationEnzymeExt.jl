@@ -13,10 +13,9 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
 
     if f.grad === nothing
         function grad(res, θ, args...)
-            dθ = zero(res)
-            Enzyme.autodiff(Enzyme.Reverse, _f, Enzyme.Duplicated(θ, dθ),
+            res .= zero(eltype(res))
+            Enzyme.autodiff(Enzyme.Reverse, _f, Enzyme.Duplicated(θ, res),
                             Enzyme.DuplicatedNoNeed(zeros(1), ones(1)), args...)
-            res .= dθ
         end
     else
         grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
@@ -124,10 +123,9 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
 
     if f.grad === nothing
         function grad(res, θ, args...)
-            dθ = zero(res)
-            Enzyme.autodiff(Enzyme.Reverse, _f, Enzyme.Duplicated(θ, dθ),
+            res .= zero(eltype(res))
+            Enzyme.autodiff(Enzyme.Reverse, _f, Enzyme.Duplicated(θ, res),
                             Enzyme.DuplicatedNoNeed(zeros(1), ones(1)), args...)
-            res .= dθ
         end
     else
         grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
