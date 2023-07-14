@@ -100,14 +100,31 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
                 return res[i]
             end
         end
-        function f2(fnc, x)
-            dx = zeros(length(x))
+
+        function f2(x, dx, fnc)
             Enzyme.autodiff_deferred(Enzyme.Reverse, fnc, Enzyme.Duplicated(x, dx))
-            dx
+            return nothing
         end
+
         cons_h = function (res, θ)
+            vdθ = Tuple((Array(r) for r in eachrow(I(length(θ)) * 1.0)))
+            bθ = zeros(length(θ))
+            vdbθ = Tuple(zeros(length(θ)) for i in eachindex(θ))
             for i in 1:num_cons
-                res[i] .= Enzyme.jacobian(Enzyme.Forward, x -> f2(fncs[i], x), θ)
+                bθ .= zero(eltype(bθ))
+                for el in vdbθ
+                    el .= zeros(length(θ))
+                end
+                Enzyme.autodiff(Enzyme.Forward,
+                                f2,
+                                Enzyme.BatchDuplicated(θ, vdθ),
+                                Enzyme.BatchDuplicated(bθ, vdbθ),
+                                Const(fncs[i]),
+                                )
+
+                for j in eachindex(θ)
+                    res[i][j, :] .= vdbθ[j]
+                end
             end
         end
     else
