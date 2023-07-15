@@ -11,15 +11,15 @@ ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
-julia = "1"
-Flux = "0.13"
+Flux = "0.13, 0.14"
+Optimization = "3.15"
 ProgressLogging = "0.1"
 Reexport = "1.2"
-Optimization = "3.15"
+julia = "1"
 
 [extras]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["ForwardDiff","Test"]
+test = ["ForwardDiff", "Test"]
