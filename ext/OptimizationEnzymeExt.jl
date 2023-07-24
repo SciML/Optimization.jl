@@ -9,34 +9,43 @@ isdefined(Base, :get_extension) ? (using Enzyme) : (using ..Enzyme)
 function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
     adtype::AutoEnzyme, p,
     num_cons = 0)
-    _f = (θ, y, args...) -> (y .= first(f.f(θ, p, args...)); return nothing)
+    _f = (f, θ, args...) -> first(f(θ, p, args...))
 
     if f.grad === nothing
         function grad(res, θ, args...)
-            Enzyme.gradient!(Enzyme.Reverse, res, (θ) -> f.f(θ, p, args...), θ)
+            res .= zero(eltype(res))
+            Enzyme.autodiff(Enzyme.Reverse,
+                Const(_f),
+                Const(f.f),
+                Enzyme.Duplicated(θ, res),
+                args...)
         end
     else
         grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
     end
 
     if f.hess === nothing
+        function g(θ, bθ, _f, f, args...)
+            Enzyme.autodiff_deferred(Enzyme.Reverse,
+                Const(_f),
+                Const(f),
+                Enzyme.Duplicated(θ, bθ),
+                args...)
+            return nothing
+        end
         function hess(res, θ, args...)
-            y = zeros(1)
-
-            vdy = Tuple(zeros(1) for i in eachindex(θ))
             vdθ = Tuple((Array(r) for r in eachrow(I(length(θ)) * 1.0)))
 
             bθ = zeros(length(θ))
-            by = ones(1)
             vdbθ = Tuple(zeros(length(θ)) for i in eachindex(θ))
-            vdby = Tuple(zeros(1) for i in eachindex(θ))
 
             Enzyme.autodiff(Enzyme.Forward,
-                (θ, y) -> Enzyme.autodiff_deferred(Enzyme.Reverse, _f, θ, y),
-                Enzyme.BatchDuplicated(Enzyme.Duplicated(θ, bθ),
-                    Enzyme.Duplicated.(vdθ, vdbθ)),
-                Enzyme.BatchDuplicated(Enzyme.Duplicated(y, by),
-                    Enzyme.Duplicated.(vdy, vdby)))
+                g,
+                Enzyme.BatchDuplicated(θ, vdθ),
+                Enzyme.BatchDuplicated(bθ, vdbθ),
+                Const(_f),
+                Const(f.f),
+                args...)
 
             for i in eachindex(θ)
                 res[i, :] .= vdbθ[i]
@@ -47,14 +56,18 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
     end
 
     if f.hv === nothing
+        function f2(x, _f, f, args...)
+            dx = zeros(length(x))
+            Enzyme.autodiff_deferred(Enzyme.Reverse, _f,
+                f,
+                Enzyme.Duplicated(x, dx),
+                args...)
+            return dx
+        end
         hv = function (H, θ, v, args...)
-            function f2(x, v)::Float64
-                dx = zeros(length(x))
-                Enzyme.autodiff_deferred(Enzyme.Reverse, (θ) -> f.f(θ, p, args...),
-                    Enzyme.Duplicated(x, dx))
-                Float64(dot(dx, v))
-            end
-            H .= Enzyme.gradient(Enzyme.Forward, x -> f2(x, v), θ)
+            H .= Enzyme.autodiff(Enzyme.Forward, f2, DuplicatedNoNeed, Duplicated(θ, v),
+                Const(_f), Const(f.f),
+                args...)[1]
         end
     else
         hv = f.hv
@@ -87,14 +100,31 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
                 return res[i]
             end
         end
-        function f2(fnc, x)
-            dx = zeros(length(x))
+
+        function f2(x, dx, fnc)
             Enzyme.autodiff_deferred(Enzyme.Reverse, fnc, Enzyme.Duplicated(x, dx))
-            dx
+            return nothing
         end
+
         cons_h = function (res, θ)
+            vdθ = Tuple((Array(r) for r in eachrow(I(length(θ)) * 1.0)))
+            bθ = zeros(length(θ))
+            vdbθ = Tuple(zeros(length(θ)) for i in eachindex(θ))
             for i in 1:num_cons
-                res[i] .= Enzyme.jacobian(Enzyme.Forward, x -> f2(fncs[i], x), θ)
+                bθ .= zero(eltype(bθ))
+                for el in vdbθ
+                    el .= zeros(length(θ))
+                end
+                Enzyme.autodiff(Enzyme.Forward,
+                                f2,
+                                Enzyme.BatchDuplicated(θ, vdθ),
+                                Enzyme.BatchDuplicated(bθ, vdbθ),
+                                Const(fncs[i]),
+                                )
+
+                for j in eachindex(θ)
+                    res[i][j, :] .= vdbθ[j]
+                end
             end
         end
     else
@@ -112,53 +142,63 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
     cache::Optimization.ReInitCache,
     adtype::AutoEnzyme,
     num_cons = 0)
-    _f = (θ, y, args...) -> (y .= first(f.f(θ, cache.p, args...)); return nothing)
+    _f = (f, θ, args...) -> first(f(θ, cache.p, args...))
 
     if f.grad === nothing
         function grad(res, θ, args...)
-            Enzyme.gradient!(Enzyme.Reverse, res, (θ) -> f.f(θ, cache.p, args...), θ)
+            res .= zero(eltype(res))
+            Enzyme.autodiff(Enzyme.Reverse,
+                Const(_f),
+                Const(f.f),
+                Enzyme.Duplicated(θ, res),
+                args...)
         end
     else
-        grad = (G, θ, args...) -> f.grad(G, θ, cache.p, args...)
+        grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
     end
 
     if f.hess === nothing
+        function g(θ, bθ, _f, f, args...)
+            Enzyme.autodiff_deferred(Enzyme.Reverse, Const(_f), Const(f),
+                Enzyme.Duplicated(θ, bθ),
+                args...)
+            return nothing
+        end
         function hess(res, θ, args...)
-            y = zeros(1)
-
-            vdy = Tuple(zeros(1) for i in eachindex(θ))
             vdθ = Tuple((Array(r) for r in eachrow(I(length(θ)) * 1.0)))
 
             bθ = zeros(length(θ))
-            by = ones(1)
             vdbθ = Tuple(zeros(length(θ)) for i in eachindex(θ))
-            vdby = Tuple(zeros(1) for i in eachindex(θ))
 
             Enzyme.autodiff(Enzyme.Forward,
-                (θ, y) -> Enzyme.autodiff_deferred(Enzyme.Reverse, _f, θ, y),
-                Enzyme.BatchDuplicated(Enzyme.Duplicated(θ, bθ),
-                    Enzyme.Duplicated.(vdθ, vdbθ)),
-                Enzyme.BatchDuplicated(Enzyme.Duplicated(y, by),
-                    Enzyme.Duplicated.(vdy, vdby)))
+                g,
+                Enzyme.BatchDuplicated(θ, vdθ),
+                Enzyme.BatchDuplicated(bθ, vdbθ),
+                Const(_f),
+                Const(f.f),
+                args...)
 
             for i in eachindex(θ)
                 res[i, :] .= vdbθ[i]
             end
         end
     else
-        hess = (H, θ, args...) -> f.hess(H, θ, cache.p, args...)
+        hess = (H, θ, args...) -> f.hess(H, θ, p, args...)
     end
 
     if f.hv === nothing
+        function f2(x, _f, f, args...)
+            dx = zeros(length(x))
+            Enzyme.autodiff_deferred(Enzyme.Reverse, _f,
+                f,
+                Enzyme.Duplicated(x, dx),
+                args...)
+            return dx
+        end
         hv = function (H, θ, v, args...)
-            function f2(x, v)::Float64
-                dx = zeros(length(x))
-                Enzyme.autodiff_deferred(Enzyme.Reverse,
-                    (θ) -> f.f(θ, cache.p, args...),
-                    Enzyme.Duplicated(x, dx))
-                Float64(dot(dx, v))
-            end
-            H .= Enzyme.gradient(Enzyme.Forward, x -> f2(x, v), θ)
+            H .= Enzyme.autodiff(Enzyme.Forward, f2, DuplicatedNoNeed, Duplicated(θ, v),
+                Const(_f), Const(f.f),
+                args...)[1]
         end
     else
         hv = f.hv
