@@ -14,7 +14,7 @@ Pkg.add(&quot;Optimization&quot;)</code></pre><p>The packages relevant to the co
   [b6b21f68] Ipopt v1.4.1
   [c8e1da08] IterTools v1.8.0
   [2ddba703] Juniper v0.9.1
-  [961ee093] ModelingToolkit v8.62.0
+  [961ee093] ModelingToolkit v8.63.0
   [76087f3c] NLopt v0.6.5
   [7f7a1694] Optimization v3.15.2 `~/work/Optimization.jl/Optimization.jl`
   [3e6eede4] OptimizationBBO v0.1.4
@@ -27,22 +27,22 @@ Pkg.add(&quot;Optimization&quot;)</code></pre><p>The packages relevant to the co
   [4e6fcdb7] OptimizationNLopt v0.1.7
   [2cab0595] OptimizationNOMAD v0.1.3
   [36348300] OptimizationOptimJL v0.1.9
-  [42dfb2eb] OptimizationOptimisers v0.1.4
+  [42dfb2eb] OptimizationOptimisers v0.1.5
   [3d669222] OptimizationSpeedMapping v0.1.5
   [1dea7af3] OrdinaryDiffEq v6.53.3
-  [37e2e3b7] ReverseDiff v1.14.6
-  [1ed8b502] SciMLSensitivity v7.35.0
+  [37e2e3b7] ReverseDiff v1.15.0
+⌃ [1ed8b502] SciMLSensitivity v7.35.0
   [9f7883ad] Tracker v0.2.26
   [e88e6eb3] Zygote v0.6.62
 ⌅ [9cc047cb] Ipopt_jll v300.1400.400+0
-Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated`</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.9.2
+Info Packages marked with ⌃ and ⌅ have new versions available, but those with ⌅ are restricted by compatibility constraints from upgrading. To see why use `status --outdated`</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.9.2
 Commit e4ee485e909 (2023-07-05 09:39 UTC)
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 2 × Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz
+  CPU: 2 × Intel(R) Xeon(R) CPU E5-2673 v4 @ 2.30GHz
   WORD_SIZE: 64
   LIBM: libopenlibm
-  LLVM: libLLVM-14.0.6 (ORCJIT, icelake-server)
+  LLVM: libLLVM-14.0.6 (ORCJIT, broadwell)
   Threads: 1 on 2 virtual cores</code></pre></details><details><summary>A more complete overview of all dependencies and their versions is also provided.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Optimization.jl/Optimization.jl/docs/Manifest.toml`
   [47edcb42] ADTypes v0.1.5
   [14f7f29c] AMD v0.5.0
@@ -76,7 +76,7 @@ Platform Info:
   [1af6417a] CUDA_Runtime_Discovery v0.2.2
   [49dc2e85] Calculus v0.5.1
   [7057c7e9] Cassette v0.3.11
-  [082447d4] ChainRules v1.52.1
+  [082447d4] ChainRules v1.53.0
   [d360d2e6] ChainRulesCore v1.16.0
   [fb6a15b2] CloseOpenIntervals v0.1.12
   [523fee87] CodecBzip2 v0.7.2
@@ -90,7 +90,7 @@ Platform Info:
   [a33af91c] CompositionsBase v0.1.2
   [f0e56b4a] ConcurrentUtilities v2.2.1
   [88cd18e8] ConsoleProgressMonitor v0.1.2
-  [187b0558] ConstructionBase v1.5.2
+  [187b0558] ConstructionBase v1.5.3
   [6add18c4] ContextVariablesX v0.1.3
   [a2441757] Coverage v1.6.0
   [c36e975a] CoverageTools v1.3.0
@@ -101,12 +101,12 @@ Platform Info:
   [e2d170a0] DataValueInterfaces v1.0.0
   [244e2a9f] DefineSingletons v0.1.2
   [8bb1440f] DelimitedFiles v1.9.1
-  [2b5f629d] DiffEqBase v6.126.0
+  [2b5f629d] DiffEqBase v6.127.0
   [459566f4] DiffEqCallbacks v2.26.1
   [77a26b50] DiffEqNoiseProcess v5.17.2
   [163ba53b] DiffResults v1.1.0
   [b552c78f] DiffRules v1.15.1
-  [b4f34e82] Distances v0.10.8
+  [b4f34e82] Distances v0.10.9
   [31c24e10] Distributions v0.25.98
   [ffbed154] DocStringExtensions v0.9.3
   [e30172f5] Documenter v0.27.25
@@ -116,7 +116,7 @@ Platform Info:
 ⌅ [7c1d4256] DynamicPolynomials v0.4.6
   [da5c29d0] EllipsisNotation v1.7.0
   [4e289a0a] EnumX v1.0.4
-  [7da242da] Enzyme v0.11.5
+  [7da242da] Enzyme v0.11.6
   [f151be2c] EnzymeCore v0.5.1
   [86b6b26d] Evolutionary v0.11.1
   [460bff9d] ExceptionUnwrapping v0.1.9
@@ -124,10 +124,10 @@ Platform Info:
   [e2ba6199] ExprTools v0.1.9
   [cc61a311] FLoops v0.2.1
   [b9860ae5] FLoopsBase v0.1.1
-  [7034ab61] FastBroadcast v0.2.5
+  [7034ab61] FastBroadcast v0.2.6
   [9aa1b823] FastClosures v0.3.2
   [29a986be] FastLapackInterface v2.0.0
-  [1a297f60] FillArrays v1.4.0
+  [1a297f60] FillArrays v1.4.2
   [6a86dc24] FiniteDiff v2.21.1
 ⌅ [587475ba] Flux v0.13.17
   [59287772] Formatting v0.4.2
@@ -135,7 +135,7 @@ Platform Info:
   [069b7b12] FunctionWrappers v1.1.3
   [77dc65aa] FunctionWrappersWrappers v0.1.3
   [d9f16b24] Functors v0.4.5
-  [4aa9d100] GCMAES v0.1.32
+  [4aa9d100] GCMAES v0.1.33
   [0c68f7d7] GPUArrays v8.8.1
   [46192b85] GPUArraysCore v0.1.5
   [61eb1bfa] GPUCompiler v0.21.4
@@ -148,7 +148,7 @@ Platform Info:
   [cd3eb016] HTTP v1.9.14
   [87dc4568] HiGHS v1.5.2
   [3e5b6fbb] HostCPUFeatures v0.1.15
-  [34004b35] HypergeometricFunctions v0.3.20
+  [34004b35] HypergeometricFunctions v0.3.21
   [b5f81e59] IOCapture v0.2.3
   [7869d1d1] IRTools v0.4.10
   [615f187c] IfElse v0.1.1
@@ -165,11 +165,11 @@ Platform Info:
   [682c06a0] JSON v0.21.4
   [98e50ef6] JuliaFormatter v1.0.34
   [b14d175d] JuliaVariables v0.2.4
-  [ccbc3e58] JumpProcesses v9.6.4
+  [ccbc3e58] JumpProcesses v9.7.2
   [2ddba703] Juniper v0.9.1
   [ef3ab10e] KLU v0.4.0
-  [63c18a36] KernelAbstractions v0.9.7
-  [ba0b0d4f] Krylov v0.9.1
+  [63c18a36] KernelAbstractions v0.9.8
+  [ba0b0d4f] Krylov v0.9.2
   [40e66cde] LDLFactorizations v0.10.0
   [929cbde3] LLVM v6.1.0
   [b964fa9f] LaTeXStrings v1.3.0
@@ -182,10 +182,10 @@ Platform Info:
   [2d8b4e74] LevyArea v1.0.0
   [d3d80556] LineSearches v7.2.0
   [5c8ed15e] LinearOperators v2.5.2
-  [7ed4a6bd] LinearSolve v2.3.0
+  [7ed4a6bd] LinearSolve v2.4.1
   [2ab3a3ac] LogExpFunctions v0.3.24
   [e6f89c97] LoggingExtras v1.0.0
-  [bdcacae8] LoopVectorization v0.12.163
+  [bdcacae8] LoopVectorization v0.12.164
   [d8e11817] MLStyle v0.4.17
   [f1d291b0] MLUtils v0.4.3
   [1914dd2f] MacroTools v0.5.10
@@ -196,7 +196,7 @@ Platform Info:
   [bcdb8e00] Metaheuristics v3.3.2
   [128add7d] MicroCollections v0.1.4
   [e1d29d7a] Missings v1.1.0
-  [961ee093] ModelingToolkit v8.62.0
+  [961ee093] ModelingToolkit v8.63.0
   [46d2c3a1] MuladdMacro v0.2.4
   [3933049c] MultistartOptimization v0.2.2
 ⌅ [102ac46a] MultivariatePolynomials v0.4.7
@@ -227,22 +227,23 @@ Platform Info:
   [4e6fcdb7] OptimizationNLopt v0.1.7
   [2cab0595] OptimizationNOMAD v0.1.3
   [36348300] OptimizationOptimJL v0.1.9
-  [42dfb2eb] OptimizationOptimisers v0.1.4
+  [42dfb2eb] OptimizationOptimisers v0.1.5
   [3d669222] OptimizationSpeedMapping v0.1.5
-  [bac558e1] OrderedCollections v1.6.0
+  [bac558e1] OrderedCollections v1.6.2
   [1dea7af3] OrdinaryDiffEq v6.53.3
   [90014a1f] PDMats v0.11.17
+  [65ce6f38] PackageExtensionCompat v1.0.0
   [d96e819e] Parameters v0.12.3
   [69de0a69] Parsers v2.7.1
   [e409e4f3] PoissonRandom v0.4.4
-  [f517fe37] Polyester v0.7.3
+  [f517fe37] Polyester v0.7.5
   [1d0040c9] PolyesterWeave v0.2.1
   [85a6dd25] PositiveFactorizations v0.2.4
   [d236fae5] PreallocationTools v0.4.12
   [aea7be01] PrecompileTools v1.1.2
   [21216c6a] Preferences v1.4.0
   [8162dcfd] PrettyPrint v0.2.0
-  [27ebfcd6] Primes v0.5.3
+  [27ebfcd6] Primes v0.5.4
   [33c8b6b6] ProgressLogging v0.1.4
   [92933f4c] ProgressMeter v1.7.2
   [10f199a5] QPSReader v0.2.1
@@ -257,22 +258,22 @@ Platform Info:
   [189a3867] Reexport v1.2.2
   [ae029012] Requires v1.3.0
   [ae5879a3] ResettableStacks v1.1.1
-  [37e2e3b7] ReverseDiff v1.14.6
+  [37e2e3b7] ReverseDiff v1.15.0
   [79098fc4] Rmath v0.7.1
 ⌅ [7e49a35a] RuntimeGeneratedFunctions v0.5.9
   [94e857df] SIMDTypes v0.1.0
   [476501e8] SLEEFPirates v0.6.39
   [322a6be2] Sass v0.2.0
-  [0bca4576] SciMLBase v1.93.2
+  [0bca4576] SciMLBase v1.93.4
   [e9a6253c] SciMLNLSolve v0.1.8
-  [c0aeaf25] SciMLOperators v0.3.3
-  [1ed8b502] SciMLSensitivity v7.35.0
+  [c0aeaf25] SciMLOperators v0.3.5
+⌃ [1ed8b502] SciMLSensitivity v7.35.0
   [6c6a2e73] Scratch v1.2.0
   [eb7571c6] SearchSpaces v0.2.0
   [efcf1570] Setfield v1.1.1
   [605ecd9f] ShowCases v0.1.0
   [777ac1f9] SimpleBufferStream v1.1.0
-  [727e6d20] SimpleNonlinearSolve v0.1.16
+  [727e6d20] SimpleNonlinearSolve v0.1.18
   [699a6c99] SimpleTraits v0.9.4
   [ce78b400] SimpleUnPack v1.1.0
   [66db9d55] SnoopPrecompile v1.0.3
@@ -285,10 +286,10 @@ Platform Info:
   [f1835b91] SpeedMapping v0.3.0
   [171d559e] SplittablesBase v0.1.15
   [cae243ae] StackViews v0.1.1
-  [aedffcd0] Static v0.8.7
+  [aedffcd0] Static v0.8.8
   [0d7ed370] StaticArrayInterface v1.4.0
-  [90137ffa] StaticArrays v1.6.1
-  [1e83bf80] StaticArraysCore v1.4.1
+  [90137ffa] StaticArrays v1.6.2
+  [1e83bf80] StaticArraysCore v1.4.2
   [82ae8749] StatsAPI v1.6.0
 ⌅ [2913bbd2] StatsBase v0.33.21
   [4c63d2b9] StatsFuns v1.3.0
@@ -307,7 +308,7 @@ Platform Info:
   [0796e94c] Tokenize v0.5.25
   [9f7883ad] Tracker v0.2.26
   [3bb67fe8] TranscodingStreams v0.9.13
-  [28d57a85] Transducers v0.4.77
+  [28d57a85] Transducers v0.4.78
   [a2a6695c] TreeViews v0.3.0
   [d5829a12] TriangularSolve v0.1.19
   [410a4b4d] Tricks v0.1.7
@@ -329,7 +330,7 @@ Platform Info:
   [4ee394cb] CUDA_Driver_jll v0.5.0+1
   [76a88914] CUDA_Runtime_jll v0.6.0+0
   [62b44479] CUDNN_jll v8.9.2+0
-  [7cc45869] Enzyme_jll v0.0.75+0
+  [7cc45869] Enzyme_jll v0.0.78+0
   [528830af] Gumbo_jll v0.10.2+0
   [8fd58aa0] HiGHS_jll v1.5.3+0
 ⌅ [9cc047cb] Ipopt_jll v300.1400.400+0
@@ -391,6 +392,6 @@ Platform Info:
   [8e850b90] libblastrampoline_jll v5.8.0+0
   [8e850ede] nghttp2_jll v1.48.0+0
   [3f19e933] p7zip_jll v17.4.0+0
-Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details>You can also download the
+Info Packages marked with ⌃ and ⌅ have new versions available, but those with ⌅ are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details>You can also download the
 <a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.15.2/assets/Manifest.toml">manifest</a> file and the
-<a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.15.2/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/">Getting Started with Optimization in Julia »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Friday 14 July 2023 12:29">Friday 14 July 2023</span>. Using Julia version 1.9.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v3.15.2/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/">Getting Started with Optimization in Julia »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Monday 24 July 2023 05:02">Monday 24 July 2023</span>. Using Julia version 1.9.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
