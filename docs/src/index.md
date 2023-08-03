@@ -6,7 +6,7 @@ a uniform interface to >25 optimization libraries, hence 100+ optimization solve
 encompassing almost all classes of optimization algorithms such as global, mixed-integer,
 non-convex, second-order local, constrained, etc. It allows you to choose an
 Automatic Differentiation (AD) backend by simply passing an argument to indicate
-the package to use and autmatically generates the efficient derivatives of the
+the package to use and automatically generates the efficient derivatives of the
 objective and constraints while giving you the flexibility to switch between
 different AD engines as per your problem. Additionally, Optimization.jl takes
 care of passing problem specific information to solvers that can leverage it
