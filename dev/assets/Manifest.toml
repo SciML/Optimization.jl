@@ -11,9 +11,9 @@ version = "0.1.6"
 
 [[deps.AMD]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse_jll"]
-git-tree-sha1 = "7e075388abb011075d994e735474ebeed0f24c4f"
+git-tree-sha1 = "d4b99dd70d7136fe75ec74d072191d688448d39c"
 uuid = "14f7f29c-3bd6-536c-9a0b-7339e30b5a3e"
-version = "0.5.1"
+version = "0.5.2"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -891,9 +891,9 @@ version = "1.4.1"
 
 [[deps.JMcDM]]
 deps = ["Requires"]
-git-tree-sha1 = "0a0c3bc051c858f6c9c11afbbfd1e180b2ab7261"
+git-tree-sha1 = "02959d1c7a79d31a260732b759a7fc8999fbfb51"
 uuid = "358108f5-d052-4d0a-8344-d5384e00c0e5"
-version = "0.7.5"
+version = "0.7.6"
 
 [[deps.JSON]]
 deps = ["Dates", "Mmap", "Parsers", "Unicode"]
