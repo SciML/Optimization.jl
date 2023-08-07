@@ -136,7 +136,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     _loss = function (θ)
         x = cache.f(θ, cache.p)
-        cache.callback(θ, x...)
+        if cache.callback(θ, x...)
+            error("Optimization halted by callback.")
+        end
         return x[1]
     end
 
