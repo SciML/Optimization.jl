@@ -9,7 +9,6 @@ isdefined(Base, :get_extension) ? (using ReverseDiff, ReverseDiff.ForwardDiff) :
 function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
     p = SciMLBase.NullParameters(),
     num_cons = 0)
-
     _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
@@ -84,13 +83,11 @@ end
 
 function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     adtype::AutoReverseDiff, num_cons = 0)
-
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
 
     if f.grad === nothing
         cfg = ReverseDiff.GradientConfig(cache.u0)
-        grad = (res, θ, args...) -> ReverseDiff.gradient!(res, x -> _f(x, args...), θ,
-            )
+        grad = (res, θ, args...) -> ReverseDiff.gradient!(res, x -> _f(x, args...), θ)
     else
         grad = (G, θ, args...) -> f.grad(G, θ, cache.p, args...)
     end

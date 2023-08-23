@@ -8,7 +8,6 @@ isdefined(Base, :get_extension) ? (using Zygote, Zygote.ForwardDiff) :
 
 function Optimization.instantiate_function(f, x, adtype::AutoZygote, p,
     num_cons = 0)
-
     _f = (θ, args...) -> f(θ, p, args...)[1]
     if f.grad === nothing
         grad = (res, θ, args...) -> false ?

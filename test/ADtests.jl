@@ -135,7 +135,6 @@ H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 H3 == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 
-
 optf = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(true, true),
     cons = con2_c)
 optprob = Optimization.instantiate_function(optf, x0,

@@ -116,11 +116,10 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
                     el .= zeros(length(θ))
                 end
                 Enzyme.autodiff(Enzyme.Forward,
-                                f2,
-                                Enzyme.BatchDuplicated(θ, vdθ),
-                                Enzyme.BatchDuplicated(bθ, vdbθ),
-                                Const(fncs[i]),
-                                )
+                    f2,
+                    Enzyme.BatchDuplicated(θ, vdθ),
+                    Enzyme.BatchDuplicated(bθ, vdbθ),
+                    Const(fncs[i]))
 
                 for j in eachindex(θ)
                     res[i][j, :] .= vdbθ[j]
