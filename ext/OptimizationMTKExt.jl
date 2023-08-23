@@ -31,11 +31,16 @@ function Optimization.instantiate_function(f, x, adtype::AutoModelingToolkit, p,
         H .= res * v
     end
 
-    cons = (res, θ) -> f.cons(res, θ, p)
+    if !isnothing(f.cons)
+        cons = (res, θ) -> f.cons(res, θ, p)
+        cons_j = (J, θ) -> f.cons_j(J, θ, p)
+        cons_h = (res, θ) -> f.cons_h(res, θ, p)
+    else
+        cons = nothing
+        cons_j = nothing
+        cons_h = nothing
+    end
 
-    cons_j = (J, θ) -> f.cons_j(J, θ, p)
-
-    cons_h = (res, θ) -> f.cons_h(res, θ, p)
     return OptimizationFunction{true}(f.f, adtype; grad = grad, hess = hess, hv = hv,
         cons = cons, cons_j = cons_j, cons_h = cons_h,
         hess_prototype = f.hess_prototype,
@@ -71,11 +76,16 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
         H .= res * v
     end
 
-    cons = (res, θ) -> f.cons(res, θ, cache.p)
+    if !isnothing(f.cons)
+        cons = (res, θ) -> f.cons(res, θ, cache.p)
+        cons_j = (J, θ) -> f.cons_j(J, θ, cache.p)
+        cons_h = (res, θ) -> f.cons_h(res, θ, cache.p)
+    else
+        cons = nothing
+        cons_j = nothing
+        cons_h = nothing
+    end
 
-    cons_j = (J, θ) -> f.cons_j(J, θ, cache.p)
-
-    cons_h = (res, θ) -> f.cons_h(res, θ, cache.p)
     return OptimizationFunction{true}(f.f, adtype; grad = grad, hess = hess, hv = hv,
         cons = cons, cons_j = cons_j, cons_h = cons_h,
         hess_prototype = f.hess_prototype,
