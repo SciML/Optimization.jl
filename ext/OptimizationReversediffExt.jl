@@ -1,4 +1,4 @@
-module OptimizationReversediffExt
+module OptimizationReverseDiffExt
 
 import SciMLBase: OptimizationFunction
 import Optimization
