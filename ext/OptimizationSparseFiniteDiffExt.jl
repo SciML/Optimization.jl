@@ -1,4 +1,4 @@
-module OptimizationSparseFinitediffExt
+module OptimizationSparseFiniteDiffExt
 
 import SciMLBase: OptimizationFunction
 import Optimization, ArrayInterface
