@@ -1,10 +1,10 @@
 module OptimizationSparseFiniteDiffExt
 
-import SciMLBase: OptimizationFunction
 import Optimization, ArrayInterface
-import ADTypes: AutoSparseFiniteDiff
-import Symbolics
-using LinearAlgebra
+import Optimization.SciMLBase: OptimizationFunction
+import Optimization.ADTypes: AutoSparseFiniteDiff
+import Optimization.Symbolics
+using Optimization.LinearAlgebra
 isdefined(Base, :get_extension) ? (using FiniteDiff, SparseDiffTools) :
 (using ..FiniteDiff, ..SparseDiffTools)
 
