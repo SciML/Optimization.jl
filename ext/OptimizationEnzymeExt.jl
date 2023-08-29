@@ -1,9 +1,9 @@
 module OptimizationEnzymeExt
 
-import SciMLBase: OptimizationFunction
-import Optimization, ArrayInterface
-import LinearAlgebra: I
-import ADTypes: AutoEnzyme
+import Optimization, Optimization.ArrayInterface
+import Optimization.SciMLBase: OptimizationFunction
+import Optimization.LinearAlgebra: I
+import Optimization.ADTypes: AutoEnzyme
 isdefined(Base, :get_extension) ? (using Enzyme) : (using ..Enzyme)
 
 function Optimization.instantiate_function(f::OptimizationFunction{true}, x,

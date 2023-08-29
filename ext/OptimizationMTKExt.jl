@@ -1,9 +1,9 @@
 module OptimizationMTKExt
 
-import SciMLBase
-import SciMLBase: OptimizationFunction
-import Optimization, ArrayInterface
-import ADTypes: AutoModelingToolkit
+import Optimization, Optimization.ArrayInterface
+import Optimization.SciMLBase
+import Optimization.SciMLBase: OptimizationFunction
+import Optimization.ADTypes: AutoModelingToolkit
 isdefined(Base, :get_extension) ? (using ModelingToolkit) : (using ..ModelingToolkit)
 
 function Optimization.instantiate_function(f, x, adtype::AutoModelingToolkit, p,
