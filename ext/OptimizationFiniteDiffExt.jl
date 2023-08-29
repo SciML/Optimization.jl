@@ -1,9 +1,9 @@
 module OptimizationFiniteDiffExt
 
-import SciMLBase: OptimizationFunction
-import Optimization, ArrayInterface
-import ADTypes: AutoFiniteDiff
-using LinearAlgebra
+import Optimization, Optimization.ArrayInterface
+import Optimization.SciMLBase: OptimizationFunction
+import Optimization.ADTypes: AutoFiniteDiff
+using Optimization.LinearAlgebra
 isdefined(Base, :get_extension) ? (using FiniteDiff) : (using ..FiniteDiff)
 
 const FD = FiniteDiff
