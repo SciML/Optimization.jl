@@ -1,8 +1,8 @@
 module OptimizationReverseDiffExt
 
-import SciMLBase: OptimizationFunction
 import Optimization
-import ADTypes: AutoReverseDiff
+import Optimization.SciMLBase: OptimizationFunction
+import Optimization.ADTypes: AutoReverseDiff
 isdefined(Base, :get_extension) ? (using ReverseDiff, ReverseDiff.ForwardDiff) :
 (using ..ReverseDiff, ..ReverseDiff.ForwardDiff)
 
