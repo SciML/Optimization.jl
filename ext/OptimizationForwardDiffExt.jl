@@ -1,8 +1,8 @@
 module OptimizationForwardDiffExt
 
-import SciMLBase: OptimizationFunction
-import Optimization, ArrayInterface
-import ADTypes: AutoForwardDiff
+import Optimization.SciMLBase: OptimizationFunction
+import Optimization, Optimization.ArrayInterface
+import Optimization.ADTypes: AutoForwardDiff
 isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 
 function default_chunk_size(len)
