@@ -3,7 +3,7 @@ module OptimizationSparseForwardDiffExt
 import Optimization, Optimization.ArrayInterface
 import Optimization.SciMLBase: OptimizationFunction
 import Optimization.ADTypes: AutoSparseForwardDiff
-import Optimization.Symbolics
+import Symbolics
 using Optimization.LinearAlgebra
 isdefined(Base, :get_extension) ? (using ForwardDiff, SparseDiffTools) :
 (using ..ForwardDiff, ..SparseDiffTools)
