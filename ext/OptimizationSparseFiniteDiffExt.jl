@@ -3,10 +3,9 @@ module OptimizationSparseFiniteDiffExt
 import Optimization, Optimization.ArrayInterface
 import Optimization.SciMLBase: OptimizationFunction
 import Optimization.ADTypes: AutoSparseFiniteDiff
-import Symbolics
 using Optimization.LinearAlgebra
-isdefined(Base, :get_extension) ? (using FiniteDiff, SparseDiffTools) :
-(using ..FiniteDiff, ..SparseDiffTools)
+isdefined(Base, :get_extension) ? (using FiniteDiff, SparseDiffTools, Symbolics) :
+(using ..FiniteDiff, ..SparseDiffTools, ..Symbolics)
 
 const FD = FiniteDiff
 

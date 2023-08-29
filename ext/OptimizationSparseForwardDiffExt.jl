@@ -3,10 +3,9 @@ module OptimizationSparseForwardDiffExt
 import Optimization, Optimization.ArrayInterface
 import Optimization.SciMLBase: OptimizationFunction
 import Optimization.ADTypes: AutoSparseForwardDiff
-import Symbolics
 using Optimization.LinearAlgebra
-isdefined(Base, :get_extension) ? (using ForwardDiff, SparseDiffTools) :
-(using ..ForwardDiff, ..SparseDiffTools)
+isdefined(Base, :get_extension) ? (using ForwardDiff, SparseDiffTools, Symbolics) :
+(using ..ForwardDiff, ..SparseDiffTools, ..Symbolics)
 
 function default_chunk_size(len)
     if len < ForwardDiff.DEFAULT_CHUNK_THRESHOLD
