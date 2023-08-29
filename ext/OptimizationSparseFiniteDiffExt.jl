@@ -1,6 +1,6 @@
 module OptimizationSparseFiniteDiffExt
 
-import Optimization, ArrayInterface
+import Optimization, Optimization.ArrayInterface
 import Optimization.SciMLBase: OptimizationFunction
 import Optimization.ADTypes: AutoSparseFiniteDiff
 import Optimization.Symbolics
