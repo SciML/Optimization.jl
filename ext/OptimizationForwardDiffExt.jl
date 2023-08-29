@@ -1,7 +1,7 @@
 module OptimizationForwardDiffExt
 
-import Optimization.SciMLBase: OptimizationFunction
 import Optimization, Optimization.ArrayInterface
+import Optimization.SciMLBase: OptimizationFunction
 import Optimization.ADTypes: AutoForwardDiff
 isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 
