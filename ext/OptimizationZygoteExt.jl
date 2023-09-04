@@ -80,7 +80,6 @@ end
 
 function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     adtype::AutoZygote, num_cons = 0)
-    num_cons != 0 && error("AutoZygote does not currently support constraints")
 
     _f = (θ, args...) -> f(θ, cache.p, args...)[1]
     if f.grad === nothing
