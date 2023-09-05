@@ -156,6 +156,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
     if f.grad === nothing
         function grad(res, θ, args...)
             res .= zero(eltype(res))
+            println("objgrad")
             Enzyme.autodiff(Enzyme.Reverse,
                 Const(firstapply),
                 Active,

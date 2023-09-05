@@ -36,8 +36,7 @@ OptimizationFiniteDiffExt = "FiniteDiff"
 OptimizationForwardDiffExt = "ForwardDiff"
 OptimizationMTKExt = "ModelingToolkit"
 OptimizationReverseDiffExt = "ReverseDiff"
-OptimizationSparseFiniteDiffExt = ["SparseDiffTools", "FiniteDiff", "Symbolics"]
-OptimizationSparseForwardDiffExt = ["SparseDiffTools", "ForwardDiff", "Symbolics"]
+OptimizationSparseDiffExt = ["SparseDiffTools", "Symbolics", "ReverseDiff"]
 OptimizationTrackerExt = "Tracker"
 OptimizationZygoteExt = "Zygote"
 
