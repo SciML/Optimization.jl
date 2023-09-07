@@ -107,8 +107,8 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
 
     if f.hess === nothing
         hesscfg = ForwardDiff.HessianConfig(_f, cache.u0, ForwardDiff.Chunk{chunksize}())
-        hess = (res, θ, args...) -> ForwardDiff.hessian!(res, x -> _f(x, args...), θ,
-            hesscfg, Val{false}())
+        hess = (res, θ, args...) -> (ForwardDiff.hessian!(res, x -> _f(x, args...), θ,
+            hesscfg, Val{false}()))
     else
         hess = (H, θ, args...) -> f.hess(H, θ, cache.p, args...)
     end
@@ -135,6 +135,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
             ForwardDiff.Chunk{chunksize}())
         cons_j = function (J, θ)
             ForwardDiff.jacobian!(J, cons_oop, θ, cjconfig)
+            println(J)
         end
     else
         cons_j = (J, θ) -> f.cons_j(J, θ, cache.p)
@@ -149,6 +150,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
             for i in 1:num_cons
                 ForwardDiff.hessian!(res[i], fncs[i], θ, hess_config_cache[i], Val{true}())
             end
+            # println(res)
         end
     else
         cons_h = (res, θ) -> f.cons_h(res, θ, cache.p)
