@@ -170,7 +170,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
 
     if f.hess === nothing
         function g(θ, bθ, f, p, args...)
-            Enzyme.autodiff_deferred(Enzyme.Reverse, Const(firstapply), Const(f),
+            Enzyme.autodiff_deferred(Enzyme.Reverse, Const(firstapply), Active, Const(f),
                 Enzyme.Duplicated(θ, bθ),
                 Const(p),
                 args...)
