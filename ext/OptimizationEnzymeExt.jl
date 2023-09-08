@@ -6,18 +6,23 @@ import Optimization.LinearAlgebra: I
 import Optimization.ADTypes: AutoEnzyme
 isdefined(Base, :get_extension) ? (using Enzyme) : (using ..Enzyme)
 
+@inline function firstapply(f, θ, p, args...)
+    first(f(θ, p, args...))
+end
+
 function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
     adtype::AutoEnzyme, p,
     num_cons = 0)
-    _f = (f, θ, args...) -> first(f(θ, p, args...))
 
     if f.grad === nothing
         function grad(res, θ, args...)
             res .= zero(eltype(res))
             Enzyme.autodiff(Enzyme.Reverse,
-                Const(_f),
+                Const(firstapply),
+                Active,
                 Const(f.f),
                 Enzyme.Duplicated(θ, res),
+                Const(p),
                 args...)
         end
     else
@@ -25,12 +30,14 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
     end
 
     if f.hess === nothing
-        function g(θ, bθ, _f, f, args...)
+        function g(θ, bθ, f, p, args...)
             Enzyme.autodiff_deferred(Enzyme.Reverse,
-                Const(_f),
+                Const(firstapply),
+                Active,
                 Const(f),
                 Enzyme.Duplicated(θ, bθ),
-                args...)
+                Const(p),
+                args...),
             return nothing
         end
         function hess(res, θ, args...)
@@ -43,8 +50,8 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
                 g,
                 Enzyme.BatchDuplicated(θ, vdθ),
                 Enzyme.BatchDuplicated(bθ, vdbθ),
-                Const(_f),
                 Const(f.f),
+                Const(p),
                 args...)
 
             for i in eachindex(θ)
@@ -56,17 +63,20 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
     end
 
     if f.hv === nothing
-        function f2(x, _f, f, args...)
+        function f2(x, f, p, args...)
             dx = zeros(length(x))
-            Enzyme.autodiff_deferred(Enzyme.Reverse, _f,
+            Enzyme.autodiff_deferred(Enzyme.Reverse,
+                firstapply,
+                Active,
                 f,
                 Enzyme.Duplicated(x, dx),
+                Const(p),
                 args...)
             return dx
         end
         hv = function (H, θ, v, args...)
             H .= Enzyme.autodiff(Enzyme.Forward, f2, DuplicatedNoNeed, Duplicated(θ, v),
-                Const(_f), Const(f.f),
+                Const(_f), Const(f.f), Const(p),
                 args...)[1]
         end
     else
@@ -141,15 +151,17 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
     cache::Optimization.ReInitCache,
     adtype::AutoEnzyme,
     num_cons = 0)
-    _f = (f, θ, args...) -> first(f(θ, cache.p, args...))
+    p = cache.p
 
     if f.grad === nothing
         function grad(res, θ, args...)
             res .= zero(eltype(res))
             Enzyme.autodiff(Enzyme.Reverse,
-                Const(_f),
+                Const(firstapply),
+                Active,
                 Const(f.f),
                 Enzyme.Duplicated(θ, res),
+                Const(p),
                 args...)
         end
     else
@@ -157,9 +169,10 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
     end
 
     if f.hess === nothing
-        function g(θ, bθ, _f, f, args...)
-            Enzyme.autodiff_deferred(Enzyme.Reverse, Const(_f), Const(f),
+        function g(θ, bθ, f, p, args...)
+            Enzyme.autodiff_deferred(Enzyme.Reverse, Const(firstapply), Active, Const(f),
                 Enzyme.Duplicated(θ, bθ),
+                Const(p),
                 args...)
             return nothing
         end
@@ -173,8 +186,8 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
                 g,
                 Enzyme.BatchDuplicated(θ, vdθ),
                 Enzyme.BatchDuplicated(bθ, vdbθ),
-                Const(_f),
                 Const(f.f),
+                Const(p),
                 args...)
 
             for i in eachindex(θ)
@@ -186,17 +199,18 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
     end
 
     if f.hv === nothing
-        function f2(x, _f, f, args...)
+        function f2(x, f, p, args...)
             dx = zeros(length(x))
-            Enzyme.autodiff_deferred(Enzyme.Reverse, _f,
+            Enzyme.autodiff_deferred(Enzyme.Reverse, firstapply, Active,
                 f,
                 Enzyme.Duplicated(x, dx),
+                Const(p),
                 args...)
             return dx
         end
         hv = function (H, θ, v, args...)
             H .= Enzyme.autodiff(Enzyme.Forward, f2, DuplicatedNoNeed, Duplicated(θ, v),
-                Const(_f), Const(f.f),
+                Const(f.f), Const(p),
                 args...)[1]
         end
     else
@@ -206,7 +220,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
     if f.cons === nothing
         cons = nothing
     else
-        cons = (res, θ) -> (f.cons(res, θ, cache.p); return nothing)
+        cons = (res, θ) -> (f.cons(res, θ, p); return nothing)
         cons_oop = (x) -> (_res = zeros(eltype(x), num_cons); cons(_res, x); _res)
     end
 
@@ -219,14 +233,14 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
             end
         end
     else
-        cons_j = (J, θ) -> f.cons_j(J, θ, cache.p)
+        cons_j = (J, θ) -> f.cons_j(J, θ, p)
     end
 
     if cons !== nothing && f.cons_h === nothing
         fncs = map(1:num_cons) do i
             function (x)
                 res = zeros(eltype(x), num_cons)
-                f.cons(res, x, cache.p)
+                f.cons(res, x, p)
                 return res[i]
             end
         end
@@ -241,7 +255,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
             end
         end
     else
-        cons_h = (res, θ) -> f.cons_h(res, θ, cache.p)
+        cons_h = (res, θ) -> f.cons_h(res, θ, p)
     end
 
     return OptimizationFunction{true}(f.f, adtype; grad = grad, hess = hess, hv = hv,
