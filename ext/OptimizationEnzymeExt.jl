@@ -7,7 +7,12 @@ import Optimization.ADTypes: AutoEnzyme
 isdefined(Base, :get_extension) ? (using Enzyme) : (using ..Enzyme)
 
 @inline function firstapply(f, θ, p, args...)
-    first(f(θ, p, args...))
+    res = f(θ, p, args...)
+    if isa(res, AbstractFloat)
+        res
+    else
+        first(res)
+    end
 end
 
 function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
