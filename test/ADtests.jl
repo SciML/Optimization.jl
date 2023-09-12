@@ -84,6 +84,9 @@ H3 = [Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 @test H3 == [[2.0 0.0; 0.0 2.0]]
 
+G2 = Array{Float64}(undef, 2)
+H2 = Array{Float64}(undef, 2, 2)
+
 optf = OptimizationFunction(rosenbrock, Optimization.AutoEnzyme(), cons = con2_c)
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoEnzyme(),
     nothing, 2)
@@ -101,6 +104,9 @@ H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 H3 == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 
+G2 = Array{Float64}(undef, 2)
+H2 = Array{Float64}(undef, 2, 2)
+
 optf = OptimizationFunction(rosenbrock, Optimization.AutoReverseDiff(), cons = con2_c)
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoReverseDiff(),
     nothing, 2)
@@ -117,6 +123,9 @@ optprob.cons_j(J, [5.0, 3.0])
 H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 H3 == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
+
+G2 = Array{Float64}(undef, 2)
+H2 = Array{Float64}(undef, 2, 2)
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote(), cons = con2_c)
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoZygote(),

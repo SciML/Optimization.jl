@@ -90,7 +90,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
 
     if f.hess === nothing
         hess = function (res, θ, args...)
-            res .= ReverseDiff.gradient(x -> _f(x, args...), θ)
+            ReverseDiff.hessian!(res, x -> _f(x, args...), θ)
         end
     else
         hess = (H, θ, args...) -> f.hess(H, θ, cache.p, args...)
