@@ -107,8 +107,8 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
 
     if f.hess === nothing
         hesscfg = ForwardDiff.HessianConfig(_f, cache.u0, ForwardDiff.Chunk{chunksize}())
-        hess = (res, θ, args...) -> ForwardDiff.hessian!(res, x -> _f(x, args...), θ,
-            hesscfg, Val{false}())
+        hess = (res, θ, args...) -> (ForwardDiff.hessian!(res, x -> _f(x, args...), θ,
+            hesscfg, Val{false}()))
     else
         hess = (H, θ, args...) -> f.hess(H, θ, cache.p, args...)
     end

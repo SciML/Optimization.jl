@@ -3,6 +3,7 @@ module OptimizationReverseDiffExt
 import Optimization
 import Optimization.SciMLBase: OptimizationFunction
 import Optimization.ADTypes: AutoReverseDiff
+# using SparseDiffTools, Symbolics
 isdefined(Base, :get_extension) ? (using ReverseDiff, ReverseDiff.ForwardDiff) :
 (using ..ReverseDiff, ..ReverseDiff.ForwardDiff)
 
@@ -20,9 +21,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
 
     if f.hess === nothing
         hess = function (res, θ, args...)
-            res .= ForwardDiff.jacobian(θ) do θ
-                ReverseDiff.gradient(x -> _f(x, args...), θ)
-            end
+            ReverseDiff.hessian!(res, x -> _f(x, args...), θ)
         end
     else
         hess = (H, θ, args...) -> f.hess(H, θ, p, args...)
@@ -59,9 +58,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
         fncs = [(x) -> cons_oop(x)[i] for i in 1:num_cons]
         cons_h = function (res, θ)
             for i in 1:num_cons
-                res[i] .= ForwardDiff.jacobian(θ) do θ
-                    ReverseDiff.gradient(fncs[i], θ)
-                end
+                ReverseDiff.hessian!(res[i], fncs[i], θ)
             end
         end
     else
@@ -86,7 +83,6 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
 
     if f.grad === nothing
-        cfg = ReverseDiff.GradientConfig(cache.u0)
         grad = (res, θ, args...) -> ReverseDiff.gradient!(res, x -> _f(x, args...), θ)
     else
         grad = (G, θ, args...) -> f.grad(G, θ, cache.p, args...)
@@ -94,9 +90,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
 
     if f.hess === nothing
         hess = function (res, θ, args...)
-            res .= ForwardDiff.jacobian(θ) do θ
-                ReverseDiff.gradient(x -> _f(x, args...), θ)
-            end
+            ReverseDiff.hessian!(res, x -> _f(x, args...), θ)
         end
     else
         hess = (H, θ, args...) -> f.hess(H, θ, cache.p, args...)
@@ -133,9 +127,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
         fncs = [(x) -> cons_oop(x)[i] for i in 1:num_cons]
         cons_h = function (res, θ)
             for i in 1:num_cons
-                res[i] .= ForwardDiff.jacobian(θ) do θ
-                    ReverseDiff.gradient(fncs[i], θ)
-                end
+                ReverseDiff.hessian!(res[i], fncs[i], θ)
             end
         end
     else

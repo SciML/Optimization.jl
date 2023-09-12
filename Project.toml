@@ -17,7 +17,6 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 TerminalLoggers = "5d786b92-1e48-4d6f-9151-6b4477ca9bed"
 
 [weakdeps]
@@ -27,6 +26,7 @@ ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 SparseDiffTools = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
+Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
@@ -36,8 +36,7 @@ OptimizationFiniteDiffExt = "FiniteDiff"
 OptimizationForwardDiffExt = "ForwardDiff"
 OptimizationMTKExt = "ModelingToolkit"
 OptimizationReverseDiffExt = "ReverseDiff"
-OptimizationSparseFiniteDiffExt = ["SparseDiffTools", "FiniteDiff"]
-OptimizationSparseForwardDiffExt = ["SparseDiffTools", "ForwardDiff"]
+OptimizationSparseDiffExt = ["SparseDiffTools", "Symbolics", "ReverseDiff"]
 OptimizationTrackerExt = "Tracker"
 OptimizationZygoteExt = "Zygote"
 
@@ -58,3 +57,4 @@ julia = "1.6"
 
 [extras]
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
+Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"

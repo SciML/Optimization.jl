@@ -84,6 +84,9 @@ H3 = [Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 @test H3 == [[2.0 0.0; 0.0 2.0]]
 
+G2 = Array{Float64}(undef, 2)
+H2 = Array{Float64}(undef, 2, 2)
+
 optf = OptimizationFunction(rosenbrock, Optimization.AutoEnzyme(), cons = con2_c)
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoEnzyme(),
     nothing, 2)
@@ -101,6 +104,9 @@ H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 H3 == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 
+G2 = Array{Float64}(undef, 2)
+H2 = Array{Float64}(undef, 2, 2)
+
 optf = OptimizationFunction(rosenbrock, Optimization.AutoReverseDiff(), cons = con2_c)
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoReverseDiff(),
     nothing, 2)
@@ -117,6 +123,9 @@ optprob.cons_j(J, [5.0, 3.0])
 H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 H3 == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
+
+G2 = Array{Float64}(undef, 2)
+H2 = Array{Float64}(undef, 2, 2)
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote(), cons = con2_c)
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoZygote(),
@@ -472,6 +481,48 @@ optprob.cons_h(H3, x0)
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoSparseForwardDiff())
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoSparseForwardDiff(),
+    nothing)
+optprob.grad(G2, x0)
+@test G1≈G2 rtol=1e-6
+optprob.hess(H2, x0)
+@test H1≈H2 rtol=1e-6
+
+prob = OptimizationProblem(optf, x0)
+sol = solve(prob, Optim.BFGS())
+@test 10 * sol.objective < l1
+
+sol = solve(prob, Optim.Newton())
+@test 10 * sol.objective < l1
+
+sol = solve(prob, Optim.KrylovTrustRegion())
+@test sol.objective < l1
+
+sol = solve(prob, Optimisers.ADAM(0.1), maxiters = 1000)
+@test 10 * sol.objective < l1
+
+optf = OptimizationFunction(rosenbrock, Optimization.AutoSparseReverseDiff(), cons = con2_c)
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoSparseReverseDiff(),
+    nothing, 2)
+G2 = Array{Float64}(undef, 2)
+optprob.grad(G2, x0)
+@test G1≈G2 rtol=1e-4
+H2 = Array{Float64}(undef, 2, 2)
+optprob.hess(H2, x0)
+@test H1≈H2 rtol=1e-4
+res = Array{Float64}(undef, 2)
+optprob.cons(res, x0)
+@test res≈[0.0, 0.0] atol=1e-4
+optprob.cons(res, [1.0, 2.0])
+@test res ≈ [5.0, 0.682941969615793]
+J = Array{Float64}(undef, 2, 2)
+optprob.cons_j(J, [5.0, 3.0])
+@test all(isapprox(J, [10.0 6.0; -0.149013 -0.958924]; rtol = 1e-3))
+H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
+optprob.cons_h(H3, x0)
+@test H3 ≈ [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
+
+optf = OptimizationFunction(rosenbrock, Optimization.AutoSparseReverseDiff())
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoSparseReverseDiff(),
     nothing)
 optprob.grad(G2, x0)
 @test G1≈G2 rtol=1e-6
