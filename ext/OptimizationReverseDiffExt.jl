@@ -20,7 +20,6 @@ function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
     end
 
     if f.hess === nothing
-        
         hess = function (res, θ, args...)
             ReverseDiff.hessian!(res, x -> _f(x, args...), θ)
         end

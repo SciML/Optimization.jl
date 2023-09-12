@@ -325,7 +325,6 @@ function Optimization.instantiate_function(f, x, adtype::AutoSparseFiniteDiff, p
     end
     return OptimizationFunction{true}(f, adtype; grad = grad, hess = hess, hv = hv,
         cons = cons, cons_j = cons_j, cons_h = cons_h,
-        cons_jac_colorvec = f.cons_jac_colorvec,
         hess_prototype = f.hess_prototype,
         cons_jac_prototype = f.cons_jac_prototype,
         cons_hess_prototype = f.cons_hess_prototype,
@@ -447,7 +446,6 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     end
     return OptimizationFunction{true}(f, adtype; grad = grad, hess = hess, hv = hv,
         cons = cons, cons_j = cons_j, cons_h = cons_h,
-        cons_jac_colorvec = cons_jac_colorvec,
         hess_prototype = hess_sparsity,
         cons_jac_prototype = cons_jac_prototype,
         cons_hess_prototype = getfield.(hesscaches, :sparsity),
