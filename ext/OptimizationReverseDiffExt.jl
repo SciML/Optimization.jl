@@ -56,10 +56,10 @@ function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
     end
 
     if cons !== nothing && f.cons_h === nothing
-        
+        fncs = [(x) -> cons_oop(x)[i] for i in 1:num_cons]
         cons_h = function (res, θ)
             for i in 1:num_cons
-                ReverseDiff.gradient(res[i], fncs[i], θ)
+                ReverseDiff.hessian!(res[i], fncs[i], θ)
             end
         end
     else
@@ -90,12 +90,8 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     end
 
     if f.hess === nothing
-        hess_sparsity = Symbolics.hessian_sparsity(_f, cache.u0)
-        hess_colors = SparseDiffTools.matrix_colors(tril(hess_sparsity))
         hess = function (res, θ, args...)
-            res .= SparseDiffTools.forwarddiff_color_jacobian(θ, colorvec = hess_colors, sparsity = hess_sparsity) do θ
-                ReverseDiff.gradient(x -> _f(x, args...), θ)
-            end
+            res .= ReverseDiff.gradient(x -> _f(x, args...), θ)
         end
     else
         hess = (H, θ, args...) -> f.hess(H, θ, cache.p, args...)
@@ -130,13 +126,9 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
 
     if cons !== nothing && f.cons_h === nothing
         fncs = [(x) -> cons_oop(x)[i] for i in 1:num_cons]
-        conshess_sparsity = Symbolics.hessian_sparsity.(fncs, Ref(cache.u0))
-        conshess_colors = SparseDiffTools.matrix_colors.(conshess_sparsity)
         cons_h = function (res, θ)
             for i in 1:num_cons
-                res[i] .= SparseDiffTools.forwarddiff_color_jacobian(θ, colorvec = conshess_colors[i], sparsity = conshess_sparsity[i]) do θ
-                    ReverseDiff.gradient(fncs[i], θ)
-                end
+                ReverseDiff.hessian!(res[i], fncs[i], θ)
             end
         end
     else
