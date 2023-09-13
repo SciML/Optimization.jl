@@ -13,8 +13,27 @@ function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
     _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
-        cfg = ReverseDiff.GradientConfig(x)
-        grad = (res, θ, args...) -> ReverseDiff.gradient!(res, x -> _f(x, args...), θ, cfg)
+
+        if adtype.compile
+            _tape = ReverseDiff.GradientTape((x,)) do θ
+                _f(θ)
+            end
+            tape = ReverseDiff.compile(_tape)
+
+            grad = function (res, θ, args...)
+                tθ = ReverseDiff.input_hook(tape)
+                output = ReverseDiff.output_hook(tape)
+                ReverseDiff.unseed!(tθ) # clear any "leftover" derivatives from previous calls
+                ReverseDiff.value!(tθ, θ)
+                ReverseDiff.forward_pass!(tape)
+                ReverseDiff.increment_deriv!(output, one(eltype(θ)))
+                ReverseDiff.reverse_pass!(tape)
+                copyto!(res, ReverseDiff.deriv(tθ))
+            end
+        else
+            cfg = ReverseDiff.GradientConfig(x)
+            grad = (res, θ, args...) -> ReverseDiff.gradient!(res, x -> _f(x, args...), θ, cfg)
+        end
     else
         grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
     end

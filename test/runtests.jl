@@ -25,6 +25,9 @@ end
         @safetestset "AD Tests" begin
             include("ADtests.jl")
         end
+        @safetestset "AD Performance Regression Tests" begin
+            include("AD_performance_regression.jl")
+        end
         @safetestset "Mini batching" begin
             include("minibatch.jl")
         end
