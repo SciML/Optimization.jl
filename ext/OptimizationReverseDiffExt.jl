@@ -21,7 +21,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
             tape = ReverseDiff.compile(_tape)
 
             grad = function (res, θ, args...)
-                tθ = ReverseDiff.input_hook(tape)
+                tθ = ReverseDiff.input_hook(tape)[1]
                 output = ReverseDiff.output_hook(tape)
                 ReverseDiff.unseed!(tθ) # clear any "leftover" derivatives from previous calls
                 ReverseDiff.value!(tθ, θ)
@@ -29,6 +29,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
                 ReverseDiff.increment_deriv!(output, one(eltype(θ)))
                 ReverseDiff.reverse_pass!(tape)
                 copyto!(res, ReverseDiff.deriv(tθ))
+                nothing
             end
         else
             cfg = ReverseDiff.GradientConfig(x)

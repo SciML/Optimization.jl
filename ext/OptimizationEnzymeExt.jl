@@ -6,7 +6,7 @@ import Optimization.LinearAlgebra: I
 import Optimization.ADTypes: AutoEnzyme
 isdefined(Base, :get_extension) ? (using Enzyme) : (using ..Enzyme)
 
-@inline function firstapply(f, θ, p, args...)
+@inline function firstapply(f::F, θ, p, args...) where F
     res = f(θ, p, args...)
     if isa(res, AbstractFloat)
         res
