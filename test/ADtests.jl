@@ -124,6 +124,27 @@ H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 H3 == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 
+
+G2 = Array{Float64}(undef, 2)
+H2 = Array{Float64}(undef, 2, 2)
+
+optf = OptimizationFunction(rosenbrock, Optimization.AutoReverseDiff(), cons = con2_c)
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoReverseDiff(compile=true),
+    nothing, 2)
+optprob.grad(G2, x0)
+@test G1 == G2
+optprob.hess(H2, x0)
+@test H1 == H2
+res = Array{Float64}(undef, 2)
+optprob.cons(res, x0)
+@test res == [0.0, 0.0]
+J = Array{Float64}(undef, 2, 2)
+optprob.cons_j(J, [5.0, 3.0])
+@test all(isapprox(J, [10.0 6.0; -0.149013 -0.958924]; rtol = 1e-3))
+H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
+optprob.cons_h(H3, x0)
+H3 == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
+
 G2 = Array{Float64}(undef, 2)
 H2 = Array{Float64}(undef, 2, 2)
 
