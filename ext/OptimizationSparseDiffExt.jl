@@ -537,10 +537,13 @@ function Optimization.instantiate_function(f, x, adtype::AutoSparseReverseDiff,
 
     if f.hv === nothing
         hv = function (H, θ, v, args...)
-            _θ = ForwardDiff.Dual.(θ, v)
-            res = similar(_θ)
-            grad(res, _θ, args...)
-            H .= getindex.(ForwardDiff.partials.(res), 1)
+            # _θ = ForwardDiff.Dual.(θ, v)
+            # res = similar(_θ)
+            # grad(res, _θ, args...)
+            # H .= getindex.(ForwardDiff.partials.(res), 1)
+            res = zeros(length(θ), length(θ))
+            hess(res, θ, args...)
+            H .= res * v
         end
     else
         hv = f.hv
@@ -671,10 +674,13 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
 
     if f.hv === nothing
         hv = function (H, θ, v, args...)
-            _θ = ForwardDiff.Dual.(θ, v)
-            res = similar(_θ)
-            grad(res, _θ, args...)
-            H .= getindex.(ForwardDiff.partials.(res), 1)
+            # _θ = ForwardDiff.Dual.(θ, v)
+            # res = similar(_θ)
+            # grad(res, _θ, args...)
+            # H .= getindex.(ForwardDiff.partials.(res), 1)
+            res = zeros(length(θ), length(θ))
+            hess(res, θ, args...)
+            H .= res * v
         end
     else
         hv = f.hv
