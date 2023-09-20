@@ -9,10 +9,20 @@ isdefined(Base, :get_extension) ? (using ReverseDiff, ReverseDiff.ForwardDiff) :
 
 struct OptimizationReverseDiffTag end
 
+function default_chunk_size(len)
+    if len < ForwardDiff.DEFAULT_CHUNK_THRESHOLD
+        len
+    else
+        ForwardDiff.DEFAULT_CHUNK_THRESHOLD
+    end
+end
+
 function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
     p = SciMLBase.NullParameters(),
     num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, p, args...))
+    
+    chunksize = default_chunk_size(length(x))
 
     if f.grad === nothing
         if adtype.compile
@@ -32,14 +42,14 @@ function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
     if f.hess === nothing
         if adtype.compile
             T = ForwardDiff.Tag(OptimizationReverseDiffTag(),eltype(x))
-            xdual = ForwardDiff.Dual{typeof(T),eltype(x),length(x)}.(x, Ref(ForwardDiff.Partials((ones(eltype(x), length(x))...,))))
+            xdual = ForwardDiff.Dual{typeof(T),eltype(x),chunksize}.(x, Ref(ForwardDiff.Partials((ones(eltype(x), chunksize)...,))))
             h_tape = ReverseDiff.GradientTape(_f, xdual)
             htape = ReverseDiff.compile(h_tape)
             function g(θ)
                 res1 = zeros(eltype(θ), length(θ))
                 ReverseDiff.gradient!(res1, htape, θ)
             end
-            jaccfg = ForwardDiff.JacobianConfig(g, x, ForwardDiff.Chunk(x), T)
+            jaccfg = ForwardDiff.JacobianConfig(g, x, ForwardDiff.Chunk{chunksize}(), T)
             hess = function (res, θ, args...)
                 ForwardDiff.jacobian!(res, g, θ, jaccfg, Val{false}())
             end
@@ -100,7 +110,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
                 ReverseDiff.gradient!(res1, htape, θ)
             end
             gs = [x -> grad_cons(x, conshtapes[i]) for i in 1:num_cons]
-            jaccfgs = [ForwardDiff.JacobianConfig(gs[i], x, ForwardDiff.Chunk(x), T) for i in 1:num_cons]
+            jaccfgs = [ForwardDiff.JacobianConfig(gs[i], x, ForwardDiff.Chunk{chunksize}(), T) for i in 1:num_cons]
             cons_h = function (res, θ)
                 for i in 1:num_cons
                     ForwardDiff.jacobian!(res[i], gs[i], θ, jaccfgs[i], Val{false}())
@@ -134,6 +144,8 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     adtype::AutoReverseDiff, num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
 
+    chunksize = default_chunk_size(length(cache.u0))
+
     if f.grad === nothing
         if adtype.compile
             _tape = ReverseDiff.GradientTape(_f, cache.u0)
@@ -152,14 +164,14 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     if f.hess === nothing
         if adtype.compile
             T = ForwardDiff.Tag(OptimizationReverseDiffTag(),eltype(cache.u0))
-            xdual = ForwardDiff.Dual{typeof(T),eltype(cache.u0),length(cache.u0)}.(cache.u0, Ref(ForwardDiff.Partials((ones(eltype(cache.u0), length(cache.u0))...,))))
+            xdual = ForwardDiff.Dual{typeof(T),eltype(cache.u0),chunksize}.(cache.u0, Ref(ForwardDiff.Partials((ones(eltype(cache.u0), chunksize)...,))))
             h_tape = ReverseDiff.GradientTape(_f, xdual)
             htape = ReverseDiff.compile(h_tape)
             function g(θ)
                 res1 = zeros(eltype(θ), length(θ))
                 ReverseDiff.gradient!(res1, htape, θ)
             end
-            jaccfg = ForwardDiff.JacobianConfig(g, cache.u0, ForwardDiff.Chunk(cache.u0), T)
+            jaccfg = ForwardDiff.JacobianConfig(g, cache.u0, ForwardDiff.Chunk{chunksize}(), T)
             hess = function (res, θ, args...)
                 ForwardDiff.jacobian!(res, g, θ, jaccfg, Val{false}())
             end
@@ -220,7 +232,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
                 ReverseDiff.gradient!(res1, htape, θ)
             end
             gs = [x -> grad_cons(x, conshtapes[i]) for i in 1:num_cons]
-            jaccfgs = [ForwardDiff.JacobianConfig(gs[i], cache.u0, ForwardDiff.Chunk(cache.u0), T) for i in 1:num_cons]
+            jaccfgs = [ForwardDiff.JacobianConfig(gs[i], cache.u0, ForwardDiff.Chunk{chunksize}(), T) for i in 1:num_cons]
             cons_h = function (res, θ)
                 for i in 1:num_cons
                     ForwardDiff.jacobian!(res[i], gs[i], θ, jaccfgs[i], Val{false}())
