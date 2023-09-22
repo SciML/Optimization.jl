@@ -1,6 +1,6 @@
 name = "Optimization"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-version = "3.18.0"
+version = "3.19.0"
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
@@ -50,7 +50,7 @@ LoggingExtras = "0.4, 0.5, 1"
 ProgressLogging = "0.1"
 Reexport = "0.2, 1.0"
 Requires = "1.0"
-SciMLBase = "1.79.0"
+SciMLBase = "1.79.0, 2"
 Symbolics = "5"
 TerminalLoggers = "0.1"
 julia = "1.6"
