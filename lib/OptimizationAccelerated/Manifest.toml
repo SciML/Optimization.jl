@@ -905,7 +905,7 @@ version = "3.19.0"
 
 [[deps.OptimizationMOI]]
 deps = ["Ipopt_jll", "MathOptInterface", "ModelingToolkit", "Optimization", "Reexport", "SparseArrays", "Symbolics"]
-git-tree-sha1 = "0e6f35532f6b433818760ec9db5eaf623b8cba52"
+path = "../OptimizationMOI"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
 version = "0.1.15"
 

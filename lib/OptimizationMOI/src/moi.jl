@@ -13,24 +13,26 @@ struct MOIOptimizationCache{F <: OptimizationFunction, RC, LB, UB, I, S, EX,
 end
 
 function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
-    isnothing(prob.f.sys) &&
+    # _f = Optimization.instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p, length(prob.ucons)) 
+    f = Optimization.instantiate_function(prob.f, prob.u0, Optimization.AutoModelingToolkit(), prob.p, length(prob.ucons))
+    isnothing(f.sys) &&
         throw(ArgumentError("Expected an `OptimizationProblem` that was setup via an `OptimizationSystem`, consider `modelingtoolkitize(prob).`"))
 
     # TODO: check if the problem is at most bilinear, i.e. affine and or quadratic terms in two variables
-    expr_map = get_expr_map(prob.f.sys)
-    expr = repl_getindex!(convert_to_expr(MTK.subs_constants(MTK.objective(prob.f.sys)),
-        prob.f.sys; expand_expr = false, expr_map))
+    expr_map = get_expr_map(f.sys)
+    expr = repl_getindex!(convert_to_expr(MTK.subs_constants(MTK.objective(f.sys)),
+        f.sys; expand_expr = false, expr_map))
 
-    cons = MTK.constraints(prob.f.sys)
+    cons = MTK.constraints(f.sys)
     cons_expr = Vector{Expr}(undef, length(cons))
     Threads.@sync for i in eachindex(cons)
         Threads.@spawn cons_expr[i] = repl_getindex!(convert_to_expr(Symbolics.canonical_form(MTK.subs_constants(cons[i])),
-            prob.f.sys;
+            f.sys;
             expand_expr = false,
             expr_map))
     end
 
-    return MOIOptimizationCache(prob.f,
+    return MOIOptimizationCache(f,
         Optimization.ReInitCache(prob.u0, prob.p),
         prob.lb,
         prob.ub,
