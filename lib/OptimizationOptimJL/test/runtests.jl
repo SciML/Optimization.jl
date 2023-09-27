@@ -37,6 +37,15 @@ using Test
     sol = solve(prob, Optim.KrylovTrustRegion())
     @test 10 * sol.objective < l1
 
+    sol = solve(prob, Optim.BFGS(), maxiters = 1)
+    @test sol.original.iterations == 1
+
+    sol = solve(prob, Optim.BFGS(), maxiters = 1, local_maxiters = 2)
+    @test sol.original.iterations == 1
+
+    sol = solve(prob, Optim.BFGS(), local_maxiters = 2)
+    @test sol.original.iterations > 2
+
     cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit();
         cons = cons)
