@@ -21,6 +21,7 @@ function __map_optimizer_args(cache::OptimizationCache,
         Optim.SAMIN, Optim.ConstrainedOptimizer};
     callback = nothing,
     maxiters::Union{Number, Nothing} = nothing,
+    local_maxiters::Union{Number, Nothing} = nothing,
     maxtime::Union{Number, Nothing} = nothing,
     abstol::Union{Number, Nothing} = nothing,
     reltol::Union{Number, Nothing} = nothing,
@@ -36,7 +37,22 @@ function __map_optimizer_args(cache::OptimizationCache,
     end
 
     if !isnothing(maxiters)
-        mapped_args = (; mapped_args..., iterations = maxiters)
+        if opt isa Optim.Fminbox
+            if !isnothing(local_maxiters)
+                mapped_args = (;
+                    mapped_args...,
+                    outer_iterations = maxiters,
+                    iterations = local_maxiters)
+            else
+                mapped_args = (; mapped_args..., outer_iterations = maxiters)
+            end
+        else
+            mapped_args = (; mapped_args..., iterations = maxiters)
+        end
+    end
+
+    if !isnothing(local_maxiters) && opt isa Optim.Fminbox
+        mapped_args = (; mapped_args..., iterations = local_maxiters)
     end
 
     if !isnothing(maxtime)
