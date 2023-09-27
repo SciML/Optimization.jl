@@ -39,7 +39,10 @@ function __map_optimizer_args(cache::OptimizationCache,
     if !isnothing(maxiters)
         if opt isa Optim.Fminbox
             if !isnothing(local_maxiters)
-                mapped_args = (; mapped_args..., outer_iterations = maxiters, iterations = local_maxiters)
+                mapped_args = (;
+                    mapped_args...,
+                    outer_iterations = maxiters,
+                    iterations = local_maxiters)
             else
                 mapped_args = (; mapped_args..., outer_iterations = maxiters)
             end
