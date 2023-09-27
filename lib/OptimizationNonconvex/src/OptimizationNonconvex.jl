@@ -36,29 +36,29 @@ function separate_kwargs(orig_kwargs)
     convergence_criteria = :convcriteria .∈ Ref(keys(orig_kwargs)) ?
                            orig_kwargs[:convcriteria] : nothing
     opt_kwargs_names = keys(orig_kwargs)[[
-                                             (keys(orig_kwargs) .∉
-                                              Ref([:sub_options, :convcriteria]))...,
-                                         ]]
+        (keys(orig_kwargs) .∉
+         Ref([:sub_options, :convcriteria]))...,
+    ]]
     opt_kwargs = (; zip(opt_kwargs_names, [orig_kwargs[j] for j in opt_kwargs_names])...)
 
     return opt_kwargs, sub_options, convergence_criteria
 end
 
 function __map_optimizer_args(prob::OptimizationProblem,
-                              opt::Nonconvex.NonconvexCore.AbstractOptimizer;
-                              callback = nothing,
-                              maxiters::Union{Number, Nothing} = nothing,
-                              maxtime::Union{Number, Nothing} = nothing,
-                              abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing,
-                              integer = nothing,
-                              kwargs...)
+    opt::Nonconvex.NonconvexCore.AbstractOptimizer;
+    callback = nothing,
+    maxiters::Union{Number, Nothing} = nothing,
+    maxtime::Union{Number, Nothing} = nothing,
+    abstol::Union{Number, Nothing} = nothing,
+    reltol::Union{Number, Nothing} = nothing,
+    integer = nothing,
+    kwargs...)
     opt_kwargs, sub_options, convergence_criteria = separate_kwargs(kwargs)
     opt_kwargs = convert_common_kwargs(opt, opt_kwargs, callback = callback,
-                                       maxiters = maxiters, maxtime = maxtime,
-                                       abstol = abstol, reltol = reltol)
+        maxiters = maxiters, maxtime = maxtime,
+        abstol = abstol, reltol = reltol)
     mapped_args = _create_options(opt, opt_kwargs = opt_kwargs, sub_options = sub_options,
-                                  convergence_criteria = convergence_criteria)
+        convergence_criteria = convergence_criteria)
 
     integer = isnothing(integer) ? fill(false, length(prob.u0)) : integer
 
@@ -66,16 +66,16 @@ function __map_optimizer_args(prob::OptimizationProblem,
 end
 
 function SciMLBase.__solve(prob::OptimizationProblem,
-                           opt::Nonconvex.NonconvexCore.AbstractOptimizer;
-                           callback = nothing,
-                           maxiters::Union{Number, Nothing} = nothing,
-                           maxtime::Union{Number, Nothing} = nothing,
-                           abstol::Union{Number, Nothing} = nothing,
-                           reltol::Union{Number, Nothing} = nothing,
-                           progress = false,
-                           surrogate_objective::Union{Symbol, Nothing} = nothing,
-                           integer = nothing,
-                           kwargs...)
+    opt::Nonconvex.NonconvexCore.AbstractOptimizer;
+    callback = nothing,
+    maxiters::Union{Number, Nothing} = nothing,
+    maxtime::Union{Number, Nothing} = nothing,
+    abstol::Union{Number, Nothing} = nothing,
+    reltol::Union{Number, Nothing} = nothing,
+    progress = false,
+    surrogate_objective::Union{Symbol, Nothing} = nothing,
+    integer = nothing,
+    kwargs...)
 
     # local x
 
@@ -89,9 +89,9 @@ function SciMLBase.__solve(prob::OptimizationProblem,
     opt_f(θ) = _loss(θ)
 
     opt_args, integer = __map_optimizer_args(prob, opt, callback = callback,
-                                             maxiters = maxiters, maxtime = maxtime,
-                                             abstol = abstol, reltol = reltol,
-                                             integer = integer; kwargs...)
+        maxiters = maxiters, maxtime = maxtime,
+        abstol = abstol, reltol = reltol,
+        integer = integer; kwargs...)
 
     opt_set = Nonconvex.Model()
     if isnothing(surrogate_objective)
@@ -128,10 +128,10 @@ function SciMLBase.__solve(prob::OptimizationProblem,
     opt_ret = hasproperty(opt_res, :status) ? Symbol(string(opt_res.status)) : nothing
 
     SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
-                             opt_res.minimizer, opt_res.minimum;
-                             (isnothing(opt_ret) ? (; original = opt_res) :
-                              (; original = opt_res, retcode = opt_ret,
-                               solve_time = t1 - t0))...)
+        opt_res.minimizer, opt_res.minimum;
+        (isnothing(opt_ret) ? (; original = opt_res) :
+         (; original = opt_res, retcode = opt_ret,
+            solve_time = t1 - t0))...)
 end
 
 end

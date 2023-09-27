@@ -36,7 +36,7 @@ For example, using the `Ipopt.jl` optimizer:
 ```julia
 using OptimizationMOI, Ipopt
 opt = OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
-                                                  "option_name" => option_value, ...)
+    "option_name" => option_value, ...)
 sol = solve(prob, opt)
 
 sol = solve(prob, Ipopt.Optimizer(); option_name = option_value, ...)
@@ -72,8 +72,8 @@ f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 prob = Optimization.OptimizationProblem(f, x0, _p)
 
 opt = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer,
-                                                  "nl_solver" => OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
-                                                                                                             "print_level" => 0))
+    "nl_solver" => OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
+        "print_level" => 0))
 sol = solve(prob, opt)
 ```
 
@@ -99,16 +99,16 @@ W = 4.0
 u0 = [0.0, 0.0, 0.0, 1.0]
 
 optfun = OptimizationFunction((u, p) -> -v'u, cons = (res, u, p) -> res .= w'u,
-                              Optimization.AutoForwardDiff())
+    Optimization.AutoForwardDiff())
 
 optprob = OptimizationProblem(optfun, u0; lb = zero.(u0), ub = one.(u0),
-                              int = ones(Bool, length(u0)),
-                              lcons = [-Inf;], ucons = [W;])
+    int = ones(Bool, length(u0)),
+    lcons = [-Inf;], ucons = [W;])
 
 nl_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
-                                                        "print_level" => 0)
+    "print_level" => 0)
 minlp_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer,
-                                                           "nl_solver" => nl_solver)
+    "nl_solver" => nl_solver)
 
 res = solve(optprob, minlp_solver)
 ```

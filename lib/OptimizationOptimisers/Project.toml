@@ -1,7 +1,7 @@
 name = "OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.1.2"
+version = "0.1.5"
 
 [deps]
 Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
@@ -15,7 +15,7 @@ julia = "1"
 Optimisers = "0.2"
 ProgressLogging = "0.1"
 Reexport = "1.2"
-Optimization = "3.9"
+Optimization = "3.15"
 
 [extras]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"

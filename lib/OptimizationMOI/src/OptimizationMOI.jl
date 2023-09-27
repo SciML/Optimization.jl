@@ -15,15 +15,15 @@ const MOI = MathOptInterface
 const DenseOrSparse{T} = Union{Matrix{T}, SparseMatrixCSC{T}}
 
 function SciMLBase.allowsbounds(opt::Union{MOI.AbstractOptimizer,
-                                           MOI.OptimizerWithAttributes})
+    MOI.OptimizerWithAttributes})
     true
 end
 function SciMLBase.allowsconstraints(opt::Union{MOI.AbstractOptimizer,
-                                                MOI.OptimizerWithAttributes})
+    MOI.OptimizerWithAttributes})
     true
 end
 function SciMLBase.allowscallback(opt::Union{MOI.AbstractOptimizer,
-                                             MOI.OptimizerWithAttributes})
+    MOI.OptimizerWithAttributes})
     false
 end
 
@@ -39,20 +39,20 @@ function _create_new_optimizer(opt::MOI.AbstractOptimizer)
         return opt
     end
     opt_setup = MOI.Utilities.CachingOptimizer(MOI.Utilities.UniversalFallback(MOI.Utilities.Model{
-                                                                                                   Float64
-                                                                                                   }()),
-                                               opt)
+            Float64,
+        }()),
+        opt)
     return opt_setup
 end
 
 function __map_optimizer_args(cache,
-                              opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes
-                                         };
-                              maxiters::Union{Number, Nothing} = nothing,
-                              maxtime::Union{Number, Nothing} = nothing,
-                              abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing,
-                              kwargs...)
+    opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes
+    };
+    maxiters::Union{Number, Nothing} = nothing,
+    maxtime::Union{Number, Nothing} = nothing,
+    abstol::Union{Number, Nothing} = nothing,
+    reltol::Union{Number, Nothing} = nothing,
+    kwargs...)
     optimizer = _create_new_optimizer(opt)
     for (key, value) in kwargs
         MOI.set(optimizer, MOI.RawOptimizerAttribute("$(key)"), value)
@@ -161,65 +161,21 @@ function repl_getindex!(expr::Expr)
     return expr
 end
 
-function __moi_status_to_ReturnCode(status::MOI.TerminationStatusCode)
-    if status in [
-        MOI.OPTIMAL,
-        MOI.LOCALLY_SOLVED,
-        MOI.ALMOST_OPTIMAL,
-        MOI.ALMOST_LOCALLY_SOLVED,
-    ]
-        return ReturnCode.Success
-    elseif status in [
-        MOI.INFEASIBLE,
-        MOI.DUAL_INFEASIBLE,
-        MOI.LOCALLY_INFEASIBLE,
-        MOI.INFEASIBLE_OR_UNBOUNDED,
-        MOI.ALMOST_INFEASIBLE,
-        MOI.ALMOST_DUAL_INFEASIBLE,
-    ]
-        return ReturnCode.Infeasible
-    elseif status in [
-        MOI.ITERATION_LIMIT,
-        MOI.NODE_LIMIT,
-        MOI.SLOW_PROGRESS,
-    ]
-        return ReturnCode.MaxIters
-    elseif status == MOI.TIME_LIMIT
-        return ReturnCode.MaxTime
-    elseif status in [
-        MOI.OPTIMIZE_NOT_CALLED,
-        MOI.NUMERICAL_ERROR,
-        MOI.INVALID_MODEL,
-        MOI.INVALID_OPTION,
-        MOI.INTERRUPTED,
-        MOI.OTHER_ERROR,
-        MOI.SOLUTION_LIMIT,
-        MOI.MEMORY_LIMIT,
-        MOI.OBJECTIVE_LIMIT,
-        MOI.NORM_LIMIT,
-        MOI.OTHER_LIMIT,
-    ]
-        return ReturnCode.Failure
-    else
-        return ReturnCode.Default
-    end
-end
-
 include("nlp.jl")
 include("moi.jl")
 
 function SciMLBase.supports_opt_cache_interface(alg::Union{MOI.AbstractOptimizer,
-                                                           MOI.OptimizerWithAttributes})
+    MOI.OptimizerWithAttributes})
     true
 end
 
 function SciMLBase.__init(prob::OptimizationProblem,
-                          opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
-                          maxiters::Union{Number, Nothing} = nothing,
-                          maxtime::Union{Number, Nothing} = nothing,
-                          abstol::Union{Number, Nothing} = nothing,
-                          reltol::Union{Number, Nothing} = nothing,
-                          kwargs...)
+    opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
+    maxiters::Union{Number, Nothing} = nothing,
+    maxtime::Union{Number, Nothing} = nothing,
+    abstol::Union{Number, Nothing} = nothing,
+    reltol::Union{Number, Nothing} = nothing,
+    kwargs...)
     cache = if MOI.supports(_create_new_optimizer(opt), MOI.NLPBlock())
         MOIOptimizationNLPCache(prob, opt; maxiters, maxtime, abstol, reltol, kwargs...)
     else

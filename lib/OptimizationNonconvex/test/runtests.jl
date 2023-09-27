@@ -17,7 +17,7 @@ using Test
     OptimizationNonconvex.Nonconvex.@load Hyperopt
     OptimizationNonconvex.Nonconvex.@load MTS
     prob = Optimization.OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0],
-                                            ub = [1.5, 1.5])
+        ub = [1.5, 1.5])
 
     sol = solve(prob, MMA02())
     @test 10 * sol.objective < l1
@@ -107,15 +107,15 @@ using Test
     @test 10 * sol.objective < l1
 
     sol = solve(prob, HyperoptAlg(NLoptAlg(:LN_NELDERMEAD)), sampler = LHSampler(),
-                maxiters = 100)
+        maxiters = 100)
     @test 10 * sol.objective < l1
 
     sol = solve(prob, HyperoptAlg(NLoptAlg(:LN_NELDERMEAD)), sampler = CLHSampler(),
-                maxiters = 100)
+        maxiters = 100)
     @test 10 * sol.objective < l1
 
     sol = solve(prob, HyperoptAlg(NLoptAlg(:LN_NELDERMEAD)), sampler = GPSampler(),
-                maxiters = 100)
+        maxiters = 100)
     @test 10 * sol.objective < l1
 
     sol = solve(prob, HyperoptAlg(IpoptAlg()), maxiters = 100)
@@ -159,30 +159,30 @@ using Test
 
     ### suboptions
     sol = solve(prob, HyperoptAlg(NLoptAlg(:LN_NELDERMEAD)), sampler = LHSampler(),
-                sub_options = (; maxeval = 100))
+        sub_options = (; maxeval = 100))
     @test 10 * sol.objective < l1
 
     sol = solve(prob, HyperoptAlg(NLoptAlg(:LN_NELDERMEAD)), sampler = CLHSampler(),
-                sub_options = (; maxeval = 100))
+        sub_options = (; maxeval = 100))
     @test 10 * sol.objective < l1
 
     sol = solve(prob, HyperoptAlg(NLoptAlg(:LN_NELDERMEAD)), sampler = GPSampler(),
-                sub_options = (; maxeval = 100))
+        sub_options = (; maxeval = 100))
     @test 10 * sol.objective < l1
 
     sol = solve(prob, HyperoptAlg(IpoptAlg()), sub_options = (; max_iter = 100))
     @test 10 * sol.objective < l1
 
     sol = solve(prob, HyperoptAlg(IpoptAlg()), sampler = LHSampler(),
-                sub_options = (; max_iter = 100))
+        sub_options = (; max_iter = 100))
     @test 10 * sol.objective < l1
 
     sol = solve(prob, HyperoptAlg(IpoptAlg()), sampler = CLHSampler(),
-                sub_options = (; max_iter = 100))
+        sub_options = (; max_iter = 100))
     @test 10 * sol.objective < l1
 
     sol = solve(prob, HyperoptAlg(IpoptAlg()), sampler = GPSampler(),
-                sub_options = (; max_iter = 100))
+        sub_options = (; max_iter = 100))
     @test 10 * sol.objective < l1
 
     sol = solve(prob, BayesOptAlg(IpoptAlg()), sub_options = (; max_iter = 100))
@@ -192,11 +192,11 @@ using Test
     @test 10 * sol.objective < l1
 
     sol = solve(prob, BayesOptAlg(NLoptAlg(:LN_NELDERMEAD)),
-                sub_options = (; maxeval = 100))
+        sub_options = (; maxeval = 100))
     @test 10 * sol.objective < l1
 
     sol = solve(prob, BayesOptAlg(NLoptAlg(:LN_NELDERMEAD)),
-                sub_options = (; maxeval = 100))
+        sub_options = (; maxeval = 100))
     @test 10 * sol.objective < l1
 
     sol = solve(prob, BayesOptAlg(IpoptAlg()), sub_options = (; max_iter = 100))
@@ -206,10 +206,10 @@ using Test
     @test 10 * sol.objective < l1
 
     sol = solve(prob, BayesOptAlg(NLoptAlg(:LN_NELDERMEAD)),
-                sub_options = (; maxeval = 100))
+        sub_options = (; maxeval = 100))
     @test 10 * sol.objective < l1
 
     sol = solve(prob, BayesOptAlg(NLoptAlg(:LN_NELDERMEAD)),
-                sub_options = (; maxeval = 100))
+        sub_options = (; maxeval = 100))
     @test 10 * sol.objective < l1
 end

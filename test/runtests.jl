@@ -20,15 +20,28 @@ if GROUP == "All" || GROUP == "Core" || GROUP == "GPU" ||
     dev_subpkg("OptimizationOptimisers")
 end
 
-@time begin if GROUP == "All" || GROUP == "Core"
-    @safetestset "AD Tests" begin include("ADtests.jl") end
-    @safetestset "Mini batching" begin include("minibatch.jl") end
-    @safetestset "DiffEqFlux" begin include("diffeqfluxtests.jl") end
-elseif GROUP == "GPU"
-    activate_downstream_env()
-    @safetestset "DiffEqFlux GPU" begin include("downstream/gpu_neural_ode.jl") end
-else
-    dev_subpkg(GROUP)
-    subpkg_path = joinpath(dirname(@__DIR__), "lib", GROUP)
-    Pkg.test(PackageSpec(name = GROUP, path = subpkg_path))
-end end
+@time begin
+    if GROUP == "All" || GROUP == "Core"
+        @safetestset "AD Tests" begin
+            include("ADtests.jl")
+        end
+        @safetestset "AD Performance Regression Tests" begin
+            include("AD_performance_regression.jl")
+        end
+        @safetestset "Mini batching" begin
+            include("minibatch.jl")
+        end
+        @safetestset "DiffEqFlux" begin
+            include("diffeqfluxtests.jl")
+        end
+    elseif GROUP == "GPU"
+        activate_downstream_env()
+        @safetestset "DiffEqFlux GPU" begin
+            include("downstream/gpu_neural_ode.jl")
+        end
+    else
+        dev_subpkg(GROUP)
+        subpkg_path = joinpath(dirname(@__DIR__), "lib", GROUP)
+        Pkg.test(PackageSpec(name = GROUP, path = subpkg_path))
+    end
+end
