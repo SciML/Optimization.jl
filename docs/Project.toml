@@ -32,7 +32,7 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
 AmplNLWriter = "1"
-Documenter = "0.26, 0.27"
+Documenter = "1"
 FiniteDiff = ">= 2.8.1"
 Flux = "0.13"
 ForwardDiff = ">= 0.10.19"
