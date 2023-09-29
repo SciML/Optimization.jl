@@ -9,7 +9,7 @@ symbolic information provided by the system.
 There are two ways that the user interacts with ModelingToolkit.jl.
 One can use `OptimizationFunction` with `AutoModelingToolkit` for
 automatically transforming numerical codes into symbolic codes. See
-the [OptimizationFunction documentation](@id optfunction) for more
+the [OptimizationFunction documentation](@ref optfunction) for more
 details.
 
 Secondly, one can generate `OptimizationProblem`s for use in
