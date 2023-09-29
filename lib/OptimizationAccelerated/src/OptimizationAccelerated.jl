@@ -64,9 +64,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
                 push!(W, consjaccache[j,:])
             end
         end
-        quadprob = OptimizationProblem(OptimizationFunction((v, p =nothing) -> (v .- rₖ).^2, Optimization.AutoModelingToolkit(), cons = (res, v, p = nothing) -> res .= (W .* v) .- w), uₖ, lcons = zeros(length(w)), ucons = fill(Inf, length(w)))
-
-        uₖ = solve(quadprob, OSQP.Optimizer()).u
+        
+        if length(w) == 0
+            uₖ = zeros(eltype(xₖ), length(xₖ))
+        else
+            quadprob = OptimizationProblem(OptimizationFunction((v, p =nothing) -> (v .- rₖ).^2, Optimization.AutoModelingToolkit(), cons = (res, v, p = nothing) -> (res .= (W .* v) .- w)), uₖ, lcons = zeros(length(w)), ucons = fill(Inf, length(w)))
+            uₖ = solve(quadprob, OSQP.Optimizer()).u
+        end
         xₖ = xₖ + Tₖ*uₖ
         if norm(uₖ, 1) < ϵ_sol
             break
