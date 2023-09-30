@@ -112,7 +112,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     cur, state = iterate(cache.data)
 
     function _cb(trace)
-        if cache.callback == DEFAULT_CALLBACK
+        if cache.callback == Optimization.DEFAULT_CALLBACK
             cb_call = false
         else
             cb_call = cache.callback(decompose_trace(trace, cache.progress), x...)
@@ -135,9 +135,9 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     _loss = function (θ)
-        if cache.callback == DEFAULT_CALLBACK && cache.data == Optimization.DEFAULT_DATA
+        if cache.callback == Optimization.DEFAULT_CALLBACK && cache.data == Optimization.DEFAULT_DATA
             return first(cache.f(θ, cache.p))
-        elseif cache.callback == DEFAULT_CALLBACK
+        elseif cache.callback == Optimization.DEFAULT_CALLBACK
             return first(cache.f(θ, cache.p, cur...))
         elseif cache.data != Optimization.DEFAULT_DATA
             x = cache.f(θ, cache.p)
@@ -149,7 +149,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     end
 
     opt_args = __map_optimizer_args(cache, cache.opt;
-        callback = cache.callback == DEFAULT_CALLBACK &&
+        callback = cache.callback == Optimization.DEFAULT_CALLBACK &&
                    cache.data == Optimization.DEFAULT_DATA ?
                    nothing : _cb,
         cache.solver_args...,

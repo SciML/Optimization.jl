@@ -71,9 +71,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
 
     _loss = function (θ)
-        if cache.callback == DEFAULT_CALLBACK && data == Optimization.DEFAULT_DATA
+        if cache.callback == Optimization.DEFAULT_CALLBACK && data == Optimization.DEFAULT_DATA
             return first(cache.f(θ, cache.p))
-        elseif cache.callback == DEFAULT_CALLBACK
+        elseif cache.callback == Optimization.DEFAULT_CALLBACK
             return first(cache.f(θ, cache.p, cur...))
         elseif data == Optimization.DEFAULT_DATA
             x = cache.f(θ, cache.p)
