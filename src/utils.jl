@@ -1,4 +1,6 @@
-const DEFAULT_CALLBACK = (args...) -> false
+struct NullCallback end
+NullCallback(args) = false;
+const DEFAULT_CALLBACK = NullCallback()
 
 struct NullData end
 const DEFAULT_DATA = Iterators.cycle((NullData(),))
