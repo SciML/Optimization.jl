@@ -1,5 +1,5 @@
 struct NullCallback end
-NullCallback(args) = false;
+(x::NullCallback)(args...) = false;
 const DEFAULT_CALLBACK = NullCallback()
 
 struct NullData end
