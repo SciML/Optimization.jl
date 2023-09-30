@@ -1,3 +1,5 @@
+const DEFAULT_CALLBACK = (args...) -> false
+
 struct NullData end
 const DEFAULT_DATA = Iterators.cycle((NullData(),))
 Base.iterate(::NullData, i = 1) = nothing

@@ -52,7 +52,7 @@ struct OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C} <:
 end
 
 function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt, data;
-    callback = nothing,
+    callback = Optimization.DEFAULT_CALLBACK,
     maxiters::Union{Number, Nothing} = nothing,
     maxtime::Union{Number, Nothing} = nothing,
     abstol::Union{Number, Nothing} = nothing,
@@ -71,7 +71,7 @@ end
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt,
     data = Optimization.DEFAULT_DATA;
-    callback = nothing,
+    callback = Optimization.DEFAULT_CALLBACK,
     maxiters::Union{Number, Nothing} = nothing,
     maxtime::Union{Number, Nothing} = nothing,
     abstol::Union{Number, Nothing} = nothing,
