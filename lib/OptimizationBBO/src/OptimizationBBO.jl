@@ -125,7 +125,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
             BlackBoxOptim.shutdown_optimizer!(trace) #doesn't work
         end
 
-        if !isnothing(cache.data)
+        if cache.data != Optimization.DEFAULT_DATA
             cur, state = iterate(cache.data, state)
         end
         cb_call
@@ -135,11 +135,11 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     _loss = function (θ)
-        if isnothing(cache.callback) && isnothing(cache.data)
+        if isnothing(cache.callback) && cache.data == Optimization.DEFAULT_DATA
             return first(cache.f(θ, cache.p))
         elseif isnothing(cache.callback)
             return first(cache.f(θ, cache.p, cur...))
-        elseif isnothing(cache.data)
+        elseif cache.data != Optimization.DEFAULT_DATA
             x = cache.f(θ, cache.p)
             return first(x)
         else
@@ -150,7 +150,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
 
     opt_args = __map_optimizer_args(cache, cache.opt;
         callback = isnothing(cache.callback) &&
-                   isnothing(cache.data) ?
+                   cache.data == Optimization.DEFAULT_DATA ?
                    nothing : _cb,
         cache.solver_args...,
         maxiters = maxiters,
