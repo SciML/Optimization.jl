@@ -13,6 +13,8 @@ using Test
     sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
     @test 10 * sol.objective < l1
 
+    @test (@allocated solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())) < 1e7
+
     prob = Optimization.OptimizationProblem(optprob, nothing, _p, lb = [-1.0, -1.0],
         ub = [0.8, 0.8])
     sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
