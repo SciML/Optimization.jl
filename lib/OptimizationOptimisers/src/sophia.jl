@@ -75,7 +75,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             return first(cache.f(θ, cache.p))
         elseif cache.callback == Optimization.DEFAULT_CALLBACK
             return first(cache.f(θ, cache.p, cur...))
-        elseif data == Optimization.DEFAULT_DATA
+        elseif data === Optimization.DEFAULT_DATA
             x = cache.f(θ, cache.p)
             return first(x)
         else
