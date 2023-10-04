@@ -1,7 +1,7 @@
 mutable struct MOIOptimizationNLPEvaluator{T, F <: OptimizationFunction, RC, LB, UB,
     I,
     JT <: DenseOrSparse{T}, HT <: DenseOrSparse{T},
-    CHT <: DenseOrSparse{T}, S} <:
+    CHT <: DenseOrSparse{T}, S, CB} <:
                MOI.AbstractNLPEvaluator
     f::F
     reinit_cache::RC
@@ -14,6 +14,7 @@ mutable struct MOIOptimizationNLPEvaluator{T, F <: OptimizationFunction, RC, LB,
     J::JT
     H::HT
     cons_H::Vector{CHT}
+    callback::CB
 end
 
 function Base.getproperty(evaluator::MOIOptimizationNLPEvaluator, x::Symbol)
@@ -101,7 +102,7 @@ function SciMLBase.get_paramsyms(sol::SciMLBase.OptimizationSolution{
     sol.cache.evaluator.f.paramsyms
 end
 
-function MOIOptimizationNLPCache(prob::OptimizationProblem, opt; kwargs...)
+function MOIOptimizationNLPCache(prob::OptimizationProblem, opt; callback = nothing, kwargs...)
     reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
@@ -142,7 +143,8 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem, opt; kwargs...)
         prob.sense,
         J,
         H,
-        cons_H)
+        cons_H,
+        callback)
     return MOIOptimizationNLPCache(evaluator, opt, NamedTuple(kwargs))
 end
 
@@ -169,7 +171,13 @@ function MOI.initialize(evaluator::MOIOptimizationNLPEvaluator,
 end
 
 function MOI.eval_objective(evaluator::MOIOptimizationNLPEvaluator, x)
-    return evaluator.f(x, evaluator.p)
+    if evaluator.callback === nothing
+        return evaluator.f(x, evaluator.p)
+    else
+        l = evaluator.f(x, evaluator.p)
+        evaluator.callback(x, l)
+        return l
+    end
 end
 
 function MOI.eval_constraint(evaluator::MOIOptimizationNLPEvaluator, g, x)
