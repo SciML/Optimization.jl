@@ -1,6 +1,6 @@
 module OptimizationAccelerated
 using Optimization, Optimization.SciMLBase, LinearAlgebra
-using OptimizationMOI, OSQP, ModelingToolkit
+using OptimizationMOI, OSQP, ModelingToolkit, Gurobi
 
 struct AcceleratedOpt
     β::Float64
@@ -61,14 +61,18 @@ function SciMLBase.__solve(cache::OptimizationCache{
         for j in 1:length(cache.lcons)
             if conscache[j] < ϵ_const
                 push!(w, -α*conscache[j] - ϵ*min(dot(consjaccache[j,:], uₖ) + α*conscache[j], 0))
-                push!(W, consjaccache[j,:])
+                push!(W, consjaccache[j,:]')
             end
         end
-        
+        W = vcat(W...)
         if length(w) == 0
             uₖ = zeros(eltype(xₖ), length(xₖ))
         else
-            quadprob = OptimizationProblem(OptimizationFunction((v, p =nothing) -> (v .- rₖ).^2, Optimization.AutoModelingToolkit(), cons = (res, v, p = nothing) -> (res .= (W .* v) .- w)), uₖ, lcons = zeros(length(w)), ucons = fill(Inf, length(w)))
+            println(w)
+            println(W)
+            println(rₖ)
+            println(uₖ)
+            quadprob = OptimizationProblem(OptimizationFunction((v, p =nothing) -> ((v .- rₖ) * (v .- rₖ)')[1], Optimization.AutoModelingToolkit(), cons = (res, v, p = SciMLBase.NullParameters()) -> (res .= (W * v) - w)), uₖ, lcons = zeros(length(w)), ucons = fill(Inf, length(w)))
             uₖ = solve(quadprob, OSQP.Optimizer()).u
         end
         xₖ = xₖ + Tₖ*uₖ
@@ -77,7 +81,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         end
     end
     
-    return SciMLBase.build_solution(cache, cache.opt, xₖ, opt.f(xₖ))
+    return SciMLBase.build_solution(cache, cache.opt, xₖ, cache.f(xₖ))
 end
 
 end

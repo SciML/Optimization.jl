@@ -4,6 +4,7 @@ authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.0.1"
 
 [deps]
+Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 OSQP = "ab2f91bb-94b4-55e3-9ba0-7f65df51de79"

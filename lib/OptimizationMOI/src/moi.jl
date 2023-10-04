@@ -15,6 +15,7 @@ end
 function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
     # _f = Optimization.instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p, length(prob.ucons)) 
     f = Optimization.instantiate_function(prob.f, prob.u0, Optimization.AutoModelingToolkit(), prob.p, length(prob.ucons))
+    println(f.sys)
     isnothing(f.sys) &&
         throw(ArgumentError("Expected an `OptimizationProblem` that was setup via an `OptimizationSystem`, consider `modelingtoolkitize(prob).`"))
 
