@@ -36,8 +36,16 @@ end
 
     optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), Optimization.AutoZygote())
     prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MaxSense)
-
-    sol = solve(prob, Ipopt.Optimizer())
+    iter = 0
+    callback = function (p, l)
+        global iter
+        iter += 1
+    
+        display(l)
+        return false
+    end
+    
+    sol = solve(prob, Ipopt.Optimizer(); callback)
     @test 10 * sol.objective < l1
 
     # cache interface

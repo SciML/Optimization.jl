@@ -414,6 +414,11 @@ function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
     MOI.set(opt_setup,
         MOI.NLPBlock(),
         MOI.NLPBlockData(con_bounds, cache.evaluator, true))
+
+    if cache.evaluator.callback !== nothing
+        MOI.set(opt_setup, MOI.Silent(), true)
+    end
+    
     MOI.optimize!(opt_setup)
     if MOI.get(opt_setup, MOI.ResultCount()) >= 1
         minimizer = MOI.get(opt_setup, MOI.VariablePrimal(), θ)
