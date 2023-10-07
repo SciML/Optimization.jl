@@ -22,10 +22,10 @@ end
 
 @time begin
     if GROUP == "All" || GROUP == "Core"
-        @safetestset "AD Tests" begin
+        VERSION >= v"1.9" && @safetestset "AD Tests" begin
             include("ADtests.jl")
         end
-        @safetestset "AD Performance Regression Tests" begin
+        VERSION >= v"1.9" && @safetestset "AD Performance Regression Tests" begin
             include("AD_performance_regression.jl")
         end
         @safetestset "Mini batching" begin
