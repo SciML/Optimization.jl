@@ -10,7 +10,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
-Optim = "1"
+Optim = "1.7.0 - 1.7.6"
 Optimization = "3.15"
 Reexport = "1.2"
 julia = "1"
