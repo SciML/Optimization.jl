@@ -10,9 +10,14 @@ function Optimization.instantiate_function(f, x, adtype::AutoZygote, p,
     num_cons = 0)
     _f = (θ, args...) -> f(θ, p, args...)[1]
     if f.grad === nothing
-        grad = (res, θ, args...) -> false ?
-                                    false :
-                                    res .= Zygote.gradient(x -> _f(x, args...), θ)[1]
+        grad = function (res, θ, args...)
+            val = Zygote.gradient(x -> _f(x, args...), θ)[1]
+            if val === nothing
+                res .= 0
+            else
+                res .= val
+            end
+        end
     else
         grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
     end
@@ -83,9 +88,14 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
 
     _f = (θ, args...) -> f(θ, cache.p, args...)[1]
     if f.grad === nothing
-        grad = (res, θ, args...) -> false ?
-                                    false :
-                                    res .= Zygote.gradient(x -> _f(x, args...), θ)[1]
+        grad = function (res, θ, args...)
+            val = Zygote.gradient(x -> _f(x, args...), θ)[1]
+            if val === nothing
+                res .= 0
+            else
+                res .= val
+            end
+        end
     else
         grad = (G, θ, args...) -> f.grad(G, θ, cache.p, args...)
     end
