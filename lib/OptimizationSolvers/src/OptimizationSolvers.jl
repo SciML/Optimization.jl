@@ -73,7 +73,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
     end
     Hₖ⁻¹= zeros(length(θ), length(θ))
     f.hess(Hₖ⁻¹, θ)
-    Hₖ⁻¹ = inv(Hₖ⁻¹)
+    println(Hₖ⁻¹)
+    Hₖ⁻¹ = inv(I(length(θ)) .+ Hₖ⁻¹)
     f.grad(G, θ)
     s = -1 * Hₖ⁻¹ * G
     # m = opt.m
@@ -93,6 +94,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     # Hₖ = I(length(θ)) * γ
     # ρ[1] = 1/dot(y[1], ss[1])
     
+    t0 = time()
     for i in 1:maxiters
         println(i, " ", θ, " Objective: ", f(θ, cache.p))
         # println(ss, " ", y, " ", γ)
@@ -118,6 +120,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         pₖ = -Hₖ⁻¹* G
         fx = _f(θ)
         dir = dot(G, pₖ)
+        println(fx, " ", dir)
         αₖ = [(HagerZhang())(ϕ, dϕ, ϕdϕ, 1.0, fx, dir)...]
         # α[k] = αₖ
         θ = θ .+ αₖ.*pₖ
@@ -135,6 +138,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
         f.grad(G, θ)
         zₖ = G - q
         Hₖ⁻¹ = (I - (s*zₖ')/dot(zₖ, s))*Hₖ⁻¹*(I - (zₖ*s')/dot(zₖ, s)) + (s*s')/dot(zₖ, s)
+        if norm(G) < 1e-6
+            break
+        end
     end
 
 
