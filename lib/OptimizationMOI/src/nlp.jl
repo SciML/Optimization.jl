@@ -189,7 +189,7 @@ function MOI.eval_objective_gradient(evaluator::MOIOptimizationNLPEvaluator, G, 
     if evaluator.f.grad === nothing
         error("Use OptimizationFunction to pass the objective gradient or " *
               "automatically generate it with one of the autodiff backends." *
-              "If you are using the ModelingToolkit sybolic interface, pass the `grad` kwarg set to `true` in `OptimizationProblem`.")
+              "If you are using the ModelingToolkit symbolic interface, pass the `grad` kwarg set to `true` in `OptimizationProblem`.")
     end
     evaluator.f.grad(G, x)
     return
@@ -213,7 +213,7 @@ function MOI.eval_constraint_jacobian(evaluator::MOIOptimizationNLPEvaluator, j,
     elseif evaluator.f.cons_j === nothing
         error("Use OptimizationFunction to pass the constraints' jacobian or " *
               "automatically generate i with one of the autodiff backends." *
-              "If you are using the ModelingToolkit sybolic interface, pass the `cons_j` kwarg set to `true` in `OptimizationProblem`.")
+              "If you are using the ModelingToolkit symbolic interface, pass the `cons_j` kwarg set to `true` in `OptimizationProblem`.")
     end
     evaluator.f.cons_j(evaluator.J, x)
     if evaluator.J isa SparseMatrixCSC
@@ -276,7 +276,7 @@ function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
     if evaluator.f.hess === nothing
         error("Use OptimizationFunction to pass the objective hessian or " *
               "automatically generate it with one of the autodiff backends." *
-              "If you are using the ModelingToolkit sybolic interface, pass the `hess` kwarg set to `true` in `OptimizationProblem`.")
+              "If you are using the ModelingToolkit symbolic interface, pass the `hess` kwarg set to `true` in `OptimizationProblem`.")
     end
     fill!(h, zero(T))
     k = 0
@@ -303,7 +303,7 @@ function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
         if evaluator.f.cons_h === nothing
             error("Use OptimizationFunction to pass the constraints' hessian or " *
                   "automatically generate it with one of the autodiff backends." *
-                  "If you are using the ModelingToolkit sybolic interface, pass the `cons_h` kwarg set to `true` in `OptimizationProblem`.")
+                  "If you are using the ModelingToolkit symbolic interface, pass the `cons_h` kwarg set to `true` in `OptimizationProblem`.")
         end
         evaluator.f.cons_h(evaluator.cons_H, x)
         for (μi, Hi) in zip(μ, evaluator.cons_H)

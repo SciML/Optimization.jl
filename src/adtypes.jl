@@ -101,7 +101,7 @@ OptimizationFunction(f, AutoModelingToolkit(); kwargs...)
 This uses the [ModelingToolkit.jl](https://github.com/SciML/ModelingToolkit.jl)
 package's `modelingtookitize` functionality to generate the derivatives and other fields of an `OptimizationFunction`.
 This backend creates the symbolic expressions for the objective and its derivatives as well as
-the constraints and their derivatives. Through `structural_simplify`, it enforces symplifications
+the constraints and their derivatives. Through `structural_simplify`, it enforces simplifications
 that can reduce the number of operations needed to compute the derivatives of the constraints. This automatically
 generates the expression graphs that some solver interfaces through OptimizationMOI like
 [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl) require.
