@@ -38,7 +38,7 @@ Each optimizer sets default settings based on the optimization problem, but spec
 
 Additionally, `Metaheuristics` common settings which would be defined by [`Metaheuristics.Options`](https://jmejia8.github.io/Metaheuristics.jl/stable/api/#Metaheuristics.Options) can be simply passed as special keyword arguments to `solve` without the need to use the `Metaheuristics.Options` struct.
 
-Lastly, information about the optimization problem such as the true optimum is set via [`Metaheuristics.Information`](https://jmejia8.github.io/Metaheuristics.jl/stable/api/#Metaheuristics.Information) and passed as part of the optimizer struct to `solve` e.g., `solve(prob, ECA(information=Metaheuristics.Inoformation(f_optimum = 0.0)))`
+Lastly, information about the optimization problem such as the true optimum is set via [`Metaheuristics.Information`](https://jmejia8.github.io/Metaheuristics.jl/stable/api/#Metaheuristics.Information) and passed as part of the optimizer struct to `solve` e.g., `solve(prob, ECA(information=Metaheuristics.Information(f_optimum = 0.0)))`
 
 The currently available algorithms and their parameters are listed [here](https://jmejia8.github.io/Metaheuristics.jl/stable/algorithms/).
 

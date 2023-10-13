@@ -196,7 +196,7 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
           * `precondprep = (P, x) -> nothing`
   - [`Optim.BFGS()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/lbfgs/): **Broyden-Fletcher-Goldfarb-Shanno algorithm**
     
-      + `solve(problem, BFGS(alpaguess, linesearch, initial_invH, initial_stepnorm, manifold))`
+      + `solve(problem, BFGS(alphaguess, linesearch, initial_invH, initial_stepnorm, manifold))`
     
       + `alphaguess` computes the initial step length (for more information, consult [this source](https://github.com/JuliaNLSolvers/LineSearches.jl) and [this example](https://julianlsolvers.github.io/LineSearches.jl/latest/examples/generated/optim_initialstep.html))
         
