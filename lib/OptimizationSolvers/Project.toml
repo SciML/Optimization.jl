@@ -1,21 +1,20 @@
-name = "OptimizationOptimisers"
-uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
+name = "OptimizationSolvers"
+uuid = "1b6bb0ae-4728-4f07-8c53-ec2138650943"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.1.5"
+version = "0.0.1"
 
 [deps]
-Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
+LineSearches = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
-julia = "1"
-Optimisers = "0.2"
+Optimization = "3.15"
 ProgressLogging = "0.1"
 Reexport = "1.2"
-Optimization = "3.15"
+julia = "1"
 
 [extras]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
@@ -23,4 +22,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["ForwardDiff","Test","Zygote"]
+test = ["ForwardDiff", "Test", "Zygote"]
