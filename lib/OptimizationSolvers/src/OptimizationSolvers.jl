@@ -121,10 +121,24 @@ function SciMLBase.__solve(cache::OptimizationCache{
         fx = _f(θ)
         dir = dot(G, pₖ)
         println(fx, " ", dir)
-        αₖ = [(HagerZhang())(ϕ, dϕ, ϕdϕ, 1.0, fx, dir)...]
+
+        if dir > 0
+            pₖ = -G
+            dir = dot(G, pₖ)
+        end
+
+        αₖ = let 
+            try
+                [(HagerZhang())(ϕ, dϕ, ϕdϕ, 1.0, fx, dir)...]
+            catch err
+                αₖ = [1.0]
+            end
+        end
         # α[k] = αₖ
+        
         θ = θ .+ αₖ.*pₖ
         s = αₖ.*pₖ
+
         # if k > m
         #     ss[1:end-1] = ss[2:end]
         #     y[1:end-1] = y[2:end]
