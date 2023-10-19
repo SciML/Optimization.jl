@@ -1,6 +1,7 @@
 module OptimizationPRIMA
 
-using PRIMA, Optimization, Optimization.SciMLBase
+using PRIMA, Optimization, Optimization.SciMLBase, SparseArrays
+import ModelingToolkit, ModelingToolkit.Symbolics
 
 abstract type PRIMASolvers end
 
@@ -19,6 +20,10 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::PRIMASolvers
     data = Optimization.DEFAULT_DATA;
     callback = (args...) -> (false),
     progress = false, kwargs...)
+    if opt isa COBYLA
+        sys = ModelingToolkit.modelingtoolkitize(prob)
+        prob = OptimizationProblem(sys, prob.u0, prob.p; lb = prob.lb, ub = prob.ub, cons_sparse = true)
+    end
     return OptimizationCache(prob, opt, data; callback, progress,
         kwargs...)
 end
@@ -127,11 +132,33 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     t0 = time()
     if cache.opt isa COBYLA
+        lininds = Int[]
+        nonlininds = Int[]
+        symboliclinexpr = []
+        for i in eachindex(cache.f.cons_expr)
+            println(cache.f.cons_expr[i])
+            println(isempty(cache.f.cons_hess_prototype[i]))
+            if isempty(cache.f.cons_hess_prototype[i])
+                push!(lininds, i)
+                symbolicexpr = Symbolics.parse_expr_to_symbolic(cache.f.cons_expr[i], (@__MODULE__,))
+                println(symbolicexpr)
+                push!(symboliclinexpr, symbolicexpr)
+            else
+                push!(nonlininds, i)
+            end
+        end
+        res1 = zeros(length(cache.f.cons_expr))
+        nonlincons = (res, θ) -> (cache.f.cons(res1, θ); res .= res1[nonlininds])
+        println(symboliclinexpr)
+        A = hcat(res1[lininds]...)
+        println(A)
+        b = cache.lcons[lininds]
+        println(b)
         function fwcons(θ, res)
-            cache.f.cons(res, θ, cache.p)
+            nonlincons(res, θ)
             return _loss(θ)
         end
-        (minx, minf, nf, rc, cstrv) = optfunc(fwcons, cache.u0; kws...)
+        (minx, minf, nf, rc, cstrv) = optfunc(fwcons, cache.u0; linear_eq = (A, b), nonlinear_ineq = length(nonlininds), kws...)
     elseif cache.opt isa LINCOA
         (minx, minf, nf, rc, cstrv) = optfunc(_loss, cache.u0; kws...)
     else
