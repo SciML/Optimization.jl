@@ -1,4 +1,4 @@
-using OptimizationPRIMA, Optimization
+using OptimizationPRIMA, Optimization, ForwardDiff, ModelingToolkit
 using Test
 
 @testset "OptimizationPRIMA.jl" begin
@@ -21,6 +21,24 @@ using Test
     function con2_c(res, x, p)
         res .= [x[1] + x[2], x[2] * sin(x[1]) - x[1]]
     end
-    optprob = OptimizationFunction(rosenbrock, cons = con2_c)
-    prob = OptimizationProblem(, x0, _p, lcons = [-Inf, -Inf], ucons = [Inf, Inf])
+    optprob = OptimizationFunction(rosenbrock, AutoForwardDiff(), cons = con2_c)
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [1, -100], ucons = [1, 100])
+    sol = Optimization.solve(prob, COBYLA(), maxiters = 1000)
+    @test sol.objective < l1
+
+    function con2_c(res, x, p)
+        res .= [x[1] + x[2]]
+    end
+    optprob = OptimizationFunction(rosenbrock, AutoForwardDiff(), cons = con2_c)
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [1], ucons = [1])
+    sol = Optimization.solve(prob, COBYLA(), maxiters = 1000)
+    @test sol.objective < l1
+
+    function con2_c(res, x, p)
+        res .= [x[2] * sin(x[1]) - x[1]]
+    end
+    optprob = OptimizationFunction(rosenbrock, AutoModelingToolkit(), cons = con2_c)
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [10], ucons = [50])
+    sol = Optimization.solve(prob, COBYLA(), maxiters = 1000)
+    @test 10*sol.objective < l1
 end

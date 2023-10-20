@@ -16,17 +16,6 @@ SciMLBase.allowsconstraints(::Union{LINCOA, COBYLA}) = true
 SciMLBase.allowsbounds(opt::Union{BOBYQA, LINCOA, COBYLA}) = true
 SciMLBase.requiresconstraints(opt::COBYLA) = true
 
-function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::PRIMASolvers,
-    data = Optimization.DEFAULT_DATA;
-    callback = (args...) -> (false),
-    progress = false, kwargs...)
-    if opt isa COBYLA
-        sys = ModelingToolkit.modelingtoolkitize(prob)
-        prob = OptimizationProblem(sys, prob.u0, prob.p; lb = prob.lb, ub = prob.ub, cons_sparse = true)
-    end
-    return OptimizationCache(prob, opt, data; callback, progress,
-        kwargs...)
-end
 
 function get_solve_func(opt::PRIMASolvers)
     if opt isa UOBYQA
@@ -132,33 +121,34 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     t0 = time()
     if cache.opt isa COBYLA
-        lininds = Int[]
+        lineqsinds = Int[]
+        linineqsinds = Int[]
         nonlininds = Int[]
-        symboliclinexpr = []
-        for i in eachindex(cache.f.cons_expr)
-            println(cache.f.cons_expr[i])
-            println(isempty(cache.f.cons_hess_prototype[i]))
-            if isempty(cache.f.cons_hess_prototype[i])
-                push!(lininds, i)
-                symbolicexpr = Symbolics.parse_expr_to_symbolic(cache.f.cons_expr[i], (@__MODULE__,))
-                println(symbolicexpr)
-                push!(symboliclinexpr, symbolicexpr)
+        H = [zeros(length(cache.u0), length(cache.u0)) for i in 1:length(cache.lcons)]
+        J = zeros(length(cache.lcons), length(cache.u0))
+
+        cache.f.cons_h(H, ones(length(cache.u0)))
+        cache.f.cons_j(J, ones(length(cache.u0)))
+        for i in eachindex(cache.lcons)
+            if iszero(H[i]) && cache.lcons[i] == cache.ucons[i]
+                push!(lineqsinds, i)
+            elseif iszero(H[i]) && cache.lcons[i] != cache.ucons[i]
+                push!(linineqsinds, i)
             else
                 push!(nonlininds, i)
             end
         end
-        res1 = zeros(length(cache.f.cons_expr))
+        res1 = zeros(length(cache.lcons))
         nonlincons = (res, θ) -> (cache.f.cons(res1, θ); res .= res1[nonlininds])
-        println(symboliclinexpr)
-        A = hcat(res1[lininds]...)
-        println(A)
-        b = cache.lcons[lininds]
-        println(b)
+        A₁ = J[lineqsinds, :]
+        b₁ = cache.lcons[lineqsinds]
+        A₂ = J[linineqsinds, :]
+        b₂ = cache.ucons[linineqsinds]
         function fwcons(θ, res)
             nonlincons(res, θ)
             return _loss(θ)
         end
-        (minx, minf, nf, rc, cstrv) = optfunc(fwcons, cache.u0; linear_eq = (A, b), nonlinear_ineq = length(nonlininds), kws...)
+        (minx, minf, nf, rc, cstrv) = optfunc(fwcons, cache.u0; linear_eq = (A₁, b₁), linear_ineq = (A₂, b₂), nonlinear_ineq = length(nonlininds), kws...)
     elseif cache.opt isa LINCOA
         (minx, minf, nf, rc, cstrv) = optfunc(_loss, cache.u0; kws...)
     else

@@ -4,7 +4,6 @@ authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "1.0.0-DEV"
 
 [deps]
-ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 PRIMA = "0a7d04aa-8ac2-47b3-b7a7-9dbd6ad661ed"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
