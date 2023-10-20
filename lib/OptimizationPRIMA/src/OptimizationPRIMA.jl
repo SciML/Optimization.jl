@@ -16,6 +16,29 @@ SciMLBase.allowsconstraints(::Union{LINCOA, COBYLA}) = true
 SciMLBase.allowsbounds(opt::Union{BOBYQA, LINCOA, COBYLA}) = true
 SciMLBase.requiresconstraints(opt::COBYLA) = true
 
+function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt, data;
+    callback = Optimization.DEFAULT_CALLBACK,
+    maxiters::Union{Number, Nothing} = nothing,
+    maxtime::Union{Number, Nothing} = nothing,
+    abstol::Union{Number, Nothing} = nothing,
+    reltol::Union{Number, Nothing} = nothing,
+    progress = false,
+    kwargs...)
+    reinit_cache = Optimization.ReInitCache(prob.u0, prob.p)
+    num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
+    if prob.f.adtype isa SciMLBase.NoAD && opt isa COBYLA
+        throw("We evaluate the jacobian and hessian of the constraints once to automatically detect 
+        linear and nonlinear constraints, please provide a valid AD backend for using COBYLA.")
+    else    
+        f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons)
+    end
+
+    return OptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons,
+        prob.ucons, prob.sense,
+        opt, data, progress, callback,
+        merge((; maxiters, maxtime, abstol, reltol),
+            NamedTuple(kwargs)))
+end
 
 function get_solve_func(opt::PRIMASolvers)
     if opt isa UOBYQA

@@ -1,6 +1,6 @@
 # BlackBoxOptim.jl
 
-[`BlackBoxOptim`](https://github.com/robertfeldt/BlackBoxOptim.jl) is a Julia package implementing **(Meta-)heuristic/stochastic algorithms** that do not require for the optimized function to be differentiable.
+[`BlackBoxOptim`](https://github.com/robertfeldt/BlackBoxOptim.jl) is a Julia package implementing **(Meta-)heuristic/stochastic algorithms** that do not require differentiability.
 
 ## Installation: OptimizationBBO.jl
 
