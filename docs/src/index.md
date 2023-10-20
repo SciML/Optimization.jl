@@ -63,7 +63,7 @@ packages.
 | NOMAD                   | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | 🟡                    |
 | NLopt                   | ✅                    | ❌                   | ✅                     | ✅               | 🟡                 | ✅                    | 🟡                    |
 | Optim                   | ✅                    | ✅                   | ✅                     | ✅               | ✅                 | ✅                    | ✅                    |
-| PRIMA          | ❌     | ❌        | ✅         |✅        | ✅        | ❌         | ❌        |
+| PRIMA                   | ❌                    | ❌                   | ✅                     | ✅               | ✅                 | ❌                    | ❌                    |
 | QuadDIRECT              | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | ❌                    |
 
 ✅ = supported

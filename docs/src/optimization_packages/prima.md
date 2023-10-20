@@ -40,7 +40,6 @@ sol = Optimization.solve(prob, BOBYQA(), maxiters = 1000)
 
 sol = Optimization.solve(prob, LINCOA(), maxiters = 1000)
 
-
 function con2_c(res, x, p)
     res .= [x[1] + x[2], x[2] * sin(x[1]) - x[1]]
 end

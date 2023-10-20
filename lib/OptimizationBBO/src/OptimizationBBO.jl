@@ -135,7 +135,8 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     _loss = function (θ)
-        if cache.callback === Optimization.DEFAULT_CALLBACK && cache.data === Optimization.DEFAULT_DATA
+        if cache.callback === Optimization.DEFAULT_CALLBACK &&
+           cache.data === Optimization.DEFAULT_DATA
             return first(cache.f(θ, cache.p))
         elseif cache.callback === Optimization.DEFAULT_CALLBACK
             return first(cache.f(θ, cache.p, cur...))

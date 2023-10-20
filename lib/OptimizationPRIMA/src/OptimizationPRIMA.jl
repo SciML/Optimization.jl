@@ -29,7 +29,7 @@ function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt, data;
     if prob.f.adtype isa SciMLBase.NoAD && opt isa COBYLA
         throw("We evaluate the jacobian and hessian of the constraints once to automatically detect 
         linear and nonlinear constraints, please provide a valid AD backend for using COBYLA.")
-    else    
+    else
         f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons)
     end
 
@@ -62,7 +62,7 @@ function __map_optimizer_args!(cache::OptimizationCache, opt::PRIMASolvers;
     reltol::Union{Number, Nothing} = nothing,
     kwargs...)
     kws = (; kwargs...)
-    
+
     if !isnothing(maxiters)
         kws = (; kws..., maxfun = maxiters)
     end
@@ -79,22 +79,15 @@ function __map_optimizer_args!(cache::OptimizationCache, opt::PRIMASolvers;
 end
 
 function sciml_prima_retcode(rc::AbstractString)
-    if rc in ["SMALL_TR_RADIUS", "TRSUBP_FAILED","NAN_INF_X"
-        ,"NAN_INF_F"
-        ,"NAN_INF_MODEL"
-        ,"DAMAGING_ROUNDING"
-        ,"ZERO_LINEAR_CONSTRAINT"
-        ,"INVALID_INPUT"
-        ,"ASSERTION_FAILS"
-        ,"VALIDATION_FAILS"
-        ,"MEMORY_ALLOCATION_FAILS"]
+    if rc in ["SMALL_TR_RADIUS", "TRSUBP_FAILED", "NAN_INF_X", "NAN_INF_F", "NAN_INF_MODEL",
+        "DAMAGING_ROUNDING", "ZERO_LINEAR_CONSTRAINT", "INVALID_INPUT", "ASSERTION_FAILS",
+        "VALIDATION_FAILS", "MEMORY_ALLOCATION_FAILS"]
         return ReturnCode.Failure
-    else rc in [
-        "FTARGET_ACHIEVED"
-        "MAXFUN_REACHED"
-        "MAXTR_REACHED"
-        "NO_SPACE_BETWEEN_BOUNDS"
-    ]
+    else
+        rc in ["FTARGET_ACHIEVED"
+            "MAXFUN_REACHED"
+            "MAXTR_REACHED"
+            "NO_SPACE_BETWEEN_BOUNDS"]
         return ReturnCode.Success
     end
 end
@@ -132,13 +125,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
         return x[1]
     end
 
-   optfunc = get_solve_func(cache.opt)
-
+    optfunc = get_solve_func(cache.opt)
 
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
-    kws = __map_optimizer_args!(cache, cache.opt; callback = cache.callback, maxiters = maxiters,
+    kws = __map_optimizer_args!(cache, cache.opt; callback = cache.callback,
+        maxiters = maxiters,
         maxtime = maxtime,
         cache.solver_args...)
 
@@ -171,7 +164,12 @@ function SciMLBase.__solve(cache::OptimizationCache{
             nonlincons(res, θ)
             return _loss(θ)
         end
-        (minx, minf, nf, rc, cstrv) = optfunc(fwcons, cache.u0; linear_eq = (A₁, b₁), linear_ineq = (A₂, b₂), nonlinear_ineq = length(nonlininds), kws...)
+        (minx, minf, nf, rc, cstrv) = optfunc(fwcons,
+            cache.u0;
+            linear_eq = (A₁, b₁),
+            linear_ineq = (A₂, b₂),
+            nonlinear_ineq = length(nonlininds),
+            kws...)
     elseif cache.opt isa LINCOA
         (minx, minf, nf, rc, cstrv) = optfunc(_loss, cache.u0; kws...)
     else

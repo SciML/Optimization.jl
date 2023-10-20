@@ -40,11 +40,11 @@ end
     callback = function (p, l)
         global iter
         iter += 1
-    
+
         display(l)
         return false
     end
-    
+
     sol = solve(prob, Ipopt.Optimizer(); callback)
     @test 10 * sol.objective < l1
 

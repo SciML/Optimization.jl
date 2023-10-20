@@ -102,7 +102,10 @@ function SciMLBase.get_paramsyms(sol::SciMLBase.OptimizationSolution{
     sol.cache.evaluator.f.paramsyms
 end
 
-function MOIOptimizationNLPCache(prob::OptimizationProblem, opt; callback = nothing, kwargs...)
+function MOIOptimizationNLPCache(prob::OptimizationProblem,
+    opt;
+    callback = nothing,
+    kwargs...)
     reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
@@ -418,7 +421,7 @@ function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
     if cache.evaluator.callback !== nothing
         MOI.set(opt_setup, MOI.Silent(), true)
     end
-    
+
     MOI.optimize!(opt_setup)
     if MOI.get(opt_setup, MOI.ResultCount()) >= 1
         minimizer = MOI.get(opt_setup, MOI.VariablePrimal(), θ)
