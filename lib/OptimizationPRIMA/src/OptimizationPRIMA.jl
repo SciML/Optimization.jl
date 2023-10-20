@@ -1,7 +1,7 @@
 module OptimizationPRIMA
 
-using PRIMA, Optimization, Optimization.SciMLBase, SparseArrays
-import ModelingToolkit, ModelingToolkit.Symbolics
+using Optimization, Optimization.SciMLBase, Reexport
+@reexport using PRIMA
 
 abstract type PRIMASolvers end
 
