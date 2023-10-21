@@ -2,10 +2,14 @@ module OptimizationSparseDiffExt
 
 import Optimization, Optimization.ArrayInterface
 import Optimization.SciMLBase: OptimizationFunction
-import Optimization.ADTypes: AutoSparseForwardDiff, AutoSparseFiniteDiff, AutoSparseReverseDiff
+import Optimization.ADTypes: AutoSparseForwardDiff,
+    AutoSparseFiniteDiff, AutoSparseReverseDiff
 using Optimization.LinearAlgebra, ReverseDiff
-isdefined(Base, :get_extension) ? (using SparseDiffTools, SparseDiffTools.ForwardDiff, SparseDiffTools.FiniteDiff, Symbolics) :
-(using ..SparseDiffTools, ..SparseDiffTools.ForwardDiff, ..SparseDiffTools.FiniteDiff, ..Symbolics)
+isdefined(Base, :get_extension) ?
+(using SparseDiffTools,
+    SparseDiffTools.ForwardDiff, SparseDiffTools.FiniteDiff, Symbolics) :
+(using ..SparseDiffTools,
+    ..SparseDiffTools.ForwardDiff, ..SparseDiffTools.FiniteDiff, ..Symbolics)
 
 function default_chunk_size(len)
     if len < ForwardDiff.DEFAULT_CHUNK_THRESHOLD
@@ -247,7 +251,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoSparseFiniteDiff, p
     else
         grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
     end
-    
+
     hess_sparsity = f.hess_prototype
     hess_colors = f.hess_colorvec
     if f.hess === nothing
@@ -371,7 +375,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     else
         grad = (G, θ, args...) -> f.grad(G, θ, cache.p, args...)
     end
-    
+
     hess_sparsity = f.hess_prototype
     hess_colors = f.hess_colorvec
     if f.hess === nothing
@@ -406,7 +410,8 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     cons_jac_colorvec = f.cons_jac_colorvec
     if cons !== nothing && f.cons_j === nothing
         cons_jac_prototype = f.cons_jac_prototype === nothing ?
-                             Symbolics.jacobian_sparsity(cons, zeros(eltype(cache.u0), num_cons),
+                             Symbolics.jacobian_sparsity(cons,
+            zeros(eltype(cache.u0), num_cons),
             cache.u0) :
                              f.cons_jac_prototype
         cons_jac_colorvec = f.cons_jac_colorvec === nothing ?
@@ -503,7 +508,10 @@ function Optimization.instantiate_function(f, x, adtype::AutoSparseReverseDiff,
             end
         else
             cfg = ReverseDiff.GradientConfig(x)
-            grad = (res, θ, args...) -> ReverseDiff.gradient!(res, x -> _f(x, args...), θ, cfg)
+            grad = (res, θ, args...) -> ReverseDiff.gradient!(res,
+                x -> _f(x, args...),
+                θ,
+                cfg)
         end
     else
         grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
@@ -515,20 +523,32 @@ function Optimization.instantiate_function(f, x, adtype::AutoSparseReverseDiff,
         hess_sparsity = Symbolics.hessian_sparsity(_f, x)
         hess_colors = SparseDiffTools.matrix_colors(tril(hess_sparsity))
         if adtype.compile
-            T = ForwardDiff.Tag(OptimizationSparseReverseTag(),eltype(x))
-            xdual = ForwardDiff.Dual{typeof(T),eltype(x),min(chunksize, maximum(hess_colors))}.(x, Ref(ForwardDiff.Partials((ones(eltype(x), min(chunksize, maximum(hess_colors)))...,))))
+            T = ForwardDiff.Tag(OptimizationSparseReverseTag(), eltype(x))
+            xdual = ForwardDiff.Dual{
+                typeof(T),
+                eltype(x),
+                min(chunksize, maximum(hess_colors)),
+            }.(x,
+                Ref(ForwardDiff.Partials((ones(eltype(x),
+                    min(chunksize, maximum(hess_colors)))...,))))
             h_tape = ReverseDiff.GradientTape(_f, xdual)
             htape = ReverseDiff.compile(h_tape)
             function g(res1, θ)
                 ReverseDiff.gradient!(res1, htape, θ)
             end
-            jaccfg = ForwardColorJacCache(g, x; tag = typeof(T), colorvec = hess_colors, sparsity = hess_sparsity)
+            jaccfg = ForwardColorJacCache(g,
+                x;
+                tag = typeof(T),
+                colorvec = hess_colors,
+                sparsity = hess_sparsity)
             hess = function (res, θ, args...)
                 SparseDiffTools.forwarddiff_color_jacobian!(res, g, θ, jaccfg)
             end
         else
             hess = function (res, θ, args...)
-                res .= SparseDiffTools.forwarddiff_color_jacobian(θ, colorvec = hess_colors, sparsity = hess_sparsity) do θ
+                res .= SparseDiffTools.forwarddiff_color_jacobian(θ,
+                    colorvec = hess_colors,
+                    sparsity = hess_sparsity) do θ
                     ReverseDiff.gradient(x -> _f(x, args...), θ)
                 end
             end
@@ -561,7 +581,11 @@ function Optimization.instantiate_function(f, x, adtype::AutoSparseReverseDiff,
     cons_jac_prototype = f.cons_jac_prototype
     cons_jac_colorvec = f.cons_jac_colorvec
     if cons !== nothing && f.cons_j === nothing
-        jaccache = SparseDiffTools.sparse_jacobian_cache(AutoSparseForwardDiff(), SparseDiffTools.SymbolicsSparsityDetection(), cons_oop, x, fx = zeros(eltype(x), num_cons))
+        jaccache = SparseDiffTools.sparse_jacobian_cache(AutoSparseForwardDiff(),
+            SparseDiffTools.SymbolicsSparsityDetection(),
+            cons_oop,
+            x,
+            fx = zeros(eltype(x), num_cons))
         # let cons = cons, θ = cache.u0, cons_jac_colorvec = cons_jac_colorvec, cons_jac_prototype = cons_jac_prototype, num_cons = num_cons
         #     ForwardColorJacCache(cons, θ;
         #     colorvec = cons_jac_colorvec,
@@ -570,14 +594,14 @@ function Optimization.instantiate_function(f, x, adtype::AutoSparseReverseDiff,
         # end
         cons_jac_prototype = jaccache.jac_prototype
         cons_jac_colorvec = jaccache.coloring
-        cons_j = function (J, θ, args...;cons = cons, cache = jaccache.cache)
+        cons_j = function (J, θ, args...; cons = cons, cache = jaccache.cache)
             forwarddiff_color_jacobian!(J, cons, θ, cache)
             return
         end
     else
         cons_j = (J, θ) -> f.cons_j(J, θ, p)
     end
-    
+
     conshess_sparsity = f.cons_hess_prototype
     conshess_colors = f.cons_hess_colorvec
     if cons !== nothing && f.cons_h === nothing
@@ -585,24 +609,39 @@ function Optimization.instantiate_function(f, x, adtype::AutoSparseReverseDiff,
         conshess_sparsity = Symbolics.hessian_sparsity.(fncs, Ref(x))
         conshess_colors = SparseDiffTools.matrix_colors.(conshess_sparsity)
         if adtype.compile
-            T = ForwardDiff.Tag(OptimizationSparseReverseTag(),eltype(x))
-            xduals = [ForwardDiff.Dual{typeof(T),eltype(x),min(chunksize, maximum(conshess_colors[i]))}.(x, Ref(ForwardDiff.Partials((ones(eltype(x), min(chunksize, maximum(conshess_colors[i])))...,)))) for i in 1:num_cons]
-            consh_tapes = [ReverseDiff.GradientTape(fncs[i], xduals[i]) for i in 1:num_cons] 
+            T = ForwardDiff.Tag(OptimizationSparseReverseTag(), eltype(x))
+            xduals = [ForwardDiff.Dual{
+                typeof(T),
+                eltype(x),
+                min(chunksize, maximum(conshess_colors[i])),
+            }.(x,
+                Ref(ForwardDiff.Partials((ones(eltype(x),
+                    min(chunksize, maximum(conshess_colors[i])))...,)))) for i in 1:num_cons]
+            consh_tapes = [ReverseDiff.GradientTape(fncs[i], xduals[i]) for i in 1:num_cons]
             conshtapes = ReverseDiff.compile.(consh_tapes)
             function grad_cons(res1, θ, htape)
                 ReverseDiff.gradient!(res1, htape, θ)
             end
             gs = [(res1, x) -> grad_cons(res1, x, conshtapes[i]) for i in 1:num_cons]
-            jaccfgs = [ForwardColorJacCache(gs[i], x; tag = typeof(T), colorvec = conshess_colors[i], sparsity = conshess_sparsity[i]) for i in 1:num_cons]
+            jaccfgs = [ForwardColorJacCache(gs[i],
+                x;
+                tag = typeof(T),
+                colorvec = conshess_colors[i],
+                sparsity = conshess_sparsity[i]) for i in 1:num_cons]
             cons_h = function (res, θ, args...)
                 for i in 1:num_cons
-                    SparseDiffTools.forwarddiff_color_jacobian!(res[i], gs[i], θ, jaccfgs[i])
+                    SparseDiffTools.forwarddiff_color_jacobian!(res[i],
+                        gs[i],
+                        θ,
+                        jaccfgs[i])
                 end
             end
         else
             cons_h = function (res, θ)
                 for i in 1:num_cons
-                    res[i] .= SparseDiffTools.forwarddiff_color_jacobian(θ, colorvec = conshess_colors[i], sparsity = conshess_sparsity[i]) do θ
+                    res[i] .= SparseDiffTools.forwarddiff_color_jacobian(θ,
+                        colorvec = conshess_colors[i],
+                        sparsity = conshess_sparsity[i]) do θ
                         ReverseDiff.gradient(fncs[i], θ)
                     end
                 end
@@ -643,7 +682,10 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
             end
         else
             cfg = ReverseDiff.GradientConfig(cache.u0)
-            grad = (res, θ, args...) -> ReverseDiff.gradient!(res, x -> _f(x, args...), θ, cfg)
+            grad = (res, θ, args...) -> ReverseDiff.gradient!(res,
+                x -> _f(x, args...),
+                θ,
+                cfg)
         end
     else
         grad = (G, θ, args...) -> f.grad(G, θ, cache.p, args...)
@@ -655,20 +697,32 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
         hess_sparsity = Symbolics.hessian_sparsity(_f, cache.u0)
         hess_colors = SparseDiffTools.matrix_colors(tril(hess_sparsity))
         if adtype.compile
-            T = ForwardDiff.Tag(OptimizationSparseReverseTag(),eltype(cache.u0))
-            xdual = ForwardDiff.Dual{typeof(T),eltype(cache.u0),min(chunksize, maximum(hess_colors))}.(cache.u0, Ref(ForwardDiff.Partials((ones(eltype(cache.u0), min(chunksize, maximum(hess_colors)))...,))))
+            T = ForwardDiff.Tag(OptimizationSparseReverseTag(), eltype(cache.u0))
+            xdual = ForwardDiff.Dual{
+                typeof(T),
+                eltype(cache.u0),
+                min(chunksize, maximum(hess_colors)),
+            }.(cache.u0,
+                Ref(ForwardDiff.Partials((ones(eltype(cache.u0),
+                    min(chunksize, maximum(hess_colors)))...,))))
             h_tape = ReverseDiff.GradientTape(_f, xdual)
             htape = ReverseDiff.compile(h_tape)
             function g(res1, θ)
                 ReverseDiff.gradient!(res1, htape, θ)
             end
-            jaccfg = ForwardColorJacCache(g, cache.u0; tag = typeof(T), colorvec = hess_colors, sparsity = hess_sparsity)
+            jaccfg = ForwardColorJacCache(g,
+                cache.u0;
+                tag = typeof(T),
+                colorvec = hess_colors,
+                sparsity = hess_sparsity)
             hess = function (res, θ, args...)
                 SparseDiffTools.forwarddiff_color_jacobian!(res, g, θ, jaccfg)
             end
         else
             hess = function (res, θ, args...)
-                res .= SparseDiffTools.forwarddiff_color_jacobian(θ, colorvec = hess_colors, sparsity = hess_sparsity) do θ
+                res .= SparseDiffTools.forwarddiff_color_jacobian(θ,
+                    colorvec = hess_colors,
+                    sparsity = hess_sparsity) do θ
                     ReverseDiff.gradient(x -> _f(x, args...), θ)
                 end
             end
@@ -694,7 +748,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     if f.cons === nothing
         cons = nothing
     else
-        cons = function (res, θ) 
+        cons = function (res, θ)
             f.cons(res, θ, cache.p)
             return
         end
@@ -705,10 +759,14 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     cons_jac_colorvec = f.cons_jac_colorvec
     if cons !== nothing && f.cons_j === nothing
         # cons_jac_prototype = Symbolics.jacobian_sparsity(cons,
-            # zeros(eltype(cache.u0), num_cons),
-            # cache.u0)
+        # zeros(eltype(cache.u0), num_cons),
+        # cache.u0)
         # cons_jac_colorvec = matrix_colors(cons_jac_prototype)
-        jaccache = SparseDiffTools.sparse_jacobian_cache(AutoSparseForwardDiff(), SparseDiffTools.SymbolicsSparsityDetection(), cons_oop, cache.u0, fx = zeros(eltype(cache.u0), num_cons))
+        jaccache = SparseDiffTools.sparse_jacobian_cache(AutoSparseForwardDiff(),
+            SparseDiffTools.SymbolicsSparsityDetection(),
+            cons_oop,
+            cache.u0,
+            fx = zeros(eltype(cache.u0), num_cons))
         # let cons = cons, θ = cache.u0, cons_jac_colorvec = cons_jac_colorvec, cons_jac_prototype = cons_jac_prototype, num_cons = num_cons
         #     ForwardColorJacCache(cons, θ;
         #     colorvec = cons_jac_colorvec,
@@ -724,7 +782,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     else
         cons_j = (J, θ) -> f.cons_j(J, θ, cache.p)
     end
-    
+
     conshess_sparsity = f.cons_hess_prototype
     conshess_colors = f.cons_hess_colorvec
     if cons !== nothing && f.cons_h === nothing
@@ -742,30 +800,45 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
         end
         conshess_colors = SparseDiffTools.matrix_colors.(conshess_sparsity)
         if adtype.compile
-            T = ForwardDiff.Tag(OptimizationSparseReverseTag(),eltype(cache.u0))
-            xduals = [ForwardDiff.Dual{typeof(T),eltype(cache.u0),min(chunksize, maximum(conshess_colors[i]))}.(cache.u0, Ref(ForwardDiff.Partials((ones(eltype(cache.u0), min(chunksize, maximum(conshess_colors[i])))...,)))) for i in 1:num_cons]
-            consh_tapes = [ReverseDiff.GradientTape(fncs[i], xduals[i]) for i in 1:num_cons] 
+            T = ForwardDiff.Tag(OptimizationSparseReverseTag(), eltype(cache.u0))
+            xduals = [ForwardDiff.Dual{
+                typeof(T),
+                eltype(cache.u0),
+                min(chunksize, maximum(conshess_colors[i])),
+            }.(cache.u0,
+                Ref(ForwardDiff.Partials((ones(eltype(cache.u0),
+                    min(chunksize, maximum(conshess_colors[i])))...,)))) for i in 1:num_cons]
+            consh_tapes = [ReverseDiff.GradientTape(fncs[i], xduals[i]) for i in 1:num_cons]
             conshtapes = ReverseDiff.compile.(consh_tapes)
             function grad_cons(res1, θ, htape)
                 ReverseDiff.gradient!(res1, htape, θ)
             end
             gs = let conshtapes = conshtapes
-                map(1:num_cons) do  i 
-                    function (res1, x) 
+                map(1:num_cons) do i
+                    function (res1, x)
                         grad_cons(res1, x, conshtapes[i])
                     end
                 end
             end
-            jaccfgs = [ForwardColorJacCache(gs[i], cache.u0; tag = typeof(T), colorvec = conshess_colors[i], sparsity = conshess_sparsity[i]) for i in 1:num_cons]
+            jaccfgs = [ForwardColorJacCache(gs[i],
+                cache.u0;
+                tag = typeof(T),
+                colorvec = conshess_colors[i],
+                sparsity = conshess_sparsity[i]) for i in 1:num_cons]
             cons_h = function (res, θ)
                 for i in 1:num_cons
-                    SparseDiffTools.forwarddiff_color_jacobian!(res[i], gs[i], θ, jaccfgs[i])
+                    SparseDiffTools.forwarddiff_color_jacobian!(res[i],
+                        gs[i],
+                        θ,
+                        jaccfgs[i])
                 end
             end
         else
             cons_h = function (res, θ)
                 for i in 1:num_cons
-                    res[i] .= SparseDiffTools.forwarddiff_color_jacobian(θ, colorvec = conshess_colors[i], sparsity = conshess_sparsity[i]) do θ
+                    res[i] .= SparseDiffTools.forwarddiff_color_jacobian(θ,
+                        colorvec = conshess_colors[i],
+                        sparsity = conshess_sparsity[i]) do θ
                         ReverseDiff.gradient(fncs[i], θ)
                     end
                 end

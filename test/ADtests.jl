@@ -85,8 +85,8 @@ if VERSION >= v"1.9"
     optprob.cons_h(H3, x0)
     @test H3 == [[2.0 0.0; 0.0 2.0]]
 
-G2 = Array{Float64}(undef, 2)
-H2 = Array{Float64}(undef, 2, 2)
+    G2 = Array{Float64}(undef, 2)
+    H2 = Array{Float64}(undef, 2, 2)
 
     optf = OptimizationFunction(rosenbrock, Optimization.AutoEnzyme(), cons = con2_c)
     optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoEnzyme(),
@@ -126,12 +126,12 @@ H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 H3 == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 
-
 G2 = Array{Float64}(undef, 2)
 H2 = Array{Float64}(undef, 2, 2)
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoReverseDiff(), cons = con2_c)
-optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoReverseDiff(compile=true),
+optprob = Optimization.instantiate_function(optf, x0,
+    Optimization.AutoReverseDiff(compile = true),
     nothing, 2)
 optprob.grad(G2, x0)
 @test G1 == G2
@@ -524,7 +524,8 @@ sol = solve(prob, Optimisers.ADAM(0.1), maxiters = 1000)
 @test 10 * sol.objective < l1
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoSparseReverseDiff(), cons = con2_c)
-optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoSparseReverseDiff(true),
+optprob = Optimization.instantiate_function(optf, x0,
+    Optimization.AutoSparseReverseDiff(true),
     nothing, 2)
 G2 = Array{Float64}(undef, 2)
 optprob.grad(G2, x0)
@@ -543,7 +544,6 @@ optprob.cons_j(J, [5.0, 3.0])
 H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 @test H3 ≈ [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
-
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoSparseReverseDiff(), cons = con2_c)
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoSparseReverseDiff(),
@@ -565,7 +565,6 @@ optprob.cons_j(J, [5.0, 3.0])
 H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 @test H3 ≈ [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
-
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoSparseReverseDiff())
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoSparseReverseDiff(),

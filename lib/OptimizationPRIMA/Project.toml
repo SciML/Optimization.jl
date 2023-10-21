@@ -1,0 +1,21 @@
+name = "OptimizationPRIMA"
+uuid = "72f8369c-a2ea-4298-9126-56167ce9cbc2"
+authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
+version = "0.0.1"
+
+[deps]
+Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+PRIMA = "0a7d04aa-8ac2-47b3-b7a7-9dbd6ad661ed"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+
+
+[compat]
+julia = "1"
+
+[extras]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test", "ForwardDiff", "ModelingToolkit"]

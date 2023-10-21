@@ -6,7 +6,7 @@ import Optimization.LinearAlgebra: I
 import Optimization.ADTypes: AutoEnzyme
 isdefined(Base, :get_extension) ? (using Enzyme) : (using ..Enzyme)
 
-@inline function firstapply(f::F, θ, p, args...) where F
+@inline function firstapply(f::F, θ, p, args...) where {F}
     res = f(θ, p, args...)
     if isa(res, AbstractFloat)
         res
@@ -18,9 +18,8 @@ end
 function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
     adtype::AutoEnzyme, p,
     num_cons = 0)
-
     if f.grad === nothing
-        grad = let 
+        grad = let
             function (res, θ, args...)
                 res .= zero(eltype(res))
                 Enzyme.autodiff(Enzyme.Reverse,
