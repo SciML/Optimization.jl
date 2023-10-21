@@ -16,7 +16,7 @@ SciMLBase.allowsconstraints(::Union{LINCOA, COBYLA}) = true
 SciMLBase.allowsbounds(opt::Union{BOBYQA, LINCOA, COBYLA}) = true
 SciMLBase.requiresconstraints(opt::COBYLA) = true
 
-function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt, data;
+function Optimization.OptimizationCache(prob::SciMLBase.OptimizationProblem, opt::PRIMASolvers, data;
     callback = Optimization.DEFAULT_CALLBACK,
     maxiters::Union{Number, Nothing} = nothing,
     maxtime::Union{Number, Nothing} = nothing,
@@ -33,7 +33,7 @@ function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt, data;
         f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons)
     end
 
-    return OptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons,
+    return Optimization.OptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
         opt, data, progress, callback,
         merge((; maxiters, maxtime, abstol, reltol),
@@ -54,7 +54,7 @@ function get_solve_func(opt::PRIMASolvers)
     end
 end
 
-function __map_optimizer_args!(cache::OptimizationCache, opt::PRIMASolvers;
+function __map_optimizer_args!(cache::Optimization.OptimizationCache, opt::PRIMASolvers;
     callback = nothing,
     maxiters::Union{Number, Nothing} = nothing,
     maxtime::Union{Number, Nothing} = nothing,
@@ -92,7 +92,7 @@ function sciml_prima_retcode(rc::AbstractString)
     end
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     F,
     RC,
     LB,
