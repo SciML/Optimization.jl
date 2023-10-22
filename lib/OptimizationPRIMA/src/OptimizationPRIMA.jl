@@ -16,7 +16,8 @@ SciMLBase.allowsconstraints(::Union{LINCOA, COBYLA}) = true
 SciMLBase.allowsbounds(opt::Union{BOBYQA, LINCOA, COBYLA}) = true
 SciMLBase.requiresconstraints(opt::COBYLA) = true
 
-function Optimization.OptimizationCache(prob::SciMLBase.OptimizationProblem, opt::PRIMASolvers, data;
+function Optimization.OptimizationCache(prob::SciMLBase.OptimizationProblem,
+    opt::PRIMASolvers, data;
     callback = Optimization.DEFAULT_CALLBACK,
     maxiters::Union{Number, Nothing} = nothing,
     maxtime::Union{Number, Nothing} = nothing,

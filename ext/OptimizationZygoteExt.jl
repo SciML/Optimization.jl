@@ -124,12 +124,12 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
         cons = nothing
     else
         cons = (res, θ) -> f.cons(res, θ, cache.p)
-        cons_oop = (x) -> (_res = zeros(eltype(x), num_cons); cons(_res, x); _res)
+        cons_oop = (x) -> (_res = Zygote.Buffer(x, num_cons); cons(_res, x); copy(_res))
     end
 
     if cons !== nothing && f.cons_j === nothing
         cons_j = function (J, θ)
-            J .= Zygote.jacobian(cons_oop, θ)
+            J .= first(Zygote.jacobian(cons_oop, θ))
         end
     else
         cons_j = (J, θ) -> f.cons_j(J, θ, cache.p)
