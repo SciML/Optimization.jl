@@ -5,7 +5,7 @@ flexibility of Optimization.jl. This is a gauntlet of many solvers to get a feel
 for common workflows of the package and give copy-pastable starting points.
 
 !!! note
-
+    
     This example uses many different solvers of Optimization.jl. Each solver
     subpackage needs to be installed separate. For example, for the details on
     the installation and usage of OptimizationOptimJL.jl package, see the
@@ -155,7 +155,7 @@ sol = solve(prob, Opt(:G_MLSL_LDS, 2), local_method = Opt(:LD_LBFGS, 2), maxiter
 
 ```@example rosenbrock
 using OptimizationBBO
-prob = Optimization.OptimizationProblem(rosenbrock, x0, _p, lb = [-1.0, 0.2],
+prob = Optimization.OptimizationProblem(rosenbrock, [0.0, 0.3], _p, lb = [-1.0, 0.2],
     ub = [0.8, 0.43])
 sol = solve(prob, BBO_adaptive_de_rand_1_bin()) # -1.0 ≤ x[1] ≤ 0.8, 0.2 ≤ x[2] ≤ 0.43
 ```
