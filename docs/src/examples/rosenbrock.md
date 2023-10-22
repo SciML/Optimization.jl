@@ -5,7 +5,7 @@ flexibility of Optimization.jl. This is a gauntlet of many solvers to get a feel
 for common workflows of the package and give copy-pastable starting points.
 
 !!! note
-    
+
     This example uses many different solvers of Optimization.jl. Each solver
     subpackage needs to be installed separate. For example, for the details on
     the installation and usage of OptimizationOptimJL.jl package, see the
@@ -80,7 +80,9 @@ prob = OptimizationProblem(optf, x0, _p, lcons = [0.5], ucons = [0.5],
 sol = solve(prob, IPNewton())
 
 # Notice now that x[1]^2 + x[2]^2 ≈ 0.5:
-cons(sol.u, _p)
+res = zeros(1)
+cons(res, sol.u, _p)
+println(res)
 ```
 
 ```@example rosenbrock
