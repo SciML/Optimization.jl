@@ -38,10 +38,10 @@ The ultimate objective is to maximize the company's wealth in June, denoted by t
 ```@example linear
 using Optimization, OptimizationMOI, ModelingToolkit, HiGHS, LinearAlgebra
 
-@variables u[1:5] [bounds = (0, 100)]
-@variables v[1:3] [bounds = (0, Inf)]
-@variables w[1:5] [bounds = (0, Inf)]
-@variables m [bounds = (0, Inf)]
+@variables u[1:5] [bounds = (0.0, 100.0)]
+@variables v[1:3] [bounds = (0.0, Inf)]
+@variables w[1:5] [bounds = (0.0, Inf)]
+@variables m [bounds = (0.0, Inf)]
 
 cons = [u[1] + v[1] - w[1] ~ 150 # January
     u[2] + v[2] - w[2] - 1.01u[1] + 1.003w[1] ~ 100 # February
