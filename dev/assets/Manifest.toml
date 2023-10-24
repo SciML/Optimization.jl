@@ -2,7 +2,7 @@
 
 julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "bea5768e28a29c2fc6bc3452782c437feca68f19"
+project_hash = "80461620056d3329ef64c7aedfc833507557009e"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "5d2e21d7b0d8c22f67483ef95ebdc39c0e6b6003"
@@ -266,9 +266,9 @@ version = "0.3.12"
 
 [[deps.ChainRules]]
 deps = ["Adapt", "ChainRulesCore", "Compat", "Distributed", "GPUArraysCore", "IrrationalConstants", "LinearAlgebra", "Random", "RealDot", "SparseArrays", "SparseInverseSubset", "Statistics", "StructArrays", "SuiteSparse"]
-git-tree-sha1 = "01b0594d8907485ed894bc59adfc0a24a9cde7a3"
+git-tree-sha1 = "7e4f5593e7e1ab923cebc5414f6d5433872cdd19"
 uuid = "082447d4-558c-5d27-93f4-14fc19e9eca2"
-version = "1.55.0"
+version = "1.56.0"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra"]
