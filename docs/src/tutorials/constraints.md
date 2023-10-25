@@ -1,7 +1,7 @@
 # [Using Equality and Inequality Constraints](@id constraints)
 
 Multiple optimization packages available with the MathOptInterface and Optim's `IPNewton` solver can handle non-linear constraints.
-Optimization.jl provides a simple interface to define the constraint as a julia function and then specify the bounds for the output
+Optimization.jl provides a simple interface to define the constraint as a Julia function and then specify the bounds for the output
 in `OptimizationFunction` to indicate if it's an equality or inequality constraint.
 
 Let's define the Rosenbrock function as our objective function and consider the below inequalities as our constraints.
@@ -11,7 +11,7 @@ Let's define the Rosenbrock function as our objective function and consider the 
 
 x_1^2 + x_2^2 \leq 0.8 \\
 
-0.0 \leq x_1 * x_2 \leq 5.0
+-1.0 \leq x_1 * x_2 \leq 2.0
 \end{aligned}
 ```
 
@@ -24,10 +24,10 @@ x0 = zeros(2)
 _p = [1.0, 1.0]
 ```
 
-Next we define the sum of squares and the product of the optimization variables as our constraint functions.
+Next, we define the sum of squares and the product of the optimization variables as our constraint functions.
 
 ```@example constraints
-cons(res, x, p) = (res .= [x[1]^2+x[2]^2, x[1]*x[2]])
+cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[2]])
 ```
 
 We'll use the `IPNewton` solver from Optim to solve the problem.
@@ -38,7 +38,8 @@ prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf, -1.0], ucons = [0.8, 
 sol = solve(prob, IPNewton())
 ```
 
-Let's check that the constraints are satisfied and the objective is lower than at initial values to be sure.
+Let's check that the constraints are satisfied,
+and that the objective is lower than at initial values.
 
 ```@example constraints
 res = zeros(2)
@@ -84,14 +85,14 @@ optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(), c
 prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, 0.5])
 ```
 
-Below the AmplNLWriter.jl package is used with to use the Ipopt library to solve the problem.
+Below, the AmplNLWriter.jl package is used with to use the Ipopt library to solve the problem.
 
 ```@example constraints
 using AmplNLWriter, Ipopt_jll
 sol = solve(prob, AmplNLWriter.Optimizer(Ipopt_jll.amplexe))
 ```
 
-The constraints evaluate to 1.0 and 0.5 respectively as expected.
+The constraints evaluate to 1.0 and 0.5 respectively, as expected.
 
 ```@example constraints
 res = zeros(2)

@@ -1,7 +1,7 @@
 name = "OptimizationOptimJL"
 uuid = "36348300-93cb-4f02-beb5-3c3902f8871e"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.1.5"
+version = "0.1.12"
 
 [deps]
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
@@ -11,7 +11,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 Optim = "1"
-Optimization = "3.9"
+Optimization = "3.15"
 Reexport = "1.2"
 julia = "1"
 

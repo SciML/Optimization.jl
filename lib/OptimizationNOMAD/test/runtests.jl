@@ -11,9 +11,9 @@ using Test
 
     prob = OptimizationProblem(f, x0, _p)
     sol = Optimization.solve(prob, NOMADOpt())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     prob = OptimizationProblem(f, x0, _p; lb = [-1.0, -1.0], ub = [1.5, 1.5])
     sol = Optimization.solve(prob, NOMADOpt())
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 end

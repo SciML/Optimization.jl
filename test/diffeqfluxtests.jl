@@ -1,5 +1,6 @@
-using OrdinaryDiffEq, DiffEqFlux, Optimization, OptimizationOptimJL, OptimizationOptimisers,
-      ForwardDiff
+using OrdinaryDiffEq, DiffEqFlux, Lux, Optimization, OptimizationOptimJL,
+    OptimizationOptimisers, ForwardDiff, ComponentArrays, Random
+rng = Random.default_rng()
 
 function lotka_volterra!(du, u, p, t)
     x, y = u
@@ -52,8 +53,8 @@ optprob = OptimizationFunction((x, p) -> loss_adjoint(x), Optimization.AutoForwa
 prob = Optimization.OptimizationProblem(optprob, p)
 
 result_ode = Optimization.solve(prob,
-                                BFGS(initial_stepnorm = 0.0001),
-                                callback = callback)
+    BFGS(initial_stepnorm = 0.0001),
+    callback = callback)
 
 u0 = Float32[2.0; 0.0]
 datasize = 30
@@ -68,17 +69,15 @@ end
 prob_trueode = ODEProblem(trueODEfunc, u0, tspan)
 ode_data = Array(solve(prob_trueode, Tsit5(), saveat = tsteps))
 
-dudt2 = FastChain((x, p) -> x .^ 3,
-                  FastDense(2, 50, tanh),
-                  FastDense(50, 2))
+dudt2 = Lux.Chain(x -> x .^ 3,
+    Lux.Dense(2, 50, tanh),
+    Lux.Dense(50, 2))
 prob_neuralode = NeuralODE(dudt2, tspan, Tsit5(), saveat = tsteps)
-
-dudt2 = Chain(x -> x .^ 3,
-              Dense(2, 50, tanh),
-              Dense(50, 2))
+pp, st = Lux.setup(rng, dudt2)
+pp = ComponentArray(pp)
 
 function predict_neuralode(p)
-    Array(prob_neuralode(u0, p))
+    Array(prob_neuralode(u0, p, st)[1])
 end
 
 function loss_neuralode(p)
@@ -98,17 +97,17 @@ end
 
 optprob = OptimizationFunction((p, x) -> loss_neuralode(p), Optimization.AutoForwardDiff())
 
-prob = Optimization.OptimizationProblem(optprob, prob_neuralode.p)
+prob = Optimization.OptimizationProblem(optprob, pp)
 
 result_neuralode = Optimization.solve(prob,
-                                      OptimizationOptimisers.ADAM(), callback = callback,
-                                      maxiters = 300)
-@test result_neuralode.minimum == loss_neuralode(result_neuralode.u)[1]
+    OptimizationOptimisers.ADAM(), callback = callback,
+    maxiters = 300)
+@test result_neuralode.objective == loss_neuralode(result_neuralode.u)[1]
 
 prob2 = remake(prob, u0 = result_neuralode.u)
 result_neuralode2 = Optimization.solve(prob2,
-                                       BFGS(initial_stepnorm = 0.0001),
-                                       callback = callback,
-                                       maxiters = 100)
-@test result_neuralode2.minimum == loss_neuralode(result_neuralode2.u)[1]
-@test result_neuralode2.minimum < 10
+    BFGS(initial_stepnorm = 0.0001),
+    callback = callback,
+    maxiters = 100)
+@test result_neuralode2.objective == loss_neuralode(result_neuralode2.u)[1]
+@test result_neuralode2.objective < 10

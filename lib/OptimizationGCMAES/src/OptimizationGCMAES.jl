@@ -10,13 +10,16 @@ struct GCMAESOpt end
 
 SciMLBase.requiresbounds(::GCMAESOpt) = true
 SciMLBase.allowsbounds(::GCMAESOpt) = true
+SciMLBase.allowscallback(::GCMAESOpt) = false
+SciMLBase.supports_opt_cache_interface(opt::GCMAESOpt) = true
 
-function __map_optimizer_args(prob::OptimizationProblem, opt::GCMAESOpt;
-                              callback = nothing,
-                              maxiters::Union{Number, Nothing} = nothing,
-                              maxtime::Union{Number, Nothing} = nothing,
-                              abstol::Union{Number, Nothing} = nothing,
-                              reltol::Union{Number, Nothing} = nothing)
+function __map_optimizer_args(cache::OptimizationCache, opt::GCMAESOpt;
+    callback = nothing,
+    maxiters::Union{Number, Nothing} = nothing,
+    maxtime::Union{Number, Nothing} = nothing,
+    abstol::Union{Number, Nothing} = nothing,
+    reltol::Union{Number, Nothing} = nothing,
+    kwargs...)
 
     # add optimiser options from kwargs
     mapped_args = (;)
@@ -40,51 +43,81 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::GCMAESOpt;
     return mapped_args
 end
 
-function SciMLBase.__solve(prob::OptimizationProblem, opt::GCMAESOpt;
-                           maxiters::Union{Number, Nothing} = nothing,
-                           maxtime::Union{Number, Nothing} = nothing,
-                           abstol::Union{Number, Nothing} = nothing,
-                           reltol::Union{Number, Nothing} = nothing,
-                           progress = false,
-                           σ0 = 0.2,
-                           kwargs...)
+function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
+    opt::GCMAESOpt,
+    data = Optimization.DEFAULT_DATA; σ0 = 0.2,
+    callback = (args...) -> (false),
+    progress = false, kwargs...)
+    return OptimizationCache(prob, opt, data; σ0 = σ0, callback = callback,
+        progress = progress,
+        kwargs...)
+end
+
+function SciMLBase.__solve(cache::OptimizationCache{
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O,
+    D,
+    P,
+    C,
+}) where {
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O <:
+    GCMAESOpt,
+    D,
+    P,
+    C,
+}
     local x
-    local G = similar(prob.u0)
-
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(maxtime)
-
-    f = Optimization.instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p)
+    local G = similar(cache.u0)
 
     _loss = function (θ)
-        x = f.f(θ, prob.p)
+        x = cache.f(θ, cache.p)
         return x[1]
     end
 
-    if !isnothing(f.grad)
+    if !isnothing(cache.f.grad)
         g = function (θ)
-            f.grad(G, θ)
+            cache.f.grad(G, θ)
             return G
         end
     end
 
-    opt_args = __map_optimizer_args(prob, opt, maxiters = maxiters, maxtime = maxtime,
-                                    abstol = abstol, reltol = reltol; kwargs...)
+    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
+
+    opt_args = __map_optimizer_args(cache, cache.opt; cache.solver_args...,
+        maxiters = maxiters,
+        maxtime = maxtime)
 
     t0 = time()
-    if prob.sense === Optimization.MaxSense
-        opt_xmin, opt_fmin, opt_ret = GCMAES.maximize(isnothing(f.grad) ? _loss :
-                                                      (_loss, g), prob.u0, σ0, prob.lb,
-                                                      prob.ub; opt_args...)
+    if cache.sense === Optimization.MaxSense
+        opt_xmin, opt_fmin, opt_ret = GCMAES.maximize(isnothing(cache.f.grad) ? _loss :
+                                                      (_loss, g), cache.u0,
+            cache.solver_args.σ0, cache.lb,
+            cache.ub; opt_args...)
     else
-        opt_xmin, opt_fmin, opt_ret = GCMAES.minimize(isnothing(f.grad) ? _loss :
-                                                      (_loss, g), prob.u0, σ0, prob.lb,
-                                                      prob.ub; opt_args...)
+        opt_xmin, opt_fmin, opt_ret = GCMAES.minimize(isnothing(cache.f.grad) ? _loss :
+                                                      (_loss, g), cache.u0,
+            cache.solver_args.σ0, cache.lb,
+            cache.ub; opt_args...)
     end
     t1 = time()
 
-    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
-                             opt_xmin, opt_fmin; retcode = Symbol(Bool(opt_ret)))
+    SciMLBase.build_solution(cache, cache.opt,
+        opt_xmin, opt_fmin; retcode = Symbol(Bool(opt_ret)),
+        solve_time = t1 - t0)
 end
 
 end

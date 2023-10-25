@@ -1,3 +1,7 @@
+struct NullCallback end
+(x::NullCallback)(args...) = false;
+const DEFAULT_CALLBACK = NullCallback()
+
 struct NullData end
 const DEFAULT_DATA = Iterators.cycle((NullData(),))
 Base.iterate(::NullData, i = 1) = nothing
@@ -58,7 +62,7 @@ function _check_and_convert_maxtime(maxtime)
 end
 
 function check_pkg_version(pkg::String, ver::String;
-                           branch::Union{String, Nothing} = nothing)
+    branch::Union{String, Nothing} = nothing)
     deps = Pkg.dependencies()
     pkg_info = Dict{String, Pkg.Types.PackageInfo}()
     for (uuid, dep) in deps
@@ -70,4 +74,10 @@ function check_pkg_version(pkg::String, ver::String;
     return (isnothing(branch) | (pkg_info[pkg].git_revision == branch)) ?
            pkg_info[pkg].version >= VersionNumber(ver) :
            pkg_info[pkg].version > VersionNumber(ver)
+end
+
+# Wrapper for fields that may change in `reinit!(cache)` of a cache.
+mutable struct ReInitCache{uType, P}
+    u0::uType
+    p::P
 end

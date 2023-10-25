@@ -7,26 +7,27 @@ using Optimization.SciMLBase
 (f::NLopt.Algorithm)() = f
 
 SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
+SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 
-function __map_optimizer_args!(prob::OptimizationProblem, opt::NLopt.Opt;
-                               callback = nothing,
-                               maxiters::Union{Number, Nothing} = nothing,
-                               maxtime::Union{Number, Nothing} = nothing,
-                               abstol::Union{Number, Nothing} = nothing,
-                               reltol::Union{Number, Nothing} = nothing,
-                               local_method::Union{NLopt.Algorithm, NLopt.Opt, Nothing} = nothing,
-                               local_maxiters::Union{Number, Nothing} = nothing,
-                               local_maxtime::Union{Number, Nothing} = nothing,
-                               local_options::Union{NamedTuple, Nothing} = nothing,
-                               kwargs...)
+function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
+    callback = nothing,
+    maxiters::Union{Number, Nothing} = nothing,
+    maxtime::Union{Number, Nothing} = nothing,
+    abstol::Union{Number, Nothing} = nothing,
+    reltol::Union{Number, Nothing} = nothing,
+    local_method::Union{NLopt.Algorithm, NLopt.Opt, Nothing} = nothing,
+    local_maxiters::Union{Number, Nothing} = nothing,
+    local_maxtime::Union{Number, Nothing} = nothing,
+    local_options::Union{NamedTuple, Nothing} = nothing,
+    kwargs...)
     if local_method !== nothing
         if isa(local_method, NLopt.Opt)
-            if ndims(local_method) != length(prob.u0)
+            if ndims(local_method) != length(cache.u0)
                 error("Passed local NLopt.Opt optimization dimension does not match OptimizationProblem dimension.")
             end
             local_meth = local_method
         else
-            local_meth = NLopt.Opt(local_method, length(prob.u0))
+            local_meth = NLopt.Opt(local_method, length(cache.u0))
         end
 
         if !isnothing(local_options)
@@ -51,12 +52,12 @@ function __map_optimizer_args!(prob::OptimizationProblem, opt::NLopt.Opt;
         eval(Meta.parse("NLopt." * string(j.first) * "!"))(opt, j.second)
     end
 
-    if prob.ub !== nothing
-        NLopt.upper_bounds!(opt, prob.ub)
+    if cache.ub !== nothing
+        opt.upper_bounds = cache.ub
     end
 
-    if prob.lb !== nothing
-        NLopt.lower_bounds!(opt, prob.lb)
+    if cache.lb !== nothing
+        opt.lower_bounds = cache.lb
     end
 
     if !(isnothing(maxiters))
@@ -77,65 +78,111 @@ function __map_optimizer_args!(prob::OptimizationProblem, opt::NLopt.Opt;
     return nothing
 end
 
-function SciMLBase.__solve(prob::OptimizationProblem,
-                           opt::Union{NLopt.Algorithm, NLopt.Opt};
-                           maxiters::Union{Number, Nothing} = nothing,
-                           maxtime::Union{Number, Nothing} = nothing,
-                           local_method::Union{NLopt.Algorithm, NLopt.Opt, Nothing} = nothing,
-                           local_maxiters::Union{Number, Nothing} = nothing,
-                           local_maxtime::Union{Number, Nothing} = nothing,
-                           local_options::Union{NamedTuple, Nothing} = nothing,
-                           abstol::Union{Number, Nothing} = nothing,
-                           reltol::Union{Number, Nothing} = nothing,
-                           progress = false,
-                           callback = (args...) -> (false),
-                           kwargs...)
+function __nlopt_status_to_ReturnCode(status::Symbol)
+    if status in Symbol.([
+        NLopt.SUCCESS,
+        NLopt.STOPVAL_REACHED,
+        NLopt.FTOL_REACHED,
+        NLopt.XTOL_REACHED,
+        NLopt.ROUNDOFF_LIMITED,
+    ])
+        return ReturnCode.Success
+    elseif status == Symbol(NLopt.MAXEVAL_REACHED)
+        return ReturnCode.MaxIters
+    elseif status == Symbol(NLopt.MAXTIME_REACHED)
+        return ReturnCode.MaxTime
+    elseif status in Symbol.([
+        NLopt.OUT_OF_MEMORY,
+        NLopt.INVALID_ARGS,
+        NLopt.FAILURE,
+        NLopt.FORCED_STOP,
+    ])
+        return ReturnCode.Failure
+    else
+        return ReturnCode.Default
+    end
+end
+
+function SciMLBase.__solve(cache::OptimizationCache{
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O,
+    D,
+    P,
+    C,
+}) where {
+    F,
+    RC,
+    LB,
+    UB,
+    LC,
+    UC,
+    S,
+    O <:
+    Union{
+        NLopt.Algorithm,
+        NLopt.Opt,
+    },
+    D,
+    P,
+    C,
+}
     local x
 
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(maxtime)
-    local_maxiters = Optimization._check_and_convert_maxiters(local_maxiters)
-    local_maxtime = Optimization._check_and_convert_maxtime(local_maxtime)
-
-    f = Optimization.instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p)
-
     _loss = function (θ)
-        x = f.f(θ, prob.p)
-        callback(θ, x...)
+        x = cache.f(θ, cache.p)
+        if cache.callback(θ, x...)
+            error("Optimization halted by callback.")
+        end
         return x[1]
     end
 
     fg! = function (θ, G)
         if length(G) > 0
-            f.grad(G, θ)
+            cache.f.grad(G, θ)
         end
 
         return _loss(θ)
     end
 
-    if isa(opt, NLopt.Opt)
-        if ndims(opt) != length(prob.u0)
+    opt_setup = if isa(cache.opt, NLopt.Opt)
+        if ndims(cache.opt) != length(cache.u0)
             error("Passed NLopt.Opt optimization dimension does not match OptimizationProblem dimension.")
         end
-        opt_setup = opt
+        cache.opt
     else
-        opt_setup = NLopt.Opt(opt, length(prob.u0))
+        NLopt.Opt(cache.opt, length(cache.u0))
     end
 
-    prob.sense === Optimization.MaxSense ? NLopt.max_objective!(opt_setup, fg!) :
-    NLopt.min_objective!(opt_setup, fg!)
+    if cache.sense === Optimization.MaxSense
+        NLopt.max_objective!(opt_setup, fg!)
+    else
+        NLopt.min_objective!(opt_setup, fg!)
+    end
 
-    __map_optimizer_args!(prob, opt_setup, maxiters = maxiters, maxtime = maxtime,
-                          abstol = abstol, reltol = reltol, local_method = local_method,
-                          local_maxiters = local_maxiters, local_options = local_options;
-                          kwargs...)
+    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
+
+    __map_optimizer_args!(cache, opt_setup; callback = cache.callback, maxiters = maxiters,
+        maxtime = maxtime,
+        cache.solver_args...)
 
     t0 = time()
-    (minf, minx, ret) = NLopt.optimize(opt_setup, prob.u0)
+    (minf, minx, ret) = NLopt.optimize(opt_setup, cache.u0)
     t1 = time()
+    retcode = __nlopt_status_to_ReturnCode(ret)
 
-    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt, minx,
-                             minf; original = opt_setup, retcode = ret)
+    if retcode == ReturnCode.Failure
+        @warn "NLopt failed to converge: $(ret)"
+    end
+    SciMLBase.build_solution(cache, cache.opt, minx,
+        minf; original = opt_setup, retcode = retcode,
+        solve_time = t1 - t0)
 end
 
 end

@@ -10,7 +10,7 @@ OptimizationOptimisers = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
-Optimization = "3.9"
+Optimization = "3.15"
 OptimizationOptimJL = "0.1"
 OptimizationOptimisers = "0.1"
 Reexport = "1.2"

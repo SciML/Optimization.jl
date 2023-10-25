@@ -1,11 +1,11 @@
 using NonconvexSearch
 function convert_common_kwargs(opt::Union{NonconvexSearch.MTSAlg, NonconvexSearch.LS1Alg},
-                               opt_kwargs;
-                               callback = nothing,
-                               maxiters = nothing,
-                               maxtime = nothing,
-                               abstol = nothing,
-                               reltol = nothing)
+    opt_kwargs;
+    callback = nothing,
+    maxiters = nothing,
+    maxtime = nothing,
+    abstol = nothing,
+    reltol = nothing)
     conv_opt_kwargs = (; opt_kwargs...)
 
     if !isnothing(callback)
@@ -32,7 +32,7 @@ function convert_common_kwargs(opt::Union{NonconvexSearch.MTSAlg, NonconvexSearc
 end
 
 function __create_options(opt::Union{NonconvexSearch.MTSAlg, NonconvexSearch.LS1Alg};
-                          opt_kwargs = nothing)
+    opt_kwargs = nothing)
     options = !isnothing(opt_kwargs) ? NonconvexSearch.MTSOptions(; opt_kwargs...) :
               NonconvexSearch.MTSOptions()
 
@@ -40,9 +40,9 @@ function __create_options(opt::Union{NonconvexSearch.MTSAlg, NonconvexSearch.LS1
 end
 
 function _create_options(opt::Union{NonconvexSearch.MTSAlg, NonconvexSearch.LS1Alg};
-                         opt_kwargs = nothing,
-                         sub_options = nothing,
-                         convergence_criteria = nothing)
+    opt_kwargs = nothing,
+    sub_options = nothing,
+    convergence_criteria = nothing)
     options = (; options = __create_options(opt, opt_kwargs = opt_kwargs))
 
     return options

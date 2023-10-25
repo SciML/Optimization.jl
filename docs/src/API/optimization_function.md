@@ -8,12 +8,12 @@ SciMLBase.OptimizationFunction
 
 The choices for the auto-AD fill-ins with quick descriptions are:
 
-- `AutoForwardDiff()`: The fastest choice for small optimizations
-- `AutoReverseDiff(compile=false)`: A fast choice for large scalar optimizations
-- `AutoTracker()`: Like ReverseDiff but GPU-compatible
-- `AutoZygote()`: The fastest choice for non-mutating array-based (BLAS) functions
-- `AutoFiniteDiff()`: Finite differencing, not optimal but always applicable
-- `AutoModelingToolkit()`: The fastest choice for large scalar optimizations
+  - `AutoForwardDiff()`: The fastest choice for small optimizations
+  - `AutoReverseDiff(compile=false)`: A fast choice for large scalar optimizations
+  - `AutoTracker()`: Like ReverseDiff but GPU-compatible
+  - `AutoZygote()`: The fastest choice for non-mutating array-based (BLAS) functions
+  - `AutoFiniteDiff()`: Finite differencing, not optimal but always applicable
+  - `AutoModelingToolkit()`: The fastest choice for large scalar optimizations
 
 ## Automatic Differentiation Choice API
 
@@ -27,4 +27,3 @@ Optimization.AutoZygote
 Optimization.AutoTracker
 Optimization.AutoModelingToolkit
 ```
-
