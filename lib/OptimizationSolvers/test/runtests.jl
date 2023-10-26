@@ -2,21 +2,34 @@ using OptimizationSolvers, ForwardDiff, Optimization
 using Test
 using Zygote
 
-@testset "OptimizationOptimisers.jl" begin
-    
+
+@testset "OptimizationSolvers.jl" begin
     function objf(x, p)
-        return x[1]^2 + x[2]^2 + x[1]* x[2]
+        return x[1]^2 + x[2]^2
     end
 
     optprob = OptimizationFunction(objf, Optimization.AutoZygote())
     x0 = zeros(2) .+ 1
     prob = OptimizationProblem(optprob, x0)
-    
+    l1 = objf(x0, nothing)
+    sol = Optimization.solve(prob,
+        OptimizationSolvers.BFGS(1e-3, 10),
+        maxiters = 10)
+    @test 10 * sol.objective < l1
+
+    sol = Optimization.solve(prob,
+        OptimizationSolvers.LBFGS(1e-3, 10),
+        maxiters = 10)
+
+    x0 = zeros(2)
+    rosenbrock(x, p = nothing) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+    l1 = rosenbrock(x0)
+    optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+    prob = OptimizationProblem(optf, x0)
     sol = Optimization.solve(prob,
         OptimizationSolvers.BFGS(1e-3, 5),
         maxiters = 1000)
     @test 10 * sol.objective < l1
 
-    prob = OptimizationProblem(optprob, x0)
-    
+
 end
