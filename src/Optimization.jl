@@ -23,6 +23,7 @@ include("utils.jl")
 include("function.jl")
 include("adtypes.jl")
 include("cache.jl")
+include("ensemble.jl")
 
 @static if !isdefined(Base, :get_extension)
     function __init__()
