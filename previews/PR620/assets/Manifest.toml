@@ -583,21 +583,21 @@ version = "1.0.4"
 
 [[deps.Enzyme]]
 deps = ["CEnum", "EnzymeCore", "Enzyme_jll", "GPUCompiler", "LLVM", "Libdl", "LinearAlgebra", "ObjectFile", "Preferences", "Printf", "Random"]
-git-tree-sha1 = "a8a13f3259f59f1738e14296b9191299226ea6b6"
+git-tree-sha1 = "821daa883570994b4c0f9994de2840cc506a51f3"
 uuid = "7da242da-08ed-463a-9acd-ee780be4f1d9"
-version = "0.11.9"
+version = "0.11.10"
 
 [[deps.EnzymeCore]]
 deps = ["Adapt"]
-git-tree-sha1 = "d8701002a745c450c03b890f10d53636d1a8a7ea"
+git-tree-sha1 = "ab81396e4e7b61f5590db02fa1c17fae4f16d7ab"
 uuid = "f151be2c-9106-41f4-ab19-57ee4f262869"
-version = "0.6.2"
+version = "0.6.3"
 
 [[deps.Enzyme_jll]]
 deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl", "TOML"]
-git-tree-sha1 = "6febd718de952cb31717a34f81f98872c065e825"
+git-tree-sha1 = "e248a990a4a917e587c6b7fcf64a4311649a267f"
 uuid = "7cc45869-7501-5eee-bdea-0790c847d4ef"
-version = "0.0.88+0"
+version = "0.0.89+0"
 
 [[deps.Evolutionary]]
 deps = ["LinearAlgebra", "NLSolversBase", "Random", "StackViews", "Statistics", "UnPack"]
@@ -1105,9 +1105,9 @@ version = "2.5.2"
 
 [[deps.LinearSolve]]
 deps = ["ArrayInterface", "ConcreteStructs", "DocStringExtensions", "EnumX", "EnzymeCore", "FastLapackInterface", "GPUArraysCore", "InteractiveUtils", "KLU", "Krylov", "Libdl", "LinearAlgebra", "MKL_jll", "PrecompileTools", "Preferences", "RecursiveFactorization", "Reexport", "Requires", "SciMLBase", "SciMLOperators", "Setfield", "SparseArrays", "Sparspak", "SuiteSparse", "UnPack"]
-git-tree-sha1 = "5f97525abf8d81f9554e836a7e5802fd89bb0594"
+git-tree-sha1 = "a563cd835c9ed5295c35a7d140e0bf0a514bb10a"
 uuid = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
-version = "2.12.1"
+version = "2.13.0"
 
     [deps.LinearSolve.extensions]
     LinearSolveBandedMatricesExt = "BandedMatrices"
@@ -1376,15 +1376,17 @@ version = "1.2.0"
 
 [[deps.NonlinearSolve]]
 deps = ["ADTypes", "ArrayInterface", "ConcreteStructs", "DiffEqBase", "EnumX", "FiniteDiff", "ForwardDiff", "LineSearches", "LinearAlgebra", "LinearSolve", "PrecompileTools", "RecursiveArrayTools", "Reexport", "SciMLBase", "SimpleNonlinearSolve", "SparseArrays", "SparseDiffTools", "StaticArraysCore", "UnPack"]
-git-tree-sha1 = "9203b3333c9610664de2e8cbc23cfd726663df7d"
+git-tree-sha1 = "adbde57261effaa44b4d3d5942651a4bb22aefc3"
 uuid = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
-version = "2.4.0"
+version = "2.5.0"
 
     [deps.NonlinearSolve.extensions]
+    NonlinearSolveBandedMatricesExt = "BandedMatrices"
     NonlinearSolveFastLevenbergMarquardtExt = "FastLevenbergMarquardt"
     NonlinearSolveLeastSquaresOptimExt = "LeastSquaresOptim"
 
     [deps.NonlinearSolve.weakdeps]
+    BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
     FastLevenbergMarquardt = "7a0df574-e128-4d35-8cbd-3d84502bf7ce"
     LeastSquaresOptim = "0fc2ff8b-aaa3-5acd-a817-1944a5e08891"
 
@@ -1832,17 +1834,19 @@ version = "0.2.0"
 
 [[deps.SciMLBase]]
 deps = ["ADTypes", "ArrayInterface", "ChainRulesCore", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "FillArrays", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "PrecompileTools", "Preferences", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables", "TruncatedStacktraces", "ZygoteRules"]
-git-tree-sha1 = "151c322c309d879d114d1c0bee69c61d5933357f"
+git-tree-sha1 = "1c2a4e245744dd76b2eb677d3535ffad16d8b989"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "2.4.3"
+version = "2.5.0"
 
     [deps.SciMLBase.extensions]
+    SciMLBasePartialFunctionsExt = "PartialFunctions"
     SciMLBasePyCallExt = "PyCall"
     SciMLBasePythonCallExt = "PythonCall"
     SciMLBaseRCallExt = "RCall"
     SciMLBaseZygoteExt = "Zygote"
 
     [deps.SciMLBase.weakdeps]
+    PartialFunctions = "570af359-4316-4cb7-8c74-252c00c2016b"
     PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
     PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
     RCall = "6f49c342-dc21-5d91-9882-a32aef131414"
