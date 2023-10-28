@@ -1,7 +1,6 @@
 
-struct BFGS
-    ϵ::Float64
-    m::Int
+@kwdef struct BFGS
+    ϵ::Float64=1e-6
 end
 
 SciMLBase.supports_opt_cache_interface(opt::BFGS) = true
@@ -50,49 +49,68 @@ function SciMLBase.__solve(cache::OptimizationCache{
     end
     opt = cache.opt
     θ = copy(cache.u0)
-    G = zeros(length(θ))
+    g₀ = zeros(length(θ))
     f = cache.f
 
     _f = (θ) -> first(f.f(θ, cache.p))
 
-    ϕ(α) = _f(θ .+ α.*s)
-    function dϕ(α)
-        f.grad(G, θ .+ α.*s)
-        return dot(G, s)
+    function ϕ(u, du)
+        function ϕ_internal(α)
+            u_ = u - α * du
+            _fu = _f(u_)
+            return dot(_fu, _fu) / 2
+        end
+        return ϕ_internal
     end
-    function ϕdϕ(α)
-        phi = _f(θ .+ α.*s)
-        f.grad(G, θ .+ α.*s)
-        dphi = dot(G, s)
-        return (phi, dphi)
+
+    function dϕ(u, du)
+        function dϕ_internal(α)
+            u_ = u - α * du
+            _fu = _f(u_)
+            f.grad(g₀, u_)
+            return dot(g₀, -du)
+        end
+        return dϕ_internal
     end
+
+    function ϕdϕ(u, du)
+        function ϕdϕ_internal(α)
+            u_ = u - α * du
+            _fu = _f(u_)
+            f.grad(g₀, u_)
+            return dot(_fu, _fu) / 2, dot(g₀, -du)
+        end
+        return ϕdϕ_internal
+    end
+
     Hₖ⁻¹= zeros(length(θ), length(θ))
     f.hess(Hₖ⁻¹, θ)
-    println(Hₖ⁻¹)
     Hₖ⁻¹ = inv(I(length(θ)) .+ Hₖ⁻¹)
+    G = zeros(length(θ))
     f.grad(G, θ)
     s = -1 * Hₖ⁻¹ * G
 
     t0 = time()
     for i in 1:maxiters
-        println(i, " ", θ, " Objective: ", f(θ, cache.p))
         q = copy(G)
-        @show q
         pₖ = -Hₖ⁻¹* G
         fx = _f(θ)
-        dir = G' * pₖ
-        println(dir)
+        dir = -pₖ
 
-        if isnan(dir) || dir > 0
+        if all(isnan.(dir)) || all(dir .> 0)
             pₖ = -G
-            dir = -G'*G
+            dir = G
         end
 
         αₖ = let
             try
-                (HagerZhang())(ϕ, dϕ, ϕdϕ, 1.0, fx, dir)[1]
+                _ϕ = ϕ(θ, dir)
+                _dϕ = dϕ(θ, dir)
+                _ϕdϕ = ϕdϕ(θ, dir)
+        
+                ϕ₀, dϕ₀ = _ϕdϕ(zero(eltype(θ)))
+                (HagerZhang())(_ϕ, _dϕ, _ϕdϕ, 1.0, ϕ₀, dϕ₀)[1]
             catch err
-                println(err)
                 1.0
             end
         end
@@ -103,14 +121,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
         G = zeros(length(θ))
         f.grad(G, θ)
         zₖ = G - q
-        @show G
         ρₖ = 1/dot(zₖ, s)
         Hₖ⁻¹ = (I - ρₖ*s*zₖ')*Hₖ⁻¹*(I - ρₖ*zₖ*s') + ρₖ*(s*s')
         if norm(G) <= opt.ϵ
+            println(i)
             break
         end
     end
-
 
     t1 = time()
 
