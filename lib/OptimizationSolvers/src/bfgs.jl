@@ -51,8 +51,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
     θ = copy(cache.u0)
     g₀ = zeros(length(θ))
     f = cache.f
-
-    _f = (θ) -> first(f.f(θ, cache.p))
+    p = cache.p
+    ls = HagerZhang()
+    _f = (θ) -> first(f.f(θ, p))
 
     function ϕ(u, du)
         function ϕ_internal(α)
@@ -105,11 +106,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
         αₖ = let
             try
                 _ϕ = ϕ(θ, dir)
-                _dϕ = dϕ(θ, dir)
                 _ϕdϕ = ϕdϕ(θ, dir)
         
                 ϕ₀, dϕ₀ = _ϕdϕ(zero(eltype(θ)))
-                (HagerZhang())(_ϕ, _dϕ, _ϕdϕ, 1.0, ϕ₀, dϕ₀)[1]
+                ls(_ϕ, _ϕdϕ, 1.0, ϕ₀, dϕ₀)[1]
             catch err
                 1.0
             end
@@ -122,8 +122,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
         f.grad(G, θ)
         zₖ = G - q
         ρₖ = 1/dot(zₖ, s)
-        Hₖ⁻¹ = (I - ρₖ*s*zₖ')*Hₖ⁻¹*(I - ρₖ*zₖ*s') + ρₖ*(s*s')
-        if norm(G) <= opt.ϵ
+        Hₖ⁻¹ = mul!((I - ρₖ*s*zₖ'), Hₖ⁻¹, (I - ρₖ*zₖ*s')) + ρₖ*(s*s')
+        if norm(G, Inf) <= opt.ϵ
             println(i)
             break
         end
