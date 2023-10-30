@@ -12,7 +12,7 @@ if !isdefined(Base, :get_extension)
 end
 
 using Logging, ProgressLogging, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
-using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
+using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra, QuasiMonteCarlo
 using Pkg
 
 import SciMLBase: OptimizationProblem, OptimizationFunction, ObjSense,
