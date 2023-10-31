@@ -72,6 +72,18 @@ packages.
 
 ❌ = not supported
 
+## Citation
+
+```
+@software{vaibhav_kumar_dixit_2023_7738525,
+	author = {Vaibhav Kumar Dixit and Christopher Rackauckas},
+	month = mar,
+	publisher = {Zenodo},
+	title = {Optimization.jl: A Unified Optimization Package},
+	version = {v3.12.1},
+	year = 2023}
+```
+
 ## Reproducibility
 
 ```@raw html
