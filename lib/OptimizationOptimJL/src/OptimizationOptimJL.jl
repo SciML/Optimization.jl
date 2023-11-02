@@ -160,7 +160,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         if G !== nothing
             cache.f.grad(G, θ, cur...)
             if cache.sense === Optimization.MaxSense
-                G .*= false
+                G .*= -one(eltype(G))
             end
         end
         return _loss(θ)
@@ -170,7 +170,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         hv = function (H, θ, v)
             cache.f.hv(H, θ, v, cur...)
             if cache.sense === Optimization.MaxSense
-                H .*= false
+                H .*= -one(eltype(H))
             end
         end
         optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, hv, cache.u0)
@@ -178,14 +178,14 @@ function SciMLBase.__solve(cache::OptimizationCache{
         gg = function (G, θ)
             cache.f.grad(G, θ, cur...)
             if cache.sense === Optimization.MaxSense
-                G .*= false
+                G .*= -one(eltype(G))
             end
         end
 
         hh = function (H, θ)
             cache.f.hess(H, θ, cur...)
             if cache.sense === Optimization.MaxSense
-                H .*= false
+                H .*= -one(eltype(H))
             end
         end
         u0_type = eltype(cache.u0)
@@ -273,7 +273,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         if G !== nothing
             cache.f.grad(G, θ, cur...)
             if cache.sense === Optimization.MaxSense
-                G .*= false
+                G .*= -one(eltype(G))
             end
         end
         return _loss(θ)
@@ -282,7 +282,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     gg = function (G, θ)
         cache.f.grad(G, θ, cur...)
         if cache.sense === Optimization.MaxSense
-            G .*= false
+            G .*= -one(eltype(G))
         end
     end
     optim_f = Optim.OnceDifferentiable(_loss, gg, fg!, cache.u0)
@@ -356,7 +356,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         if G !== nothing
             cache.f.grad(G, θ, cur...)
             if cache.sense === Optimization.MaxSense
-                G .*= false
+                G .*= -one(eltype(G))
             end
         end
         return _loss(θ)
@@ -364,14 +364,14 @@ function SciMLBase.__solve(cache::OptimizationCache{
     gg = function (G, θ)
         cache.f.grad(G, θ, cur...)
         if cache.sense === Optimization.MaxSense
-            G .*= false
+            G .*= -one(eltype(G))
         end
     end
 
     hh = function (H, θ)
         cache.f.hess(H, θ, cur...)
         if cache.sense === Optimization.MaxSense
-            H .*= false
+            H .*= -one(eltype(H))
         end
     end
     u0_type = eltype(cache.u0)
