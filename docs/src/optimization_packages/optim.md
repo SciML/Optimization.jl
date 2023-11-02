@@ -274,7 +274,7 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
           * `P = nothing`
           * `precondprep = (P, x) -> nothing`
           * `manifold = Flat()`
-          * `scaleinvH0::Bool = true && (typeof(P) <: Nothing)`
+          * `scaleinvH0::Bool = true && (P isa Nothing)`
   - [`Optim.NGMRES()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/ngmres/)
   - [`Optim.OACCEL()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/ngmres/)
 

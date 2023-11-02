@@ -98,7 +98,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
 
     if cons !== nothing && f.cons_j === nothing
         cons_j = function (J, θ)
-            if typeof(J) <: Vector
+            if J isa Vector
                 J .= Enzyme.jacobian(Enzyme.Forward, cons_oop, θ)[1, :]
             else
                 J .= Enzyme.jacobian(Enzyme.Forward, cons_oop, θ)
@@ -232,7 +232,7 @@ function Optimization.instantiate_function(f::OptimizationFunction{true},
 
     if cons !== nothing && f.cons_j === nothing
         cons_j = function (J, θ)
-            if typeof(J) <: Vector
+            if J isa Vector
                 J .= Enzyme.jacobian(Enzyme.Forward, cons_oop, θ)[1, :]
             else
                 J .= Enzyme.jacobian(Enzyme.Forward, cons_oop, θ)
