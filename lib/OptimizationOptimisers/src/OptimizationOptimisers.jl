@@ -65,7 +65,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cache.f.grad(G, θ, d...)
             x = cache.f(θ, cache.p, d...)
             cb_call = cache.callback(θ, x...)
-            if !(typeof(cb_call) <: Bool)
+            if !(cb_call isa Bool)
                 error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
             elseif cb_call
                 break

@@ -138,7 +138,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                   cache.callback(decompose_trace(trace).metadata["centroid"],
             x...) :
                   cache.callback(decompose_trace(trace).metadata["x"], x...)
-        if !(typeof(cb_call) <: Bool)
+        if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
         nx_itr = iterate(cache.data, state)
@@ -252,7 +252,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                   cache.callback(decompose_trace(trace).metadata["centroid"],
             x...) :
                   cache.callback(decompose_trace(trace).metadata["x"], x...)
-        if !(typeof(cb_call) <: Bool)
+        if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
         nx_itr = iterate(cache.data, state)
@@ -335,7 +335,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     function _cb(trace)
         cb_call = cache.callback(decompose_trace(trace).metadata["x"], x...)
-        if !(typeof(cb_call) <: Bool)
+        if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
         nx_itr = iterate(cache.data, state)
