@@ -149,6 +149,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         end
     end
 
+    println(cache.sense)
     _loss = function (θ)
         x = cache.f.f(θ, cache.p, cur...)
         __x = first(x)
@@ -274,6 +275,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             if cache.sense === Optimization.MaxSense
                 G .*= -one(eltype(G))
             end
+            println(G)
         end
         return _loss(θ)
     end
