@@ -21,21 +21,24 @@ function SciMLBase.__solve(prob::OptimizationProblem,
     if isempty(args) && deterministic && prob.lb === nothing && prob.ub === nothing
         # If deterministic then ADAM -> finish with BFGS
         if maxiters === nothing
-            res1 = Optimization.solve(prob, Optimisers.ADAM(0.01), args...; maxiters = 300,
+            res1 = Optimization.solve(prob, Optimisers.ADAM(0.1), args...; maxiters = 300,
                 kwargs...)
         else
-            res1 = Optimization.solve(prob, Optimisers.ADAM(0.01), args...; maxiters,
+            res1 = Optimization.solve(prob, Optimisers.ADAM(0.1), args...; maxiters,
                 kwargs...)
         end
 
         optprob2 = remake(prob, u0 = res1.u)
-        res1 = Optimization.solve(optprob2, BFGS(initial_stepnorm = 0.01), args...;
+        res1 = Optimization.solve(optprob2, LBFGS(initial_stepnorm = 0.01), args...;
             maxiters, kwargs...)
     elseif isempty(args) && deterministic
-        res1 = Optimization.solve(prob, BFGS(initial_stepnorm = 0.01), args...; maxiters,
+        res1 = Optimization.solve(prob, LBFGS(), args...; maxiters,
             kwargs...)
     else
         res1 = Optimization.solve(prob, Optimisers.ADAM(0.1), args...; maxiters, kwargs...)
+        optprob2 = remake(prob, u0 = res1.u)
+        res1 = Optimization.solve(optprob2, Optimisers.ADAM(0.1), args...;
+            maxiters÷10, kwargs...)
     end
 end
 
