@@ -37,7 +37,7 @@ function SciMLBase.__solve(prob::OptimizationProblem,
     else
         res1 = Optimization.solve(prob, Optimisers.ADAM(0.1), args...; maxiters, kwargs...)
         optprob2 = remake(prob, u0 = res1.u)
-        res1 = Optimization.solve(optprob2, Optimisers.ADAM(0.1), args...;
+        res1 = Optimization.solve(optprob2, Optimisers.ADAM(0.01), args...;
             maxiters÷10, kwargs...)
     end
 end
