@@ -7,7 +7,6 @@ decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace::Optim.OptimizationState) = trace
 
 SciMLBase.allowsconstraints(::IPNewton) = true
-SciMLBase.requiresconstraints(::IPNewton) = true
 SciMLBase.allowsbounds(opt::Optim.AbstractOptimizer) = true
 SciMLBase.allowsbounds(opt::Optim.SimulatedAnnealing) = false
 SciMLBase.requiresbounds(opt::Optim.Fminbox) = true
