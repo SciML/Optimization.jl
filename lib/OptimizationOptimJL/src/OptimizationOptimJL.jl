@@ -329,9 +329,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     cur, state = iterate(cache.data)
 
-    cache.opt isa Optim.ConstrainedOptimizer && cache.f.cons_j === nothing &&
-        error("This optimizer requires derivative definitions for nonlinear constraints. If the problem does not have nonlinear constraints, choose a different optimizer. Otherwise define the derivative for cons using OptimizationFunction either directly or automatically generate them with one of the autodiff backends")
-
     function _cb(trace)
         cb_call = cache.callback(decompose_trace(trace).metadata["x"], x...)
         if !(cb_call isa Bool)
@@ -393,9 +390,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     lb = cache.lb === nothing ? [] : cache.lb
     ub = cache.ub === nothing ? [] : cache.ub
-    optim_fc = Optim.TwiceDifferentiableConstraints(cache.f.cons, cache.f.cons_j, cons_hl!,
-        lb, ub,
-        cache.lcons, cache.ucons)
+    if cache.f.cons !== nothing
+        optim_fc = Optim.TwiceDifferentiableConstraints(cache.f.cons, cache.f.cons_j, cons_hl!,
+            lb, ub,
+            cache.lcons, cache.ucons)
+    else
+        optim_fc = Optim.TwiceDifferentiableConstraints(lb, ub)
+    end
 
     opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb,
         maxiters = cache.solver_args.maxiters,
