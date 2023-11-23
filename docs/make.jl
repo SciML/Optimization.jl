@@ -1,4 +1,4 @@
-using Documenter, Optimization
+using Documenter, Optimization, SciMLBase
 using FiniteDiff, ForwardDiff, ModelingToolkit, ReverseDiff, Tracker, Zygote
 
 cp("./docs/Manifest.toml", "./docs/src/assets/Manifest.toml", force = true)
@@ -8,7 +8,7 @@ include("pages.jl")
 
 makedocs(sitename = "Optimization.jl",
     authors = "Chris Rackauckas, Vaibhav Kumar Dixit et al.",
-    modules = [Optimization, Optimization.SciMLBase, FiniteDiff,
+    modules = [Optimization, SciMLBase, FiniteDiff,
         ForwardDiff, ModelingToolkit, ReverseDiff, Tracker, Zygote],
     clean = true, doctest = false, linkcheck = true,
     warnonly = [:missing_docs],
