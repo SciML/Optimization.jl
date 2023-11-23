@@ -23,6 +23,9 @@ using Test
     sol = solve(prob, SAMIN())
     @test 10 * sol.objective < l1
 
+    sol = solve(prob, Optim.IPNewton())
+    @test 10 * sol.objective < l1
+
     prob = OptimizationProblem(f, x0, _p)
     Random.seed!(1234)
     sol = solve(prob, SimulatedAnnealing())
