@@ -116,6 +116,27 @@ function __moi_status_to_ReturnCode(status::MOI.TerminationStatusCode)
     end
 end
 
+function get_expr_map(prob, f)
+    pairs_arr = if prob.p isa SciMLBase.NullParameters
+        [_s => Expr(:ref, :x, i) for (i, _s) in enumerate(f.syms)]
+    else
+        vcat([_s => Expr(:ref, :x, i) for (i, _s) in enumerate(f.syms)],
+            [_p => p[i] for (i, _p) in enumerate(f.paramsyms)])
+    end
+
+    return pairs_arr
+end
+
+"""
+Substitute variables and parameters with canonical names x and p respectively.
+"""
+function rep_pars_vals!(e::Expr, p)
+    rep_pars_vals!.(e.args, Ref(p))
+    replace!(e.args, p...)
+end
+
+function rep_pars_vals!(e, p) end
+
 """
 Replaces every expression `:x[i]` with `:x[MOI.VariableIndex(i)]`
 """

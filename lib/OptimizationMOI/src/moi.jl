@@ -17,17 +17,13 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
         throw(ArgumentError("Expected an `OptimizationProblem` that was setup via an `OptimizationSystem`, consider `modelingtoolkitize(prob).`"))
 
     # TODO: check if the problem is at most bilinear, i.e. affine and or quadratic terms in two variables
-    expr_map = get_expr_map(prob.f.sys)
-    expr = repl_getindex!(convert_to_expr(MTK.subs_constants(MTK.objective(prob.f.sys)),
-        prob.f.sys; expand_expr = false, expr_map))
+    expr_map = get_expr_map(prob, prob.f)
+    expr = repl_getindex!(convert_to_expr(prob.f.obj_expr, expr_map; expand_expr = false))
 
     cons = MTK.constraints(prob.f.sys)
     cons_expr = Vector{Expr}(undef, length(cons))
     Threads.@sync for i in eachindex(cons)
-        Threads.@spawn cons_expr[i] = repl_getindex!(convert_to_expr(Symbolics.canonical_form(MTK.subs_constants(cons[i])),
-            prob.f.sys;
-            expand_expr = false,
-            expr_map))
+        Threads.@spawn cons_expr[i] = repl_getindex!(convert_to_expr(prob.f.cons_expr, expr_map; expand_expr = false))
     end
 
     return MOIOptimizationCache(prob.f,
@@ -422,21 +418,6 @@ function symbolify!(e::Expr)
 end
 
 """
-    get_expr_map(sys)
-
-Make a map from every parameter and state of the given system to an expression indexing its position
-in the state or parameter vector.
-"""
-function get_expr_map(sys)
-    dvs = ModelingToolkit.states(sys)
-    ps = ModelingToolkit.parameters(sys)
-    return vcat([ModelingToolkit.toexpr(_s) => Expr(:ref, :x, i)
-                 for (i, _s) in enumerate(dvs)],
-        [ModelingToolkit.toexpr(_p) => Expr(:ref, :p, i)
-         for (i, _p) in enumerate(ps)])
-end
-
-"""
     convert_to_expr(eq, sys; expand_expr = false, pairs_arr = expr_map(sys))
 
 Converts the given symbolic expression to a Julia `Expr` and replaces all symbols, i.e. states and
@@ -447,7 +428,7 @@ parameters with `x[i]` and `p[i]`.
 - `sys`: Reference to the system holding the parameters and states
 - `expand_expr=false`: If `true` the symbolic expression is expanded first.
 """
-function convert_to_expr(eq, sys; expand_expr = false, expr_map = get_expr_map(sys))
+function convert_to_expr(eq, expr_map; expand_expr = false)
     if expand_expr
         eq = try
             Symbolics.expand(eq) # PolyForm sometimes errors
