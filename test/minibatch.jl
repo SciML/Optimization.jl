@@ -1,5 +1,5 @@
 using DiffEqFlux, Optimization, OrdinaryDiffEq, OptimizationOptimisers, ModelingToolkit,
-    SciMLSensitivity, Lux, Random, ComponentArrays
+    SciMLSensitivity, Lux, Random, ComponentArrays, Flux
 
 rng = Random.default_rng()
 
