@@ -118,12 +118,11 @@ end
 
 function get_expr_map(prob, f)
     pairs_arr = if prob.p isa SciMLBase.NullParameters
-        [_s => Expr(:ref, :x, i) for (i, _s) in enumerate(f.syms)]
+        [Meta.parse(string(_s)) => Expr(:ref, :x, i) for (i, _s) in enumerate(f.syms)]
     else
-        vcat([_s => Expr(:ref, :x, i) for (i, _s) in enumerate(f.syms)],
-            [_p => p[i] for (i, _p) in enumerate(f.paramsyms)])
+        vcat([Symbol(_s) => Expr(:ref, :x, i) for (i, _s) in enumerate(f.syms)],
+        [Symbol(_s) => Expr(:ref, p, i) for (i, _p) in enumerate(f.paramsyms)])
     end
-
     return pairs_arr
 end
 
