@@ -65,7 +65,7 @@ Symbolics = "5"
 TerminalLoggers = "0.1"
 Tracker = "0.2"
 Zygote = "0.6"
-julia = "1.6"
+julia = "1.9"
 
 [extras]
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
