@@ -23,8 +23,9 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
             throw(ArgumentError("Expected an `OptimizationProblem` that was setup via an `OptimizationSystem`, or AutoModelingToolkit ad choice"))
         end
     end
+
     # TODO: check if the problem is at most bilinear, i.e. affine and or quadratic terms in two variables
-    expr_map = get_expr_map(prob, f)
+    expr_map = get_expr_map(prob.f.sys)
     expr = repl_getindex!(convert_to_expr(f.expr, expr_map; expand_expr = false))
 
     cons = MTK.constraints(f.sys)
@@ -447,4 +448,13 @@ function convert_to_expr(eq, expr_map; expand_expr = false)
     expr = rep_pars_vals!(expr, expr_map)
     expr = symbolify!(expr)
     return expr
+end
+
+function get_expr_map(sys)
+    dvs = ModelingToolkit.states(sys)
+    ps = ModelingToolkit.parameters(sys)
+    return vcat([ModelingToolkit.toexpr(_s) => Expr(:ref, :x, i)
+                 for (i, _s) in enumerate(dvs)],
+        [ModelingToolkit.toexpr(_p) => Expr(:ref, :p, i)
+         for (i, _p) in enumerate(ps)])
 end
