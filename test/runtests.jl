@@ -22,6 +22,7 @@ end
 
 @time begin
     if GROUP == "All" || GROUP == "Core"
+        @safetestset "Quality Assurance" include("qa.jl")
         VERSION >= v"1.9" && @safetestset "AD Tests" begin
             include("ADtests.jl")
         end
