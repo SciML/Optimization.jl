@@ -107,7 +107,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
             try
                 _ϕ = ϕ(θ, dir)
                 _ϕdϕ = ϕdϕ(θ, dir)
-        
                 ϕ₀, dϕ₀ = _ϕdϕ(zero(eltype(θ)))
                 ls(_ϕ, _ϕdϕ, 1.0, ϕ₀, dϕ₀)[1]
             catch err
