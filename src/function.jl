@@ -97,7 +97,6 @@ function instantiate_function(f, cache::ReInitCache, ::SciMLBase.NoAD,
         cons_jac_prototype = cons_jac_prototype,
         cons_hess_prototype = cons_hess_prototype,
         expr = expr, cons_expr = cons_expr,
-        syms = f.syms, paramsyms = f.paramsyms,
         observed = f.observed)
 end
 
