@@ -85,7 +85,7 @@ function SciMLBase.get_syms(sol::SciMLBase.OptimizationSolution{
     C <:
     MOIOptimizationNLPCache,
 }
-    sol.cache.evaluator.f.syms
+    variable_symbols(sol.cache.evaluator.f)
 end
 function SciMLBase.get_paramsyms(sol::SciMLBase.OptimizationSolution{
     T,
@@ -99,7 +99,7 @@ function SciMLBase.get_paramsyms(sol::SciMLBase.OptimizationSolution{
     C <:
     MOIOptimizationNLPCache,
 }
-    sol.cache.evaluator.f.paramsyms
+    parameter_symbols(sol.cache.evaluator.f)
 end
 
 function MOIOptimizationNLPCache(prob::OptimizationProblem,

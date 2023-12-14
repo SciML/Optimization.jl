@@ -13,6 +13,7 @@ end
 
 using Logging, ProgressLogging, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
+using SymbolicIndexingInterface
 using Pkg
 
 import SciMLBase: OptimizationProblem, OptimizationFunction, ObjSense,
