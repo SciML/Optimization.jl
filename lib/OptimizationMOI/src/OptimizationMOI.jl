@@ -5,8 +5,8 @@ using Reexport
 using MathOptInterface
 using Optimization.SciMLBase
 using SparseArrays
+import ModelingToolkit: parameters, states, varmap_to_vars, mergedefaults, toexpr
 import ModelingToolkit
-using ModelingToolkit: parameters, states, varmap_to_vars, mergedefaults
 const MTK = ModelingToolkit
 using Symbolics
 
