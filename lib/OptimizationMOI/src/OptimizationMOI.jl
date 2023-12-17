@@ -8,7 +8,7 @@ using SparseArrays
 import ModelingToolkit
 using ModelingToolkit: parameters, states, varmap_to_vars, mergedefaults
 const MTK = ModelingToolkit
-import Symbolics
+using Symbolics
 
 const MOI = MathOptInterface
 

@@ -18,7 +18,7 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
     if isnothing(f.sys)
         if f.adtype isa Optimization.AutoModelingToolkit
             num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
-            f = Optimization.instatiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons)
+            f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons)
         else
             throw(ArgumentError("Expected an `OptimizationProblem` that was setup via an `OptimizationSystem`, or AutoModelingToolkit ad choice"))
         end
