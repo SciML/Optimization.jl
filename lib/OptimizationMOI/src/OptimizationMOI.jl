@@ -4,6 +4,7 @@ using Reexport
 @reexport using Optimization
 using MathOptInterface
 using Optimization.SciMLBase
+using SymbolicIndexingInterface
 using SparseArrays
 import ModelingToolkit: parameters, states, varmap_to_vars, mergedefaults, toexpr
 import ModelingToolkit
@@ -116,25 +117,106 @@ function __moi_status_to_ReturnCode(status::MOI.TerminationStatusCode)
     end
 end
 
-# function get_expr_map(prob, f)
-#     pairs_arr = if prob.p isa SciMLBase.NullParameters
-#         [Meta.parse(string(_s)) => Expr(:ref, :x, i) for (i, _s) in enumerate(f.syms)]
-#     else
-#         vcat([Symbol(_s) => Expr(:ref, :x, i) for (i, _s) in enumerate(f.syms)],
-#         [Symbol(_s) => Expr(:ref, p, i) for (i, _p) in enumerate(f.paramsyms)])
-#     end
-#     return pairs_arr
-# end
+_get_variable_index_from_expr(expr::T) where {T} = throw(MalformedExprException("$expr"))
+function _get_variable_index_from_expr(expr::Expr)
+    _is_var_ref_expr(expr)
+    return MOI.VariableIndex(expr.args[2])
+end
 
-# """
-# Substitute variables and parameters with canonical names x and p respectively.
-# """
-# function rep_pars_vals!(e::Expr, p)
-#     rep_pars_vals!.(e.args, Ref(p))
-#     replace!(e.args, p...)
-# end
+function _is_var_ref_expr(expr::Expr)
+    expr.head == :ref || throw(MalformedExprException("$expr")) # x[i]
+    expr.args[1] == :x || throw(MalformedExprException("$expr"))
+    return true
+end
 
-# function rep_pars_vals!(e, p) end
+function is_eq(expr::Expr)
+    expr.head == :call || throw(MalformedExprException("$expr"))
+    expr.args[1] in [:(==), :(=)]
+end
+
+function is_leq(expr::Expr)
+    expr.head == :call || throw(MalformedExprException("$expr"))
+    expr.args[1] == :(<=)
+end
+
+"""
+    rep_pars_vals!(expr::T, expr_map)
+
+Replaces variable expressions of the form `:some_variable` or `:(getindex, :some_variable, j)` with
+`x[i]` were `i` is the corresponding index in the state vector. Same for the parameters. The
+variable/parameter pairs are provided via the `expr_map`.
+
+Expects only expressions where the variables and parameters are of the form `:some_variable`
+or `:(getindex, :some_variable, j)` or :(some_variable[j]).
+"""
+rep_pars_vals!(expr::T, expr_map) where {T} = expr
+function rep_pars_vals!(expr::Symbol, expr_map)
+    for (f, n) in expr_map
+        isequal(f, expr) && return n
+    end
+    return expr
+end
+function rep_pars_vals!(expr::Expr, expr_map)
+    if (expr.head == :call && expr.args[1] == getindex) || (expr.head == :ref)
+        for (f, n) in expr_map
+            isequal(f, expr) && return n
+        end
+    end
+    Threads.@sync for i in eachindex(expr.args)
+        i == 1 && expr.head == :call && continue # first arg is the operator
+        Threads.@spawn expr.args[i] = rep_pars_vals!(expr.args[i], expr_map)
+    end
+    return expr
+end
+
+"""
+    symbolify!(e)
+
+Ensures that a given expression is fully symbolic, e.g. no function calls.
+"""
+symbolify!(e) = e
+function symbolify!(e::Expr)
+    if !(e.args[1] isa Symbol)
+        e.args[1] = Symbol(e.args[1])
+    end
+    symbolify!.(e.args)
+    return e
+end
+
+"""
+    convert_to_expr(eq, sys; expand_expr = false, pairs_arr = expr_map(sys))
+
+Converts the given symbolic expression to a Julia `Expr` and replaces all symbols, i.e. states and
+parameters with `x[i]` and `p[i]`.
+
+# Arguments:
+- `eq`: Expression to convert
+- `sys`: Reference to the system holding the parameters and states
+- `expand_expr=false`: If `true` the symbolic expression is expanded first.
+"""
+function convert_to_expr(eq, expr_map; expand_expr = false)
+    if expand_expr
+        eq = try
+            Symbolics.expand(eq) # PolyForm sometimes errors
+        catch e
+            Symbolics.expand(eq)
+        end
+    end
+    expr = ModelingToolkit.toexpr(eq)
+
+    expr = rep_pars_vals!(expr, expr_map)
+    expr = symbolify!(expr)
+    return expr
+end
+
+function get_expr_map(sys)
+    dvs = ModelingToolkit.states(sys)
+    ps = ModelingToolkit.parameters(sys)
+    return vcat([ModelingToolkit.toexpr(_s) => Expr(:ref, :x, i)
+                 for (i, _s) in enumerate(dvs)],
+        [ModelingToolkit.toexpr(_p) => Expr(:ref, :p, i)
+         for (i, _p) in enumerate(ps)])
+end
 
 """
 Replaces every expression `:x[i]` with `:x[MOI.VariableIndex(i)]`
