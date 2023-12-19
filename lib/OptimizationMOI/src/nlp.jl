@@ -377,13 +377,13 @@ function MOI.objective_expr(evaluator::MOIOptimizationNLPEvaluator)
 end
 
 function MOI.constraint_expr(evaluator::MOIOptimizationNLPEvaluator, i)
-    # expr has the form f(x,p) == 0 or f(x,p) <= 0
+    # expr has the form f(x,p) == 0 or f(x,p) <= 0 
     cons_expr = deepcopy(evaluator.cons_expr[i].args[2])
+    compop = Symbol(evaluator.cons_expr[i].args[1])
     repl_getindex!(cons_expr)
     _replace_parameter_indices!(cons_expr, evaluator.p)
     _replace_variable_indices!(cons_expr)
-    lb, ub = Float64(evaluator.lcons[i]), Float64(evaluator.ucons[i])
-    return :($lb <= $cons_expr <= $ub)
+    return Expr(:call, compop, cons_expr, 0.0)
 end
 
 function _add_moi_variables!(opt_setup, evaluator::MOIOptimizationNLPEvaluator)

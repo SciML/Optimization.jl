@@ -4,7 +4,6 @@ authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.1.16"
 
 [deps]
-AmplNLWriter = "7c4d4715-977e-5154-bfe0-e096adeac482"
 Ipopt_jll = "9cc047cb-c261-5740-88fc-0cf96f7bdcc7"
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
