@@ -15,6 +15,8 @@ mutable struct MOIOptimizationNLPEvaluator{T, F <: OptimizationFunction, RC, LB,
     H::HT
     cons_H::Vector{CHT}
     callback::CB
+    obj_expr::Union{Expr, Nothing}
+    cons_expr::Union{Vector{Expr}, Nothing}
 end
 
 function Base.getproperty(evaluator::MOIOptimizationNLPEvaluator, x::Symbol)
@@ -136,6 +138,37 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
     lcons = prob.lcons === nothing ? fill(T(-Inf), num_cons) : prob.lcons
     ucons = prob.ucons === nothing ? fill(T(Inf), num_cons) : prob.ucons
 
+    if f.sys isa SymbolicIndexingInterface.SymbolCache{Nothing, Nothing, Nothing}
+        sys = MTK.modelingtoolkitize(prob)
+        if !isnothing(prob.p) && !(prob.p isa SciMLBase.NullParameters)
+            unames = variable_symbols(sys)
+            pnames = parameter_symbols(sys)
+            us = [unames[i] => prob.u0[i] for i in 1:length(prob.u0)]
+            ps = [pnames[i] => prob.p[i] for i in 1:length(prob.p)]
+            sysprob = OptimizationProblem(sys, us, ps)
+        else
+            unames = variable_symbols(sys)
+            us = [unames[i] => prob.u0[i] for i in 1:length(prob.u0)]
+            sysprob = OptimizationProblem(sys, us)
+        end
+
+        obj_expr = sysprob.f.expr
+        cons_expr = sysprob.f.cons_expr
+    else
+        sys = f.sys
+        obj_expr = f.expr
+        cons_expr = f.cons_expr
+    end
+
+    expr_map = get_expr_map(sys)
+    expr = convert_to_expr(obj_expr, expr_map; expand_expr = false)
+    expr = repl_getindex!(expr)
+    cons = MTK.constraints(sys)
+    _cons_expr = Vector{Expr}(undef, length(cons))
+    for i in eachindex(cons)
+        _cons_expr[i] = repl_getindex!(convert_to_expr(cons_expr[i], expr_map; expand_expr = false))
+    end
+
     evaluator = MOIOptimizationNLPEvaluator(f,
         reinit_cache,
         prob.lb,
@@ -147,7 +180,9 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
         J,
         H,
         cons_H,
-        callback)
+        callback,
+        expr,
+        _cons_expr)
     return MOIOptimizationNLPCache(evaluator, opt, NamedTuple(kwargs))
 end
 
@@ -334,7 +369,7 @@ function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
 end
 
 function MOI.objective_expr(evaluator::MOIOptimizationNLPEvaluator)
-    expr = deepcopy(evaluator.f.expr)
+    expr = deepcopy(evaluator.obj_expr)
     repl_getindex!(expr)
     _replace_parameter_indices!(expr, evaluator.p)
     _replace_variable_indices!(expr)
@@ -342,13 +377,13 @@ function MOI.objective_expr(evaluator::MOIOptimizationNLPEvaluator)
 end
 
 function MOI.constraint_expr(evaluator::MOIOptimizationNLPEvaluator, i)
-    # expr has the form f(x,p) == 0 or f(x,p) <= 0
-    cons_expr = deepcopy(evaluator.f.cons_expr[i].args[2])
+    # expr has the form f(x,p) == 0 or f(x,p) <= 0 
+    cons_expr = deepcopy(evaluator.cons_expr[i].args[2])
+    compop = Symbol(evaluator.cons_expr[i].args[1])
     repl_getindex!(cons_expr)
     _replace_parameter_indices!(cons_expr, evaluator.p)
     _replace_variable_indices!(cons_expr)
-    lb, ub = Float64(evaluator.lcons[i]), Float64(evaluator.ucons[i])
-    return :($lb <= $cons_expr <= $ub)
+    return Expr(:call, compop, cons_expr, 0.0)
 end
 
 function _add_moi_variables!(opt_setup, evaluator::MOIOptimizationNLPEvaluator)
