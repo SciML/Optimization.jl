@@ -26,7 +26,6 @@ jobs:
                                                                        "lib/OptimizationMultistartOptimization",
                                                                        "lib/OptimizationNLopt",
                                                                        "lib/OptimizationNOMAD",
-                                                                       "lib/OptimizationNonconvex",
                                                                        "lib/OptimizationOptimJL",
                                                                        "lib/OptimizationOptimisers",
                                                                        "lib/OptimizationPolyalgorithms",
