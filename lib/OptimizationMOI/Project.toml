@@ -20,6 +20,7 @@ MathOptInterface = "1"
 ModelingToolkit = "8.74"
 Optimization = "3.15"
 Reexport = "1.2"
+SymbolicIndexingInterface = "0.3"
 Symbolics = "5"
 julia = "1"
 
