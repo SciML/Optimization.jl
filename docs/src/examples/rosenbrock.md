@@ -112,7 +112,7 @@ function con2_c(res, x, p)
 end
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote(); cons = con2_c)
-prob = OptimizationProblem(optf, x0, _p, lcons = [-Inf, -Inf], ucons = [Inf, Inf])
+prob = OptimizationProblem(optf, x0, _p, lcons = [-Inf, -Inf], ucons = [100.0, 100.0])
 sol = solve(prob, Ipopt.Optimizer())
 ```
 
