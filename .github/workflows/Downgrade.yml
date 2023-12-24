@@ -14,8 +14,28 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         version: ['1']
+        group:
+          - Core
+          - OptimizationBBO
+          - OptimizationCMAEvolutionStrategy
+          - OptimizationEvolutionary
+          - OptimizationFlux
+          - OptimizationGCMAES
+          - OptimizationMetaheuristics
+          - OptimizationMOI
+          - OptimizationMultistartOptimization
+          - OptimizationNLopt
+          #- OptimizationNonconvex
+          - OptimizationNOMAD
+          - OptimizationOptimJL
+          - OptimizationOptimisers
+          - OptimizationPRIMA
+          - OptimizationQuadDIRECT
+          - OptimizationSpeedMapping
+          - OptimizationPolyalgorithms
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v1
@@ -27,3 +47,5 @@ jobs:
           skip: Pkg,TOML
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
+        env:
+          GROUP: ${{ matrix.group }}
