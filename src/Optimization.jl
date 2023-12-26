@@ -25,7 +25,6 @@ include("function.jl")
 include("adtypes.jl")
 include("cache.jl")
 
-
 export solve, OptimizationCache
 
 end # module

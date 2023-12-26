@@ -17,14 +17,14 @@ SciMLBase.allowsbounds(opt::Union{BOBYQA, LINCOA, COBYLA}) = true
 SciMLBase.requiresconstraints(opt::COBYLA) = true
 
 function Optimization.OptimizationCache(prob::SciMLBase.OptimizationProblem,
-    opt::PRIMASolvers, data;
-    callback = Optimization.DEFAULT_CALLBACK,
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    progress = false,
-    kwargs...)
+        opt::PRIMASolvers, data;
+        callback = Optimization.DEFAULT_CALLBACK,
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing,
+        progress = false,
+        kwargs...)
     reinit_cache = Optimization.ReInitCache(prob.u0, prob.p)
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     if prob.f.adtype isa SciMLBase.NoAD && opt isa COBYLA
@@ -56,12 +56,12 @@ function get_solve_func(opt::PRIMASolvers)
 end
 
 function __map_optimizer_args!(cache::Optimization.OptimizationCache, opt::PRIMASolvers;
-    callback = nothing,
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    kwargs...)
+        callback = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing,
+        kwargs...)
     kws = (; kwargs...)
 
     if !isnothing(maxiters)
@@ -94,29 +94,29 @@ function sciml_prima_retcode(rc::AbstractString)
 end
 
 function SciMLBase.__solve(cache::Optimization.OptimizationCache{
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O,
+        D,
+        P,
+        C,
 }) where {
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O <: PRIMASolvers,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O <: PRIMASolvers,
+        D,
+        P,
+        C,
 }
     _loss = function (θ)
         x = cache.f(θ, cache.p)

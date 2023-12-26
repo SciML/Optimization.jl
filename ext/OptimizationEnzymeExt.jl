@@ -16,8 +16,8 @@ isdefined(Base, :get_extension) ? (using Enzyme) : (using ..Enzyme)
 end
 
 function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
-    adtype::AutoEnzyme, p,
-    num_cons = 0)
+        adtype::AutoEnzyme, p,
+        num_cons = 0)
     if f.grad === nothing
         grad = let
             function (res, θ, args...)
@@ -154,9 +154,9 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
 end
 
 function Optimization.instantiate_function(f::OptimizationFunction{true},
-    cache::Optimization.ReInitCache,
-    adtype::AutoEnzyme,
-    num_cons = 0)
+        cache::Optimization.ReInitCache,
+        adtype::AutoEnzyme,
+        num_cons = 0)
     p = cache.p
 
     if f.grad === nothing

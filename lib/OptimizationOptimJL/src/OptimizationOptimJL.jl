@@ -16,15 +16,15 @@ SciMLBase.supports_opt_cache_interface(opt::Union{Optim.Fminbox, Optim.SAMIN}) =
 SciMLBase.supports_opt_cache_interface(opt::Optim.ConstrainedOptimizer) = true
 
 function __map_optimizer_args(cache::OptimizationCache,
-    opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
-        Optim.SAMIN, Optim.ConstrainedOptimizer};
-    callback = nothing,
-    maxiters::Union{Number, Nothing} = nothing,
-    local_maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    kwargs...)
+        opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
+            Optim.SAMIN, Optim.ConstrainedOptimizer};
+        callback = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        local_maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing,
+        kwargs...)
     if !isnothing(abstol)
         @warn "common abstol is currently not used by $(opt)"
     end
@@ -66,17 +66,17 @@ function __map_optimizer_args(cache::OptimizationCache,
 end
 
 function SciMLBase.__init(prob::OptimizationProblem,
-    opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
-        Optim.SAMIN, Optim.ConstrainedOptimizer,
-    },
-    data = Optimization.DEFAULT_DATA;
-    callback = (args...) -> (false),
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    progress = false,
-    kwargs...)
+        opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
+            Optim.SAMIN, Optim.ConstrainedOptimizer,
+        },
+        data = Optimization.DEFAULT_DATA;
+        callback = (args...) -> (false),
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing,
+        progress = false,
+        kwargs...)
     if !isnothing(prob.lb) || !isnothing(prob.ub)
         if !(opt isa Union{Optim.Fminbox, Optim.SAMIN, Optim.AbstractConstrainedOptimizer})
             if opt isa Optim.ParticleSwarm
@@ -104,26 +104,26 @@ function SciMLBase.__init(prob::OptimizationProblem,
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O,
-    D,
-    P,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O,
+        D,
+        P,
 }) where {
-    F,
-    RC,
-    LB,
-    UB, LC, UC,
-    S,
-    O <:
-    Optim.AbstractOptimizer,
-    D,
-    P,
+        F,
+        RC,
+        LB,
+        UB, LC, UC,
+        S,
+        O <:
+        Optim.AbstractOptimizer,
+        D,
+        P,
 }
     local x, cur, state
 
@@ -219,29 +219,29 @@ function SciMLBase.__solve(cache::OptimizationCache{
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O,
-    D,
-    P,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O,
+        D,
+        P,
 }) where {
-    F,
-    RC,
-    LB,
-    UB, LC, UC,
-    S,
-    O <:
-    Union{
-        Optim.Fminbox,
-        Optim.SAMIN,
-    },
-    D,
-    P,
+        F,
+        RC,
+        LB,
+        UB, LC, UC,
+        S,
+        O <:
+        Union{
+            Optim.Fminbox,
+            Optim.SAMIN,
+        },
+        D,
+        P,
 }
     local x, cur, state
 
@@ -306,26 +306,26 @@ function SciMLBase.__solve(cache::OptimizationCache{
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O,
-    D,
-    P,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O,
+        D,
+        P,
 }) where {
-    F,
-    RC,
-    LB,
-    UB, LC, UC,
-    S,
-    O <:
-    Optim.ConstrainedOptimizer,
-    D,
-    P,
+        F,
+        RC,
+        LB,
+        UB, LC, UC,
+        S,
+        O <:
+        Optim.ConstrainedOptimizer,
+        D,
+        P,
 }
     local x, cur, state
 
@@ -393,7 +393,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
     lb = cache.lb === nothing ? [] : cache.lb
     ub = cache.ub === nothing ? [] : cache.ub
     if cache.f.cons !== nothing
-        optim_fc = Optim.TwiceDifferentiableConstraints(cache.f.cons, cache.f.cons_j, cons_hl!,
+        optim_fc = Optim.TwiceDifferentiableConstraints(cache.f.cons, cache.f.cons_j,
+            cons_hl!,
             lb, ub,
             cache.lcons, cache.ucons)
     else

@@ -13,11 +13,11 @@ SciMLBase.requiresbounds(::QuadDirect) = true
 SciMLBase.allowscallback(::QuadDirect) = false
 
 function __map_optimizer_args(prob::OptimizationProblem, opt::QuadDirect;
-    callback = nothing,
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing)
+        callback = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing)
     if !isnothing(maxtime)
         @warn "common maxtime is currently not used by $(opt)"
     end
@@ -40,12 +40,12 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::QuadDirect;
 end
 
 function SciMLBase.__solve(prob::OptimizationProblem, opt::QuadDirect;
-    splits = nothing,
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    kwargs...)
+        splits = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing,
+        kwargs...)
     local x, _loss
 
     maxiters = Optimization._check_and_convert_maxiters(maxiters)

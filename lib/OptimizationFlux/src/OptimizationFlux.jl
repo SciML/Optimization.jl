@@ -7,39 +7,39 @@ using Optimization.SciMLBase
 SciMLBase.supports_opt_cache_interface(opt::Flux.Optimise.AbstractOptimiser) = true
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
-    opt::Flux.Optimise.AbstractOptimiser,
-    data = Optimization.DEFAULT_DATA; save_best = true,
-    callback = (args...) -> (false),
-    progress = false, kwargs...)
+        opt::Flux.Optimise.AbstractOptimiser,
+        data = Optimization.DEFAULT_DATA; save_best = true,
+        callback = (args...) -> (false),
+        progress = false, kwargs...)
     return OptimizationCache(prob, opt, data; save_best, callback, progress,
         kwargs...)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O,
+        D,
+        P,
+        C,
 }) where {
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O <:
-    Flux.Optimise.AbstractOptimiser,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O <:
+        Flux.Optimise.AbstractOptimiser,
+        D,
+        P,
+        C,
 }
     if cache.data != Optimization.DEFAULT_DATA
         maxiters = length(cache.data)

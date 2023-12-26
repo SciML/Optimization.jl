@@ -13,11 +13,11 @@ SciMLBase.allowscallback(::CMAEvolutionStrategyOpt) = false #looks like `logger`
 SciMLBase.supports_opt_cache_interface(opt::CMAEvolutionStrategyOpt) = true
 
 function __map_optimizer_args(prob::OptimizationCache, opt::CMAEvolutionStrategyOpt;
-    callback = nothing,
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing)
+        callback = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing)
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
@@ -41,30 +41,30 @@ function __map_optimizer_args(prob::OptimizationCache, opt::CMAEvolutionStrategy
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O,
+        D,
+        P,
+        C,
 }) where {
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O <:
-    CMAEvolutionStrategyOpt,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O <:
+        CMAEvolutionStrategyOpt,
+        D,
+        P,
+        C,
 }
     local x, cur, state
 

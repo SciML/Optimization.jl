@@ -20,8 +20,8 @@ function default_chunk_size(len)
 end
 
 function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
-    adtype::AutoSparseForwardDiff{_chunksize}, p,
-    num_cons = 0) where {_chunksize}
+        adtype::AutoSparseForwardDiff{_chunksize}, p,
+        num_cons = 0) where {_chunksize}
     if maximum(getfield.(methods(f.f), :nargs)) > 3
         error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")
     end
@@ -127,9 +127,9 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
 end
 
 function Optimization.instantiate_function(f::OptimizationFunction{true},
-    cache::Optimization.ReInitCache,
-    adtype::AutoSparseForwardDiff{_chunksize},
-    num_cons = 0) where {_chunksize}
+        cache::Optimization.ReInitCache,
+        adtype::AutoSparseForwardDiff{_chunksize},
+        num_cons = 0) where {_chunksize}
     if maximum(getfield.(methods(f.f), :nargs)) > 3
         error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")
     end
@@ -237,7 +237,7 @@ end
 const FD = FiniteDiff
 
 function Optimization.instantiate_function(f, x, adtype::AutoSparseFiniteDiff, p,
-    num_cons = 0)
+        num_cons = 0)
     if maximum(getfield.(methods(f.f), :nargs)) > 3
         error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")
     end
@@ -362,7 +362,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoSparseFiniteDiff, p
 end
 
 function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
-    adtype::AutoSparseFiniteDiff, num_cons = 0)
+        adtype::AutoSparseFiniteDiff, num_cons = 0)
     if maximum(getfield.(methods(f.f), :nargs)) > 3
         error("$(string(adtype)) with SparseDiffTools does not support functions with more than 2 arguments")
     end
@@ -493,8 +493,8 @@ end
 struct OptimizationSparseReverseTag end
 
 function Optimization.instantiate_function(f, x, adtype::AutoSparseReverseDiff,
-    p = SciMLBase.NullParameters(),
-    num_cons = 0)
+        p = SciMLBase.NullParameters(),
+        num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     chunksize = default_chunk_size(length(x))
@@ -668,7 +668,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoSparseReverseDiff,
 end
 
 function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
-    adtype::AutoSparseReverseDiff, num_cons = 0)
+        adtype::AutoSparseReverseDiff, num_cons = 0)
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
 
     chunksize = default_chunk_size(length(cache.u0))

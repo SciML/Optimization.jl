@@ -10,16 +10,16 @@ SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 
 function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
-    callback = nothing,
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    local_method::Union{NLopt.Algorithm, NLopt.Opt, Nothing} = nothing,
-    local_maxiters::Union{Number, Nothing} = nothing,
-    local_maxtime::Union{Number, Nothing} = nothing,
-    local_options::Union{NamedTuple, Nothing} = nothing,
-    kwargs...)
+        callback = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing,
+        local_method::Union{NLopt.Algorithm, NLopt.Opt, Nothing} = nothing,
+        local_maxiters::Union{Number, Nothing} = nothing,
+        local_maxtime::Union{Number, Nothing} = nothing,
+        local_options::Union{NamedTuple, Nothing} = nothing,
+        kwargs...)
     if local_method !== nothing
         if isa(local_method, NLopt.Opt)
             if ndims(local_method) != length(cache.u0)
@@ -104,33 +104,33 @@ function __nlopt_status_to_ReturnCode(status::Symbol)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O,
+        D,
+        P,
+        C,
 }) where {
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O <:
-    Union{
-        NLopt.Algorithm,
-        NLopt.Opt,
-    },
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O <:
+        Union{
+            NLopt.Algorithm,
+            NLopt.Opt,
+        },
+        D,
+        P,
+        C,
 }
     local x
 

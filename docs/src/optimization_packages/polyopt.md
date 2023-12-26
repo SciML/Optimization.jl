@@ -1,6 +1,6 @@
 # OptimizationPolyalgorithms.jl
 
- OptimizationPolyalgorithms.jl is a package for collecting polyalgorithms formed by fusing popular optimization solvers of different characteristics.
+OptimizationPolyalgorithms.jl is a package for collecting polyalgorithms formed by fusing popular optimization solvers of different characteristics.
 
 ## Installation: OptimizationPolyalgorithms
 
@@ -10,6 +10,7 @@ To use this package, install the OptimizationPolyalgorithms package:
 import Pkg;
 Pkg.add("OptimizationPolyalgorithms");
 ```
+
 ## Algorithms
 
 Right now we support the following polyalgorithms.

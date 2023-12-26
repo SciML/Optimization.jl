@@ -8,7 +8,7 @@ end
 
 SciMLBase.has_reinit(cache::SciMLBase.AbstractOptimizationCache) = true
 function SciMLBase.reinit!(cache::SciMLBase.AbstractOptimizationCache; p = missing,
-    u0 = missing)
+        u0 = missing)
     if p === missing && u0 === missing
         p, u0 = cache.p, cache.u0
     else # at least one of them has a value
@@ -52,13 +52,13 @@ struct OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C} <:
 end
 
 function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt, data;
-    callback = Optimization.DEFAULT_CALLBACK,
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    progress = false,
-    kwargs...)
+        callback = Optimization.DEFAULT_CALLBACK,
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing,
+        progress = false,
+        kwargs...)
     reinit_cache = Optimization.ReInitCache(prob.u0, prob.p)
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons)
@@ -70,14 +70,14 @@ function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt, data;
 end
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt,
-    data = Optimization.DEFAULT_DATA;
-    callback = Optimization.DEFAULT_CALLBACK,
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    progress = false,
-    kwargs...)
+        data = Optimization.DEFAULT_DATA;
+        callback = Optimization.DEFAULT_CALLBACK,
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing,
+        progress = false,
+        kwargs...)
     return OptimizationCache(prob, opt, data; maxiters, maxtime, abstol, callback,
         reltol, progress,
         kwargs...)
