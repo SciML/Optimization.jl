@@ -74,9 +74,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cache.progress && ProgressLogging.@logprogress msg i/maxiters
 
             if cache.solver_args.save_best
-                if first(x)[1] < first(min_err)  #found a better solution
+                if first(x)[1] < first(min_err)[1]  #found a better solution
                     min_opt = opt
-                    min_err = x[1]
+                    min_err = x
                     min_θ = copy(θ)
                 end
                 if i == maxiters  #Last iteration, revert to best.
@@ -93,7 +93,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     t1 = time()
 
-    SciMLBase.build_solution(cache, cache.opt, θ, x[1], solve_time = t1 - t0)
+    SciMLBase.build_solution(cache, cache.opt, θ, first(x)[1], solve_time = t1 - t0)
     # here should be build_solution to create the output message
 end
 
