@@ -70,13 +70,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
             elseif cb_call
                 break
             end
-            msg = @sprintf("loss: %.3g", x[1])
+            msg = @sprintf("loss: %.3g", first(x)[1])
             cache.progress && ProgressLogging.@logprogress msg i/maxiters
 
             if cache.solver_args.save_best
-                if first(x) < first(min_err)  #found a better solution
+                if first(x)[1] < first(min_err)  #found a better solution
                     min_opt = opt
-                    min_err = x
+                    min_err = x[1]
                     min_θ = copy(θ)
                 end
                 if i == maxiters  #Last iteration, revert to best.
