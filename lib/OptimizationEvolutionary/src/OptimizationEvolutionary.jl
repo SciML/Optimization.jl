@@ -12,18 +12,18 @@ decompose_trace(trace::Evolutionary.OptimizationTrace) = last(trace)
 decompose_trace(trace::Evolutionary.OptimizationTraceRecord) = trace
 
 function Evolutionary.trace!(record::Dict{String, Any}, objfun, state, population,
-    method::Evolutionary.AbstractOptimizer, options)
+        method::Evolutionary.AbstractOptimizer, options)
     record["x"] = population
 end
 
 function __map_optimizer_args(cache::OptimizationCache,
-    opt::Evolutionary.AbstractOptimizer;
-    callback = nothing,
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    kwargs...)
+        opt::Evolutionary.AbstractOptimizer;
+        callback = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing,
+        kwargs...)
     mapped_args = (; kwargs...)
 
     if !isnothing(callback)
@@ -50,30 +50,30 @@ function __map_optimizer_args(cache::OptimizationCache,
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O,
+        D,
+        P,
+        C,
 }) where {
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O <:
-    Evolutionary.AbstractOptimizer,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O <:
+        Evolutionary.AbstractOptimizer,
+        D,
+        P,
+        C,
 }
     local x, cur, state
 

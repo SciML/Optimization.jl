@@ -11,12 +11,12 @@ SciMLBase.allowsbounds(::NOMADOpt) = true
 SciMLBase.allowscallback(::NOMADOpt) = false
 
 function __map_optimizer_args!(prob::OptimizationProblem, opt::NOMAD.NomadProblem;
-    callback = nothing,
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    kwargs...)
+        callback = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing,
+        kwargs...)
     for j in kwargs
         setproperty!(opt.options, j.first, j.second)
     end
@@ -41,12 +41,12 @@ function __map_optimizer_args!(prob::OptimizationProblem, opt::NOMAD.NomadProble
 end
 
 function SciMLBase.__solve(prob::OptimizationProblem, opt::NOMADOpt;
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    progress = false,
-    kwargs...)
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing,
+        progress = false,
+        kwargs...)
     local x
 
     maxiters = Optimization._check_and_convert_maxiters(maxiters)

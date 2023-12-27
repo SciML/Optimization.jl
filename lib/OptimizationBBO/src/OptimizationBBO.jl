@@ -37,13 +37,13 @@ function decompose_trace(opt::BlackBoxOptim.OptRunController, progress)
 end
 
 function __map_optimizer_args(prob::Optimization.OptimizationCache, opt::BBO;
-    callback = nothing,
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    verbose::Bool = false,
-    kwargs...)
+        callback = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing,
+        verbose::Bool = false,
+        kwargs...)
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
@@ -78,30 +78,30 @@ function __map_optimizer_args(prob::Optimization.OptimizationCache, opt::BBO;
 end
 
 function SciMLBase.__solve(cache::Optimization.OptimizationCache{
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O,
+        D,
+        P,
+        C,
 }) where {
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O <:
-    BBO,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O <:
+        BBO,
+        D,
+        P,
+        C,
 }
     local x, cur, state
 

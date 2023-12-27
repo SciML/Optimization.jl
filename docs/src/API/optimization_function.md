@@ -15,6 +15,7 @@ The choices for the auto-AD fill-ins with quick descriptions are:
   - `AutoFiniteDiff()`: Finite differencing, not optimal but always applicable
   - `AutoModelingToolkit()`: The fastest choice for large scalar optimizations
   - `AutoEnzyme()`: Highly performant AD choice for type stable and optimized code
+
 ## Automatic Differentiation Choice API
 
 The following sections describe the Auto-AD choices in detail.

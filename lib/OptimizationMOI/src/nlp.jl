@@ -51,63 +51,63 @@ function Base.setproperty!(cache::MOIOptimizationNLPCache{E}, name::Symbol, x) w
 end
 
 function SciMLBase.get_p(sol::SciMLBase.OptimizationSolution{
-    T,
-    N,
-    uType,
-    C,
+        T,
+        N,
+        uType,
+        C,
 }) where {T, N,
-    uType,
-    C <:
-    MOIOptimizationNLPCache,
+        uType,
+        C <:
+        MOIOptimizationNLPCache,
 }
     sol.cache.evaluator.p
 end
 function SciMLBase.get_observed(sol::SciMLBase.OptimizationSolution{
-    T,
-    N,
-    uType,
-    C,
+        T,
+        N,
+        uType,
+        C,
 }) where {
-    T,
-    N,
-    uType,
-    C <:
-    MOIOptimizationNLPCache,
+        T,
+        N,
+        uType,
+        C <:
+        MOIOptimizationNLPCache,
 }
     sol.cache.evaluator.f.observed
 end
 function SciMLBase.get_syms(sol::SciMLBase.OptimizationSolution{
-    T,
-    N,
-    uType,
-    C,
+        T,
+        N,
+        uType,
+        C,
 }) where {T,
-    N,
-    uType,
-    C <:
-    MOIOptimizationNLPCache,
+        N,
+        uType,
+        C <:
+        MOIOptimizationNLPCache,
 }
     variable_symbols(sol.cache.evaluator.f)
 end
 function SciMLBase.get_paramsyms(sol::SciMLBase.OptimizationSolution{
-    T,
-    N,
-    uType,
-    C,
+        T,
+        N,
+        uType,
+        C,
 }) where {
-    T,
-    N,
-    uType,
-    C <:
-    MOIOptimizationNLPCache,
+        T,
+        N,
+        uType,
+        C <:
+        MOIOptimizationNLPCache,
 }
     parameter_symbols(sol.cache.evaluator.f)
 end
 
 function MOIOptimizationNLPCache(prob::OptimizationProblem,
-    opt;
-    callback = nothing,
-    kwargs...)
+        opt;
+        callback = nothing,
+        kwargs...)
     reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
@@ -166,7 +166,9 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
     cons = MTK.constraints(sys)
     _cons_expr = Vector{Expr}(undef, length(cons))
     for i in eachindex(cons)
-        _cons_expr[i] = repl_getindex!(convert_to_expr(cons_expr[i], expr_map; expand_expr = false))
+        _cons_expr[i] = repl_getindex!(convert_to_expr(cons_expr[i],
+            expr_map;
+            expand_expr = false))
     end
 
     evaluator = MOIOptimizationNLPEvaluator(f,
@@ -196,7 +198,7 @@ function MOI.features_available(evaluator::MOIOptimizationNLPEvaluator)
 end
 
 function MOI.initialize(evaluator::MOIOptimizationNLPEvaluator,
-    requested_features::Vector{Symbol})
+        requested_features::Vector{Symbol})
     available_features = MOI.features_available(evaluator)
     for feat in requested_features
         if !(feat in available_features)
@@ -304,10 +306,10 @@ function MOI.hessian_lagrangian_structure(evaluator::MOIOptimizationNLPEvaluator
 end
 
 function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
-    h,
-    x,
-    σ,
-    μ) where {T}
+        h,
+        x,
+        σ,
+        μ) where {T}
     if evaluator.f.lag_h !== nothing
         return evaluator.f.lag_h(h, x, σ, μ)
     end

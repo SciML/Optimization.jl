@@ -8,38 +8,38 @@ SciMLBase.supports_opt_cache_interface(opt::AbstractRule) = true
 include("sophia.jl")
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::AbstractRule,
-    data = Optimization.DEFAULT_DATA; save_best = true,
-    callback = (args...) -> (false),
-    progress = false, kwargs...)
+        data = Optimization.DEFAULT_DATA; save_best = true,
+        callback = (args...) -> (false),
+        progress = false, kwargs...)
     return OptimizationCache(prob, opt, data; save_best, callback, progress,
         kwargs...)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O,
+        D,
+        P,
+        C,
 }) where {
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O <:
-    AbstractRule,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O <:
+        AbstractRule,
+        D,
+        P,
+        C,
 }
     if cache.data != Optimization.DEFAULT_DATA
         maxiters = length(cache.data)

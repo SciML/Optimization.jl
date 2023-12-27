@@ -13,11 +13,11 @@ SciMLBase.allowscallback(::SpeedMappingOpt) = false
 SciMLBase.supports_opt_cache_interface(opt::SpeedMappingOpt) = true
 
 function __map_optimizer_args(cache::OptimizationCache, opt::SpeedMappingOpt;
-    callback = nothing,
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing)
+        callback = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing)
 
     # add optimiser options from kwargs
     mapped_args = (;)
@@ -43,30 +43,30 @@ function __map_optimizer_args(cache::OptimizationCache, opt::SpeedMappingOpt;
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O,
+        D,
+        P,
+        C,
 }) where {
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O <:
-    SpeedMappingOpt,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O <:
+        SpeedMappingOpt,
+        D,
+        P,
+        C,
 }
     local x
 

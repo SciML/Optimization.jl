@@ -14,12 +14,12 @@ SciMLBase.allowscallback(::GCMAESOpt) = false
 SciMLBase.supports_opt_cache_interface(opt::GCMAESOpt) = true
 
 function __map_optimizer_args(cache::OptimizationCache, opt::GCMAESOpt;
-    callback = nothing,
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    kwargs...)
+        callback = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing,
+        kwargs...)
 
     # add optimiser options from kwargs
     mapped_args = (;)
@@ -44,40 +44,40 @@ function __map_optimizer_args(cache::OptimizationCache, opt::GCMAESOpt;
 end
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
-    opt::GCMAESOpt,
-    data = Optimization.DEFAULT_DATA; σ0 = 0.2,
-    callback = (args...) -> (false),
-    progress = false, kwargs...)
+        opt::GCMAESOpt,
+        data = Optimization.DEFAULT_DATA; σ0 = 0.2,
+        callback = (args...) -> (false),
+        progress = false, kwargs...)
     return OptimizationCache(prob, opt, data; σ0 = σ0, callback = callback,
         progress = progress,
         kwargs...)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O,
+        D,
+        P,
+        C,
 }) where {
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O <:
-    GCMAESOpt,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O <:
+        GCMAESOpt,
+        D,
+        P,
+        C,
 }
     local x
     local G = similar(cache.u0)

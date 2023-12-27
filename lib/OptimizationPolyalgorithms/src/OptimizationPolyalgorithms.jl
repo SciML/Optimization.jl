@@ -7,10 +7,10 @@ using Optimization.SciMLBase, OptimizationOptimJL, OptimizationOptimisers
 struct PolyOpt end
 
 function SciMLBase.__solve(prob::OptimizationProblem,
-    opt::PolyOpt,
-    args...;
-    maxiters = nothing,
-    kwargs...)
+        opt::PolyOpt,
+        args...;
+        maxiters = nothing,
+        kwargs...)
     loss, θ = x -> prob.f(x, prob.p), prob.u0
     deterministic = first(loss(θ)) == first(loss(θ))
 

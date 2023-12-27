@@ -12,45 +12,45 @@ end
 SciMLBase.supports_opt_cache_interface(opt::Sophia) = true
 
 function Sophia(; η = 1e-3, βs = (0.9, 0.999), ϵ = 1e-8, λ = 1e-1, k = 10,
-    ρ = 0.04)
+        ρ = 0.04)
     Sophia(η, βs, ϵ, λ, k, ρ)
 end
 
 clip(z, ρ) = max(min(z, ρ), -ρ)
 
 function SciMLBase.__init(prob::OptimizationProblem, opt::Sophia,
-    data = Optimization.DEFAULT_DATA;
-    maxiters::Number = 1000, callback = (args...) -> (false),
-    progress = false, save_best = true, kwargs...)
+        data = Optimization.DEFAULT_DATA;
+        maxiters::Number = 1000, callback = (args...) -> (false),
+        progress = false, save_best = true, kwargs...)
     return OptimizationCache(prob, opt, data; maxiters, callback, progress,
         save_best, kwargs...)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O,
+        D,
+        P,
+        C,
 }) where {
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O <:
-    Sophia,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O <:
+        Sophia,
+        D,
+        P,
+        C,
 }
     local x, cur, state
     uType = eltype(cache.u0)

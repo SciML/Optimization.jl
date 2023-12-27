@@ -28,13 +28,13 @@ function initial_population!(opt, cache, bounds, f)
 end
 
 function __map_optimizer_args!(cache::OptimizationCache,
-    opt::Metaheuristics.AbstractAlgorithm;
-    callback = nothing,
-    maxiters::Union{Number, Nothing} = nothing,
-    maxtime::Union{Number, Nothing} = nothing,
-    abstol::Union{Number, Nothing} = nothing,
-    reltol::Union{Number, Nothing} = nothing,
-    kwargs...)
+        opt::Metaheuristics.AbstractAlgorithm;
+        callback = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing,
+        kwargs...)
     for j in kwargs
         if j.first .∈ Ref(propertynames(Metaheuristics.Information()))
             error("Set $(j.first) by directly passing it to Information Structure which is passed to $(typeof(opt)) algorithms when calling solve().")
@@ -66,10 +66,10 @@ function __map_optimizer_args!(cache::OptimizationCache,
 end
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
-    opt::Metaheuristics.AbstractAlgorithm,
-    data = Optimization.DEFAULT_DATA; use_initial = false,
-    callback = (args...) -> (false),
-    progress = false, kwargs...)
+        opt::Metaheuristics.AbstractAlgorithm,
+        data = Optimization.DEFAULT_DATA; use_initial = false,
+        callback = (args...) -> (false),
+        progress = false, kwargs...)
     return OptimizationCache(prob, opt, data; use_initial = use_initial,
         callback = callback,
         progress = progress,
@@ -77,30 +77,30 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O,
+        D,
+        P,
+        C,
 }) where {
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O <:
-    Metaheuristics.AbstractAlgorithm,
-    D,
-    P,
-    C,
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O <:
+        Metaheuristics.AbstractAlgorithm,
+        D,
+        P,
+        C,
 }
     local x
 

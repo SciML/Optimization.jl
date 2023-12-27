@@ -18,7 +18,10 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
     if isnothing(f.sys)
         if f.adtype isa Optimization.AutoModelingToolkit
             num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
-            f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons)
+            f = Optimization.instantiate_function(prob.f,
+                reinit_cache,
+                prob.f.adtype,
+                num_cons)
         else
             throw(ArgumentError("Expected an `OptimizationProblem` that was setup via an `OptimizationSystem`, or AutoModelingToolkit ad choice"))
         end
@@ -31,7 +34,9 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
     cons = MTK.constraints(f.sys)
     cons_expr = Vector{Expr}(undef, length(cons))
     Threads.@sync for i in eachindex(cons)
-        Threads.@spawn cons_expr[i] = repl_getindex!(convert_to_expr(f.cons_expr[i], expr_map; expand_expr = false))
+        Threads.@spawn cons_expr[i] = repl_getindex!(convert_to_expr(f.cons_expr[i],
+            expr_map;
+            expand_expr = false))
     end
 
     return MOIOptimizationCache(f,
