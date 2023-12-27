@@ -50,4 +50,20 @@ using Zygote
         sol = Optimization.solve!(cache)
         @test sol.u≈[2.0] atol=1e-3
     end
+
+    @testset "callback" begin
+        rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+        x0 = zeros(2)
+        _p = [1.0, 100.0]
+        l1 = rosenbrock(x0, _p)
+
+        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+
+        prob = OptimizationProblem(optprob, x0, _p)
+        function callback(θ, l, state, iter)
+            Optimisers.adjust!(state, 0.1/iter)
+            return false
+        end
+        sol = solve(prob, Optimisers.Adam(0.1), maxiters = 1000, progress = false, callback = callback)
+    end
 end

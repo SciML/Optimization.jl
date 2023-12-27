@@ -63,18 +63,18 @@ function SciMLBase.__solve(cache::OptimizationCache{
     Optimization.@withprogress cache.progress name="Training" begin
         for (i, d) in enumerate(data)
             cache.f.grad(G, θ, d...)
-            x = cache.f(θ, cache.p, d...)
+            x = (cache.f(θ, cache.p, d...), state, i)
             cb_call = cache.callback(θ, x...)
             if !(cb_call isa Bool)
-                error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
+                error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the `solve` documentation for information.")
             elseif cb_call
                 break
             end
-            msg = @sprintf("loss: %.3g", x[1])
+            msg = @sprintf("loss: %.3g", first(x)[1])
             cache.progress && ProgressLogging.@logprogress msg i/maxiters
 
             if cache.solver_args.save_best
-                if first(x) < first(min_err)  #found a better solution
+                if first(x)[1] < first(min_err)[1]  #found a better solution
                     min_opt = opt
                     min_err = x
                     min_θ = copy(θ)
@@ -93,7 +93,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     t1 = time()
 
-    SciMLBase.build_solution(cache, cache.opt, θ, x[1], solve_time = t1 - t0)
+    SciMLBase.build_solution(cache, cache.opt, θ, first(x)[1], solve_time = t1 - t0)
     # here should be build_solution to create the output message
 end
 

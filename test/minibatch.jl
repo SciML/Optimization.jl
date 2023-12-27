@@ -18,7 +18,7 @@ function dudt_(u, p, t)
     ann(u, p, st)[1] .* u
 end
 
-callback = function (p, l, pred; doplot = false) #callback function to observe training
+callback = function (p, l, pred, args...; doplot = false) #callback function to observe training
     display(l)
     # plot current prediction against data
     if doplot
