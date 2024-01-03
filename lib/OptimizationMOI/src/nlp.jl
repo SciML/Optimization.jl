@@ -15,6 +15,7 @@ mutable struct MOIOptimizationNLPEvaluator{T, F <: OptimizationFunction, RC, LB,
     H::HT
     cons_H::Vector{CHT}
     callback::CB
+    iteration::Int
     obj_expr::Union{Expr, Nothing}
     cons_expr::Union{Vector{Expr}, Nothing}
 end
@@ -183,6 +184,7 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
         H,
         cons_H,
         callback,
+        0,
         expr,
         _cons_expr)
     return MOIOptimizationNLPCache(evaluator, opt, NamedTuple(kwargs))
@@ -215,7 +217,9 @@ function MOI.eval_objective(evaluator::MOIOptimizationNLPEvaluator, x)
         return evaluator.f(x, evaluator.p)
     else
         l = evaluator.f(x, evaluator.p)
-        evaluator.callback(x, l)
+        evaluator.iteration += 1
+        state = Optimization.OptimizationState(iteration = evaluator.iteration, u = x, objective = l[1])
+        evaluator.callback(state, l)
         return l
     end
 end

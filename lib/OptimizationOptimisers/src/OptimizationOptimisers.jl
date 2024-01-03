@@ -63,8 +63,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
     Optimization.@withprogress cache.progress name="Training" begin
         for (i, d) in enumerate(data)
             cache.f.grad(G, θ, d...)
-            x = (cache.f(θ, cache.p, d...), state, i)
-            cb_call = cache.callback(θ, x...)
+            x = cache.f(θ, cache.p, d...)
+            opt_state = Optimization.OptimizationState(iteration = i, u = θ, objective = x[1], gradient = G, solver_state = state)
+            cb_call = cache.callback(opt_state, x...)
             if !(cb_call isa Bool)
                 error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the `solve` documentation for information.")
             elseif cb_call
@@ -83,7 +84,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
                     opt = min_opt
                     x = min_err
                     θ = min_θ
-                    cache.callback(θ, x...)
+                    cache.f.grad(G, θ, d...)
+                    opt_state = Optimization.OptimizationState(iteration = i, u = θ, objective = x[1], gradient = G, solver_state = state)
+                    cache.callback(opt_state, x...)
                     break
                 end
             end

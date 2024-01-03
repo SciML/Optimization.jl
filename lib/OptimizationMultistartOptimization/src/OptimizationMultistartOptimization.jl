@@ -6,6 +6,7 @@ using Optimization.SciMLBase
 
 SciMLBase.requiresbounds(opt::MultistartOptimization.TikTak) = true
 SciMLBase.allowsbounds(opt::MultistartOptimization.TikTak) = true
+SciMLBase.allowscallback(opt::MultistartOptimization.TikTak) = false
 SciMLBase.supports_opt_cache_interface(opt::MultistartOptimization.TikTak) = true
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,

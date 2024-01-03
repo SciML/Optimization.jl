@@ -23,10 +23,6 @@ function SciMLBase.allowsconstraints(opt::Union{MOI.AbstractOptimizer,
         MOI.OptimizerWithAttributes})
     true
 end
-# function SciMLBase.allowscallback(opt::Union{MOI.AbstractOptimizer,
-#     MOI.OptimizerWithAttributes})
-#     false
-# end
 
 function _create_new_optimizer(opt::MOI.OptimizerWithAttributes)
     return _create_new_optimizer(MOI.instantiate(opt, with_bridge_type = Float64))

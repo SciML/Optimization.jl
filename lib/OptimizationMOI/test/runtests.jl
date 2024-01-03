@@ -36,11 +36,8 @@ end
 
     optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), Optimization.AutoZygote())
     prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MaxSense)
-    global iter = 0
-    callback = function (p, l)
-        global iter
-        iter += 1
 
+    callback = function (state, l)
         display(l)
         return false
     end
