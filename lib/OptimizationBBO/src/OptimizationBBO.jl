@@ -117,8 +117,8 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         else
             n_steps = BlackBoxOptim.num_steps(trace)
             curr_u = decompose_trace(trace, cache.progress)
-            state = Optimization.OptimizationState(iterations = n_steps, u = curr_u, objective = x[1], solver_state = trace)
-            cb_call = cache.callback(curr_u, x..., state)
+            state = Optimization.OptimizationState(iteration = n_steps, u = curr_u, objective = x[1], solver_state = trace)
+            cb_call = cache.callback(state, x...)
         end
 
         if !(cb_call isa Bool)

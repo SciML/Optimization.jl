@@ -19,6 +19,6 @@ struct OptimizationState{X, O, G, H, S}
     solver_state::S
 end
 
-OptimizationState(; iterations = 0, u = nothing, objective = nothing,
+OptimizationState(; iteration = 0, u = nothing, objective = nothing,
         gradient = nothing, hessian = nothing, solver_state = nothing) =
-    OptimizationState(iterations, u, objective, gradient, hessian, solver_state)
+    OptimizationState(iteration, u, objective, gradient, hessian, solver_state)
