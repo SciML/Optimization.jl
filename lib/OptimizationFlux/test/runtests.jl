@@ -34,4 +34,12 @@ using Test
         sol = Optimization.solve!(cache)
         @test sol.u≈[2.0] atol=1e-3
     end
+
+    function cb(state, args...)
+        if state.iteration % 10 == 0
+            println(state.u)
+        end
+        return false
+    end
+    sol = solve(prob, Flux.Adam(0.1), callback = cb, maxiters = 100, progress = false)
 end
