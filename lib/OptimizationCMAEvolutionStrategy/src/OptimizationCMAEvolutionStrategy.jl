@@ -109,7 +109,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     SciMLBase.build_solution(cache, cache.opt,
         opt_res.logger.xbest[end],
         opt_res.logger.fbest[end]; original = opt_res,
-        retcode = opt_ret, solve_time = t1 - t0,
+        retcode = opt_ret,
         stats = stats)
 end
 

@@ -208,12 +208,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
     opt_res = Optim.optimize(optim_f, cache.u0, cache.opt, opt_args)
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
-
+    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations, 
+        time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls, hevals = opt_res.h_calls)
     SciMLBase.build_solution(cache, cache.opt,
         opt_res.minimizer,
         cache.sense === Optimization.MaxSense ? -opt_res.minimum :
         opt_res.minimum; original = opt_res, retcode = opt_ret,
-        solve_time = t1 - t0)
+        stats = stats)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
@@ -296,10 +297,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
     opt_res = Optim.optimize(optim_f, cache.lb, cache.ub, cache.u0, cache.opt, opt_args)
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
-
+    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations, 
+        time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls, hevals = opt_res.h_calls)
     SciMLBase.build_solution(cache, cache.opt,
         opt_res.minimizer, opt_res.minimum;
-        original = opt_res, retcode = opt_ret, solve_time = t1 - t0)
+        original = opt_res, retcode = opt_ret, stats = stats)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
@@ -410,10 +412,12 @@ function SciMLBase.__solve(cache::OptimizationCache{
     opt_res = Optim.optimize(optim_f, optim_fc, cache.u0, cache.opt, opt_args)
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
-
+    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations, 
+        time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls, hevals = opt_res.h_calls)
     SciMLBase.build_solution(cache, cache.opt,
         opt_res.minimizer, opt_res.minimum;
-        original = opt_res, retcode = opt_ret)
+        original = opt_res, retcode = opt_ret,
+        stats = stats)
 end
 
 end

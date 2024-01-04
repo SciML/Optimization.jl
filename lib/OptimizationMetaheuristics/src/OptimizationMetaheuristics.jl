@@ -139,11 +139,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
     t0 = time()
     opt_res = Metaheuristics.optimize(_loss, opt_bounds, cache.opt)
     t1 = time()
-
+    stats = Optimization.OptimizationStats(; time = t1 - t0)
     SciMLBase.build_solution(cache, cache.opt,
         Metaheuristics.minimizer(opt_res),
         Metaheuristics.minimum(opt_res); original = opt_res,
-        solve_time = t1 - t0)
+        stats = stats)
 end
 
 end

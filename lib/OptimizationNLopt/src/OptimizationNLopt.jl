@@ -181,9 +181,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
     if retcode == ReturnCode.Failure
         @warn "NLopt failed to converge: $(ret)"
     end
+    stats = Optimization.OptimizationStats(; time = t1 - t0)
     SciMLBase.build_solution(cache, cache.opt, minx,
         minf; original = opt_setup, retcode = retcode,
-        solve_time = t1 - t0)
+        stats = stats)
 end
 
 end

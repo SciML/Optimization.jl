@@ -180,10 +180,10 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     t1 = time()
 
     retcode = sciml_prima_retcode(PRIMA.reason(rc))
-
+    stats = Optimization.OptimizationStats(; time = t1 - t0, fevals = nf)
     SciMLBase.build_solution(cache, cache.opt, minx,
         minf; retcode = retcode,
-        solve_time = t1 - t0)
+        stats = stats)
 end
 
 export UOBYQA, NEWUOA, BOBYQA, LINCOA, COBYLA
