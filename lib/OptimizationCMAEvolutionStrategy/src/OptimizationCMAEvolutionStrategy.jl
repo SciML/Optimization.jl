@@ -105,7 +105,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     t1 = time()
 
     opt_ret = opt_res.stop.reason
-    stats = Optimization.OptimizationStats(; iterations = length(opt.logger.fmedian), time = t1 - t0, fevals = length(opt.logger.fmedian))
+    stats = Optimization.OptimizationStats(; iterations = length(opt_res.logger.fmedian), time = t1 - t0, fevals = length(opt_res.logger.fmedian))
     SciMLBase.build_solution(cache, cache.opt,
         opt_res.logger.xbest[end],
         opt_res.logger.fbest[end]; original = opt_res,
