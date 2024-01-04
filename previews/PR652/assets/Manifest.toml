@@ -1702,9 +1702,9 @@ version = "0.2.4"
 
 [[deps.PreallocationTools]]
 deps = ["Adapt", "ArrayInterface", "ForwardDiff"]
-git-tree-sha1 = "13078a8afc9f88ede295c17c3c673eb52c05b0b4"
+git-tree-sha1 = "64bb68f76f789f5fe5930a80af310f19cdafeaed"
 uuid = "d236fae5-4411-538c-8e31-a6e3d9e00b46"
-version = "0.4.16"
+version = "0.4.17"
 weakdeps = ["ReverseDiff"]
 
     [deps.PreallocationTools.extensions]
