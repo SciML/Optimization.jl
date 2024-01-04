@@ -178,7 +178,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     t1 = time()
 
     opt_ret = Symbol(opt_res.stop_reason)
-    stats = Optimization.OptimizationStats(opt_res.num_steps, t1 - t0, BlackBoxOptim.num_func_evals(opt_res))
+    stats = Optimization.OptimizationStats(opt_res.iterations, t1 - t0, opt_res.f_calls)
     SciMLBase.build_solution(cache, cache.opt,
         BlackBoxOptim.best_candidate(opt_res),
         BlackBoxOptim.best_fitness(opt_res);
