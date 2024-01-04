@@ -34,14 +34,12 @@ function loss_adjoint(p)
 end
 
 iter = 0
-callback = function (p, l, pred)
-    global iter
-    iter += 1
+callback = function (state, l, pred)
 
     display(l)
 
     # using `remake` to re-create our `prob` with current parameters `p`
-    remade_solution = solve(remake(prob_ode, p = p), Tsit5(), saveat = tsteps)
+    remade_solution = solve(remake(prob_ode, p = state.u), Tsit5(), saveat = tsteps)
 
     # Tell sciml_train to not halt the optimization. If return true, then
     # optimization stops.
