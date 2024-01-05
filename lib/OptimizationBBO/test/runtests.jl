@@ -25,8 +25,8 @@ using Test
     @test 10 * sol.objective < l1
 
     fitness_progress_history = []
-    function cb(best_candidate, fitness)
-        push!(fitness_progress_history, [best_candidate, fitness])
+    function cb(state, fitness)
+        push!(fitness_progress_history, [state.u, fitness])
         return false
     end
     sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(), callback = cb)

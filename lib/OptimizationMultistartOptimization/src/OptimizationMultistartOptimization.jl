@@ -6,6 +6,7 @@ using Optimization.SciMLBase
 
 SciMLBase.requiresbounds(opt::MultistartOptimization.TikTak) = true
 SciMLBase.allowsbounds(opt::MultistartOptimization.TikTak) = true
+SciMLBase.allowscallback(opt::MultistartOptimization.TikTak) = false
 SciMLBase.supports_opt_cache_interface(opt::MultistartOptimization.TikTak) = true
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
@@ -68,13 +69,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
         use_threads = cache.solver_args.use_threads)
     t1 = time()
     opt_ret = hasproperty(opt_res, :ret) ? opt_res.ret : nothing
-
+    stats = Optimization.OptimizationStats(; time = t1 - t0)
     SciMLBase.build_solution(cache,
         (cache.opt, cache.solver_args.local_opt), opt_res.location,
         opt_res.value;
+        stats = stats,
         (isnothing(opt_ret) ? (; original = opt_res) :
-         (; original = opt_res, retcode = opt_ret,
-            solve_time = t1 - t0))...)
+         (; original = opt_res, retcode = opt_ret,))...)
 end
 
 end

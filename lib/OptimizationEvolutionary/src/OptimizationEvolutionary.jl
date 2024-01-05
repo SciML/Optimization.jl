@@ -84,7 +84,12 @@ function SciMLBase.__solve(cache::OptimizationCache{
     cur, state = iterate(cache.data)
 
     function _cb(trace)
-        cb_call = cache.callback(decompose_trace(trace).metadata["x"], trace.value...)
+        curr_u = decompose_trace(trace).metadata["x"][end]
+        opt_state = Optimization.OptimizationState(; iteration = decompose_trace(trace).iteration,
+            u = curr_u,
+            objective = x[1],
+            solver_state = trace)
+        cb_call = cache.callback(opt_state, trace.value...)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -127,11 +132,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
     end
     t1 = time()
     opt_ret = Symbol(Evolutionary.converged(opt_res))
-
+    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations
+        , time = t1 - t0, fevals = opt_res.f_calls)
     SciMLBase.build_solution(cache, cache.opt,
         Evolutionary.minimizer(opt_res),
         Evolutionary.minimum(opt_res); original = opt_res,
-        retcode = opt_ret, solve_time = t1 - t0)
+        retcode = opt_ret,
+        stats = stats)
 end
 
 end

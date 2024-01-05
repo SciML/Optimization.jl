@@ -29,7 +29,7 @@ function __map_optimizer_args(cache::OptimizationCache, opt::GCMAESOpt;
     end
 
     if !(isnothing(maxtime))
-        @warn "common maxtime is currently not used by $(opt)"
+        mapped_args = (; mapped_args..., maxtime = maxtime)
     end
 
     if !isnothing(abstol)
@@ -114,10 +114,12 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cache.ub; opt_args...)
     end
     t1 = time()
-
+    stats = Optimization.OptimizationStats(; iterations = maxiters === nothing ? 0 : maxiters, 
+            time = t1 - t0)
     SciMLBase.build_solution(cache, cache.opt,
         opt_xmin, opt_fmin; retcode = Symbol(Bool(opt_ret)),
-        solve_time = t1 - t0)
+        stats = stats
+        )
 end
 
 end

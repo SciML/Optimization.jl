@@ -66,10 +66,10 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::QuadDirect;
     root, x0 = QuadDIRECT.analyze(_loss, splits, prob.lb, prob.ub; opt_arg...)
     box = minimum(root)
     t1 = time()
-
+    stats = Optimization.OptimizationStats(; time = t1 - t0)
     SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
         QuadDIRECT.position(box, x0), QuadDIRECT.value(box);
-        original = root, solve_time = t1 - t0)
+        original = root, stats = stats)
 end
 
 end

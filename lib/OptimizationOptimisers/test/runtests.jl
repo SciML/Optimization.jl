@@ -60,10 +60,12 @@ using Zygote
         optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
 
         prob = OptimizationProblem(optprob, x0, _p)
-        function callback(θ, l, state, iter)
-            Optimisers.adjust!(state, 0.1/iter)
+        function callback(state, l)
+            Optimisers.adjust!(state.solver_state, 0.1/state.iteration)
             return false
         end
         sol = solve(prob, Optimisers.Adam(0.1), maxiters = 1000, progress = false, callback = callback)
     end
+
+    @test_throws ArgumentError sol = solve(prob, Optimisers.Adam())
 end

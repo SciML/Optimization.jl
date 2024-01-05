@@ -136,7 +136,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     _loss = function (θ)
         x = cache.f(θ, cache.p)
-        if cache.callback(θ, x...)
+        opt_state = Optimization.OptimizationState(u = θ, objective = x[1])
+        if cache.callback(opt_state, x...)
             error("Optimization halted by callback.")
         end
         return x[1]
@@ -180,9 +181,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
     if retcode == ReturnCode.Failure
         @warn "NLopt failed to converge: $(ret)"
     end
+    stats = Optimization.OptimizationStats(; time = t1 - t0)
     SciMLBase.build_solution(cache, cache.opt, minx,
         minf; original = opt_setup, retcode = retcode,
-        solve_time = t1 - t0)
+        stats = stats)
 end
 
 end

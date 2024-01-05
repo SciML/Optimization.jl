@@ -34,4 +34,12 @@ Random.seed!(1234)
     res = zeros(1)
     cons_circ(res, sol.u, nothing)
     @test sol.objective < l1
+
+    function cb(state, args...)
+        if state.iteration %10 == 0
+            println(state.u)
+        end
+        return false
+    end
+    sol = solve(prob, CMAES(μ = 40, λ = 100), callback = cb, maxiters = 100)
 end

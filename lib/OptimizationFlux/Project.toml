@@ -1,7 +1,7 @@
 name = "OptimizationFlux"
 uuid = "253f991c-a7b2-45f8-8852-8b9a9df78a86"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.1.5"
+version = "0.2.0"
 
 [deps]
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
@@ -15,7 +15,7 @@ julia = "1"
 Flux = "0.13, 0.14"
 ProgressLogging = "0.1"
 Reexport = "1.2"
-Optimization = "3.15"
+Optimization = "3.21"
 
 [extras]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"

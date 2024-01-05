@@ -70,20 +70,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
 
-    _loss = function (θ)
-        if cache.callback === Optimization.DEFAULT_CALLBACK &&
-           data === Optimization.DEFAULT_DATA
-            return first(cache.f(θ, cache.p))
-        elseif cache.callback === Optimization.DEFAULT_CALLBACK
-            return first(cache.f(θ, cache.p, cur...))
-        elseif data === Optimization.DEFAULT_DATA
-            x = cache.f(θ, cache.p)
-            return first(x)
-        else
-            x = cache.f(θ, cache.p, cur...)
-            return first(x)
-        end
-    end
     f = cache.f
     θ = copy(cache.u0)
     gₜ = zero(θ)
@@ -92,6 +78,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
     for (i, d) in enumerate(data)
         f.grad(gₜ, θ, d...)
         x = cache.f(θ, cache.p, d...)
+        opt_state = Optimization.OptimizationState(; iteration = i,
+            u = θ,
+            objective = first(x),
+            gradient = gₜ,
+            solver_state = nothing)
         cb_call = cache.callback(θ, x...)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")

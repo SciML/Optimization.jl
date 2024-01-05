@@ -161,12 +161,14 @@ function SciMLBase.__solve(cache::MOIOptimizationCache)
         minimum = NaN
         opt_ret = SciMLBase.ReturnCode.Default
     end
+    stats = Optimization.OptimizationStats()
     return SciMLBase.build_solution(cache,
         cache.opt,
         minimizer,
         minimum;
         original = opt_setup,
-        retcode = opt_ret)
+        retcode = opt_ret,
+        stats = stats)
 end
 
 function get_moi_function(expr)

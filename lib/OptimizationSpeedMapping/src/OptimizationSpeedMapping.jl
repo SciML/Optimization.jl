@@ -92,10 +92,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
         upper = cache.ub, opt_args...)
     t1 = time()
     opt_ret = Symbol(opt_res.converged)
-
+    stats = Optimization.OptimizationStats(; time = t1 - t0)
     SciMLBase.build_solution(cache, cache.opt,
         opt_res.minimizer, _loss(opt_res.minimizer);
-        original = opt_res, retcode = opt_ret, solve_time = t1 - t0)
+        original = opt_res, retcode = opt_ret, stats = stats)
 end
 
 end
