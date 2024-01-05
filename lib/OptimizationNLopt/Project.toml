@@ -1,7 +1,7 @@
 name = "OptimizationNLopt"
 uuid = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.1.8"
+version = "0.2.0"
 
 [deps]
 NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
@@ -10,7 +10,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
 NLopt = "0.6, 1"
-Optimization = "3.15"
+Optimization = "3.21"
 Reexport = "1.2"
 julia = "1"
 
