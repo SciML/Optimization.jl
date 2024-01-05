@@ -133,8 +133,12 @@ function SciMLBase.__solve(cache::OptimizationCache{
         error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
     function _cb(trace)
-        θ = cache.opt isa Optim.NelderMead ? decompose_trace(trace).metadata["centroid"] : decompose_trace(trace).metadata["x"]
-        opt_state = Optimization.OptimizationState(iteration = trace.iteration, u = θ, objective = x[1], solver_state = trace)
+        θ = cache.opt isa Optim.NelderMead ? decompose_trace(trace).metadata["centroid"] :
+            decompose_trace(trace).metadata["x"]
+        opt_state = Optimization.OptimizationState(iteration = trace.iteration,
+            u = θ,
+            objective = x[1],
+            solver_state = trace)
         cb_call = cache.callback(opt_state, x...)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
@@ -208,8 +212,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
     opt_res = Optim.optimize(optim_f, cache.u0, cache.opt, opt_args)
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
-    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations, 
-        time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls, hevals = opt_res.h_calls)
+    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations,
+        time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls,
+        hevals = opt_res.h_calls)
     SciMLBase.build_solution(cache, cache.opt,
         opt_res.minimizer,
         cache.sense === Optimization.MaxSense ? -opt_res.minimum :
@@ -247,8 +252,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
     cur, state = iterate(cache.data)
 
     function _cb(trace)
-        θ = !(cache.opt isa Optim.SAMIN) && cache.opt.method == Optim.NelderMead() ? decompose_trace(trace).metadata["centroid"] : decompose_trace(trace).metadata["x"]
-        opt_state = Optimization.OptimizationState(iteration = trace.iteration, u = θ, objective = x[1], solver_state = trace)
+        θ = !(cache.opt isa Optim.SAMIN) && cache.opt.method == Optim.NelderMead() ?
+            decompose_trace(trace).metadata["centroid"] :
+            decompose_trace(trace).metadata["x"]
+        opt_state = Optimization.OptimizationState(iteration = trace.iteration,
+            u = θ,
+            objective = x[1],
+            solver_state = trace)
         cb_call = cache.callback(opt_state, x...)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
@@ -297,8 +307,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
     opt_res = Optim.optimize(optim_f, cache.lb, cache.ub, cache.u0, cache.opt, opt_args)
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
-    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations, 
-        time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls, hevals = opt_res.h_calls)
+    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations,
+        time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls,
+        hevals = opt_res.h_calls)
     SciMLBase.build_solution(cache, cache.opt,
         opt_res.minimizer, opt_res.minimum;
         original = opt_res, retcode = opt_ret, stats = stats)
@@ -331,7 +342,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
     cur, state = iterate(cache.data)
 
     function _cb(trace)
-        opt_state = Optimization.OptimizationState(iteration = trace.iteration, u = decompose_trace(trace).metadata["x"], objective = x[1], solver_state = trace)
+        opt_state = Optimization.OptimizationState(iteration = trace.iteration,
+            u = decompose_trace(trace).metadata["x"],
+            objective = x[1],
+            solver_state = trace)
         cb_call = cache.callback(opt_state, x...)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
@@ -412,8 +426,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
     opt_res = Optim.optimize(optim_f, optim_fc, cache.u0, cache.opt, opt_args)
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
-    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations, 
-        time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls, hevals = opt_res.h_calls)
+    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations,
+        time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls,
+        hevals = opt_res.h_calls)
     SciMLBase.build_solution(cache, cache.opt,
         opt_res.minimizer, opt_res.minimum;
         original = opt_res, retcode = opt_ret,

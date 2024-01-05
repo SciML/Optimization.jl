@@ -85,7 +85,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     function _cb(trace)
         curr_u = decompose_trace(trace).metadata["x"][end]
-        opt_state = Optimization.OptimizationState(; iteration = decompose_trace(trace).iteration,
+        opt_state = Optimization.OptimizationState(;
+            iteration = decompose_trace(trace).iteration,
             u = curr_u,
             objective = x[1],
             solver_state = trace)
@@ -132,8 +133,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
     end
     t1 = time()
     opt_ret = Symbol(Evolutionary.converged(opt_res))
-    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations
-        , time = t1 - t0, fevals = opt_res.f_calls)
+    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations,
+        time = t1 - t0, fevals = opt_res.f_calls)
     SciMLBase.build_solution(cache, cache.opt,
         Evolutionary.minimizer(opt_res),
         Evolutionary.minimum(opt_res); original = opt_res,

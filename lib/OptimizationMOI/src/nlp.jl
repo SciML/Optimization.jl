@@ -218,7 +218,9 @@ function MOI.eval_objective(evaluator::MOIOptimizationNLPEvaluator, x)
     else
         l = evaluator.f(x, evaluator.p)
         evaluator.iteration += 1
-        state = Optimization.OptimizationState(iteration = evaluator.iteration, u = x, objective = l[1])
+        state = Optimization.OptimizationState(iteration = evaluator.iteration,
+            u = x,
+            objective = l[1])
         evaluator.callback(state, l)
         return l
     end

@@ -35,7 +35,6 @@ end
 
 iter = 0
 callback = function (state, l, pred)
-
     display(l)
 
     # using `remake` to re-create our `prob` with current parameters `p`
