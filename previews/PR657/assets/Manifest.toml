@@ -1253,9 +1253,9 @@ version = "0.1.2"
 
 [[deps.MathOptInterface]]
 deps = ["BenchmarkTools", "CodecBzip2", "CodecZlib", "DataStructures", "ForwardDiff", "JSON", "LinearAlgebra", "MutableArithmetics", "NaNMath", "OrderedCollections", "PrecompileTools", "Printf", "SparseArrays", "SpecialFunctions", "Test", "Unicode"]
-git-tree-sha1 = "d2a140e551c9ec9028483e3c7d1244f417567ac0"
+git-tree-sha1 = "372dfbc815ddd820ae9a83990e4f625d95c9bca9"
 uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
-version = "1.24.0"
+version = "1.25.0"
 
 [[deps.MathProgBase]]
 deps = ["LinearAlgebra", "SparseArrays"]
