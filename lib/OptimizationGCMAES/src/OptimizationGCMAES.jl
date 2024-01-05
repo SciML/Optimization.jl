@@ -114,12 +114,12 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cache.ub; opt_args...)
     end
     t1 = time()
-    stats = Optimization.OptimizationStats(; iterations = maxiters === nothing ? 0 : maxiters, 
-            time = t1 - t0)
+    stats = Optimization.OptimizationStats(;
+        iterations = maxiters === nothing ? 0 : maxiters,
+        time = t1 - t0)
     SciMLBase.build_solution(cache, cache.opt,
         opt_xmin, opt_fmin; retcode = Symbol(Bool(opt_ret)),
-        stats = stats
-        )
+        stats = stats)
 end
 
 end
