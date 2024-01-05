@@ -1253,9 +1253,9 @@ version = "0.1.2"
 
 [[deps.MathOptInterface]]
 deps = ["BenchmarkTools", "CodecBzip2", "CodecZlib", "DataStructures", "ForwardDiff", "JSON", "LinearAlgebra", "MutableArithmetics", "NaNMath", "OrderedCollections", "PrecompileTools", "Printf", "SparseArrays", "SpecialFunctions", "Test", "Unicode"]
-git-tree-sha1 = "d2a140e551c9ec9028483e3c7d1244f417567ac0"
+git-tree-sha1 = "372dfbc815ddd820ae9a83990e4f625d95c9bca9"
 uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
-version = "1.24.0"
+version = "1.25.0"
 
 [[deps.MathProgBase]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1814,9 +1814,9 @@ version = "1.3.4"
 
 [[deps.RecursiveArrayTools]]
 deps = ["Adapt", "ArrayInterface", "DocStringExtensions", "GPUArraysCore", "IteratorInterfaceExtensions", "LinearAlgebra", "RecipesBase", "SparseArrays", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables"]
-git-tree-sha1 = "264026749612181b79275685eede9af07c0ee588"
+git-tree-sha1 = "ba6dc2ce929bb8502e468a4981c1c69cab07c8b8"
 uuid = "731186ca-8d62-57ce-b412-fbd966d074cd"
-version = "3.4.0"
+version = "3.4.1"
 
     [deps.RecursiveArrayTools.extensions]
     RecursiveArrayToolsFastBroadcastExt = "FastBroadcast"
