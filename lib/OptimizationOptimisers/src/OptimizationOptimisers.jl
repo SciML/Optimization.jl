@@ -41,6 +41,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         P,
         C,
 }
+    local i
     if cache.data != Optimization.DEFAULT_DATA
         maxiters = length(cache.data)
         data = cache.data
