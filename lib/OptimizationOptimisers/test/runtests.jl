@@ -66,4 +66,6 @@ using Zygote
         end
         sol = solve(prob, Optimisers.Adam(0.1), maxiters = 1000, progress = false, callback = callback)
     end
+
+    @test_throws ArgumentError sol = solve(prob, Optimisers.Adam())
 end

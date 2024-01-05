@@ -41,12 +41,14 @@ function SciMLBase.__solve(cache::OptimizationCache{
         P,
         C,
 }
-    local i
     if cache.data != Optimization.DEFAULT_DATA
         maxiters = length(cache.data)
         data = cache.data
     else
         maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
+        if maxiters === nothing
+            throw(ArgumentError("The number of iterations must be specified as the maxiters kwarg."))
+        end
         data = Optimization.take(cache.data, maxiters)
     end
     opt = cache.opt
@@ -96,8 +98,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
     end
 
     t1 = time()
-    stats = Optimization.OptimizationStats(; iterations = i, 
-        time = t1 - t0, fevals = i, gevals = i)
+    stats = Optimization.OptimizationStats(; iterations = maxiters,
+        time = t1 - t0, fevals = maxiters, gevals = maxiters)
     SciMLBase.build_solution(cache, cache.opt, θ, first(x)[1], stats = stats)
     # here should be build_solution to create the output message
 end

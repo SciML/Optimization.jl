@@ -102,8 +102,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
     end
 
     t1 = time()
-    stats = Optimization.OptimizationStats(; iterations = i, 
-        time = t1 - t0, fevals = i, gevals = i)
+    stats = Optimization.OptimizationStats(; iterations = maxiters, 
+        time = t1 - t0, fevals = maxiters, gevals = maxiters)
     SciMLBase.build_solution(cache, opt, θ, x[1], stats = stats)
     # here should be build_solution to create the output message
 end
