@@ -34,20 +34,20 @@ Stores the optimization run's state at the current iteration
 and is passed to the callback function as the first argument.
 
 ## Fields
-- `iteration`: current iteration
+- `iter`: current iteration
 - `u`: current solution
 - `objective`: current objective value
 - `gradient`: current gradient
 - `hessian`: current hessian
-- `solver_state`: if the solver has its own state object then it is stored here
+- `original`: if the solver has its own state object then it is stored here
 """
 struct OptimizationState{X, O, G, H, S}
     iteration::Int
     u::X
     objective::O
-    gradient::G
-    hessian::H
-    solver_state::S
+    grad::G
+    hess::H
+    original::S
 end
 
 function OptimizationState(; iteration = 0, u = nothing, objective = nothing,

@@ -69,7 +69,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             opt_state = Optimization.OptimizationState(; iteration = i,
                 u = θ,
                 objective = x[1],
-                solver_state = opt)
+                original = opt)
             cb_call = cache.callback(opt_state, x...)
             if !(cb_call isa Bool)
                 error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
@@ -92,7 +92,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                     opt_state = Optimization.OptimizationState(; iteration = i,
                         u = θ,
                         objective = x[1],
-                        solver_state = opt)
+                        original = opt)
                     cache.callback(opt_state, x...)
                     break
                 end

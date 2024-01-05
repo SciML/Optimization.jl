@@ -134,7 +134,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     function _cb(trace)
         θ = cache.opt isa Optim.NelderMead ? decompose_trace(trace).metadata["centroid"] : decompose_trace(trace).metadata["x"]
-        opt_state = Optimization.OptimizationState(iteration = trace.iteration, u = θ, objective = x[1], solver_state = trace)
+        opt_state = Optimization.OptimizationState(iteration = trace.iteration, u = θ, objective = x[1], original = trace)
         cb_call = cache.callback(opt_state, x...)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
@@ -248,7 +248,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     function _cb(trace)
         θ = !(cache.opt isa Optim.SAMIN) && cache.opt.method == Optim.NelderMead() ? decompose_trace(trace).metadata["centroid"] : decompose_trace(trace).metadata["x"]
-        opt_state = Optimization.OptimizationState(iteration = trace.iteration, u = θ, objective = x[1], solver_state = trace)
+        opt_state = Optimization.OptimizationState(iteration = trace.iteration, u = θ, objective = x[1], original = trace)
         cb_call = cache.callback(opt_state, x...)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
@@ -331,7 +331,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     cur, state = iterate(cache.data)
 
     function _cb(trace)
-        opt_state = Optimization.OptimizationState(iteration = trace.iteration, u = decompose_trace(trace).metadata["x"], objective = x[1], solver_state = trace)
+        opt_state = Optimization.OptimizationState(iteration = trace.iteration, u = decompose_trace(trace).metadata["x"], objective = x[1], original = trace)
         cb_call = cache.callback(opt_state, x...)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
