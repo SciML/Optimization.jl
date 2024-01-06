@@ -66,7 +66,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         for (i, d) in enumerate(data)
             cache.f.grad(G, θ, d...)
             x = cache.f(θ, cache.p, d...)
-            opt_state = Optimization.OptimizationState(; iteration = i,
+            opt_state = Optimization.OptimizationState(; iter = i,
                 u = θ,
                 objective = x[1],
                 original = opt)
@@ -85,11 +85,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
                     min_err = x
                     min_θ = copy(θ)
                 end
-                if i == maxiters  #Last iteration, revert to best.
+                if i == maxiters  #Last iter, revert to best.
                     opt = min_opt
                     x = min_err
                     θ = min_θ
-                    opt_state = Optimization.OptimizationState(; iteration = i,
+                    opt_state = Optimization.OptimizationState(; iter = i,
                         u = θ,
                         objective = x[1],
                         original = opt)
