@@ -42,7 +42,7 @@ and is passed to the callback function as the first argument.
 - `original`: if the solver has its own state object then it is stored here
 """
 struct OptimizationState{X, O, G, H, S}
-    iteration::Int
+    iter::Int
     u::X
     objective::O
     grad::G
@@ -50,7 +50,7 @@ struct OptimizationState{X, O, G, H, S}
     original::S
 end
 
-function OptimizationState(; iteration = 0, u = nothing, objective = nothing,
-        gradient = nothing, hessian = nothing, solver_state = nothing)
-    OptimizationState(iteration, u, objective, gradient, hessian, solver_state)
+function OptimizationState(; iter = 0, u = nothing, objective = nothing,
+        grad = nothing, hess = nothing, original = nothing)
+    OptimizationState(iter, u, objective, grad, hess, original)
 end
