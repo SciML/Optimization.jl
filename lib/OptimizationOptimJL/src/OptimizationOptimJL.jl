@@ -342,7 +342,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     cur, state = iterate(cache.data)
 
     function _cb(trace)
-        opt_state = Optimization.OptimizationState(iteration = trace.iteration,
+        opt_state = Optimization.OptimizationState(iter = trace.iteration,
             u = decompose_trace(trace).metadata["x"],
             objective = x[1],
             solver_state = trace)
