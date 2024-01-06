@@ -78,10 +78,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     function _cb(opt, y, fvals, perm)
         curr_u = opt.logger.xbest[end]
-        opt_state = Optimization.OptimizationState(; iteration = length(opt.logger.fmedian),
+        opt_state = Optimization.OptimizationState(; iter = length(opt.logger.fmedian),
             u = curr_u,
             objective = opt.logger.fbest[end],
-            solver_state = opt.logger)
+            original = opt.logger)
 
         cb_call = cache.callback(opt_state, x...)
         if !(cb_call isa Bool)
