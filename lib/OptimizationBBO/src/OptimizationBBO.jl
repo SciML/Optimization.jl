@@ -117,7 +117,11 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         else
             n_steps = BlackBoxOptim.num_steps(trace)
             curr_u = decompose_trace(trace, cache.progress)
-            opt_state = Optimization.OptimizationState(; iter = n_steps, u = curr_u, objective = x[1], original = trace)
+            opt_state = Optimization.OptimizationState(;
+                iter = n_steps,
+                u = curr_u,
+                objective = x[1],
+                original = trace)
             cb_call = cache.callback(opt_state, x...)
         end
 
@@ -178,7 +182,10 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     t1 = time()
 
     opt_ret = Symbol(opt_res.stop_reason)
-    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations, time = t1 - t0, fevals = opt_res.f_calls)
+    stats = Optimization.OptimizationStats(;
+        iterations = opt_res.iterations,
+        time = t1 - t0,
+        fevals = opt_res.f_calls)
     SciMLBase.build_solution(cache, cache.opt,
         BlackBoxOptim.best_candidate(opt_res),
         BlackBoxOptim.best_fitness(opt_res);

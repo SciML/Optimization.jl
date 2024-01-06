@@ -12,7 +12,7 @@ using Test
     @test 10 * sol.objective < l1
 
     function cb(state, args...)
-        if state.iteration %10 == 0
+        if state.iteration % 10 == 0
             println(state.u)
         end
         return false
