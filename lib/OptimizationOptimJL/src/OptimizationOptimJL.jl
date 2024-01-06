@@ -342,10 +342,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
     cur, state = iterate(cache.data)
 
     function _cb(trace)
-        opt_state = Optimization.OptimizationState(iter = trace.iteration,
+        opt_state = Optimization.OptimizationState(iteration = trace.iteration,
             u = decompose_trace(trace).metadata["x"],
             objective = x[1],
-            original = trace)
+            solver_state = trace)
         cb_call = cache.callback(opt_state, x...)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
