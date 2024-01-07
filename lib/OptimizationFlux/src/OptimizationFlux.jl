@@ -66,10 +66,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
         for (i, d) in enumerate(data)
             cache.f.grad(G, θ, d...)
             x = cache.f(θ, cache.p, d...)
-            opt_state = Optimization.OptimizationState(; iteration = i,
+            opt_state = Optimization.OptimizationState(; iter = i,
                 u = θ,
                 objective = x[1],
-                solver_state = opt)
+                original = opt)
             cb_call = cache.callback(opt_state, x...)
             if !(cb_call isa Bool)
                 error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
@@ -85,14 +85,14 @@ function SciMLBase.__solve(cache::OptimizationCache{
                     min_err = x
                     min_θ = copy(θ)
                 end
-                if i == maxiters  #Last iteration, revert to best.
+                if i == maxiters  #Last iter, revert to best.
                     opt = min_opt
                     x = min_err
                     θ = min_θ
-                    opt_state = Optimization.OptimizationState(; iteration = i,
+                    opt_state = Optimization.OptimizationState(; iter = i,
                         u = θ,
                         objective = x[1],
-                        solver_state = opt)
+                        original = opt)
                     cache.callback(opt_state, x...)
                     break
                 end

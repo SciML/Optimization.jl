@@ -117,10 +117,11 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         else
             n_steps = BlackBoxOptim.num_steps(trace)
             curr_u = decompose_trace(trace, cache.progress)
-            opt_state = Optimization.OptimizationState(iteration = n_steps,
+            opt_state = Optimization.OptimizationState(;
+                iter = n_steps,
                 u = curr_u,
                 objective = x[1],
-                solver_state = trace)
+                original = trace)
             cb_call = cache.callback(opt_state, x...)
         end
 
