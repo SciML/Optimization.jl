@@ -28,7 +28,7 @@ function dudt_(u, p, t)
     re(p)(u) .* u
 end
 
-callback = function (p, l, pred; doplot = false) #callback function to observe training
+callback = function (state, l, pred; doplot = false) #callback function to observe training
     display(l)
     # plot current prediction against data
     if doplot
