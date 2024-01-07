@@ -36,7 +36,7 @@ using Test
     end
 
     function cb(state, args...)
-        if state.iteration % 10 == 0
+        if state.iter % 10 == 0
             println(state.u)
         end
         return false
