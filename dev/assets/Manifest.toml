@@ -2,7 +2,7 @@
 
 julia_version = "1.10.0"
 manifest_format = "2.0"
-project_hash = "fdc0f7ebca97d9671162dcb26f76354a6bcf0254"
+project_hash = "89cff9a2144378fb6f5625935c7b78d330c88229"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "41c37aa88889c171f1300ceac1313c06e891d245"
@@ -1535,9 +1535,9 @@ version = "0.1.3"
 
 [[deps.OptimizationGCMAES]]
 deps = ["GCMAES", "Optimization", "Reexport"]
-git-tree-sha1 = "2f1143e6526f89f60516721c06a84032ce2ec852"
+git-tree-sha1 = "a3a5ea1d7e16132ce6f8452d427842d0312a058d"
 uuid = "6f0a0517-dbc2-4a7a-8a20-99ae7f27e911"
-version = "0.1.6"
+version = "0.2.0"
 
 [[deps.OptimizationMOI]]
 deps = ["Ipopt_jll", "MathOptInterface", "ModelingToolkit", "Optimization", "Reexport", "SparseArrays", "SymbolicIndexingInterface", "Symbolics"]
@@ -1553,9 +1553,9 @@ version = "0.1.3"
 
 [[deps.OptimizationMultistartOptimization]]
 deps = ["MultistartOptimization", "Optimization", "Reexport"]
-git-tree-sha1 = "fa849fb53a2dd8dc8ff84aa5182fc986796004ff"
+git-tree-sha1 = "25b2f551e904a4680574e8254ad1409f6f7d4559"
 uuid = "e4316d97-8bbb-4fd3-a7d8-3851d2a72823"
-version = "0.1.4"
+version = "0.2.0"
 
 [[deps.OptimizationNLopt]]
 deps = ["NLopt", "Optimization", "Reexport"]
