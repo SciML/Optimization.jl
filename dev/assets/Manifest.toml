@@ -2,7 +2,7 @@
 
 julia_version = "1.10.0"
 manifest_format = "2.0"
-project_hash = "10aab19c64e15cf12d5d97acb9b7ffb0093ad4d2"
+project_hash = "4261e7a46efe9a6764ab3f58516535fd28c334ac"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "41c37aa88889c171f1300ceac1313c06e891d245"
@@ -103,9 +103,9 @@ version = "7.7.0"
 
 [[deps.ArrayLayouts]]
 deps = ["FillArrays", "LinearAlgebra"]
-git-tree-sha1 = "ab9e65a1a0cfa0c1add8525f75533aea063cd8b4"
+git-tree-sha1 = "6364e1f449627f9ca6ba9dd2e48527dd4a682a5e"
 uuid = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
-version = "1.5.0"
+version = "1.5.1"
 weakdeps = ["SparseArrays"]
 
     [deps.ArrayLayouts.extensions]
@@ -1315,9 +1315,9 @@ version = "0.2.2"
 
 [[deps.MultivariatePolynomials]]
 deps = ["ChainRulesCore", "DataStructures", "LinearAlgebra", "MutableArithmetics"]
-git-tree-sha1 = "6ffb234d6d7c866a75c1879d2099049d3a35a83a"
+git-tree-sha1 = "769c9175942d91ed9b83fa929eee4fe6a1d128ad"
 uuid = "102ac46a-7ee4-5c85-9060-abc95bfdeaa3"
-version = "0.5.3"
+version = "0.5.4"
 
 [[deps.MutableArithmetics]]
 deps = ["LinearAlgebra", "SparseArrays", "Test"]
@@ -1502,7 +1502,7 @@ version = "0.3.1"
 deps = ["ADTypes", "ArrayInterface", "ConsoleProgressMonitor", "DocStringExtensions", "LinearAlgebra", "Logging", "LoggingExtras", "Pkg", "Printf", "ProgressLogging", "Reexport", "SciMLBase", "SparseArrays", "SymbolicIndexingInterface", "TerminalLoggers"]
 path = "/home/runner/work/Optimization.jl/Optimization.jl"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-version = "3.21.0"
+version = "3.21.1"
 weakdeps = ["Enzyme", "FiniteDiff", "ForwardDiff", "ModelingToolkit", "ReverseDiff", "SparseDiffTools", "Symbolics", "Tracker", "Zygote"]
 
     [deps.Optimization.extensions]
@@ -1517,21 +1517,21 @@ weakdeps = ["Enzyme", "FiniteDiff", "ForwardDiff", "ModelingToolkit", "ReverseDi
 
 [[deps.OptimizationBBO]]
 deps = ["BlackBoxOptim", "Optimization", "Reexport"]
-git-tree-sha1 = "cd5e432e6ea4544539fef5e637398a8679f55ffa"
+git-tree-sha1 = "ae0742c7c4e17271fc713ce4c61c10c9ccdb15a4"
 uuid = "3e6eede4-6085-4f62-9a71-46d9bc1eb92b"
-version = "0.2.0"
+version = "0.2.1"
 
 [[deps.OptimizationCMAEvolutionStrategy]]
 deps = ["CMAEvolutionStrategy", "Optimization", "Reexport"]
-git-tree-sha1 = "c9ea6ce0433d6d1f2dd2d1aadb2afe62a008ad58"
+git-tree-sha1 = "347e7cd1a67fd38be1083c4164be1404fc1dbd49"
 uuid = "bd407f91-200f-4536-9381-e4ba712f53f8"
-version = "0.1.4"
+version = "0.2.1"
 
 [[deps.OptimizationEvolutionary]]
 deps = ["Evolutionary", "Optimization", "Reexport"]
-git-tree-sha1 = "6544d75807390a1889d583a29fa5ceaf7aa2e7a5"
+git-tree-sha1 = "ceeb7c40200a3e9af2c46ce1452c9ff1ad7c2f44"
 uuid = "cb963754-43f6-435e-8d4b-99009ff27753"
-version = "0.1.3"
+version = "0.2.1"
 
 [[deps.OptimizationGCMAES]]
 deps = ["GCMAES", "Optimization", "Reexport"]
@@ -1541,9 +1541,9 @@ version = "0.2.0"
 
 [[deps.OptimizationMOI]]
 deps = ["Ipopt_jll", "MathOptInterface", "ModelingToolkit", "Optimization", "Reexport", "SparseArrays", "SymbolicIndexingInterface", "Symbolics"]
-git-tree-sha1 = "507778cf5309aedd8e94757f067ea0743559911c"
+git-tree-sha1 = "8d7436cfe3a9745aed8c294db0d1f50af8f08482"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
-version = "0.2.0"
+version = "0.3.1"
 
 [[deps.OptimizationMetaheuristics]]
 deps = ["Metaheuristics", "Optimization", "Reexport"]
@@ -1559,15 +1559,15 @@ version = "0.2.0"
 
 [[deps.OptimizationNLopt]]
 deps = ["NLopt", "Optimization", "Reexport"]
-git-tree-sha1 = "dc1b76eae7c47ae77560803587911d4d219af531"
+git-tree-sha1 = "745df99f24c30787886b7b941553e513ffeccc8e"
 uuid = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
-version = "0.1.8"
+version = "0.2.0"
 
 [[deps.OptimizationNOMAD]]
 deps = ["NOMAD", "Optimization", "Reexport"]
-git-tree-sha1 = "d2c7a1e649da6ad3b8b87dff69f847dfd83d9050"
+git-tree-sha1 = "910b16baf2851f11fabdc1db66550847f5b7dc8e"
 uuid = "2cab0595-8222-4775-b714-9828e6a9e01b"
-version = "0.1.3"
+version = "0.2.0"
 
 [[deps.OptimizationOptimJL]]
 deps = ["Optim", "Optimization", "Reexport", "SparseArrays"]
@@ -2211,9 +2211,9 @@ uuid = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 version = "0.5.23"
 
 [[deps.Tokenize]]
-git-tree-sha1 = "3ac1ac11b09e8033ec93a7993acdb9b68252be6d"
+git-tree-sha1 = "5b5a892ba7704c0977013bd0f9c30f5d962181e0"
 uuid = "0796e94c-ce3b-5d07-9a54-7f471281c624"
-version = "0.5.27"
+version = "0.5.28"
 
 [[deps.Tracker]]
 deps = ["Adapt", "DiffRules", "ForwardDiff", "Functors", "LinearAlgebra", "LogExpFunctions", "MacroTools", "NNlib", "NaNMath", "Optimisers", "Printf", "Random", "Requires", "SpecialFunctions", "Statistics"]
