@@ -35,7 +35,7 @@ function SciMLBase.reinit!(cache::SciMLBase.AbstractOptimizationCache; p = missi
     return cache
 end
 
-struct OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C} <:
+mutable struct OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P, C} <:
        SciMLBase.AbstractOptimizationCache
     f::F
     reinit_cache::RC
