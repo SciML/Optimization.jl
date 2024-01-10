@@ -48,6 +48,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoModelingToolkit, p,
         cons_hess_prototype = f.cons_hess_prototype,
         expr = Optimization.symbolify(f.expr),
         cons_expr = Optimization.symbolify.(f.cons_expr),
+        sys = sys,
         observed = f.observed)
 end
 
@@ -93,6 +94,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
         cons_hess_prototype = f.cons_hess_prototype,
         expr = Optimization.symbolify(f.expr),
         cons_expr = Optimization.symbolify.(f.cons_expr),
+        sys = sys,
         observed = f.observed)
 end
 
