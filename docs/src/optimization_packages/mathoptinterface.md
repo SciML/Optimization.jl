@@ -13,9 +13,14 @@ Pkg.add("OptimizationMOI");
 ```
 
 ## Details
-
 As of now, the `Optimization` interface to `MathOptInterface` implements only
 the `maxtime` common keyword argument.
+
+`OptimizationMOI` supports an argument `mtkize` which takes a boolean (default to `false`)
+that allows automatic symbolic expression generation, this allows using any AD backend with
+solvers or interfaces such as AmplNLWriter that require the expression graph of the objective
+and constraints. This always happens automatically in the case of the `AutoModelingToolkit`
+`adtype`.
 
 An optimizer which supports the `MathOptInterface` API can be called
 directly if no optimizer options have to be defined.
