@@ -16,8 +16,8 @@ using OptimizationBBO
 prob = OptimizationProblem(rosenbrock, u0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Failure
 u: 2-element Vector{Float64}:
- 0.9999999999999963
- 0.9999999999999943</code></pre><p>Notice that Optimization.jl is the core glue package that holds all the common pieces, but to solve the equations, we need to use a solver package. Here, OptimizationOptimJL is for <a href="https://github.com/JuliaNLSolvers/Optim.jl">Optim.jl</a> and OptimizationBBO is for <a href="https://github.com/robertfeldt/BlackBoxOptim.jl">BlackBoxOptim.jl</a>.</p><p>The output of the first optimization task (with the <code>NelderMead()</code> algorithm) is given below:</p><pre><code class="language-julia hljs">optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+ 1.0
+ 1.0</code></pre><p>Notice that Optimization.jl is the core glue package that holds all the common pieces, but to solve the equations, we need to use a solver package. Here, OptimizationOptimJL is for <a href="https://github.com/JuliaNLSolvers/Optim.jl">Optim.jl</a> and OptimizationBBO is for <a href="https://github.com/robertfeldt/BlackBoxOptim.jl">BlackBoxOptim.jl</a>.</p><p>The output of the first optimization task (with the <code>NelderMead()</code> algorithm) is given below:</p><pre><code class="language-julia hljs">optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 prob = OptimizationProblem(optf, u0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, NelderMead())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
 u: 2-element Vector{Float64}:
