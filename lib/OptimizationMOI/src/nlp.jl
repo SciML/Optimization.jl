@@ -107,6 +107,7 @@ end
 
 function MOIOptimizationNLPCache(prob::OptimizationProblem,
         opt;
+        mtkize = false,
         callback = nothing,
         kwargs...)
     reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
@@ -139,8 +140,13 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
     lcons = prob.lcons === nothing ? fill(T(-Inf), num_cons) : prob.lcons
     ucons = prob.ucons === nothing ? fill(T(Inf), num_cons) : prob.ucons
 
-    if f.sys isa SymbolicIndexingInterface.SymbolCache{Nothing, Nothing, Nothing}
-        sys = MTK.modelingtoolkitize(prob)
+    if f.sys isa SymbolicIndexingInterface.SymbolCache{Nothing, Nothing, Nothing} && mtkize
+        try
+            sys = MTK.modelingtoolkitize(prob)
+        catch err
+            throw(ArgumentError("Automatic symbolic expression generation with ModelingToolkit failed with error: $err.
+            Try by setting `mtkize = false` instead if the solver doesn't require symbolic expressions."))
+        end
         if !isnothing(prob.p) && !(prob.p isa SciMLBase.NullParameters)
             unames = variable_symbols(sys)
             pnames = parameter_symbols(sys)
@@ -156,7 +162,7 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
         obj_expr = sysprob.f.expr
         cons_expr = sysprob.f.cons_expr
     else
-        sys = f.sys
+        sys = f.sys isa SymbolicIndexingInterface.SymbolCache{Nothing, Nothing, Nothing} ? nothing : f.sys
         obj_expr = f.expr
         cons_expr = f.cons_expr
     end
