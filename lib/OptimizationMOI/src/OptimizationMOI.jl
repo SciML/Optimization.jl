@@ -276,7 +276,14 @@ function SciMLBase.__init(prob::OptimizationProblem,
         mtkize = false,
         kwargs...)
     cache = if MOI.supports(_create_new_optimizer(opt), MOI.NLPBlock())
-        MOIOptimizationNLPCache(prob, opt; maxiters, maxtime, abstol, reltol, mtkize, kwargs...)
+        MOIOptimizationNLPCache(prob,
+            opt;
+            maxiters,
+            maxtime,
+            abstol,
+            reltol,
+            mtkize,
+            kwargs...)
     else
         MOIOptimizationCache(prob, opt; maxiters, maxtime, abstol, reltol, kwargs...)
     end

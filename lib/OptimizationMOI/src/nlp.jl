@@ -162,7 +162,8 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
         obj_expr = sysprob.f.expr
         cons_expr = sysprob.f.cons_expr
     else
-        sys = f.sys isa SymbolicIndexingInterface.SymbolCache{Nothing, Nothing, Nothing} ? nothing : f.sys
+        sys = f.sys isa SymbolicIndexingInterface.SymbolCache{Nothing, Nothing, Nothing} ?
+              nothing : f.sys
         obj_expr = f.expr
         cons_expr = f.cons_expr
     end
