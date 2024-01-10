@@ -107,6 +107,7 @@ end
 
 function MOIOptimizationNLPCache(prob::OptimizationProblem,
         opt;
+        mtkize = false,
         callback = nothing,
         kwargs...)
     reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
@@ -139,8 +140,13 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
     lcons = prob.lcons === nothing ? fill(T(-Inf), num_cons) : prob.lcons
     ucons = prob.ucons === nothing ? fill(T(Inf), num_cons) : prob.ucons
 
-    if f.sys isa SymbolicIndexingInterface.SymbolCache{Nothing, Nothing, Nothing}
-        sys = MTK.modelingtoolkitize(prob)
+    if f.sys isa SymbolicIndexingInterface.SymbolCache{Nothing, Nothing, Nothing} && mtkize
+        try
+            sys = MTK.modelingtoolkitize(prob)
+        catch err
+            throw(ArgumentError("Automatic symbolic expression generation with ModelingToolkit failed with error: $err.
+            Try by setting `mtkize = false` instead if the solver doesn't require symbolic expressions."))
+        end
         if !isnothing(prob.p) && !(prob.p isa SciMLBase.NullParameters)
             unames = variable_symbols(sys)
             pnames = parameter_symbols(sys)
@@ -156,21 +162,31 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
         obj_expr = sysprob.f.expr
         cons_expr = sysprob.f.cons_expr
     else
-        sys = f.sys
+        sys = f.sys isa SymbolicIndexingInterface.SymbolCache{Nothing, Nothing, Nothing} ?
+              nothing : f.sys
         obj_expr = f.expr
         cons_expr = f.cons_expr
     end
 
-    expr_map = get_expr_map(sys)
-    expr = convert_to_expr(obj_expr, expr_map; expand_expr = false)
-    expr = repl_getindex!(expr)
-    cons = MTK.constraints(sys)
-    _cons_expr = Vector{Expr}(undef, length(cons))
-    for i in eachindex(cons)
-        _cons_expr[i] = repl_getindex!(convert_to_expr(cons_expr[i],
-            expr_map;
-            expand_expr = false))
+    if sys === nothing
+        expr = obj_expr
+        _cons_expr = cons_expr
+    else
+        expr_map = get_expr_map(sys)
+        expr = convert_to_expr(obj_expr, expr_map; expand_expr = false)
+        expr = repl_getindex!(expr)
+        cons = MTK.constraints(sys)
+        @show cons
+        _cons_expr = Vector{Expr}(undef, length(cons))
+        for i in eachindex(cons)
+            _cons_expr[i] = repl_getindex!(convert_to_expr(cons_expr[i],
+                expr_map;
+                expand_expr = false))
+        end
     end
+
+    @show expr
+    @show _cons_expr
 
     evaluator = MOIOptimizationNLPEvaluator(f,
         reinit_cache,
@@ -387,11 +403,24 @@ end
 function MOI.constraint_expr(evaluator::MOIOptimizationNLPEvaluator, i)
     # expr has the form f(x,p) == 0 or f(x,p) <= 0 
     cons_expr = deepcopy(evaluator.cons_expr[i].args[2])
-    compop = Symbol(evaluator.cons_expr[i].args[1])
     repl_getindex!(cons_expr)
     _replace_parameter_indices!(cons_expr, evaluator.p)
     _replace_variable_indices!(cons_expr)
-    return Expr(:call, compop, cons_expr, 0.0)
+    lb, ub = Float64(evaluator.lcons[i]), Float64(evaluator.ucons[i])
+    @show lb
+    @show ub
+    @show cons_expr
+    if lb == ub
+        return Expr(:call, :(==), cons_expr, lb)
+    else
+        if lb == -Inf
+            return Expr(:call, :(<=), cons_expr, ub)
+        elseif ub == Inf
+            return Expr(:call, :(>=), cons_expr, lb)
+        else
+            return Expr(:call, :between, cons_expr, lb, ub)
+        end
+    end
 end
 
 function _add_moi_variables!(opt_setup, evaluator::MOIOptimizationNLPEvaluator)
