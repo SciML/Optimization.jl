@@ -1541,9 +1541,9 @@ version = "0.2.0"
 
 [[deps.OptimizationMOI]]
 deps = ["Ipopt_jll", "MathOptInterface", "ModelingToolkit", "Optimization", "Reexport", "SparseArrays", "SymbolicIndexingInterface", "Symbolics"]
-git-tree-sha1 = "878ac81ff9b91750b825c763e92a4df081ef2433"
+git-tree-sha1 = "aa533b4eae43ec7655dfe1b248194670a625de49"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
-version = "0.3.2"
+version = "0.3.3"
 
 [[deps.OptimizationMetaheuristics]]
 deps = ["Metaheuristics", "Optimization", "Reexport"]
@@ -1867,9 +1867,9 @@ version = "0.2.0"
 
 [[deps.SciMLBase]]
 deps = ["ADTypes", "ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "FillArrays", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "PrecompileTools", "Preferences", "Printf", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables", "TruncatedStacktraces"]
-git-tree-sha1 = "e54bd4dbce5e7081ba429f4800f21d0414d46636"
+git-tree-sha1 = "b2714ddd879525c825f427e861f5059a96b287f7"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "2.17.1"
+version = "2.18.0"
 
     [deps.SciMLBase.extensions]
     SciMLBaseChainRulesCoreExt = "ChainRulesCore"
