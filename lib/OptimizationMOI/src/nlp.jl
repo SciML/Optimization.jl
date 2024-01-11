@@ -176,7 +176,6 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
         expr = convert_to_expr(obj_expr, expr_map; expand_expr = false)
         expr = repl_getindex!(expr)
         cons = MTK.constraints(sys)
-        @show cons
         _cons_expr = Vector{Expr}(undef, length(cons))
         for i in eachindex(cons)
             _cons_expr[i] = repl_getindex!(convert_to_expr(cons_expr[i],
@@ -184,9 +183,6 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
                 expand_expr = false))
         end
     end
-
-    @show expr
-    @show _cons_expr
 
     evaluator = MOIOptimizationNLPEvaluator(f,
         reinit_cache,
@@ -401,15 +397,12 @@ function MOI.objective_expr(evaluator::MOIOptimizationNLPEvaluator)
 end
 
 function MOI.constraint_expr(evaluator::MOIOptimizationNLPEvaluator, i)
-    # expr has the form f(x,p) == 0 or f(x,p) <= 0 
+    # expr has the form f(x,p) == 0 or f(x,p) <= 0
     cons_expr = deepcopy(evaluator.cons_expr[i].args[2])
     repl_getindex!(cons_expr)
     _replace_parameter_indices!(cons_expr, evaluator.p)
     _replace_variable_indices!(cons_expr)
     lb, ub = Float64(evaluator.lcons[i]), Float64(evaluator.ucons[i])
-    @show lb
-    @show ub
-    @show cons_expr
     if lb == ub
         return Expr(:call, :(==), cons_expr, lb)
     else
