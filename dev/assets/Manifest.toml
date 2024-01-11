@@ -1230,9 +1230,9 @@ version = "0.1.2"
 
 [[deps.MathOptInterface]]
 deps = ["BenchmarkTools", "CodecBzip2", "CodecZlib", "DataStructures", "ForwardDiff", "JSON", "LinearAlgebra", "MutableArithmetics", "NaNMath", "OrderedCollections", "PrecompileTools", "Printf", "SparseArrays", "SpecialFunctions", "Test", "Unicode"]
-git-tree-sha1 = "372dfbc815ddd820ae9a83990e4f625d95c9bca9"
+git-tree-sha1 = "e2ae8cf5ac6daf5a3959f7f6ded9c2028b61d09d"
 uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
-version = "1.25.0"
+version = "1.25.1"
 
 [[deps.MathProgBase]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1541,9 +1541,9 @@ version = "0.2.0"
 
 [[deps.OptimizationMOI]]
 deps = ["Ipopt_jll", "MathOptInterface", "ModelingToolkit", "Optimization", "Reexport", "SparseArrays", "SymbolicIndexingInterface", "Symbolics"]
-git-tree-sha1 = "8d7436cfe3a9745aed8c294db0d1f50af8f08482"
+git-tree-sha1 = "878ac81ff9b91750b825c763e92a4df081ef2433"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
-version = "0.3.1"
+version = "0.3.2"
 
 [[deps.OptimizationMetaheuristics]]
 deps = ["Metaheuristics", "Optimization", "Reexport"]
