@@ -273,16 +273,19 @@ function MOI.eval_constraint_jacobian(evaluator::MOIOptimizationNLPEvaluator, j,
               "automatically generate i with one of the autodiff backends." *
               "If you are using the ModelingToolkit symbolic interface, pass the `cons_j` kwarg set to `true` in `OptimizationProblem`.")
     end
-    evaluator.f.cons_j(evaluator.J, x)
-    if evaluator.J isa SparseMatrixCSC
-        nnz = nonzeros(evaluator.J)
+    # Get and cache the Jacobian object here once. `evaluator.J` calls
+    # `getproperty`, which is expensive because it calls `fieldnames`.
+    J = evaluator.J
+    evaluator.f.cons_j(J, x)
+    if J isa SparseMatrixCSC
+        nnz = nonzeros(J)
         @assert length(j) == length(nnz)
         for (i, Ji) in zip(eachindex(j), nnz)
             j[i] = Ji
         end
     else
         for i in eachindex(j)
-            j[i] = evaluator.J[i]
+            j[i] = J[i]
         end
     end
     return
@@ -336,22 +339,25 @@ function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
               "automatically generate it with one of the autodiff backends." *
               "If you are using the ModelingToolkit symbolic interface, pass the `hess` kwarg set to `true` in `OptimizationProblem`.")
     end
+    # Get and cache the Hessian object here once. `evaluator.H` calls
+    # `getproperty`, which is expensive because it calls `fieldnames`.
+    H = evaluator.H
     fill!(h, zero(T))
     k = 0
-    evaluator.f.hess(evaluator.H, x)
-    sparse_objective = evaluator.H isa SparseMatrixCSC
+    evaluator.f.hess(H, x)
+    sparse_objective = H isa SparseMatrixCSC
     if sparse_objective
-        rows, cols, _ = findnz(evaluator.H)
+        rows, cols, _ = findnz(H)
         for (i, j) in zip(rows, cols)
             if i <= j
                 k += 1
-                h[k] = σ * evaluator.H[i, j]
+                h[k] = σ * H[i, j]
             end
         end
     else
-        for i in 1:size(evaluator.H, 1), j in 1:i
+        for i in 1:size(H, 1), j in 1:i
             k += 1
-            h[k] = σ * evaluator.H[i, j]
+            h[k] = σ * H[i, j]
         end
     end
     # A count of the number of non-zeros in the objective Hessian is needed if
