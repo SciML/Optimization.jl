@@ -82,7 +82,7 @@ packages.
 	title = {Optimization.jl: A Unified Optimization Package},
 	version = {v3.12.1},
 	doi = {10.5281/zenodo.7738525},
-  	url = {https://doi.org/10.5281/zenodo.7738525}
+  	url = {https://doi.org/10.5281/zenodo.7738525},
 	year = 2023}
 ```
 
