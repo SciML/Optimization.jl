@@ -1,6 +1,6 @@
 name = "Optimization"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-version = "3.21.1"
+version = "3.21.2"
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
@@ -57,7 +57,7 @@ Printf = "1.10"
 ProgressLogging = "0.1"
 Reexport = "1.2"
 ReverseDiff = "1.14"
-SciMLBase = "2.16.3"
+SciMLBase = "2.20.0"
 SparseArrays = "1.10"
 SparseDiffTools = "2.14"
 SymbolicIndexingInterface = "0.3.2"
