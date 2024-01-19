@@ -16,15 +16,16 @@ using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 using SymbolicIndexingInterface
 using Pkg
 
-import SciMLBase: OptimizationProblem, OptimizationFunction, ObjSense,
-    MaxSense, MinSense
+import SciMLBase: OptimizationProblem,
+    OptimizationFunction, ObjSense,
+    MaxSense, MinSense, OptimizationStats
 export ObjSense, MaxSense, MinSense
 
 include("utils.jl")
 include("function.jl")
 include("adtypes.jl")
 include("cache.jl")
-include("stats_state.jl")
+include("state.jl")
 
 export solve, OptimizationCache
 
