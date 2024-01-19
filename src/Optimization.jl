@@ -17,7 +17,7 @@ using SymbolicIndexingInterface
 using Pkg
 
 import SciMLBase: OptimizationProblem, OptimizationFunction, ObjSense,
-    MaxSense, MinSense
+    MaxSense, MinSense, OptimizationStats
 export ObjSense, MaxSense, MinSense
 
 include("utils.jl")
