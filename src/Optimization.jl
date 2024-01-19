@@ -16,7 +16,8 @@ using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 using SymbolicIndexingInterface
 using Pkg
 
-import SciMLBase: OptimizationProblem, OptimizationFunction, ObjSense,
+import SciMLBase: OptimizationProblem,
+    OptimizationFunction, ObjSense,
     MaxSense, MinSense, OptimizationStats
 export ObjSense, MaxSense, MinSense
 

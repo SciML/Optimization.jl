@@ -13,6 +13,7 @@ Pkg.add("OptimizationMOI");
 ```
 
 ## Details
+
 As of now, the `Optimization` interface to `MathOptInterface` implements only
 the `maxtime` common keyword argument.
 

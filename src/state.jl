@@ -25,4 +25,3 @@ function OptimizationState(; iter = 0, u = nothing, objective = nothing,
         grad = nothing, hess = nothing, original = nothing)
     OptimizationState(iter, u, objective, grad, hess, original)
 end
-
