@@ -121,9 +121,9 @@ uuid = "a9b6321e-bd34-4604-b9c9-b65b8de01458"
 version = "0.1.0"
 
 [[deps.BSON]]
-git-tree-sha1 = "2208958832d6e1b59e49f53697483a84ca8d664e"
+git-tree-sha1 = "5fa6520e45c7b839ef9af18be94313971f9f2ff9"
 uuid = "fbb218c0-5317-5bc6-957e-2ee96dd4b1f0"
-version = "0.3.7"
+version = "0.3.8"
 
 [[deps.BangBang]]
 deps = ["Compat", "ConstructionBase", "InitialValues", "LinearAlgebra", "Requires", "Setfield", "Tables"]
@@ -823,9 +823,9 @@ version = "0.2.4"
 
 [[deps.IRTools]]
 deps = ["InteractiveUtils", "MacroTools", "Test"]
-git-tree-sha1 = "8aa91235360659ca7560db43a7d57541120aa31d"
+git-tree-sha1 = "5d8c5713f38f7bc029e26627b687710ba406d0dd"
 uuid = "7869d1d1-7146-5819-86e3-90919afe41df"
-version = "0.4.11"
+version = "0.4.12"
 
 [[deps.IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
@@ -897,9 +897,9 @@ version = "1.5.0"
 
 [[deps.JMcDM]]
 deps = ["Requires"]
-git-tree-sha1 = "bcd7278203da025eaea805a0a14f5943e340fbd4"
+git-tree-sha1 = "7ef193b97eb94db358fc531be3a525d768f8e279"
 uuid = "358108f5-d052-4d0a-8344-d5384e00c0e5"
-version = "0.7.12"
+version = "0.7.13"
 
 [[deps.JSON]]
 deps = ["Dates", "Mmap", "Parsers", "Unicode"]
@@ -1265,9 +1265,9 @@ version = "2.28.2+1"
 
 [[deps.Metaheuristics]]
 deps = ["Distances", "JMcDM", "LinearAlgebra", "Pkg", "Printf", "Random", "Reexport", "Requires", "SearchSpaces", "SnoopPrecompile", "Statistics"]
-git-tree-sha1 = "fda08e881de2665d0a4cfbaf98dd6d24b9439142"
+git-tree-sha1 = "f6edd8373210230637ecbcc116bf8d5ba08a1d89"
 uuid = "bcdb8e00-2c21-11e9-3065-2b553b22f898"
-version = "3.3.3"
+version = "3.3.4"
 
 [[deps.MicroCollections]]
 deps = ["BangBang", "InitialValues", "Setfield"]
@@ -2127,9 +2127,9 @@ version = "0.5.2"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "ConstructionBase", "DataAPI", "GPUArraysCore", "StaticArraysCore", "Tables"]
-git-tree-sha1 = "0a3db38e4cce3c54fe7a71f831cd7b6194a54213"
+git-tree-sha1 = "1b0b1205a56dc288b71b1961d48e351520702e24"
 uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
-version = "0.6.16"
+version = "0.6.17"
 
 [[deps.StructIO]]
 deps = ["Test"]
@@ -2365,9 +2365,9 @@ version = "1.2.13+1"
 
 [[deps.Zygote]]
 deps = ["AbstractFFTs", "ChainRules", "ChainRulesCore", "DiffRules", "Distributed", "FillArrays", "ForwardDiff", "GPUArrays", "GPUArraysCore", "IRTools", "InteractiveUtils", "LinearAlgebra", "LogExpFunctions", "MacroTools", "NaNMath", "PrecompileTools", "Random", "Requires", "SparseArrays", "SpecialFunctions", "Statistics", "ZygoteRules"]
-git-tree-sha1 = "30c1b8bfc2b3c7c5d8bba7cd32e8b6d5f968e7c3"
+git-tree-sha1 = "4ddb4470e47b0094c93055a3bcae799165cc68f1"
 uuid = "e88e6eb3-aa80-5325-afca-941959d7151f"
-version = "0.6.68"
+version = "0.6.69"
 
     [deps.Zygote.extensions]
     ZygoteColorsExt = "Colors"
