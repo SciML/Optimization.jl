@@ -283,7 +283,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
             if cache.sense === Optimization.MaxSense
                 G .*= -one(eltype(G))
             end
-            println(G)
         end
         return _loss(θ)
     end
