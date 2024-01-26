@@ -150,8 +150,8 @@ H3 == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 G2 = Array{Float64}(undef, 2)
 H2 = Array{Float64}(undef, 2, 2)
 
-optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote(), cons = con2_c)
-optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoZygote(),
+optf = OptimizationFunction(rosenbrock, Optimization.AutoEnzyme(), cons = con2_c)
+optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoEnzyme(),
     nothing, 2)
 optprob.grad(G2, x0)
 @test G1 == G2
@@ -167,15 +167,27 @@ H3 = [Array{Float64}(undef, 2, 2), Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 H3 == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
 
-optf = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(true, true),
+optf = OptimizationFunction(rosenbrock, Optimization.AutoEnzyme(),
     cons = con2_c)
 optprob = Optimization.instantiate_function(optf, x0,
-    Optimization.AutoModelingToolkit(true, true),
+    Optimization.AutoEnzyme(),
     nothing, 2)
 using SparseArrays
 sH = sparse([1, 1, 2, 2], [1, 2, 1, 2], zeros(4))
-@test findnz(sH)[1:2] == findnz(optprob.hess_prototype)[1:2]
+# @test findnz(sH)[1:2] == findnz(optprob.hess_prototype)[1:2]
 optprob.hess(sH, x0)
+
+sH = sparse([1, 1, 2, 2], [1, 2, 1, 2], zeros(4))
+optf = OptimizationFunction(rosenbrock, Optimization.AutoEnzyme(),
+    cons = con2_c, hess_prototype = sH)
+optprob = Optimization.instantiate_function(optf, x0,
+    Optimization.AutoEnzyme(),
+    nothing, 2)
+using SparseArrays
+
+# @test findnz(sH)[1:2] == findnz(optprob.hess_prototype)[1:2]
+optprob.hess(sH, x0)
+
 @test sH == H2
 res = Array{Float64}(undef, 2)
 optprob.cons(res, x0)

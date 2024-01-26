@@ -1,6 +1,6 @@
 module OptimizationEnzymeExt
 
-import Optimization, Optimization.ArrayInterface
+import Optimization, Optimization.ArrayInterface, Optimization.SparseArrays
 import Optimization.SciMLBase: OptimizationFunction
 import Optimization.LinearAlgebra: I
 import Optimization.ADTypes: AutoEnzyme
@@ -47,11 +47,27 @@ function Optimization.instantiate_function(f::OptimizationFunction{true}, x,
             return nothing
         end
         function hess(res, θ, args...)
-            vdθ = Tuple((Array(r) for r in eachrow(I(length(θ)) * 1.0)))
-
-            bθ = zeros(length(θ))
-            vdbθ = Tuple(zeros(length(θ)) for i in eachindex(θ))
-
+            if f.hess_prototype === nothing
+                vdθ = Tuple((similar(r) for r in eachrow(I(length(θ)) * 1.0)))
+                bθ = zeros(length(θ))
+                @show bθ
+                @show typeof(bθ)
+                vdbθ = Tuple(zeros(length(θ)) for i in eachindex(θ))
+                @show vdbθ
+                @show typeof(vdbθ)
+            else
+                θ = SparseArrays.sparse(θ)
+                @show θ
+                vdθ = Tuple((similar(SparseArrays.sparse(r)) for r in eachrow(I(length(θ)) * 1.0)))
+                @show vdθ
+                @show typeof(vdθ)
+                bθ = SparseArrays.similar(θ)
+                @show bθ
+                @show typeof(bθ)
+                vdbθ = Tuple(similar(i) for i in eachrow(f.hess_prototype))
+                @show vdbθ
+                @show typeof(vdbθ)
+            end
             Enzyme.autodiff(Enzyme.Forward,
                 g,
                 Enzyme.BatchDuplicated(θ, vdθ),
