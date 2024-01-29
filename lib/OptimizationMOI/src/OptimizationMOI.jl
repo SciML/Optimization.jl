@@ -6,7 +6,7 @@ using MathOptInterface
 using Optimization.SciMLBase
 using SymbolicIndexingInterface
 using SparseArrays
-import ModelingToolkit: parameters, states, varmap_to_vars, mergedefaults, toexpr
+import ModelingToolkit: parameters, unknowns, varmap_to_vars, mergedefaults, toexpr
 import ModelingToolkit
 const MTK = ModelingToolkit
 using Symbolics
@@ -183,13 +183,13 @@ end
 """
     convert_to_expr(eq, sys; expand_expr = false, pairs_arr = expr_map(sys))
 
-Converts the given symbolic expression to a Julia `Expr` and replaces all symbols, i.e. states and
+Converts the given symbolic expression to a Julia `Expr` and replaces all symbols, i.e. unknowns and
 parameters with `x[i]` and `p[i]`.
 
 # Arguments:
 
   - `eq`: Expression to convert
-  - `sys`: Reference to the system holding the parameters and states
+  - `sys`: Reference to the system holding the parameters and unknowns
   - `expand_expr=false`: If `true` the symbolic expression is expanded first.
 """
 function convert_to_expr(eq, expr_map; expand_expr = false)
@@ -208,7 +208,7 @@ function convert_to_expr(eq, expr_map; expand_expr = false)
 end
 
 function get_expr_map(sys)
-    dvs = ModelingToolkit.states(sys)
+    dvs = ModelingToolkit.unknowns(sys)
     ps = ModelingToolkit.parameters(sys)
     return vcat(
         [ModelingToolkit.toexpr(_s) => Expr(:ref, :x, i)
