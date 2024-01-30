@@ -10,11 +10,11 @@ function Optimization.instantiate_function(f, x, adtype::AutoModelingToolkit, p,
         num_cons = 0)
     p = isnothing(p) ? SciMLBase.NullParameters() : p
 
-    sys = ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, x, p;
+    sys = complete(ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, x, p;
         lcons = fill(0.0,
             num_cons),
         ucons = fill(0.0,
-            num_cons)))
+            num_cons))))
     #sys = ModelingToolkit.structural_simplify(sys)
     f = OptimizationProblem(sys, x, p, grad = true, hess = true,
         sparse = adtype.obj_sparse, cons_j = true, cons_h = true,
@@ -56,11 +56,11 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
         adtype::AutoModelingToolkit, num_cons = 0)
     p = isnothing(cache.p) ? SciMLBase.NullParameters() : cache.p
 
-    sys = ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, cache.u0, cache.p;
+    sys = complete(ModelingToolkit.modelingtoolkitize(OptimizationProblem(f, cache.u0, cache.p;
         lcons = fill(0.0,
             num_cons),
         ucons = fill(0.0,
-            num_cons)))
+            num_cons))))
     #sys = ModelingToolkit.structural_simplify(sys)
     f = OptimizationProblem(sys, cache.u0, cache.p, grad = true, hess = true,
         sparse = adtype.obj_sparse, cons_j = true, cons_h = true,
