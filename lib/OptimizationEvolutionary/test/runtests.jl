@@ -42,10 +42,7 @@ Random.seed!(1234)
         return false
     end
     sol = solve(prob, CMAES(μ = 40, λ = 100), callback = cb, maxiters = 100)
-
-    #test that `store_trace=true` throws error. This should fail now that it is fixed
-    # @test_throws "type Array has no field value" solve(prob, CMAES(μ = 40, λ = 100), store_trace = true)
     
-    #test that `store_trace=true` works now.
+    #test that `store_trace=true` works now. Threw ""type Array has no field value" before.
     solve(prob, CMAES(μ = 40, λ = 100), store_trace = true)
 end
