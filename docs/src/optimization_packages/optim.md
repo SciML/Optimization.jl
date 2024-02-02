@@ -57,15 +57,6 @@ For a more extensive documentation of all the algorithms and options, please con
 
   - [`Optim.IPNewton()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/ipnewton/)
     
-      + `linesearch` specifies the line search algorithm (for more information, consult [this source](https://github.com/JuliaNLSolvers/LineSearches.jl) and [this example](https://julianlsolvers.github.io/LineSearches.jl/latest/examples/generated/optim_linesearch.html))
-        
-          * available line search algorithms:
-          * `HaegerZhang`
-          * `MoreThuente`
-          * `BackTracking`
-          * `StrongWolfe`
-          * `Static`
-    
       + `μ0` specifies the initial barrier penalty coefficient as either a number or `:auto`
       + `show_linesearch` is an option to turn on linesearch verbosity.
       + Defaults:
@@ -86,6 +77,8 @@ prob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = c
 prob = Optimization.OptimizationProblem(prob, x0, p, lcons = [-5.0], ucons = [10.0])
 sol = solve(prob, IPNewton())
 ```
+
+See also in the `Optim.jl` documentation the [Nonlinear constrained optimization](https://julianlsolvers.github.io/Optim.jl/stable/#examples/generated/ipnewton_basics/) example using `IPNewton`.
 
 ### Derivative-Free
 
