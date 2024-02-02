@@ -119,10 +119,10 @@ sol = solve(prob, Ipopt.Optimizer())
 ## Now let's switch over to OptimizationOptimisers with reverse-mode AD
 
 ```@example rosenbrock
-using OptimizationOptimisers
+import OptimizationOptimisers
 optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
 prob = OptimizationProblem(optf, x0, _p)
-sol = solve(prob, Adam(0.05), maxiters = 1000, progress = false)
+sol = solve(prob, OptimizationOptimisers.Adam(0.05), maxiters = 1000, progress = false)
 ```
 
 ## Try out CMAEvolutionStrategy.jl's evolutionary methods
