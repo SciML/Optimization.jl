@@ -62,6 +62,6 @@ jobs:
       - uses: julia-actions/julia-processcoverage@v1
         with:
           directories: src,lib/OptimizationBBO/src,lib/OptimizationCMAEvolutionStrategy/src,lib/OptimizationEvolutionary/src,lib/OptimizationFlux/src,lib/OptimizationGCMAES/src,lib/OptimizationMOI/src,lib/OptimizationMetaheuristics/src,lib/OptimizationMultistartOptimization/src,lib/OptimizationNLopt/src,lib/OptimizationNOMAD/src,lib/OptimizationOptimJL/src,lib/OptimizationOptimisers/src,lib/OptimizationPolyalgorithms/src,lib/OptimizationQuadDIRECT/src,lib/OptimizationSpeedMapping/src
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
           file: lcov.info
