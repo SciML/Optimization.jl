@@ -11,10 +11,6 @@ SciMLBase.supports_opt_cache_interface(opt::Evolutionary.AbstractOptimizer) = tr
 decompose_trace(trace::Evolutionary.OptimizationTrace) = last(trace)
 decompose_trace(trace::Evolutionary.OptimizationTraceRecord) = trace
 
-# function Evolutionary.trace!(record::Dict{String, Any}, objfun, state, population,
-#         method::Evolutionary.AbstractOptimizer, options)
-#     record["x"] = population
-# end
 
 # Overload the trace! function to add the population to the trace prior to calling any user-defined trace! method
 function Evolutionary.trace!(tr, iteration, objfun, state, population, method::Evolutionary.AbstractOptimizer, options, curr_time=time()) 
