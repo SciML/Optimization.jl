@@ -4,6 +4,7 @@ using Reexport
 @reexport using Optimization
 using MathOptInterface
 using Optimization.SciMLBase
+using SciMLStructures
 using SymbolicIndexingInterface
 using SparseArrays
 import ModelingToolkit: parameters, unknowns, varmap_to_vars, mergedefaults, toexpr
@@ -237,7 +238,8 @@ Replaces every expression `:p[i]` with its numeric value from `p`
 _replace_parameter_indices!(expr, p) = expr
 function _replace_parameter_indices!(expr::Expr, p)
     if expr.head == :ref && expr.args[1] == :p
-        p_ = p[expr.args[2]]
+        tunable, _, _ = SciMLStructures.canonicalize(SciMLStructures.Tunable(), p)
+        p_ = tunable[expr.args[2]]
         (!isa(p_, Real) || isnan(p_) || isinf(p_)) &&
             throw(ArgumentError("Expected parameters to be real valued: $(expr.args[2]) => $p_"))
         return p_
