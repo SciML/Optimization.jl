@@ -38,9 +38,9 @@ weakdeps = ["ChainRulesCore", "Test"]
     AbstractFFTsTestExt = "Test"
 
 [[deps.AbstractTrees]]
-git-tree-sha1 = "faa260e4cb5aba097a73fab382dd4b5819d8ec8c"
+git-tree-sha1 = "2d9c9a55f9c93e8887ad391fbae72f8ef55e1177"
 uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
-version = "0.4.4"
+version = "0.4.5"
 
 [[deps.AccurateArithmetic]]
 deps = ["LinearAlgebra", "Random", "VectorizationBase"]
@@ -914,9 +914,9 @@ version = "0.21.4"
 
 [[deps.JuliaFormatter]]
 deps = ["CSTParser", "Combinatorics", "CommonMark", "DataStructures", "Glob", "Pkg", "PrecompileTools", "Tokenize"]
-git-tree-sha1 = "40f1eb7837b7b75d07c062790942406b9a010725"
+git-tree-sha1 = "fde717f9e3fe6ffb0336bcc2142cfa71dd9df1f5"
 uuid = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
-version = "1.0.49"
+version = "1.0.50"
 
 [[deps.JuliaVariables]]
 deps = ["MLStyle", "NameResolution"]
@@ -2176,9 +2176,9 @@ version = "1.5.0"
 
 [[deps.Symbolics]]
 deps = ["ArrayInterface", "Bijections", "ConstructionBase", "DataStructures", "DiffRules", "Distributions", "DocStringExtensions", "DomainSets", "DynamicPolynomials", "ForwardDiff", "IfElse", "LaTeXStrings", "LambertW", "Latexify", "Libdl", "LinearAlgebra", "LogExpFunctions", "MacroTools", "Markdown", "NaNMath", "PrecompileTools", "RecipesBase", "Reexport", "Requires", "RuntimeGeneratedFunctions", "SciMLBase", "Setfield", "SparseArrays", "SpecialFunctions", "StaticArrays", "SymbolicIndexingInterface", "SymbolicUtils"]
-git-tree-sha1 = "a5d599a4a8a0671cf9944d8d43520670990f437a"
+git-tree-sha1 = "168d291b59ee4ef2158081a2b650647018600ffa"
 uuid = "0c5d862f-8b57-4792-8d23-62f2024744c7"
-version = "5.18.0"
+version = "5.19.1"
 
     [deps.Symbolics.extensions]
     SymbolicsGroebnerExt = "Groebner"
