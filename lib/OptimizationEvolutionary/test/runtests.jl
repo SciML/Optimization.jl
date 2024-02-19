@@ -41,16 +41,17 @@ Random.seed!(1234)
         end
         return false
     end
-    sol = solve(prob, CMAES(μ = 40, λ = 100), callback = cb, maxiters = 100)
+    solve(prob, CMAES(μ = 40, λ = 100), callback = cb, maxiters = 100)
     
-    #test that `store_trace=true` works now. Threw ""type Array has no field value" before.
-    solve(prob, CMAES(μ = 40, λ = 100), store_trace = true)
-
     # Test compatibility of user overload of trace! 
     function Evolutionary.trace!(record::Dict{String, Any}, objfun, state, population, method::CMAES, options)
         # record fittest individual
         record["TESTVAL"] = state.fittest
     end
+
+    #test that `store_trace=true` works now. Threw ""type Array has no field value" before.
+    sol = solve(prob, CMAES(μ = 40, λ = 100), store_trace = true)
+
     # Make sure that both the user's trace record value, as well as `x` are stored in the trace.
     @test haskey(sol.original.trace[end].metadata, "TESTVAL") &&  haskey(sol.original.trace[end].metadata, "x")
 end
