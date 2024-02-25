@@ -7,11 +7,11 @@
 @variables m [bounds = (0.0, Inf)]
 
 cons = [u[1] + v[1] - w[1] ~ 150 # January
-    u[2] + v[2] - w[2] - 1.01u[1] + 1.003w[1] ~ 100 # February
-    u[3] + v[3] - w[3] - 1.01u[2] + 1.003w[2] ~ -200 # March
-    u[4] - w[4] - 1.02v[1] - 1.01u[3] + 1.003w[3] ~ 200 # April
-    u[5] - w[5] - 1.02v[2] - 1.01u[4] + 1.003w[4] ~ -50 # May
-    -m - 1.02v[3] - 1.01u[5] + 1.003w[5] ~ -300]
+        u[2] + v[2] - w[2] - 1.01u[1] + 1.003w[1] ~ 100 # February
+        u[3] + v[3] - w[3] - 1.01u[2] + 1.003w[2] ~ -200 # March
+        u[4] - w[4] - 1.02v[1] - 1.01u[3] + 1.003w[3] ~ 200 # April
+        u[5] - w[5] - 1.02v[2] - 1.01u[4] + 1.003w[4] ~ -50 # May
+        -m - 1.02v[3] - 1.01u[5] + 1.003w[5] ~ -300]
 
 @named optsys = OptimizationSystem(m, [u..., v..., w..., m], [], constraints = cons)
 optprob = OptimizationProblem(optsys,
@@ -76,4 +76,4 @@ u: 5-element Vector{Float64}:
  0.0
  0.0
  1.0
- 1.0</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../constraints/">« Using Equality and Inequality Constraints</a><a class="docs-footer-nextpage" href="../../examples/rosenbrock/">Solving the Rosenbrock Problem in &gt;10 Ways »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Thursday 22 February 2024 06:12">Thursday 22 February 2024</span>. Using Julia version 1.10.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 1.0</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../constraints/">« Using Equality and Inequality Constraints</a><a class="docs-footer-nextpage" href="../../examples/rosenbrock/">Solving the Rosenbrock Problem in &gt;10 Ways »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Sunday 25 February 2024 13:51">Sunday 25 February 2024</span>. Using Julia version 1.10.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
