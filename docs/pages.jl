@@ -4,10 +4,10 @@ pages = ["index.md",
         "tutorials/minibatch.md",
         "tutorials/symbolic.md",
         "tutorials/constraints.md",
-        "tutorials/linearandinteger.md",
+        "tutorials/linearandinteger.md"
     ],
     "Examples" => [
-        "examples/rosenbrock.md",
+        "examples/rosenbrock.md"
     ],
     "Basics" => [
         "API/optimization_problem.md",
@@ -15,7 +15,7 @@ pages = ["index.md",
         "API/solve.md",
         "API/optimization_solution.md",
         "API/modelingtoolkit.md",
-        "API/FAQ.md",
+        "API/FAQ.md"
     ],
     "Optimizer Packages" => [
         "BlackBoxOptim.jl" => "optimization_packages/blackboxoptim.md",
@@ -33,6 +33,6 @@ pages = ["index.md",
         "PRIMA.jl" => "optimization_packages/prima.md",
         "Polyalgorithms.jl" => "optimization_packages/polyopt.md",
         "QuadDIRECT.jl" => "optimization_packages/quaddirect.md",
-        "SpeedMapping.jl" => "optimization_packages/speedmapping.md",
-    ],
+        "SpeedMapping.jl" => "optimization_packages/speedmapping.md"
+    ]
 ]

@@ -12,8 +12,9 @@ decompose_trace(trace::Evolutionary.OptimizationTrace) = last(trace)
 decompose_trace(trace::Evolutionary.OptimizationTraceRecord) = trace
 
 # Overload the trace! function to add the population to the trace prior to calling any user-defined trace! method
-function Evolutionary.trace!(tr, iteration, objfun, state, population, method::Evolutionary.AbstractOptimizer, options, curr_time=time()) 
-    dt = Dict{String,Any}()
+function Evolutionary.trace!(tr, iteration, objfun, state, population,
+        method::Evolutionary.AbstractOptimizer, options, curr_time = time())
+    dt = Dict{String, Any}()
     dt["time"] = curr_time
 
     # record `x` to store the population. Needed for constructing OptimizationState.
@@ -22,14 +23,14 @@ function Evolutionary.trace!(tr, iteration, objfun, state, population, method::E
     # set additional trace value
     Evolutionary.trace!(dt, objfun, state, population, method, options)
     Evolutionary.update!(tr,
-            state,
-            iteration,
-            Evolutionary.value(state),
-            dt,
-            options.store_trace,
-            options.show_trace,
-            options.show_every,
-            options.callback)
+        state,
+        iteration,
+        Evolutionary.value(state),
+        dt,
+        options.store_trace,
+        options.show_trace,
+        options.show_every,
+        options.callback)
 end
 
 function __map_optimizer_args(cache::OptimizationCache,
@@ -76,7 +77,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         O,
         D,
         P,
-        C,
+        C
 }) where {
         F,
         RC,
@@ -89,7 +90,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         Evolutionary.AbstractOptimizer,
         D,
         P,
-        C,
+        C
 }
     local x, cur, state
 

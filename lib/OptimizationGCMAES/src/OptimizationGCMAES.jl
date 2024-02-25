@@ -64,7 +64,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         O,
         D,
         P,
-        C,
+        C
 }) where {
         F,
         RC,
@@ -77,7 +77,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         GCMAESOpt,
         D,
         P,
-        C,
+        C
 }
     local x
     local G = similar(cache.u0)
@@ -103,13 +103,15 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     t0 = time()
     if cache.sense === Optimization.MaxSense
-        opt_xmin, opt_fmin, opt_ret = GCMAES.maximize(isnothing(cache.f.grad) ? _loss :
-                                                      (_loss, g), cache.u0,
+        opt_xmin, opt_fmin, opt_ret = GCMAES.maximize(
+            isnothing(cache.f.grad) ? _loss :
+            (_loss, g), cache.u0,
             cache.solver_args.σ0, cache.lb,
             cache.ub; opt_args...)
     else
-        opt_xmin, opt_fmin, opt_ret = GCMAES.minimize(isnothing(cache.f.grad) ? _loss :
-                                                      (_loss, g), cache.u0,
+        opt_xmin, opt_fmin, opt_ret = GCMAES.minimize(
+            isnothing(cache.f.grad) ? _loss :
+            (_loss, g), cache.u0,
             cache.solver_args.σ0, cache.lb,
             cache.ub; opt_args...)
     end

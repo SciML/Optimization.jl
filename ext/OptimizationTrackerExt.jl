@@ -11,7 +11,8 @@ function Optimization.instantiate_function(f, x, adtype::AutoTracker, p,
     _f = (θ, args...) -> first(f.f(θ, p, args...))
 
     if f.grad === nothing
-        grad = (res, θ, args...) -> res .= Tracker.data(Tracker.gradient(x -> _f(x, args...),
+        grad = (res, θ, args...) -> res .= Tracker.data(Tracker.gradient(
+            x -> _f(x, args...),
             θ)[1])
     else
         grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
@@ -42,7 +43,8 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
     _f = (θ, args...) -> first(f.f(θ, cache.p, args...))
 
     if f.grad === nothing
-        grad = (res, θ, args...) -> res .= Tracker.data(Tracker.gradient(x -> _f(x, args...),
+        grad = (res, θ, args...) -> res .= Tracker.data(Tracker.gradient(
+            x -> _f(x, args...),
             θ)[1])
     else
         grad = (G, θ, args...) -> f.grad(G, θ, cache.p, args...)

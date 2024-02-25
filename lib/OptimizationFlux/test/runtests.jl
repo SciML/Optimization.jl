@@ -23,7 +23,8 @@ using Test
         x0 = zeros(1)
         p = [1.0]
 
-        prob = OptimizationProblem(OptimizationFunction(objective,
+        prob = OptimizationProblem(
+            OptimizationFunction(objective,
                 Optimization.AutoForwardDiff()), x0,
             p)
         cache = Optimization.init(prob, Flux.Adam(0.1), maxiters = 1000)

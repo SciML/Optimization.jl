@@ -1,5 +1,5 @@
 using DiffEqFlux, Optimization, OrdinaryDiffEq, OptimizationOptimisers, ModelingToolkit,
-    SciMLSensitivity, Lux, Random, ComponentArrays, Flux
+      SciMLSensitivity, Lux, Random, ComponentArrays, Flux
 
 rng = Random.default_rng()
 
@@ -58,7 +58,8 @@ train_loader = Flux.Data.DataLoader((ode_data, t), batchsize = k)
 numEpochs = 300
 l1 = loss_adjoint(pp, train_loader.data[1], train_loader.data[2])[1]
 
-optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
+optfun = OptimizationFunction(
+    (θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
         time_batch),
     Optimization.AutoZygote())
 optprob = OptimizationProblem(optfun, pp)
@@ -67,7 +68,8 @@ res1 = Optimization.solve(optprob, Optimisers.Adam(0.05), ncycle(train_loader, n
     callback = callback, maxiters = numEpochs)
 @test 10res1.objective < l1
 
-optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
+optfun = OptimizationFunction(
+    (θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
         time_batch),
     Optimization.AutoForwardDiff())
 optprob = OptimizationProblem(optfun, pp)
@@ -76,7 +78,8 @@ res1 = Optimization.solve(optprob, Optimisers.Adam(0.05), ncycle(train_loader, n
     callback = callback, maxiters = numEpochs)
 @test 10res1.objective < l1
 
-optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
+optfun = OptimizationFunction(
+    (θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
         time_batch),
     Optimization.AutoModelingToolkit())
 optprob = OptimizationProblem(optfun, pp)
@@ -95,7 +98,8 @@ function loss_grad(res, fullp, _, batch, time_batch)
         sensealg = InterpolatingAdjoint())[2]')
 end
 
-optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
+optfun = OptimizationFunction(
+    (θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
         time_batch),
     grad = loss_grad)
 optprob = OptimizationProblem(optfun, pp)

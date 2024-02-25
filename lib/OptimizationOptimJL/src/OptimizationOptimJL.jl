@@ -67,7 +67,7 @@ end
 
 function SciMLBase.__init(prob::OptimizationProblem,
         opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
-            Optim.SAMIN, Optim.ConstrainedOptimizer,
+            Optim.SAMIN, Optim.ConstrainedOptimizer
         },
         data = Optimization.DEFAULT_DATA;
         callback = (args...) -> (false),
@@ -113,7 +113,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         S,
         O,
         D,
-        P,
+        P
 }) where {
         F,
         RC,
@@ -123,7 +123,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         O <:
         Optim.AbstractOptimizer,
         D,
-        P,
+        P
 }
     local x, cur, state
 
@@ -232,7 +232,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         S,
         O,
         D,
-        P,
+        P
 }) where {
         F,
         RC,
@@ -242,10 +242,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
         O <:
         Union{
             Optim.Fminbox,
-            Optim.SAMIN,
+            Optim.SAMIN
         },
         D,
-        P,
+        P
 }
     local x, cur, state
 
@@ -324,7 +324,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         S,
         O,
         D,
-        P,
+        P
 }) where {
         F,
         RC,
@@ -334,7 +334,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         O <:
         Optim.ConstrainedOptimizer,
         D,
-        P,
+        P
 }
     local x, cur, state
 

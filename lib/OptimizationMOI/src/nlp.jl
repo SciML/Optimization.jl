@@ -55,11 +55,11 @@ function SciMLBase.get_p(sol::SciMLBase.OptimizationSolution{
         T,
         N,
         uType,
-        C,
+        C
 }) where {T, N,
         uType,
         C <:
-        MOIOptimizationNLPCache,
+        MOIOptimizationNLPCache
 }
     sol.cache.evaluator.p
 end
@@ -67,13 +67,13 @@ function SciMLBase.get_observed(sol::SciMLBase.OptimizationSolution{
         T,
         N,
         uType,
-        C,
+        C
 }) where {
         T,
         N,
         uType,
         C <:
-        MOIOptimizationNLPCache,
+        MOIOptimizationNLPCache
 }
     sol.cache.evaluator.f.observed
 end
@@ -81,12 +81,12 @@ function SciMLBase.get_syms(sol::SciMLBase.OptimizationSolution{
         T,
         N,
         uType,
-        C,
+        C
 }) where {T,
         N,
         uType,
         C <:
-        MOIOptimizationNLPCache,
+        MOIOptimizationNLPCache
 }
     variable_symbols(sol.cache.evaluator.f)
 end
@@ -94,13 +94,13 @@ function SciMLBase.get_paramsyms(sol::SciMLBase.OptimizationSolution{
         T,
         N,
         uType,
-        C,
+        C
 }) where {
         T,
         N,
         uType,
         C <:
-        MOIOptimizationNLPCache,
+        MOIOptimizationNLPCache
 }
     parameter_symbols(sol.cache.evaluator.f)
 end
