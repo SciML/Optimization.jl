@@ -1,5 +1,5 @@
 using OrdinaryDiffEq, DiffEqFlux, Lux, Optimization, OptimizationOptimJL,
-    OptimizationOptimisers, ForwardDiff, ComponentArrays, Random
+      OptimizationOptimisers, ForwardDiff, ComponentArrays, Random
 rng = Random.default_rng()
 
 function lotka_volterra!(du, u, p, t)

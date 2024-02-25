@@ -84,7 +84,7 @@ function __nlopt_status_to_ReturnCode(status::Symbol)
         NLopt.STOPVAL_REACHED,
         NLopt.FTOL_REACHED,
         NLopt.XTOL_REACHED,
-        NLopt.ROUNDOFF_LIMITED,
+        NLopt.ROUNDOFF_LIMITED
     ])
         return ReturnCode.Success
     elseif status == Symbol(NLopt.MAXEVAL_REACHED)
@@ -95,7 +95,7 @@ function __nlopt_status_to_ReturnCode(status::Symbol)
         NLopt.OUT_OF_MEMORY,
         NLopt.INVALID_ARGS,
         NLopt.FAILURE,
-        NLopt.FORCED_STOP,
+        NLopt.FORCED_STOP
     ])
         return ReturnCode.Failure
     else
@@ -114,7 +114,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         O,
         D,
         P,
-        C,
+        C
 }) where {
         F,
         RC,
@@ -126,11 +126,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
         O <:
         Union{
             NLopt.Algorithm,
-            NLopt.Opt,
+            NLopt.Opt
         },
         D,
         P,
-        C,
+        C
 }
     local x
 

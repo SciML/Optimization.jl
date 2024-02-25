@@ -65,7 +65,8 @@ train_loader = Flux.Data.DataLoader((ode_data, t), batchsize = k)
 numEpochs = 300
 l1 = loss_adjoint(pp, train_loader.data[1], train_loader.data[2])[1]
 
-optfun = OptimizationFunction((θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
+optfun = OptimizationFunction(
+    (θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
         time_batch),
     Optimization.AutoZygote())
 optprob = OptimizationProblem(optfun, pp)

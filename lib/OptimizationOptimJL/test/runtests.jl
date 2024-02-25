@@ -1,6 +1,6 @@
 using OptimizationOptimJL,
-    OptimizationOptimJL.Optim, Optimization, ForwardDiff, Zygote,
-    Random, ModelingToolkit
+      OptimizationOptimJL.Optim, Optimization, ForwardDiff, Zygote,
+      Random, ModelingToolkit
 using Test
 
 @testset "OptimizationOptimJL.jl" begin

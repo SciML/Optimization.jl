@@ -26,7 +26,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         O,
         D,
         P,
-        C,
+        C
 }) where {
         F,
         RC,
@@ -39,7 +39,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         Flux.Optimise.AbstractOptimiser,
         D,
         P,
-        C,
+        C
 }
     local i
     if cache.data != Optimization.DEFAULT_DATA

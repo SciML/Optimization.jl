@@ -88,7 +88,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         O,
         D,
         P,
-        C,
+        C
 }) where {
         F,
         RC,
@@ -101,7 +101,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         BBO,
         D,
         P,
-        C,
+        C
 }
     local x, cur, state
 

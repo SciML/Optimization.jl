@@ -53,7 +53,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         O,
         D,
         P,
-        C,
+        C
 }) where {
         F,
         RC,
@@ -66,7 +66,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         SpeedMappingOpt,
         D,
         P,
-        C,
+        C
 }
     local x
 

@@ -31,7 +31,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         O,
         D,
         P,
-        C,
+        C
 }) where {
         F,
         RC,
@@ -44,7 +44,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         MultistartOptimization.TikTak,
         D,
         P,
-        C,
+        C
 }
     local x, _loss
 
@@ -75,7 +75,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         opt_res.value;
         stats = stats,
         (isnothing(opt_ret) ? (; original = opt_res) :
-         (; original = opt_res, retcode = opt_ret,))...)
+         (; original = opt_res, retcode = opt_ret))...)
 end
 
 end

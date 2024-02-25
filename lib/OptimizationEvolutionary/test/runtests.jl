@@ -42,9 +42,10 @@ Random.seed!(1234)
         return false
     end
     solve(prob, CMAES(μ = 40, λ = 100), callback = cb, maxiters = 100)
-    
+
     # Test compatibility of user overload of trace! 
-    function Evolutionary.trace!(record::Dict{String, Any}, objfun, state, population, method::CMAES, options)
+    function Evolutionary.trace!(
+            record::Dict{String, Any}, objfun, state, population, method::CMAES, options)
         # record fittest individual
         record["TESTVAL"] = state.fittest
     end
@@ -53,5 +54,6 @@ Random.seed!(1234)
     sol = solve(prob, CMAES(μ = 40, λ = 100), store_trace = true)
 
     # Make sure that both the user's trace record value, as well as `x` are stored in the trace.
-    @test haskey(sol.original.trace[end].metadata, "TESTVAL") &&  haskey(sol.original.trace[end].metadata, "x")
+    @test haskey(sol.original.trace[end].metadata, "TESTVAL") &&
+          haskey(sol.original.trace[end].metadata, "x")
 end

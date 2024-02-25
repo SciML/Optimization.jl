@@ -48,7 +48,7 @@ function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
             xdual = ForwardDiff.Dual{
                 typeof(T),
                 eltype(x),
-                chunksize,
+                chunksize
             }.(x, Ref(ForwardDiff.Partials((ones(eltype(x), chunksize)...,))))
             h_tape = ReverseDiff.GradientTape(_f, xdual)
             htape = ReverseDiff.compile(h_tape)
@@ -118,9 +118,9 @@ function Optimization.instantiate_function(f, x, adtype::AutoReverseDiff,
             end
             gs = [x -> grad_cons(x, conshtapes[i]) for i in 1:num_cons]
             jaccfgs = [ForwardDiff.JacobianConfig(gs[i],
-                x,
-                ForwardDiff.Chunk{chunksize}(),
-                T) for i in 1:num_cons]
+                           x,
+                           ForwardDiff.Chunk{chunksize}(),
+                           T) for i in 1:num_cons]
             cons_h = function (res, θ)
                 for i in 1:num_cons
                     ForwardDiff.jacobian!(res[i], gs[i], θ, jaccfgs[i], Val{false}())
@@ -180,7 +180,7 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
             xdual = ForwardDiff.Dual{
                 typeof(T),
                 eltype(cache.u0),
-                chunksize,
+                chunksize
             }.(cache.u0, Ref(ForwardDiff.Partials((ones(eltype(cache.u0), chunksize)...,))))
             h_tape = ReverseDiff.GradientTape(_f, xdual)
             htape = ReverseDiff.compile(h_tape)
@@ -253,9 +253,9 @@ function Optimization.instantiate_function(f, cache::Optimization.ReInitCache,
             end
             gs = [x -> grad_cons(x, conshtapes[i]) for i in 1:num_cons]
             jaccfgs = [ForwardDiff.JacobianConfig(gs[i],
-                cache.u0,
-                ForwardDiff.Chunk{chunksize}(),
-                T) for i in 1:num_cons]
+                           cache.u0,
+                           ForwardDiff.Chunk{chunksize}(),
+                           T) for i in 1:num_cons]
             cons_h = function (res, θ)
                 for i in 1:num_cons
                     ForwardDiff.jacobian!(res[i], gs[i], θ, jaccfgs[i], Val{false}())

@@ -58,6 +58,7 @@ For a more extensive documentation of all the algorithms and options, please con
   - [`Optim.IPNewton()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/ipnewton/)
     
       + `μ0` specifies the initial barrier penalty coefficient as either a number or `:auto`
+    
       + `show_linesearch` is an option to turn on linesearch verbosity.
       + Defaults:
         

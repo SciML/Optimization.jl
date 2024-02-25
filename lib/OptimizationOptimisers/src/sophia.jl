@@ -37,7 +37,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         O,
         D,
         P,
-        C,
+        C
 }) where {
         F,
         RC,
@@ -50,7 +50,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         Sophia,
         D,
         P,
-        C,
+        C
 }
     local x, cur, state
     uType = eltype(cache.u0)

@@ -87,7 +87,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         O,
         D,
         P,
-        C,
+        C
 }) where {
         F,
         RC,
@@ -100,7 +100,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         Metaheuristics.AbstractAlgorithm,
         D,
         P,
-        C,
+        C
 }
     local x
 
@@ -128,7 +128,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
         @warn "Inequality constraints are current not passed on by Optimization"
     end
 
-    __map_optimizer_args!(cache, cache.opt; callback = cache.callback, cache.solver_args...,
+    __map_optimizer_args!(
+        cache, cache.opt; callback = cache.callback, cache.solver_args...,
         maxiters = maxiters,
         maxtime = maxtime)
 
