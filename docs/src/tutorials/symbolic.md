@@ -42,6 +42,7 @@ p = [a => 6.0
 And now we solve.
 
 ```@example modelingtoolkit
+sys = complete(sys)
 prob = OptimizationProblem(sys, u0, p, grad = true, hess = true)
 solve(prob, Newton())
 ```
