@@ -51,6 +51,7 @@ cons = [u[1] + v[1] - w[1] ~ 150 # January
         -m - 1.02v[3] - 1.01u[5] + 1.003w[5] ~ -300]
 
 @named optsys = OptimizationSystem(m, [u..., v..., w..., m], [], constraints = cons)
+optsys = complete(optsys)
 optprob = OptimizationProblem(optsys,
     vcat(fill(0.0, 13), 300.0);
     grad = true,
