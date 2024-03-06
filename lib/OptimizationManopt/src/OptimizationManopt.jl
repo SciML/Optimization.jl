@@ -29,7 +29,7 @@ struct GradientDescentOptimizer{
 end
 
 function GradientDescentOptimizer(M::AbstractManifold;
-                                  eval::AbstractEvaluationType = MutatingEvaluation(),
+                                  eval::AbstractEvaluationType = Manopt.AllocatingEvaluation(),
                                   stepsize::Stepsize = ArmijoLinesearch(M))
     GradientDescentOptimizer{typeof(eval), typeof(M), typeof(stepsize)}(M, stepsize)
 end
@@ -99,7 +99,7 @@ struct ConjugateGradientDescentOptimizer{Teval <: AbstractEvaluationType,
 end
 
 function ConjugateGradientDescentOptimizer(M::AbstractManifold;
-                                           eval::AbstractEvaluationType = MutatingEvaluation(),
+                                           eval::AbstractEvaluationType = InplaceEvaluation(),
                                            stepsize::Stepsize = ArmijoLinesearch(M))
     ConjugateGradientDescentOptimizer{typeof(eval), typeof(M), typeof(stepsize)}(M,
                                                                                  stepsize)
@@ -143,7 +143,7 @@ struct ParticleSwarmOptimizer{Teval <: AbstractEvaluationType,
 end
 
 function ParticleSwarmOptimizer(M::AbstractManifold;
-                                eval::AbstractEvaluationType = MutatingEvaluation(),
+                                eval::AbstractEvaluationType = InplaceEvaluation(),
                                 population_size::Int = 100,
                                 retraction_method::AbstractRetractionMethod = default_retraction_method(M),
                                 inverse_retraction_method::AbstractInverseRetractionMethod = default_inverse_retraction_method(M),
@@ -195,7 +195,7 @@ struct QuasiNewtonOptimizer{Teval <: AbstractEvaluationType,
 end
 
 function QuasiNewtonOptimizer(M::AbstractManifold;
-                              eval::AbstractEvaluationType = MutatingEvaluation(),
+                              eval::AbstractEvaluationType = InplaceEvaluation(),
                               retraction_method::AbstractRetractionMethod = default_retraction_method(M),
                               vector_transport_method::AbstractVectorTransportMethod = default_vector_transport_method(M),
                               stepsize = WolfePowellLinesearch(M;
@@ -245,12 +245,13 @@ function build_loss(f::OptimizationFunction, prob, cur)
 end
 
 function build_gradF(f::OptimizationFunction{true}, prob, cur)
-    function (::AbstractManifold, G, θ)
-        X = f.grad(G, θ, cur...)
+    function (M::AbstractManifold, G, θ)
+        f.grad(G, θ, cur...)
+        G .= riemannian_gradient(M, θ, G)
         if prob.sense === Optimization.MaxSense
-            return -X # TODO: check
+            return -G # TODO: check
         else
-            return X
+            return G
         end
     end
 end
