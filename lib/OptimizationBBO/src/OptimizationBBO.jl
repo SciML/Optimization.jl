@@ -9,6 +9,11 @@ abstract type BBO end
 SciMLBase.requiresbounds(::BBO) = true
 SciMLBase.allowsbounds(::BBO) = true
 SciMLBase.supports_opt_cache_interface(opt::BBO) = true
+SciMLBase.requiresgradient(::BBO) = false
+SciMLBase.requireshessian(::BBO) = false
+SciMLBase.requiresconsjac(::BBO) = false
+SciMLBase.requiresconshess(::BBO) = false
+
 
 for j in string.(BlackBoxOptim.SingleObjectiveMethodNames)
     eval(Meta.parse("Base.@kwdef struct BBO_" * j * " <: BBO method=:" * j * " end"))
