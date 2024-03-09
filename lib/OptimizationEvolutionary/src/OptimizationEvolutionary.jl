@@ -7,6 +7,10 @@ using Optimization.SciMLBase
 SciMLBase.allowsbounds(opt::Evolutionary.AbstractOptimizer) = true
 SciMLBase.allowsconstraints(opt::Evolutionary.AbstractOptimizer) = true
 SciMLBase.supports_opt_cache_interface(opt::Evolutionary.AbstractOptimizer) = true
+SciMLBase.requiresgradient(opt::Evolutionary.AbstractOptimizer) = false
+SciMLBase.requireshessian(opt::Evolutionary.AbstractOptimizer) = false
+SciMLBase.requiresconsjac(opt::Evolutionary.AbstractOptimizer) = false
+SciMLBase.requiresconshess(opt::Evolutionary.AbstractOptimizer) = false
 
 decompose_trace(trace::Evolutionary.OptimizationTrace) = last(trace)
 decompose_trace(trace::Evolutionary.OptimizationTraceRecord) = trace
