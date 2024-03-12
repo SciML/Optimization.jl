@@ -8,6 +8,7 @@ using Optimization.SciMLBase
 
 SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
+SciMLBase.requiresgradient(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 
 function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
         callback = nothing,
