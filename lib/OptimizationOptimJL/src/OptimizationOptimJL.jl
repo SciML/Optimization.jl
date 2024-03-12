@@ -15,6 +15,13 @@ SciMLBase.supports_opt_cache_interface(opt::Optim.AbstractOptimizer) = true
 SciMLBase.supports_opt_cache_interface(opt::Union{Optim.Fminbox, Optim.SAMIN}) = true
 SciMLBase.supports_opt_cache_interface(opt::Optim.ConstrainedOptimizer) = true
 SciMLBase.requiresgradient(Optim.AbstractOptimizer) = !(opt isa Optim.ZerothOrderOptimizer)
+SciMLBase.requiresgradient(::IPNewton) = true
+SciMLBase.requireshessian(::IPNewton) = true
+SciMLBase.requiresconsjac(::IPNewton) = true
+SciMLBase.requireshessian(Optim.NewtonTrustRegion) = !(opt isa Optim.ZerothOrderOptimizer || opt isa Optim.FirstOrderOptimizer)
+SciMLBase.requireshessian(Optim.Newton) = !(opt isa Optim.ZerothOrderOptimizer || opt isa Optim.FirstOrderOptimizer)
+
+
 
 function __map_optimizer_args(cache::OptimizationCache,
         opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
