@@ -8,6 +8,7 @@ using Optimization.SciMLBase
 
 SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
+SciMLBase.requiresgradient(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 
 function SciMLBase.requiresgradient(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
     str_opt = string(opt)
