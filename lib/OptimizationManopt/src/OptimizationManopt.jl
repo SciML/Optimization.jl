@@ -1,6 +1,6 @@
 module OptimizationManopt
 
-using Optimization, Manopt, ManifoldsBase
+using Optimization, Manopt, ManifoldsBase, ManifoldDiff
 
 """
     abstract type AbstractManoptOptimizer end
@@ -52,7 +52,7 @@ function call_manopt_optimizer(opt::GradientDescentOptimizer{Teval},
                             stepsize = opt.stepsize,
                             sckwarg...)
     # we unwrap DebugOptions here
-    minimizer = Manopt.get_solver_result(opts)
+    minimizer = opts
     return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
            :who_knows
 end
@@ -61,15 +61,12 @@ end
 
 struct NelderMeadOptimizer{
                            TM <: AbstractManifold,
-                           Tpop <: AbstractVector
                            } <: AbstractManoptOptimizer
     M::TM
-    initial_population::Tpop
 end
 
 function NelderMeadOptimizer(M::AbstractManifold)
-    initial_population = [rand(M) for _ in 1:(manifold_dimension(M) + 1)]
-    return NelderMeadOptimizer{typeof(M), typeof(initial_population)}(M, initial_population)
+    return NelderMeadOptimizer{typeof(M)}(M)
 end
 
 function call_manopt_optimizer(opt::NelderMeadOptimizer,
@@ -80,11 +77,10 @@ function call_manopt_optimizer(opt::NelderMeadOptimizer,
     sckwarg = stopping_criterion_to_kwarg(stopping_criterion)
 
     opts = NelderMead(opt.M,
-                      loss,
-                      opt.initial_population;
+                      loss;
                       return_options = true,
                       sckwarg...)
-    minimizer = Manopt.get_solver_result(opts)
+    minimizer = opts
     return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
            :who_knows
 end
@@ -123,7 +119,7 @@ function call_manopt_optimizer(opt::ConjugateGradientDescentOptimizer{Teval},
                                       stepsize = opt.stepsize,
                                       sckwarg...)
     # we unwrap DebugOptions here
-    minimizer = Manopt.get_solver_result(opts)
+    minimizer = opts
     return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
            :who_knows
 end
@@ -177,7 +173,7 @@ function call_manopt_optimizer(opt::ParticleSwarmOptimizer{Teval},
                           vector_transport_method = opt.vector_transport_method,
                           sckwarg...)
     # we unwrap DebugOptions here
-    minimizer = Manopt.get_solver_result(opts)
+    minimizer = opts
     return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
            :who_knows
 end
@@ -229,7 +225,7 @@ function call_manopt_optimizer(opt::QuasiNewtonOptimizer{Teval},
                                       stepsize = opt.stepsize,
                                       sckwarg...)
     # we unwrap DebugOptions here
-    minimizer = Manopt.get_solver_result(opts)
+    minimizer = opts
     return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
            :who_knows
 end
@@ -245,14 +241,14 @@ function build_loss(f::OptimizationFunction, prob, cur)
 end
 
 function build_gradF(f::OptimizationFunction{true}, prob, cur)
-    function (M::AbstractManifold, G, θ)
+    function g(M::AbstractManifold, G, θ)
         f.grad(G, θ, cur...)
         G .= riemannian_gradient(M, θ, G)
-        if prob.sense === Optimization.MaxSense
-            return -G # TODO: check
-        else
-            return G
-        end
+    end
+    function g(M::AbstractManifold, θ)
+        G = zero(θ)
+        f.grad(G, θ, cur...)
+        return riemannian_gradient(M, θ, G)
     end
 end
 
