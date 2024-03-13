@@ -18,8 +18,8 @@ SciMLBase.requiresgradient(Optim.AbstractOptimizer) = !(opt isa Optim.ZerothOrde
 SciMLBase.requiresgradient(::IPNewton) = true
 SciMLBase.requireshessian(::IPNewton) = true
 SciMLBase.requiresconsjac(::IPNewton) = true
-SciMLBase.requireshessian(Opt::Optim.NewtonTrustRegion) = true
-SciMLBase.requireshessian(Opt::Optim.Newton) = true
+SciMLBase.requireshessian(opt::Optim.NewtonTrustRegion) = true
+SciMLBase.requireshessian(opt::Optim.Newton) = true
 
 function __map_optimizer_args(cache::OptimizationCache,
         opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
