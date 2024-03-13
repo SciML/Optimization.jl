@@ -20,6 +20,7 @@ SciMLBase.requireshessian(::IPNewton) = true
 SciMLBase.requiresconsjac(::IPNewton) = true
 SciMLBase.requireshessian(opt::Optim.NewtonTrustRegion) = true
 SciMLBase.requireshessian(opt::Optim.Newton) = true
+SciMLBase.requiresgradient(opt::Optim.Fminbox) = true
 
 function __map_optimizer_args(cache::OptimizationCache,
         opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
