@@ -8,7 +8,39 @@ using Optimization.SciMLBase
 
 SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
-SciMLBase.requiresgradient(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
+
+function SciMLBase.requiresgradient(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
+    str_opt = string(opt)
+    if str_opt[2] == "D"
+         return true
+    else
+         return false
+end
+
+function SciMLBase.requireshessian(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
+    str_opt = string(opt)
+    if (str_opt[2] == "D" && str_opt[4] == "N")
+         return true
+    else
+         return false
+end
+
+function SciMLBase.requireshessian(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
+    str_opt = string(opt)
+    if str_opt[2] == "D" && str_opt[4] == "N"
+         return true
+    else
+         return false
+end
+function SciMLBase.requiresconsjac(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
+    str_opt = string(opt)
+    if str_opt[3] == "O" || str_opt[3] == "I" || str_opt[5] == "G"
+         return true
+    else
+         return false
+end
+
+
 
 function SciMLBase.requiresgradient(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
     str_opt = string(opt)
