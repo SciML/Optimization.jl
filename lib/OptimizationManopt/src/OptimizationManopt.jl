@@ -47,12 +47,12 @@ function call_manopt_optimizer(opt::GradientDescentOptimizer{Teval},
                             loss,
                             gradF,
                             x0;
-                            return_options = true,
+                            return_state = true,
                             evaluation = Teval(),
                             stepsize = opt.stepsize,
                             sckwarg...)
     # we unwrap DebugOptions here
-    minimizer = opts
+    minimizer = Manopt.get_solver_result(opts)
     return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
            :who_knows
 end
@@ -78,9 +78,9 @@ function call_manopt_optimizer(opt::NelderMeadOptimizer,
 
     opts = NelderMead(opt.M,
                       loss;
-                      return_options = true,
+                      return_state = true,
                       sckwarg...)
-    minimizer = opts
+    minimizer = Manopt.get_solver_result(opts)
     return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
            :who_knows
 end
@@ -114,12 +114,12 @@ function call_manopt_optimizer(opt::ConjugateGradientDescentOptimizer{Teval},
                                       loss,
                                       gradF,
                                       x0;
-                                      return_options = true,
+                                      return_state = true,
                                       evaluation = Teval(),
                                       stepsize = opt.stepsize,
                                       sckwarg...)
     # we unwrap DebugOptions here
-    minimizer = opts
+    minimizer = Manopt.get_solver_result(opts)
     return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
            :who_knows
 end
@@ -167,13 +167,13 @@ function call_manopt_optimizer(opt::ParticleSwarmOptimizer{Teval},
                           loss;
                           x0 = initial_population,
                           n = opt.population_size,
-                          return_options = true,
+                          return_state = true,
                           retraction_method = opt.retraction_method,
                           inverse_retraction_method = opt.inverse_retraction_method,
                           vector_transport_method = opt.vector_transport_method,
                           sckwarg...)
     # we unwrap DebugOptions here
-    minimizer = opts
+    minimizer = Manopt.get_solver_result(opts)
     return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
            :who_knows
 end
@@ -218,14 +218,14 @@ function call_manopt_optimizer(opt::QuasiNewtonOptimizer{Teval},
                                       loss,
                                       gradF,
                                       x0;
-                                      return_options = true,
+                                      return_state = true,
                                       evaluation = Teval(),
                                       retraction_method = opt.retraction_method,
                                       vector_transport_method = opt.vector_transport_method,
                                       stepsize = opt.stepsize,
                                       sckwarg...)
     # we unwrap DebugOptions here
-    minimizer = opts
+    minimizer = Manopt.get_solver_result(opts)
     return (; minimizer = minimizer, minimum = loss(opt.M, minimizer), options = opts),
            :who_knows
 end

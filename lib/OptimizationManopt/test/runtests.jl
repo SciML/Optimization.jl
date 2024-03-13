@@ -1,10 +1,11 @@
 using OptimizationManopt
 using Optimization
 using Manifolds
-using ForwardDiff
+using ForwardDiff, Zygote, Enzyme
 using Manopt
 using Test
 using Optimization.SciMLBase
+using LinearAlgebra
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 
@@ -98,4 +99,23 @@ end
     optprob_cons = OptimizationFunction(rosenbrock; grad = rosenbrock_grad!, cons = cons)
     prob_cons = OptimizationProblem(optprob_cons, x0, p)
     @test_throws SciMLBase.IncompatibleOptimizerError Optimization.solve(prob_cons, opt)
+end
+
+@testset "SPD Manifold" begin
+    M = SymmetricPositiveDefinite(5)
+    m = 100
+    σ = 0.005
+    q = Matrix{Float64}(I, 5, 5) .+ 2.0
+    data2 = [exp(M, q, σ * rand(M; vector_at=q)) for i in 1:m];
+
+    f(M, x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
+    f(x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
+
+    optf = OptimizationFunction(f, Optimization.AutoForwardDiff())
+    prob = OptimizationProblem(optf, data2[1])
+
+    opt = OptimizationManopt.GradientDescentOptimizer(M)
+    @time sol = Optimization.solve(prob, opt)
+
+    @test sol.u ≈ q
 end
