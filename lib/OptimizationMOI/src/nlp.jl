@@ -21,7 +21,7 @@ mutable struct MOIOptimizationNLPEvaluator{T, F <: OptimizationFunction, RC, LB,
 end
 
 function Base.getproperty(evaluator::MOIOptimizationNLPEvaluator, x::Symbol)
-    if x in fieldnames(Optimization.ReInitCache)
+    if x in fieldnames(OptimizationBase.ReInitCache)
         return getfield(evaluator.reinit_cache, x)
     end
     return getfield(evaluator, x)
@@ -37,7 +37,7 @@ end
 function Base.getproperty(cache::MOIOptimizationNLPCache{E}, name::Symbol) where {E}
     if name in fieldnames(E)
         return getfield(cache.evaluator, name)
-    elseif name in fieldnames(Optimization.ReInitCache)
+    elseif name in fieldnames(OptimizationBase.ReInitCache)
         return getfield(cache.evaluator.reinit_cache, name)
     end
     return getfield(cache, name)
@@ -45,7 +45,7 @@ end
 function Base.setproperty!(cache::MOIOptimizationNLPCache{E}, name::Symbol, x) where {E}
     if name in fieldnames(E)
         return setfield!(cache.evaluator, name, x)
-    elseif name in fieldnames(Optimization.ReInitCache)
+    elseif name in fieldnames(OptimizationBase.ReInitCache)
         return setfield!(cache.evaluator.reinit_cache, name, x)
     end
     return setfield!(cache, name, x)
@@ -110,7 +110,7 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
         mtkize = false,
         callback = nothing,
         kwargs...)
-    reinit_cache = Optimization.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
+    reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons)
