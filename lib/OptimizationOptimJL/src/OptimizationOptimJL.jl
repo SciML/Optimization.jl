@@ -133,11 +133,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
         error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
     function _cb(trace)
-        θ = cache.opt isa Optim.NelderMead ? decompose_trace(trace).metadata["centroid"] :
-            decompose_trace(trace).metadata["x"]
+        metadata = decompose_trace(trace).metadata
+        θ = metadata[cache.opt isa Optim.NelderMead ? "centroid" : "x"]
         opt_state = Optimization.OptimizationState(iter = trace.iteration,
             u = θ,
             objective = x[1],
+            grad = get(metadata, "g(x)", nothing),
+            hess = get(metadata, "h(x)", nothing),
             original = trace)
         cb_call = cache.callback(opt_state, x...)
         if !(cb_call isa Bool)
@@ -252,12 +254,15 @@ function SciMLBase.__solve(cache::OptimizationCache{
     cur, state = iterate(cache.data)
 
     function _cb(trace)
+        metadata = decompose_trace(trace).metadata
         θ = !(cache.opt isa Optim.SAMIN) && cache.opt.method == Optim.NelderMead() ?
-            decompose_trace(trace).metadata["centroid"] :
-            decompose_trace(trace).metadata["x"]
+            metadata["centroid"] :
+            metadata["x"]
         opt_state = Optimization.OptimizationState(iter = trace.iteration,
             u = θ,
             objective = x[1],
+            grad = get(metadata, "g(x)", nothing),
+            hess = get(metadata, "h(x)", nothing),
             original = trace)
         cb_call = cache.callback(opt_state, x...)
         if !(cb_call isa Bool)
@@ -341,8 +346,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
     cur, state = iterate(cache.data)
 
     function _cb(trace)
+        metadata = decompose_trace(trace).metadata
         opt_state = Optimization.OptimizationState(iter = trace.iteration,
-            u = decompose_trace(trace).metadata["x"],
+            u = metadata["x"],
+            grad = get(metadata, "g(x)", nothing),
+            hess = get(metadata, "h(x)", nothing),
             objective = x[1],
             original = trace)
         cb_call = cache.callback(opt_state, x...)
