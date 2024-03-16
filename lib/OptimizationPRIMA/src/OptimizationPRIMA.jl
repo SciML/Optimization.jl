@@ -31,7 +31,8 @@ function Optimization.OptimizationCache(prob::SciMLBase.OptimizationProblem,
         throw("We evaluate the jacobian and hessian of the constraints once to automatically detect 
         linear and nonlinear constraints, please provide a valid AD backend for using COBYLA.")
     else
-        f = Optimization.instantiate_function(prob.f, reinit_cache.u0, prob.f.adtype, reinit_cache.p, num_cons)
+        f = Optimization.instantiate_function(
+            prob.f, reinit_cache.u0, prob.f.adtype, reinit_cache.p, num_cons)
     end
 
     return Optimization.OptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons,
