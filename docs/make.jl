@@ -8,8 +8,8 @@ include("pages.jl")
 
 makedocs(sitename = "Optimization.jl",
     authors = "Chris Rackauckas, Vaibhav Kumar Dixit et al.",
-    modules = [Optimization, Optimization.SciMLBase, FiniteDiff,
-        ForwardDiff, ModelingToolkit, ReverseDiff, Tracker, Zygote],
+    modules = [Optimization, Optimization.SciMLBase, Optimization.OptimizationBase,
+        FiniteDiff, ForwardDiff, ModelingToolkit, ReverseDiff, Tracker, Zygote],
     clean = true, doctest = false, linkcheck = true,
     warnonly = [:missing_docs],
     format = Documenter.HTML(assets = ["assets/favicon.ico"],
