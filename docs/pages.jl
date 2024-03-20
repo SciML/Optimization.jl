@@ -12,6 +12,7 @@ pages = ["index.md",
     "Basics" => [
         "API/optimization_problem.md",
         "API/optimization_function.md",
+        "API/ad.md",
         "API/solve.md",
         "API/optimization_solution.md",
         "API/modelingtoolkit.md",
