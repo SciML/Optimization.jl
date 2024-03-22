@@ -15,7 +15,7 @@ using Logging, ProgressLogging, ConsoleProgressMonitor, TerminalLoggers, Logging
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 using Pkg
 
-import OptimizationBase: instantiate_function
+import OptimizationBase: instantiate_function, OptimizationCache, ReInitCache
 import SciMLBase: OptimizationProblem,
                   OptimizationFunction, ObjSense,
                   MaxSense, MinSense, OptimizationStats
@@ -24,6 +24,6 @@ export ObjSense, MaxSense, MinSense
 include("utils.jl")
 include("state.jl")
 
-export solve, OptimizationCache
+export solve
 
 end # module
