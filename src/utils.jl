@@ -66,9 +66,3 @@ function check_pkg_version(pkg::String, ver::String;
            pkg_info[pkg].version >= VersionNumber(ver) :
            pkg_info[pkg].version > VersionNumber(ver)
 end
-
-# Wrapper for fields that may change in `reinit!(cache)` of a cache.
-mutable struct ReInitCache{uType, P}
-    u0::uType
-    p::P
-end
