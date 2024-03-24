@@ -65,9 +65,6 @@ struct NelderMeadOptimizer{
     M::TM
 end
 
-function NelderMeadOptimizer(M::AbstractManifold)
-    return NelderMeadOptimizer{typeof(M)}(M)
-end
 
 function call_manopt_optimizer(opt::NelderMeadOptimizer,
                                loss,
@@ -268,6 +265,12 @@ function SciMLBase.__solve(prob::OptimizationProblem,
                            progress = false,
                            kwargs...)
     local x, cur, state
+
+    manifold = haskey(prob.kwargs, :manifold) ? prob.kwargs[:manifold] : nothing
+
+    if manifold === nothing || manifold !== opt.M
+        throw(ArgumentError("Either manifold not specified in the problem `OptimizationProblem(f, x, p; manifold = SymmetricPositiveDefinite(5))` or it doesn't match the manifold specified in the optimizer `$(opt.M)`"))
+    end
 
     if data !== Optimization.DEFAULT_DATA
         maxiters = length(data)
