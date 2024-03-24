@@ -18,28 +18,30 @@ R2 = Euclidean(2)
 
 @testset "Error on no or mismatching manifolds" begin
     x0 = zeros(2)
-    p = [1.0, 100.0] 
+    p = [1.0, 100.0]
 
     stepsize = Manopt.ArmijoLinesearch(R2)
     opt = OptimizationManopt.GradientDescentOptimizer(R2,
-                                                      stepsize = stepsize)
+        stepsize = stepsize)
 
     optprob_forwarddiff = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
     prob_forwarddiff = OptimizationProblem(optprob_forwarddiff, x0, p)
-    @test_throws ArgumentError("Either manifold not specified in the problem `OptimizationProblem(f, x, p; manifold = SymmetricPositiveDefinite(5))` or it doesn't match the manifold specified in the optimizer `$(opt.M)`") Optimization.solve(prob_forwarddiff, opt)
+    @test_throws ArgumentError("Either manifold not specified in the problem `OptimizationProblem(f, x, p; manifold = SymmetricPositiveDefinite(5))` or it doesn't match the manifold specified in the optimizer `$(opt.M)`") Optimization.solve(
+        prob_forwarddiff, opt)
 
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
     prob = OptimizationProblem(optprob, x0, p; manifold = SymmetricPositiveDefinite(5))
-    @test_throws ArgumentError("Either manifold not specified in the problem `OptimizationProblem(f, x, p; manifold = SymmetricPositiveDefinite(5))` or it doesn't match the manifold specified in the optimizer `$(opt.M)`") Optimization.solve(prob, opt)
+    @test_throws ArgumentError("Either manifold not specified in the problem `OptimizationProblem(f, x, p; manifold = SymmetricPositiveDefinite(5))` or it doesn't match the manifold specified in the optimizer `$(opt.M)`") Optimization.solve(
+        prob, opt)
 end
 
 @testset "Gradient descent" begin
     x0 = zeros(2)
-    p = [1.0, 100.0] 
+    p = [1.0, 100.0]
 
     stepsize = Manopt.ArmijoLinesearch(R2)
     opt = OptimizationManopt.GradientDescentOptimizer(R2,
-                                                      stepsize = stepsize)
+        stepsize = stepsize)
 
     optprob_forwarddiff = OptimizationFunction(rosenbrock, Optimization.AutoEnzyme())
     prob_forwarddiff = OptimizationProblem(optprob_forwarddiff, x0, p; manifold = R2)
@@ -71,7 +73,7 @@ end
 
     stepsize = Manopt.ArmijoLinesearch(R2)
     opt = OptimizationManopt.ConjugateGradientDescentOptimizer(R2,
-                                                               stepsize = stepsize)
+        stepsize = stepsize)
 
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
     prob = OptimizationProblem(optprob, x0, p; manifold = R2)
@@ -123,7 +125,7 @@ end
     m = 100
     σ = 0.005
     q = Matrix{Float64}(I, 5, 5) .+ 2.0
-    data2 = [exp(M, q, σ * rand(M; vector_at=q)) for i in 1:m];
+    data2 = [exp(M, q, σ * rand(M; vector_at = q)) for i in 1:m]
 
     f(M, x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
     f(x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
