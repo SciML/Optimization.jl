@@ -1,5 +1,7 @@
 module OptimizationManopt
 
+using Reexport
+@reexport using Manopt
 using Optimization, Manopt, ManifoldsBase, ManifoldDiff
 
 """
@@ -228,9 +230,9 @@ end
 
 ## Optimization.jl stuff
 
-function build_loss(f::OptimizationFunction, prob, cur)
+function build_loss(f::OptimizationFunction, prob)
     function (::AbstractManifold, θ)
-        x = f.f(θ, prob.p, cur...)
+        x = f.f(θ)
         __x = first(x)
         return prob.sense === Optimization.MaxSense ? -__x : __x
     end
@@ -287,7 +289,7 @@ function SciMLBase.__solve(prob::OptimizationProblem,
 
     f = Optimization.instantiate_function(prob.f, prob.u0, prob.f.adtype, prob.p)
 
-    _loss = build_loss(f, prob, cur)
+    _loss = build_loss(f, prob)
 
     gradF = build_gradF(f, prob, cur)
 

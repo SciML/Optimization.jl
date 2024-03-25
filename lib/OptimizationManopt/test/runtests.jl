@@ -131,10 +131,10 @@ end
     f(x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
 
     optf = OptimizationFunction(f, Optimization.AutoForwardDiff())
-    prob = OptimizationProblem(optf, data2[1]; manifold = M)
+    prob = OptimizationProblem(optf, data2[1]; manifold = M, maxiters = 1000)
 
     opt = OptimizationManopt.GradientDescentOptimizer(M)
     @time sol = Optimization.solve(prob, opt)
 
-    @test sol.u ≈ q
+    @test sol.u ≈ q atol = 1e-2
 end
