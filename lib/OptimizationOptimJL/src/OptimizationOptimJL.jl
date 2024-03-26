@@ -135,7 +135,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     local x, cur, state
 
     cur, state = iterate(cache.data)
--        
+-
     !(cache.opt isa Optim.ZerothOrderOptimizer) && cache.f.grad === nothing &&
         error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
