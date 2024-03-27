@@ -3,7 +3,7 @@ using Optimization.SciMLBase, LBFGSB
 """
 $(TYPEDEF)
 
-L-BFGS-B Nonlinear Optimization Code from [LBFGSB](https://github.com/Gnimuc/LBFGSB.jl/tree/master).
+[L-BFGS-B](https://en.wikipedia.org/wiki/Limited-memory_BFGS#L-BFGS-B) Nonlinear Optimization Code from [LBFGSB](https://github.com/Gnimuc/LBFGSB.jl/tree/master).
 It is a quasi-Newton optimization algorithm that supports bounds.
 
 References
@@ -13,7 +13,7 @@ References
 - J.L. Morales and J. Nocedal. L-BFGS-B: Remark on Algorithm 778: L-BFGS-B, FORTRAN routines for large scale bound constrained optimization (2011), to appear in ACM Transactions on Mathematical Software.
 """
 @kwdef struct LBFGS
-    m::Int=10
+    m::Int = 10
 end
 
 SciMLBase.supports_opt_cache_interface(::LBFGS) = true
@@ -85,7 +85,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
     t1 = time()
     stats = Optimization.OptimizationStats(; iterations = maxiters,
         time = t1 - t0, fevals = maxiters, gevals = maxiters)
-    
+
     return SciMLBase.build_solution(cache, cache.opt, res[2], res[1], stats = stats)
 end
-
