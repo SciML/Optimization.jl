@@ -1273,9 +1273,9 @@ version = "0.1.2"
 
 [[deps.MathOptInterface]]
 deps = ["BenchmarkTools", "CodecBzip2", "CodecZlib", "DataStructures", "ForwardDiff", "JSON", "LinearAlgebra", "MutableArithmetics", "NaNMath", "OrderedCollections", "PrecompileTools", "Printf", "SparseArrays", "SpecialFunctions", "Test", "Unicode"]
-git-tree-sha1 = "679c1aec6934d322783bd15db4d18f898653be4f"
+git-tree-sha1 = "d268e82322cc5df142a3664d03d59adecd53abf9"
 uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
-version = "1.27.0"
+version = "1.27.1"
 
 [[deps.MathProgBase]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -2390,9 +2390,9 @@ version = "0.9.6"
 
 [[deps.TypeUtils]]
 deps = ["Requires"]
-git-tree-sha1 = "5206f83cec49890133b5e904b4b76117ca5279af"
+git-tree-sha1 = "bdd88868eb3fb29aff042a1f50619b5d0b94a5ea"
 uuid = "c3b1956e-8857-4d84-9b79-890df85b1e67"
-version = "0.3.5"
+version = "0.3.7"
 
     [deps.TypeUtils.extensions]
     TypeUtilsTwoDimensionalExt = "TwoDimensional"
