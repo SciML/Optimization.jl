@@ -10,6 +10,10 @@ struct CMAEvolutionStrategyOpt end
 
 SciMLBase.allowsbounds(::CMAEvolutionStrategyOpt) = true
 SciMLBase.supports_opt_cache_interface(opt::CMAEvolutionStrategyOpt) = true
+SciMLBase.requiresgradient(::CMAEvolutionStrategyOpt) = false
+SciMLBase.requireshessian(::CMAEvolutionStrategyOpt) = false
+SciMLBase.requiresconsjac(::CMAEvolutionStrategyOpt) = false
+SciMLBase.requiresconshess(::CMAEvolutionStrategyOpt) = false
 
 function __map_optimizer_args(prob::OptimizationCache, opt::CMAEvolutionStrategyOpt;
         callback = nothing,

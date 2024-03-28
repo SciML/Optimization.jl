@@ -15,6 +15,9 @@ SciMLBase.supports_opt_cache_interface(::PRIMASolvers) = true
 SciMLBase.allowsconstraints(::Union{LINCOA, COBYLA}) = true
 SciMLBase.allowsbounds(opt::Union{BOBYQA, LINCOA, COBYLA}) = true
 SciMLBase.requiresconstraints(opt::COBYLA) = true
+SciMLBase.requiresgradient(opt::Union{BOBYQA, LINCOA, COBYLA}) = true
+SciMLBase.requiresconsjac(opt::Union{LINCOA, COBYLA}) = true
+
 
 function Optimization.OptimizationCache(prob::SciMLBase.OptimizationProblem,
         opt::PRIMASolvers, data;

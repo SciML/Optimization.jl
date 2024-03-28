@@ -5,6 +5,7 @@ using Reexport, Printf, ProgressLogging
 using Optimization.SciMLBase
 
 SciMLBase.supports_opt_cache_interface(opt::AbstractRule) = true
+SciMLBase.requiresgradient(opt::AbstractRule) = true
 include("sophia.jl")
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::AbstractRule,

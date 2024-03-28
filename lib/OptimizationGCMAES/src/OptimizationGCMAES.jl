@@ -12,6 +12,11 @@ SciMLBase.requiresbounds(::GCMAESOpt) = true
 SciMLBase.allowsbounds(::GCMAESOpt) = true
 SciMLBase.allowscallback(::GCMAESOpt) = false
 SciMLBase.supports_opt_cache_interface(opt::GCMAESOpt) = true
+SciMLBase.requiresgradient(::GCMAESOpt) = true
+SciMLBase.requireshessian(::GCMAESOpt) = false
+SciMLBase.requiresconsjac(::GCMAESOpt) = false
+SciMLBase.requiresconshess(::GCMAESOpt) = false
+
 
 function __map_optimizer_args(cache::OptimizationCache, opt::GCMAESOpt;
         callback = nothing,
