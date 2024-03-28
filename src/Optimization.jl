@@ -23,6 +23,7 @@ export ObjSense, MaxSense, MinSense
 
 include("utils.jl")
 include("state.jl")
+include("lbfgsb.jl")
 
 export solve
 
