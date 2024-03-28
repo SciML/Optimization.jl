@@ -21,6 +21,38 @@ SciMLBase.allowsbounds(::LBFGS) = true
 # SciMLBase.requiresgradient(::LBFGS) = true
 SciMLBase.allowsconstraints(::LBFGS) = true
 
+function __map_optimizer_args(cache::Optimization.OptimizationCache, opt::LBFGS;
+        callback = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        maxtime::Union{Number, Nothing} = nothing,
+        abstol::Union{Number, Nothing} = nothing,
+        reltol::Union{Number, Nothing} = nothing,
+        verbose::Bool = false,
+        kwargs...)
+    if !isnothing(abstol)
+        @warn "common abstol is currently not used by $(opt)"
+    end
+    if !isnothing(maxtime)
+        @warn "common abstol is currently not used by $(opt)"
+    end
+
+    mapped_args = (; )
+
+    if cache.lb !== nothing && cache.ub !== nothing
+        mapped_args = (; mapped_args..., lb = cache.lb, ub = cache.ub)
+    end
+
+    if !isnothing(maxiters)
+        mapped_args = (; mapped_args..., maxiter = maxiters)
+    end
+
+    if !isnothing(reltol)
+        mapped_args = (; mapped_args..., pgtol = reltol)
+    end
+
+    return mapped_args
+end
+
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
         opt::LBFGS,
         data = Optimization.DEFAULT_DATA; save_best = true,
@@ -66,7 +98,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     local x
 
-    if !isnothing(cache.f.cons) 
+    if !isnothing(cache.f.cons)
         eq_inds = [cache.lcons[i] == cache.ucons[i] for i in eachindex(cache.lcons)]
         ineq_inds = (!).(eq_inds)
 
@@ -111,15 +143,15 @@ function SciMLBase.__solve(cache::OptimizationCache{
             __tmp = zero(cons_tmp)
             cache.f.cons(__tmp, θ)
             G .+= sum(λ .* J[i, :] + ρ * (__tmp[eq_inds].* J[i, :]) for i in eqidxs)
-            G .+= sum(ρ * (max.(Ref(0.0), μ .+ (ρ .* __tmp[ineq_inds])) .* J[i, :]) for i in ineqidxs)
+            G .+= sum(1/ρ * (max.(Ref(0.0), μ .+ (ρ .* __tmp[ineq_inds])) .* J[i, :]) for i in ineqidxs)
         end
         for i in 1:maxiters
             prev_eqcons .= cons_tmp[eq_inds]
             prevβ .= copy(β)
             if cache.lb !== nothing && cache.ub !== nothing
-                res = lbfgsb(_loss, aug_grad, θ; m = cache.opt.m, pgtol = sqrt(ϵ), maxiter = 100, lb = cache.lb, ub = cache.ub)
+                res = lbfgsb(_loss, aug_grad, θ; m = cache.opt.m, pgtol = sqrt(ϵ), maxiter = maxiters/100, lb = cache.lb, ub = cache.ub)
             else
-                res = lbfgsb(_loss, aug_grad, θ; m = cache.opt.m, pgtol = sqrt(ϵ), maxiter = 100)
+                res = lbfgsb(_loss, aug_grad, θ; m = cache.opt.m, pgtol = sqrt(ϵ), maxiter = maxiters/100)
             end
             @show res[2]
             @show res[1]
@@ -127,6 +159,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             @show λ
             @show β
             @show μ
+            @show ρ
 
             θ = res[2]
             cons_tmp .= 0.0
@@ -156,15 +189,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
             end
             return x[1]
         end
-
+        solver_kwargs = __map_optimizer_args(cache, cache.opt; cache.solver_args...)
         t0 = time()
-        if cache.lb !== nothing && cache.ub !== nothing
-            res = lbfgsb(_loss, cache.f.grad, cache.u0; m = cache.opt.m, maxiter = maxiters,
-                lb = cache.lb, ub = cache.ub)
-        else
-            res = lbfgsb(_loss, cache.f.grad, cache.u0; m = cache.opt.m, maxiter = maxiters)
-        end
-
+        res = lbfgsb(_loss, cache.f.grad, cache.u0; m = cache.opt.m, solver_kwargs...)
         t1 = time()
         stats = Optimization.OptimizationStats(; iterations = maxiters,
             time = t1 - t0, fevals = maxiters, gevals = maxiters)

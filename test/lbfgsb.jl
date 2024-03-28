@@ -20,9 +20,9 @@ res = solve(prob, Optimization.LBFGS(), maxiters = 100)
 @test res.u≈[0.3, 0.09] atol=1e-3
 
 function con2_c(res, x, p)
-    res .= [x[1]^2 + x[2]^2, 5 - (x[2] * sin(x[1]) - x[1])]
+    res .= [x[1]^2 + x[2]^2, (x[2] * sin(x[1]) - x[1])-5]
 end
 
 optf = OptimizationFunction(rosenbrock, AutoForwardDiff(), cons = con2_c)
-prob = OptimizationProblem(optf, x0, lcons = [2, -Inf], ucons = [2.0, 0.0])
-res = solve(prob, Optimization.LBFGS(), maxiters = 10)
+prob = OptimizationProblem(optf, x0.+2.0, lcons = [2, -Inf], ucons = [2.0, 0.0])
+res = solve(prob, Optimization.LBFGS(), maxiters = 500)
