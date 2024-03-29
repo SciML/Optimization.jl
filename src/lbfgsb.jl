@@ -98,6 +98,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     local x
 
+    solver_kwargs = __map_optimizer_args(cache, cache.opt; cache.solver_args...)
+
     if !isnothing(cache.f.cons)
         eq_inds = [cache.lcons[i] == cache.ucons[i] for i in eachindex(cache.lcons)]
         ineq_inds = (!).(eq_inds)
@@ -119,13 +121,15 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
         _loss = function (θ)
             x = cache.f(θ, cache.p)
-            cons_tmp .= 0.0 
+            cons_tmp .= zero(eltype(θ))
             cache.f.cons(cons_tmp, θ)
+            cons_tmp[eq_inds] .= cons_tmp[eq_inds] - cache.lcons[eq_inds]
+            cons_tmp[ineq_inds] .= cons_tmp[ineq_inds] .- cache.ucons[ineq_inds]
             opt_state = Optimization.OptimizationState(u = θ, objective = x[1])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
             end
-            return x[1] + sum(@. λ * cons_tmp[eq_inds] + ρ/2 * (cons_tmp[eq_inds].^2)) + 0.5/ ρ * sum((max.(Ref(0.0), μ .+ (ρ .* cons_tmp[ineq_inds]))).^2)
+            return x[1] + sum(@. λ * cons_tmp[eq_inds] + ρ/2 * (cons_tmp[eq_inds].^2)) +  1 / (2*ρ) * sum((max.(Ref(0.0), μ .+ (ρ .* cons_tmp[ineq_inds]))).^2)
         end
 
         prev_eqcons = zero(λ)
@@ -138,12 +142,18 @@ function SciMLBase.__solve(cache::OptimizationCache{
         ineqidxs = ineqidxs[ineqidxs.!=nothing]
         function aug_grad(G, θ)
             cache.f.grad(G, θ)
-            J = zeros((length(cache.lcons), length(θ)))
+            if !isnothing(cache.f.cons_jac_prototype)
+                J = Float64.(cache.f.cons_jac_prototype)
+            else
+                J = zeros((length(cache.lcons), length(θ)))
+            end
             cache.f.cons_j(J, θ)
             __tmp = zero(cons_tmp)
             cache.f.cons(__tmp, θ)
-            G .+= sum(λ .* J[i, :] + ρ * (__tmp[eq_inds].* J[i, :]) for i in eqidxs)
-            G .+= sum(1/ρ * (max.(Ref(0.0), μ .+ (ρ .* __tmp[ineq_inds])) .* J[i, :]) for i in ineqidxs)
+            __tmp[eq_inds] .= __tmp[eq_inds] .- cache.lcons[eq_inds]
+            __tmp[ineq_inds] .= __tmp[ineq_inds] .- cache.ucons[ineq_inds]
+            G .+= sum(λ[i] .* J[idx, :] + ρ * (__tmp[idx].* J[idx, :]) for (i,idx) in enumerate(eqidxs); init = zero(G))
+            G .+= sum(1/ρ * (max.(Ref(0.0), μ[i] .+ (ρ .* __tmp[idx])) .* J[idx, :]) for (i, idx) in enumerate(ineqidxs);  init = zero(G))
         end
         for i in 1:maxiters
             prev_eqcons .= cons_tmp[eq_inds]
@@ -153,13 +163,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
             else
                 res = lbfgsb(_loss, aug_grad, θ; m = cache.opt.m, pgtol = sqrt(ϵ), maxiter = maxiters/100)
             end
-            @show res[2]
-            @show res[1]
-            @show cons_tmp
-            @show λ
-            @show β
-            @show μ
-            @show ρ
+            # @show res[2]
+            # @show res[1]
+            # @show cons_tmp
+            # @show λ
+            # @show β
+            # @show μ
+            # @show ρ
 
             θ = res[2]
             cons_tmp .= 0.0
@@ -178,7 +188,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
         stats = Optimization.OptimizationStats(; iterations = maxiters,
             time = 0.0, fevals = maxiters, gevals = maxiters)
-        return SciMLBase.build_solution(cache, cache.opt, res[2], res[1], stats = stats)
+        return SciMLBase.build_solution(cache, cache.opt, res[2], cache.f(res[2], cache.p)[1], stats = stats)
     else
         _loss = function (θ)
             x = cache.f(θ, cache.p)
@@ -189,7 +199,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             end
             return x[1]
         end
-        solver_kwargs = __map_optimizer_args(cache, cache.opt; cache.solver_args...)
+
         t0 = time()
         res = lbfgsb(_loss, cache.f.grad, cache.u0; m = cache.opt.m, solver_kwargs...)
         t1 = time()
