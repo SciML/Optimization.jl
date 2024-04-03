@@ -55,5 +55,12 @@ Random.seed!(1234)
 
     # Make sure that both the user's trace record value, as well as `curr_u` are stored in the trace.
     @test haskey(sol.original.trace[end].metadata, "TESTVAL") &&
+<<<<<<< HEAD
           haskey(sol.original.trace[end].metadata, "curr_u")
+=======
+          haskey(sol.original.trace[end].metadata, "x")
+
+    # Test the the values of x are saved, not the reference
+    @test sol.original.trace[end].metadata["x"] !== sol.original.trace[end-1].metadata["x"]
+>>>>>>> 7c33c0c4 (deepcopy of population in default trace, so gets values instead of references)
 end
