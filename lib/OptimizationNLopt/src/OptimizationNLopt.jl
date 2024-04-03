@@ -15,6 +15,7 @@ function SciMLBase.requiresgradient(opt::NLopt.Algorithm) #https://github.com/Ju
          return true
     else
          return false
+    end
 end
 
 function SciMLBase.requireshessian(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
@@ -23,6 +24,7 @@ function SciMLBase.requireshessian(opt::NLopt.Algorithm) #https://github.com/Jul
          return true
     else
          return false
+    end
 end
 
 function SciMLBase.requireshessian(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
@@ -31,6 +33,7 @@ function SciMLBase.requireshessian(opt::NLopt.Algorithm) #https://github.com/Jul
          return true
     else
          return false
+    end
 end
 function SciMLBase.requiresconsjac(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
     str_opt = string(opt)
@@ -38,6 +41,7 @@ function SciMLBase.requiresconsjac(opt::NLopt.Algorithm) #https://github.com/Jul
          return true
     else
          return false
+    end
 end
 
 
