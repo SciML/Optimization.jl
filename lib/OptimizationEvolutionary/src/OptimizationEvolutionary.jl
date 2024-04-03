@@ -18,7 +18,7 @@ function Evolutionary.trace!(tr, iteration, objfun, state, population,
     dt["time"] = curr_time
 
     # record `x` to store the population. Needed for constructing OptimizationState.
-    dt["x"] = population
+    dt["x"] = deepcopy(population)
 
     # set additional trace value
     Evolutionary.trace!(dt, objfun, state, population, method, options)
