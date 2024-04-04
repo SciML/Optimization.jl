@@ -9,7 +9,7 @@ l1 = rosenbrock(x0)
 
 optf = OptimizationFunction(rosenbrock, AutoEnzyme())
 prob = OptimizationProblem(optf, x0)
-res = solve(prob, Optimization.LBFGS(), maxiters = 100)
+@time res = solve(prob, Optimization.LBFGS(), maxiters = 100)
 
 @test res.u≈[1.0, 1.0] atol=1e-3
 

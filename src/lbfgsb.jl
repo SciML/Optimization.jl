@@ -152,8 +152,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cache.f.cons(__tmp, θ)
             __tmp[eq_inds] .= __tmp[eq_inds] .- cache.lcons[eq_inds]
             __tmp[ineq_inds] .= __tmp[ineq_inds] .- cache.ucons[ineq_inds]
-            G .+= sum(λ[i] .* J[idx, :] + ρ * (__tmp[idx].* J[idx, :]) for (i,idx) in enumerate(eqidxs); init = zero(G))
-            G .+= sum(1/ρ * (max.(Ref(0.0), μ[i] .+ (ρ .* __tmp[idx])) .* J[idx, :]) for (i, idx) in enumerate(ineqidxs);  init = zero(G))
+            G .+= sum(λ[i] .* J[idx, :] + ρ * (__tmp[idx].* J[idx, :]) for (i,idx) in enumerate(eqidxs); init = zero(G)) #should be jvp
+            G .+= sum(1/ρ * (max.(Ref(0.0), μ[i] .+ (ρ .* __tmp[idx])) .* J[idx, :]) for (i, idx) in enumerate(ineqidxs);  init = zero(G)) #should be jvp
         end
         for i in 1:maxiters
             prev_eqcons .= cons_tmp[eq_inds]
