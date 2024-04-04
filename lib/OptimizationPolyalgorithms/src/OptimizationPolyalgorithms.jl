@@ -4,9 +4,9 @@ using Reexport
 @reexport using Optimization
 using Optimization.SciMLBase, OptimizationOptimJL, OptimizationOptimisers
 
-SciMLBase.requiresgradient(opt::PolyOpt) = true
-
 struct PolyOpt end
+
+SciMLBase.requiresgradient(opt::PolyOpt) = true
 
 function SciMLBase.__solve(prob::OptimizationProblem,
         opt::PolyOpt,
