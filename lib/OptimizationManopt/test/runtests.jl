@@ -37,7 +37,8 @@ end
     opt = OptimizationManopt.GradientDescentOptimizer()
 
     optprob_forwarddiff = OptimizationFunction(rosenbrock, Optimization.AutoEnzyme())
-    prob_forwarddiff = OptimizationProblem(optprob_forwarddiff, x0, p; manifold = R2, stepsize = stepsize)
+    prob_forwarddiff = OptimizationProblem(
+        optprob_forwarddiff, x0, p; manifold = R2, stepsize = stepsize)
     sol = Optimization.solve(prob_forwarddiff, opt)
     @test sol.minimum < 0.2
 
@@ -132,5 +133,5 @@ end
     opt = OptimizationManopt.GradientDescentOptimizer()
     @time sol = Optimization.solve(prob, opt)
 
-    @test sol.u ≈ q atol = 1e-2
+    @test sol.u≈q atol=1e-2
 end

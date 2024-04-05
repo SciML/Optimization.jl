@@ -22,26 +22,32 @@ function __map_optimizer_args!(cache::OptimizationCache,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         kwargs...)
-
     solver_kwargs = (; kwargs...)
 
     if !isnothing(maxiters)
-        solver_kwargs = (; solver_kwargs..., stopping_criterion = [Manopt.StopAfterIteration(maxiters)])
+        solver_kwargs = (;
+            solver_kwargs..., stopping_criterion = [Manopt.StopAfterIteration(maxiters)])
     end
 
     if !isnothing(maxtime)
         if haskey(solver_kwargs, :stopping_criterion)
-            solver_kwargs = (; solver_kwargs..., stopping_criterion = push!(solver_kwargs.stopping_criterion, Manopt.StopAfterTime(maxtime)))
+            solver_kwargs = (; solver_kwargs...,
+                stopping_criterion = push!(
+                    solver_kwargs.stopping_criterion, Manopt.StopAfterTime(maxtime)))
         else
-            solver_kwargs = (; solver_kwargs..., stopping_criterion = [Manopt.StopAfter(maxtime)])
+            solver_kwargs = (;
+                solver_kwargs..., stopping_criterion = [Manopt.StopAfter(maxtime)])
         end
     end
 
     if !isnothing(abstol)
         if haskey(solver_kwargs, :stopping_criterion)
-            solver_kwargs = (; solver_kwargs..., stopping_criterion = push!(solver_kwargs.stopping_criterion, Manopt.StopWhenChangeLess(abstol)))
+            solver_kwargs = (; solver_kwargs...,
+                stopping_criterion = push!(
+                    solver_kwargs.stopping_criterion, Manopt.StopWhenChangeLess(abstol)))
         else
-            solver_kwargs = (; solver_kwargs..., stopping_criterion = [Manopt.StopWhenChangeLess(abstol)])
+            solver_kwargs = (;
+                solver_kwargs..., stopping_criterion = [Manopt.StopWhenChangeLess(abstol)])
         end
     end
 
@@ -54,7 +60,8 @@ end
 ## gradient descent
 struct GradientDescentOptimizer <: AbstractManoptOptimizer end
 
-function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold, opt::GradientDescentOptimizer,
+function call_manopt_optimizer(
+        M::ManifoldsBase.AbstractManifold, opt::GradientDescentOptimizer,
         loss,
         gradF,
         x0;
@@ -84,7 +91,6 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold, opt::NelderMea
         x0;
         stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
         kwargs...)
-
     opts = NelderMead(M,
         loss;
         return_state = true,
@@ -96,7 +102,7 @@ end
 ## conjugate gradient descent
 struct ConjugateGradientDescentOptimizer <: AbstractManoptOptimizer end
 
-function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold, 
+function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         opt::ConjugateGradientDescentOptimizer,
         loss,
         gradF,
@@ -105,7 +111,6 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         evaluation::AbstractEvaluationType = InplaceEvaluation(),
         stepsize::Stepsize = ArmijoLinesearch(M),
         kwargs...)
-
     opts = conjugate_gradient_descent(M,
         loss,
         gradF,
@@ -134,7 +139,6 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         inverse_retraction_method::AbstractInverseRetractionMethod = default_inverse_retraction_method(M),
         vector_transport_method::AbstractVectorTransportMethod = default_vector_transport_method(M),
         kwargs...)
-    
     initial_population = vcat([x0], [rand(M) for _ in 1:(population_size - 1)])
     opts = particle_swarm(M,
         loss;
@@ -168,8 +172,7 @@ function call_manopt_optimizer(M::Manopt.AbstractManifold,
             vector_transport_method = vector_transport_method,
             linesearch_stopsize = 1e-12),
         kwargs...
-        )
-    
+)
     opts = quasi_Newton(M,
         loss,
         gradF,
@@ -214,30 +217,30 @@ end
 # 3) add callbacks to Manopt.jl
 
 function SciMLBase.__solve(cache::OptimizationCache{
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O,
-    D,
-    P,
-    C
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O,
+        D,
+        P,
+        C
 }) where {
-    F,
-    RC,
-    LB,
-    UB,
-    LC,
-    UC,
-    S,
-    O <:
-    AbstractManoptOptimizer,
-    D,
-    P,
-    C
+        F,
+        RC,
+        LB,
+        UB,
+        LC,
+        UC,
+        S,
+        O <:
+        AbstractManoptOptimizer,
+        D,
+        P,
+        C
 }
     local x, cur, state
 
@@ -272,11 +275,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
         end
     end
     solver_kwarg = __map_optimizer_args!(cache, cache.opt, callback = _cb,
-                    maxiters = maxiters,
-                    maxtime = cache.solver_args.maxtime,
-                    abstol = cache.solver_args.abstol,
-                    reltol = cache.solver_args.reltol;
-                    )
+        maxiters = maxiters,
+        maxtime = cache.solver_args.maxtime,
+        abstol = cache.solver_args.abstol,
+        reltol = cache.solver_args.reltol;
+    )
 
     _loss = build_loss(cache.f, cache, _cb)
 
@@ -288,11 +291,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
         stopping_criterion = Manopt.StopAfterIteration(500)
     end
 
-    opt_res = call_manopt_optimizer(manifold, cache.opt, _loss, gradF, cache.u0; solver_kwarg..., stopping_criterion=stopping_criterion)
+    opt_res = call_manopt_optimizer(manifold, cache.opt, _loss, gradF, cache.u0;
+        solver_kwarg..., stopping_criterion = stopping_criterion)
 
     asc = get_active_stopping_criteria(opt_res.options.stop)
 
-    opt_ret = any(Manopt.indicates_convergence, asc) ? ReturnCode.Success : ReturnCode.Failure
+    opt_ret = any(Manopt.indicates_convergence, asc) ? ReturnCode.Success :
+              ReturnCode.Failure
 
     return SciMLBase.build_solution(cache,
         cache.opt,
