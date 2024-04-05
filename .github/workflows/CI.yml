@@ -24,11 +24,11 @@ jobs:
           - OptimizationEvolutionary
           - OptimizationFlux
           - OptimizationGCMAES
+          - OptimizationManopt
           - OptimizationMetaheuristics
           - OptimizationMOI
           - OptimizationMultistartOptimization
           - OptimizationNLopt
-          #- OptimizationNonconvex
           - OptimizationNOMAD
           - OptimizationOptimJL
           - OptimizationOptimisers
