@@ -58,5 +58,5 @@ Random.seed!(1234)
           haskey(sol.original.trace[end].metadata, "x")
 
     # Test the the values of x are saved, not the reference
-    @test sol.original.trace[end].metadata["x"] !== sol.original.trace[end-1].metadata["x"]
+    @test !(sol.original.trace[end].metadata["x"] === sol.original.trace[end-1].metadata["x"])
 end
