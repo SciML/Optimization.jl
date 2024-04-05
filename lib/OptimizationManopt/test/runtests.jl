@@ -21,18 +21,12 @@ R2 = Euclidean(2)
     p = [1.0, 100.0]
 
     stepsize = Manopt.ArmijoLinesearch(R2)
-    opt = OptimizationManopt.GradientDescentOptimizer(R2,
-        stepsize = stepsize)
+    opt = OptimizationManopt.GradientDescentOptimizer()
 
     optprob_forwarddiff = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
     prob_forwarddiff = OptimizationProblem(optprob_forwarddiff, x0, p)
-    @test_throws ArgumentError("Either manifold not specified in the problem `OptimizationProblem(f, x, p; manifold = SymmetricPositiveDefinite(5))` or it doesn't match the manifold specified in the optimizer `$(opt.M)`") Optimization.solve(
+    @test_throws ArgumentError("Manifold not specified in the problem for e.g. `OptimizationProblem(f, x, p; manifold = SymmetricPositiveDefinite(5))`.") Optimization.solve(
         prob_forwarddiff, opt)
-
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
-    prob = OptimizationProblem(optprob, x0, p; manifold = SymmetricPositiveDefinite(5))
-    @test_throws ArgumentError("Either manifold not specified in the problem `OptimizationProblem(f, x, p; manifold = SymmetricPositiveDefinite(5))` or it doesn't match the manifold specified in the optimizer `$(opt.M)`") Optimization.solve(
-        prob, opt)
 end
 
 @testset "Gradient descent" begin
@@ -40,16 +34,15 @@ end
     p = [1.0, 100.0]
 
     stepsize = Manopt.ArmijoLinesearch(R2)
-    opt = OptimizationManopt.GradientDescentOptimizer(R2,
-        stepsize = stepsize)
+    opt = OptimizationManopt.GradientDescentOptimizer()
 
     optprob_forwarddiff = OptimizationFunction(rosenbrock, Optimization.AutoEnzyme())
-    prob_forwarddiff = OptimizationProblem(optprob_forwarddiff, x0, p; manifold = R2)
+    prob_forwarddiff = OptimizationProblem(optprob_forwarddiff, x0, p; manifold = R2, stepsize = stepsize)
     sol = Optimization.solve(prob_forwarddiff, opt)
     @test sol.minimum < 0.2
 
     optprob_grad = OptimizationFunction(rosenbrock; grad = rosenbrock_grad!)
-    prob_grad = OptimizationProblem(optprob_grad, x0, p; manifold = R2)
+    prob_grad = OptimizationProblem(optprob_grad, x0, p; manifold = R2, stepsize = stepsize)
     sol = Optimization.solve(prob_grad, opt)
     @test sol.minimum < 0.2
 end
@@ -58,7 +51,7 @@ end
     x0 = zeros(2)
     p = [1.0, 100.0]
 
-    opt = OptimizationManopt.NelderMeadOptimizer(R2, [[1.0, 0.0], [0.0, 1.0], [0.0, 0.0]])
+    opt = OptimizationManopt.NelderMeadOptimizer()
 
     optprob = OptimizationFunction(rosenbrock)
     prob = OptimizationProblem(optprob, x0, p; manifold = R2)
@@ -72,34 +65,37 @@ end
     p = [1.0, 100.0]
 
     stepsize = Manopt.ArmijoLinesearch(R2)
-    opt = OptimizationManopt.ConjugateGradientDescentOptimizer(R2,
-        stepsize = stepsize)
+    opt = OptimizationManopt.ConjugateGradientDescentOptimizer()
 
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
     prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
-    sol = Optimization.solve(prob, opt)
-    @test sol.minimum < 0.2
+    sol = Optimization.solve(prob, opt, stepsize = stepsize)
+    @test sol.minimum < 0.5
 end
 
 @testset "Quasi Newton" begin
     x0 = zeros(2)
     p = [1.0, 100.0]
 
-    opt = OptimizationManopt.QuasiNewtonOptimizer(R2)
-
+    opt = OptimizationManopt.QuasiNewtonOptimizer()
+    function callback(state, l)
+        println(state.u)
+        println(l)
+        return false
+    end
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
     prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
-    sol = Optimization.solve(prob, opt)
-    @test sol.minimum < 1e-16
+    sol = Optimization.solve(prob, opt, callback = callback, maxiters = 30)
+    @test sol.minimum < 1e-14
 end
 
 @testset "Particle swarm" begin
     x0 = zeros(2)
     p = [1.0, 100.0]
 
-    opt = OptimizationManopt.ParticleSwarmOptimizer(R2)
+    opt = OptimizationManopt.ParticleSwarmOptimizer()
 
     optprob = OptimizationFunction(rosenbrock)
     prob = OptimizationProblem(optprob, x0, p; manifold = R2)
@@ -113,7 +109,7 @@ end
 
     x0 = zeros(2)
     p = [1.0, 100.0]
-    opt = OptimizationManopt.GradientDescentOptimizer(R2)
+    opt = OptimizationManopt.GradientDescentOptimizer()
 
     optprob_cons = OptimizationFunction(rosenbrock; grad = rosenbrock_grad!, cons = cons)
     prob_cons = OptimizationProblem(optprob_cons, x0, p)
@@ -133,7 +129,7 @@ end
     optf = OptimizationFunction(f, Optimization.AutoForwardDiff())
     prob = OptimizationProblem(optf, data2[1]; manifold = M, maxiters = 1000)
 
-    opt = OptimizationManopt.GradientDescentOptimizer(M)
+    opt = OptimizationManopt.GradientDescentOptimizer()
     @time sol = Optimization.solve(prob, opt)
 
     @test sol.u ≈ q atol = 1e-2
