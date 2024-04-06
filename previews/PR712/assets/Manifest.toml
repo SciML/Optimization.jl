@@ -1801,7 +1801,7 @@ uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
 version = "0.4.2"
 
 [[deps.OptimizationManopt]]
-deps = ["ManifoldDiff", "Manifolds", "ManifoldsBase", "Manopt", "Optimization", "Reexport"]
+deps = ["LinearAlgebra", "ManifoldDiff", "Manifolds", "ManifoldsBase", "Manopt", "Optimization", "Reexport"]
 path = "../lib/OptimizationManopt"
 uuid = "e57b7fff-7ee7-4550-b4f0-90e9476e9fb6"
 version = "0.1.0"
