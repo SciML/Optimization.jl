@@ -6,6 +6,8 @@ using Optimization.SciMLBase, OptimizationOptimJL, OptimizationOptimisers
 
 struct PolyOpt end
 
+SciMLBase.requiresgradient(opt::PolyOpt) = true
+
 function SciMLBase.__solve(prob::OptimizationProblem,
         opt::PolyOpt,
         args...;

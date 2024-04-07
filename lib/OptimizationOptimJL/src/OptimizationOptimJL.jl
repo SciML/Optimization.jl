@@ -14,6 +14,13 @@ SciMLBase.requiresbounds(opt::Optim.SAMIN) = true
 SciMLBase.supports_opt_cache_interface(opt::Optim.AbstractOptimizer) = true
 SciMLBase.supports_opt_cache_interface(opt::Union{Optim.Fminbox, Optim.SAMIN}) = true
 SciMLBase.supports_opt_cache_interface(opt::Optim.ConstrainedOptimizer) = true
+SciMLBase.requiresgradient(opt::Optim.AbstractOptimizer) = !(opt isa Optim.ZerothOrderOptimizer)
+SciMLBase.requiresgradient(::IPNewton) = true
+SciMLBase.requireshessian(::IPNewton) = true
+SciMLBase.requiresconsjac(::IPNewton) = true
+SciMLBase.requireshessian(opt::Optim.NewtonTrustRegion) = true
+SciMLBase.requireshessian(opt::Optim.Newton) = true
+SciMLBase.requiresgradient(opt::Optim.Fminbox) = true
 
 function __map_optimizer_args(cache::OptimizationCache,
         opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
@@ -128,7 +135,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
     local x, cur, state
 
     cur, state = iterate(cache.data)
-
     !(cache.opt isa Optim.ZerothOrderOptimizer) && cache.f.grad === nothing &&
         error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
