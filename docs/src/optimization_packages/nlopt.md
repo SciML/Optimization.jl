@@ -26,7 +26,6 @@ but preferably via `NLopt.AlgorithmName()` where `AlgorithmName can be one of th
   - `NLopt.GN_ORIG_DIRECT_L()`
   - `NLopt.GD_STOGO()`
   - `NLopt.GD_STOGO_RAND()`
-  - `NLopt.LD_LBFGS_NOCEDAL()`
   - `NLopt.LD_LBFGS()`
   - `NLopt.LN_PRAXIS()`
   - `NLopt.LD_VAR1()`

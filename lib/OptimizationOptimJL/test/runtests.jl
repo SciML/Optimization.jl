@@ -3,6 +3,32 @@ using OptimizationOptimJL,
       Random, ModelingToolkit
 using Test
 
+struct CallbackTester
+    dim::Int
+    has_grad::Bool
+    has_hess::Bool
+end
+function CallbackTester(dim::Int; has_grad = false, has_hess = false)
+    CallbackTester(dim, has_grad, has_hess)
+end
+
+function (cb::CallbackTester)(state, loss_val)
+    @test length(state.u) == cb.dim
+    if cb.has_grad
+        @test state.grad isa AbstractVector
+        @test length(state.grad) == cb.dim
+    else
+        @test state.grad === nothing
+    end
+    if cb.has_hess
+        @test state.hess isa AbstractMatrix
+        @test size(state.hess) == (cb.dim, cb.dim)
+    else
+        @test state.hess === nothing
+    end
+    return false
+end
+
 @testset "OptimizationOptimJL.jl" begin
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = zeros(2)
@@ -13,34 +39,43 @@ using Test
     sol = solve(prob,
         Optim.NelderMead(;
             initial_simplex = Optim.AffineSimplexer(; a = 0.025,
-                b = 0.5)))
+                b = 0.5)); callback = CallbackTester(length(x0)))
     @test 10 * sol.objective < l1
 
     f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 
     Random.seed!(1234)
     prob = OptimizationProblem(f, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
-    sol = solve(prob, SAMIN())
+    sol = solve(prob, SAMIN(); callback = CallbackTester(length(x0)))
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, Optim.IPNewton())
+    sol = solve(
+        prob, Optim.IPNewton();
+        callback = CallbackTester(length(x0); has_grad = true, has_hess = true)
+    )
     @test 10 * sol.objective < l1
 
     prob = OptimizationProblem(f, x0, _p)
     Random.seed!(1234)
-    sol = solve(prob, SimulatedAnnealing())
+    sol = solve(prob, SimulatedAnnealing(); callback = CallbackTester(length(x0)))
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, Optim.BFGS())
+    sol = solve(prob, Optim.BFGS(); callback = CallbackTester(length(x0); has_grad = true))
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, Optim.Newton())
+    sol = solve(
+        prob, Optim.Newton();
+        callback = CallbackTester(length(x0); has_grad = true, has_hess = true)
+    )
     @test 10 * sol.objective < l1
 
     sol = solve(prob, Optim.KrylovTrustRegion())
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, Optim.BFGS(), maxiters = 1)
+    sol = solve(
+        prob, Optim.BFGS();
+        maxiters = 1, callback = CallbackTester(length(x0); has_grad = true)
+    )
     @test sol.original.iterations == 1
 
     sol = solve(prob, Optim.BFGS(), maxiters = 1, local_maxiters = 2)
@@ -92,7 +127,8 @@ using Test
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
 
     prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
-    sol = solve(prob, Optim.Fminbox())
+    sol = solve(
+        prob, Optim.Fminbox(); callback = CallbackTester(length(x0); has_grad = true))
     @test 10 * sol.objective < l1
 
     Random.seed!(1234)

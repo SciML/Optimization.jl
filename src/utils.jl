@@ -1,12 +1,3 @@
-struct NullCallback end
-(x::NullCallback)(args...) = false;
-const DEFAULT_CALLBACK = NullCallback()
-
-struct NullData end
-const DEFAULT_DATA = Iterators.cycle((NullData(),))
-Base.iterate(::NullData, i = 1) = nothing
-Base.length(::NullData) = 0
-
 function get_maxiters(data)
     Iterators.IteratorSize(typeof(DEFAULT_DATA)) isa Iterators.IsInfinite ||
         Iterators.IteratorSize(typeof(DEFAULT_DATA)) isa Iterators.SizeUnknown ?
@@ -74,10 +65,4 @@ function check_pkg_version(pkg::String, ver::String;
     return (isnothing(branch) | (pkg_info[pkg].git_revision == branch)) ?
            pkg_info[pkg].version >= VersionNumber(ver) :
            pkg_info[pkg].version > VersionNumber(ver)
-end
-
-# Wrapper for fields that may change in `reinit!(cache)` of a cache.
-mutable struct ReInitCache{uType, P}
-    u0::uType
-    p::P
 end
