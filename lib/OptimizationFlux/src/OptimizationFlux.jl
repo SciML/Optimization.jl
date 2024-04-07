@@ -5,6 +5,10 @@ using Reexport, Printf, ProgressLogging
 using Optimization.SciMLBase
 
 SciMLBase.supports_opt_cache_interface(opt::Flux.Optimise.AbstractOptimiser) = true
+SciMLBase.requiresgradient(opt::Flux.Optimise.AbstractOptimiser) = true
+SciMLBase.requireshessian(opt::Flux.Optimise.AbstractOptimiser) = false
+SciMLBase.requiresconsjac(opt::Flux.Optimise.AbstractOptimiser) = false
+SciMLBase.requiresconshess(opt::Flux.Optimise.AbstractOptimiser) = false
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
         opt::Flux.Optimise.AbstractOptimiser,
