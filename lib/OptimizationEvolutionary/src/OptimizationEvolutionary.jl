@@ -17,8 +17,8 @@ function Evolutionary.trace!(tr, iteration, objfun, state, population,
     dt = Dict{String, Any}()
     dt["time"] = curr_time
 
-    # record `x` to store the population. Needed for constructing OptimizationState.
-    dt["x"] = deepcopy(population)
+    # record current u0. Needed for constructing OptimizationState.
+    dt["curr_u"] = population[end]
 
     # set additional trace value
     Evolutionary.trace!(dt, objfun, state, population, method, options)
@@ -101,7 +101,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     cur, state = iterate(cache.data)
 
     function _cb(trace)
-        curr_u = decompose_trace(trace).metadata["x"][end]
+        curr_u = decompose_trace(trace).metadata["curr_u"]
         opt_state = Optimization.OptimizationState(;
             iter = decompose_trace(trace).iteration,
             u = curr_u,
