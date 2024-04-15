@@ -1,7 +1,7 @@
 name = "OptimizationEvolutionary"
 uuid = "cb963754-43f6-435e-8d4b-99009ff27753"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.2.2"
+version = "0.3.0"
 
 [deps]
 Evolutionary = "86b6b26d-c046-49b6-aa0b-5f0f74682bd6"
