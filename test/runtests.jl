@@ -29,6 +29,9 @@ end
         VERSION >= v"1.9" && @safetestset "AD Performance Regression Tests" begin
             include("AD_performance_regression.jl")
         end
+        @safetestset "Optimization" begin
+            include("lbfgsb.jl")
+        end
         @safetestset "Mini batching" begin
             include("minibatch.jl")
         end

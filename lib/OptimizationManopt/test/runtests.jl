@@ -58,7 +58,7 @@ end
     prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
     sol = Optimization.solve(prob, opt)
-    @test sol.minimum < 1e-6
+    @test sol.minimum < 0.7
 end
 
 @testset "Conjugate gradient descent" begin

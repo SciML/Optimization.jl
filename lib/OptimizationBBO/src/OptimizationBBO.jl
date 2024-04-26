@@ -12,6 +12,8 @@ SciMLBase.supports_opt_cache_interface(opt::BBO) = true
 
 
 
+
+
 for j in string.(BlackBoxOptim.SingleObjectiveMethodNames)
     eval(Meta.parse("Base.@kwdef struct BBO_" * j * " <: BBO method=:" * j * " end"))
     eval(Meta.parse("export BBO_" * j))
