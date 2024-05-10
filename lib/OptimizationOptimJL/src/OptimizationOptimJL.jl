@@ -89,10 +89,12 @@ function SciMLBase.__init(prob::OptimizationProblem,
             if opt isa Optim.ParticleSwarm
                 opt = Optim.ParticleSwarm(; lower = prob.lb, upper = prob.ub,
                     n_particles = opt.n_particles)
-            elseif opt isa Optim.SimulatedAnnealing
-                @warn "$(opt) can currently not be wrapped in Fminbox(). The lower and upper bounds thus will be ignored. Consider using a different optimizer or open an issue with Optim.jl"
             else
-                opt = Optim.Fminbox(opt)
+                if prob.f isa OptimizationFunction && !(prob.f.adtype isa NoAD)
+                        opt = Optim.Fminbox(opt)
+                else
+                        @warn "Fminbox($opt) requires gradients, since you didn't use `OptimizationFunction` with a valid AD backend https://docs.sciml.ai/Optimization/stable/API/ad/ the lower and upper bounds thus will be ignored."
+                end
             end
         end
     end
