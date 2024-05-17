@@ -93,7 +93,7 @@ function SciMLBase.__init(prob::OptimizationProblem,
                 if prob.f isa OptimizationFunction && !(prob.f.adtype isa NoAD)
                         opt = Optim.Fminbox(opt)
                 else
-                        @warn "Fminbox($opt) requires gradients, since you didn't use `OptimizationFunction` with a valid AD backend https://docs.sciml.ai/Optimization/stable/API/ad/ the lower and upper bounds thus will be ignored."
+                        throw(ArgumentError("Fminbox($opt) requires gradients, since you didn't use `OptimizationFunction` with a valid AD backend https://docs.sciml.ai/Optimization/stable/API/ad/ the lower and upper bounds thus will be ignored."))
                 end
             end
         end
