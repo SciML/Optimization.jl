@@ -188,6 +188,29 @@ function call_manopt_optimizer(M::Manopt.AbstractManifold,
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
 end
 
+struct CMAESOptimizer <: AbstractManoptOptimizer end
+
+function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
+        opt::CMAESOptimizer,
+        loss,
+        gradF,
+        x0;
+        stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
+        evaluation::AbstractEvaluationType = InplaceEvaluation(),
+        retraction_method::AbstractRetractionMethod = default_retraction_method(M),
+        vector_transport_method::AbstractVectorTransportMethod = default_vector_transport_method(M),
+        basis = Manopt.DefaultOrthonormalBasis(),
+        kwargs...)
+    opt = cma_es(M,
+        loss,
+        x0;
+        return_state = true,
+        stopping_criterion)
+    # we unwrap DebugOptions here
+    minimizer = Manopt.get_solver_result(opt)
+    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
+end
+
 ## Optimization.jl stuff
 
 function build_loss(f::OptimizationFunction, prob, cb)
@@ -210,11 +233,6 @@ function build_gradF(f::OptimizationFunction{true}, cur)
         return riemannian_gradient(M, θ, G)
     end
 end
-
-# TODO:
-# 1) convert tolerances and other stopping criteria
-# 2) return convergence information
-# 3) add callbacks to Manopt.jl
 
 function SciMLBase.__solve(cache::OptimizationCache{
         F,
