@@ -1888,7 +1888,7 @@ version = "0.0.2"
 deps = ["Optimization", "OptimizationOptimJL", "OptimizationOptimisers", "Reexport"]
 path = "../lib/OptimizationPolyalgorithms"
 uuid = "500b13db-7e66-49ce-bda4-eed966be6282"
-version = "0.2.0"
+version = "0.2.1"
 
 [[deps.OptimizationSpeedMapping]]
 deps = ["Optimization", "Reexport", "SpeedMapping"]
