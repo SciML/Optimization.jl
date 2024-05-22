@@ -170,6 +170,10 @@ end
     sol = solve(prob, Optim.KrylovTrustRegion())
     @test 10 * sol.objective < l1
 
+    prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MaxSense, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+    sol = solve(prob, BFGS())
+    @test 10 * sol.objective < l1
+      
     @testset "cache" begin
         objective(x, p) = (p[1] - x[1])^2
         x0 = zeros(1)
