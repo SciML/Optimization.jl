@@ -27,49 +27,6 @@ function SciMLBase.requireshessian(opt::NLopt.Algorithm) #https://github.com/Jul
     end
 end
 
-function SciMLBase.requireshessian(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
-    str_opt = string(opt)
-    if str_opt[2] == "D" && str_opt[4] == "N"
-        return true
-    else
-        return false
-    end
-end
-function SciMLBase.requiresconsjac(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
-    str_opt = string(opt)
-    if str_opt[3] == "O" || str_opt[3] == "I" || str_opt[5] == "G"
-        return true
-    else
-        return false
-    end
-end
-
-function SciMLBase.requiresgradient(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
-    str_opt = string(opt)
-    if str_opt[2] == "D"
-        return true
-    else
-        return false
-    end
-end
-
-function SciMLBase.requireshessian(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
-    str_opt = string(opt)
-    if (str_opt[2] == "D" && str_opt[4] == "N")
-        return true
-    else
-        return false
-    end
-end
-
-function SciMLBase.requireshessian(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
-    str_opt = string(opt)
-    if str_opt[2] == "D" && str_opt[4] == "N"
-        return true
-    else
-        return false
-    end
-end
 function SciMLBase.requiresconsjac(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
     str_opt = string(opt)
     if str_opt[3] == "O" || str_opt[3] == "I" || str_opt[5] == "G"
