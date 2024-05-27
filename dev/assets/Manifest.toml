@@ -1896,7 +1896,7 @@ version = "0.2.0"
 deps = ["NLopt", "Optimization", "Reexport"]
 path = "../lib/OptimizationNLopt"
 uuid = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
-version = "0.2.1"
+version = "0.2.2"
 
 [[deps.OptimizationNOMAD]]
 deps = ["NOMAD", "Optimization", "Reexport"]
