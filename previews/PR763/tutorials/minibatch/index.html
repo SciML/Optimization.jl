@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Data Iterators and Minibatching · Optimization.jl</title><meta name="title" content="Data Iterators and Minibatching · Optimization.jl"/><meta property="og:title" content="Data Iterators and Minibatching · Optimization.jl"/><meta property="twitter:title" content="Data Iterators and Minibatching · Optimization.jl"/><meta name="description" content="Documentation for Optimization.jl."/><meta property="og:description" content="Documentation for Optimization.jl."/><meta property="twitter:description" content="Documentation for Optimization.jl."/><meta property="og:url" content="https://docs.sciml.ai/Optimization/stable/tutorials/minibatch/"/><meta property="twitter:url" content="https://docs.sciml.ai/Optimization/stable/tutorials/minibatch/"/><link rel="canonical" href="https://docs.sciml.ai/Optimization/stable/tutorials/minibatch/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Optimization.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Optimization.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Optimization.jl: A Unified Optimization Package</a></li><li><a class="tocitem" href="../../getting_started/">Getting Started with Optimization in Julia</a></li><li><span class="tocitem">Tutorials</span><ul><li class="is-active"><a class="tocitem" href>Data Iterators and Minibatching</a></li><li><a class="tocitem" href="../symbolic/">Symbolic Problem Building with ModelingToolkit</a></li><li><a class="tocitem" href="../constraints/">Using Equality and Inequality Constraints</a></li><li><a class="tocitem" href="../linearandinteger/">Linear and Integer Optimization Problems</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../../examples/rosenbrock/">Solving the Rosenbrock Problem in &gt;10 Ways</a></li></ul></li><li><span class="tocitem">Basics</span><ul><li><a class="tocitem" href="../../API/optimization_problem/">Defining OptimizationProblems</a></li><li><a class="tocitem" href="../../API/optimization_function/">OptimizationFunction</a></li><li><a class="tocitem" href="../../API/ad/">Automatic Differentiation Construction Choice Recommendations</a></li><li><a class="tocitem" href="../../API/solve/">Common Solver Options (Solve Keyword Arguments)</a></li><li><a class="tocitem" href="../../API/optimization_solution/">Optimization Solutions</a></li><li><a class="tocitem" href="../../API/optimization_state/">OptimizationState</a></li><li><a class="tocitem" href="../../API/optimization_stats/">OptimizationStats</a></li><li><a class="tocitem" href="../../API/modelingtoolkit/">ModelingToolkit Integration</a></li><li><a class="tocitem" href="../../API/FAQ/">Frequently Asked Questions</a></li></ul></li><li><span class="tocitem">Optimizer Packages</span><ul><li><a class="tocitem" href="../../optimization_packages/blackboxoptim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../../optimization_packages/cmaevolutionstrategy/">CMAEvolutionStrategy.jl</a></li><li><a class="tocitem" href="../../optimization_packages/evolutionary/">Evolutionary.jl</a></li><li><a class="tocitem" href="../../optimization_packages/flux/">Flux.jl</a></li><li><a class="tocitem" href="../../optimization_packages/gcmaes/">GCMAES.jl</a></li><li><a class="tocitem" href="../../optimization_packages/mathoptinterface/">MathOptInterface.jl</a></li><li><a class="tocitem" href="../../optimization_packages/metaheuristics/">Metaheuristics.jl</a></li><li><a class="tocitem" href="../../optimization_packages/multistartoptimization/">MultistartOptimization.jl</a></li><li><a class="tocitem" href="../../optimization_packages/nlopt/">NLopt.jl</a></li><li><a class="tocitem" href="../../optimization_packages/nomad/">NOMAD.jl</a></li><li><a class="tocitem" href="../../optimization_packages/optim/">Optim.jl</a></li><li><a class="tocitem" href="../../optimization_packages/optimisers/">Optimisers.jl</a></li><li><a class="tocitem" href="../../optimization_packages/prima/">PRIMA.jl</a></li><li><a class="tocitem" href="../../optimization_packages/polyopt/">Polyalgorithms.jl</a></li><li><a class="tocitem" href="../../optimization_packages/quaddirect/">QuadDIRECT.jl</a></li><li><a class="tocitem" href="../../optimization_packages/speedmapping/">SpeedMapping.jl</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Data Iterators and Minibatching</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Data Iterators and Minibatching</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/SciML/Optimization.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/SciML/Optimization.jl/blob/master/docs/src/tutorials/minibatch.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Data-Iterators-and-Minibatching"><a class="docs-heading-anchor" href="#Data-Iterators-and-Minibatching">Data Iterators and Minibatching</a><a id="Data-Iterators-and-Minibatching-1"></a><a class="docs-heading-anchor-permalink" href="#Data-Iterators-and-Minibatching" title="Permalink"></a></h1><p>It is possible to solve an optimization problem with batches using a <code>Flux.Data.DataLoader</code>, which is passed to <code>Optimization.solve</code> with <code>ncycles</code>. All data for the batches need to be passed as a tuple of vectors.</p><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>This example uses the OptimizationOptimisers.jl package. See the <a href="../../optimization_packages/optimisers/#optimisers">Optimisers.jl page</a> for details on the installation and usage.</p></div></div><pre><code class="language-julia hljs">using Flux, Optimization, OptimizationOptimisers, OrdinaryDiffEq, SciMLSensitivity
+
+function newtons_cooling(du, u, p, t)
+    temp = u[1]
+    k, temp_m = p
+    du[1] = dT = -k * (temp - temp_m)
+end
+
+function true_sol(du, u, p, t)
+    true_p = [log(2) / 8.0, 100.0]
+    newtons_cooling(du, u, true_p, t)
+end
+
+ann = Chain(Dense(1, 8, tanh), Dense(8, 1, tanh))
+pp, re = Flux.destructure(ann)
+
+function dudt_(u, p, t)
+    re(p)(u) .* u
+end
+
+callback = function (state, l, pred; doplot = false) #callback function to observe training
+    display(l)
+    # plot current prediction against data
+    if doplot
+        pl = scatter(t, ode_data[1, :], label = &quot;data&quot;)
+        scatter!(pl, t, pred[1, :], label = &quot;prediction&quot;)
+        display(plot(pl))
+    end
+    return false
+end
+
+u0 = Float32[200.0]
+datasize = 30
+tspan = (0.0f0, 1.5f0)
+
+t = range(tspan[1], tspan[2], length = datasize)
+true_prob = ODEProblem(true_sol, u0, tspan)
+ode_data = Array(solve(true_prob, Tsit5(), saveat = t))
+
+prob = ODEProblem{false}(dudt_, u0, tspan, pp)
+
+function predict_adjoint(fullp, time_batch)
+    Array(solve(prob, Tsit5(), p = fullp, saveat = time_batch))
+end
+
+function loss_adjoint(fullp, batch, time_batch)
+    pred = predict_adjoint(fullp, time_batch)
+    sum(abs2, batch .- pred), pred
+end
+
+k = 10
+# Pass the data for the batches as separate vectors wrapped in a tuple
+train_loader = Flux.Data.DataLoader((ode_data, t), batchsize = k)
+
+numEpochs = 300
+l1 = loss_adjoint(pp, train_loader.data[1], train_loader.data[2])[1]
+
+optfun = OptimizationFunction(
+    (θ, p, batch, time_batch) -&gt; loss_adjoint(θ, batch,
+        time_batch),
+    Optimization.AutoZygote())
+optprob = OptimizationProblem(optfun, pp)
+using IterTools: ncycle
+res1 = Optimization.solve(optprob, Optimisers.ADAM(0.05), ncycle(train_loader, numEpochs),
+    callback = callback)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Default
+u: 25-element Vector{Float32}:
+  0.3617028
+  0.52147233
+ -0.80785656
+  0.56759727
+  0.23965602
+ -0.7800286
+ -0.7154112
+  0.23776054
+  0.0
+  0.0
+  ⋮
+ -0.7350105
+  0.15715072
+ -0.29792336
+  0.049188364
+  0.30153754
+ -0.3613926
+  0.22392455
+  0.06260467
+ -0.31395823</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../getting_started/">« Getting Started with Optimization in Julia</a><a class="docs-footer-nextpage" href="../symbolic/">Symbolic Problem Building with ModelingToolkit »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.4.1 on <span class="colophon-date" title="Monday 27 May 2024 22:55">Monday 27 May 2024</span>. Using Julia version 1.10.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
