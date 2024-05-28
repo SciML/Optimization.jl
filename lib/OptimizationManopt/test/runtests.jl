@@ -105,6 +105,89 @@ end
     @test sol.minimum < 0.1
 end
 
+@testset "CMA-ES" begin
+    x0 = zeros(2)
+    p = [1.0, 100.0]
+
+    opt = OptimizationManopt.CMAESOptimizer()
+
+    optprob = OptimizationFunction(rosenbrock)
+    prob = OptimizationProblem(optprob, x0, p; manifold = R2)
+
+    sol = Optimization.solve(prob, opt)
+    @test sol.minimum < 0.1
+end
+
+@testset "ConvexBundle" begin
+    using QuadraticModels, RipQP
+    x0 = zeros(2)
+    p = [1.0, 100.0]
+
+    opt = OptimizationManopt.ConvexBundleOptimizer()
+
+    optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
+    prob = OptimizationProblem(optprob, x0, p; manifold = R2)
+
+    sol = Optimization.solve(prob, opt, sub_problem= Manopt.convex_bundle_method_subsolver!) 
+    @test sol.minimum < 0.1
+end
+
+@testset "TruncatedConjugateGradientDescent" begin
+    x0 = zeros(2)
+    p = [1.0, 100.0]
+
+    opt = OptimizationManopt.TruncatedConjugateGradientDescentOptimizer()
+
+    optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
+    prob = OptimizationProblem(optprob, x0, p; manifold = R2)
+
+    @test_broken Optimization.solve(prob, opt)
+    # @test sol.minimum < 0.1
+end
+
+@testset "AdaptiveRegularizationCubic" begin
+    x0 = zeros(2)
+    p = [1.0, 100.0]
+
+    opt = OptimizationManopt.AdaptiveRegularizationCubicOptimizer()
+
+    optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
+    prob = OptimizationProblem(optprob, x0, p; manifold = R2)
+
+    @test_broken Optimization.solve(prob, opt)
+    # @test sol.minimum < 0.1
+end
+
+@testset "TrustRegions" begin
+    x0 = zeros(2)
+    p = [1.0, 100.0]
+
+    opt = OptimizationManopt.TrustRegionsOptimizer()
+
+    optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
+    prob = OptimizationProblem(optprob, x0, p; manifold = R2)
+
+    @test_broken Optimization.solve(prob, opt)
+    # @test sol.minimum < 0.1
+end
+
+@testset "Circle example from Manopt" begin
+    Mc = Circle()
+    pc = 0.0
+    data = [-π / 4, 0.0, π / 4]
+    fc(y, _) = 1 / 2 * sum([distance(M, y, x)^2 for x in data])
+    sgrad_fc(G, y, _) = G .= -log(Mc, y, rand(data))
+    
+    opt = OptimizationManopt.StochasticGradientDescentOptimizer()
+
+    optprob = OptimizationFunction(fc, grad = sgrad_fc)
+    prob = OptimizationProblem(optprob, pc; manifold = Mc)
+
+    sol = Optimization.solve(prob, opt)
+
+    @test all([is_point(Mc, q, true) for q in [q1, q2, q3, q4, q5]])
+end
+
 @testset "Custom constraints" begin
     cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[2]])
 
@@ -134,4 +217,27 @@ end
     @time sol = Optimization.solve(prob, opt)
 
     @test sol.u≈q atol=1e-2
+
+    function closed_form_solution!(M::SymmetricPositiveDefinite, q, L, U, p, X)
+        # extract p^1/2 and p^{-1/2}
+        (p_sqrt_inv, p_sqrt) = Manifolds.spd_sqrt_and_sqrt_inv(p)
+        # Compute D & Q
+        e2 = eigen(p_sqrt_inv * X * p_sqrt_inv) # decompose Sk  = QDQ'
+        D = Diagonal(1.0 .* (e2.values .< 0))
+        Q = e2.vectors
+        #println(p)
+        Uprime = Q' * p_sqrt_inv * U * p_sqrt_inv * Q
+        Lprime = Q' * p_sqrt_inv * L * p_sqrt_inv * Q
+        P = cholesky(Hermitian(Uprime - Lprime))
+        z = P.U' * D * P.U + Lprime
+        copyto!(M, q, p_sqrt * Q * z * Q' * p_sqrt)
+        return q
+    end
+    N = m
+    U = mean(data2)
+    L = inv(sum(1/N * inv(matrix) for matrix in data2))
+
+    optf = OptimizationFunction(f, Optimization.AutoZygote())
+    prob = OptimizationProblem(optf, U; manifold = M, maxiters = 1000)
+    @time sol = Optimization.solve(prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X))
 end

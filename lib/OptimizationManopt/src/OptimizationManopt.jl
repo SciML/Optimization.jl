@@ -244,10 +244,10 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
-struct TruncatedConjugateGradientDescent <: AbstractManoptOptimizer end
+struct TruncatedConjugateGradientDescentOptimizer <: AbstractManoptOptimizer end
 
 function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
-        opt::TruncatedConjugateGradientDescent,
+        opt::TruncatedConjugateGradientDescentOptimizer,
         loss,
         gradF,
         x0;
@@ -275,13 +275,13 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         opt::AdaptiveRegularizationCubicOptimizer,
         loss,
         gradF,
-        hesssF,
         x0;
+        hessF = nothing,
         stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
         evaluation::AbstractEvaluationType = InplaceEvaluation(),
         retraction_method::AbstractRetractionMethod = default_retraction_method(M),
         kwargs...)
-    opt = adaptive_regularization_cubic(M,
+    opt = adaptive_regularization_with_cubics(M,
         loss,
         gradF,
         hessF,
@@ -296,19 +296,19 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
-struct TrustRegionOptimizer <: AbstractManoptOptimizer end
+struct TrustRegionsOptimizer <: AbstractManoptOptimizer end
 
 function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
-        opt::TrustRegionOptimizer,
+        opt::TrustRegionsOptimizer,
         loss,
         gradF,
-        hessF,
         x0;
+        hessF = nothing,
         stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
         evaluation::AbstractEvaluationType = InplaceEvaluation(),
         retraction_method::AbstractRetractionMethod = default_retraction_method(M),
         kwargs...)
-    opt = trust_region(M,
+    opt = trust_regions(M,
         loss,
         gradF,
         hessF,
@@ -331,14 +331,14 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         gradF,
         x0;
         stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
-        evaluation::AbstractEvaluationType = InplaceEvaluation(),
+        evaluation::AbstractEvaluationType = AllocatingEvaluation(),
         stepsize::Stepsize = ConstantStepsize(1.0),
         retraction_method::AbstractRetractionMethod = default_retraction_method(M),
         kwargs...)
     opt = stochastic_gradient_descent(M,
-        loss,
         gradF,
         x0;
+        cost = loss,
         return_state = true,
         evaluation,
         stopping_criterion,
@@ -352,7 +352,7 @@ end
 
 struct AlternatingGradientDescentOptimizer <: AbstractManoptOptimizer end
 
-function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
+function call_manopt_optimizer(M::ManifoldsBase.ProductManifold,
         opt::AlternatingGradientDescentOptimizer,
         loss,
         gradF,
@@ -427,19 +427,22 @@ function build_gradF(f::OptimizationFunction{true}, cur)
     end
 end
 
-# function buildf_hessF(f::OptimizationFunction{true}, cur)
-#     function h(M::AbstractManifold, H, θ)
-#         f.hess(H, θ, cur...)
-#         G = zeros(eltype(θ), length(θ))
-#         f.grad(G, θ, cur...)
-#         H .= riemannian_Hessian(M, θ, G, H)
-#     end
-#     function h(M::AbstractManifold, θ)
-#         H = zero(θ)
-#         f.hess(H, θ, cur...)
-#         return riemannian_hessian(M, θ, H)
-#     end
-# end
+function build_hessF(f::OptimizationFunction{true}, cur)
+    function h(M::AbstractManifold, H1, θ, X)
+        H = zeros(eltype(θ), length(θ), length(θ))
+        f.hess(H, θ, cur...)
+        G = zeros(eltype(θ), length(θ))
+        f.grad(G, θ, cur...)
+        H1 .= riemannian_Hessian(M, θ, G, H, X)
+    end
+    function h(M::AbstractManifold, θ, X)
+        H = zeros(eltype(θ), length(θ), length(θ))
+        f.hess(H, θ, cur...)
+        G = zeros(eltype(θ), length(θ))
+        f.grad(G, θ, cur...)
+        return riemannian_Hessian(M, θ, G, H, X)
+    end
+end
 
 function SciMLBase.__solve(cache::OptimizationCache{
         F,
@@ -510,6 +513,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     gradF = build_gradF(cache.f, cur)
 
+    hessF = build_hessF(cache.f, cur)
+
     if haskey(solver_kwarg, :stopping_criterion)
         stopping_criterion = Manopt.StopWhenAny(solver_kwarg.stopping_criterion...)
     else
@@ -517,12 +522,15 @@ function SciMLBase.__solve(cache::OptimizationCache{
     end
 
     opt_res = call_manopt_optimizer(manifold, cache.opt, _loss, gradF, cache.u0;
-        solver_kwarg..., stopping_criterion = stopping_criterion)
+        solver_kwarg..., stopping_criterion = stopping_criterion, hessF)
 
-    asc = get_active_stopping_criteria(opt_res.options.stop)
-
-    opt_ret = any(Manopt.indicates_convergence, asc) ? ReturnCode.Success :
+    if hasfield(typeof(opt_res.options), :stop)
+        asc = get_active_stopping_criteria(opt_res.options.stop)
+        opt_ret = any(Manopt.indicates_convergence, asc) ? ReturnCode.Success :
               ReturnCode.Failure
+    else
+        opt_ret = ReturnCode.Default
+    end
 
     return SciMLBase.build_solution(cache,
         cache.opt,

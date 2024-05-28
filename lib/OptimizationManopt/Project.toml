@@ -10,7 +10,9 @@ Manifolds = "1cead3c2-87b3-11e9-0ccd-23c62b72b94e"
 ManifoldsBase = "3362f125-f0bb-47a3-aa74-596ffd7ef2fb"
 Manopt = "0fc0a36d-df90-57f3-8f93-d78a9fc72bb5"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+QuadraticModels = "f468eda6-eac5-11e8-05a5-ff9e497bcd19"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+RipQP = "1e40b3f8-35eb-4cd8-8edd-3e515bb9de08"
 
 [extras]
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
