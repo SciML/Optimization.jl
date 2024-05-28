@@ -22,7 +22,7 @@ TerminalLoggers = "5d786b92-1e48-4d6f-9151-6b4477ca9bed"
 
 [compat]
 ADTypes = "1.2"
-ArrayInterface = "7.6"
+ArrayInterface = "7.10"
 ConsoleProgressMonitor = "0.1.1"
 DocStringExtensions = "0.9"
 LBFGSB = "0.4.1"
