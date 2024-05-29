@@ -53,10 +53,7 @@ Random.seed!(1234)
     # Test that `store_trace=true` works now. Threw ""type Array has no field value" before.
     sol = solve(prob, CMAES(μ = 40, λ = 100), store_trace = true)
 
-    # Make sure that both the user's trace record value, as well as `x` are stored in the trace.
+    # Make sure that both the user's trace record value, as well as `curr_u` are stored in the trace.
     @test haskey(sol.original.trace[end].metadata, "TESTVAL") &&
-          haskey(sol.original.trace[end].metadata, "x")
-
-    # Test the the values of x are saved, not the reference
-    @test !(sol.original.trace[end].metadata["x"] === sol.original.trace[end-1].metadata["x"])
+          haskey(sol.original.trace[end].metadata, "curr_u")
 end

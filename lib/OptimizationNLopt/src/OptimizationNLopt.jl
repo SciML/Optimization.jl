@@ -12,39 +12,29 @@ SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) =
 function SciMLBase.requiresgradient(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
     str_opt = string(opt)
     if str_opt[2] == "D"
-         return true
+        return true
     else
-         return false
+        return false
     end
 end
 
 function SciMLBase.requireshessian(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
     str_opt = string(opt)
     if (str_opt[2] == "D" && str_opt[4] == "N")
-         return true
+        return true
     else
-         return false
+        return false
     end
 end
 
-function SciMLBase.requireshessian(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
-    str_opt = string(opt)
-    if str_opt[2] == "D" && str_opt[4] == "N"
-         return true
-    else
-         return false
-    end
-end
 function SciMLBase.requiresconsjac(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
     str_opt = string(opt)
     if str_opt[3] == "O" || str_opt[3] == "I" || str_opt[5] == "G"
-         return true
+        return true
     else
-         return false
+        return false
     end
 end
-
-
 
 function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
         callback = nothing,
@@ -175,7 +165,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         x = cache.f(θ, cache.p)
         opt_state = Optimization.OptimizationState(u = θ, objective = x[1])
         if cache.callback(opt_state, x...)
-            error("Optimization halted by callback.")
+            NLopt.force_stop!(opt_setup)
         end
         return x[1]
     end

@@ -1,0 +1,23 @@
+name = "OptimizationManopt"
+uuid = "e57b7fff-7ee7-4550-b4f0-90e9476e9fb6"
+authors = ["Mateusz Baran <mateuszbaran89@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+ManifoldDiff = "af67fdf4-a580-4b9f-bbec-742ef357defd"
+Manifolds = "1cead3c2-87b3-11e9-0ccd-23c62b72b94e"
+ManifoldsBase = "3362f125-f0bb-47a3-aa74-596ffd7ef2fb"
+Manopt = "0fc0a36d-df90-57f3-8f93-d78a9fc72bb5"
+Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+
+[extras]
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+
+[targets]
+test = ["Enzyme", "ForwardDiff", "Random", "Test", "Zygote"]

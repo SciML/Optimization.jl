@@ -17,7 +17,6 @@ SciMLBase.requireshessian(::GCMAESOpt) = false
 SciMLBase.requiresconsjac(::GCMAESOpt) = false
 SciMLBase.requiresconshess(::GCMAESOpt) = false
 
-
 function __map_optimizer_args(cache::OptimizationCache, opt::GCMAESOpt;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,

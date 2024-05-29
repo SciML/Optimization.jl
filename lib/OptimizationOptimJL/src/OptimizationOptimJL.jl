@@ -14,7 +14,9 @@ SciMLBase.requiresbounds(opt::Optim.SAMIN) = true
 SciMLBase.supports_opt_cache_interface(opt::Optim.AbstractOptimizer) = true
 SciMLBase.supports_opt_cache_interface(opt::Union{Optim.Fminbox, Optim.SAMIN}) = true
 SciMLBase.supports_opt_cache_interface(opt::Optim.ConstrainedOptimizer) = true
-SciMLBase.requiresgradient(opt::Optim.AbstractOptimizer) = !(opt isa Optim.ZerothOrderOptimizer)
+function SciMLBase.requiresgradient(opt::Optim.AbstractOptimizer)
+    !(opt isa Optim.ZerothOrderOptimizer)
+end
 SciMLBase.requiresgradient(::IPNewton) = true
 SciMLBase.requireshessian(::IPNewton) = true
 SciMLBase.requiresconsjac(::IPNewton) = true
@@ -89,10 +91,12 @@ function SciMLBase.__init(prob::OptimizationProblem,
             if opt isa Optim.ParticleSwarm
                 opt = Optim.ParticleSwarm(; lower = prob.lb, upper = prob.ub,
                     n_particles = opt.n_particles)
-            elseif opt isa Optim.SimulatedAnnealing
-                @warn "$(opt) can currently not be wrapped in Fminbox(). The lower and upper bounds thus will be ignored. Consider using a different optimizer or open an issue with Optim.jl"
             else
-                opt = Optim.Fminbox(opt)
+                if prob.f isa OptimizationFunction && (!(prob.f.adtype isa SciMLBase.NoAD) || !isnothing(prob.f.grad))
+                    opt = Optim.Fminbox(opt)
+                else
+                    throw(ArgumentError("Fminbox($opt) requires gradients, use `OptimizationFunction` either with a valid AD backend https://docs.sciml.ai/Optimization/stable/API/ad/ or a provided 'grad' function."))
+                end
             end
         end
     end

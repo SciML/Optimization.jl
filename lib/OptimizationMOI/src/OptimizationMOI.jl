@@ -16,10 +16,22 @@ const MOI = MathOptInterface
 
 const DenseOrSparse{T} = Union{Matrix{T}, SparseMatrixCSC{T}}
 
-SciMLBase.requiresgradient(opt::Union{MOI.AbstractOptimizer,MOI.OptimizerWithAttributes}) = true
-SciMLBase.requireshessian(opt::Union{MOI.AbstractOptimizer,MOI.OptimizerWithAttributes}) = true
-SciMLBase.requiresconsjac(opt::Union{MOI.AbstractOptimizer,MOI.OptimizerWithAttributes}) = true
-SciMLBase.requiresconshess(opt::Union{MOI.AbstractOptimizer,MOI.OptimizerWithAttributes}) = true
+function SciMLBase.requiresgradient(opt::Union{
+        MOI.AbstractOptimizer, MOI.OptimizerWithAttributes})
+    true
+end
+function SciMLBase.requireshessian(opt::Union{
+        MOI.AbstractOptimizer, MOI.OptimizerWithAttributes})
+    true
+end
+function SciMLBase.requiresconsjac(opt::Union{
+        MOI.AbstractOptimizer, MOI.OptimizerWithAttributes})
+    true
+end
+function SciMLBase.requiresconshess(opt::Union{
+        MOI.AbstractOptimizer, MOI.OptimizerWithAttributes})
+    true
+end
 
 function SciMLBase.allowsbounds(opt::Union{MOI.AbstractOptimizer,
         MOI.OptimizerWithAttributes})
