@@ -182,7 +182,11 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     end
 
     t1 = time()
-
+"""
+the retcode below is generated and returned to SciMLBase.build_solution function needs to have a case where if not 
+recognised and the method converges we return success or special warning that the retcode was not recognised 
+and if the process was successful ignore the warning.
+"""
     opt_ret = Symbol(opt_res.stop_reason)
     stats = Optimization.OptimizationStats(;
         iterations = opt_res.iterations,
