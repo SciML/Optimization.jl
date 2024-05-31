@@ -12,7 +12,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 [compat]
 julia = "1"
 Optimization = "3.21"
-PRIMA = "0.1.1"
+PRIMA = "0.1.1, 0.2.0"
 Reexport = "1"
 
 [extras]
