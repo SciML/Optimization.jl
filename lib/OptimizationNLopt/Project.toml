@@ -1,7 +1,7 @@
 name = "OptimizationNLopt"
 uuid = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.2.0"
+version = "0.2.2"
 
 [deps]
 NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"

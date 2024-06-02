@@ -71,4 +71,15 @@ using Test
         @test sol.retcode == ReturnCode.Success
         @test sol.u≈[2.0] atol=1e-3
     end
+
+    @testset "callback" begin
+        cbstopping = function(state, loss)
+            println(state.iter, " ", state.u, " ", state.objective)
+            return state.objective < 0.7
+        end
+
+        sol = solve(prob, NLopt.LD_LBFGS())
+        #nlopt gives the last best not the one where callback stops
+        @test sol.objective < 0.8
+    end
 end

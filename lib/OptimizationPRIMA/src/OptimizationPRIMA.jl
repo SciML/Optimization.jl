@@ -18,7 +18,6 @@ SciMLBase.requiresconstraints(opt::COBYLA) = true
 SciMLBase.requiresgradient(opt::Union{BOBYQA, LINCOA, COBYLA}) = true
 SciMLBase.requiresconsjac(opt::Union{LINCOA, COBYLA}) = true
 
-
 function Optimization.OptimizationCache(prob::SciMLBase.OptimizationProblem,
         opt::PRIMASolvers, data;
         callback = Optimization.DEFAULT_CALLBACK,
@@ -123,9 +122,11 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         P,
         C
 }
+    iter = 0
     _loss = function (θ)
         x = cache.f(θ, cache.p)
-        opt_state = Optimization.OptimizationState(u = θ, objective = x[1])
+        iter += 1
+        opt_state = Optimization.OptimizationState(u = θ, objective = x[1], iter = iter)
         if cache.callback(opt_state, x...)
             error("Optimization halted by callback.")
         end

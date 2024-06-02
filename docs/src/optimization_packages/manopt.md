@@ -1,6 +1,6 @@
 # Manopt.jl
 
-[Manopt.jl](https://github.com/JuliaManifolds/Manopt.jl) is a package with implementations of a variety of optimziation solvers on manifolds supported by 
+[Manopt.jl](https://github.com/JuliaManifolds/Manopt.jl) is a package with implementations of a variety of optimization solvers on manifolds supported by
 [Manifolds](https://github.com/JuliaManifolds/Manifolds.jl).
 
 ## Installation: OptimizationManopt.jl
