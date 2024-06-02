@@ -23,7 +23,6 @@ The following methods are available for the `OptimizationManopt` package:
   - `QuasiNewtonOptimizer`: Corresponds to the [`quasi_Newton`](https://manoptjl.org/stable/solvers/quasi_Newton/) method in Manopt.
   - `CMAESOptimizer`: Corresponds to the [`cma_es`](https://manoptjl.org/stable/solvers/cma_es/) method in Manopt.
   - `ConvexBundleOptimizer`: Corresponds to the [`convex_bundle_method`](https://manoptjl.org/stable/solvers/convex_bundle_method/) method in Manopt.
-  - `TruncatedConjugateGradientDescentOptimizer`: Corresponds to the [`truncated_conjugate_gradient_descent`](https://manoptjl.org/stable/solvers/truncated_conjugate_gradient_descent/) method in Manopt.
   - `AdaptiveRegularizationCubicOptimizer`: Corresponds to the [`adaptive_regularization_with_cubics`](https://manoptjl.org/stable/solvers/adaptive-regularization-with-cubics/) method in Manopt.
   - `TrustRegionsOptimizer`: Corresponds to the [`trust_regions`](https://manoptjl.org/stable/solvers/trust_regions/) method in Manopt.
   - `FrankWolfeOptimizer`: Corresponds to the [`FrankWolfe`](https://manoptjl.org/stable/solvers/FrankWolfe/) method in Manopt.
@@ -56,7 +55,7 @@ prob = OptimizationProblem(
 sol = Optimization.solve(prob, opt)
 ```
 
-The Karcher mean problem in the SPD manifold with the Frank-Wolfe algorithm is solved as follows:
+The Karcher mean problem on the SPD manifold with the Frank-Wolfe algorithm is solved as follows:
 
 ```@example Manopt2
 M = SymmetricPositiveDefinite(5)

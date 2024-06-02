@@ -132,18 +132,18 @@ end
     @test sol.minimum < 0.1
 end
 
-@testset "TruncatedConjugateGradientDescent" begin
-    x0 = zeros(2)
-    p = [1.0, 100.0]
+# @testset "TruncatedConjugateGradientDescent" begin
+#     x0 = zeros(2)
+#     p = [1.0, 100.0]
 
-    opt = OptimizationManopt.TruncatedConjugateGradientDescentOptimizer()
+#     opt = OptimizationManopt.TruncatedConjugateGradientDescentOptimizer()
 
-    optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
-    prob = OptimizationProblem(optprob, x0, p; manifold = R2)
+#     optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
+#     prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
-    sol = Optimization.solve(prob, opt)
-    @test_broken sol.minimum < 0.1
-end
+#     sol = Optimization.solve(prob, opt)
+#     @test_broken sol.minimum < 0.1
+# end
 
 @testset "AdaptiveRegularizationCubic" begin
     x0 = zeros(2)
@@ -241,5 +241,5 @@ end
     optf = OptimizationFunction(f, Optimization.AutoZygote())
     prob = OptimizationProblem(optf, (L+U)/2; manifold = M)
 
-    @time_broken Optimization.solve(prob, opt, sub_problem = (M, p, X) -> closed_form_solution!(M, L, U, p, X), maxiters = 10) 
+    @test_broken Optimization.solve(prob, opt, sub_problem = (M, p, X) -> closed_form_solution!(M, L, U, p, X), maxiters = 10) 
 end

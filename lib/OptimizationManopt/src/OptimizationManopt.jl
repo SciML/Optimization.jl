@@ -244,31 +244,6 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
-struct TruncatedConjugateGradientDescentOptimizer <: AbstractManoptOptimizer end
-
-function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
-        opt::TruncatedConjugateGradientDescentOptimizer,
-        loss,
-        gradF,
-        x0;
-        hessF::Function = nothing,
-        stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
-        evaluation::AbstractEvaluationType = InplaceEvaluation(),
-        kwargs...)
-    opt = truncated_conjugate_gradient_descent(M,
-        loss,
-        gradF,
-        hessF,
-        x0;
-        return_state = true,
-        evaluation,
-        stopping_criterion,
-        kwargs...)
-    # we unwrap DebugOptions here
-    minimizer = Manopt.get_solver_result(opt)
-    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
-end
-
 struct AdaptiveRegularizationCubicOptimizer <: AbstractManoptOptimizer end
 
 function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
@@ -364,9 +339,7 @@ end
 function build_gradF(f::OptimizationFunction{true}, cur)
     function g(M::AbstractManifold, G, θ)
         f.grad(G, θ, cur...)
-        @show θ
         G .= riemannian_gradient(M, θ, G)
-        @show G
     end
     function g(M::AbstractManifold, θ)
         G = zero(θ)
@@ -472,13 +445,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
     opt_res = call_manopt_optimizer(manifold, cache.opt, _loss, gradF, cache.u0;
         solver_kwarg..., stopping_criterion = stopping_criterion, hessF)
 
-    if hasfield(typeof(opt_res.options), :stop)
-        asc = get_active_stopping_criteria(opt_res.options.stop)
-        opt_ret = any(Manopt.indicates_convergence, asc) ? ReturnCode.Success :
-              ReturnCode.Failure
-    else
-        opt_ret = ReturnCode.Default
-    end
+    asc = get_stopping_criterion(opt_res.options)
+    opt_ret = Manopt.indicates_convergence(asc) ? ReturnCode.Success : ReturnCode.Failure
 
     return SciMLBase.build_solution(cache,
         cache.opt,
