@@ -183,7 +183,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     end
     t1 = time()
 
-    retcode = sciml_prima_retcode(PRIMA.reason(rc))
+    retcode = sciml_prima_retcode(PRIMA.reason(inf))
     stats = Optimization.OptimizationStats(; time = t1 - t0, fevals = inf.nf)
     SciMLBase.build_solution(cache, cache.opt, minx,
         inf.fx; retcode = retcode,
