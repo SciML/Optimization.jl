@@ -2,7 +2,7 @@
 
 julia_version = "1.10.3"
 manifest_format = "2.0"
-project_hash = "7e17d9e258d69b663206379870918ccad5aa970c"
+project_hash = "be78544b3b5bfcc3a72c704a78d176c7aefe29d0"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "daf26bbdec60d9ca1c0003b70f389d821ddb4224"
@@ -1920,7 +1920,7 @@ version = "0.2.1"
 deps = ["Optimization", "PRIMA", "Reexport"]
 path = "../lib/OptimizationPRIMA"
 uuid = "72f8369c-a2ea-4298-9126-56167ce9cbc2"
-version = "0.0.2"
+version = "0.1.0"
 
 [[deps.OptimizationPolyalgorithms]]
 deps = ["Optimization", "OptimizationOptimJL", "OptimizationOptimisers", "Reexport"]
