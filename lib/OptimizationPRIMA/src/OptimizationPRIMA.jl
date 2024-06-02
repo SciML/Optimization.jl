@@ -176,7 +176,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
             cache.u0;
             linear_eq = (A₁, b₁),
             linear_ineq = (A₂, b₂),
-            nonlinear_ineq = length(nonlininds),
+            nonlinear_ineq = x -> (res = zeros(eltype(x), length(nonlininds)); nonlincons(res, x); res),
             kws...)
     else
         (minx, inf) = optfunc(_loss, cache.u0; kws...)
