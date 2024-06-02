@@ -172,24 +172,22 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
             nonlincons(res, θ)
             return _loss(θ)
         end
-        (minx, minf, nf, rc, cstrv) = optfunc(fwcons,
+        (minx, inf) = optfunc(fwcons,
             cache.u0;
             linear_eq = (A₁, b₁),
             linear_ineq = (A₂, b₂),
             nonlinear_ineq = length(nonlininds),
             kws...)
-    elseif cache.opt isa LINCOA
-        (minx, minf, nf, rc, cstrv) = optfunc(_loss, cache.u0; kws...)
     else
-        (minx, minf, nf, rc) = optfunc(_loss, cache.u0; kws...)
+        (minx, inf) = optfunc(_loss, cache.u0; kws...)
     end
     t1 = time()
 
     retcode = sciml_prima_retcode(PRIMA.reason(rc))
-    stats = Optimization.OptimizationStats(; time = t1 - t0, fevals = nf)
+    stats = Optimization.OptimizationStats(; time = t1 - t0, fevals = inf.nf)
     SciMLBase.build_solution(cache, cache.opt, minx,
-        minf; retcode = retcode,
-        stats = stats)
+        inf.fx; retcode = retcode,
+        stats = stats, original = inf)
 end
 
 export UOBYQA, NEWUOA, BOBYQA, LINCOA, COBYLA
