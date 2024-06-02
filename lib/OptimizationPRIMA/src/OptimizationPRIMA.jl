@@ -168,11 +168,8 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         b₁ = cache.lcons[lineqsinds]
         A₂ = J[linineqsinds, :]
         b₂ = cache.ucons[linineqsinds]
-        function fwcons(θ, res)
-            nonlincons(res, θ)
-            return _loss(θ)
-        end
-        (minx, inf) = optfunc(fwcons,
+
+        (minx, inf) = optfunc(_loss,
             cache.u0;
             linear_eq = (A₁, b₁),
             linear_ineq = (A₂, b₂),
