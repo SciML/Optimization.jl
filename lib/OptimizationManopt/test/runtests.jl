@@ -141,8 +141,8 @@ end
     optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
     prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
-    @test_broken Optimization.solve(prob, opt)
-    # @test sol.minimum < 0.1
+    sol = Optimization.solve(prob, opt)
+    @test_broken sol.minimum < 0.1
 end
 
 @testset "AdaptiveRegularizationCubic" begin
@@ -155,7 +155,7 @@ end
     prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
     @test_broken Optimization.solve(prob, opt)
-    # @test sol.minimum < 0.1
+    @test_broken sol.minimum < 0.1
 end
 
 @testset "TrustRegions" begin
@@ -167,26 +167,26 @@ end
     optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
     prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
-    @test_broken Optimization.solve(prob, opt)
-    # @test sol.minimum < 0.1
-end
-
-@testset "Circle example from Manopt" begin
-    Mc = Circle()
-    pc = 0.0
-    data = [-π / 4, 0.0, π / 4]
-    fc(y, _) = 1 / 2 * sum([distance(M, y, x)^2 for x in data])
-    sgrad_fc(G, y, _) = G .= -log(Mc, y, rand(data))
-    
-    opt = OptimizationManopt.StochasticGradientDescentOptimizer()
-
-    optprob = OptimizationFunction(fc, grad = sgrad_fc)
-    prob = OptimizationProblem(optprob, pc; manifold = Mc)
-
     sol = Optimization.solve(prob, opt)
-
-    @test all([is_point(Mc, q, true) for q in [q1, q2, q3, q4, q5]])
+    @test sol.minimum < 0.1
 end
+
+# @testset "Circle example from Manopt" begin
+#     Mc = Circle()
+#     pc = 0.0
+#     data = [-π / 4, 0.0, π / 4]
+#     fc(y, _) = 1 / 2 * sum([distance(M, y, x)^2 for x in data])
+#     sgrad_fc(G, y, _) = G .= -log(Mc, y, rand(data))
+
+#     opt = OptimizationManopt.StochasticGradientDescentOptimizer()
+
+#     optprob = OptimizationFunction(fc, grad = sgrad_fc)
+#     prob = OptimizationProblem(optprob, pc; manifold = Mc)
+
+#     sol = Optimization.solve(prob, opt)
+
+#     @test all([is_point(Mc, q, true) for q in [q1, q2, q3, q4, q5]])
+# end
 
 @testset "Custom constraints" begin
     cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[2]])

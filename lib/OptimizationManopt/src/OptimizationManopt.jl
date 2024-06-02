@@ -323,60 +323,6 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
-struct StochasticGradientDescentOptimizer <: AbstractManoptOptimizer end
-
-function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
-        opt::StochasticGradientDescentOptimizer,
-        loss,
-        gradF,
-        x0;
-        stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
-        evaluation::AbstractEvaluationType = AllocatingEvaluation(),
-        stepsize::Stepsize = ConstantStepsize(1.0),
-        retraction_method::AbstractRetractionMethod = default_retraction_method(M),
-        kwargs...)
-    opt = stochastic_gradient_descent(M,
-        gradF,
-        x0;
-        cost = loss,
-        return_state = true,
-        evaluation,
-        stopping_criterion,
-        stepsize,
-        retraction_method,
-        kwargs...)
-    # we unwrap DebugOptions here
-    minimizer = Manopt.get_solver_result(opt)
-    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
-end
-
-struct AlternatingGradientDescentOptimizer <: AbstractManoptOptimizer end
-
-function call_manopt_optimizer(M::ManifoldsBase.ProductManifold,
-        opt::AlternatingGradientDescentOptimizer,
-        loss,
-        gradF,
-        x0;
-        stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
-        evaluation::AbstractEvaluationType = InplaceEvaluation(),
-        retraction_method::AbstractRetractionMethod = default_retraction_method(M),
-        stepsize::Stepsize = ArmijoLinesearch(M),
-        kwargs...)
-    opt = alternating_gradient_descent(M,
-        loss,
-        gradF,
-        x0;
-        return_state = true,
-        evaluation,
-        retraction_method,
-        stopping_criterion,
-        stepsize,
-        kwargs...)
-    # we unwrap DebugOptions here
-    minimizer = Manopt.get_solver_result(opt)
-    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
-end
-
 struct FrankWolfeOptimizer <: AbstractManoptOptimizer end
 
 function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
@@ -429,11 +375,11 @@ end
 
 function build_hessF(f::OptimizationFunction{true}, cur)
     function h(M::AbstractManifold, H1, θ, X)
-        H = zeros(eltype(θ), length(θ), length(θ))
-        f.hess(H, θ, cur...)
+        H = zeros(eltype(θ), length(θ))
+        f.hv(H, θ, X, cur...)
         G = zeros(eltype(θ), length(θ))
         f.grad(G, θ, cur...)
-        H1 .= riemannian_Hessian(M, θ, G, H, X)
+        riemannian_Hessian!(M, H1, θ, G, H, X)
     end
     function h(M::AbstractManifold, θ, X)
         H = zeros(eltype(θ), length(θ), length(θ))
