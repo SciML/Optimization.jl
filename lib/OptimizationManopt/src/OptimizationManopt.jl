@@ -335,7 +335,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         retraction_method::AbstractRetractionMethod = default_retraction_method(M),
         stepsize::Stepsize = DecreasingStepsize(; length=2.0, shift=2),
         kwargs...)
-    opt = frank_wolfe(M,
+    opt = Frank_Wolfe_method(M,
         loss,
         gradF,
         x0;
@@ -364,7 +364,9 @@ end
 function build_gradF(f::OptimizationFunction{true}, cur)
     function g(M::AbstractManifold, G, θ)
         f.grad(G, θ, cur...)
+        @show θ
         G .= riemannian_gradient(M, θ, G)
+        @show G
     end
     function g(M::AbstractManifold, θ)
         G = zero(θ)

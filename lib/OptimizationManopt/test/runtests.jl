@@ -210,7 +210,7 @@ end
     f(M, x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
     f(x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
 
-    optf = OptimizationFunction(f, Optimization.AutoForwardDiff())
+    optf = OptimizationFunction(f, Optimization.AutoZygote())
     prob = OptimizationProblem(optf, data2[1]; manifold = M, maxiters = 1000)
 
     opt = OptimizationManopt.GradientDescentOptimizer()
@@ -218,7 +218,7 @@ end
 
     @test sol.u≈q atol=1e-2
 
-    function closed_form_solution!(M::SymmetricPositiveDefinite, q, L, U, p, X)
+    function closed_form_solution!(M::SymmetricPositiveDefinite, L, U, p, X)
         # extract p^1/2 and p^{-1/2}
         (p_sqrt_inv, p_sqrt) = Manifolds.spd_sqrt_and_sqrt_inv(p)
         # Compute D & Q
@@ -230,14 +230,16 @@ end
         Lprime = Q' * p_sqrt_inv * L * p_sqrt_inv * Q
         P = cholesky(Hermitian(Uprime - Lprime))
         z = P.U' * D * P.U + Lprime
-        copyto!(M, q, p_sqrt * Q * z * Q' * p_sqrt)
-        return q
+        return p_sqrt * Q * z * Q' * p_sqrt
     end
     N = m
     U = mean(data2)
     L = inv(sum(1/N * inv(matrix) for matrix in data2))
 
+    opt = OptimizationManopt.FrankWolfeOptimizer()
+
     optf = OptimizationFunction(f, Optimization.AutoZygote())
-    prob = OptimizationProblem(optf, U; manifold = M, maxiters = 1000)
-    @time sol = Optimization.solve(prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X))
+    prob = OptimizationProblem(optf, (L+U)/2; manifold = M)
+
+    @time_broken Optimization.solve(prob, opt, sub_problem = (M, p, X) -> closed_form_solution!(M, L, U, p, X), maxiters = 10) 
 end
