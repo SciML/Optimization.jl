@@ -2,7 +2,7 @@ using OptimizationManopt
 using Optimization
 using Manifolds
 using ForwardDiff, Zygote, Enzyme
-using Manopt
+using Manopt, RipQP, QuadraticModels
 using Test
 using Optimization.SciMLBase
 using LinearAlgebra
