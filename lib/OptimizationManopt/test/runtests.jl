@@ -119,7 +119,6 @@ end
 end
 
 @testset "ConvexBundle" begin
-    using QuadraticModels, RipQP
     x0 = zeros(2)
     p = [1.0, 100.0]
 
@@ -128,7 +127,7 @@ end
     optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
     prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
-    sol = Optimization.solve(prob, opt, sub_problem= Manopt.convex_bundle_method_subsolver!) 
+    sol = Optimization.solve(prob, opt, sub_problem= Manopt.convex_bundle_method_subsolver!)
     @test sol.minimum < 0.1
 end
 

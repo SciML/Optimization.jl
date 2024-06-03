@@ -428,6 +428,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         maxtime = cache.solver_args.maxtime,
         abstol = cache.solver_args.abstol,
         reltol = cache.solver_args.reltol;
+        cache.solver_args...
     )
 
     _loss = build_loss(cache.f, cache, _cb)
