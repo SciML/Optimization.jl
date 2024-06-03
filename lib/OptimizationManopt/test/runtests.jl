@@ -209,7 +209,7 @@ end
     f(M, x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
     f(x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
 
-    optf = OptimizationFunction(f, Optimization.AutoZygote())
+    optf = OptimizationFunction(f, Optimization.AutoFiniteDiff())
     prob = OptimizationProblem(optf, data2[1]; manifold = M, maxiters = 1000)
 
     opt = OptimizationManopt.GradientDescentOptimizer()
@@ -237,8 +237,9 @@ end
     L = inv(sum(1/N * inv(matrix) for matrix in data2))
 
     opt = OptimizationManopt.FrankWolfeOptimizer()
-    optf = OptimizationFunction(f, Optimization.AutoZygote())
-    prob = OptimizationProblem(optf, (L+U)/2; manifold = M)
+    optf = OptimizationFunction(f, Optimization.AutoFiniteDiff())
+    prob = OptimizationProblem(optf, data2[1]; manifold = M)
 
-    @test_broken Optimization.solve(prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X), maxiters = 10)
+    @time sol = Optimization.solve(prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X), maxiters = 1000)
+    @test sol.u≈q atol=1e-2
 end

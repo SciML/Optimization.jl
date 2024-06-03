@@ -37,7 +37,7 @@ function or `OptimizationProblem`.
 The Rosenbrock function on the Euclidean manifold can be optimized using the `GradientDescentOptimizer` as follows:
 
 ```@example Manopt1
-using Optimization, OptimizationManopt
+using Optimization, OptimizationManopt, Manifolds
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
@@ -55,7 +55,7 @@ prob = OptimizationProblem(
 sol = Optimization.solve(prob, opt)
 ```
 
-<!-- The box-constrained Karcher mean problem on the SPD manifold with the Frank-Wolfe algorithm can be solved as follows:
+The box-constrained Karcher mean problem on the SPD manifold with the Frank-Wolfe algorithm can be solved as follows:
 
 ```@example Manopt2
 M = SymmetricPositiveDefinite(5)
@@ -94,7 +94,7 @@ prob = OptimizationProblem(optf, U; manifold = M, maxiters = 1000)
 sol = Optimization.solve(prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X))
 ```
 
-This example is based on the [example](https://juliamanifolds.github.io/ManoptExamples.jl/stable/examples/Riemannian-mean/) in the Manopt and https://doi.org/10.1007/s10107-022-01840-5. -->
+This example is based on the [example](https://juliamanifolds.github.io/ManoptExamples.jl/stable/examples/Riemannian-mean/) in the Manopt and [Weber and Sra'22](https://doi.org/10.1007/s10107-022-01840-5).
 
 The following example is adapted from the Rayleigh Quotient example in ManoptExamples.jl.
 We solve the Rayleigh quotient problem on the Sphere manifold:
