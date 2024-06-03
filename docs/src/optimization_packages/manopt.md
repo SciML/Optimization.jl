@@ -42,6 +42,8 @@ rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 
+R2 = Euclidean(2)
+
 stepsize = Manopt.ArmijoLinesearch(R2)
 opt = OptimizationManopt.GradientDescentOptimizer()
 
@@ -53,7 +55,7 @@ prob = OptimizationProblem(
 sol = Optimization.solve(prob, opt)
 ```
 
-The Karcher mean problem on the SPD manifold with the Frank-Wolfe algorithm can be solved as follows:
+<!-- The Karcher mean problem on the SPD manifold with the Frank-Wolfe algorithm can be solved as follows:
 
 ```@example Manopt2
 M = SymmetricPositiveDefinite(5)
@@ -92,4 +94,32 @@ prob = OptimizationProblem(optf, U; manifold = M, maxiters = 1000)
 sol = Optimization.solve(prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X))
 ```
 
-This example is based on the [example](https://juliamanifolds.github.io/ManoptExamples.jl/stable/examples/Riemannian-mean/) in the Manopt and https://doi.org/10.1007/s10107-022-01840-5.
+This example is based on the [example](https://juliamanifolds.github.io/ManoptExamples.jl/stable/examples/Riemannian-mean/) in the Manopt and https://doi.org/10.1007/s10107-022-01840-5. -->
+
+The Rayleigh quotient problem on the Sphere manifold can be solved as follows:
+
+```@example Manopt3
+using Optimization, OptimizationManopt
+using Manifolds, LinearAlgebra
+using Manopt
+
+n = 1000
+A = Symmetric(randn(n, n) / n)
+manifold = Sphere(n-1)
+
+cost(x, p = nothing) = -x'*A*x
+egrad(G, x, p = nothing) = (G .= -2*A*x)
+
+optf = OptimizationFunction(cost, grad = egrad)
+x0 = rand(manifold)
+prob = OptimizationProblem(optf, x0, manifold = manifold)
+
+sol = solve(prob, GradientDescentOptimizer())
+```
+
+We can check that this indeed corresponds to the minimum eigenvalue of the matrix `A`.
+
+```@example Manopt3
+@show eigmin(A)
+@show sol.objective
+```
