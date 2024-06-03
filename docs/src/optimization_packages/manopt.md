@@ -55,7 +55,7 @@ prob = OptimizationProblem(
 sol = Optimization.solve(prob, opt)
 ```
 
-<!-- The Karcher mean problem on the SPD manifold with the Frank-Wolfe algorithm can be solved as follows:
+<!-- The box-constrained Karcher mean problem on the SPD manifold with the Frank-Wolfe algorithm can be solved as follows:
 
 ```@example Manopt2
 M = SymmetricPositiveDefinite(5)
