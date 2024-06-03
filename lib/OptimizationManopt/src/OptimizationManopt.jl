@@ -457,4 +457,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         retcode = opt_ret)
 end
 
+export GradientDescentOptimizer, NelderMeadOptimizer, ConjugateGradientDescentOptimizer,
+    ParticleSwarmOptimizer, QuasiNewtonOptimizer, CMAESOptimizer, ConvexBundleOptimizer, FrankWolfeOptimizer
+
 end # module OptimizationManopt

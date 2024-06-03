@@ -23,8 +23,6 @@ The following methods are available for the `OptimizationManopt` package:
   - `QuasiNewtonOptimizer`: Corresponds to the [`quasi_Newton`](https://manoptjl.org/stable/solvers/quasi_Newton/) method in Manopt.
   - `CMAESOptimizer`: Corresponds to the [`cma_es`](https://manoptjl.org/stable/solvers/cma_es/) method in Manopt.
   - `ConvexBundleOptimizer`: Corresponds to the [`convex_bundle_method`](https://manoptjl.org/stable/solvers/convex_bundle_method/) method in Manopt.
-  - `AdaptiveRegularizationCubicOptimizer`: Corresponds to the [`adaptive_regularization_with_cubics`](https://manoptjl.org/stable/solvers/adaptive-regularization-with-cubics/) method in Manopt.
-  - `TrustRegionsOptimizer`: Corresponds to the [`trust_regions`](https://manoptjl.org/stable/solvers/trust_regions/) method in Manopt.
   - `FrankWolfeOptimizer`: Corresponds to the [`FrankWolfe`](https://manoptjl.org/stable/solvers/FrankWolfe/) method in Manopt.
   
 The common kwargs `maxiters`, `maxtime` and `abstol` are supported by all the optimizers. Solver specific kwargs from Manopt can be passed to the `solve` 
@@ -55,7 +53,7 @@ prob = OptimizationProblem(
 sol = Optimization.solve(prob, opt)
 ```
 
-The Karcher mean problem on the SPD manifold with the Frank-Wolfe algorithm is solved as follows:
+The Karcher mean problem on the SPD manifold with the Frank-Wolfe algorithm can be solved as follows:
 
 ```@example Manopt2
 M = SymmetricPositiveDefinite(5)
@@ -76,7 +74,7 @@ function closed_form_solution!(M::SymmetricPositiveDefinite, q, L, U, p, X)
     e2 = eigen(p_sqrt_inv * X * p_sqrt_inv) # decompose Sk  = QDQ'
     D = Diagonal(1.0 .* (e2.values .< 0))
     Q = e2.vectors
-    #println(p)
+
     Uprime = Q' * p_sqrt_inv * U * p_sqrt_inv * Q
     Lprime = Q' * p_sqrt_inv * L * p_sqrt_inv * Q
     P = cholesky(Hermitian(Uprime - Lprime))

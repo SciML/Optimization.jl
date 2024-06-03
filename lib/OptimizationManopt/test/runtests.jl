@@ -218,28 +218,28 @@ end
 
     @test sol.u≈q atol=1e-2
 
-    function closed_form_solution!(M::SymmetricPositiveDefinite, L, U, p, X)
+    function closed_form_solution!(M::SymmetricPositiveDefinite, q, L, U, p, X)
         # extract p^1/2 and p^{-1/2}
         (p_sqrt_inv, p_sqrt) = Manifolds.spd_sqrt_and_sqrt_inv(p)
         # Compute D & Q
         e2 = eigen(p_sqrt_inv * X * p_sqrt_inv) # decompose Sk  = QDQ'
         D = Diagonal(1.0 .* (e2.values .< 0))
         Q = e2.vectors
-        #println(p)
         Uprime = Q' * p_sqrt_inv * U * p_sqrt_inv * Q
         Lprime = Q' * p_sqrt_inv * L * p_sqrt_inv * Q
         P = cholesky(Hermitian(Uprime - Lprime))
+
         z = P.U' * D * P.U + Lprime
-        return p_sqrt * Q * z * Q' * p_sqrt
+        copyto!(M, q, p_sqrt * Q * z * Q' * p_sqrt)
+        return q
     end
     N = m
     U = mean(data2)
     L = inv(sum(1/N * inv(matrix) for matrix in data2))
 
     opt = OptimizationManopt.FrankWolfeOptimizer()
-
     optf = OptimizationFunction(f, Optimization.AutoZygote())
     prob = OptimizationProblem(optf, (L+U)/2; manifold = M)
 
-    @test_broken Optimization.solve(prob, opt, sub_problem = (M, p, X) -> closed_form_solution!(M, L, U, p, X), maxiters = 10) 
+    @test_broken Optimization.solve(prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X), maxiters = 10)
 end
