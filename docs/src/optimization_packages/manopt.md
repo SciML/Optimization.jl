@@ -96,7 +96,8 @@ sol = Optimization.solve(prob, opt, sub_problem = (M, q, p, X) -> closed_form_so
 
 This example is based on the [example](https://juliamanifolds.github.io/ManoptExamples.jl/stable/examples/Riemannian-mean/) in the Manopt and https://doi.org/10.1007/s10107-022-01840-5. -->
 
-The Rayleigh quotient problem on the Sphere manifold can be solved as follows:
+The following example is adapted from the Rayleigh Quotient example in ManoptExamples.jl.
+We solve the Rayleigh quotient problem on the Sphere manifold:
 
 ```@example Manopt3
 using Optimization, OptimizationManopt
@@ -117,7 +118,7 @@ prob = OptimizationProblem(optf, x0, manifold = manifold)
 sol = solve(prob, GradientDescentOptimizer())
 ```
 
-We can check that this indeed corresponds to the minimum eigenvalue of the matrix `A`.
+Let's check that this indeed corresponds to the minimum eigenvalue of the matrix `A`.
 
 ```@example Manopt3
 @show eigmin(A)
