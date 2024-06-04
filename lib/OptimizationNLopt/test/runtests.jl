@@ -73,7 +73,7 @@ using Test
     end
 
     @testset "callback" begin
-        cbstopping = function(state, loss)
+        cbstopping = function (state, loss)
             println(state.iter, " ", state.u, " ", state.objective)
             return state.objective < 0.7
         end

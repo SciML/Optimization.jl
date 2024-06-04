@@ -170,34 +170,35 @@ end
     sol = solve(prob, Optim.KrylovTrustRegion())
     @test 10 * sol.objective < l1
 
-    prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MaxSense, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+    prob = OptimizationProblem(
+        optprob, x0, _p; sense = Optimization.MaxSense, lb = [-1.0, -1.0], ub = [0.8, 0.8])
     sol = solve(prob, BFGS())
     @test 10 * sol.objective < l1
-      
+
     function rosenbrock_grad!(dx, x, p)
-        dx[1] = -2*(p[1] - x[1]) -4 * p[2] * (x[2] - x[1]^2)*x[1]
-        dx[2]= 2*p[2]*(x[2]-x[1]^2)
+        dx[1] = -2 * (p[1] - x[1]) - 4 * p[2] * (x[2] - x[1]^2) * x[1]
+        dx[2] = 2 * p[2] * (x[2] - x[1]^2)
         return nothing
     end
 
     # https://github.com/SciML/Optimization.jl/issues/754 Optim.BFGS() with explicit gradient function
-    optprob = OptimizationFunction(rosenbrock; grad=rosenbrock_grad!)
+    optprob = OptimizationFunction(rosenbrock; grad = rosenbrock_grad!)
     prob = OptimizationProblem(optprob, x0, _p)
     @test (sol = solve(prob, Optim.BFGS())) isa Any # test exception not thrown
     @test 10 * sol.objective < l1
 
     # https://github.com/SciML/Optimization.jl/issues/754 Optim.BFGS() with bounds and explicit gradient function
-    optprob = OptimizationFunction(rosenbrock; grad=rosenbrock_grad!)
-    prob = OptimizationProblem(optprob, x0, _p;  lb = [-1.0, -1.0], ub = [0.8, 0.8])
+    optprob = OptimizationFunction(rosenbrock; grad = rosenbrock_grad!)
+    prob = OptimizationProblem(optprob, x0, _p; lb = [-1.0, -1.0], ub = [0.8, 0.8])
     @test (sol = solve(prob, Optim.BFGS())) isa Any  # test exception not thrown
     @test 10 * sol.objective < l1
 
     # test that Optim.BFGS() with bounds but no AD or user-supplied gradient fails
     optprob = OptimizationFunction(rosenbrock, SciMLBase.NoAD())
-    prob = OptimizationProblem(optprob, x0, _p;  lb = [-1.0, -1.0], ub = [0.8, 0.8])
+    prob = OptimizationProblem(optprob, x0, _p; lb = [-1.0, -1.0], ub = [0.8, 0.8])
     @test_throws ArgumentError (sol = solve(prob, Optim.BFGS())) isa Any  # test exception is thrown
     @test 10 * sol.objective < l1
-    
+
     @testset "cache" begin
         objective(x, p) = (p[1] - x[1])^2
         x0 = zeros(1)

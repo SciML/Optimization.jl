@@ -308,7 +308,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
         evaluation::AbstractEvaluationType = InplaceEvaluation(),
         retraction_method::AbstractRetractionMethod = default_retraction_method(M),
-        stepsize::Stepsize = DecreasingStepsize(; length=2.0, shift=2),
+        stepsize::Stepsize = DecreasingStepsize(; length = 2.0, shift = 2),
         kwargs...)
     opt = Frank_Wolfe_method(M,
         loss,
@@ -459,6 +459,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 end
 
 export GradientDescentOptimizer, NelderMeadOptimizer, ConjugateGradientDescentOptimizer,
-    ParticleSwarmOptimizer, QuasiNewtonOptimizer, CMAESOptimizer, ConvexBundleOptimizer, FrankWolfeOptimizer
+       ParticleSwarmOptimizer, QuasiNewtonOptimizer, CMAESOptimizer, ConvexBundleOptimizer,
+       FrankWolfeOptimizer
 
 end # module OptimizationManopt

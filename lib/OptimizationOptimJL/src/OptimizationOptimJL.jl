@@ -92,7 +92,8 @@ function SciMLBase.__init(prob::OptimizationProblem,
                 opt = Optim.ParticleSwarm(; lower = prob.lb, upper = prob.ub,
                     n_particles = opt.n_particles)
             else
-                if prob.f isa OptimizationFunction && (!(prob.f.adtype isa SciMLBase.NoAD) || !isnothing(prob.f.grad))
+                if prob.f isa OptimizationFunction &&
+                   (!(prob.f.adtype isa SciMLBase.NoAD) || !isnothing(prob.f.grad))
                     opt = Optim.Fminbox(opt)
                 else
                     throw(ArgumentError("Fminbox($opt) requires gradients, use `OptimizationFunction` either with a valid AD backend https://docs.sciml.ai/Optimization/stable/API/ad/ or a provided 'grad' function."))
