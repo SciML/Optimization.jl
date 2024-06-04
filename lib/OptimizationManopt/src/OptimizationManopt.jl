@@ -76,7 +76,8 @@ function call_manopt_optimizer(
         return_state = true,
         evaluation,
         stepsize,
-        stopping_criterion)
+        stopping_criterion,
+        kwargs...)
     # we unwrap DebugOptions here
     minimizer = Manopt.get_solver_result(opts)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
@@ -94,7 +95,8 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold, opt::NelderMea
     opts = NelderMead(M,
         loss;
         return_state = true,
-        stopping_criterion)
+        stopping_criterion,
+        kwargs...)
     minimizer = Manopt.get_solver_result(opts)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
 end
@@ -118,7 +120,8 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         return_state = true,
         evaluation,
         stepsize,
-        stopping_criterion)
+        stopping_criterion,
+        kwargs...)
     # we unwrap DebugOptions here
     minimizer = Manopt.get_solver_result(opts)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
@@ -148,7 +151,8 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         retraction_method,
         inverse_retraction_method,
         vector_transport_method,
-        stopping_criterion)
+        stopping_criterion,
+        kwargs...)
     # we unwrap DebugOptions here
     minimizer = Manopt.get_solver_result(opts)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
@@ -182,10 +186,143 @@ function call_manopt_optimizer(M::Manopt.AbstractManifold,
         retraction_method,
         vector_transport_method,
         stepsize,
-        stopping_criterion)
+        stopping_criterion,
+        kwargs...)
     # we unwrap DebugOptions here
     minimizer = Manopt.get_solver_result(opts)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
+end
+
+struct CMAESOptimizer <: AbstractManoptOptimizer end
+
+function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
+        opt::CMAESOptimizer,
+        loss,
+        gradF,
+        x0;
+        stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
+        evaluation::AbstractEvaluationType = InplaceEvaluation(),
+        retraction_method::AbstractRetractionMethod = default_retraction_method(M),
+        vector_transport_method::AbstractVectorTransportMethod = default_vector_transport_method(M),
+        basis = Manopt.DefaultOrthonormalBasis(),
+        kwargs...)
+    opt = cma_es(M,
+        loss,
+        x0;
+        return_state = true,
+        stopping_criterion,
+        kwargs...)
+    # we unwrap DebugOptions here
+    minimizer = Manopt.get_solver_result(opt)
+    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
+end
+
+struct ConvexBundleOptimizer <: AbstractManoptOptimizer end
+
+function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
+        opt::ConvexBundleOptimizer,
+        loss,
+        gradF,
+        x0;
+        stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
+        evaluation::AbstractEvaluationType = InplaceEvaluation(),
+        retraction_method::AbstractRetractionMethod = default_retraction_method(M),
+        vector_transport_method::AbstractVectorTransportMethod = default_vector_transport_method(M),
+        kwargs...)
+    opt = convex_bundle_method!(M,
+        loss,
+        gradF,
+        x0;
+        return_state = true,
+        evaluation,
+        retraction_method,
+        vector_transport_method,
+        stopping_criterion,
+        kwargs...)
+    # we unwrap DebugOptions here
+    minimizer = Manopt.get_solver_result(opt)
+    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
+end
+
+struct AdaptiveRegularizationCubicOptimizer <: AbstractManoptOptimizer end
+
+function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
+        opt::AdaptiveRegularizationCubicOptimizer,
+        loss,
+        gradF,
+        x0;
+        hessF = nothing,
+        stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
+        evaluation::AbstractEvaluationType = InplaceEvaluation(),
+        retraction_method::AbstractRetractionMethod = default_retraction_method(M),
+        kwargs...)
+    opt = adaptive_regularization_with_cubics(M,
+        loss,
+        gradF,
+        hessF,
+        x0;
+        return_state = true,
+        evaluation,
+        retraction_method,
+        stopping_criterion,
+        kwargs...)
+    # we unwrap DebugOptions here
+    minimizer = Manopt.get_solver_result(opt)
+    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
+end
+
+struct TrustRegionsOptimizer <: AbstractManoptOptimizer end
+
+function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
+        opt::TrustRegionsOptimizer,
+        loss,
+        gradF,
+        x0;
+        hessF = nothing,
+        stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
+        evaluation::AbstractEvaluationType = InplaceEvaluation(),
+        retraction_method::AbstractRetractionMethod = default_retraction_method(M),
+        kwargs...)
+    opt = trust_regions(M,
+        loss,
+        gradF,
+        hessF,
+        x0;
+        return_state = true,
+        evaluation,
+        retraction = retraction_method,
+        stopping_criterion,
+        kwargs...)
+    # we unwrap DebugOptions here
+    minimizer = Manopt.get_solver_result(opt)
+    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
+end
+
+struct FrankWolfeOptimizer <: AbstractManoptOptimizer end
+
+function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
+        opt::FrankWolfeOptimizer,
+        loss,
+        gradF,
+        x0;
+        stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
+        evaluation::AbstractEvaluationType = InplaceEvaluation(),
+        retraction_method::AbstractRetractionMethod = default_retraction_method(M),
+        stepsize::Stepsize = DecreasingStepsize(; length=2.0, shift=2),
+        kwargs...)
+    opt = Frank_Wolfe_method(M,
+        loss,
+        gradF,
+        x0;
+        return_state = true,
+        evaluation,
+        retraction_method,
+        stopping_criterion,
+        stepsize,
+        kwargs...)
+    # we unwrap DebugOptions here
+    minimizer = Manopt.get_solver_result(opt)
+    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
 ## Optimization.jl stuff
@@ -211,10 +348,22 @@ function build_gradF(f::OptimizationFunction{true}, cur)
     end
 end
 
-# TODO:
-# 1) convert tolerances and other stopping criteria
-# 2) return convergence information
-# 3) add callbacks to Manopt.jl
+function build_hessF(f::OptimizationFunction{true}, cur)
+    function h(M::AbstractManifold, H1, θ, X)
+        H = zeros(eltype(θ), length(θ))
+        f.hv(H, θ, X, cur...)
+        G = zeros(eltype(θ), length(θ))
+        f.grad(G, θ, cur...)
+        riemannian_Hessian!(M, H1, θ, G, H, X)
+    end
+    function h(M::AbstractManifold, θ, X)
+        H = zeros(eltype(θ), length(θ), length(θ))
+        f.hess(H, θ, cur...)
+        G = zeros(eltype(θ), length(θ))
+        f.grad(G, θ, cur...)
+        return riemannian_Hessian(M, θ, G, H, X)
+    end
+end
 
 function SciMLBase.__solve(cache::OptimizationCache{
         F,
@@ -279,11 +428,14 @@ function SciMLBase.__solve(cache::OptimizationCache{
         maxtime = cache.solver_args.maxtime,
         abstol = cache.solver_args.abstol,
         reltol = cache.solver_args.reltol;
+        cache.solver_args...
     )
 
     _loss = build_loss(cache.f, cache, _cb)
 
     gradF = build_gradF(cache.f, cur)
+
+    hessF = build_hessF(cache.f, cur)
 
     if haskey(solver_kwarg, :stopping_criterion)
         stopping_criterion = Manopt.StopWhenAny(solver_kwarg.stopping_criterion...)
@@ -292,12 +444,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
     end
 
     opt_res = call_manopt_optimizer(manifold, cache.opt, _loss, gradF, cache.u0;
-        solver_kwarg..., stopping_criterion = stopping_criterion)
+        solver_kwarg..., stopping_criterion = stopping_criterion, hessF)
 
-    asc = get_active_stopping_criteria(opt_res.options.stop)
-
-    opt_ret = any(Manopt.indicates_convergence, asc) ? ReturnCode.Success :
-              ReturnCode.Failure
+    asc = get_stopping_criterion(opt_res.options)
+    opt_ret = Manopt.indicates_convergence(asc) ? ReturnCode.Success : ReturnCode.Failure
 
     return SciMLBase.build_solution(cache,
         cache.opt,
@@ -307,5 +457,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
         original = opt_res.options,
         retcode = opt_ret)
 end
+
+export GradientDescentOptimizer, NelderMeadOptimizer, ConjugateGradientDescentOptimizer,
+    ParticleSwarmOptimizer, QuasiNewtonOptimizer, CMAESOptimizer, ConvexBundleOptimizer, FrankWolfeOptimizer
 
 end # module OptimizationManopt
