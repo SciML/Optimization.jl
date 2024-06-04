@@ -66,3 +66,88 @@ function check_pkg_version(pkg::String, ver::String;
            pkg_info[pkg].version >= VersionNumber(ver) :
            pkg_info[pkg].version > VersionNumber(ver)
 end
+
+
+# RetCode handling for BBO and others.
+using Logging
+ # Define the ReturnCode type using @enum
+@enum ReturnCode begin
+    Default
+    Success
+    Terminated
+    MaxIters
+    MaxTime
+    DtLessThanMin
+    Unstable
+    InitialFailure
+    ConvergenceFailure
+    Failure
+    Infeasible
+end
+ 
+# Define a dictionary to map regular expressions to ReturnCode values
+const STOP_REASON_MAP = Dict(
+    r"Delta fitness .* below tolerance .*" => ReturnCode.Success,
+    r"Fitness .* within tolerance .* of optimum" => ReturnCode.Success,
+    r"Terminated" => ReturnCode.Terminated,
+    r"MaxIters|MAXITERS_EXCEED" => ReturnCode.MaxIters,
+    r"MaxTime|TIME_LIMIT" => ReturnCode.MaxTime,
+    r"DtLessThanMin" => ReturnCode.DtLessThanMin,
+    r"Unstable" => ReturnCode.Unstable,
+    r"InitialFailure" => ReturnCode.InitialFailure,
+    r"ConvergenceFailure|ITERATION_LIMIT" => ReturnCode.ConvergenceFailure,
+    r"Infeasible|INFEASIBLE|DUAL_INFEASIBLE|LOCALLY_INFEASIBLE|INFEASIBLE_OR_UNBOUNDED" => ReturnCode.Infeasible
+)
+
+# Function to deduce ReturnCode from a stop_reason string using the dictionary
+function deduce_retcode(stop_reason::String)::ReturnCode
+    for (pattern, retcode) in STOP_REASON_MAP
+        if occursin(pattern, stop_reason)
+        	return retcode
+        end
+    end
+    @warn "Unrecognized stop reason: $stop_reason. Defaulting to ReturnCode.Failure."
+    return ReturnCode.Failure
+end
+
+function Base.convert(::Type{ReturnCode.T}, retcode::Union{Symbol, String})
+    @warn "Backwards compatibility support of the new return codes to Symbols will be deprecated with the Julia v1.9 release. Please see https://docs.sciml.ai/SciMLBase/stable/interfaces/Solutions/#retcodes for more information"
+ 
+    if isa(retcode, Symbol)
+        if retcode == :Default || retcode == :DEFAULT
+        	return ReturnCode.Default
+        elseif retcode == :Success || retcode == :EXACT_SOLUTION_LEFT ||
+           	retcode == :FLOATING_POINT_LIMIT || retcode == :true || retcode == :OPTIMAL ||
+           	retcode == :LOCALLY_SOLVED
+        	return ReturnCode.Success
+        elseif retcode == :Terminated
+        	return ReturnCode.Terminated
+        elseif retcode == :MaxIters || retcode == :MAXITERS_EXCEED
+        	return ReturnCode.MaxIters
+        elseif retcode == :MaxTime || retcode == :TIME_LIMIT
+        	return ReturnCode.MaxTime
+        elseif retcode == :DtLessThanMin
+        	return ReturnCode.DtLessThanMin
+        elseif retcode == :Unstable
+        	return ReturnCode.Unstable
+        elseif retcode == :InitialFailure
+        	return ReturnCode.InitialFailure
+        elseif retcode == :ConvergenceFailure || retcode == :ITERATION_LIMIT
+        	return ReturnCode.ConvergenceFailure
+        elseif retcode == :Failure || retcode == :false
+        	return ReturnCode.Failure
+        elseif retcode == :Infeasible || retcode == :INFEASIBLE ||
+           	retcode == :DUAL_INFEASIBLE || retcode == :LOCALLY_INFEASIBLE ||
+           	retcode == :INFEASIBLE_OR_UNBOUNDED
+        	return ReturnCode.Infeasible
+        else
+        	return ReturnCode.Failure
+        end
+    elseif isa(retcode, String)
+        return deduce_retcode(retcode)
+    else
+        @warn "Unsupported retcode type: $retcode. Defaulting to ReturnCode.Failure."
+        return ReturnCode.Failure
+    end
+end
+
