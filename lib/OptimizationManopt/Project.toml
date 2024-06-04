@@ -12,6 +12,16 @@ Manopt = "0fc0a36d-df90-57f3-8f93-d78a9fc72bb5"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
+[compat]
+LinearAlgebra = "1.10"
+ManifoldDiff = "0.3.10"
+Manifolds = "0.9.18"
+ManifoldsBase = "0.15.10"
+Manopt = "0.4.63"
+Optimization = "3.25.1"
+Reexport = "1.2"
+julia = "1.9"
+
 [extras]
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
