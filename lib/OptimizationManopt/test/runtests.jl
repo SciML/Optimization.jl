@@ -127,7 +127,8 @@ end
     optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
     prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
-    sol = Optimization.solve(prob, opt, sub_problem= Manopt.convex_bundle_method_subsolver!)
+    sol = Optimization.solve(
+        prob, opt, sub_problem = Manopt.convex_bundle_method_subsolver!)
     @test sol.minimum < 0.1
 end
 
@@ -234,12 +235,14 @@ end
     end
     N = m
     U = mean(data2)
-    L = inv(sum(1/N * inv(matrix) for matrix in data2))
+    L = inv(sum(1 / N * inv(matrix) for matrix in data2))
 
     opt = OptimizationManopt.FrankWolfeOptimizer()
     optf = OptimizationFunction(f, Optimization.AutoFiniteDiff())
     prob = OptimizationProblem(optf, data2[1]; manifold = M)
 
-    @time sol = Optimization.solve(prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X), maxiters = 1000)
+    @time sol = Optimization.solve(
+        prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X),
+        maxiters = 1000)
     @test sol.u≈q atol=1e-2
 end
