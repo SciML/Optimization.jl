@@ -69,22 +69,6 @@ end
 
 
 # RetCode handling for BBO and others.
-using Logging
- # Define the ReturnCode type using @enum
-@enum ReturnCode begin
-    Default
-    Success
-    Terminated
-    MaxIters
-    MaxTime
-    DtLessThanMin
-    Unstable
-    InitialFailure
-    ConvergenceFailure
-    Failure
-    Infeasible
-end
- 
 # Define a dictionary to map regular expressions to ReturnCode values
 const STOP_REASON_MAP = Dict(
     r"Delta fitness .* below tolerance .*" => ReturnCode.Success,
