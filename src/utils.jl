@@ -84,7 +84,7 @@ const STOP_REASON_MAP = Dict(
 )
 
 # Function to deduce ReturnCode from a stop_reason string using the dictionary
-function deduce_retcode(stop_reason::String)::ReturnCode
+function deduce_retcode_from_string(stop_reason::String)::ReturnCode
     for (pattern, retcode) in STOP_REASON_MAP
         if occursin(pattern, stop_reason)
         	return retcode
@@ -94,7 +94,7 @@ function deduce_retcode(stop_reason::String)::ReturnCode
     return ReturnCode.Failure
 end
 
-function Base.convert(::Type{ReturnCode.T}, retcode::Union{Symbol, String})
+function Base.deduce_retcode(::Type{ReturnCode.T}, retcode::Union{Symbol, String})
     @warn "Backwards compatibility support of the new return codes to Symbols will be deprecated with the Julia v1.9 release. Please see https://docs.sciml.ai/SciMLBase/stable/interfaces/Solutions/#retcodes for more information"
  
     if isa(retcode, Symbol)
@@ -128,7 +128,7 @@ function Base.convert(::Type{ReturnCode.T}, retcode::Union{Symbol, String})
         	return ReturnCode.Failure
         end
     elseif isa(retcode, String)
-        return deduce_retcode(retcode)
+        return deduce_retcode_from_string(retcode)
     else
         @warn "Unsupported retcode type: $retcode. Defaulting to ReturnCode.Failure."
         return ReturnCode.Failure
