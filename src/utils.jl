@@ -84,7 +84,7 @@ const STOP_REASON_MAP = Dict(
 )
 
 # Function to deduce ReturnCode from a stop_reason string using the dictionary
-function deduce_retcode_from_string(stop_reason::String)::ReturnCode
+function deduce_retcode(stop_reason::String)::ReturnCode
     for (pattern, retcode) in STOP_REASON_MAP
         if occursin(pattern, stop_reason)
         	return retcode
@@ -94,43 +94,35 @@ function deduce_retcode_from_string(stop_reason::String)::ReturnCode
     return ReturnCode.Failure
 end
 
-function Base.deduce_retcode(::Type{ReturnCode.T}, retcode::Union{Symbol, String})
-    @warn "Backwards compatibility support of the new return codes to Symbols will be deprecated with the Julia v1.9 release. Please see https://docs.sciml.ai/SciMLBase/stable/interfaces/Solutions/#retcodes for more information"
- 
-    if isa(retcode, Symbol)
-        if retcode == :Default || retcode == :DEFAULT
-        	return ReturnCode.Default
-        elseif retcode == :Success || retcode == :EXACT_SOLUTION_LEFT ||
-           	retcode == :FLOATING_POINT_LIMIT || retcode == :true || retcode == :OPTIMAL ||
-           	retcode == :LOCALLY_SOLVED
-        	return ReturnCode.Success
-        elseif retcode == :Terminated
-        	return ReturnCode.Terminated
-        elseif retcode == :MaxIters || retcode == :MAXITERS_EXCEED
-        	return ReturnCode.MaxIters
-        elseif retcode == :MaxTime || retcode == :TIME_LIMIT
-        	return ReturnCode.MaxTime
-        elseif retcode == :DtLessThanMin
-        	return ReturnCode.DtLessThanMin
-        elseif retcode == :Unstable
-        	return ReturnCode.Unstable
-        elseif retcode == :InitialFailure
-        	return ReturnCode.InitialFailure
-        elseif retcode == :ConvergenceFailure || retcode == :ITERATION_LIMIT
-        	return ReturnCode.ConvergenceFailure
-        elseif retcode == :Failure || retcode == :false
-        	return ReturnCode.Failure
-        elseif retcode == :Infeasible || retcode == :INFEASIBLE ||
-           	retcode == :DUAL_INFEASIBLE || retcode == :LOCALLY_INFEASIBLE ||
-           	retcode == :INFEASIBLE_OR_UNBOUNDED
-        	return ReturnCode.Infeasible
-        else
-        	return ReturnCode.Failure
-        end
-    elseif isa(retcode, String)
-        return deduce_retcode_from_string(retcode)
+# Function to deduce ReturnCode from a Symbol
+function deduce_retcode(retcode::Symbol)::ReturnCode
+    if retcode == :Default || retcode == :DEFAULT
+        return ReturnCode.Default
+    elseif retcode == :Success || retcode == :EXACT_SOLUTION_LEFT ||
+           retcode == :FLOATING_POINT_LIMIT || retcode == :true || retcode == :OPTIMAL ||
+           retcode == :LOCALLY_SOLVED
+        return ReturnCode.Success
+    elseif retcode == :Terminated
+        return ReturnCode.Terminated
+    elseif retcode == :MaxIters || retcode == :MAXITERS_EXCEED
+        return ReturnCode.MaxIters
+    elseif retcode == :MaxTime || retcode == :TIME_LIMIT
+        return ReturnCode.MaxTime
+    elseif retcode == :DtLessThanMin
+        return ReturnCode.DtLessThanMin
+    elseif retcode == :Unstable
+        return ReturnCode.Unstable
+    elseif retcode == :InitialFailure
+        return ReturnCode.InitialFailure
+    elseif retcode == :ConvergenceFailure || retcode == :ITERATION_LIMIT
+        return ReturnCode.ConvergenceFailure
+    elseif retcode == :Failure || retcode == :false
+        return ReturnCode.Failure
+    elseif retcode == :Infeasible || retcode == :INFEASIBLE ||
+           retcode == :DUAL_INFEASIBLE || retcode == :LOCALLY_INFEASIBLE ||
+           retcode == :INFEASIBLE_OR_UNBOUNDED
+        return ReturnCode.Infeasible
     else
-        @warn "Unsupported retcode type: $retcode. Defaulting to ReturnCode.Failure."
         return ReturnCode.Failure
     end
 end
