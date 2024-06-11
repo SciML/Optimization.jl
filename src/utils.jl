@@ -69,6 +69,8 @@ end
 
 
 # RetCode handling for BBO and others.
+using SciMLBase: ReturnCode
+
 # Define a dictionary to map regular expressions to ReturnCode values
 const STOP_REASON_MAP = Dict(
     r"Delta fitness .* below tolerance .*" => ReturnCode.Success,
