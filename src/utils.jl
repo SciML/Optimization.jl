@@ -86,7 +86,7 @@ const STOP_REASON_MAP = Dict(
 )
 
 # Function to deduce ReturnCode from a stop_reason string using the dictionary
-function deduce_retcode(stop_reason::String)::ReturnCode
+function deduce_retcode(stop_reason::String)
     for (pattern, retcode) in STOP_REASON_MAP
         if occursin(pattern, stop_reason)
         	return retcode
@@ -97,7 +97,7 @@ function deduce_retcode(stop_reason::String)::ReturnCode
 end
 
 # Function to deduce ReturnCode from a Symbol
-function deduce_retcode(retcode::Symbol)::ReturnCode
+function deduce_retcode(retcode::Symbol)
     if retcode == :Default || retcode == :DEFAULT
         return ReturnCode.Default
     elseif retcode == :Success || retcode == :EXACT_SOLUTION_LEFT ||
