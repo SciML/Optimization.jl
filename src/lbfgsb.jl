@@ -213,10 +213,17 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
         t0 = time()
         res = lbfgsb(_loss, cache.f.grad, cache.u0; m = cache.opt.m, solver_kwargs...)
+
+        # Extract the task message from the result
+        stop_reason = String(copy(res.task))
+
+        # Deduce the return code from the stop reason
+        opt_ret = deduce_retcode(stop_reason)
+        
         t1 = time()
         stats = Optimization.OptimizationStats(; iterations = maxiters,
             time = t1 - t0, fevals = maxiters, gevals = maxiters)
 
-        return SciMLBase.build_solution(cache, cache.opt, res[2], res[1], stats = stats)
+        return SciMLBase.build_solution(cache, cache.opt, res[2], res[1], stats = stats, retcode = opt_ret)
     end
 end
