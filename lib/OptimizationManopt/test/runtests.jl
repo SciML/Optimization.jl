@@ -154,8 +154,8 @@ end
     optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
     prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
-    @test_broken Optimization.solve(prob, opt)
-    @test_broken sol.minimum < 0.1
+    sol = Optimization.solve(prob, opt)
+    @test sol.minimum < 0.1
 end
 
 @testset "TrustRegions" begin
@@ -207,7 +207,6 @@ end
     q = Matrix{Float64}(I, 5, 5) .+ 2.0
     data2 = [exp(M, q, σ * rand(M; vector_at = q)) for i in 1:m]
 
-    f(M, x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
     f(x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
 
     optf = OptimizationFunction(f, Optimization.AutoFiniteDiff())

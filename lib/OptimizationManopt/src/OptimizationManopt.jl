@@ -394,6 +394,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
     local x, cur, state
 
     manifold = haskey(cache.solver_args, :manifold) ? cache.solver_args[:manifold] : nothing
+    gradF = haskey(cache.solver_args, :riemannian_grad) ? cache.solver_args[:riemannian_grad] : nothing
+    hessF = haskey(cache.solver_args, :riemannian_hess) ? cache.solver_args[:riemannian_hess] : nothing
 
     if manifold === nothing
         throw(ArgumentError("Manifold not specified in the problem for e.g. `OptimizationProblem(f, x, p; manifold = SymmetricPositiveDefinite(5))`."))
@@ -433,9 +435,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     _loss = build_loss(cache.f, cache, _cb)
 
-    gradF = build_gradF(cache.f, cur)
+    if gradF === nothing
+        gradF = build_gradF(cache.f, cur)
+    end
 
-    hessF = build_hessF(cache.f, cur)
+    if hessF === nothing
+        hessF = build_hessF(cache.f, cur)
+    end
 
     if haskey(solver_kwarg, :stopping_criterion)
         stopping_criterion = Manopt.StopWhenAny(solver_kwarg.stopping_criterion...)
