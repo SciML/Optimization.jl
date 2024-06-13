@@ -83,6 +83,16 @@ const STOP_REASON_MAP = Dict(
     r"InitialFailure" => ReturnCode.InitialFailure,
     r"ConvergenceFailure|ITERATION_LIMIT" => ReturnCode.ConvergenceFailure,
     r"Infeasible|INFEASIBLE|DUAL_INFEASIBLE|LOCALLY_INFEASIBLE|INFEASIBLE_OR_UNBOUNDED" => ReturnCode.Infeasible
+    r"STOP: TOTAL NO. of ITERATIONS REACHED LIMIT" => ReturnCode.MaxIters,
+    r"STOP: TOTAL NO. of f AND g EVALUATIONS EXCEEDS LIMIT" => ReturnCode.MaxIters,
+    r"STOP: ABNORMAL_TERMINATION_IN_LNSRCH" => ReturnCode.Unstable,
+    r"STOP: ERROR INPUT DATA" => ReturnCode.InitialFailure,
+    r"STOP: FTOL.TOO.SMALL" => ReturnCode.ConvergenceFailure,
+    r"STOP: GTOL.TOO.SMALL" => ReturnCode.ConvergenceFailure,
+    r"STOP: XTOL.TOO.SMALL" => ReturnCode.ConvergenceFailure,
+    r"STOP: TERMINATION" => ReturnCode.Terminated,
+    r"Optimization completed" => ReturnCode.Success,
+    r"Convergence achieved" => ReturnCode.Success
 )
 
 # Function to deduce ReturnCode from a stop_reason string using the dictionary
