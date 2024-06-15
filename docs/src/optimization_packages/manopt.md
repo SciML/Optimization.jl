@@ -37,7 +37,7 @@ function or `OptimizationProblem`.
 The Rosenbrock function on the Euclidean manifold can be optimized using the `GradientDescentOptimizer` as follows:
 
 ```@example Manopt
-using Optimization, OptimizationManopt, Manifolds
+using Optimization, OptimizationManopt, Manifolds, LinearAlgebra
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
