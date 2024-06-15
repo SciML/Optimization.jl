@@ -21,6 +21,10 @@ SciMLBase.allowsbounds(::LBFGS) = true
 # SciMLBase.requiresgradient(::LBFGS) = true
 SciMLBase.allowsconstraints(::LBFGS) = true
 
+function task_message_to_string(task::Vector{UInt8})
+    return String(task[1:findfirst(iszero, task, 1) - 1])
+end
+
 function __map_optimizer_args(cache::Optimization.OptimizationCache, opt::LBFGS;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
@@ -215,7 +219,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         res = lbfgsb(_loss, cache.f.grad, cache.u0; m = cache.opt.m, solver_kwargs...)
 
         # Extract the task message from the result
-        stop_reason = String(copy(res.task))
+        stop_reason = task_message_to_string(res.task)
 
         # Deduce the return code from the stop reason
         opt_ret = deduce_retcode(stop_reason)
