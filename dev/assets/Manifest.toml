@@ -2,7 +2,7 @@
 
 julia_version = "1.10.4"
 manifest_format = "2.0"
-project_hash = "7ea0d19075a904d19674d267f93e29c8d5174b65"
+project_hash = "a6bbe5af6d1ef413ab3dc2d34b87998ceb118de6"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "fc02d55798c1af91123d07915a990fbb9a10d146"
@@ -683,9 +683,9 @@ version = "1.0.4"
 
 [[deps.Enzyme]]
 deps = ["CEnum", "EnzymeCore", "Enzyme_jll", "GPUCompiler", "LLVM", "Libdl", "LinearAlgebra", "ObjectFile", "Preferences", "Printf", "Random"]
-git-tree-sha1 = "eebd27752e25c49e539b6dd356e5f6ee4b22dd83"
+git-tree-sha1 = "60994d952bf5a6a28f8938f76c8136ebed449f73"
 uuid = "7da242da-08ed-463a-9acd-ee780be4f1d9"
-version = "0.12.13"
+version = "0.12.14"
 weakdeps = ["ChainRulesCore", "SpecialFunctions", "StaticArrays"]
 
     [deps.Enzyme.extensions]
@@ -704,9 +704,9 @@ weakdeps = ["Adapt"]
 
 [[deps.Enzyme_jll]]
 deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl", "TOML"]
-git-tree-sha1 = "e3ece7b5fb991252abd138a2978e970063fc1412"
+git-tree-sha1 = "7dde7751eea556d20a6216eef6b94b9b2925ddbf"
 uuid = "7cc45869-7501-5eee-bdea-0790c847d4ef"
-version = "0.0.121+0"
+version = "0.0.122+0"
 
 [[deps.Evolutionary]]
 deps = ["LinearAlgebra", "NLSolversBase", "Random", "StackViews", "Statistics", "UnPack"]
@@ -1941,9 +1941,9 @@ version = "1.6.3"
 
 [[deps.OrdinaryDiffEq]]
 deps = ["ADTypes", "Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "EnumX", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FillArrays", "FiniteDiff", "ForwardDiff", "FunctionWrappersWrappers", "IfElse", "InteractiveUtils", "LineSearches", "LinearAlgebra", "LinearSolve", "Logging", "MacroTools", "MuladdMacro", "NonlinearSolve", "Polyester", "PreallocationTools", "PrecompileTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLOperators", "SciMLStructures", "SimpleNonlinearSolve", "SimpleUnPack", "SparseArrays", "SparseDiffTools", "StaticArrayInterface", "StaticArrays", "TruncatedStacktraces"]
-git-tree-sha1 = "3ae298de8045aeaed80a992074d473b040a5b9cd"
+git-tree-sha1 = "a6a006cbf1e563035c0e32b63234e039b599f6b2"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "6.83.1"
+version = "6.83.2"
 
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
