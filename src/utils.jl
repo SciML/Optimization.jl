@@ -78,6 +78,7 @@ const STOP_REASON_MAP = Dict(
     r"Terminated" => ReturnCode.Terminated,
     r"MaxIters|MAXITERS_EXCEED|Max number of steps .* reached" => ReturnCode.MaxIters,
     r"MaxTime|TIME_LIMIT" => ReturnCode.MaxTime,
+    r"Max time" => ReturnCode.MaxTime,
     r"DtLessThanMin" => ReturnCode.DtLessThanMin,
     r"Unstable" => ReturnCode.Unstable,
     r"InitialFailure" => ReturnCode.InitialFailure,
