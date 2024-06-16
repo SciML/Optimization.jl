@@ -168,17 +168,19 @@ function SciMLBase.__solve(cache::OptimizationCache{
         end
 
         opt_ret = ReturnCode.MaxIters
+        n = length(cache.u0)
+
+        if solver_kwargs.lb === nothing
+            optimizer, bounds= LBFGSB._opt_bounds(n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n])
+        else
+            optimizer, bounds= LBFGSB._opt_bounds(n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
+        end
 
         for i in 1:maxiters
             prev_eqcons .= cons_tmp[eq_inds]
             prevβ .= copy(β)
-            if cache.lb !== nothing && cache.ub !== nothing
-                res = lbfgsb(_loss, aug_grad, θ; m = cache.opt.m, pgtol = sqrt(ϵ),
-                    maxiter = maxiters / 100, lb = cache.lb, ub = cache.ub)
-            else
-                res = lbfgsb(_loss, aug_grad, θ; m = cache.opt.m,
-                    pgtol = sqrt(ϵ), maxiter = maxiters / 100)
-            end
+
+            res = optimizer(_loss, aug_grad, θ, bounds; m = cache.opt.m, pgtol = sqrt(ϵ), maxiter = maxiters / 100) 
             # @show res[2]
             # @show res[1]
             # @show cons_tmp
