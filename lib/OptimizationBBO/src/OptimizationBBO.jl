@@ -181,7 +181,8 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
 
     t1 = time()
 
-    opt_ret = Symbol(opt_res.stop_reason)
+    # Use the improved convert function
+    opt_ret = Optimization.deduce_retcode(opt_res.stop_reason)
     stats = Optimization.OptimizationStats(;
         iterations = opt_res.iterations,
         time = t1 - t0,

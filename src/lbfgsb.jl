@@ -21,6 +21,10 @@ SciMLBase.allowsbounds(::LBFGS) = true
 # SciMLBase.requiresgradient(::LBFGS) = true
 SciMLBase.allowsconstraints(::LBFGS) = true
 
+function task_message_to_string(task::Vector{UInt8})
+    return String(task)
+end
+
 function __map_optimizer_args(cache::Optimization.OptimizationCache, opt::LBFGS;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
@@ -162,16 +166,21 @@ function SciMLBase.__solve(cache::OptimizationCache{
                 for (i, idx) in enumerate(ineqidxs);
                 init = zero(G)) #should be jvp
         end
+
+        opt_ret = ReturnCode.MaxIters
+        n = length(cache.u0)
+
+        if cache.lb === nothing
+            optimizer, bounds= LBFGSB._opt_bounds(n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n])
+        else
+            optimizer, bounds= LBFGSB._opt_bounds(n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
+        end
+
         for i in 1:maxiters
             prev_eqcons .= cons_tmp[eq_inds]
             prevβ .= copy(β)
-            if cache.lb !== nothing && cache.ub !== nothing
-                res = lbfgsb(_loss, aug_grad, θ; m = cache.opt.m, pgtol = sqrt(ϵ),
-                    maxiter = maxiters / 100, lb = cache.lb, ub = cache.ub)
-            else
-                res = lbfgsb(_loss, aug_grad, θ; m = cache.opt.m,
-                    pgtol = sqrt(ϵ), maxiter = maxiters / 100)
-            end
+
+            res = optimizer(_loss, aug_grad, θ, bounds; m = cache.opt.m, pgtol = sqrt(ϵ), maxiter = maxiters / 100) 
             # @show res[2]
             # @show res[1]
             # @show cons_tmp
@@ -192,6 +201,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                 ρ = γ * ρ
             end
             if norm(cons_tmp[eq_inds], Inf) < ϵ && norm(β, Inf) < ϵ
+                opt_ret = ReturnCode.Success
                 break
             end
         end
@@ -199,7 +209,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         stats = Optimization.OptimizationStats(; iterations = maxiters,
             time = 0.0, fevals = maxiters, gevals = maxiters)
         return SciMLBase.build_solution(
-            cache, cache.opt, res[2], cache.f(res[2], cache.p)[1], stats = stats)
+            cache, cache.opt, res[2], cache.f(res[2], cache.p)[1], stats = stats, retcode = opt_ret)
     else
         _loss = function (θ)
             x = cache.f(θ, cache.p)
@@ -211,12 +221,28 @@ function SciMLBase.__solve(cache::OptimizationCache{
             return x[1]
         end
 
+        n = length(cache.u0)
+
+        if cache.lb === nothing
+            optimizer, bounds= LBFGSB._opt_bounds(n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n])
+        else
+            optimizer, bounds= LBFGSB._opt_bounds(n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
+        end
+
         t0 = time()
-        res = lbfgsb(_loss, cache.f.grad, cache.u0; m = cache.opt.m, solver_kwargs...)
+
+        res = optimizer(_loss, cache.f.grad, cache.u0, bounds; m = cache.opt.m, solver_kwargs...)
+
+        # Extract the task message from the result
+        stop_reason = task_message_to_string(optimizer.task)
+
+        # Deduce the return code from the stop reason
+        opt_ret = deduce_retcode(stop_reason)
+
         t1 = time()
         stats = Optimization.OptimizationStats(; iterations = maxiters,
             time = t1 - t0, fevals = maxiters, gevals = maxiters)
 
-        return SciMLBase.build_solution(cache, cache.opt, res[2], res[1], stats = stats)
+        return SciMLBase.build_solution(cache, cache.opt, res[2], res[1], stats = stats, retcode = opt_ret)
     end
 end
