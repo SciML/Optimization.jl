@@ -75,6 +75,7 @@ using SciMLBase: ReturnCode
 const STOP_REASON_MAP = Dict(
     r"Delta fitness .* below tolerance .*" => ReturnCode.Success,
     r"Fitness .* within tolerance .* of optimum" => ReturnCode.Success,
+    r"CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL" => ReturnCode.Success,
     r"Terminated" => ReturnCode.Terminated,
     r"MaxIters|MAXITERS_EXCEED|Max number of steps .* reached" => ReturnCode.MaxIters,
     r"MaxTime|TIME_LIMIT" => ReturnCode.MaxTime,

@@ -22,7 +22,7 @@ SciMLBase.allowsbounds(::LBFGS) = true
 SciMLBase.allowsconstraints(::LBFGS) = true
 
 function task_message_to_string(task::Vector{UInt8})
-    return String(task[1:findfirst(iszero, task, 1) - 1])
+    return String(task)
 end
 
 function __map_optimizer_args(cache::Optimization.OptimizationCache, opt::LBFGS;
@@ -170,7 +170,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         opt_ret = ReturnCode.MaxIters
         n = length(cache.u0)
 
-        if solver_kwargs.lb === nothing
+        if cache.lb === nothing
             optimizer, bounds= LBFGSB._opt_bounds(n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n])
         else
             optimizer, bounds= LBFGSB._opt_bounds(n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
@@ -223,7 +223,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
         n = length(cache.u0)
 
-        if solver_kwargs.lb === nothing
+        if cache.lb === nothing
             optimizer, bounds= LBFGSB._opt_bounds(n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n])
         else
             optimizer, bounds= LBFGSB._opt_bounds(n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
