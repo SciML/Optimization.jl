@@ -10,6 +10,9 @@ optf = OptimizationFunction(rosenbrock, AutoEnzyme())
 prob = OptimizationProblem(optf, x0)
 @time res = solve(prob, Optimization.LBFGS(), maxiters = 100)
 
+prob = OptimizationProblem(optf, x0,  lb = [-1.0, -1.0], ub = [1.0, 1.0])
+@time res = solve(prob, Optimization.LBFGS(), maxiters = 100)
+
 function con2_c(res, x, p)
     res .= [x[1]^2 + x[2]^2, (x[2] * sin(x[1]) + x[1]) - 5]
 end
