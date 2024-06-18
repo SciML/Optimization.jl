@@ -171,16 +171,18 @@ function SciMLBase.__solve(cache::OptimizationCache{
         n = length(cache.u0)
 
         if cache.lb === nothing
-            optimizer, bounds= LBFGSB._opt_bounds(n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n])
+            optimizer, bounds = LBFGSB._opt_bounds(n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n])
         else
-            optimizer, bounds= LBFGSB._opt_bounds(n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
+            optimizer, bounds = LBFGSB._opt_bounds(n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
         end
+
+        solver_kwargs = Base.structdiff(solver_kwargs, (; lb = nothing, ub = nothing))
 
         for i in 1:maxiters
             prev_eqcons .= cons_tmp[eq_inds]
             prevβ .= copy(β)
 
-            res = optimizer(_loss, aug_grad, θ, bounds; m = cache.opt.m, pgtol = sqrt(ϵ), maxiter = maxiters / 100) 
+            res = optimizer(_loss, aug_grad, θ, bounds; solver_kwargs..., m = cache.opt.m, pgtol = sqrt(ϵ), maxiter = maxiters / 100)
             # @show res[2]
             # @show res[1]
             # @show cons_tmp
@@ -228,6 +230,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
         else
             optimizer, bounds= LBFGSB._opt_bounds(n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
         end
+
+        solver_kwargs = Base.structdiff(solver_kwargs, (; lb = nothing, ub = nothing))
 
         t0 = time()
 
