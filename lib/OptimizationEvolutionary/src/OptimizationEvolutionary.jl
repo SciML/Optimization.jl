@@ -125,8 +125,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
     f = cache.f
 
     _loss = function (θ)
-        x = f(θ, cache.p, cur...)
-        return first(x)
+        if isa(f, MultiObjectiveOptimizationFunction)
+            x = f(θ, cache.p, cur...)
+            return x
+        else
+            x = f(θ, cache.p, cur...)
+            return first(x)
+        end
     end
 
     opt_args = __map_optimizer_args(cache, cache.opt; callback = _cb, cache.solver_args...,
