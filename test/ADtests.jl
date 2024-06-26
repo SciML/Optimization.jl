@@ -202,12 +202,15 @@ prob = OptimizationProblem(optf, x0)
 
 sol = solve(prob, Optim.BFGS())
 @test 10 * sol.objective < l1
+@test sol.retcode == ReturnCode.Success
 
 sol = solve(prob, Optim.Newton())
 @test 10 * sol.objective < l1
+@test sol.retcode == ReturnCode.Success
 
 sol = solve(prob, Optim.KrylovTrustRegion())
 @test 10 * sol.objective < l1
+@test sol.retcode == ReturnCode.Success
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoZygote(), nothing)
@@ -403,10 +406,12 @@ for consf in [cons, con2_c]
     prob1 = OptimizationProblem(optf1, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8],
         lcons = lcons, ucons = ucons)
     sol1 = solve(prob1, Optim.IPNewton())
+    @test sol1.retcode == ReturnCode.Success
     optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = consf)
     prob2 = OptimizationProblem(optf2, [0.3, 0.5], lb = [0.2, 0.4], ub = [0.6, 0.8],
         lcons = lcons, ucons = ucons)
     sol2 = solve(prob2, Optim.IPNewton())
+    @test sol2.retcode == ReturnCode.Success
     @test sol1.objective≈sol2.objective rtol=1e-4
     @test sol1.u ≈ sol2.u
     res = Array{Float64}(undef, length(lcons))
@@ -421,9 +426,11 @@ for consf in [cons, con2_c]
     optf1 = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff(); cons = consf)
     prob1 = OptimizationProblem(optf1, [0.5, 0.5], lcons = lcons, ucons = ucons)
     sol1 = solve(prob1, Optim.IPNewton())
+    @test sol1.retcode == ReturnCode.Success
     optf2 = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = consf)
     prob2 = OptimizationProblem(optf2, [0.5, 0.5], lcons = lcons, ucons = ucons)
     sol2 = solve(prob2, Optim.IPNewton())
+    @test sol2.retcode == ReturnCode.Success
     @test sol1.objective≈sol2.objective rtol=1e-4
     @test sol1.u≈sol2.u rtol=1e-4
     res = Array{Float64}(undef, length(lcons))
