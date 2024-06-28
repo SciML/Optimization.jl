@@ -394,8 +394,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
     local x, cur, state
 
     manifold = haskey(cache.solver_args, :manifold) ? cache.solver_args[:manifold] : nothing
-    gradF = haskey(cache.solver_args, :riemannian_grad) ? cache.solver_args[:riemannian_grad] : nothing
-    hessF = haskey(cache.solver_args, :riemannian_hess) ? cache.solver_args[:riemannian_hess] : nothing
+    gradF = haskey(cache.solver_args, :riemannian_grad) ?
+            cache.solver_args[:riemannian_grad] : nothing
+    hessF = haskey(cache.solver_args, :riemannian_hess) ?
+            cache.solver_args[:riemannian_hess] : nothing
 
     if manifold === nothing
         throw(ArgumentError("Manifold not specified in the problem for e.g. `OptimizationProblem(f, x, p; manifold = SymmetricPositiveDefinite(5))`."))

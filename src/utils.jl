@@ -67,7 +67,6 @@ function check_pkg_version(pkg::String, ver::String;
            pkg_info[pkg].version > VersionNumber(ver)
 end
 
-
 # RetCode handling for BBO and others.
 using SciMLBase: ReturnCode
 
@@ -76,7 +75,7 @@ const STOP_REASON_MAP = Dict(
     r"Delta fitness .* below tolerance .*" => ReturnCode.Success,
     r"Fitness .* within tolerance .* of optimum" => ReturnCode.Success,
     r"CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL" => ReturnCode.Success,
-    r"Unrecognized stop reason: CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH" => ReturnCode.Success, 
+    r"^CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR\*EPSMCH\s*$" => ReturnCode.Success,
     r"Terminated" => ReturnCode.Terminated,
     r"MaxIters|MAXITERS_EXCEED|Max number of steps .* reached" => ReturnCode.MaxIters,
     r"MaxTime|TIME_LIMIT" => ReturnCode.MaxTime,
@@ -102,11 +101,11 @@ const STOP_REASON_MAP = Dict(
 function deduce_retcode(stop_reason::String)
     for (pattern, retcode) in STOP_REASON_MAP
         if occursin(pattern, stop_reason)
-        	return retcode
+            return retcode
         end
     end
-    @warn "Unrecognized stop reason: $stop_reason. Defaulting to ReturnCode.Failure."
-    return ReturnCode.Failure
+    @warn "Unrecognized stop reason: $stop_reason. Defaulting to ReturnCode.Default."
+    return ReturnCode.Default
 end
 
 # Function to deduce ReturnCode from a Symbol
@@ -141,4 +140,3 @@ function deduce_retcode(retcode::Symbol)
         return ReturnCode.Failure
     end
 end
-
