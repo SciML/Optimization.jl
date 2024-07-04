@@ -39,7 +39,7 @@ function Optimization.OptimizationCache(prob::SciMLBase.OptimizationProblem,
 
     return Optimization.OptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
-        opt, data, progress, callback,
+        opt, data, progress, callback, nothing, nothing,
         merge((; maxiters, maxtime, abstol, reltol),
             NamedTuple(kwargs)))
 end
