@@ -18,7 +18,7 @@ ManifoldDiff = "0.3.10"
 Manifolds = "0.9.18"
 ManifoldsBase = "0.15.10"
 Manopt = "0.4.63"
-Optimization = "3.26.3"
+Optimization = "3.27"
 Reexport = "1.2"
 julia = "1.9"
 
