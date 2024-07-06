@@ -393,7 +393,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 }
     local x, cur, state
 
-    manifold = haskey(cache.solver_args, :manifold) ? cache.solver_args[:manifold] : nothing
+    manifold = cache.manifold
     gradF = haskey(cache.solver_args, :riemannian_grad) ?
             cache.solver_args[:riemannian_grad] : nothing
     hessF = haskey(cache.solver_args, :riemannian_hess) ?
