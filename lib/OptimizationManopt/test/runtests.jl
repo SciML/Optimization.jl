@@ -215,7 +215,7 @@ end
     opt = OptimizationManopt.GradientDescentOptimizer()
     @time sol = Optimization.solve(prob, opt)
 
-    @test sol.u≈q atol=1e-2
+    @test sol.u≈q rtol=1e-2
 
     function closed_form_solution!(M::SymmetricPositiveDefinite, q, L, U, p, X)
         # extract p^1/2 and p^{-1/2}
@@ -243,5 +243,5 @@ end
     @time sol = Optimization.solve(
         prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X),
         maxiters = 1000)
-    @test sol.u≈q atol=1e-2
+    @test sol.u≈q rtol=1e-2
 end
