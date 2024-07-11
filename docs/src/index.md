@@ -29,8 +29,9 @@ Pkg.add("Optimization")
 
 The packages relevant to the core functionality of Optimization.jl will be imported
 accordingly and, in most cases, you do not have to worry about the manual
-installation of dependencies. However, you will need to add the specific optimizer
-packages.
+installation of dependencies. [Optimization.jl](@ref) natively offers a LBFGS solver 
+but for more solver choices (discussed below in Optimization Packages), you will need 
+to add the specific wrapper packages.
 
 ## Contributing
 
