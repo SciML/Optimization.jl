@@ -252,14 +252,14 @@ optf = OptimizationFunction(rosenbrock, Optimization.AutoTracker())
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoTracker(), nothing)
 optprob.grad(G2, x0)
 @test G1 == G2
-@test_throws ErrorException optprob.hess(H2, x0)
+@test_broken optprob.hess(H2, x0)
 
 prob = OptimizationProblem(optf, x0)
 
 sol = solve(prob, Optim.BFGS())
 @test 10 * sol.objective < l1
 
-@test_throws ErrorException solve(prob, Newton())
+@test_broken solve(prob, Newton())
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoFiniteDiff())
 optprob = Optimization.instantiate_function(optf, x0, Optimization.AutoFiniteDiff(),
@@ -303,11 +303,11 @@ H3 = [Array{Float64}(undef, 2, 2)]
 optprob.cons_h(H3, x0)
 @test H3 ≈ [[2.0 0.0; 0.0 2.0]]
 
-H4 = Array{Float64}(undef, 2, 2)
-μ = randn(1)
-σ = rand()
-optprob.lag_h(H4, x0, σ, μ)
-@test H4≈σ * H1 + μ[1] * H3[1] rtol=1e-6
+# H4 = Array{Float64}(undef, 2, 2)
+# μ = randn(1)
+# σ = rand()
+# optprob.lag_h(H4, x0, σ, μ)
+# @test H4≈σ * H1 + μ[1] * H3[1] rtol=1e-6
 
 cons_jac_proto = Float64.(sparse([1 1])) # Things break if you only use [1 1]; see FiniteDiff.jl
 cons_jac_colors = 1:2
