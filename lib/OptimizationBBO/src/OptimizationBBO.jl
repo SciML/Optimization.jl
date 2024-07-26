@@ -142,17 +142,32 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     _loss = function (θ)
-        if cache.callback === Optimization.DEFAULT_CALLBACK &&
-           cache.data === Optimization.DEFAULT_DATA
-            return first(cache.f(θ, cache.p))
-        elseif cache.callback === Optimization.DEFAULT_CALLBACK
-            return first(cache.f(θ, cache.p, cur...))
-        elseif cache.data !== Optimization.DEFAULT_DATA
-            x = cache.f(θ, cache.p)
-            return first(x)
+        if isa(f, MultiObjectiveOptimizationFunction)
+            if cache.callback === Optimization.DEFAULT_CALLBACK &&
+               cache.data === Optimization.DEFAULT_DATA
+                return cache.f(θ, cache.p)
+            elseif cache.callback === Optimization.DEFAULT_CALLBACK
+                return cache.f(θ, cache.p, cur...)
+            elseif cache.data !== Optimization.DEFAULT_DATA
+                x = cache.f(θ, cache.p)
+                return x
+            else
+                x = cache.f(θ, cache.p, cur...)
+                return first(x)
+            end
         else
-            x = cache.f(θ, cache.p, cur...)
-            return first(x)
+            if cache.callback === Optimization.DEFAULT_CALLBACK &&
+               cache.data === Optimization.DEFAULT_DATA
+                return first(cache.f(θ, cache.p))
+            elseif cache.callback === Optimization.DEFAULT_CALLBACK
+                return first(cache.f(θ, cache.p, cur...))
+            elseif cache.data !== Optimization.DEFAULT_DATA
+                x = cache.f(θ, cache.p)
+                return first(x)
+            else
+                x = cache.f(θ, cache.p, cur...)
+                return first(x)
+            end
         end
     end
 
