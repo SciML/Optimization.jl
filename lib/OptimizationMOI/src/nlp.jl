@@ -284,15 +284,17 @@ function MOI.eval_constraint_jacobian(evaluator::MOIOptimizationNLPEvaluator, j,
             j[i] = Ji
         end
     else
-        for i in eachindex(j)
-            j[i] = J[i]
-        end
+        j .= vec(J)
     end
     return
 end
 
 function MOI.hessian_lagrangian_structure(evaluator::MOIOptimizationNLPEvaluator)
     lagh = evaluator.f.lag_h !== nothing
+    if evaluator.f.lag_hess_prototype !== nothing
+        rows, cols, _ = findnz(evaluator.f.lag_hess_prototype)
+        return Tuple{Int, Int}[(i, j) for (i, j) in zip(rows, cols) if i <= j]
+    end
     sparse_obj = evaluator.H isa SparseMatrixCSC
     sparse_constraints = all(H -> H isa SparseMatrixCSC, evaluator.cons_H)
     if !lagh && !sparse_constraints && any(H -> H isa SparseMatrixCSC, evaluator.cons_H)
@@ -332,64 +334,13 @@ function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
         σ,
         μ) where {T}
     if evaluator.f.lag_h !== nothing
-        return evaluator.f.lag_h(h, x, σ, μ)
+        evaluator.f.lag_h(h, x, σ, μ)
+        return
     end
     if evaluator.f.hess === nothing
         error("Use OptimizationFunction to pass the objective hessian or " *
               "automatically generate it with one of the autodiff backends." *
               "If you are using the ModelingToolkit symbolic interface, pass the `hess` kwarg set to `true` in `OptimizationProblem`.")
-    end
-    # Get and cache the Hessian object here once. `evaluator.H` calls
-    # `getproperty`, which is expensive because it calls `fieldnames`.
-    H = evaluator.H
-    fill!(h, zero(T))
-    k = 0
-    evaluator.f.hess(H, x)
-    sparse_objective = H isa SparseMatrixCSC
-    if sparse_objective
-        rows, cols, _ = findnz(H)
-        for (i, j) in zip(rows, cols)
-            if i <= j
-                k += 1
-                h[k] = σ * H[i, j]
-            end
-        end
-    else
-        for i in 1:size(H, 1), j in 1:i
-            k += 1
-            h[k] = σ * H[i, j]
-        end
-    end
-    # A count of the number of non-zeros in the objective Hessian is needed if
-    # the constraints are dense.
-    nnz_objective = k
-    if !isempty(μ) && !all(iszero, μ)
-        if evaluator.f.cons_h === nothing
-            error("Use OptimizationFunction to pass the constraints' hessian or " *
-                  "automatically generate it with one of the autodiff backends." *
-                  "If you are using the ModelingToolkit symbolic interface, pass the `cons_h` kwarg set to `true` in `OptimizationProblem`.")
-        end
-        evaluator.f.cons_h(evaluator.cons_H, x)
-        for (μi, Hi) in zip(μ, evaluator.cons_H)
-            if Hi isa SparseMatrixCSC
-                rows, cols, _ = findnz(Hi)
-                for (i, j) in zip(rows, cols)
-                    if i <= j
-                        k += 1
-                        h[k] += μi * Hi[i, j]
-                    end
-                end
-            else
-                # The constraints are dense. We only store one copy of the
-                # Hessian, so reset `k` to where it starts. That will be
-                # `nnz_objective` if the objective is sprase, and `0` otherwise.
-                k = sparse_objective ? nnz_objective : 0
-                for i in 1:size(Hi, 1), j in 1:i
-                    k += 1
-                    h[k] += μi * Hi[i, j]
-                end
-            end
-        end
     end
     return
 end
