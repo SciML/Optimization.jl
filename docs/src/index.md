@@ -58,7 +58,6 @@ to add the specific wrapper packages.
     - Unconstrained
     - Box Constraints
 </details>
-
 <details>
   <summary><strong>CMAEvolutionaryStrategy</strong></summary>
   - **Global Methods**
@@ -66,7 +65,6 @@ to add the specific wrapper packages.
     - Unconstrained
     - Box Constraints
 </details>
-
 <details>
   <summary><strong>Evolutionary</strong></summary>
   - **Global Methods**
@@ -75,7 +73,6 @@ to add the specific wrapper packages.
     - Box Constraints
     - Non-linear Constraints
 </details>
-
 <details>
   <summary><strong>GCMAES</strong></summary>
   - **Global Methods**
@@ -83,7 +80,6 @@ to add the specific wrapper packages.
     - Box Constraints
     - Unconstrained
 </details>
-
 <details>
   <summary><strong>Manopt</strong></summary>
   - **Local Methods**
@@ -96,7 +92,6 @@ to add the specific wrapper packages.
     - Zeroth order
     - Unconstrained
 </details>
-
 <details>
   <summary><strong>MathOptInterface</strong></summary>
   - **Local Methods**
@@ -109,7 +104,6 @@ to add the specific wrapper packages.
     - Second order
     - Constrained
 </details>
-
 <details>
   <summary><strong>MultistartOptimization</strong></summary>
   - **Global Methods**
@@ -118,7 +112,6 @@ to add the specific wrapper packages.
     - Second order
     - Box Constraints
 </details>
-
 <details>
   <summary><strong>Metaheuristics</strong></summary>
   - **Global Methods**
@@ -126,7 +119,6 @@ to add the specific wrapper packages.
     - Unconstrained
     - Box Constraints
 </details>
-
 <details>
   <summary><strong>NOMAD</strong></summary>
   - **Global Methods**
@@ -135,7 +127,6 @@ to add the specific wrapper packages.
     - Box Constraints
     - Constrained 🟡
 </details>
-
 <details>
   <summary><strong>NLopt</strong></summary>
   - **Local Methods**
@@ -150,7 +141,6 @@ to add the specific wrapper packages.
     - Unconstrained
     - Constrained 🟡
 </details>
-
 <details>
   <summary><strong>Optim</strong></summary>
   - **Local Methods**
@@ -164,7 +154,6 @@ to add the specific wrapper packages.
     - Unconstrained
     - Box Constraints
 </details>
-
 <details>
   <summary><strong>PRIMA</strong></summary>
   - **Local Methods**
@@ -173,7 +162,6 @@ to add the specific wrapper packages.
     - Box Constraints: ✅
     - Local Constrained: ✅
 </details>
-
 <details>
   <summary><strong>QuadDIRECT</strong></summary>
   - **Constraints**
@@ -181,9 +169,7 @@ to add the specific wrapper packages.
   - **Global Methods**
     - Unconstrained: ✅
 </details>
-
 🟡 = supported in downstream library but not yet implemented in `Optimization.jl`; PR to add this functionality are welcome
-
 
 ## Citation
 
