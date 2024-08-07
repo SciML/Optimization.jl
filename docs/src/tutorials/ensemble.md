@@ -10,7 +10,7 @@ using Optimization, OptimizationOptimJL, Random
 
 Random.seed!(100)
 
-rosenbrock(x, p) =  (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 
 optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
