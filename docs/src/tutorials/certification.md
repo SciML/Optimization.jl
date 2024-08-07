@@ -4,45 +4,6 @@ In this tutorial, we will show how to use automatic convexity certification of t
 
 This works with the `structural_analysis` keyword argument to `OptimizationProblem`. This tells the package to try to trace through the objective and constraints with symbolic variables (for more details on this look at the [Symbolics documentation](https://symbolics.juliasymbolics.org/stable/manual/functions/#function_registration)). This relies on the Disciplined Programming approach hence neccessitates the use of "atoms" from the SymbolicAnalysis.jl package.
 
-<!-- Let's look at a simple long-only Markowitz portfolio optimization problem.
-
-```math
-\begin{alig}
-\text{minimize} &x^{T}\Sigma x
-\text{subject to} &p^{T}x \geq r_{min}
-                  &\emp{1}^{T}x = 1
-                  &x \geq 0
-\end{align}
-```
-
-We'll use the MTK symbolic interface to define the problem.
-
-```@example symanalysis
-using SymbolicAnalysis, Zygote, LinearAlgebra, Optimization, OptimizationMOI
-
-prices = rand(5)
-Σsqrt = rand(5,5)
-Σ = Σsqrt*Σsqrt'
-r_min = 1.0
-
-function objective(x, p=nothing)
-    return SymbolicAnalysis.quad_form(x, Σ)
-end
-
-function cons(res, x, p = nothing)
-    res[1] = (x'*prices)[1] - r_min
-    res[2] = (ones(1, 5)*x)[1] - 1.0
-end
-
-optf = OptimizationFunction(objective, Optimization.AutoZygote(); cons = cons)
-x0unnorm = rand(5)
-x0 = x0unnorm./sum(x0unnorm)
-prob = OptimizationProblem(optf, x0, lcons = [-Inf, 0.0], ucons = [0.0, 0.0], structural_analysis = true)
-
-sol = solve(prob, Optimization.LBFGS())
-
-``` 
--->
 We'll use a simple example to illustrate the convexity structure certification process.
 
 ```@example symanalysis
