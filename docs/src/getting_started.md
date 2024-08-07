@@ -1,41 +1,39 @@
-# Getting Started with Optimization in Julia
+# Getting Started with Optimization.jl
 
 In this tutorial, we introduce the basics of Optimization.jl by showing
-how to easily mix local optimizers from Optim.jl and global optimizers
-from BlackBoxOptim.jl on the Rosenbrock equation. The simplest copy-pasteable
-code to get started is the following:
+how to easily mix local optimizers and global optimizers on the Rosenbrock equation.
+The simplest copy-pasteable code using a quasi-Newton method (LBFGS) to solve the Rosenbrock problem is the following:
 
 ```@example intro
 # Import the package and define the problem to optimize
-using Optimization
+using Optimization, Zygote
 rosenbrock(u, p) = (p[1] - u[1])^2 + p[2] * (u[2] - u[1]^2)^2
 u0 = zeros(2)
 p = [1.0, 100.0]
 
-prob = OptimizationProblem(rosenbrock, u0, p)
+optf = OptimizationFunction(rosenbrock, AutoZygote())
+prob = OptimizationProblem(optf, u0, p)
 
-# Import a solver package and solve the optimization problem
+sol = solve(prob, Optimization.LBFGS())
+```
+
+## Import a different solver package and solve the problem
+
+OptimizationOptimJL is a wrapper for [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) and OptimizationBBO is a wrapper for [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl).
+
+First let's use the NelderMead a derivative free solver from Optim.jl:
+
+```@example intro
 using OptimizationOptimJL
-sol = solve(prob, NelderMead())
+sol = solve(prob, Optim.NelderMead())
+```
 
-# Import a different solver package and solve the optimization problem a different way
+BlackBoxOptim.jl offers derivative-free global optimization solvers that requrie the bounds to be set via `lb` and `ub` in the `OptimizationProblem`. Let's use the BBO_adaptive_de_rand_1_bin_radiuslimited() solver:
+
+```@example intro
 using OptimizationBBO
 prob = OptimizationProblem(rosenbrock, u0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
-```
-
-Notice that Optimization.jl is the core glue package that holds all the common
-pieces, but to solve the equations, we need to use a solver package. Here, OptimizationOptimJL
-is for [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) and OptimizationBBO is for
-[BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl).
-
-The output of the first optimization task (with the `NelderMead()` algorithm)
-is given below:
-
-```@example intro
-optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
-prob = OptimizationProblem(optf, u0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
-sol = solve(prob, NelderMead())
 ```
 
 The solution from the original solver can always be obtained via `original`:
