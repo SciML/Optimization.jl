@@ -1,2 +1,17 @@
+name = "OptimizationNLPModels"
+uuid = "064b21be-54cf-11ef-1646-cdfee32b588f"
+authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
+version = "0.0.1"
+
 [deps]
+ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
 NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
+Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+
+[extras]
+NLPModelsTest = "7998695d-6960-4d3a-85c4-e1bceb8cd856"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test", "NLPModelsTest"]
