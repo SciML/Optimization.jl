@@ -8,6 +8,7 @@ SciMLBase.allowsbounds(opt::Evolutionary.AbstractOptimizer) = true
 SciMLBase.allowsconstraints(opt::Evolutionary.AbstractOptimizer) = true
 SciMLBase.supports_opt_cache_interface(opt::Evolutionary.AbstractOptimizer) = true
 SciMLBase.requiresgradient(opt::Evolutionary.AbstractOptimizer) = false
+SciMLBase.requiresgradient(opt::Evolutionary.NSGA2) = false
 SciMLBase.requireshessian(opt::Evolutionary.AbstractOptimizer) = false
 SciMLBase.requiresconsjac(opt::Evolutionary.AbstractOptimizer) = false
 SciMLBase.requiresconshess(opt::Evolutionary.AbstractOptimizer) = false
@@ -125,8 +126,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
     f = cache.f
 
     _loss = function (θ)
-        x = f(θ, cache.p, cur...)
-        return first(x)
+        if isa(f, MultiObjectiveOptimizationFunction)
+            x = f(θ, cache.p, cur...)
+            return x
+        else
+            x = f(θ, cache.p, cur...)
+            return first(x)
+        end
     end
 
     opt_args = __map_optimizer_args(cache, cache.opt; callback = _cb, cache.solver_args...,
