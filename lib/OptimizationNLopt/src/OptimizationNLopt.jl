@@ -36,6 +36,24 @@ function SciMLBase.requiresconsjac(opt::NLopt.Algorithm) #https://github.com/Jul
     end
 end
 
+function SciMLBase.allowsconstraints(opt::NLopt.Algorithm)
+    str_opt = string(opt)
+    if occursin("AUGLAG", str_opt) || occursin("CCSA", str_opt) || occursin("MMA", str_opt) || occursin("COBYLA", str_opt) || occursin("ISRES", str_opt) || occursin("AGS", str_opt) || occursin("ORIG_DIRECT", str_opt) || occursin("SLSQP", str_opt) 
+        return true
+    else
+        return false
+    end
+end
+
+function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::NLopt.Algorithm,
+        data = Optimization.DEFAULT_DATA; cons_tol =  1e-6,
+        callback = (args...) -> (false),
+        progress = false, kwargs...)
+    return OptimizationCache(prob, opt, data; cons_tol, callback, progress,
+        kwargs...)
+end
+
+
 function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
@@ -76,7 +94,9 @@ function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
 
     # add optimiser options from kwargs
     for j in kwargs
-        eval(Meta.parse("NLopt." * string(j.first) * "!"))(opt, j.second)
+        if j.first != :cons_tol
+            eval(Meta.parse("NLopt." * string(j.first) * "!"))(opt, j.second)
+        end
     end
 
     if cache.ub !== nothing
@@ -170,13 +190,17 @@ function SciMLBase.__solve(cache::OptimizationCache{
         return x[1]
     end
 
-    fg! = function (θ, G)
-        if length(G) > 0
-            cache.f.grad(G, θ)
+    if !hasfield(typeof(cache.f), :fg) || cache.f.fg === nothing
+        fg! = function (θ, G)
+            if length(G) > 0
+                cache.f.grad(G, θ)
+            end
+            return _loss(θ)
         end
-
-        return _loss(θ)
+    else
+        fg! = cache.f.fg
     end
+
 
     opt_setup = if isa(cache.opt, NLopt.Opt)
         if ndims(cache.opt) != length(cache.u0)
@@ -191,6 +215,37 @@ function SciMLBase.__solve(cache::OptimizationCache{
         NLopt.max_objective!(opt_setup, fg!)
     else
         NLopt.min_objective!(opt_setup, fg!)
+    end
+
+    if cache.f.cons !== nothing
+        eqinds = map((y) -> y[1]==y[2], zip(cache.lcons, cache.ucons))
+        ineqinds = map((y) -> y[1]!=y[2], zip(cache.lcons, cache.ucons))
+        if sum(ineqinds) > 0
+            ineqcons = function (res, θ, J)
+                cons_cache = zeros(eltype(res), sum(eqinds)+sum(ineqinds))
+                cache.f.cons(cons_cache, θ)
+                res .= @view(cons_cache[ineqinds])
+                if length(J) > 0
+                    Jcache = zeros(eltype(J), sum(ineqinds)+sum(eqinds), length(θ))
+                    cache.f.cons_j(Jcache, θ)
+                    J .= @view(Jcache[ineqinds, :])'
+                end
+            end
+            NLopt.inequality_constraint!(opt_setup, ineqcons, [cache.solver_args.cons_tol for i in 1:sum(ineqinds)])
+        end
+        if sum(eqinds) > 0
+            eqcons = function (res, θ, J)
+                cons_cache = zeros(eltype(res), sum(eqinds)+sum(ineqinds))
+                cache.f.cons(cons_cache, θ)
+                res .= @view(cons_cache[eqinds])
+                if length(J) > 0
+                    Jcache = zeros(eltype(res), sum(eqinds)+sum(ineqinds), length(θ))
+                    cache.f.cons_j(Jcache, θ)
+                    J .= @view(Jcache[eqinds, :])'
+                end
+            end
+            NLopt.equality_constraint!(opt_setup, eqcons, [cache.solver_args.cons_tol for i in 1:sum(eqinds)])
+        end
     end
 
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)

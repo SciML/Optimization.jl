@@ -1,5 +1,5 @@
 using OptimizationNLopt, Optimization, Zygote
-using Test
+using Test, Random
 
 @testset "OptimizationNLopt.jl" begin
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
@@ -16,15 +16,11 @@ using Test
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
     prob = OptimizationProblem(optprob, x0, _p)
 
-    sol = solve(prob, NLopt.Opt(:LN_BOBYQA, 2))
+    sol = solve(prob, NLopt.Opt(:LD_LBFGS, 2))
     @test sol.retcode == ReturnCode.Success
     @test 10 * sol.objective < l1
 
     prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
-
-    sol = solve(prob, NLopt.Opt(:LD_LBFGS, 2))
-    @test sol.retcode == ReturnCode.Success
-    @test 10 * sol.objective < l1
 
     sol = solve(prob, NLopt.Opt(:LD_LBFGS, 2))
     @test sol.retcode == ReturnCode.Success
@@ -81,5 +77,47 @@ using Test
         sol = solve(prob, NLopt.LD_LBFGS())
         #nlopt gives the last best not the one where callback stops
         @test sol.objective < 0.8
+    end
+
+    @testset "constrained" begin
+        cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2 - 1.0]
+        x0 = zeros(2)
+        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote();
+            cons = cons)
+        prob = OptimizationProblem(optprob, x0, _p, lcons = [0.0], ucons = [0.0])
+        sol = solve(prob, NLopt.LN_COBYLA())
+        @test sol.retcode == ReturnCode.Success
+        @test 10 * sol.objective < l1
+
+        Random.seed!(1)
+        prob = OptimizationProblem(optprob, rand(2), _p,
+            lcons = [0.0], ucons = [0.0])
+
+        sol = solve(prob, NLopt.LD_SLSQP())
+        @test sol.retcode == ReturnCode.Success
+        @test 10 * sol.objective < l1
+
+        Random.seed!(1)
+        prob = OptimizationProblem(optprob, rand(2), _p,
+            lcons = [0.0], ucons = [0.0])
+        sol = solve(prob, NLopt.AUGLAG(), local_method = NLopt.LD_LBFGS())
+        @test sol.retcode == ReturnCode.Success
+        @test 10 * sol.objective < l1
+
+        function con2_c(res, x, p)
+            res .= [x[1]^2 + x[2]^2 - 1.0, x[2] * sin(x[1]) - x[1] - 2.0]
+        end
+    
+        optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();cons = con2_c)
+        Random.seed!(1)
+        prob = OptimizationProblem(optprob, rand(2), _p, lcons = [0.0, -Inf], ucons = [0.0, 0.0])
+        sol = solve(prob, NLopt.LD_AUGLAG(), local_method = NLopt.LD_LBFGS())
+        @test sol.retcode == ReturnCode.Success
+        @test 10 * sol.objective < l1
+
+        prob = OptimizationProblem(optprob, rand(2), _p, lcons = [-Inf, -Inf], ucons = [0.0, 0.0], lb = [-1.0, -1.0], ub = [1.0, 1.0])
+        sol = solve(prob, NLopt.GN_ISRES(), maxiters = 1000)
+        @test sol.retcode == ReturnCode.MaxIters
+        @test 10 * sol.objective < l1
     end
 end
