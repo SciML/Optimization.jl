@@ -94,7 +94,8 @@ const STOP_REASON_MAP = Dict(
     r"STOP: XTOL.TOO.SMALL" => ReturnCode.ConvergenceFailure,
     r"STOP: TERMINATION" => ReturnCode.Terminated,
     r"Optimization completed" => ReturnCode.Success,
-    r"Convergence achieved" => ReturnCode.Success
+    r"Convergence achieved" => ReturnCode.Success,
+    r"ROUNDOFF_LIMITED" => ReturnCode.Success
 )
 
 # Function to deduce ReturnCode from a stop_reason string using the dictionary

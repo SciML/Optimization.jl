@@ -3,6 +3,7 @@ module OptimizationNLopt
 using Reexport
 @reexport using NLopt, Optimization
 using Optimization.SciMLBase
+using Optimization: deduce_retcode
 
 (f::NLopt.Algorithm)() = f
 
@@ -125,31 +126,6 @@ function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
     return nothing
 end
 
-function __nlopt_status_to_ReturnCode(status::Symbol)
-    if status in Symbol.([
-        NLopt.SUCCESS,
-        NLopt.STOPVAL_REACHED,
-        NLopt.FTOL_REACHED,
-        NLopt.XTOL_REACHED,
-        NLopt.ROUNDOFF_LIMITED
-    ])
-        return ReturnCode.Success
-    elseif status == Symbol(NLopt.MAXEVAL_REACHED)
-        return ReturnCode.MaxIters
-    elseif status == Symbol(NLopt.MAXTIME_REACHED)
-        return ReturnCode.MaxTime
-    elseif status in Symbol.([
-        NLopt.OUT_OF_MEMORY,
-        NLopt.INVALID_ARGS,
-        NLopt.FAILURE,
-        NLopt.FORCED_STOP
-    ])
-        return ReturnCode.Failure
-    else
-        return ReturnCode.Default
-    end
-end
-
 function SciMLBase.__solve(cache::OptimizationCache{
         F,
         RC,
@@ -258,7 +234,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     t0 = time()
     (minf, minx, ret) = NLopt.optimize(opt_setup, cache.u0)
     t1 = time()
-    retcode = __nlopt_status_to_ReturnCode(ret)
+    retcode = deduce_retcode(ret)
 
     if retcode == ReturnCode.Failure
         @warn "NLopt failed to converge: $(ret)"
