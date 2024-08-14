@@ -15,6 +15,10 @@ for j in string.(BlackBoxOptim.SingleObjectiveMethodNames)
     eval(Meta.parse("export BBO_" * j))
 end
 
+Base.@kwdef struct BBO_borg_moea <: BBO
+    method = :borg_moea 
+end
+
 function decompose_trace(opt::BlackBoxOptim.OptRunController, progress)
     if progress
         maxiters = opt.max_steps
