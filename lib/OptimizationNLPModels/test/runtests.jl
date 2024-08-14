@@ -19,6 +19,7 @@ using Test
     sol_native = solve(oprob, Ipopt.Optimizer())
     sol_converted = solve(converted, Ipopt.Optimizer())
 
+    @test sol_converted.retcode == sol_native.retcode
     @test sol_converted.u ≈ sol_native.u
 
     # Second problem: Brown and Dennis function
@@ -37,12 +38,13 @@ using Test
     sol_native = solve(oprob, BFGS())
     sol_converted = solve(converted, BFGS())
 
+    @test sol_converted.retcode == sol_native.retcode
     @test sol_converted.u ≈ sol_native.u
 
     # Third problem: Problem 10 in the Hock-Schittkowski suite
     # Problem with inequality bounds
     hs10(u, p) = u[1] - u[2]
-    hs10_cons(u, p) = -3.0 * u[1]^2 + 2.0 * u[1] * u[2] - u[2]^2 + 1.0
+    hs10_cons(res, u, p) = (res .= -3.0 * u[1]^2 + 2.0 * u[1] * u[2] - u[2]^2 + 1.0)
     lcons = [0.0]
     ucons = [Inf]
     u0 = [-10.0; 10.0]
@@ -55,5 +57,6 @@ using Test
     sol_native = solve(oprob, Ipopt.Optimizer())
     sol_converted = solve(converted, Ipopt.Optimizer())
 
+    @test sol_converted.retcode == sol_native.retcode
     @test sol_converted.u ≈ sol_native.u
 end

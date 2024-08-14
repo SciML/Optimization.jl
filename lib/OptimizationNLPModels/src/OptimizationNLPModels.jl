@@ -14,10 +14,9 @@ function SciMLBase.OptimizationFunction(nlpmodel::AbstractNLPModel,
         cons(res, x, p) = NLPModels.cons!(nlpmodel, x, res)
         cons_j(J, x, p) = (J .= NLPModels.jac(nlpmodel, x))
         cons_jvp(Jv, v, x, p) = NLPModels.jprod!(nlpmodel, x, v, Jv)
-        lag_h(x, sigma, mu, p) = NLPModels.hess(nlpmodel, x, mu; obj_weight = sigma)
 
         return OptimizationFunction(
-            f, adtype; grad, hess, hv, cons, cons_j, cons_jvp, lag_h, kwargs...)
+            f, adtype; grad, hess, hv, cons, cons_j, cons_jvp, kwargs...)
     end
 
     return OptimizationFunction(f, adtype; grad, hess, hv, kwargs...)
@@ -25,7 +24,7 @@ end
 
 function OptimizationProblem(nlpmodel::AbstractNLPModel,
         adtype::ADTypes.AbstractADType = SciMLBase.NoAD(); kwargs...)
-    f = OptimizationFunction(nlpmodel, kwargs...)
+    f = OptimizationFunction(nlpmodel, adtype; kwargs...)
     u0 = nlpmodel.meta.x0
     lb = nlpmodel.meta.lvar
     ub = nlpmodel.meta.uvar
