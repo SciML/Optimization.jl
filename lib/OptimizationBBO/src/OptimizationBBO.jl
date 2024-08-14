@@ -3,6 +3,7 @@ module OptimizationBBO
 using Reexport
 import Optimization
 import BlackBoxOptim, Optimization.SciMLBase
+import Optimization.SciMLBase: MultiObjectiveOptimizationFunction
 
 abstract type BBO end
 
@@ -147,7 +148,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     _loss = function (θ)
-        if isa(f, MultiObjectiveOptimizationFunction)
+        if isa(cache.f, MultiObjectiveOptimizationFunction)
             if cache.callback === Optimization.DEFAULT_CALLBACK &&
                cache.data === Optimization.DEFAULT_DATA
                 return cache.f(θ, cache.p)
