@@ -18,6 +18,7 @@ end
 Base.@kwdef struct BBO_borg_moea <: BBO
     method = :borg_moea 
 end
+export BBO_borg_moea
 
 function decompose_trace(opt::BlackBoxOptim.OptRunController, progress)
     if progress
