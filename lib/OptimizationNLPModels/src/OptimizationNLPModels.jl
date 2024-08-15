@@ -17,7 +17,7 @@ function SciMLBase.OptimizationFunction(nlpmodel::AbstractNLPModel,
     hess(H, u, p) = (H .= NLPModels.hess(nlpmodel, u))
     hv(Hv, u, v, p) = NLPModels.hprod!(nlpmodel, u, v, Hv)
 
-    if !unconstrained(nlpmodel)
+    if !unconstrained(nlpmodel) && !bound_constrained(nlpmodel)
         cons(res, x, p) = NLPModels.cons!(nlpmodel, x, res)
         cons_j(J, x, p) = (J .= NLPModels.jac(nlpmodel, x))
         cons_jvp(Jv, v, x, p) = NLPModels.jprod!(nlpmodel, x, v, Jv)
