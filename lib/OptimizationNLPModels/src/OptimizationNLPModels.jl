@@ -3,6 +3,13 @@ module OptimizationNLPModels
 using Reexport
 @reexport using NLPModels, Optimization, ADTypes
 
+"""
+    OptimizationFunction(nlpmodel::AbstractNLPModel, adtype::AbstractADType = NoAD())
+
+Returns an `OptimizationFunction` from the `NLPModel` defined in `nlpmodel` where the
+available derivates are re-used from the model, and the rest are populated with the
+Automatic Differentiation backend specified by `adtype`.
+"""
 function SciMLBase.OptimizationFunction(nlpmodel::AbstractNLPModel,
         adtype::ADTypes.AbstractADType = SciMLBase.NoAD(); kwargs...)
     f(x, p) = NLPModels.obj(nlpmodel, x)
@@ -22,6 +29,13 @@ function SciMLBase.OptimizationFunction(nlpmodel::AbstractNLPModel,
     return OptimizationFunction(f, adtype; grad, hess, hv, kwargs...)
 end
 
+"""
+    OptimizationProblem(nlpmodel::AbstractNLPModel, adtype::AbstractADType = NoAD())
+
+Returns an `OptimizationProblem` with the bounds and constraints defined in `nlpmodel`.
+The optimization function and its derivatives are re-used from `nlpmodel` when available
+or populated wit the Automatic Differentiation backend specified by `adtype`.
+"""
 function OptimizationProblem(nlpmodel::AbstractNLPModel,
         adtype::ADTypes.AbstractADType = SciMLBase.NoAD(); kwargs...)
     f = OptimizationFunction(nlpmodel, adtype; kwargs...)
