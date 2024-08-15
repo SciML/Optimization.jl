@@ -26,10 +26,17 @@ function OptimizationProblem(nlpmodel::AbstractNLPModel,
         adtype::ADTypes.AbstractADType = SciMLBase.NoAD(); kwargs...)
     f = OptimizationFunction(nlpmodel, adtype; kwargs...)
     u0 = nlpmodel.meta.x0
-    lb = nlpmodel.meta.lvar
-    ub = nlpmodel.meta.uvar
-    lcons = nlpmodel.meta.lcon
-    ucons = nlpmodel.meta.ucon
+    lb, ub = if has_bounds(nlpmodel)
+        (nlpmodel.meta.lvar, nlpmodel.meta.uvar)
+    else
+        (nothing, nothing)
+    end
+
+    lcons, ucons = if has_inequalities(nlpmodel) || has_equalities(nlpmodel)
+        (nlpmodel.meta.lcon, nlpmodel.meta.ucon)
+    else
+        (nothing, nothing)
+    end
     sense = nlpmodel.meta.minimize ? Optimization.MinSense : Optimization.MaxSense
 
     # The number of variables, geometry of u0, etc.. are valid and were checked when the
