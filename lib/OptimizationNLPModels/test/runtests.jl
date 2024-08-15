@@ -17,8 +17,8 @@ using Test
     nlpmo = NLPModelsTest.HS5()
     converted = OptimizationNLPModels.OptimizationProblem(nlpmo, Optimization.AutoZygote())
 
-    sol_native = solve(oprob, Ipopt.Optimizer())
-    sol_converted = solve(converted, Ipopt.Optimizer())
+    sol_native = solve(oprob, Optimization.LBFGS())
+    sol_converted = solve(converted, Optimization.LBFGS())
 
     @test sol_converted.retcode == sol_native.retcode
     @test sol_converted.u ≈ sol_native.u
