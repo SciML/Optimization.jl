@@ -1,5 +1,5 @@
 using OptimizationEvolutionary, Optimization, Random
-using SciMLBase: MultiObjectiveOptimizationFunction
+using Optimization.SciMLBase: MultiObjectiveOptimizationFunction
 using NaNMath
 using Test
 

@@ -1,5 +1,5 @@
 using OptimizationBBO, Optimization, BlackBoxOptim
-using SciMLBase: MultiObjectiveOptimizationFunction
+using Optimization.SciMLBase: MultiObjectiveOptimizationFunction
 using Test
 
 @testset "OptimizationBBO.jl" begin
