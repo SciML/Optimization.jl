@@ -37,6 +37,7 @@ translate it to an `OptimizationProblem`.
 
 ```@example NLPModels
 using OptimizationNLPModels, Optimization, NLPModelsTest, Ipopt
+using Optimization: OptimizationProblem
 nlpmodel = NLPModelsTest.HS10()
 prob = OptimizationProblem(nlpmodel, AutoForwardDiff())
 ```
