@@ -15,7 +15,7 @@ import Pkg;
 Pkg.add("OptimizationNLPModels")
 ```
 
-The package NLPModels.jl itself containts no optimizers or models. Several packages
+The package NLPModels.jl itself contains no optimizers or models. Several packages
 provide optimization problem ([CUTEst.jl](https://jso.dev/CUTEst.jl/stable/),
 [NLPModelsTest.jl](https://jso.dev/NLPModelsTest.jl/dev/)) which can then be solved with
 any optimizer supported by Optimization.jl
@@ -36,7 +36,7 @@ Hock--Schittkowski optimization suite available from `NLPModelsTest` as `HS10`, 
 translate it to an `OptimizationProblem`.
 
 ```@example NLPModels
-using OptimizationNLPModels, Optimization, NLPModelsTest, Ipopt 
+using OptimizationNLPModels, Optimization, NLPModelsTest, Ipopt
 nlpmodel = NLPModelsTest.HS10()
 prob = OptimizationProblem(nlpmodel, AutoForwardDiff())
 ```

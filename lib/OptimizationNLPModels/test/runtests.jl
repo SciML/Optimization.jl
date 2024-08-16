@@ -96,7 +96,7 @@ using Test
     # Problem with mixed equality & inequality constraints
     hs14(u, p) = (u[1] - 2.0)^2 + (u[2] - 1.0)^2
     hs14_cons(res, u, p) = (res .= [u[1] - 2.0 * u[2];
-                                    -1/4 * u[1]^2 - u[2]^2 + 1.0])
+                                    -0.25 * u[1]^2 - u[2]^2 + 1.0])
     lcons = [-1.0; 0.0]
     ucons = [-1.0; Inf]
     u0 = [2.0; 2.0]
