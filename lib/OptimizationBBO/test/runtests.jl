@@ -72,6 +72,8 @@ opt = OptimizationBBO.BBO_borg_moea()
         
         @test sol_1 ≠ nothing
         println("Solution for Sphere and Rastrigin: ", sol_1)
+        @test sol_1.objective[1] ≈ 6.9905986e-18 atol=1e-3
+        @test sol_1.objective[2] ≈ 1.7763568e-15 atol=1e-3
     end
 
     # Test 2: Rosenbrock and Ackley Functions
@@ -88,6 +90,8 @@ opt = OptimizationBBO.BBO_borg_moea()
         
         @test sol_2 ≠ nothing
         println("Solution for Rosenbrock and Ackley: ", sol_2)
+        @test sol_2.objective[1] ≈ 0.97438 atol=1e-3
+        @test sol_2.objective[2] ≈ 0.04088 atol=1e-3
     end
 
     # Test 3: ZDT1 Function
@@ -105,6 +109,8 @@ opt = OptimizationBBO.BBO_borg_moea()
         
         @test sol_3 ≠ nothing
         println("Solution for ZDT1: ", sol_3)
+        @test sol_3.objective[1] ≈ 0.273445 atol=1e-3
+        @test sol_3.objective[2] ≈ 0.477079 atol=1e-3
     end
 end
 end
