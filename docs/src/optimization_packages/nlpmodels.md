@@ -50,10 +50,5 @@ sol = solve(prob, Ipopt.Optimizer())
 
 ## API
 
-Problems represented as `NLPModel`s can be used to create `OptimizationProblem`s and
-`OptimizationFunction`.
-
-```@docs
-SciMLBase.OptimizationFunction(::AbstractNLPModel, ::ADTypes.AbstractADType)
-SciMLBase.OptimizationProblem(::AbstractNLPModel, ::ADTypes.AbstractADType)
-```
+Problems represented as `NLPModel`s can be used to create [`OptimizationProblem`](@ref)s and
+[`OptimizationFunction`](@ref).
