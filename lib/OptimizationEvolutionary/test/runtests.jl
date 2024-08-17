@@ -92,6 +92,8 @@ end
         result = test_multi_objective(multi_objective_1, [0.25, 0.25])
         @test result ≠ nothing
         println("Solution for Sphere and Rastrigin: ", result)
+        @test result.u[1][1] ≈ 0.00908 atol=1e-3
+        @test result.u[1][2] ≈ 0.02312 atol=1e-3
     end
 
     # Test 2: Rosenbrock and Ackley Functions
@@ -104,6 +106,8 @@ end
         result = test_multi_objective(multi_objective_2, [1.0, 1.0])
         @test result ≠ nothing
         println("Solution for Rosenbrock and Ackley: ", result)
+        @test result.u[2][1] ≈ 1.2428 atol=1e-3
+        @test result.u[2][2] ≈ 0.7091 atol=1e-3
     end
 
     # Test 3: ZDT1 Function
@@ -118,6 +122,8 @@ end
         result = test_multi_objective(multi_objective_3, [0.5, 0.5])
         @test result ≠ nothing
         println("Solution for ZDT1: ", result)
+        @test result.u[1][1] ≈ -1.1669 atol=1e-3
+        @test result.u[1][2] ≈ 2.3492 atol=1e-3
     end
 
     # Test 4: DTLZ2 Function
@@ -130,6 +136,8 @@ end
         result = test_multi_objective(multi_objective_4, [0.5, 0.5])
         @test result ≠ nothing
         println("Solution for DTLZ2: ", result)
+        @test result.u[1][1] ≈ -1.31011 atol=1e-3
+        @test result.u[2][1] ≈ -1.38852 atol=1e-3
     end
 
     # Test 5: Schaffer Function N.2
@@ -139,9 +147,11 @@ end
             f2 = (x[1] - 2)^2
             return [f1, f2]
         end
-        result = test_multi_objective(multi_objective_5, [2.0])
+        result = test_multi_objective(multi_objective_5, [1.0])
         @test result ≠ nothing
         println("Solution for Schaffer N.2: ", result)
+        @test result.u[1][1] ≈ 1.00000 atol=1e-3
+        @test result.u[9][1] ≈ 1.44114 atol=1e-3
     end
 
 end
