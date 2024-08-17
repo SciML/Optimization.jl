@@ -1,6 +1,5 @@
 using OptimizationEvolutionary, Optimization, Random
 using Optimization.SciMLBase: MultiObjectiveOptimizationFunction
-using NaNMath
 using Test
 
 Random.seed!(1234)
