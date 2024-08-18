@@ -145,9 +145,17 @@ function SciMLBase.__solve(cache::OptimizationCache{
             c = x -> (res = zeros(length(cache.lcons)); f.cons(res, x); res)
             cons = WorstFitnessConstraints(Float64[], Float64[], cache.lcons, cache.ucons,
                 c)
-            opt_res = Evolutionary.optimize(_loss, cons, cache.u0, cache.opt, opt_args)
+            if isa(f, MultiObjectiveOptimizationFunction)
+                opt_res = Evolutionary.optimize(_loss, _loss(cache.u0), cons, cache.u0, cache.opt, opt_args)
+            else
+                opt_res = Evolutionary.optimize(_loss, cons, cache.u0, cache.opt, opt_args)
+            end
         else
-            opt_res = Evolutionary.optimize(_loss, cache.u0, cache.opt, opt_args)
+            if isa(f, MultiObjectiveOptimizationFunction)
+                opt_res = Evolutionary.optimize(_loss, _loss(cache.u0), cache.u0, cache.opt, opt_args)
+            else
+                opt_res = Evolutionary.optimize(_loss, cache.u0, cache.opt, opt_args)
+            end
         end
     else
         if !isnothing(f.cons)
@@ -156,7 +164,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
         else
             cons = BoxConstraints(cache.lb, cache.ub)
         end
-        opt_res = Evolutionary.optimize(_loss, cons, cache.u0, cache.opt, opt_args)
+        if isa(f, MultiObjectiveOptimizationFunction)
+                opt_res = Evolutionary.optimize(_loss, _loss(cache.u0), cons, cache.u0, cache.opt, opt_args)
+        else
+                opt_res = Evolutionary.optimize(_loss, cons, cache.u0, cache.opt, opt_args)
+        end
     end
     t1 = time()
     opt_ret = Symbol(Evolutionary.converged(opt_res))
