@@ -94,6 +94,7 @@ end
         println("Solution for Sphere and Rastrigin: ", result)
         @test result.u[1][1] ≈ 7.88866e-5 atol=1e-3
         @test result.u[1][2] ≈ 4.96471e-5 atol=1e-3
+        @test result.objective[1] ≈ 8.6879e-9 atol=1e-3
     end
 
     # Test 2: Rosenbrock and Ackley Functions
@@ -108,6 +109,7 @@ end
         println("Solution for Rosenbrock and Ackley: ", result)
         @test result.u[10][1] ≈ 1.0 atol=1e-3
         @test result.u[10][2] ≈ 0.999739 atol=1e-3
+        @test result.objective[2] ≈ 3.625384 atol=1e-3
     end
 
     # Test 3: ZDT1 Function
@@ -124,6 +126,7 @@ end
         println("Solution for ZDT1: ", result)
         @test result.u[1][1] ≈ -0.365434 atol=1e-3
         @test result.u[1][2] ≈ 1.22128 atol=1e-3
+        @test result.objective[1] ≈ -0.365434 atol=1e-3
     end
 
     # Test 4: DTLZ2 Function
@@ -138,6 +141,7 @@ end
         println("Solution for DTLZ2: ", result)
         @test result.u[1][1] ≈ 0.899183 atol=1e-3
         @test result.u[2][1] ≈ 0.713992 atol=1e-3
+        @test result.objective[1] ≈ 0.1599915 atol=1e-3
     end
 
     # Test 5: Schaffer Function N.2
@@ -152,6 +156,7 @@ end
         println("Solution for Schaffer N.2: ", result)
         @test result.u[19][1] ≈ 0.252635 atol=1e-3
         @test result.u[9][1] ≈ 1.0 atol=1e-3
+        @test result.objective[1] ≈ 1.0 atol=1e-3
     end
 
 end
