@@ -36,7 +36,7 @@ Returns an `OptimizationProblem` with the bounds and constraints defined in `nlp
 The optimization function and its derivatives are re-used from `nlpmodel` when available
 or populated wit the Automatic Differentiation backend specified by `adtype`.
 """
-function OptimizationProblem(nlpmodel::AbstractNLPModel,
+function SciMLBase.OptimizationProblem(nlpmodel::AbstractNLPModel,
         adtype::ADTypes.AbstractADType = SciMLBase.NoAD(); kwargs...)
     f = OptimizationFunction(nlpmodel, adtype; kwargs...)
     u0 = nlpmodel.meta.x0
