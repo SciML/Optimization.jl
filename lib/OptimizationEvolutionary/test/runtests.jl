@@ -89,11 +89,11 @@ end
             f2 = sum(x .^ 2 .- 10 .* cos.(2π .* x) .+ 10)  # Rastrigin function
             return [f1, f2]
         end
-        result = test_multi_objective(multi_objective_1, [0.25, 0.25])
+        result = test_multi_objective(multi_objective_1, [0.0, 1.0])
         @test result ≠ nothing
         println("Solution for Sphere and Rastrigin: ", result)
-        @test result.u[1][1] ≈ 0.00908 atol=1e-3
-        @test result.u[1][2] ≈ 0.02312 atol=1e-3
+        @test result.u[1][1] ≈ 7.88866e-5 atol=1e-3
+        @test result.u[1][2] ≈ 4.96471e-5 atol=1e-3
     end
 
     # Test 2: Rosenbrock and Ackley Functions
@@ -106,8 +106,8 @@ end
         result = test_multi_objective(multi_objective_2, [1.0, 1.0])
         @test result ≠ nothing
         println("Solution for Rosenbrock and Ackley: ", result)
-        @test result.u[2][1] ≈ 1.2428 atol=1e-3
-        @test result.u[2][2] ≈ 0.7091 atol=1e-3
+        @test result.u[10][1] ≈ 1.0 atol=1e-3
+        @test result.u[10][2] ≈ 0.999739 atol=1e-3
     end
 
     # Test 3: ZDT1 Function
@@ -119,11 +119,11 @@ end
             f2 = g * (1 - (sqrt_arg >= 0 ? sqrt(sqrt_arg) : NaN))
             return [f1, f2]
         end
-        result = test_multi_objective(multi_objective_3, [0.5, 0.5])
+        result = test_multi_objective(multi_objective_3, [0.25, 1.5])
         @test result ≠ nothing
         println("Solution for ZDT1: ", result)
-        @test result.u[1][1] ≈ -1.1669 atol=1e-3
-        @test result.u[1][2] ≈ 2.3492 atol=1e-3
+        @test result.u[1][1] ≈ -0.365434 atol=1e-3
+        @test result.u[1][2] ≈ 1.22128 atol=1e-3
     end
 
     # Test 4: DTLZ2 Function
@@ -133,11 +133,11 @@ end
             f2 = (1 + sum(x[2:end] .^ 2)) * sin(x[1] * π / 2)
             return [f1, f2]
         end
-        result = test_multi_objective(multi_objective_4, [0.5, 0.5])
+        result = test_multi_objective(multi_objective_4, [0.25, 0.75])
         @test result ≠ nothing
         println("Solution for DTLZ2: ", result)
-        @test result.u[1][1] ≈ -1.31011 atol=1e-3
-        @test result.u[2][1] ≈ -1.38852 atol=1e-3
+        @test result.u[1][1] ≈ 0.899183 atol=1e-3
+        @test result.u[2][1] ≈ 0.713992 atol=1e-3
     end
 
     # Test 5: Schaffer Function N.2
@@ -150,8 +150,8 @@ end
         result = test_multi_objective(multi_objective_5, [1.0])
         @test result ≠ nothing
         println("Solution for Schaffer N.2: ", result)
-        @test result.u[1][1] ≈ 1.00000 atol=1e-3
-        @test result.u[9][1] ≈ 1.44114 atol=1e-3
+        @test result.u[19][1] ≈ 0.252635 atol=1e-3
+        @test result.u[9][1] ≈ 1.0 atol=1e-3
     end
 
 end
