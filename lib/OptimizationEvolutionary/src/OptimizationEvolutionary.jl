@@ -174,11 +174,20 @@ function SciMLBase.__solve(cache::OptimizationCache{
     opt_ret = Symbol(Evolutionary.converged(opt_res))
     stats = Optimization.OptimizationStats(; iterations = opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls)
-    SciMLBase.build_solution(cache, cache.opt,
+    if !isa(f, MultiObjectiveOptimizationFunction)
+        SciMLBase.build_solution(cache, cache.opt,
         Evolutionary.minimizer(opt_res),
         Evolutionary.minimum(opt_res); original = opt_res,
         retcode = opt_ret,
         stats = stats)
+    else
+        ans = Evolutionary.minimizer(opt_res)
+        SciMLBase.build_solution(cache, cache.opt,
+        ans,
+        _loss(ans[1]); original = opt_res,
+        retcode = opt_ret,
+        stats = stats)
+    end
 end
 
 end
