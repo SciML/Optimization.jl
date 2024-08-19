@@ -12,7 +12,7 @@ Let's look at a 10 dimensional schwefel function in the hypercube $x_i \in [-500
 
 ```@example polyalg
 using Optimization, Random
-import OptimizationBBO, ReverseDiff
+using OptimizationBBO, ReverseDiff
 
 Random.seed!(122333)
 
