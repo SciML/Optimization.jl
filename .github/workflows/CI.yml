@@ -36,6 +36,7 @@ jobs:
           - OptimizationQuadDIRECT
           - OptimizationSpeedMapping
           - OptimizationPolyalgorithms
+          - OptimizationNLPModels
         version:
           - '1'
     steps:

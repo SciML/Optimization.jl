@@ -36,6 +36,7 @@ pages = ["index.md",
         "PRIMA.jl" => "optimization_packages/prima.md",
         "Polyalgorithms.jl" => "optimization_packages/polyopt.md",
         "QuadDIRECT.jl" => "optimization_packages/quaddirect.md",
-        "SpeedMapping.jl" => "optimization_packages/speedmapping.md"
+        "SpeedMapping.jl" => "optimization_packages/speedmapping.md",
+        "NLPModels.jl" => "optimization_packages/nlpmodels.md"
     ]
 ]
