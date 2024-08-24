@@ -453,7 +453,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         stats = stats)
 end
 
-
+using PrecompileTools
 PrecompileTools.@compile_workload begin
 
     function obj_f(x, p)
