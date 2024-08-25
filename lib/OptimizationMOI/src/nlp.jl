@@ -289,6 +289,25 @@ function MOI.eval_constraint_jacobian(evaluator::MOIOptimizationNLPEvaluator, j,
     return
 end
 
+function MOI.eval_constraint_jacobian_product(evaluator::Evaluator, y, x, w)
+    start = time()
+    MOI.eval_constraint_jacobian_product(evaluator.backend, y, x, w)
+    evaluator.eval_constraint_jacobian_timer += time() - start
+    return
+end
+
+function MOI.eval_constraint_jacobian_transpose_product(
+    evaluator::Evaluator,
+    y,
+    x,
+    w,
+)
+    start = time()
+    MOI.eval_constraint_jacobian_transpose_product(evaluator.backend, y, x, w)
+    evaluator.eval_constraint_jacobian_timer += time() - start
+    return
+end
+
 function MOI.hessian_lagrangian_structure(evaluator::MOIOptimizationNLPEvaluator)
     lagh = evaluator.f.lag_h !== nothing
     if evaluator.f.lag_hess_prototype !== nothing

@@ -6,6 +6,7 @@ using Optimization.SciMLBase
 
 SciMLBase.supports_opt_cache_interface(opt::AbstractRule) = true
 SciMLBase.requiresgradient(opt::AbstractRule) = true
+SciMLBase.allowsfg(opt::AbstractRule) = true
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::AbstractRule,
         data = Optimization.DEFAULT_DATA; save_best = true,
@@ -55,7 +56,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     else
         maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
         if maxiters === nothing
-            throw(ArgumentError("The number of iterations must be specified as the maxiters kwarg."))
+            throw(ArgumentError("The number of epochs must be specified as the epochs or maxiters kwarg."))
         end
         data = Optimization.take(cache.data, maxiters)
     end
@@ -74,8 +75,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     Optimization.@withprogress cache.progress name="Training" begin
         for _ in 1:maxiters
             for (i, d) in enumerate(data)
-                cache.f.grad(G, θ, d...)
-                x = cache.f(θ, cache.p, d...)
+                x = cache.f.fg(G, θ, d...)
                 opt_state = Optimization.OptimizationState(iter = i,
                     u = θ,
                     objective = x[1],
