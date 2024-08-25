@@ -1,6 +1,7 @@
-using OptimizationMetaheuristics, Optimization
+using OptimizationMetaheuristics, Optimization, Random
 using Test
 
+Random.seed!(42)
 @testset "OptimizationMetaheuristics.jl" begin
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = zeros(2)
@@ -102,41 +103,41 @@ function schaffer_n2(x)
     return [f1, f2], gx, hx
 end
 OBJECTIVES = Dict(
-            "Metaheuristics.Algorithm{NSGA2} for sphere"=> [0.9179326495423358, 6.500479761845751],
-            "Metaheuristics.Algorithm{NSGA3} for sphere"=>  [1.459119296264428, 5.316958184343253],
+            "Metaheuristics.Algorithm{NSGA2} for sphere"=> [2.1903011284699687, 3.9825426762781477],
+            "Metaheuristics.Algorithm{NSGA3} for sphere"=>  [0.36916068436590516, 8.256797942777018],
             "Metaheuristics.Algorithm{SPEA2} for sphere"=> [0.6866588142724173, 7.18284015333389],
-            "Metaheuristics.Algorithm{CCMO{NSGA2}} for sphere"=> [0.8829537455812262, 6.5718236788783555],
-            "Metaheuristics.Algorithm{MOEAD_DE} for sphere"=> [0.3976541196796912, 8.117594342458556],
+            "Metaheuristics.Algorithm{CCMO{NSGA2}} for sphere"=> [1.6659983952552437, 4.731690734657798],
+            "Metaheuristics.Algorithm{MOEAD_DE} for sphere"=> [1.3118335977331483, 5.478715622895562],
             "Metaheuristics.Algorithm{SMS_EMOA} for sphere"=> [0.5003293369817386, 7.837151299208113],
-            "Metaheuristics.Algorithm{NSGA2} for rastrigin"=> [3.2085851798990426, 11.008095021493556],
-            "Metaheuristics.Algorithm{NSGA3} for rastrigin"=> [7.651119804304736, 8.720012335441673],
-            "Metaheuristics.Algorithm{SPEA2} for rastrigin"=> [6.584283198538056, 11.285298996109109],
-            "Metaheuristics.Algorithm{CCMO{NSGA2}} for rastrigin"=> [1.5700038876682554, 4.889538439797789],
-            "Metaheuristics.Algorithm{MOEAD_DE} for rastrigin"=> [3.630324386882652, 11.255596145071413],
-            "Metaheuristics.Algorithm{SMS_EMOA} for rastrigin"=> [2.429354909458187, 10.665738548398641],
-            "Metaheuristics.Algorithm{NSGA2} for rosenbrock"=> [8.289098963014444, 690.3540872929669],
-            "Metaheuristics.Algorithm{NSGA3} for rosenbrock"=> [5.809098608164398, 677.7633682236716] ,
-            "Metaheuristics.Algorithm{SPEA2} for rosenbrock"=> [78.91822306586232, 426.30261147533],
-            "Metaheuristics.Algorithm{CCMO{NSGA2}} for rosenbrock"=> [1.5700038876682554, 4.889538439797789],
-            "Metaheuristics.Algorithm{MOEAD_DE} for rosenbrock"=> [14.107118783363653, 615.3036153255869],
-            "Metaheuristics.Algorithm{SMS_EMOA} for rosenbrock"=> [30.756427683784672, 542.6831635776932],
+            "Metaheuristics.Algorithm{NSGA2} for rastrigin"=> [0.0, 12.0],
+            "Metaheuristics.Algorithm{NSGA3} for rastrigin"=> [9.754810555001253, 11.123569741993528],
+            "Metaheuristics.Algorithm{SPEA2} for rastrigin"=> [0.0, 12.0],
+            "Metaheuristics.Algorithm{CCMO{NSGA2}} for rastrigin"=> [2.600961284360525, 3.4282466721631755],
+            "Metaheuristics.Algorithm{MOEAD_DE} for rastrigin"=> [2.4963842982482607, 10.377445766099369],
+            "Metaheuristics.Algorithm{SMS_EMOA} for rastrigin"=> [0.0, 12.0],
+            "Metaheuristics.Algorithm{NSGA2} for rosenbrock"=> [17.500214034475118, 586.5039366722865],
+            "Metaheuristics.Algorithm{NSGA3} for rosenbrock"=> [60.58413196101549, 427.34913230512063] ,
+            "Metaheuristics.Algorithm{SPEA2} for rosenbrock"=> [37.42314302223994, 498.8799375425481],
+            "Metaheuristics.Algorithm{CCMO{NSGA2}} for rosenbrock"=> [2.600961284360525, 3.4282466721631755],
+            "Metaheuristics.Algorithm{MOEAD_DE} for rosenbrock"=> [12.969698120217537, 642.4135236259822],
+            "Metaheuristics.Algorithm{SMS_EMOA} for rosenbrock"=> [61.6898556398449, 450.62433057243777],
             "Metaheuristics.Algorithm{NSGA2} for ackley"=> [2.240787163704834, 5.990002878952371],
-            "Metaheuristics.Algorithm{NSGA3} for ackley"=> [4.440892098500626e-16, 6.593599079287213],
-            "Metaheuristics.Algorithm{SPEA2} for ackley"=> [2.6329825257456503, 6.060788875236632],
-            "Metaheuristics.Algorithm{CCMO{NSGA2}} for ackley"=> [1.5700038876682554, 4.889538439797789],
+            "Metaheuristics.Algorithm{NSGA3} for ackley"=> [3.408535107623966, 5.459538604033934],
+            "Metaheuristics.Algorithm{SPEA2} for ackley"=> [4.440892098500626e-16, 6.593599079287213],
+            "Metaheuristics.Algorithm{CCMO{NSGA2}} for ackley"=> [2.600961284360525, 3.4282466721631755],
             "Metaheuristics.Algorithm{MOEAD_DE} for ackley"=> [4.440892098500626e-16, 6.593599079287213],
-            "Metaheuristics.Algorithm{SMS_EMOA} for ackley"=> [2.1417573971815256, 6.015324307249184],
+            "Metaheuristics.Algorithm{SMS_EMOA} for ackley"=> [3.370770500897429, 5.510527199861947],
             "Metaheuristics.Algorithm{NSGA2} for dtlz2"=> [0.013283104966270814, 0.010808186786590583],
             "Metaheuristics.Algorithm{NSGA3} for dtlz2"=> [0.013428265441897881, 0.03589930489326534],
             "Metaheuristics.Algorithm{SPEA2} for dtlz2"=> [0.019006068021099495, 0.0009905093731377751],
-            "Metaheuristics.Algorithm{CCMO{NSGA2}} for dtlz2"=> [1.5700038876682554, 4.889538439797789],
+            "Metaheuristics.Algorithm{CCMO{NSGA2}} for dtlz2"=> [2.600961284360525, 3.4282466721631755],
             "Metaheuristics.Algorithm{MOEAD_DE} for dtlz2"=> [0.027075258566241527, 0.00973958317460759],
             "Metaheuristics.Algorithm{SMS_EMOA} for dtlz2"=> [0.056304481489060705, 0.026075248436234502],
             "Metaheuristics.Algorithm{NSGA2} for schaffer_n2"=> [1.4034569322987955, 0.6647534264038837],
-            "Metaheuristics.Algorithm{NSGA3} for schaffer_n2"=> [0.9679143048226242, 1.0326088684985277],
-            "Metaheuristics.Algorithm{SPEA2} for schaffer_n2"=> [0.24369709729308642, 2.269069649724968],
+            "Metaheuristics.Algorithm{NSGA3} for schaffer_n2"=> [2.7987535368174363, 0.10696329884083178],
+            "Metaheuristics.Algorithm{SPEA2} for schaffer_n2"=> [0.0007534237111212252, 3.8909591643988075],
             "Metaheuristics.Algorithm{CCMO{NSGA2}} for schaffer_n2"=> [3.632401400816196e-17, 4.9294679997494206e-17],
-            "Metaheuristics.Algorithm{MOEAD_DE} for schaffer_n2"=> [0.059772358446876686, 3.0818369131591896],
+            "Metaheuristics.Algorithm{MOEAD_DE} for schaffer_n2"=> [2.50317097527324, 0.17460592430221922],
             "Metaheuristics.Algorithm{SMS_EMOA} for schaffer_n2"=> [0.4978888767998813, 1.67543922644328],
     )
     # Define the testset
