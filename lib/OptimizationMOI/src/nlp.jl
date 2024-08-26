@@ -114,7 +114,7 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons;
-        g = true, h = false, cons_j = true, lag_h = true)
+        g = true, h = false, cons_j = true, cons_vjp = true, lag_h = true)
     T = eltype(prob.u0)
     n = length(prob.u0)
 
