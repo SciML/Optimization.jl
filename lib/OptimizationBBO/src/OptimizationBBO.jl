@@ -17,7 +17,7 @@ for j in string.(BlackBoxOptim.SingleObjectiveMethodNames)
 end
 
 Base.@kwdef struct BBO_borg_moea <: BBO
-    method = :borg_moea 
+    method = :borg_moea
 end
 export BBO_borg_moea
 

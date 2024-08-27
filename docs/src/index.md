@@ -29,8 +29,9 @@ Pkg.add("Optimization")
 
 The packages relevant to the core functionality of Optimization.jl will be imported
 accordingly and, in most cases, you do not have to worry about the manual
-installation of dependencies. However, you will need to add the specific optimizer
-packages.
+installation of dependencies. [Optimization.jl](@ref) natively offers a LBFGS solver
+but for more solver choices (discussed below in Optimization Packages), you will need
+to add the specific wrapper packages.
 
 ## Contributing
 
@@ -48,32 +49,128 @@ packages.
       + On the [Julia Discourse forums](https://discourse.julialang.org)
       + See also [SciML Community page](https://sciml.ai/community/)
 
-## Overview of the Optimizers
+## Overview of the solver packages in alphabetical order
 
-| Package                 | Local Gradient-Based | Local Hessian-Based | Local Derivative-Free | Box Constraints | Local Constrained | Global Unconstrained | Global Constrained   |
-|:----------------------- |:--------------------:|:-------------------:|:---------------------:|:---------------:|:-----------------:|:--------------------:|:--------------------:|
-| BlackBoxOptim           | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | ❌                  ✅ |
-| CMAEvolutionaryStrategy | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | ❌                    |
-| Evolutionary            | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | 🟡                    |
-| Flux                    | ✅                    | ❌                   | ❌                     | ❌               | ❌                 | ❌                    | ❌                    |
-| GCMAES                  | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | ❌                    |
-| MathOptInterface        | ✅                    | ✅                   | ✅                     | ✅               | ✅                 | ✅                    | 🟡                    |
-| MultistartOptimization  | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | ❌                    |
-| Metaheuristics          | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | 🟡                    |
-| NOMAD                   | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | 🟡                    |
-| NLopt                   | ✅                    | ❌                   | ✅                     | ✅               | 🟡                 | ✅                    | 🟡                    |
-| Optim                   | ✅                    | ✅                   | ✅                     | ✅               | ✅                 | ✅                    | ✅                    |
-| PRIMA                   | ❌                    | ❌                   | ✅                     | ✅               | ✅                 | ❌                    | ❌                    |
-| QuadDIRECT              | ❌                    | ❌                   | ❌                     | ✅               | ❌                 | ✅                    | ❌                    |
-
-✅ = supported
-
-🟡 = supported in downstream library but not yet implemented in `Optimization`; PR to add this functionality are welcome
-
-❌ = not supported
-
+<details>
+  <summary><strong>BlackBoxOptim</strong></summary>
+  - **Global Methods**
+    - Zeroth order
+    - Unconstrained
+    - Box Constraints
+</details>
+<details>
+  <summary><strong>CMAEvolutionaryStrategy</strong></summary>
+  - **Global Methods**
+    - Zeroth order
+    - Unconstrained
+    - Box Constraints
+</details>
+<details>
+  <summary><strong>Evolutionary</strong></summary>
+  - **Global Methods**
+    - Zeroth order
+    - Unconstrained
+    - Box Constraints
+    - Non-linear Constraints
+</details>
+<details>
+  <summary><strong>GCMAES</strong></summary>
+  - **Global Methods**
+    - First order
+    - Box Constraints
+    - Unconstrained
+</details>
+<details>
+  <summary><strong>Manopt</strong></summary>
+  - **Local Methods**
+    - First order
+    - Second order
+    - Zeroth order
+    - Box Constraints
+    - Constrained 🟡
+  - **Global Methods**
+    - Zeroth order
+    - Unconstrained
+</details>
+<details>
+  <summary><strong>MathOptInterface</strong></summary>
+  - **Local Methods**
+    - First order
+    - Second order
+    - Box Constraints
+    - Constrained
+  - **Global Methods**
+    - First order
+    - Second order
+    - Constrained
+</details>
+<details>
+  <summary><strong>MultistartOptimization</strong></summary>
+  - **Global Methods**
+    - Zeroth order
+    - First order
+    - Second order
+    - Box Constraints
+</details>
+<details>
+  <summary><strong>Metaheuristics</strong></summary>
+  - **Global Methods**
+    - Zeroth order
+    - Unconstrained
+    - Box Constraints
+</details>
+<details>
+  <summary><strong>NOMAD</strong></summary>
+  - **Global Methods**
+    - Zeroth order
+    - Unconstrained
+    - Box Constraints
+    - Constrained 🟡
+</details>
+<details>
+  <summary><strong>NLopt</strong></summary>
+  - **Local Methods**
+    - First order
+    - Zeroth order
+    - Second order 🟡
+    - Box Constraints
+    - Local Constrained 🟡
+  - **Global Methods**
+    - Zeroth order
+    - First order
+    - Unconstrained
+    - Constrained 🟡
+</details>
+<details>
+  <summary><strong>Optim</strong></summary>
+  - **Local Methods**
+    - Zeroth order
+    - First order
+    - Second order
+    - Box Constraints
+    - Constrained
+  - **Global Methods**
+    - Zeroth order
+    - Unconstrained
+    - Box Constraints
+</details>
+<details>
+  <summary><strong>PRIMA</strong></summary>
+  - **Local Methods**
+    - Derivative-Free: ✅
+  - **Constraints**
+    - Box Constraints: ✅
+    - Local Constrained: ✅
+</details>
+<details>
+  <summary><strong>QuadDIRECT</strong></summary>
+  - **Constraints**
+    - Box Constraints: ✅
+  - **Global Methods**
+    - Unconstrained: ✅
+</details>
+🟡 = supported in downstream library but not yet implemented in `Optimization.jl`; PR to add this functionality are welcome
 ## Citation
-
 ```
 @software{vaibhav_kumar_dixit_2023_7738525,
 	author = {Vaibhav Kumar Dixit and Christopher Rackauckas},

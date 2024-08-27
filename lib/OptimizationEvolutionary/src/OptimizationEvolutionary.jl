@@ -146,13 +146,15 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cons = WorstFitnessConstraints(Float64[], Float64[], cache.lcons, cache.ucons,
                 c)
             if isa(f, MultiObjectiveOptimizationFunction)
-                opt_res = Evolutionary.optimize(_loss, _loss(cache.u0), cons, cache.u0, cache.opt, opt_args)
+                opt_res = Evolutionary.optimize(
+                    _loss, _loss(cache.u0), cons, cache.u0, cache.opt, opt_args)
             else
                 opt_res = Evolutionary.optimize(_loss, cons, cache.u0, cache.opt, opt_args)
             end
         else
             if isa(f, MultiObjectiveOptimizationFunction)
-                opt_res = Evolutionary.optimize(_loss, _loss(cache.u0), cache.u0, cache.opt, opt_args)
+                opt_res = Evolutionary.optimize(
+                    _loss, _loss(cache.u0), cache.u0, cache.opt, opt_args)
             else
                 opt_res = Evolutionary.optimize(_loss, cache.u0, cache.opt, opt_args)
             end
@@ -165,9 +167,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cons = BoxConstraints(cache.lb, cache.ub)
         end
         if isa(f, MultiObjectiveOptimizationFunction)
-                opt_res = Evolutionary.optimize(_loss, _loss(cache.u0), cons, cache.u0, cache.opt, opt_args)
+            opt_res = Evolutionary.optimize(
+                _loss, _loss(cache.u0), cons, cache.u0, cache.opt, opt_args)
         else
-                opt_res = Evolutionary.optimize(_loss, cons, cache.u0, cache.opt, opt_args)
+            opt_res = Evolutionary.optimize(_loss, cons, cache.u0, cache.opt, opt_args)
         end
     end
     t1 = time()
@@ -176,17 +179,17 @@ function SciMLBase.__solve(cache::OptimizationCache{
         time = t1 - t0, fevals = opt_res.f_calls)
     if !isa(f, MultiObjectiveOptimizationFunction)
         SciMLBase.build_solution(cache, cache.opt,
-        Evolutionary.minimizer(opt_res),
-        Evolutionary.minimum(opt_res); original = opt_res,
-        retcode = opt_ret,
-        stats = stats)
+            Evolutionary.minimizer(opt_res),
+            Evolutionary.minimum(opt_res); original = opt_res,
+            retcode = opt_ret,
+            stats = stats)
     else
         ans = Evolutionary.minimizer(opt_res)
         SciMLBase.build_solution(cache, cache.opt,
-        ans,
-        _loss(ans[1]); original = opt_res,
-        retcode = opt_ret,
-        stats = stats)
+            ans,
+            _loss(ans[1]); original = opt_res,
+            retcode = opt_ret,
+            stats = stats)
     end
 end
 
