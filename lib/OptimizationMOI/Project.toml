@@ -4,6 +4,7 @@ authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.4.2"
 
 [deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
@@ -19,6 +20,7 @@ HiGHS = "1"
 Ipopt = "1"
 Ipopt_jll = "300.1400"
 Juniper = "0.9"
+LinearAlgebra = "1"
 MathOptInterface = "1"
 ModelingToolkit = "9"
 NLopt = "1"

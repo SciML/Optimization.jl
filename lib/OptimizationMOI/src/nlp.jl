@@ -114,7 +114,7 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons;
-    g = true, h = true, cons_j = true, lag_h = true)
+        g = true, h = false, cons_j = true, cons_vjp = true, lag_h = true)
     T = eltype(prob.u0)
     n = length(prob.u0)
 
@@ -297,17 +297,23 @@ end
 #     return
 # end
 
-# function MOI.eval_constraint_jacobian_transpose_product(
-#     evaluator::Evaluator,
-#     y,
-#     x,
-#     w,
-# )
-#     start = time()
-#     MOI.eval_constraint_jacobian_transpose_product(evaluator.backend, y, x, w)
-#     evaluator.eval_constraint_jacobian_timer += time() - start
-#     return
-# end
+function MOI.eval_constraint_jacobian_transpose_product(
+        evaluator::MOIOptimizationNLPEvaluator,
+        y,
+        x,
+        w
+)
+    if evaluator.f.cons_vjp !== nothing
+        evaluator.f.cons_vjp(y, x, w)
+
+    elseif evaluator.f.cons_j !== nothing
+        J = evaluator.J
+        evaluator.f.cons_j(J, x)
+        mul!(y, J', w)
+        return
+    end
+    error("Thou shalt provide the v'J of the constraint jacobian, not doing so is associated with great misfortune and also no ice cream for you.")
+end
 
 function MOI.hessian_lagrangian_structure(evaluator::MOIOptimizationNLPEvaluator)
     lagh = evaluator.f.lag_h !== nothing
