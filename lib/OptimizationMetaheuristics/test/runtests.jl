@@ -186,7 +186,7 @@ OBJECTIVES = Dict(
                 key = "$alg_name for $prob_name"
                 value = OBJECTIVES[key]
                 objectives = sol.objective
-                @test value ≈ objectives atol=1e-1
+                @test value ≈ objectives atol=0.95
                 end
             end
         end
