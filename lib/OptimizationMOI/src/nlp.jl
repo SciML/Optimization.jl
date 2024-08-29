@@ -304,7 +304,7 @@ function MOI.eval_constraint_jacobian_transpose_product(
         w
 )
     if evaluator.f.cons_vjp !== nothing
-        evaluator.f.cons_vjp(y, w, x)
+        evaluator.f.cons_vjp(y, x, w)
 
     elseif evaluator.f.cons_j !== nothing
         J = evaluator.J
