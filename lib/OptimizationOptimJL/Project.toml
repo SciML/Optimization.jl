@@ -6,13 +6,14 @@ version = "0.3.2"
 [deps]
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 
 [compat]
 Optim = "1"
 Optimization = "3.21"
+PrecompileTools = "1"
 Reexport = "1.2"
 SparseArrays = "1.6"
 julia = "1.6"
