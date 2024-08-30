@@ -1062,10 +1062,10 @@ uuid = "18e54dd8-cb9d-406c-a71d-865a43cbb235"
 version = "0.1.2"
 
 [[deps.IntelOpenMP_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "14eb2b542e748570b56446f4c50fbfb2306ebc45"
+deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
+git-tree-sha1 = "10bd689145d2c3b2a9844005d01087cc1194e79e"
 uuid = "1d5cc7b8-4909-519e-a0f8-d0f5ad9712d0"
-version = "2024.2.0+0"
+version = "2024.2.1+0"
 
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
@@ -1523,9 +1523,9 @@ version = "0.9.20"
 
 [[deps.ManifoldsBase]]
 deps = ["LinearAlgebra", "Markdown", "Printf", "Random", "Requires"]
-git-tree-sha1 = "5b0070c314af04eadea473a671fcb0a2536041ff"
+git-tree-sha1 = "000599aeb2406f7c63085f4904b9736e52f5795b"
 uuid = "3362f125-f0bb-47a3-aa74-596ffd7ef2fb"
-version = "0.15.14"
+version = "0.15.15"
 
     [deps.ManifoldsBase.extensions]
     ManifoldsBasePlotsExt = "Plots"
@@ -1578,9 +1578,9 @@ version = "0.1.2"
 
 [[deps.MathOptInterface]]
 deps = ["BenchmarkTools", "CodecBzip2", "CodecZlib", "DataStructures", "ForwardDiff", "JSON", "LinearAlgebra", "MutableArithmetics", "NaNMath", "OrderedCollections", "PrecompileTools", "Printf", "SparseArrays", "SpecialFunctions", "Test", "Unicode"]
-git-tree-sha1 = "c0fe113e9c72aa0c9a185fd3c5ca1daa51de1486"
+git-tree-sha1 = "5b246fca5420ae176d65ed43a2d0ee5897775216"
 uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
-version = "1.31.1"
+version = "1.31.2"
 
 [[deps.MathProgBase]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1745,9 +1745,9 @@ version = "0.9.22"
 
 [[deps.NOMAD]]
 deps = ["Libdl", "LinearAlgebra", "NOMAD_jll", "SparseArrays", "Test", "Tulip"]
-git-tree-sha1 = "7c18f7978bacbdcc6290170704b8205b02218662"
+git-tree-sha1 = "9b918f45f00ecbeb5b1676cb7ee960b8b94f3f6a"
 uuid = "02130f1c-4665-5b79-af82-ff1385104aa0"
-version = "2.4.0"
+version = "2.4.1"
 
 [[deps.NOMAD_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
