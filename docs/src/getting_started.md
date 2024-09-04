@@ -1,7 +1,7 @@
 # Getting Started with Optimization.jl
 
 In this tutorial, we introduce the basics of Optimization.jl by showing
-how to easily mix local optimizers and global optimizers on the Rosenbrock equation. 
+how to easily mix local optimizers and global optimizers on the Rosenbrock equation.
 The simplest copy-pasteable code using a quasi-Newton method (LBFGS) to solve the Rosenbrock problem is the following:
 
 ```@example intro

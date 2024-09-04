@@ -3,6 +3,7 @@ module OptimizationBBO
 using Reexport
 import Optimization
 import BlackBoxOptim, Optimization.SciMLBase
+import Optimization.SciMLBase: MultiObjectiveOptimizationFunction
 
 abstract type BBO end
 
@@ -14,6 +15,11 @@ for j in string.(BlackBoxOptim.SingleObjectiveMethodNames)
     eval(Meta.parse("Base.@kwdef struct BBO_" * j * " <: BBO method=:" * j * " end"))
     eval(Meta.parse("export BBO_" * j))
 end
+
+Base.@kwdef struct BBO_borg_moea <: BBO
+    method = :borg_moea
+end
+export BBO_borg_moea
 
 function decompose_trace(opt::BlackBoxOptim.OptRunController, progress)
     if progress
@@ -142,17 +148,32 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     _loss = function (θ)
-        if cache.callback === Optimization.DEFAULT_CALLBACK &&
-           cache.data === Optimization.DEFAULT_DATA
-            return first(cache.f(θ, cache.p))
-        elseif cache.callback === Optimization.DEFAULT_CALLBACK
-            return first(cache.f(θ, cache.p, cur...))
-        elseif cache.data !== Optimization.DEFAULT_DATA
-            x = cache.f(θ, cache.p)
-            return first(x)
+        if isa(cache.f, MultiObjectiveOptimizationFunction)
+            if cache.callback === Optimization.DEFAULT_CALLBACK &&
+               cache.data === Optimization.DEFAULT_DATA
+                return cache.f(θ, cache.p)
+            elseif cache.callback === Optimization.DEFAULT_CALLBACK
+                return cache.f(θ, cache.p, cur...)
+            elseif cache.data !== Optimization.DEFAULT_DATA
+                x = cache.f(θ, cache.p)
+                return x
+            else
+                x = cache.f(θ, cache.p, cur...)
+                return first(x)
+            end
         else
-            x = cache.f(θ, cache.p, cur...)
-            return first(x)
+            if cache.callback === Optimization.DEFAULT_CALLBACK &&
+               cache.data === Optimization.DEFAULT_DATA
+                return first(cache.f(θ, cache.p))
+            elseif cache.callback === Optimization.DEFAULT_CALLBACK
+                return first(cache.f(θ, cache.p, cur...))
+            elseif cache.data !== Optimization.DEFAULT_DATA
+                x = cache.f(θ, cache.p)
+                return first(x)
+            else
+                x = cache.f(θ, cache.p, cur...)
+                return first(x)
+            end
         end
     end
 

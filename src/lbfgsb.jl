@@ -57,15 +57,6 @@ function __map_optimizer_args(cache::Optimization.OptimizationCache, opt::LBFGS;
     return mapped_args
 end
 
-function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
-        opt::LBFGS,
-        data = Optimization.DEFAULT_DATA; save_best = true,
-        callback = (args...) -> (false),
-        progress = false, kwargs...)
-    return OptimizationCache(prob, opt, data; save_best, callback, progress,
-        kwargs...)
-end
-
 function SciMLBase.__solve(cache::OptimizationCache{
         F,
         RC,
@@ -94,15 +85,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
 }
     if cache.data != Optimization.DEFAULT_DATA
         maxiters = length(cache.data)
-        data = cache.data
     else
         maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-        data = Optimization.take(cache.data, maxiters)
     end
 
     local x
 
-    solver_kwargs = __map_optimizer_args(cache, cache.opt; cache.solver_args...)
+    solver_kwargs = __map_optimizer_args(cache, cache.opt; maxiters, cache.solver_args...)
 
     if !isnothing(cache.f.cons)
         eq_inds = [cache.lcons[i] == cache.ucons[i] for i in eachindex(cache.lcons)]
@@ -251,8 +240,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
         opt_ret = deduce_retcode(stop_reason)
 
         t1 = time()
-        stats = Optimization.OptimizationStats(; iterations = maxiters,
-            time = t1 - t0, fevals = maxiters, gevals = maxiters)
+
+        stats = Optimization.OptimizationStats(; iterations = optimizer.isave[30],
+            time = t1 - t0, fevals = optimizer.isave[34], gevals = optimizer.isave[34])
 
         return SciMLBase.build_solution(cache, cache.opt, res[2], res[1], stats = stats,
             retcode = opt_ret, original = optimizer)

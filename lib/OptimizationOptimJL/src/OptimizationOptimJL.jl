@@ -453,4 +453,34 @@ function SciMLBase.__solve(cache::OptimizationCache{
         stats = stats)
 end
 
+using PrecompileTools
+PrecompileTools.@compile_workload begin
+
+    function obj_f(x, p)
+        A = p[1]
+        b = p[2]
+        return sum((A * x - b) .^ 2)
+    end
+
+    function solve_nonnegative_least_squares(A, b, solver)
+
+        optf = Optimization.OptimizationFunction(obj_f, Optimization.AutoForwardDiff())
+        prob = Optimization.OptimizationProblem(optf, ones(size(A, 2)), (A, b), lb=zeros(size(A, 2)), ub=Inf * ones(size(A, 2)))
+        x = OptimizationOptimJL.solve(prob, solver, maxiters=5000, maxtime=100)
+
+        return x
+    end
+
+    solver_list = [OptimizationOptimJL.LBFGS(),
+        OptimizationOptimJL.ConjugateGradient(),
+        OptimizationOptimJL.GradientDescent(),
+        OptimizationOptimJL.BFGS()]
+
+    for solver in solver_list
+        x = solve_nonnegative_least_squares(rand(4, 4), rand(4), solver)
+        x = solve_nonnegative_least_squares(rand(35, 35), rand(35), solver)
+        x = solve_nonnegative_least_squares(rand(35, 10), rand(35), solver)
+    end
+end
+
 end
