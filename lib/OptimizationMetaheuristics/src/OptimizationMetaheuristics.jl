@@ -107,9 +107,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
-    f=cache.f
+    f = cache.f
     _loss = function (θ)
-        if isa(f,MultiObjectiveOptimizationFunction)
+        if isa(f, MultiObjectiveOptimizationFunction)
             return cache.f(θ, cache.p)
         else
             x = cache.f(θ, cache.p)

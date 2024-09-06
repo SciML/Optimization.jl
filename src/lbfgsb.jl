@@ -14,12 +14,20 @@ References
 """
 @kwdef struct LBFGS
     m::Int = 10
+    τ = 0.5
+    γ = 10.0
+    λmin = -1e20
+    λmax = 1e20
+    μmin = 0.0
+    μmax = 1e20
+    ϵ = 1e-8
 end
 
 SciMLBase.supports_opt_cache_interface(::LBFGS) = true
 SciMLBase.allowsbounds(::LBFGS) = true
-# SciMLBase.requiresgradient(::LBFGS) = true
+SciMLBase.requiresgradient(::LBFGS) = true
 SciMLBase.allowsconstraints(::LBFGS) = true
+SciMLBase.requiresconsjac(::LBFGS) = true
 
 function task_message_to_string(task::Vector{UInt8})
     return String(task)
@@ -97,13 +105,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
         eq_inds = [cache.lcons[i] == cache.ucons[i] for i in eachindex(cache.lcons)]
         ineq_inds = (!).(eq_inds)
 
-        τ = 0.5
-        γ = 10.0
-        λmin = -1e20
-        λmax = 1e20
-        μmin = 0.0
-        μmax = 1e20
-        ϵ = 1e-8
+        τ = cache.opt.τ
+        γ = cache.opt.γ
+        λmin = cache.opt.λmin
+        λmax = cache.opt.λmax
+        μmin = cache.opt.μmin
+        μmax = cache.opt.μmax
+        ϵ = cache.opt.ϵ
 
         λ = zeros(eltype(cache.u0), sum(eq_inds))
         μ = zeros(eltype(cache.u0), sum(ineq_inds))
@@ -170,7 +178,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         solver_kwargs = Base.structdiff(solver_kwargs, (; lb = nothing, ub = nothing))
 
         for i in 1:maxiters
-            prev_eqcons .= cons_tmp[eq_inds]
+            prev_eqcons .= cons_tmp[eq_inds] .- cache.lcons[eq_inds]
             prevβ .= copy(β)
 
             res = optimizer(_loss, aug_grad, θ, bounds; solver_kwargs...,
@@ -186,15 +194,16 @@ function SciMLBase.__solve(cache::OptimizationCache{
             θ = res[2]
             cons_tmp .= 0.0
             cache.f.cons(cons_tmp, θ)
-            λ = max.(min.(λmax, λ .+ ρ * cons_tmp[eq_inds]), λmin)
+
+            λ = max.(min.(λmax, λ .+ ρ * (cons_tmp[eq_inds] .- cache.lcons[eq_inds])), λmin)
             β = max.(cons_tmp[ineq_inds], -1 .* μ ./ ρ)
             μ = min.(μmax, max.(μ .+ ρ * cons_tmp[ineq_inds], μmin))
 
-            if max(norm(cons_tmp[eq_inds], Inf), norm(β, Inf)) >
+            if max(norm(cons_tmp[eq_inds] .- cache.lcons[eq_inds], Inf), norm(β, Inf)) >
                τ * max(norm(prev_eqcons, Inf), norm(prevβ, Inf))
                 ρ = γ * ρ
             end
-            if norm(cons_tmp[eq_inds], Inf) < ϵ && norm(β, Inf) < ϵ
+            if norm((cons_tmp[eq_inds] .- cache.lcons[eq_inds]) ./ cache.lcons[eq_inds], Inf) < ϵ && norm(β, Inf) < ϵ
                 opt_ret = ReturnCode.Success
                 break
             end

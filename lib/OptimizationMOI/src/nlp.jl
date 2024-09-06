@@ -317,7 +317,7 @@ end
 
 function MOI.hessian_lagrangian_structure(evaluator::MOIOptimizationNLPEvaluator)
     lagh = evaluator.f.lag_h !== nothing
-    if evaluator.f.lag_hess_prototype !== nothing
+    if evaluator.f.lag_hess_prototype isa SparseMatrixCSC
         rows, cols, _ = findnz(evaluator.f.lag_hess_prototype)
         return Tuple{Int, Int}[(i, j) for (i, j) in zip(rows, cols) if i <= j]
     end

@@ -182,13 +182,10 @@ to add the specific wrapper packages.
   	url = {https://doi.org/10.5281/zenodo.7738525},
 	year = 2023}
 ```
-
 ## Reproducibility
-
 ```@raw html
 <details><summary>The documentation of this SciML package was built using these direct dependencies,</summary>
 ```
-
 ```@example
 using Pkg # hide
 Pkg.status() # hide

@@ -20,8 +20,11 @@ end
 SciMLBase.requiresgradient(::IPNewton) = true
 SciMLBase.requireshessian(::IPNewton) = true
 SciMLBase.requiresconsjac(::IPNewton) = true
-SciMLBase.requireshessian(opt::Optim.NewtonTrustRegion) = true
-SciMLBase.requireshessian(opt::Optim.Newton) = true
+SciMLBase.requiresconshess(::IPNewton) = true
+function SciMLBase.requireshessian(opt::Union{
+        Optim.Newton, Optim.NewtonTrustRegion, Optim.KrylovTrustRegion})
+    true
+end
 SciMLBase.requiresgradient(opt::Optim.Fminbox) = true
 
 function __map_optimizer_args(cache::OptimizationCache,
@@ -455,7 +458,6 @@ end
 
 using PrecompileTools
 PrecompileTools.@compile_workload begin
-
     function obj_f(x, p)
         A = p[1]
         b = p[2]
@@ -463,10 +465,10 @@ PrecompileTools.@compile_workload begin
     end
 
     function solve_nonnegative_least_squares(A, b, solver)
-
         optf = Optimization.OptimizationFunction(obj_f, Optimization.AutoForwardDiff())
-        prob = Optimization.OptimizationProblem(optf, ones(size(A, 2)), (A, b), lb=zeros(size(A, 2)), ub=Inf * ones(size(A, 2)))
-        x = OptimizationOptimJL.solve(prob, solver, maxiters=5000, maxtime=100)
+        prob = Optimization.OptimizationProblem(optf, ones(size(A, 2)), (A, b),
+            lb = zeros(size(A, 2)), ub = Inf * ones(size(A, 2)))
+        x = OptimizationOptimJL.solve(prob, solver, maxiters = 5000, maxtime = 100)
 
         return x
     end
