@@ -1,6 +1,6 @@
 using Optimization, OptimizationOptimJL, OptimizationMOI, Ipopt, Test
 using ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker
-using ModelingToolkit, Enzyme, Random
+using Enzyme, Random
 
 x0 = zeros(2)
 rosenbrock(x, p = nothing) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
@@ -61,11 +61,14 @@ end
 end
 
 @testset "One constraint" begin
-    for adtype in [AutoEnzyme(), AutoForwardDiff(), AutoZygote(), AutoReverseDiff(), AutoModelingToolkit(), AutoSparseForwardDiff(), AutoSparseReverseDiff(), AutoSparse(AutoZygote()), AutoModelingToolkit(true, true)]
+    for adtype in [AutoEnzyme(), AutoForwardDiff(), AutoZygote(), AutoReverseDiff(),
+        AutoFiniteDiff(), AutoModelingToolkit(), AutoSparseForwardDiff(),
+        AutoSparseReverseDiff(), AutoSparse(AutoZygote()), AutoModelingToolkit(true, true)]
         cons = (res, x, p) -> (res[1] = x[1]^2 + x[2]^2 - 1.0; return nothing)
         optf = OptimizationFunction(rosenbrock, adtype, cons = cons)
         @show adtype
-        prob = OptimizationProblem(optf, x0, lb = [-1.0, -1.0], ub = [1.0, 1.0], lcons = [0.0], ucons = [0.0])
+        prob = OptimizationProblem(
+            optf, x0, lb = [-1.0, -1.0], ub = [1.0, 1.0], lcons = [0.0], ucons = [0.0])
 
         sol = solve(prob, Optimization.LBFGS(), maxiters = 1000)
         @test 10 * sol.objective < l1
@@ -76,8 +79,8 @@ end
 end
 
 @testset "Two constraints" begin
-    for adtype in [AutoEnzyme(), AutoForwardDiff(), AutoZygote(), AutoReverseDiff(),
-            AutoModelingToolkit(), AutoSparseForwardDiff(),
+    for adtype in [AutoForwardDiff(), AutoZygote(), AutoReverseDiff(),
+        AutoFiniteDiff(), AutoModelingToolkit(), AutoSparseForwardDiff(),
         AutoSparseReverseDiff(), AutoSparse(AutoZygote()), AutoModelingToolkit(true, true)]
         function con2_c(res, x, p)
             res[1] = x[1]^2 + x[2]^2
@@ -86,7 +89,8 @@ end
         end
         optf = OptimizationFunction(rosenbrock, adtype, cons = con2_c)
 
-        prob = OptimizationProblem(optf, x0, lb = [-1.0, -1.0], ub = [1.0, 1.0], lcons = [1.0, -2.0], ucons = [1.0, 2.0])
+        prob = OptimizationProblem(optf, x0, lb = [-1.0, -1.0], ub = [1.0, 1.0],
+            lcons = [1.0, -2.0], ucons = [1.0, 2.0])
 
         sol = solve(prob, Optimization.LBFGS(), maxiters = 1000)
         @test 10 * sol.objective < l1

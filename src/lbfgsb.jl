@@ -203,7 +203,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
                τ * max(norm(prev_eqcons, Inf), norm(prevβ, Inf))
                 ρ = γ * ρ
             end
-            if norm((cons_tmp[eq_inds] .- cache.lcons[eq_inds]) ./ cache.lcons[eq_inds], Inf) < ϵ && norm(β, Inf) < ϵ
+            if norm(
+                (cons_tmp[eq_inds] .- cache.lcons[eq_inds]) ./ cons_tmp[eq_inds], Inf) <
+               ϵ && norm(β, Inf) < ϵ
                 opt_ret = ReturnCode.Success
                 break
             end
