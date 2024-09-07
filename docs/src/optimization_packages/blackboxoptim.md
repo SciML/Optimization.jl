@@ -67,3 +67,21 @@ prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 
 sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(), maxiters = 100000,
     maxtime = 1000.0)
 ```
+
+## Multi-objective optimization
+The optimizer for Multi-Objective Optimization is `BBO_borg_moea()`. Your fitness function should return a tuple of the objective values and you should indicate the fitness scheme to be (typically) Pareto fitness and specify the number of objectives. Otherwise, the use is similar, here is an example:
+
+```@example MOO-BBO
+using OptimizationBBO, Optimization, BlackBoxOptim
+using SciMLBase: MultiObjectiveOptimizationFunction
+u0 = [0.25, 0.25]
+opt = OptimizationBBO.BBO_borg_moea()
+function multi_obj_func_2(x, p)
+    f1 = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2  # Rosenbrock function
+    f2 = -20.0 * exp(-0.2 * sqrt(0.5 * (x[1]^2 + x[2]^2))) - exp(0.5 * (cos(2π * x[1]) + cos(2π * x[2]))) + exp(1) + 20.0  # Ackley function
+    return (f1, f2)
+end
+mof = MultiObjectiveOptimizationFunction(multi_obj_func_2)
+prob = Optimization.OptimizationProblem(mof_2, u0; lb = [0.0, 0.0], ub = [2.0, 2.0])
+sol = solve(prob_2, opt, NumDimensions=2, FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true))
+```
