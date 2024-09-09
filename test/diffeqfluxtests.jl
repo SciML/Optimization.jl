@@ -84,7 +84,7 @@ function loss_neuralode(p)
 end
 
 iter = 0
-callback = function (p, l, pred, args...)
+callback = function (st, l)
     global iter
     iter += 1
 

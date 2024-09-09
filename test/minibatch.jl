@@ -1,5 +1,5 @@
 using Optimization, OrdinaryDiffEq, OptimizationOptimisers,
-      SciMLSensitivity, Lux, Random, ComponentArrays, Flux
+      SciMLSensitivity, Lux, Random, ComponentArrays, MLUtils
 using Test
 
 rng = Random.default_rng()
@@ -49,7 +49,7 @@ function loss_adjoint(fullp, p)
 end
 
 k = 10
-train_loader = Flux.Data.DataLoader((ode_data, t), batchsize = k)
+train_loader = MLUtils.DataLoader((ode_data, t), batchsize = k)
 
 numEpochs = 300
 l1 = loss_adjoint(pp, (train_loader.data[1], train_loader.data[2]))[1]
