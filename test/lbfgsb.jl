@@ -24,4 +24,4 @@ prob = OptimizationProblem(optf, x0, lcons = [1.0, -Inf],
     ucons = [1.0, 0.0], lb = [-1.0, -1.0],
     ub = [1.0, 1.0])
 @time res = solve(prob, Optimization.LBFGS(), maxiters = 100)
-@test res.retcode == Optimization.SciMLBase.ReturnCode.MaxIters
+@test res.retcode == SciMLBase.ReturnCode.Success

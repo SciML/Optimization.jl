@@ -66,7 +66,7 @@ end
         AutoSparseReverseDiff(), AutoSparse(AutoZygote()), AutoModelingToolkit(true, true)]
         cons = (res, x, p) -> (res[1] = x[1]^2 + x[2]^2 - 1.0; return nothing)
         optf = OptimizationFunction(rosenbrock, adtype, cons = cons)
-        @show adtype
+
         prob = OptimizationProblem(
             optf, x0, lb = [-1.0, -1.0], ub = [1.0, 1.0], lcons = [0.0], ucons = [0.0])
 

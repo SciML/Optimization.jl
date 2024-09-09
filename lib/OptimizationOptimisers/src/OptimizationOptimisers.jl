@@ -8,11 +8,10 @@ SciMLBase.supports_opt_cache_interface(opt::AbstractRule) = true
 SciMLBase.requiresgradient(opt::AbstractRule) = true
 SciMLBase.allowsfg(opt::AbstractRule) = true
 
-function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::AbstractRule,
-        data = Optimization.DEFAULT_DATA; save_best = true,
+function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::AbstractRule; save_best = true,
         callback = (args...) -> (false), epochs = nothing,
         progress = false, kwargs...)
-    return OptimizationCache(prob, opt, data; save_best, callback, progress,
+    return OptimizationCache(prob, opt; save_best, callback, progress, epochs,
         kwargs...)
 end
 
@@ -42,23 +41,25 @@ function SciMLBase.__solve(cache::OptimizationCache{
         P,
         C
 }
-    if cache.data != Optimization.DEFAULT_DATA
-        maxiters = if cache.solver_args.epochs === nothing
-            if cache.solver_args.maxiters === nothing
-                throw(ArgumentError("The number of epochs must be specified with either the epochs or maxiters kwarg."))
-            else
-                cache.solver_args.maxiters
-            end
+    maxiters = if cache.solver_args.epochs === nothing
+        if cache.solver_args.maxiters === nothing
+            throw(ArgumentError("The number of epochs must be specified with either the epochs or maxiters kwarg."))
         else
-            cache.solver_args.epochs
+            cache.solver_args.maxiters
         end
-        data = cache.data
     else
-        maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-        if maxiters === nothing
-            throw(ArgumentError("The number of epochs must be specified as the epochs or maxiters kwarg."))
-        end
-        data = Optimization.take(cache.data, maxiters)
+        cache.solver_args.epochs
+    end
+
+    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
+    if maxiters === nothing
+        throw(ArgumentError("The number of epochs must be specified as the epochs or maxiters kwarg."))
+    end
+
+    if cache.p == SciMLBase.NullParameters()
+        data = OptimizationBase.DEFAULT_DATA
+    else
+        data = cache.p
     end
     opt = cache.opt
     θ = copy(cache.u0)
@@ -75,7 +76,12 @@ function SciMLBase.__solve(cache::OptimizationCache{
     Optimization.@withprogress cache.progress name="Training" begin
         for _ in 1:maxiters
             for (i, d) in enumerate(data)
-                x = cache.f.fg(G, θ, d...)
+                if cache.f.fg !== nothing
+                    x = cache.f.fg(G, θ, d)
+                else
+                    cache.f.grad(G, θ, d)
+                    x = cache.f(θ, d)
+                end
                 opt_state = Optimization.OptimizationState(iter = i,
                     u = θ,
                     objective = x[1],

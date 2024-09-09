@@ -193,11 +193,9 @@ Pkg.status() # hide
 ```@raw html
 </details>
 ```
-
 ```@raw html
 <details><summary>and using this machine and Julia version.</summary>
 ```
-
 ```@example
 using InteractiveUtils # hide
 versioninfo() # hide
