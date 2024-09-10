@@ -99,12 +99,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
 }
     local x, cur, state
 
-    if cache.data != Optimization.DEFAULT_DATA
-        maxiters = length(cache.data)
-    end
-
-    cur, state = iterate(cache.data)
-
     function _cb(trace)
         curr_u = decompose_trace(trace).metadata["curr_u"]
         opt_state = Optimization.OptimizationState(;
@@ -116,7 +110,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
-        cur, state = iterate(cache.data, state)
         cb_call
     end
 
@@ -127,10 +120,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     _loss = function (θ)
         if isa(f, MultiObjectiveOptimizationFunction)
-            x = f(θ, cache.p, cur...)
+            x = f(θ, cache.p)
             return x
         else
-            x = f(θ, cache.p, cur...)
+            x = f(θ, cache.p)
             return first(x)
         end
     end

@@ -11,11 +11,10 @@ SciMLBase.supports_opt_cache_interface(opt::MultistartOptimization.TikTak) = tru
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
         opt::MultistartOptimization.TikTak,
-        local_opt,
-        data = Optimization.DEFAULT_DATA;
+        local_opt;
         use_threads = true,
         kwargs...)
-    return OptimizationCache(prob, opt, data; local_opt = local_opt, prob = prob,
+    return OptimizationCache(prob, opt; local_opt = local_opt, prob = prob,
         use_threads = use_threads,
         kwargs...)
 end

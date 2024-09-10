@@ -403,14 +403,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
         throw(ArgumentError("Manifold not specified in the problem for e.g. `OptimizationProblem(f, x, p; manifold = SymmetricPositiveDefinite(5))`."))
     end
 
-    if cache.data !== Optimization.DEFAULT_DATA
-        maxiters = length(cache.data)
-    else
-        maxiters = cache.solver_args.maxiters
-    end
-
-    cur, state = iterate(cache.data)
-
     function _cb(x, θ)
         opt_state = Optimization.OptimizationState(iter = 0,
             u = θ,
@@ -419,13 +411,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
-        nx_itr = iterate(cache.data, state)
-        if isnothing(nx_itr)
-            true
-        else
-            cur, state = nx_itr
-            cb_call
-        end
+        cb_call
     end
     solver_kwarg = __map_optimizer_args!(cache, cache.opt, callback = _cb,
         maxiters = maxiters,

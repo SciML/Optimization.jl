@@ -1,6 +1,6 @@
 using OptimizationOptimJL,
       OptimizationOptimJL.Optim, Optimization, ForwardDiff, Zygote,
-      Random, ModelingToolkit
+      Random, ModelingToolkit, OptimizationBase.DifferentiationInterface
 using Test
 
 struct CallbackTester
@@ -42,7 +42,7 @@ end
                 b = 0.5)); callback = CallbackTester(length(x0)))
     @test 10 * sol.objective < l1
 
-    f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+    f = OptimizationFunction(rosenbrock, SecondOrder(AutoForwardDiff(), AutoZygote()))
 
     Random.seed!(1234)
     prob = OptimizationProblem(f, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])

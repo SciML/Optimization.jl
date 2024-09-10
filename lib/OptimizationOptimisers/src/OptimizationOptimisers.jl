@@ -8,7 +8,8 @@ SciMLBase.supports_opt_cache_interface(opt::AbstractRule) = true
 SciMLBase.requiresgradient(opt::AbstractRule) = true
 SciMLBase.allowsfg(opt::AbstractRule) = true
 
-function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::AbstractRule; save_best = true,
+function SciMLBase.__init(
+        prob::SciMLBase.OptimizationProblem, opt::AbstractRule; save_best = true,
         callback = (args...) -> (false), epochs = nothing,
         progress = false, kwargs...)
     return OptimizationCache(prob, opt; save_best, callback, progress, epochs,

@@ -66,11 +66,10 @@ function __map_optimizer_args!(cache::OptimizationCache,
 end
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
-        opt::Metaheuristics.AbstractAlgorithm,
-        data = Optimization.DEFAULT_DATA; use_initial = false,
+        opt::Metaheuristics.AbstractAlgorithm; use_initial = false,
         callback = (args...) -> (false),
         progress = false, kwargs...)
-    return OptimizationCache(prob, opt, data; use_initial = use_initial,
+    return OptimizationCache(prob, opt; use_initial = use_initial,
         callback = callback,
         progress = progress,
         kwargs...)

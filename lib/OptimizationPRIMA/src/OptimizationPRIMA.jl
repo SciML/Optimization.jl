@@ -19,7 +19,7 @@ SciMLBase.requiresgradient(opt::Union{BOBYQA, LINCOA, COBYLA}) = true
 SciMLBase.requiresconsjac(opt::Union{LINCOA, COBYLA}) = true
 
 function Optimization.OptimizationCache(prob::SciMLBase.OptimizationProblem,
-        opt::PRIMASolvers, data;
+        opt::PRIMASolvers;
         callback = Optimization.DEFAULT_CALLBACK,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -39,7 +39,7 @@ function Optimization.OptimizationCache(prob::SciMLBase.OptimizationProblem,
 
     return Optimization.OptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
-        opt, data, progress, callback, nothing,
+        opt, progress, callback, nothing,
         Optimization.OptimizationBase.AnalysisResults(nothing, nothing),
         merge((; maxiters, maxtime, abstol, reltol),
             NamedTuple(kwargs)))

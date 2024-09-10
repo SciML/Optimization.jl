@@ -111,12 +111,6 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
 }
     local x, cur, state
 
-    if cache.data != Optimization.DEFAULT_DATA
-        maxiters = length(cache.data)
-    end
-
-    cur, state = iterate(cache.data)
-
     function _cb(trace)
         if cache.callback === Optimization.DEFAULT_CALLBACK
             cb_call = false
@@ -138,9 +132,6 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
             BlackBoxOptim.shutdown_optimizer!(trace) #doesn't work
         end
 
-        if cache.data !== Optimization.DEFAULT_DATA
-            cur, state = iterate(cache.data, state)
-        end
         cb_call
     end
 
@@ -149,37 +140,14 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
 
     _loss = function (θ)
         if isa(cache.f, MultiObjectiveOptimizationFunction)
-            if cache.callback === Optimization.DEFAULT_CALLBACK &&
-               cache.data === Optimization.DEFAULT_DATA
-                return cache.f(θ, cache.p)
-            elseif cache.callback === Optimization.DEFAULT_CALLBACK
-                return cache.f(θ, cache.p, cur...)
-            elseif cache.data !== Optimization.DEFAULT_DATA
-                x = cache.f(θ, cache.p)
-                return x
-            else
-                x = cache.f(θ, cache.p, cur...)
-                return first(x)
-            end
+            return cache.f(θ, cache.p)
         else
-            if cache.callback === Optimization.DEFAULT_CALLBACK &&
-               cache.data === Optimization.DEFAULT_DATA
-                return first(cache.f(θ, cache.p))
-            elseif cache.callback === Optimization.DEFAULT_CALLBACK
-                return first(cache.f(θ, cache.p, cur...))
-            elseif cache.data !== Optimization.DEFAULT_DATA
-                x = cache.f(θ, cache.p)
-                return first(x)
-            else
-                x = cache.f(θ, cache.p, cur...)
-                return first(x)
-            end
+            return first(cache.f(θ, cache.p))
         end
     end
 
     opt_args = __map_optimizer_args(cache, cache.opt;
-        callback = cache.callback === Optimization.DEFAULT_CALLBACK &&
-                   cache.data === Optimization.DEFAULT_DATA ?
+        callback = cache.callback === Optimization.DEFAULT_CALLBACK ?
                    nothing : _cb,
         cache.solver_args...,
         maxiters = maxiters,
