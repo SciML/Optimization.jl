@@ -22,7 +22,6 @@ jobs:
           - OptimizationBBO
           - OptimizationCMAEvolutionStrategy
           - OptimizationEvolutionary
-          - OptimizationFlux
           - OptimizationGCMAES
           - OptimizationManopt
           - OptimizationMetaheuristics

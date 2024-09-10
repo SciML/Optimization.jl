@@ -1,6 +1,6 @@
 using OptimizationOptimJL,
       OptimizationOptimJL.Optim, Optimization, ForwardDiff, Zygote,
-      Random, ModelingToolkit, OptimizationBase.DifferentiationInterface
+      Random, ModelingToolkit, Optimization.OptimizationBase.DifferentiationInterface
 using Test
 
 struct CallbackTester

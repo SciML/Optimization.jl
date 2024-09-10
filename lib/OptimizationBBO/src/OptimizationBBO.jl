@@ -140,9 +140,11 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
 
     _loss = function (θ)
         if isa(cache.f, MultiObjectiveOptimizationFunction)
-            return cache.f(θ, cache.p)
+            x = (cache.f(θ, cache.p),)
+            return x[1]
         else
-            return first(cache.f(θ, cache.p))
+            x = cache.f(θ, cache.p)
+            return first(x)
         end
     end
 
