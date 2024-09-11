@@ -30,12 +30,6 @@ end
     sol = solve(prob, Optim.Newton())
     @test 10 * sol.objective < l1
     @test sol.retcode == ReturnCode.Success
-
-    sol = Optimization.solve(prob,
-        Optimization.Sophia(; η = 0.5,
-            λ = 0.0),
-        maxiters = 1000)
-    @test 10 * sol.objective < l1
 end
 
 @testset "No constraint" begin

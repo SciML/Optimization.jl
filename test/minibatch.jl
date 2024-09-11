@@ -58,8 +58,10 @@ optfun = OptimizationFunction(loss_adjoint,
     Optimization.AutoZygote())
 optprob = OptimizationProblem(optfun, pp, train_loader)
 
-res1 = Optimization.solve(optprob, Optimisers.Adam(0.05),
-    callback = callback, maxiters = numEpochs)
+sol = Optimization.solve(optprob,
+Optimization.Sophia(; η = 0.5,
+    λ = 0.0),
+maxiters = 1000)
 @test 10res1.objective < l1
 
 optfun = OptimizationFunction(loss_adjoint,

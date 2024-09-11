@@ -1,5 +1,5 @@
 using OptimizationOptimJL,
-      OptimizationOptimJL.Optim, Optimization, ForwardDiff, Zygote,
+      OptimizationOptimJL.Optim, Optimization, ForwardDiff, Zygote, ReverseDiff.
       Random, ModelingToolkit, Optimization.OptimizationBase.DifferentiationInterface
 using Test
 

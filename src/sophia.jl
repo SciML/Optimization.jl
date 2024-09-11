@@ -10,6 +10,9 @@ struct Sophia
 end
 
 SciMLBase.supports_opt_cache_interface(opt::Sophia) = true
+SciMLBase.requiresgradient(opt::Sophia) = true
+SciMLBase.allowsfg(opt::Sophia) = true
+SciMLBase.requireshessian(opt::Sophia) = true
 
 function Sophia(; η = 1e-3, βs = (0.9, 0.999), ϵ = 1e-8, λ = 1e-1, k = 10,
         ρ = 0.04)
@@ -18,11 +21,10 @@ end
 
 clip(z, ρ) = max(min(z, ρ), -ρ)
 
-function SciMLBase.__init(prob::OptimizationProblem, opt::Sophia,
-        data = Optimization.DEFAULT_DATA;
+function SciMLBase.__init(prob::OptimizationProblem, opt::Sophia;
         maxiters::Number = 1000, callback = (args...) -> (false),
         progress = false, save_best = true, kwargs...)
-    return OptimizationCache(prob, opt, data; maxiters, callback, progress,
+    return OptimizationCache(prob, opt; maxiters, callback, progress,
         save_best, kwargs...)
 end
 
@@ -60,46 +62,46 @@ function SciMLBase.__solve(cache::OptimizationCache{
     λ = uType(cache.opt.λ)
     ρ = uType(cache.opt.ρ)
 
-    if cache.data != Optimization.DEFAULT_DATA
-        maxiters = length(cache.data)
-        data = cache.data
-    else
-        maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-        data = Optimization.take(cache.data, maxiters)
-    end
+    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
 
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
+    if cache.p == SciMLBase.NullParameters()
+        data = OptimizationBase.DEFAULT_DATA
+    else
+        data = cache.p
+    end
 
     f = cache.f
     θ = copy(cache.u0)
     gₜ = zero(θ)
     mₜ = zero(θ)
     hₜ = zero(θ)
-    for (i, d) in enumerate(data)
-        f.grad(gₜ, θ, d...)
-        x = cache.f(θ, cache.p, d...)
-        opt_state = Optimization.OptimizationState(; iter = i,
-            u = θ,
-            objective = first(x),
-            grad = gₜ,
-            original = nothing)
-        cb_call = cache.callback(θ, x...)
-        if !(cb_call isa Bool)
-            error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
-        elseif cb_call
-            break
-        end
-        mₜ = βs[1] .* mₜ + (1 - βs[1]) .* gₜ
+    for _ in 1:maxiters
+        for (i, d) in enumerate(data)
+            f.grad(gₜ, θ, d)
+            x = cache.f(θ, cache.p, d...)
+            opt_state = Optimization.OptimizationState(; iter = i,
+                u = θ,
+                objective = first(x),
+                grad = gₜ,
+                original = nothing)
+            cb_call = cache.callback(θ, x...)
+            if !(cb_call isa Bool)
+                error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
+            elseif cb_call
+                break
+            end
+            mₜ = βs[1] .* mₜ + (1 - βs[1]) .* gₜ
 
-        if i % cache.opt.k == 1
-            hₜ₋₁ = copy(hₜ)
-            u = randn(uType, length(θ))
-            f.hv(hₜ, θ, u, d...)
-            hₜ = βs[2] .* hₜ₋₁ + (1 - βs[2]) .* (u .* hₜ)
+            if i % cache.opt.k == 1
+                hₜ₋₁ = copy(hₜ)
+                u = randn(uType, length(θ))
+                f.hv(hₜ, θ, u, d)
+                hₜ = βs[2] .* hₜ₋₁ + (1 - βs[2]) .* (u .* hₜ)
+            end
+            θ = θ .- η * λ .* θ
+            θ = θ .-
+                η .* clip.(mₜ ./ max.(hₜ, Ref(ϵ)), Ref(ρ))
         end
-        θ = θ .- η * λ .* θ
-        θ = θ .-
-            η .* clip.(mₜ ./ max.(hₜ, Ref(ϵ)), Ref(ρ))
     end
 
     return SciMLBase.build_solution(cache, cache.opt,

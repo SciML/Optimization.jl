@@ -13,6 +13,9 @@ internal state.
 abstract type AbstractManoptOptimizer end
 
 SciMLBase.supports_opt_cache_interface(opt::AbstractManoptOptimizer) = true
+SciMLBase.requiresgradient(opt::Union{GradientDescentOptimizer, ConjugateGradientDescentOptimizer, QuasiNewtonOptimizer, ConvexBundleOptimizer, FrankWolfeOptimizer}) = true
+SciMLBase.requireshessian(opt::Union{AdaptiveRegularizationCubicOptimizer, TrustRegionsOptimizer}) = true
+
 
 function __map_optimizer_args!(cache::OptimizationCache,
         opt::AbstractManoptOptimizer;
