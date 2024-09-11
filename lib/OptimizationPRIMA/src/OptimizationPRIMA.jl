@@ -15,8 +15,7 @@ SciMLBase.supports_opt_cache_interface(::PRIMASolvers) = true
 SciMLBase.allowsconstraints(::Union{LINCOA, COBYLA}) = true
 SciMLBase.allowsbounds(opt::Union{BOBYQA, LINCOA, COBYLA}) = true
 SciMLBase.requiresconstraints(opt::COBYLA) = true
-SciMLBase.requiresgradient(opt::Union{BOBYQA, LINCOA, COBYLA}) = true
-SciMLBase.requiresconsjac(opt::Union{LINCOA, COBYLA}) = true
+SciMLBase.requiresconsjac(opt::COBYLA) = true
 SciMLBase.requiresconshess(opt::COBYLA) = true
 
 function Optimization.OptimizationCache(prob::SciMLBase.OptimizationProblem,
@@ -34,8 +33,14 @@ function Optimization.OptimizationCache(prob::SciMLBase.OptimizationProblem,
         throw("We evaluate the jacobian and hessian of the constraints once to automatically detect 
         linear and nonlinear constraints, please provide a valid AD backend for using COBYLA.")
     else
-        f = Optimization.instantiate_function(
-            prob.f, reinit_cache.u0, prob.f.adtype, reinit_cache.p, num_cons)
+        if opt isa COBYLA
+            f = Optimization.instantiate_function(
+                prob.f, reinit_cache.u0, prob.f.adtype, reinit_cache.p, num_cons,
+                cons_j = true, cons_h = true)
+        else
+            f = Optimization.instantiate_function(
+                prob.f, reinit_cache.u0, prob.f.adtype, reinit_cache.p, num_cons)
+        end
     end
 
     return Optimization.OptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons,

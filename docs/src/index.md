@@ -203,20 +203,16 @@ versioninfo() # hide
 ```@raw html
 </details>
 ```
-
 ```@raw html
 <details><summary>A more complete overview of all dependencies and their versions is also provided.</summary>
 ```
-
 ```@example
 using Pkg # hide
 Pkg.status(; mode = PKGMODE_MANIFEST) # hide
 ```
-
 ```@raw html
 </details>
 ```
-
 ```@eval
 using TOML
 using Markdown

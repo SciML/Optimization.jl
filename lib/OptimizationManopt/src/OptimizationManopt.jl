@@ -13,9 +13,6 @@ internal state.
 abstract type AbstractManoptOptimizer end
 
 SciMLBase.supports_opt_cache_interface(opt::AbstractManoptOptimizer) = true
-SciMLBase.requiresgradient(opt::Union{GradientDescentOptimizer, ConjugateGradientDescentOptimizer, QuasiNewtonOptimizer, ConvexBundleOptimizer, FrankWolfeOptimizer}) = true
-SciMLBase.requireshessian(opt::Union{AdaptiveRegularizationCubicOptimizer, TrustRegionsOptimizer}) = true
-
 
 function __map_optimizer_args!(cache::OptimizationCache,
         opt::AbstractManoptOptimizer;
@@ -329,6 +326,15 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
 end
 
 ## Optimization.jl stuff
+function SciMLBase.requiresgradient(opt::Union{
+        GradientDescentOptimizer, ConjugateGradientDescentOptimizer,
+        QuasiNewtonOptimizer, ConvexBundleOptimizer, FrankWolfeOptimizer})
+    true
+end
+function SciMLBase.requireshessian(opt::Union{
+        AdaptiveRegularizationCubicOptimizer, TrustRegionsOptimizer})
+    true
+end
 
 function build_loss(f::OptimizationFunction, prob, cb)
     function (::AbstractManifold, θ)

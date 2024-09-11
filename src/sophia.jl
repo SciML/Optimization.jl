@@ -78,7 +78,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     for _ in 1:maxiters
         for (i, d) in enumerate(data)
             f.grad(gₜ, θ, d)
-            x = cache.f(θ, cache.p, d...)
+            x = cache.f(θ, d)
             opt_state = Optimization.OptimizationState(; iter = i,
                 u = θ,
                 objective = first(x),
