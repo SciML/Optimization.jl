@@ -97,7 +97,9 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::NOMADOpt;
     if prob.f.cons === nothing
         opt_setup = NOMAD.NomadProblem(length(prob.u0), 1, ["OBJ"], bb; bounds...)
     else
-        opt_setup = NOMAD.NomadProblem(length(prob.u0), 1+length(prob.ucons), vcat("OBJ", fill(strcnsmethod(cons_method), length(prob.ucons))), bbcons; bounds...)
+        opt_setup = NOMAD.NomadProblem(length(prob.u0), 1 + length(prob.ucons),
+            vcat("OBJ", fill(strcnsmethod(cons_method), length(prob.ucons))),
+            bbcons; bounds...)
     end
 
     __map_optimizer_args!(prob, opt_setup, maxiters = maxiters, maxtime = maxtime,
