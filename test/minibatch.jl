@@ -58,9 +58,9 @@ optfun = OptimizationFunction(loss_adjoint,
     Optimization.AutoZygote())
 optprob = OptimizationProblem(optfun, pp, train_loader)
 
-sol = Optimization.solve(optprob,
+res1 = Optimization.solve(optprob,
     Optimization.Sophia(; η = 0.5,
-        λ = 0.0),
+        λ = 0.0), callback = callback,
     maxiters = 1000)
 @test 10res1.objective < l1
 

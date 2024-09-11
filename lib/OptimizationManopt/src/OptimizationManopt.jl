@@ -328,7 +328,8 @@ end
 ## Optimization.jl stuff
 function SciMLBase.requiresgradient(opt::Union{
         GradientDescentOptimizer, ConjugateGradientDescentOptimizer,
-        QuasiNewtonOptimizer, ConvexBundleOptimizer, FrankWolfeOptimizer})
+        QuasiNewtonOptimizer, ConvexBundleOptimizer, FrankWolfeOptimizer,
+        AdaptiveRegularizationCubicOptimizer, TrustRegionsOptimizer})
     true
 end
 function SciMLBase.requireshessian(opt::Union{
