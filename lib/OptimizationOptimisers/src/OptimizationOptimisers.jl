@@ -2,7 +2,7 @@ module OptimizationOptimisers
 
 using Reexport, Printf, ProgressLogging
 @reexport using Optimisers, Optimization
-using Optimization.SciMLBase
+using Optimization.SciMLBase, MLUtils
 
 SciMLBase.supports_opt_cache_interface(opt::AbstractRule) = true
 SciMLBase.requiresgradient(opt::AbstractRule) = true
@@ -57,10 +57,12 @@ function SciMLBase.__solve(cache::OptimizationCache{
         throw(ArgumentError("The number of epochs must be specified as the epochs or maxiters kwarg."))
     end
 
-    if cache.p == SciMLBase.NullParameters()
-        data = OptimizationBase.DEFAULT_DATA
-    else
+    if cache.p isa MLUtils.DataLoader
         data = cache.p
+        dataiterate = true
+    else
+        data = [cache.p]
+        dataiterate = false
     end
     opt = cache.opt
     θ = copy(cache.u0)
@@ -77,11 +79,16 @@ function SciMLBase.__solve(cache::OptimizationCache{
     Optimization.@withprogress cache.progress name="Training" begin
         for _ in 1:maxiters
             for (i, d) in enumerate(data)
-                if cache.f.fg !== nothing
+                if cache.f.fg !== nothing && dataiterate
                     x = cache.f.fg(G, θ, d)
-                else
+                elseif dataiterate
                     cache.f.grad(G, θ, d)
                     x = cache.f(θ, d)
+                elseif cache.f.fg !== nothing
+                    x = cache.f.fg(G, θ)
+                else
+                    cache.f.grad(G, θ)
+                    x = cache.f(θ)
                 end
                 opt_state = Optimization.OptimizationState(iter = i,
                     u = θ,

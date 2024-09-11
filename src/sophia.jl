@@ -64,10 +64,12 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
 
-    if cache.p == SciMLBase.NullParameters()
-        data = OptimizationBase.DEFAULT_DATA
-    else
+    if cache.p isa MLUtils.DataLoader
         data = cache.p
+        dataiterate = true
+    else
+        data = [cache.p]
+        dataiterate = false
     end
 
     f = cache.f
@@ -77,14 +79,23 @@ function SciMLBase.__solve(cache::OptimizationCache{
     hₜ = zero(θ)
     for _ in 1:maxiters
         for (i, d) in enumerate(data)
-            f.grad(gₜ, θ, d)
-            x = cache.f(θ, d)
+            if cache.f.fg !== nothing && dataiterate
+                x = cache.f.fg(G, θ, d)
+            elseif dataiterate
+                cache.f.grad(G, θ, d)
+                x = cache.f(θ, d)
+            elseif cache.f.fg !== nothing
+                x = cache.f.fg(G, θ)
+            else
+                cache.f.grad(G, θ)
+                x = cache.f(θ)
+            end
             opt_state = Optimization.OptimizationState(; iter = i,
                 u = θ,
                 objective = first(x),
                 grad = gₜ,
                 original = nothing)
-            cb_call = cache.callback(θ, x...)
+            cb_call = cache.callback(opt_state, x...)
             if !(cb_call isa Bool)
                 error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
             elseif cb_call

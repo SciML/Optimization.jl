@@ -19,7 +19,7 @@ function dudt_(u, p, t)
     ann(u, p, st)[1] .* u
 end
 
-function callback(state, l) #callback function to observe training
+function callback(state, l, pred) #callback function to observe training
     display(l)
     return false
 end

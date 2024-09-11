@@ -42,7 +42,7 @@ end
                 b = 0.5)); callback = CallbackTester(length(x0)))
     @test 10 * sol.objective < l1
 
-    f = OptimizationFunction(rosenbrock, SecondOrder(AutoForwardDiff(), AutoZygote()))
+    f = OptimizationFunction(rosenbrock, AutoReverseDiff())
 
     Random.seed!(1234)
     prob = OptimizationProblem(f, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
