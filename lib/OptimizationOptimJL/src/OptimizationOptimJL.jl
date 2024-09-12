@@ -159,14 +159,18 @@ function SciMLBase.__solve(cache::OptimizationCache{
         return cache.sense === Optimization.MaxSense ? -__x : __x
     end
 
-    fg! = function (G, θ)
-        if G !== nothing
-            cache.f.grad(G, θ)
-            if cache.sense === Optimization.MaxSense
-                G .*= -one(eltype(G))
+    if cache.f.fg === nothing
+        fg! = function (G, θ)
+            if G !== nothing
+                cache.f.grad(G, θ)
+                if cache.sense === Optimization.MaxSense
+                    G .*= -one(eltype(G))
+                end
             end
+            return _loss(θ)
         end
-        return _loss(θ)
+    else
+        fg! = cache.f.fg
     end
 
     if cache.opt isa Optim.KrylovTrustRegion

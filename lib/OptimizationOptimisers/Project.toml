@@ -12,6 +12,7 @@ ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
+MLUtils = "0.4.4"
 Optimisers = "0.2, 0.3"
 Optimization = "3.21"
 ProgressLogging = "0.1"
