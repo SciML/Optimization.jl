@@ -1,4 +1,4 @@
-using Optimization.LinearAlgebra
+using Optimization.LinearAlgebra, MLUtils
 
 struct Sophia
     η::Float64
@@ -80,14 +80,14 @@ function SciMLBase.__solve(cache::OptimizationCache{
     for _ in 1:maxiters
         for (i, d) in enumerate(data)
             if cache.f.fg !== nothing && dataiterate
-                x = cache.f.fg(G, θ, d)
+                x = cache.f.fg(gₜ, θ, d)
             elseif dataiterate
-                cache.f.grad(G, θ, d)
+                cache.f.grad(gₜ, θ, d)
                 x = cache.f(θ, d)
             elseif cache.f.fg !== nothing
-                x = cache.f.fg(G, θ)
+                x = cache.f.fg(gₜ, θ)
             else
-                cache.f.grad(G, θ)
+                cache.f.grad(gₜ, θ)
                 x = cache.f(θ)
             end
             opt_state = Optimization.OptimizationState(; iter = i,
