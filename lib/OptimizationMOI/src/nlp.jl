@@ -113,8 +113,16 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
     reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
-    f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons;
-        g = true, h = true, cons_j = true, cons_vjp = true, lag_h = true)
+    if prob.f.adtype isa ADTypes.AutoSymbolics || (prob.f.adtype isa ADTypes.AutoSparse &&
+        prob.f.adtype.dense_ad isa ADTypes.AutoSymbolics)
+        f = Optimization.instantiate_function(
+            prob.f, reinit_cache, prob.f.adtype, num_cons;
+            g = true, h = true, cons_j = true, cons_h = true)
+    else
+        f = Optimization.instantiate_function(
+            prob.f, reinit_cache, prob.f.adtype, num_cons;
+            g = true, h = true, cons_j = true, cons_vjp = true, lag_h = true)
+    end
     T = eltype(prob.u0)
     n = length(prob.u0)
 
@@ -290,7 +298,8 @@ function MOI.eval_constraint_jacobian(evaluator::MOIOptimizationNLPEvaluator, j,
     return
 end
 
-function MOI.eval_constraint_jacobian_product(evaluator::MOIOptimizationNLPEvaluator, y, x, w)
+function MOI.eval_constraint_jacobian_product(
+        evaluator::MOIOptimizationNLPEvaluator, y, x, w)
     if evaluator.f.cons_jvp !== nothing
         evaluator.f.cons_jvp(y, x, w)
 

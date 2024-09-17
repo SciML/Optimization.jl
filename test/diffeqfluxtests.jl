@@ -99,12 +99,12 @@ prob = Optimization.OptimizationProblem(optprob, pp)
 result_neuralode = Optimization.solve(prob,
     OptimizationOptimisers.ADAM(), callback = callback,
     maxiters = 300)
-@test result_neuralode.objective ≈ loss_neuralode(result_neuralode.u)[1] rtol = 1e-2
+@test result_neuralode.objective≈loss_neuralode(result_neuralode.u)[1] rtol=1e-2
 
 prob2 = remake(prob, u0 = result_neuralode.u)
 result_neuralode2 = Optimization.solve(prob2,
     BFGS(initial_stepnorm = 0.0001),
     callback = callback,
     maxiters = 100)
-@test result_neuralode2.objective ≈ loss_neuralode(result_neuralode2.u)[1] rtol = 1e-2
+@test result_neuralode2.objective≈loss_neuralode(result_neuralode2.u)[1] rtol=1e-2
 @test result_neuralode2.objective < 10
