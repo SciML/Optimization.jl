@@ -74,10 +74,10 @@ function SciMLBase.allowsconstraints(opt::NLopt.Algorithm)
 end
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::NLopt.Algorithm,
-        data = Optimization.DEFAULT_DATA; cons_tol =  1e-6,
+; cons_tol =  1e-6,
         callback = (args...) -> (false),
         progress = false, kwargs...)
-    return OptimizationCache(prob, opt, data; cons_tol, callback, progress,
+    return OptimizationCache(prob, opt; cons_tol, callback, progress,
         kwargs...)
 end
 
