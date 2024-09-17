@@ -1,4 +1,5 @@
 using OptimizationNLPModels, Optimization, NLPModelsTest, Ipopt, OptimizationMOI, Zygote,
+      ReverseDiff,
       OptimizationOptimJL
 using Test
 

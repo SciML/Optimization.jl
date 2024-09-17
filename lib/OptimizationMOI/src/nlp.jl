@@ -113,7 +113,16 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
     reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
-    f = Optimization.instantiate_function(prob.f, reinit_cache, prob.f.adtype, num_cons)
+    if prob.f.adtype isa ADTypes.AutoSymbolics || (prob.f.adtype isa ADTypes.AutoSparse &&
+        prob.f.adtype.dense_ad isa ADTypes.AutoSymbolics)
+        f = Optimization.instantiate_function(
+            prob.f, reinit_cache, prob.f.adtype, num_cons;
+            g = true, h = true, cons_j = true, cons_h = true)
+    else
+        f = Optimization.instantiate_function(
+            prob.f, reinit_cache, prob.f.adtype, num_cons;
+            g = true, h = true, cons_j = true, cons_vjp = true, lag_h = true)
+    end
     T = eltype(prob.u0)
     n = length(prob.u0)
 
@@ -203,7 +212,7 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
 end
 
 function MOI.features_available(evaluator::MOIOptimizationNLPEvaluator)
-    features = [:Grad, :Hess, :Jac]
+    features = [:Grad, :Hess, :Jac, :JacVec]
     # Assume that if there are constraints and expr then cons_expr exists
     if evaluator.f.expr !== nothing
         push!(features, :ExprGraph)
@@ -284,15 +293,49 @@ function MOI.eval_constraint_jacobian(evaluator::MOIOptimizationNLPEvaluator, j,
             j[i] = Ji
         end
     else
-        for i in eachindex(j)
-            j[i] = J[i]
-        end
+        j .= vec(J)
     end
     return
 end
 
+function MOI.eval_constraint_jacobian_product(
+        evaluator::MOIOptimizationNLPEvaluator, y, x, w)
+    if evaluator.f.cons_jvp !== nothing
+        evaluator.f.cons_jvp(y, x, w)
+
+    elseif evaluator.f.cons_j !== nothing
+        J = evaluator.J
+        evaluator.f.cons_j(J, x)
+        mul!(y, J, w)
+        return
+    end
+    error("Thou shalt provide the v'J of the constraint jacobian, not doing so is associated with great misfortune and also no ice cream for you.")
+end
+
+function MOI.eval_constraint_jacobian_transpose_product(
+        evaluator::MOIOptimizationNLPEvaluator,
+        y,
+        x,
+        w
+)
+    if evaluator.f.cons_vjp !== nothing
+        evaluator.f.cons_vjp(y, x, w)
+
+    elseif evaluator.f.cons_j !== nothing
+        J = evaluator.J
+        evaluator.f.cons_j(J, x)
+        mul!(y, J', w)
+        return
+    end
+    error("Thou shalt provide the v'J of the constraint jacobian, not doing so is associated with great misfortune and also no ice cream for you.")
+end
+
 function MOI.hessian_lagrangian_structure(evaluator::MOIOptimizationNLPEvaluator)
     lagh = evaluator.f.lag_h !== nothing
+    if evaluator.f.lag_hess_prototype isa SparseMatrixCSC
+        rows, cols, _ = findnz(evaluator.f.lag_hess_prototype)
+        return Tuple{Int, Int}[(i, j) for (i, j) in zip(rows, cols) if i <= j]
+    end
     sparse_obj = evaluator.H isa SparseMatrixCSC
     sparse_constraints = all(H -> H isa SparseMatrixCSC, evaluator.cons_H)
     if !lagh && !sparse_constraints && any(H -> H isa SparseMatrixCSC, evaluator.cons_H)
@@ -332,7 +375,8 @@ function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
         σ,
         μ) where {T}
     if evaluator.f.lag_h !== nothing
-        return evaluator.f.lag_h(h, x, σ, μ)
+        evaluator.f.lag_h(h, x, σ, μ)
+        return
     end
     if evaluator.f.hess === nothing
         error("Use OptimizationFunction to pass the objective hessian or " *
@@ -393,6 +437,18 @@ function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
     end
     return
 end
+
+# function MOI.eval_hessian_lagrangian_product(evaluator::MOIOptimizationNLPEvaluator, h, x, v, σ, μ)
+#     if evaluator.f.lag_hvp !== nothing
+#         evaluator.f.lag_hvp(h, x, v, σ, μ)
+#     elseif evaluator.f.lag_h !== nothing
+#         H = copy(h)
+#         evaluator.f.lag_h(H, x, σ, μ)
+#         mul!(h, H, v)
+#     else
+#         error("The hessian-lagrangian product ")
+#     end
+# end
 
 function MOI.objective_expr(evaluator::MOIOptimizationNLPEvaluator)
     expr = deepcopy(evaluator.obj_expr)

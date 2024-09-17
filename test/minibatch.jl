@@ -1,5 +1,6 @@
-using DiffEqFlux, Optimization, OrdinaryDiffEq, OptimizationOptimisers, ModelingToolkit,
-      SciMLSensitivity, Lux, Random, ComponentArrays, Flux
+using Optimization, OrdinaryDiffEq, OptimizationOptimisers,
+      SciMLSensitivity, Lux, Random, ComponentArrays, MLUtils
+using Test
 
 rng = Random.default_rng()
 
@@ -18,15 +19,9 @@ function dudt_(u, p, t)
     ann(u, p, st)[1] .* u
 end
 
-callback = function (state, l, pred, args...; doplot = false) #callback function to observe training
+function callback(state, l) #callback function to observe training
     display(l)
-    # plot current prediction against data
-    if doplot
-        pl = scatter(t, ode_data[1, :], label = "data")
-        scatter!(pl, t, pred[1, :], label = "prediction")
-        display(plot(pl))
-    end
-    return false
+    return l < 1e-2
 end
 
 u0 = Float32[200.0]
@@ -47,34 +42,33 @@ function predict_adjoint(fullp, time_batch)
     Array(solve(prob, Tsit5(), p = fullp, saveat = time_batch))
 end
 
-function loss_adjoint(fullp, batch, time_batch)
+function loss_adjoint(fullp, p)
+    (batch, time_batch) = p
     pred = predict_adjoint(fullp, time_batch)
     sum(abs2, batch .- pred), pred
 end
 
 k = 10
-train_loader = Flux.Data.DataLoader((ode_data, t), batchsize = k)
+train_loader = MLUtils.DataLoader((ode_data, t), batchsize = k)
 
 numEpochs = 300
-l1 = loss_adjoint(pp, train_loader.data[1], train_loader.data[2])[1]
+l1 = loss_adjoint(pp, (train_loader.data[1], train_loader.data[2]))[1]
 
-optfun = OptimizationFunction(
-    (θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
-        time_batch),
+optfun = OptimizationFunction(loss_adjoint,
     Optimization.AutoZygote())
-optprob = OptimizationProblem(optfun, pp)
-using IterTools: ncycle
-res1 = Optimization.solve(optprob, Optimisers.Adam(0.05), ncycle(train_loader, numEpochs),
-    callback = callback, maxiters = numEpochs)
-@test 10res1.objective < l1
+optprob = OptimizationProblem(optfun, pp, train_loader)
 
-optfun = OptimizationFunction(
-    (θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
-        time_batch),
+# res1 = Optimization.solve(optprob,
+#     Optimization.Sophia(; η = 0.5,
+#         λ = 0.0), callback = callback,
+#     maxiters = 1000)
+# @test 10res1.objective < l1
+
+optfun = OptimizationFunction(loss_adjoint,
     Optimization.AutoForwardDiff())
-optprob = OptimizationProblem(optfun, pp)
-using IterTools: ncycle
-res1 = Optimization.solve(optprob, Optimisers.Adam(0.05), ncycle(train_loader, numEpochs),
+optprob = OptimizationProblem(optfun, pp, train_loader)
+
+res1 = Optimization.solve(optprob, Optimisers.Adam(0.05),
     callback = callback, maxiters = numEpochs)
 @test 10res1.objective < l1
 
@@ -89,7 +83,8 @@ using IterTools: ncycle
     callback = callback, maxiters = numEpochs)
 # @test 10res1.objective < l1
 
-function loss_grad(res, fullp, _, batch, time_batch)
+function loss_grad(res, fullp, p)
+    (batch, time_batch) = p
     pred = solve(prob, Tsit5(), p = fullp, saveat = time_batch)
     res .= Array(adjoint_sensitivities(pred, Tsit5(); t = time_batch, p = fullp,
         dgdu_discrete = (out, u, p, t, i) -> (out .= -2 *
@@ -98,12 +93,20 @@ function loss_grad(res, fullp, _, batch, time_batch)
         sensealg = InterpolatingAdjoint())[2]')
 end
 
-optfun = OptimizationFunction(
-    (θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
-        time_batch),
+function callback(st, l, pred; doplot = false)
+    display(l)
+    if doplot
+        pl = scatter(t, ode_data[1, :], label = "data")
+        scatter!(pl, t, pred[1, :], label = "prediction")
+        display(plot(pl))
+    end
+    return l < 1e-3
+end
+
+optfun = OptimizationFunction(loss_adjoint,
     grad = loss_grad)
-optprob = OptimizationProblem(optfun, pp)
-using IterTools: ncycle
-res1 = Optimization.solve(optprob, Optimisers.Adam(0.05), ncycle(train_loader, numEpochs),
+optprob = OptimizationProblem(optfun, pp, train_loader)
+
+res1 = Optimization.solve(optprob, Optimisers.Adam(0.05),
     callback = callback, maxiters = numEpochs)
 @test 10res1.objective < l1

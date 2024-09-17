@@ -14,10 +14,16 @@ function activate_subpkg_env(subpkg)
     Pkg.instantiate()
 end
 
-if GROUP == "All" || GROUP == "Core" || GROUP == "GPU" ||
-   GROUP == "OptimizationPolyalgorithms"
+if GROUP == "All" || GROUP == "Core"
     dev_subpkg("OptimizationOptimJL")
     dev_subpkg("OptimizationOptimisers")
+    dev_subpkg("OptimizationMOI")
+elseif GROUP == "GPU" || GROUP == "OptimizationPolyalgorithms"
+    dev_subpkg("OptimizationOptimJL")
+    dev_subpkg("OptimizationOptimisers")
+elseif GROUP == "OptimizationNLPModels"
+    dev_subpkg("OptimizationOptimJL")
+    dev_subpkg("OptimizationMOI")
 end
 
 @time begin
