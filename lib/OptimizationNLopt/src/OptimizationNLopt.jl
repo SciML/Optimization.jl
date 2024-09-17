@@ -73,6 +73,15 @@ function SciMLBase.allowsconstraints(opt::NLopt.Algorithm)
     end
 end
 
+function SciMLBase.requiresconsjac(opt::NLopt.Algorithm)
+    str_opt = string(opt)
+    if occursin("AUGLAG", str_opt) || occursin("CCSA", str_opt) || occursin("MMA", str_opt) || occursin("COBYLA", str_opt) || occursin("ISRES", str_opt) || occursin("AGS", str_opt) || occursin("ORIG_DIRECT", str_opt) || occursin("SLSQP", str_opt) 
+        return true
+    else
+        return false
+    end
+end
+
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::NLopt.Algorithm,
 ; cons_tol =  1e-6,
         callback = (args...) -> (false),
