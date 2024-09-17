@@ -74,12 +74,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
 }
     local x, cur, state
 
-    if cache.data != Optimization.DEFAULT_DATA
-        maxiters = length(cache.data)
-    end
-
-    cur, state = iterate(cache.data)
-
     function _cb(opt, y, fvals, perm)
         curr_u = opt.logger.xbest[end]
         opt_state = Optimization.OptimizationState(; iter = length(opt.logger.fmedian),
@@ -91,7 +85,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
-        cur, state = iterate(cache.data, state)
         cb_call
     end
 
@@ -99,7 +92,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     _loss = function (θ)
-        x = cache.f(θ, cache.p, cur...)
+        x = cache.f(θ, cache.p)
         return first(x)
     end
 

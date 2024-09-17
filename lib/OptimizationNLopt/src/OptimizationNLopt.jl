@@ -10,27 +10,54 @@ using Optimization: deduce_retcode
 SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 
-function SciMLBase.requiresgradient(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
-    str_opt = string(opt)
-    if str_opt[2] == "D"
-        return true
+function SciMLBase.requiresgradient(opt::Union{NLopt.Algorithm, NLopt.Opt}) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
+    str_opt = if opt isa NLopt.Algorithm
+        string(opt)
     else
+        string(opt.algorithm)
+    end
+    if str_opt[2] == 'N'
         return false
+    else
+        return true
     end
 end
 
-function SciMLBase.requireshessian(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
-    str_opt = string(opt)
-    if (str_opt[2] == "D" && str_opt[4] == "N")
-        return true
+#interferes with callback handling
+# function SciMLBase.allowsfg(opt::Union{NLopt.Algorithm, NLopt.Opt})
+#     str_opt = if opt isa NLopt.Algorithm
+#         string(opt)
+#     else
+#         string(opt.algorithm)
+#     end
+#     if str_opt[2] == 'D'
+#         return true
+#     else
+#         return false
+#     end
+# end
+
+function SciMLBase.requireshessian(opt::Union{NLopt.Algorithm, NLopt.Opt}) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
+    str_opt = if opt isa NLopt.Algorithm
+        string(opt)
     else
+        string(opt.algorithm)
+    end
+
+    if str_opt[2] == 'N'
         return false
+    else
+        return true
     end
 end
 
-function SciMLBase.requiresconsjac(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
-    str_opt = string(opt)
-    if str_opt[3] == "O" || str_opt[3] == "I" || str_opt[5] == "G"
+function SciMLBase.requiresconsjac(opt::Union{NLopt.Algorithm, NLopt.Opt}) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
+    str_opt = if opt isa NLopt.Algorithm
+        string(opt)
+    else
+        string(opt.algorithm)
+    end
+    if str_opt[3] == 'O' || str_opt[3] == 'I' || str_opt[5] == 'G'
         return true
     else
         return false
@@ -166,16 +193,13 @@ function SciMLBase.__solve(cache::OptimizationCache{
         return x[1]
     end
 
-    if !hasfield(typeof(cache.f), :fg) || cache.f.fg === nothing
-        fg! = function (θ, G)
-            if length(G) > 0
-                cache.f.grad(G, θ)
-            end
-            return _loss(θ)
+    fg! = function (θ, G)
+        if length(G) > 0
+            cache.f.grad(G, θ)
         end
-    else
-        fg! = cache.f.fg
+        return _loss(θ)
     end
+
 
 
     opt_setup = if isa(cache.opt, NLopt.Opt)

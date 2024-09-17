@@ -326,6 +326,16 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
 end
 
 ## Optimization.jl stuff
+function SciMLBase.requiresgradient(opt::Union{
+        GradientDescentOptimizer, ConjugateGradientDescentOptimizer,
+        QuasiNewtonOptimizer, ConvexBundleOptimizer, FrankWolfeOptimizer,
+        AdaptiveRegularizationCubicOptimizer, TrustRegionsOptimizer})
+    true
+end
+function SciMLBase.requireshessian(opt::Union{
+        AdaptiveRegularizationCubicOptimizer, TrustRegionsOptimizer})
+    true
+end
 
 function build_loss(f::OptimizationFunction, prob, cb)
     function (::AbstractManifold, θ)
@@ -336,31 +346,31 @@ function build_loss(f::OptimizationFunction, prob, cb)
     end
 end
 
-function build_gradF(f::OptimizationFunction{true}, cur)
+function build_gradF(f::OptimizationFunction{true})
     function g(M::AbstractManifold, G, θ)
-        f.grad(G, θ, cur...)
+        f.grad(G, θ)
         G .= riemannian_gradient(M, θ, G)
     end
     function g(M::AbstractManifold, θ)
         G = zero(θ)
-        f.grad(G, θ, cur...)
+        f.grad(G, θ)
         return riemannian_gradient(M, θ, G)
     end
 end
 
-function build_hessF(f::OptimizationFunction{true}, cur)
+function build_hessF(f::OptimizationFunction{true})
     function h(M::AbstractManifold, H1, θ, X)
         H = zeros(eltype(θ), length(θ))
-        f.hv(H, θ, X, cur...)
+        f.hv(H, θ, X)
         G = zeros(eltype(θ), length(θ))
-        f.grad(G, θ, cur...)
+        f.grad(G, θ)
         riemannian_Hessian!(M, H1, θ, G, H, X)
     end
     function h(M::AbstractManifold, θ, X)
         H = zeros(eltype(θ), length(θ), length(θ))
-        f.hess(H, θ, cur...)
+        f.hess(H, θ)
         G = zeros(eltype(θ), length(θ))
-        f.grad(G, θ, cur...)
+        f.grad(G, θ)
         return riemannian_Hessian(M, θ, G, H, X)
     end
 end
@@ -403,14 +413,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
         throw(ArgumentError("Manifold not specified in the problem for e.g. `OptimizationProblem(f, x, p; manifold = SymmetricPositiveDefinite(5))`."))
     end
 
-    if cache.data !== Optimization.DEFAULT_DATA
-        maxiters = length(cache.data)
-    else
-        maxiters = cache.solver_args.maxiters
-    end
-
-    cur, state = iterate(cache.data)
-
     function _cb(x, θ)
         opt_state = Optimization.OptimizationState(iter = 0,
             u = θ,
@@ -419,16 +421,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
-        nx_itr = iterate(cache.data, state)
-        if isnothing(nx_itr)
-            true
-        else
-            cur, state = nx_itr
-            cb_call
-        end
+        cb_call
     end
     solver_kwarg = __map_optimizer_args!(cache, cache.opt, callback = _cb,
-        maxiters = maxiters,
+        maxiters = cache.solver_args.maxiters,
         maxtime = cache.solver_args.maxtime,
         abstol = cache.solver_args.abstol,
         reltol = cache.solver_args.reltol;
@@ -438,11 +434,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
     _loss = build_loss(cache.f, cache, _cb)
 
     if gradF === nothing
-        gradF = build_gradF(cache.f, cur)
+        gradF = build_gradF(cache.f)
     end
 
     if hessF === nothing
-        hessF = build_hessF(cache.f, cur)
+        hessF = build_hessF(cache.f)
     end
 
     if haskey(solver_kwarg, :stopping_criterion)

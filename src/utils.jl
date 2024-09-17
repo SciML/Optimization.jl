@@ -52,21 +52,6 @@ function _check_and_convert_maxtime(maxtime)
     end
 end
 
-function check_pkg_version(pkg::String, ver::String;
-        branch::Union{String, Nothing} = nothing)
-    deps = Pkg.dependencies()
-    pkg_info = Dict{String, Pkg.Types.PackageInfo}()
-    for (uuid, dep) in deps
-        dep.is_direct_dep || continue
-        dep.version === nothing && continue
-        pkg_info[dep.name] = dep
-    end
-
-    return (isnothing(branch) | (pkg_info[pkg].git_revision == branch)) ?
-           pkg_info[pkg].version >= VersionNumber(ver) :
-           pkg_info[pkg].version > VersionNumber(ver)
-end
-
 # RetCode handling for BBO and others.
 using SciMLBase: ReturnCode
 

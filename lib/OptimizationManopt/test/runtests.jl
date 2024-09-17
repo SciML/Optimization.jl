@@ -1,7 +1,7 @@
 using OptimizationManopt
 using Optimization
 using Manifolds
-using ForwardDiff, Zygote, Enzyme, FiniteDiff
+using ForwardDiff, Zygote, Enzyme, FiniteDiff, ReverseDiff
 using Manopt, RipQP, QuadraticModels
 using Test
 using Optimization.SciMLBase
