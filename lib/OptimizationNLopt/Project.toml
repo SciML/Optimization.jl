@@ -10,14 +10,15 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
-NLopt = "1.0.3"
+NLopt = "1.1"
 Optimization = "3.21"
 Reexport = "1.2"
 julia = "1"
 
 [extras]
+ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Test", "Zygote"]
+test = ["ReverseDiff", "Test", "Zygote"]

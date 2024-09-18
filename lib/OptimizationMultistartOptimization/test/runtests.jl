@@ -1,5 +1,3 @@
-using Pkg;
-Pkg.develop(path = joinpath(@__DIR__, "../../", "OptimizationNLopt"));
 using OptimizationMultistartOptimization, Optimization, ForwardDiff, OptimizationNLopt
 using Test, ReverseDiff
 
