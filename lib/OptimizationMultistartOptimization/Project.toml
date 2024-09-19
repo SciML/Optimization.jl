@@ -16,9 +16,10 @@ Reexport = "1.2"
 
 [extras]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+OptimizationNLopt= "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["ForwardDiff", "ReverseDiff", "Pkg", "Test"]
+test = ["ForwardDiff", "OptimizationNLopt", "ReverseDiff", "Pkg", "Test"]
