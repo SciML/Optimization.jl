@@ -67,13 +67,13 @@ k = 10
 train_loader = MLUtils.DataLoader((ode_data, t), batchsize = k)
 
 numEpochs = 300
-l1 = loss_adjoint(pp, train_loader.data[1], train_loader.data[2])[1]
+l1 = loss_adjoint(pp, train_loader.data)[1]
 
 optfun = OptimizationFunction(
     loss_adjoint,
     Optimization.AutoZygote())
-optprob = OptimizationProblem(optfun, pp)
+optprob = OptimizationProblem(optfun, ps_ca, train_loader)
 using IterTools: ncycle
-res1 = Optimization.solve(optprob, Optimisers.ADAM(0.05), ncycle(train_loader, numEpochs),
-    callback = callback)
+res1 = Optimization.solve(
+    optprob, Optimisers.ADAM(0.05); callback = callback, epochs = 1000)
 ```
