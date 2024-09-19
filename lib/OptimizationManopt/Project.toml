@@ -1,7 +1,7 @@
 name = "OptimizationManopt"
 uuid = "e57b7fff-7ee7-4550-b4f0-90e9476e9fb6"
 authors = ["Mateusz Baran <mateuszbaran89@gmail.com>"]
-version = "0.0.3"
+version = "0.0.4"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -18,7 +18,7 @@ ManifoldDiff = "0.3.10"
 Manifolds = "0.9.18"
 ManifoldsBase = "0.15.10"
 Manopt = "0.4.63"
-Optimization = "3.27"
+Optimization = "4"
 Reexport = "1.2"
 julia = "1.9"
 

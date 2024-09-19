@@ -1,7 +1,7 @@
 name = "OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.2.1"
+version = "0.3.0"
 
 [deps]
 MLUtils = "f1d291b0-491e-4a28-83b9-f70985020b54"
@@ -14,7 +14,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 [compat]
 MLUtils = "0.4.4"
 Optimisers = "0.2, 0.3"
-Optimization = "3.21"
+Optimization = "4"
 ProgressLogging = "0.1"
 Reexport = "1.2"
 julia = "1"

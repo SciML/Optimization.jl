@@ -1,7 +1,7 @@
 name = "OptimizationNOMAD"
 uuid = "2cab0595-8222-4775-b714-9828e6a9e01b"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.2.0"
+version = "0.3.0"
 
 [deps]
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
@@ -11,7 +11,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 [compat]
 julia = "1"
 NOMAD = "2"
-Optimization = "3.21"
+Optimization = "4"
 Reexport = "1.2"
 
 [extras]
