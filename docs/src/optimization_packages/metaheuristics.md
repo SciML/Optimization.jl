@@ -70,3 +70,54 @@ sol = solve(prob, ECA(), use_initial = true, maxiters = 100000, maxtime = 1000.0
 ### With Constraint Equations
 
 While `Metaheuristics.jl` supports such constraints, `Optimization.jl` currently does not relay these constraints.
+
+
+## Multi-objective optimization
+The zdt1 functions can be optimized using the `Metaheuristics.jl` as follows:
+
+```@example MOO-Evolutionary
+using Optimization, OptimizationEvolutionary
+function zdt1(x)
+    f1 = x[1]
+    g = 1 + 9 * mean(x[2:end])
+    h = 1 - sqrt(f1 / g)
+    f2 = g * h
+    # In this example, we have no constraints
+    gx = [0.0]  # Inequality constraints (not used)
+    hx = [0.0]  # Equality constraints (not used)
+    return [f1, f2], gx, hx
+end
+multi_obj_fun = MultiObjectiveOptimizationFunction((x, p) -> zdt1(x))
+
+# Define the problem bounds
+lower_bounds = [0.0, 0.0, 0.0]
+upper_bounds = [1.0, 1.0, 1.0]
+
+# Define the initial guess
+initial_guess = [0.5, 0.5, 0.5]
+
+# Create the optimization problem
+prob = OptimizationProblem(multi_obj_fun, initial_guess; lb = lower_bounds, ub = upper_bounds)
+
+nobjectives = 2
+npartitions = 100
+
+# reference points (Das and Dennis's method)
+weights = gen_ref_dirs(nobjectives, npartitions)
+
+# Choose the algorithm as required.
+alg1 = NSGA2()
+alg2 = NSGA3()
+alg3 = SPEA2()
+alg4 = CCMO(NSGA2(N=100, p_m=0.001))
+alg5 = MOEAD_DE(weights, options=Options(debug=false, iterations = 250))
+alg6 = SMS_EMOA()
+
+# Solve the problem
+sol1 = solve(prob, alg1; maxiters = 100, use_initial = true)
+sol2 = solve(prob, alg2; maxiters = 100, use_initial = true)
+sol3 = solve(prob, alg3; maxiters = 100, use_initial = true)
+sol4 = solve(prob, alg4)
+sol5 = solve(prob, alg5; maxiters = 100, use_initial = true)
+sol6 = solve(prob, alg6; maxiters = 100, use_initial = true)
+```
