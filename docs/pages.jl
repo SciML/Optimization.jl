@@ -7,7 +7,7 @@ pages = ["index.md",
         "tutorials/linearandinteger.md",
         "tutorials/minibatch.md",
         "tutorials/remakecomposition.md",
-        "tutorials/symbolic.md",
+        "tutorials/symbolic.md"
     ],
     "Examples" => [
         "examples/rosenbrock.md"
@@ -41,6 +41,6 @@ pages = ["index.md",
         "Polyalgorithms.jl" => "optimization_packages/polyopt.md",
         "PRIMA.jl" => "optimization_packages/prima.md",
         "QuadDIRECT.jl" => "optimization_packages/quaddirect.md",
-        "SpeedMapping.jl" => "optimization_packages/speedmapping.md",
+        "SpeedMapping.jl" => "optimization_packages/speedmapping.md"
     ]
 ]

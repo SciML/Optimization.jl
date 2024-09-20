@@ -1,6 +1,7 @@
 using OrdinaryDiffEq, DiffEqFlux, Lux, Optimization, OptimizationOptimJL,
       OptimizationOptimisers, ForwardDiff, ComponentArrays, Random
 rng = Random.default_rng()
+Random.seed!(123)
 
 function lotka_volterra!(du, u, p, t)
     x, y = u

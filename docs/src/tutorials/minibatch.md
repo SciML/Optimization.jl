@@ -32,14 +32,8 @@ function dudt_(u, p, t)
     smodel(u, p) .* u
 end
 
-function callback(state, l, pred; doplot = false) #callback function to observe training
+function callback(state, l) #callback function to observe training
     display(l)
-    # plot current prediction against data
-    if doplot
-        pl = scatter(t, ode_data[1, :], label = "data")
-        scatter!(pl, t, pred[1, :], label = "prediction")
-        display(plot(pl))
-    end
     return false
 end
 

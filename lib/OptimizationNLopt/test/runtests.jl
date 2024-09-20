@@ -117,8 +117,7 @@ using Test, Random
         # @test sol.retcode == ReturnCode.Success
         @test 10 * sol.objective < l1
 
-        Random.seed!(1)
-        prob = OptimizationProblem(optprob, rand(2), _p, lcons = [-Inf, -Inf],
+        prob = OptimizationProblem(optprob, [0.5, 0.5], _p, lcons = [-Inf, -Inf],
             ucons = [0.0, 0.0], lb = [-1.0, -1.0], ub = [1.0, 1.0])
         sol = solve(prob, NLopt.GN_ISRES(), maxiters = 1000)
         @test sol.retcode == ReturnCode.MaxIters
