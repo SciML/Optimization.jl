@@ -63,7 +63,7 @@ res = solve(prob, Optimization.LBFGS(), maxiters = 100)
 
 ```@example Sophia
 
-using Optimization, Lux, Zygote, MLUtils, Statistics, Plots
+using Optimization, Lux, Zygote, MLUtils, Statistics, Plots, Random, ComponentArrays
 
 x = rand(10000)
 y = sin.(x)

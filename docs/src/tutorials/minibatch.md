@@ -9,7 +9,8 @@ It is possible to solve an optimization problem with batches using a `MLUtils.Da
 
 ```@example minibatch
 
-using Lux, Optimization, OptimizationOptimisers, OrdinaryDiffEq, SciMLSensitivity, MLUtils
+using Lux, Optimization, OptimizationOptimisers, OrdinaryDiffEq, SciMLSensitivity, MLUtils,
+      Random, ComponentArrays
 
 function newtons_cooling(du, u, p, t)
     temp = u[1]
@@ -50,7 +51,7 @@ t = range(tspan[1], tspan[2], length = datasize)
 true_prob = ODEProblem(true_sol, u0, tspan)
 ode_data = Array(solve(true_prob, Tsit5(), saveat = t))
 
-prob = ODEProblem{false}(dudt_, u0, tspan, pp)
+prob = ODEProblem{false}(dudt_, u0, tspan, ps_ca)
 
 function predict_adjoint(fullp, time_batch)
     Array(solve(prob, Tsit5(), p = fullp, saveat = time_batch))
@@ -67,7 +68,7 @@ k = 10
 train_loader = MLUtils.DataLoader((ode_data, t), batchsize = k)
 
 numEpochs = 300
-l1 = loss_adjoint(pp, train_loader.data)[1]
+l1 = loss_adjoint(ps_ca, train_loader.data)[1]
 
 optfun = OptimizationFunction(
     loss_adjoint,
