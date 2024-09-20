@@ -52,7 +52,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         cache.solver_args.epochs
     end
 
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxiters = Optimization._check_and_convert_maxiters(maxiters)
     if maxiters === nothing
         throw(ArgumentError("The number of epochs must be specified as the epochs or maxiters kwarg."))
     end
