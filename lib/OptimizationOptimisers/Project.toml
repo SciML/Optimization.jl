@@ -10,13 +10,13 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
-[extensions]
-OptimizationOptimisersMLDataDevicesExt = "MLDataDevices"
-OptimizationOptimisersMLUtilsExt = "MLUtils"
-
 [weakdeps]
 MLDataDevices = "7e8f7934-dd98-4c1a-8fe8-92b47a384d40"
 MLUtils = "f1d291b0-491e-4a28-83b9-f70985020b54"
+
+[extensions]
+OptimizationOptimisersMLDataDevicesExt = "MLDataDevices"
+OptimizationOptimisersMLUtilsExt = "MLUtils"
 
 [compat]
 MLDataDevices = "1.1"

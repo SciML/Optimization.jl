@@ -117,7 +117,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                         opt = min_opt
                         x = min_err
                         θ = min_θ
-                        cache.f.grad(G, θ, d...)
+                        cache.f.grad(G, θ, d)
                         opt_state = Optimization.OptimizationState(iter = i,
                             u = θ,
                             objective = x[1],
