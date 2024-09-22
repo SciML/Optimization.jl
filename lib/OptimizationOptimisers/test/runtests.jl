@@ -68,3 +68,43 @@ using Zygote
 
     @test_throws ArgumentError sol=solve(prob, Optimisers.Adam())
 end
+
+@testset "Minibatching" begin
+    using Optimization, OptimizationOptimisers, Lux, Zygote, MLUtils, Random, ComponentArrays
+
+    x = rand(10000)
+    y = sin.(x)
+    data = MLUtils.DataLoader((x, y), batchsize = 100)
+
+    # Define the neural network
+    model = Chain(Dense(1, 32, tanh), Dense(32, 1))
+    ps, st = Lux.setup(Random.default_rng(), model)
+    ps_ca = ComponentArray(ps)
+    smodel = StatefulLuxLayer{true}(model, nothing, st)
+
+    function callback(state, l)
+        state.iter % 25 == 1 && @show "Iteration: %5d, Loss: %.6e\n" state.iter l
+        return l < 1e-4
+    end
+
+    function loss(ps, data)
+        ypred = [smodel([data[1][i]], ps)[1] for i in eachindex(data[1])]
+        return sum(abs2, ypred .- data[2])
+    end
+
+    optf = OptimizationFunction(loss, AutoZygote())
+    prob = OptimizationProblem(optf, ps_ca, data)
+
+    res = Optimization.solve(prob, Optimisers.Adam(), callback = callback, epochs = 10000)
+
+    @test res.objective < 1e-4
+
+    using MLDataDevices
+    data = CPUDevice()(data)
+    optf = OptimizationFunction(loss, AutoZygote())
+    prob = OptimizationProblem(optf, ps_ca, data)
+
+    res = Optimization.solve(prob, Optimisers.Adam(), callback = callback, epochs = 10000)
+
+    @test res.objective < 1e-4
+end
