@@ -70,8 +70,7 @@ using Zygote
 end
 
 @testset "Minibatching" begin
-    using Optimization, OptimizationOptimisers, Lux, Zygote, MLUtils, Statistics, Plots,
-          Random, ComponentArrays
+    using Optimization, OptimizationOptimisers, Lux, Zygote, MLUtils, Random, ComponentArrays
 
     x = rand(10000)
     y = sin.(x)
