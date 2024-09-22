@@ -82,6 +82,6 @@ function multi_obj_func_2(x, p)
     return (f1, f2)
 end
 mof = MultiObjectiveOptimizationFunction(multi_obj_func_2)
-prob = Optimization.OptimizationProblem(mof_2, u0; lb = [0.0, 0.0], ub = [2.0, 2.0])
+prob = Optimization.OptimizationProblem(mof, u0; lb = [0.0, 0.0], ub = [2.0, 2.0])
 sol = solve(prob_2, opt, NumDimensions=2, FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true))
 ```
