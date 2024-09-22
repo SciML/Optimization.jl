@@ -638,9 +638,9 @@ version = "0.5.17"
 
 [[deps.DispatchDoctor]]
 deps = ["MacroTools", "Preferences"]
-git-tree-sha1 = "c2acd1de2c4c357928f9fb6b60b402d914621378"
+git-tree-sha1 = "19eec8ee5cde1c10aa5e5e0f25d10a3b4c8f8f12"
 uuid = "8d63f2c5-f18a-4cf2-ba9d-b3f60fc568c8"
-version = "0.4.14"
+version = "0.4.15"
 weakdeps = ["ChainRulesCore", "EnzymeCore"]
 
     [deps.DispatchDoctor.extensions]
@@ -1952,10 +1952,10 @@ version = "1.2.0"
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[deps.ModelingToolkit]]
-deps = ["AbstractTrees", "ArrayInterface", "BlockArrays", "Combinatorics", "Compat", "ConstructionBase", "DataStructures", "DiffEqBase", "DiffEqCallbacks", "DiffEqNoiseProcess", "DiffRules", "Distributed", "Distributions", "DocStringExtensions", "DomainSets", "DynamicQuantities", "ExprTools", "Expronicon", "FindFirstFunctions", "ForwardDiff", "FunctionWrappersWrappers", "Graphs", "InteractiveUtils", "JuliaFormatter", "JumpProcesses", "Latexify", "Libdl", "LinearAlgebra", "MLStyle", "NaNMath", "NonlinearSolve", "OrderedCollections", "PrecompileTools", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLBase", "SciMLStructures", "Serialization", "Setfield", "SimpleNonlinearSolve", "SparseArrays", "SpecialFunctions", "StaticArrays", "SymbolicIndexingInterface", "SymbolicUtils", "Symbolics", "URIs", "UnPack", "Unitful"]
-git-tree-sha1 = "1f63c7127bbabf22c58edc85dac72afa28fce375"
+deps = ["AbstractTrees", "ArrayInterface", "BlockArrays", "Combinatorics", "Compat", "ConstructionBase", "DataStructures", "DiffEqBase", "DiffEqCallbacks", "DiffEqNoiseProcess", "DiffRules", "Distributed", "Distributions", "DocStringExtensions", "DomainSets", "DynamicQuantities", "ExprTools", "Expronicon", "FindFirstFunctions", "ForwardDiff", "FunctionWrappers", "FunctionWrappersWrappers", "Graphs", "InteractiveUtils", "JuliaFormatter", "JumpProcesses", "Latexify", "Libdl", "LinearAlgebra", "MLStyle", "NaNMath", "NonlinearSolve", "OrderedCollections", "PrecompileTools", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLBase", "SciMLStructures", "Serialization", "Setfield", "SimpleNonlinearSolve", "SparseArrays", "SpecialFunctions", "StaticArrays", "SymbolicIndexingInterface", "SymbolicUtils", "Symbolics", "URIs", "UnPack", "Unitful"]
+git-tree-sha1 = "ebcdaf39b0cee8051193911fe2c97f327fa6735f"
 uuid = "961ee093-0014-501f-94e3-6117800e7a78"
-version = "9.40.0"
+version = "9.40.1"
 
     [deps.ModelingToolkit.extensions]
     MTKBifurcationKitExt = "BifurcationKit"
@@ -2196,9 +2196,9 @@ version = "1.4.3"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "a12e56c72edee3ce6b96667745e6cbbe5498f200"
+git-tree-sha1 = "ad31332567b189f508a3ea8957a2640b1147ab00"
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
-version = "1.1.23+0"
+version = "1.1.23+1"
 
 [[deps.OpenSpecFun_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
@@ -2310,10 +2310,15 @@ uuid = "36348300-93cb-4f02-beb5-3c3902f8871e"
 version = "0.4.0"
 
 [[deps.OptimizationOptimisers]]
-deps = ["MLUtils", "Optimisers", "Optimization", "Printf", "ProgressLogging", "Reexport"]
+deps = ["Optimisers", "Optimization", "Printf", "ProgressLogging", "Reexport"]
 path = "../lib/OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
-version = "0.3.0"
+version = "0.3.1"
+weakdeps = ["MLDataDevices", "MLUtils"]
+
+    [deps.OptimizationOptimisers.extensions]
+    OptimizationOptimisersMLDataDevicesExt = "MLDataDevices"
+    OptimizationOptimisersMLUtilsExt = "MLUtils"
 
 [[deps.OptimizationPRIMA]]
 deps = ["Optimization", "PRIMA", "Reexport"]
