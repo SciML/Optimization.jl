@@ -95,7 +95,7 @@ end
     optf = OptimizationFunction(loss, AutoZygote())
     prob = OptimizationProblem(optf, ps_ca, data)
 
-    res = Optimization.solve(prob, Optimisers.Adam(), callback = callback, epochs = 100)
+    res = Optimization.solve(prob, Optimisers.Adam(), callback = callback, epochs = 10000)
 
     @test res.objective < 1e-4
 
@@ -104,7 +104,7 @@ end
     optf = OptimizationFunction(loss, AutoZygote())
     prob = OptimizationProblem(optf, ps_ca, data)
 
-    res = Optimization.solve(prob, Optimisers.Adam(), callback = callback, epochs = 100)
+    res = Optimization.solve(prob, Optimisers.Adam(), callback = callback, epochs = 10000)
 
     @test res.objective < 1e-4
 end
