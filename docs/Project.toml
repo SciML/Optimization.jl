@@ -42,6 +42,7 @@ SymbolicAnalysis = "4297ee4d-0239-47d8-ba5d-195ecdf594fe"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
 
 [compat]
 AmplNLWriter = "1"
