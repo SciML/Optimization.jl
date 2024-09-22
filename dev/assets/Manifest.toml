@@ -2313,7 +2313,7 @@ version = "0.4.0"
 deps = ["Optimisers", "Optimization", "Printf", "ProgressLogging", "Reexport"]
 path = "../lib/OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
-version = "0.3.1"
+version = "0.3.2"
 weakdeps = ["MLDataDevices", "MLUtils"]
 
     [deps.OptimizationOptimisers.extensions]
