@@ -76,7 +76,7 @@ While `Metaheuristics.jl` supports such constraints, `Optimization.jl` currently
 The zdt1 functions can be optimized using the `Metaheuristics.jl` as follows:
 
 ```@example MOO-Evolutionary
-using Optimization, OptimizationEvolutionary
+using Optimization, OptimizationEvolutionary,OptimizationMetaheuristics, Metaheuristics
 function zdt1(x)
     f1 = x[1]
     g = 1 + 9 * mean(x[2:end])
@@ -103,7 +103,7 @@ nobjectives = 2
 npartitions = 100
 
 # reference points (Das and Dennis's method)
-weights = gen_ref_dirs(nobjectives, npartitions)
+weights = Metaheuristics.gen_ref_dirs(nobjectives, npartitions)
 
 # Choose the algorithm as required.
 alg1 = NSGA2()
