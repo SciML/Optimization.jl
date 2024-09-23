@@ -76,12 +76,12 @@ using OptimizationBBO, Optimization, BlackBoxOptim
 using SciMLBase: MultiObjectiveOptimizationFunction
 u0 = [0.25, 0.25]
 opt = OptimizationBBO.BBO_borg_moea()
-function multi_obj_func_2(x, p)
+function multi_obj_func(x, p)
     f1 = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2  # Rosenbrock function
     f2 = -20.0 * exp(-0.2 * sqrt(0.5 * (x[1]^2 + x[2]^2))) - exp(0.5 * (cos(2π * x[1]) + cos(2π * x[2]))) + exp(1) + 20.0  # Ackley function
     return (f1, f2)
 end
-mof = MultiObjectiveOptimizationFunction(multi_obj_func_2)
+mof = MultiObjectiveOptimizationFunction(multi_obj_func)
 prob = Optimization.OptimizationProblem(mof, u0; lb = [0.0, 0.0], ub = [2.0, 2.0])
-sol = solve(prob_2, opt, NumDimensions=2, FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true))
+sol = solve(prob, opt, NumDimensions=2, FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true))
 ```
