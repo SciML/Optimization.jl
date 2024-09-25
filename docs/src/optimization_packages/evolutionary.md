@@ -53,10 +53,7 @@ function func(x, p=nothing)::Vector{Float64}
   return [f1, f2]
 end
 initial_guess = [1.0, 1.0]
-function gradient_multi_objective(x, p=nothing)
-    ForwardDiff.jacobian(func, x)
-end
-obj_func = MultiObjectiveOptimizationFunction(func, jac=gradient_multi_objective)
+obj_func = MultiObjectiveOptimizationFunction(func)
 algorithm = OptimizationEvolutionary.NSGA2()
 problem = OptimizationProblem(obj_func, initial_guess)
 result = solve(problem, algorithm)
