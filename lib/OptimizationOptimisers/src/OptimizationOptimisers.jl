@@ -80,7 +80,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     t0 = time()
     Optimization.@withprogress cache.progress name="Training" begin
-        for _ in 1:maxiters
+        for epoch in 1:maxiters
             for (i, d) in enumerate(data)
                 if cache.f.fg !== nothing && dataiterate
                     x = cache.f.fg(G, θ, d)
@@ -93,7 +93,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                     cache.f.grad(G, θ)
                     x = cache.f(θ)
                 end
-                opt_state = Optimization.OptimizationState(iter = i,
+                opt_state = Optimization.OptimizationState(iter = i + (epoch-1)*length(data),
                     u = θ,
                     objective = x[1],
                     grad = G,
