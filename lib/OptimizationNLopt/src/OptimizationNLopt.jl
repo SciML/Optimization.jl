@@ -232,15 +232,40 @@ function SciMLBase.__solve(cache::OptimizationCache{
     if cache.f.cons !== nothing
         eqinds = map((y) -> y[1] == y[2], zip(cache.lcons, cache.ucons))
         ineqinds = map((y) -> y[1] != y[2], zip(cache.lcons, cache.ucons))
+        cons_cache = zeros(eltype(cache.u0), sum(eqinds) + sum(ineqinds))
+        thetacache = rand(size(cache.u0))
+        Jthetacache = rand(size(cache.u0))
+        Jcache = zeros(eltype(cache.u0), sum(ineqinds) + sum(eqinds), length(cache.u0))
+        evalcons = function (θ, ineqoreq)
+            if thetacache != θ
+                cache.f.cons(cons_cache, θ)
+                thetacache = copy(θ)
+            end
+            if ineqoreq == :eq
+                return @view(cons_cache[eqinds])
+            else
+                return @view(cons_cache[ineqinds])
+            end
+        end
+
+        evalconj = function (θ, ineqoreq)
+            if Jthetacache != θ
+                cache.f.cons_j(Jcache, θ)
+                Jthetacache = copy(θ)
+            end
+
+            if ineqoreq == :eq
+                return @view(Jcache[eqinds, :])'
+            else
+                return @view(Jcache[ineqinds, :])'
+            end
+        end
+
         if sum(ineqinds) > 0
             ineqcons = function (res, θ, J)
-                cons_cache = zeros(eltype(res), sum(eqinds) + sum(ineqinds))
-                cache.f.cons(cons_cache, θ)
-                res .= @view(cons_cache[ineqinds])
+                res .= copy(evalcons(θ, :ineq))
                 if length(J) > 0
-                    Jcache = zeros(eltype(J), sum(ineqinds) + sum(eqinds), length(θ))
-                    cache.f.cons_j(Jcache, θ)
-                    J .= @view(Jcache[ineqinds, :])'
+                    J .= copy(evalconj(θ, :ineq))
                 end
             end
             NLopt.inequality_constraint!(
@@ -248,13 +273,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
         end
         if sum(eqinds) > 0
             eqcons = function (res, θ, J)
-                cons_cache = zeros(eltype(res), sum(eqinds) + sum(ineqinds))
-                cache.f.cons(cons_cache, θ)
-                res .= @view(cons_cache[eqinds])
+                res .= copy(evalcons(θ, :eq))
                 if length(J) > 0
-                    Jcache = zeros(eltype(res), sum(eqinds) + sum(ineqinds), length(θ))
-                    cache.f.cons_j(Jcache, θ)
-                    J .= @view(Jcache[eqinds, :])'
+                    J .= copy(evalconj(θ, :eq))
                 end
             end
             NLopt.equality_constraint!(

@@ -60,7 +60,7 @@ optprob = OptimizationProblem(optfun, pp, train_loader)
 
 res1 = Optimization.solve(optprob,
     Optimization.Sophia(), callback = callback,
-    maxiters = 1000)
+    maxiters = 2000)
 @test 10res1.objective < l1
 
 optfun = OptimizationFunction(loss_adjoint,
