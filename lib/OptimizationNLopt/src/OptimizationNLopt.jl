@@ -232,10 +232,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
     if cache.f.cons !== nothing
         eqinds = map((y) -> y[1] == y[2], zip(cache.lcons, cache.ucons))
         ineqinds = map((y) -> y[1] != y[2], zip(cache.lcons, cache.ucons))
-        cons_cache = zeros(eltype(res), sum(eqinds) + sum(ineqinds))
+        cons_cache = zeros(eltype(cache.u0), sum(eqinds) + sum(ineqinds))
         thetacache = rand(size(cache.u0))
         Jthetacache = rand(size(cache.u0))
-        Jcache = zeros(eltype(J), sum(ineqinds) + sum(eqinds), length(θ))
+        Jcache = zeros(eltype(cache.u0), sum(ineqinds) + sum(eqinds), length(cache.u0))
         evalcons = function (θ, ineqoreq)
             if thetacache != θ
                 cache.f.cons(cons_cache, θ)
