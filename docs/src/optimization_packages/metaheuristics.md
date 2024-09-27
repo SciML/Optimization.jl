@@ -75,7 +75,7 @@ While `Metaheuristics.jl` supports such constraints, `Optimization.jl` currently
 ## Multi-objective optimization
 The zdt1 functions can be optimized using the `Metaheuristics.jl` as follows:
 
-```@example MOO-Evolutionary
+```@example MOO-Metaheuristics
 using Optimization, OptimizationEvolutionary,OptimizationMetaheuristics, Metaheuristics
 function zdt1(x)
     f1 = x[1]
