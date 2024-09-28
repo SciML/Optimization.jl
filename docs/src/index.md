@@ -51,6 +51,7 @@ to add the specific wrapper packages.
 
 ## Overview of the solver packages in alphabetical order
 
+```@raw html
 <details>
   <summary><strong>BlackBoxOptim</strong></summary>
   - **Global Methods**
@@ -169,7 +170,9 @@ to add the specific wrapper packages.
   - **Global Methods**
     - Unconstrained: ✅
 </details>
+```
 🟡 = supported in downstream library but not yet implemented in `Optimization.jl`; PR to add this functionality are welcome
+
 ## Citation
 ```
 @software{vaibhav_kumar_dixit_2023_7738525,
