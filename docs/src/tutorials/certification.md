@@ -7,7 +7,7 @@ This works with the `structural_analysis` keyword argument to `OptimizationProbl
 We'll use a simple example to illustrate the convexity structure certification process.
 
 ```@example symanalysis
-using SymbolicAnalysis, Zygote, LinearAlgebra, Optimization, OptimizationMOI
+using SymbolicAnalysis, Zygote, LinearAlgebra, Optimization
 
 function f(x, p = nothing)
     return exp(x[1]) + x[1]^2
