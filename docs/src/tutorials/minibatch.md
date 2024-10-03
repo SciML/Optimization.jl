@@ -54,7 +54,7 @@ end
 function loss_adjoint(fullp, data)
     batch, time_batch = data
     pred = predict_adjoint(fullp, time_batch)
-    sum(abs2, batch .- pred), pred
+    sum(abs2, batch .- pred)
 end
 
 k = 10
