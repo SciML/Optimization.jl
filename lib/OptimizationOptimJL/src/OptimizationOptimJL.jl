@@ -292,7 +292,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
     else
         fg! = cache.f.fg
     end
-    
 
     gg = function (G, θ)
         cache.f.grad(G, θ)

@@ -171,9 +171,11 @@ to add the specific wrapper packages.
     - Unconstrained: ✅
 </details>
 ```
+
 🟡 = supported in downstream library but not yet implemented in `Optimization.jl`; PR to add this functionality are welcome
 
 ## Citation
+
 ```
 @software{vaibhav_kumar_dixit_2023_7738525,
 	author = {Vaibhav Kumar Dixit and Christopher Rackauckas},
@@ -185,37 +187,48 @@ to add the specific wrapper packages.
   	url = {https://doi.org/10.5281/zenodo.7738525},
 	year = 2023}
 ```
+
 ## Reproducibility
+
 ```@raw html
 <details><summary>The documentation of this SciML package was built using these direct dependencies,</summary>
 ```
+
 ```@example
 using Pkg # hide
 Pkg.status() # hide
 ```
+
 ```@raw html
 </details>
 ```
+
 ```@raw html
 <details><summary>and using this machine and Julia version.</summary>
 ```
+
 ```@example
 using InteractiveUtils # hide
 versioninfo() # hide
 ```
+
 ```@raw html
 </details>
 ```
+
 ```@raw html
 <details><summary>A more complete overview of all dependencies and their versions is also provided.</summary>
 ```
+
 ```@example
 using Pkg # hide
 Pkg.status(; mode = PKGMODE_MANIFEST) # hide
 ```
+
 ```@raw html
 </details>
 ```
+
 ```@eval
 using TOML
 using Markdown
