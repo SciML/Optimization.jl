@@ -2233,7 +2233,7 @@ version = "0.3.3"
 deps = ["ADTypes", "ArrayInterface", "ConsoleProgressMonitor", "DocStringExtensions", "LBFGSB", "LinearAlgebra", "Logging", "LoggingExtras", "MLUtils", "OptimizationBase", "Printf", "ProgressLogging", "Reexport", "SciMLBase", "SparseArrays", "TerminalLoggers"]
 path = "/home/runner/work/Optimization.jl/Optimization.jl"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-version = "4.0.2"
+version = "4.0.3"
 
 [[deps.OptimizationBBO]]
 deps = ["BlackBoxOptim", "Optimization", "Reexport"]
@@ -2317,13 +2317,13 @@ version = "0.3.0"
 deps = ["Optim", "Optimization", "PrecompileTools", "Reexport", "SparseArrays"]
 path = "../lib/OptimizationOptimJL"
 uuid = "36348300-93cb-4f02-beb5-3c3902f8871e"
-version = "0.4.0"
+version = "0.4.1"
 
 [[deps.OptimizationOptimisers]]
 deps = ["Optimisers", "Optimization", "Printf", "ProgressLogging", "Reexport"]
 path = "../lib/OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
-version = "0.3.2"
+version = "0.3.3"
 
 [[deps.OptimizationPRIMA]]
 deps = ["Optimization", "PRIMA", "Reexport"]
