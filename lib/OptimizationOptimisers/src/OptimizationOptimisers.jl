@@ -2,7 +2,7 @@ module OptimizationOptimisers
 
 using Reexport, Printf, ProgressLogging
 @reexport using Optimisers, Optimization
-using Optimization.SciMLBase
+using Optimization.SciMLBase, Optimization.OptimizationBase
 
 SciMLBase.supports_opt_cache_interface(opt::AbstractRule) = true
 SciMLBase.requiresgradient(opt::AbstractRule) = true
@@ -15,8 +15,6 @@ function SciMLBase.__init(
     return OptimizationCache(prob, opt; save_best, callback, progress, epochs,
         kwargs...)
 end
-
-isa_dataiterator(data) = false
 
 function SciMLBase.__solve(cache::OptimizationCache{
         F,
@@ -59,7 +57,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         throw(ArgumentError("The number of epochs must be specified as the epochs or maxiters kwarg."))
     end
 
-    if isa_dataiterator(cache.p)
+    if OptimizationBase.isa_dataiterator(cache.p)
         data = cache.p
         dataiterate = true
     else

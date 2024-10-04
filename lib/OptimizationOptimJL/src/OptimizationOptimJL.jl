@@ -26,6 +26,7 @@ function SciMLBase.requireshessian(opt::Union{
     true
 end
 SciMLBase.requiresgradient(opt::Optim.Fminbox) = true
+# SciMLBase.allowsfg(opt::Union{Optim.AbstractOptimizer, Optim.ConstrainedOptimizer, Optim.Fminbox, Optim.SAMIN}) = true
 
 function __map_optimizer_args(cache::OptimizationCache,
         opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
@@ -142,11 +143,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
         θ = metadata[cache.opt isa Optim.NelderMead ? "centroid" : "x"]
         opt_state = Optimization.OptimizationState(iter = trace.iteration,
             u = θ,
-            objective = x[1],
+            objective = trace.value,
             grad = get(metadata, "g(x)", nothing),
             hess = get(metadata, "h(x)", nothing),
             original = trace)
-        cb_call = cache.callback(opt_state, x...)
+        cb_call = cache.callback(opt_state, trace.value)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -261,11 +262,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
             metadata["x"]
         opt_state = Optimization.OptimizationState(iter = trace.iteration,
             u = θ,
-            objective = x[1],
+            objective = trace.value,
             grad = get(metadata, "g(x)", nothing),
             hess = get(metadata, "h(x)", nothing),
             original = trace)
-        cb_call = cache.callback(opt_state, x...)
+        cb_call = cache.callback(opt_state, trace.value)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -277,14 +278,19 @@ function SciMLBase.__solve(cache::OptimizationCache{
         __x = first(x)
         return cache.sense === Optimization.MaxSense ? -__x : __x
     end
-    fg! = function (G, θ)
-        if G !== nothing
-            cache.f.grad(G, θ)
-            if cache.sense === Optimization.MaxSense
-                G .*= -one(eltype(G))
+
+    if cache.f.fg === nothing
+        fg! = function (G, θ)
+            if G !== nothing
+                cache.f.grad(G, θ)
+                if cache.sense === Optimization.MaxSense
+                    G .*= -one(eltype(G))
+                end
             end
+            return _loss(θ)
         end
-        return _loss(θ)
+    else
+        fg! = cache.f.fg
     end
 
     gg = function (G, θ)
@@ -344,9 +350,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
             u = metadata["x"],
             grad = get(metadata, "g(x)", nothing),
             hess = get(metadata, "h(x)", nothing),
-            objective = x[1],
+            objective = trace.value,
             original = trace)
-        cb_call = cache.callback(opt_state, x...)
+        cb_call = cache.callback(opt_state, trace.value)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -358,15 +364,21 @@ function SciMLBase.__solve(cache::OptimizationCache{
         __x = first(x)
         return cache.sense === Optimization.MaxSense ? -__x : __x
     end
-    fg! = function (G, θ)
-        if G !== nothing
-            cache.f.grad(G, θ)
-            if cache.sense === Optimization.MaxSense
-                G .*= -one(eltype(G))
+
+    if cache.f.fg === nothing
+        fg! = function (G, θ)
+            if G !== nothing
+                cache.f.grad(G, θ)
+                if cache.sense === Optimization.MaxSense
+                    G .*= -one(eltype(G))
+                end
             end
+            return _loss(θ)
         end
-        return _loss(θ)
+    else
+        fg! = cache.f.fg
     end
+
     gg = function (G, θ)
         cache.f.grad(G, θ)
         if cache.sense === Optimization.MaxSense
@@ -434,7 +446,7 @@ PrecompileTools.@compile_workload begin
     function obj_f(x, p)
         A = p[1]
         b = p[2]
-        return sum((A * x - b) .^ 2)
+        return sum((A * x .- b) .^ 2)
     end
 
     function solve_nonnegative_least_squares(A, b, solver)

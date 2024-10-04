@@ -1,5 +1,3 @@
-using Optimization.LinearAlgebra, MLUtils
-
 struct Sophia
     η::Float64
     βs::Tuple{Float64, Float64}
@@ -64,7 +62,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
 
-    if cache.p isa MLUtils.DataLoader
+    if OptimizationBase.isa_dataiterator(cache.p)
         data = cache.p
         dataiterate = true
     else

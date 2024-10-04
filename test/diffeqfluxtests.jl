@@ -31,11 +31,11 @@ end
 function loss_adjoint(p)
     prediction = predict_adjoint(p)
     loss = sum(abs2, x - 1 for x in prediction)
-    return loss, prediction
+    return loss
 end
 
 iter = 0
-callback = function (state, l, pred)
+callback = function (state, l)
     display(l)
 
     # using `remake` to re-create our `prob` with current parameters `p`
@@ -81,11 +81,11 @@ end
 function loss_neuralode(p)
     pred = predict_neuralode(p)
     loss = sum(abs2, ode_data .- pred)
-    return loss, pred
+    return loss
 end
 
 iter = 0
-callback = function (st, l, pred...)
+callback = function (st, l)
     global iter
     iter += 1
 

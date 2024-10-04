@@ -54,21 +54,21 @@ to add the specific wrapper packages.
 ```@raw html
 <details>
   <summary><strong>BlackBoxOptim</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
 </details>
 <details>
   <summary><strong>CMAEvolutionaryStrategy</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
 </details>
 <details>
   <summary><strong>Evolutionary</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
@@ -76,38 +76,38 @@ to add the specific wrapper packages.
 </details>
 <details>
   <summary><strong>GCMAES</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - First order
     - Box Constraints
     - Unconstrained
 </details>
 <details>
   <summary><strong>Manopt</strong></summary>
-  - **Local Methods**
+  - <strong>Local Methods</strong>
     - First order
     - Second order
     - Zeroth order
     - Box Constraints
     - Constrained 🟡
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
 </details>
 <details>
   <summary><strong>MathOptInterface</strong></summary>
-  - **Local Methods**
+  - <strong>Local Methods</strong>
     - First order
     - Second order
     - Box Constraints
     - Constrained
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - First order
     - Second order
     - Constrained
 </details>
 <details>
   <summary><strong>MultistartOptimization</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - First order
     - Second order
@@ -115,14 +115,14 @@ to add the specific wrapper packages.
 </details>
 <details>
   <summary><strong>Metaheuristics</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
 </details>
 <details>
   <summary><strong>NOMAD</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
@@ -130,13 +130,13 @@ to add the specific wrapper packages.
 </details>
 <details>
   <summary><strong>NLopt</strong></summary>
-  - **Local Methods**
+  - <strong>Local Methods</strong>
     - First order
     - Zeroth order
     - Second order 🟡
     - Box Constraints
     - Local Constrained 🟡
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - First order
     - Unconstrained
@@ -144,20 +144,20 @@ to add the specific wrapper packages.
 </details>
 <details>
   <summary><strong>Optim</strong></summary>
-  - **Local Methods**
+  - <strong>Local Methods</strong>
     - Zeroth order
     - First order
     - Second order
     - Box Constraints
     - Constrained
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
 </details>
 <details>
   <summary><strong>PRIMA</strong></summary>
-  - **Local Methods**
+  - <strong>Local Methods</strong>
     - Derivative-Free: ✅
   - **Constraints**
     - Box Constraints: ✅
@@ -167,13 +167,15 @@ to add the specific wrapper packages.
   <summary><strong>QuadDIRECT</strong></summary>
   - **Constraints**
     - Box Constraints: ✅
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Unconstrained: ✅
 </details>
 ```
+
 🟡 = supported in downstream library but not yet implemented in `Optimization.jl`; PR to add this functionality are welcome
 
 ## Citation
+
 ```
 @software{vaibhav_kumar_dixit_2023_7738525,
 	author = {Vaibhav Kumar Dixit and Christopher Rackauckas},
@@ -185,37 +187,48 @@ to add the specific wrapper packages.
   	url = {https://doi.org/10.5281/zenodo.7738525},
 	year = 2023}
 ```
+
 ## Reproducibility
+
 ```@raw html
 <details><summary>The documentation of this SciML package was built using these direct dependencies,</summary>
 ```
+
 ```@example
 using Pkg # hide
 Pkg.status() # hide
 ```
+
 ```@raw html
 </details>
 ```
+
 ```@raw html
 <details><summary>and using this machine and Julia version.</summary>
 ```
+
 ```@example
 using InteractiveUtils # hide
 versioninfo() # hide
 ```
+
 ```@raw html
 </details>
 ```
+
 ```@raw html
 <details><summary>A more complete overview of all dependencies and their versions is also provided.</summary>
 ```
+
 ```@example
 using Pkg # hide
 Pkg.status(; mode = PKGMODE_MANIFEST) # hide
 ```
+
 ```@raw html
 </details>
 ```
+
 ```@eval
 using TOML
 using Markdown
