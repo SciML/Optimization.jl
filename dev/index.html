@@ -2,21 +2,21 @@
 <html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Optimization.jl: A Unified Optimization Package · Optimization.jl</title><meta name="title" content="Optimization.jl: A Unified Optimization Package · Optimization.jl"/><meta property="og:title" content="Optimization.jl: A Unified Optimization Package · Optimization.jl"/><meta property="twitter:title" content="Optimization.jl: A Unified Optimization Package · Optimization.jl"/><meta name="description" content="Documentation for Optimization.jl."/><meta property="og:description" content="Documentation for Optimization.jl."/><meta property="twitter:description" content="Documentation for Optimization.jl."/><meta property="og:url" content="https://docs.sciml.ai/Optimization/stable/"/><meta property="twitter:url" content="https://docs.sciml.ai/Optimization/stable/"/><link rel="canonical" href="https://docs.sciml.ai/Optimization/stable/"/><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="search_index.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href><img src="assets/logo.png" alt="Optimization.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href>Optimization.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Optimization.jl: A Unified Optimization Package</a><ul class="internal"><li><a class="tocitem" href="#Installation"><span>Installation</span></a></li><li><a class="tocitem" href="#Contributing"><span>Contributing</span></a></li><li><a class="tocitem" href="#Overview-of-the-solver-packages-in-alphabetical-order"><span>Overview of the solver packages in alphabetical order</span></a></li><li><a class="tocitem" href="#Citation"><span>Citation</span></a></li><li><a class="tocitem" href="#Reproducibility"><span>Reproducibility</span></a></li></ul></li><li><a class="tocitem" href="getting_started/">Getting Started with Optimization.jl</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="tutorials/certification/">Using SymbolicAnalysis.jl for convexity certificates</a></li><li><a class="tocitem" href="tutorials/constraints/">Using Equality and Inequality Constraints</a></li><li><a class="tocitem" href="tutorials/ensemble/">Multistart optimization with EnsembleProblem</a></li><li><a class="tocitem" href="tutorials/linearandinteger/">Linear and Integer Optimization Problems</a></li><li><a class="tocitem" href="tutorials/minibatch/">Data Iterators and Minibatching</a></li><li><a class="tocitem" href="tutorials/remakecomposition/">Creating polyalgorithms by chaining solvers using <code>remake</code></a></li><li><a class="tocitem" href="tutorials/symbolic/">Symbolic Problem Building with ModelingToolkit</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="examples/rosenbrock/">Solving the Rosenbrock Problem in &gt;10 Ways</a></li></ul></li><li><span class="tocitem">Basics</span><ul><li><a class="tocitem" href="API/optimization_problem/">Defining OptimizationProblems</a></li><li><a class="tocitem" href="API/optimization_function/">OptimizationFunction</a></li><li><a class="tocitem" href="API/ad/">Automatic Differentiation Construction Choice Recommendations</a></li><li><a class="tocitem" href="API/solve/">Common Solver Options (Solve Keyword Arguments)</a></li><li><a class="tocitem" href="API/optimization_solution/">Optimization Solutions</a></li><li><a class="tocitem" href="API/optimization_state/">OptimizationState</a></li><li><a class="tocitem" href="API/optimization_stats/">OptimizationStats</a></li><li><a class="tocitem" href="API/modelingtoolkit/">ModelingToolkit Integration</a></li><li><a class="tocitem" href="API/FAQ/">Frequently Asked Questions</a></li></ul></li><li><span class="tocitem">Optimizer Packages</span><ul><li><a class="tocitem" href="optimization_packages/blackboxoptim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="optimization_packages/cmaevolutionstrategy/">CMAEvolutionStrategy.jl</a></li><li><a class="tocitem" href="optimization_packages/evolutionary/">Evolutionary.jl</a></li><li><a class="tocitem" href="optimization_packages/gcmaes/">GCMAES.jl</a></li><li><a class="tocitem" href="optimization_packages/manopt/">Manopt.jl</a></li><li><a class="tocitem" href="optimization_packages/mathoptinterface/">MathOptInterface.jl</a></li><li><a class="tocitem" href="optimization_packages/metaheuristics/">Metaheuristics.jl</a></li><li><a class="tocitem" href="optimization_packages/multistartoptimization/">MultistartOptimization.jl</a></li><li><a class="tocitem" href="optimization_packages/nlopt/">NLopt.jl</a></li><li><a class="tocitem" href="optimization_packages/nlpmodels/">NLPModels.jl</a></li><li><a class="tocitem" href="optimization_packages/nomad/">NOMAD.jl</a></li><li><a class="tocitem" href="optimization_packages/optim/">Optim.jl</a></li><li><a class="tocitem" href="optimization_packages/optimisers/">Optimisers.jl</a></li><li><a class="tocitem" href="optimization_packages/optimization/">Optimization.jl</a></li><li><a class="tocitem" href="optimization_packages/polyopt/">Polyalgorithms.jl</a></li><li><a class="tocitem" href="optimization_packages/prima/">PRIMA.jl</a></li><li><a class="tocitem" href="optimization_packages/quaddirect/">QuadDIRECT.jl</a></li><li><a class="tocitem" href="optimization_packages/speedmapping/">SpeedMapping.jl</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Optimization.jl: A Unified Optimization Package</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Optimization.jl: A Unified Optimization Package</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/SciML/Optimization.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/SciML/Optimization.jl/blob/master/docs/src/index.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Optimization.jl:-A-Unified-Optimization-Package"><a class="docs-heading-anchor" href="#Optimization.jl:-A-Unified-Optimization-Package">Optimization.jl: A Unified Optimization Package</a><a id="Optimization.jl:-A-Unified-Optimization-Package-1"></a><a class="docs-heading-anchor-permalink" href="#Optimization.jl:-A-Unified-Optimization-Package" title="Permalink"></a></h1><p>Optimization.jl provides the easiest way to create an optimization problem and solve it. It enables rapid prototyping and experimentation with minimal syntax overhead by providing a uniform interface to &gt;25 optimization libraries, hence 100+ optimization solvers encompassing almost all classes of optimization algorithms such as global, mixed-integer, non-convex, second-order local, constrained, etc. It allows you to choose an Automatic Differentiation (AD) backend by simply passing an argument to indicate the package to use and automatically generates the efficient derivatives of the objective and constraints while giving you the flexibility to switch between different AD engines as per your problem. Additionally, Optimization.jl takes care of passing problem specific information to solvers that can leverage it such as the sparsity pattern of the hessian or constraint jacobian and the expression graph.</p><p>It extends the common SciML interface making it very easy to use for anyone familiar with the SciML ecosystem. It is also very easy to extend to new solvers and new problem types. The package is actively maintained and new features are added regularly.</p><h2 id="Installation"><a class="docs-heading-anchor" href="#Installation">Installation</a><a id="Installation-1"></a><a class="docs-heading-anchor-permalink" href="#Installation" title="Permalink"></a></h2><p>Assuming that you already have Julia correctly installed, it suffices to import Optimization.jl in the standard way:</p><pre><code class="language-julia hljs">import Pkg
 Pkg.add(&quot;Optimization&quot;)</code></pre><p>The packages relevant to the core functionality of Optimization.jl will be imported accordingly and, in most cases, you do not have to worry about the manual installation of dependencies. <a href="optimization_packages/optimization/#Optimization.jl">Optimization.jl</a> natively offers a LBFGS solver but for more solver choices (discussed below in Optimization Packages), you will need to add the specific wrapper packages.</p><h2 id="Contributing"><a class="docs-heading-anchor" href="#Contributing">Contributing</a><a id="Contributing-1"></a><a class="docs-heading-anchor-permalink" href="#Contributing" title="Permalink"></a></h2><ul><li><p>Please refer to the <a href="https://github.com/SciML/ColPrac/blob/master/README.md">SciML ColPrac: Contributor&#39;s Guide on Collaborative Practices for Community Packages</a> for guidance on PRs, issues, and other matters relating to contributing to SciML.</p></li><li><p>See the <a href="https://github.com/SciML/SciMLStyle">SciML Style Guide</a> for common coding practices and other style decisions.</p></li><li><p>There are a few community forums:</p><ul><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.org/slack/">Julia Slack</a></li><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged">Julia Zulip</a></li><li>On the <a href="https://discourse.julialang.org">Julia Discourse forums</a></li><li>See also <a href="https://sciml.ai/community/">SciML Community page</a></li></ul></li></ul><h2 id="Overview-of-the-solver-packages-in-alphabetical-order"><a class="docs-heading-anchor" href="#Overview-of-the-solver-packages-in-alphabetical-order">Overview of the solver packages in alphabetical order</a><a id="Overview-of-the-solver-packages-in-alphabetical-order-1"></a><a class="docs-heading-anchor-permalink" href="#Overview-of-the-solver-packages-in-alphabetical-order" title="Permalink"></a></h2><details>
   <summary><strong>BlackBoxOptim</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
 </details>
 <details>
   <summary><strong>CMAEvolutionaryStrategy</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
 </details>
 <details>
   <summary><strong>Evolutionary</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
@@ -24,38 +24,38 @@ Pkg.add(&quot;Optimization&quot;)</code></pre><p>The packages relevant to the co
 </details>
 <details>
   <summary><strong>GCMAES</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - First order
     - Box Constraints
     - Unconstrained
 </details>
 <details>
   <summary><strong>Manopt</strong></summary>
-  - **Local Methods**
+  - <strong>Local Methods</strong>
     - First order
     - Second order
     - Zeroth order
     - Box Constraints
     - Constrained 🟡
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
 </details>
 <details>
   <summary><strong>MathOptInterface</strong></summary>
-  - **Local Methods**
+  - <strong>Local Methods</strong>
     - First order
     - Second order
     - Box Constraints
     - Constrained
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - First order
     - Second order
     - Constrained
 </details>
 <details>
   <summary><strong>MultistartOptimization</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - First order
     - Second order
@@ -63,14 +63,14 @@ Pkg.add(&quot;Optimization&quot;)</code></pre><p>The packages relevant to the co
 </details>
 <details>
   <summary><strong>Metaheuristics</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
 </details>
 <details>
   <summary><strong>NOMAD</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
@@ -78,13 +78,13 @@ Pkg.add(&quot;Optimization&quot;)</code></pre><p>The packages relevant to the co
 </details>
 <details>
   <summary><strong>NLopt</strong></summary>
-  - **Local Methods**
+  - <strong>Local Methods</strong>
     - First order
     - Zeroth order
     - Second order 🟡
     - Box Constraints
     - Local Constrained 🟡
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - First order
     - Unconstrained
@@ -92,20 +92,20 @@ Pkg.add(&quot;Optimization&quot;)</code></pre><p>The packages relevant to the co
 </details>
 <details>
   <summary><strong>Optim</strong></summary>
-  - **Local Methods**
+  - <strong>Local Methods</strong>
     - Zeroth order
     - First order
     - Second order
     - Box Constraints
     - Constrained
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
 </details>
 <details>
   <summary><strong>PRIMA</strong></summary>
-  - **Local Methods**
+  - <strong>Local Methods</strong>
     - Derivative-Free: ✅
   - **Constraints**
     - Box Constraints: ✅
@@ -115,7 +115,7 @@ Pkg.add(&quot;Optimization&quot;)</code></pre><p>The packages relevant to the co
   <summary><strong>QuadDIRECT</strong></summary>
   - **Constraints**
     - Box Constraints: ✅
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Unconstrained: ✅
 </details><p>🟡 = supported in downstream library but not yet implemented in <code>Optimization.jl</code>; PR to add this functionality are welcome</p><h2 id="Citation"><a class="docs-heading-anchor" href="#Citation">Citation</a><a id="Citation-1"></a><a class="docs-heading-anchor-permalink" href="#Citation" title="Permalink"></a></h2><pre><code class="nohighlight hljs">@software{vaibhav_kumar_dixit_2023_7738525,
 	author = {Vaibhav Kumar Dixit and Christopher Rackauckas},
@@ -135,17 +135,17 @@ Pkg.add(&quot;Optimization&quot;)</code></pre><p>The packages relevant to the co
   [b6b21f68] Ipopt v1.6.6
   [c8e1da08] IterTools v1.10.0
   [2ddba703] Juniper v0.9.2
-⌃ [b2108857] Lux v1.0.5
+  [b2108857] Lux v1.1.0
   [f1d291b0] MLUtils v0.4.4
 ⌅ [1cead3c2] Manifolds v0.9.20
 ⌅ [0fc0a36d] Manopt v0.4.69
-  [961ee093] ModelingToolkit v9.41.0
+  [961ee093] ModelingToolkit v9.42.0
   [a4795742] NLPModels v0.21.3
   [7998695d] NLPModelsTest v0.10.1
   [76087f3c] NLopt v1.1.1
-  [7f7a1694] Optimization v4.0.2 `~/work/Optimization.jl/Optimization.jl`
+  [7f7a1694] Optimization v4.0.3 `~/work/Optimization.jl/Optimization.jl`
   [3e6eede4] OptimizationBBO v0.4.0 `../lib/OptimizationBBO`
-  [bca83a33] OptimizationBase v2.0.4
+  [bca83a33] OptimizationBase v2.2.1
   [bd407f91] OptimizationCMAEvolutionStrategy v0.3.0 `../lib/OptimizationCMAEvolutionStrategy`
   [cb963754] OptimizationEvolutionary v0.4.0 `../lib/OptimizationEvolutionary`
   [6f0a0517] OptimizationGCMAES v0.3.0 `../lib/OptimizationGCMAES`
@@ -155,15 +155,15 @@ Pkg.add(&quot;Optimization&quot;)</code></pre><p>The packages relevant to the co
   [064b21be] OptimizationNLPModels v0.0.2 `../lib/OptimizationNLPModels`
   [4e6fcdb7] OptimizationNLopt v0.3.1 `../lib/OptimizationNLopt`
   [2cab0595] OptimizationNOMAD v0.3.0 `../lib/OptimizationNOMAD`
-  [36348300] OptimizationOptimJL v0.4.0 `../lib/OptimizationOptimJL`
-  [42dfb2eb] OptimizationOptimisers v0.3.2 `../lib/OptimizationOptimisers`
+  [36348300] OptimizationOptimJL v0.4.1 `../lib/OptimizationOptimJL`
+  [42dfb2eb] OptimizationOptimisers v0.3.3 `../lib/OptimizationOptimisers`
   [72f8369c] OptimizationPRIMA v0.3.0 `../lib/OptimizationPRIMA`
   [500b13db] OptimizationPolyalgorithms v0.3.0 `../lib/OptimizationPolyalgorithms`
   [3d669222] OptimizationSpeedMapping v0.2.0 `../lib/OptimizationSpeedMapping`
   [1dea7af3] OrdinaryDiffEq v6.89.0
   [91a5bcdd] Plots v1.40.8
   [37e2e3b7] ReverseDiff v1.15.3
-  [0bca4576] SciMLBase v2.54.1
+  [0bca4576] SciMLBase v2.55.0
   [1ed8b502] SciMLSensitivity v7.68.0
   [4297ee4d] SymbolicAnalysis v0.3.0
   [0c5d862f] Symbolics v6.13.1
@@ -171,7 +171,7 @@ Pkg.add(&quot;Optimization&quot;)</code></pre><p>The packages relevant to the co
   [e88e6eb3] Zygote v0.6.71
   [9cc047cb] Ipopt_jll v300.1400.1600+0
   [9a3f8284] Random
-Info Packages marked with ⌃ and ⌅ have new versions available. Those with ⌃ may be upgradable, but those with ⌅ are restricted by compatibility constraints from upgrading. To see why use `status --outdated`</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.10.5
+Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated`</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.10.5
 Commit 6f3fdf7b362 (2024-08-27 14:19 UTC)
 Build Info:
   Official https://julialang.org/ release
@@ -222,7 +222,7 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [c3611d14] ColorVectorSpace v0.10.0
   [5ae59095] Colors v0.12.11
   [861a8166] Combinatorics v1.0.2
-  [a80b9123] CommonMark v0.8.12
+  [a80b9123] CommonMark v0.8.15
   [38540f10] CommonSolve v0.2.4
   [bbf7d656] CommonSubexpressions v0.3.1
   [f70d9fcc] CommonWorldInvalidations v1.0.0
@@ -247,12 +247,12 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [244e2a9f] DefineSingletons v0.1.2
   [8bb1440f] DelimitedFiles v1.9.1
   [85a47980] Dictionaries v0.4.2
-⌃ [2b5f629d] DiffEqBase v6.155.1
+  [2b5f629d] DiffEqBase v6.156.1
 ⌅ [459566f4] DiffEqCallbacks v3.9.1
   [77a26b50] DiffEqNoiseProcess v5.23.0
   [163ba53b] DiffResults v1.1.0
   [b552c78f] DiffRules v1.15.1
-⌅ [a0c0ee7d] DifferentiationInterface v0.5.17
+  [a0c0ee7d] DifferentiationInterface v0.6.5
   [8d63f2c5] DispatchDoctor v0.4.15
   [b4f34e82] Distances v0.10.11
   [31c24e10] Distributions v0.25.112
@@ -265,8 +265,8 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [b7d42ee7] Einsum v0.4.1
   [da5c29d0] EllipsisNotation v1.8.0
   [4e289a0a] EnumX v1.0.4
-⌃ [7da242da] Enzyme v0.12.36
-⌅ [f151be2c] EnzymeCore v0.7.8
+  [7da242da] Enzyme v0.13.7
+  [f151be2c] EnzymeCore v0.8.4
   [86b6b26d] Evolutionary v0.11.1
   [460bff9d] ExceptionUnwrapping v0.1.10
   [d4d017d3] ExponentialUtilities v1.26.1
@@ -292,12 +292,12 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [4aa9d100] GCMAES v0.1.34
   [0c68f7d7] GPUArrays v10.3.1
   [46192b85] GPUArraysCore v0.1.6
-⌃ [61eb1bfa] GPUCompiler v0.27.5
+  [61eb1bfa] GPUCompiler v0.27.8
   [28b8d3ca] GR v0.73.7
   [c145ed77] GenericSchur v0.5.4
   [d7ba0133] Git v1.3.1
   [c27321d9] Glob v1.3.1
-  [86223c79] Graphs v1.11.2
+  [86223c79] Graphs v1.12.0
   [42e2da0e] Grisu v1.0.2
   [708ec375] Gumbo v0.8.2
   [cd3eb016] HTTP v1.10.8
@@ -328,37 +328,38 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [ccbc3e58] JumpProcesses v9.13.7
   [2ddba703] Juniper v0.9.2
   [ef3ab10e] KLU v0.6.0
-⌃ [63c18a36] KernelAbstractions v0.9.26
+  [63c18a36] KernelAbstractions v0.9.28
   [2c470bb0] Kronecker v0.5.5
   [ba0b0d4f] Krylov v0.9.6
   [5be7bae1] LBFGSB v0.4.1
   [40e66cde] LDLFactorizations v0.10.1
-⌅ [929cbde3] LLVM v9.0.0
+  [929cbde3] LLVM v9.1.2
   [b964fa9f] LaTeXStrings v1.3.1
-  [984bce1d] LambertW v0.4.6
+⌅ [984bce1d] LambertW v0.4.6
   [23fbe1c1] Latexify v0.16.5
   [10f19ff3] LayoutPointers v0.1.17
   [0e77f7df] LazilyInitializedFields v1.2.2
   [5078a376] LazyArrays v2.2.1
   [1d6d02ad] LeftChildRightSiblingTrees v0.2.0
+  [87fe0de2] LineSearch v0.1.2
   [d3d80556] LineSearches v7.3.0
   [7a12625a] LinearMaps v3.11.3
   [5c8ed15e] LinearOperators v2.8.0
-⌃ [7ed4a6bd] LinearSolve v2.34.0
+  [7ed4a6bd] LinearSolve v2.35.0
   [2ab3a3ac] LogExpFunctions v0.3.28
   [e6f89c97] LoggingExtras v1.0.3
   [bdcacae8] LoopVectorization v0.12.171
   [30fc2ffe] LossFunctions v0.11.2
-⌃ [b2108857] Lux v1.0.5
+  [b2108857] Lux v1.1.0
   [bb33d45b] LuxCore v1.0.1
-⌃ [82251201] LuxLib v1.2.4
-  [7e8f7934] MLDataDevices v1.1.1
+  [82251201] LuxLib v1.3.2
+  [7e8f7934] MLDataDevices v1.2.0
   [d8e11817] MLStyle v0.4.17
   [f1d291b0] MLUtils v0.4.4
   [1914dd2f] MacroTools v0.5.13
   [af67fdf4] ManifoldDiff v0.3.12
 ⌅ [1cead3c2] Manifolds v0.9.20
-  [3362f125] ManifoldsBase v0.15.16
+  [3362f125] ManifoldsBase v0.15.17
 ⌅ [0fc0a36d] Manopt v0.4.69
   [d125e4d3] ManualMemory v0.1.8
   [d0879d2d] MarkdownAST v0.1.2
@@ -370,7 +371,7 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [bcdb8e00] Metaheuristics v3.3.5
 ⌅ [128add7d] MicroCollections v0.1.4
   [e1d29d7a] Missings v1.2.0
-  [961ee093] ModelingToolkit v9.41.0
+  [961ee093] ModelingToolkit v9.42.0
   [46d2c3a1] MuladdMacro v0.2.4
   [102ac46a] MultivariatePolynomials v0.5.6
   [d8a4904e] MutableArithmetics v1.5.0
@@ -384,16 +385,16 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [77ba4419] NaNMath v1.0.2
   [71a1bf82] NameResolution v0.1.5
   [356022a1] NamedDims v1.2.2
-  [8913a72c] NonlinearSolve v3.14.0
+  [8913a72c] NonlinearSolve v3.15.0
   [d8793406] ObjectFile v0.4.2
   [6fd5a793] Octavian v0.3.28
   [6fe1bfb0] OffsetArrays v1.14.1
   [4d8831e6] OpenSSL v1.4.3
   [429524aa] Optim v1.9.4
   [3bd65402] Optimisers v0.3.3
-  [7f7a1694] Optimization v4.0.2 `~/work/Optimization.jl/Optimization.jl`
+  [7f7a1694] Optimization v4.0.3 `~/work/Optimization.jl/Optimization.jl`
   [3e6eede4] OptimizationBBO v0.4.0 `../lib/OptimizationBBO`
-  [bca83a33] OptimizationBase v2.0.4
+  [bca83a33] OptimizationBase v2.2.1
   [bd407f91] OptimizationCMAEvolutionStrategy v0.3.0 `../lib/OptimizationCMAEvolutionStrategy`
   [cb963754] OptimizationEvolutionary v0.4.0 `../lib/OptimizationEvolutionary`
   [6f0a0517] OptimizationGCMAES v0.3.0 `../lib/OptimizationGCMAES`
@@ -403,8 +404,8 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [064b21be] OptimizationNLPModels v0.0.2 `../lib/OptimizationNLPModels`
   [4e6fcdb7] OptimizationNLopt v0.3.1 `../lib/OptimizationNLopt`
   [2cab0595] OptimizationNOMAD v0.3.0 `../lib/OptimizationNOMAD`
-  [36348300] OptimizationOptimJL v0.4.0 `../lib/OptimizationOptimJL`
-  [42dfb2eb] OptimizationOptimisers v0.3.2 `../lib/OptimizationOptimisers`
+  [36348300] OptimizationOptimJL v0.4.1 `../lib/OptimizationOptimJL`
+  [42dfb2eb] OptimizationOptimisers v0.3.3 `../lib/OptimizationOptimisers`
   [72f8369c] OptimizationPRIMA v0.3.0 `../lib/OptimizationPRIMA`
   [500b13db] OptimizationPolyalgorithms v0.3.0 `../lib/OptimizationPolyalgorithms`
   [3d669222] OptimizationSpeedMapping v0.2.0 `../lib/OptimizationSpeedMapping`
@@ -483,7 +484,8 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [94e857df] SIMDTypes v0.1.0
   [476501e8] SLEEFPirates v0.6.43
   [322a6be2] Sass v0.2.0
-  [0bca4576] SciMLBase v2.54.1
+  [0bca4576] SciMLBase v2.55.0
+  [19f34311] SciMLJacobianOperators v0.1.0
   [c0aeaf25] SciMLOperators v0.3.10
   [1ed8b502] SciMLSensitivity v7.68.0
   [53ae85a6] SciMLStructures v1.5.0
@@ -493,16 +495,16 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [605ecd9f] ShowCases v0.1.0
   [992d4aef] Showoff v1.0.3
   [777ac1f9] SimpleBufferStream v1.2.0
-⌃ [727e6d20] SimpleNonlinearSolve v1.12.2
+  [727e6d20] SimpleNonlinearSolve v1.12.3
   [699a6c99] SimpleTraits v0.9.4
   [ce78b400] SimpleUnPack v1.1.0
   [47aef6b3] SimpleWeightedGraphs v1.4.0
   [66db9d55] SnoopPrecompile v1.0.3
   [a2af1166] SortingAlgorithms v1.2.1
-  [9f842d2f] SparseConnectivityTracer v0.6.5
-⌃ [47a9eef4] SparseDiffTools v2.20.0
+  [9f842d2f] SparseConnectivityTracer v0.6.6
+  [47a9eef4] SparseDiffTools v2.22.0
   [dc90abb0] SparseInverseSubset v0.1.2
-  [0a514795] SparseMatrixColorings v0.4.2
+  [0a514795] SparseMatrixColorings v0.4.6
   [e56a9233] Sparspak v0.3.9
   [d4ead438] SpatialIndexing v0.1.6
   [276daf66] SpecialFunctions v2.4.0
@@ -559,7 +561,7 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [6e34b625] Bzip2_jll v1.0.8+1
   [83423d85] Cairo_jll v1.18.0+2
   [ee1fde0b] Dbus_jll v1.14.10+0
-⌅ [7cc45869] Enzyme_jll v0.0.148+0
+  [7cc45869] Enzyme_jll v0.0.153+0
   [2702e6a9] EpollShim_jll v0.0.20230411+0
   [2e619515] Expat_jll v2.6.2+0
 ⌅ [b22a6f82] FFMPEG_jll v4.4.4+1
@@ -571,7 +573,7 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [d2c73de3] GR_jll v0.73.7+0
   [78b55507] Gettext_jll v0.21.0+0
   [f8c6e375] Git_jll v2.46.2+0
-  [7746bdde] Glib_jll v2.80.2+0
+  [7746bdde] Glib_jll v2.80.5+0
   [3b182d85] Graphite2_jll v1.3.14+0
   [528830af] Gumbo_jll v0.10.2+0
   [2e76f6c2] HarfBuzz_jll v8.3.1+0
@@ -582,7 +584,7 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [aacddb02] JpegTurbo_jll v3.0.4+0
   [c1c5ebd0] LAME_jll v3.100.2+0
 ⌅ [88015f11] LERC_jll v3.0.0+1
-⌅ [dad2f222] LLVMExtra_jll v0.0.33+0
+  [dad2f222] LLVMExtra_jll v0.0.34+0
   [1d63c593] LLVMOpenMP_jll v18.1.7+0
   [dd4b983a] LZO_jll v2.10.2+1
   [81d17ec3] L_BFGS_B_jll v3.0.1+0
@@ -711,4 +713,4 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [8e850b90] libblastrampoline_jll v5.11.0+0
   [8e850ede] nghttp2_jll v1.52.0+1
   [3f19e933] p7zip_jll v17.4.0+2
-Info Packages marked with ⌃ and ⌅ have new versions available. Those with ⌃ may be upgradable, but those with ⌅ are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v4.0.2/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v4.0.2/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/">Getting Started with Optimization.jl »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.7.0 on <span class="colophon-date" title="Saturday 28 September 2024 14:29">Saturday 28 September 2024</span>. Using Julia version 1.10.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Info Packages marked with ⌃ and ⌅ have new versions available. Those with ⌃ may be upgradable, but those with ⌅ are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v4.0.3/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v4.0.3/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/">Getting Started with Optimization.jl »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.7.0 on <span class="colophon-date" title="Friday 4 October 2024 22:06">Friday 4 October 2024</span>. Using Julia version 1.10.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
