@@ -54,21 +54,21 @@ to add the specific wrapper packages.
 ```@raw html
 <details>
   <summary><strong>BlackBoxOptim</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
 </details>
 <details>
   <summary><strong>CMAEvolutionaryStrategy</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
 </details>
 <details>
   <summary><strong>Evolutionary</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
@@ -76,38 +76,38 @@ to add the specific wrapper packages.
 </details>
 <details>
   <summary><strong>GCMAES</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - First order
     - Box Constraints
     - Unconstrained
 </details>
 <details>
   <summary><strong>Manopt</strong></summary>
-  - **Local Methods**
+  - <strong>Local Methods</strong>
     - First order
     - Second order
     - Zeroth order
     - Box Constraints
     - Constrained 🟡
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
 </details>
 <details>
   <summary><strong>MathOptInterface</strong></summary>
-  - **Local Methods**
+  - <strong>Local Methods</strong>
     - First order
     - Second order
     - Box Constraints
     - Constrained
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - First order
     - Second order
     - Constrained
 </details>
 <details>
   <summary><strong>MultistartOptimization</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - First order
     - Second order
@@ -115,14 +115,14 @@ to add the specific wrapper packages.
 </details>
 <details>
   <summary><strong>Metaheuristics</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
 </details>
 <details>
   <summary><strong>NOMAD</strong></summary>
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
@@ -130,13 +130,13 @@ to add the specific wrapper packages.
 </details>
 <details>
   <summary><strong>NLopt</strong></summary>
-  - **Local Methods**
+  - <strong>Local Methods</strong>
     - First order
     - Zeroth order
     - Second order 🟡
     - Box Constraints
     - Local Constrained 🟡
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - First order
     - Unconstrained
@@ -144,20 +144,20 @@ to add the specific wrapper packages.
 </details>
 <details>
   <summary><strong>Optim</strong></summary>
-  - **Local Methods**
+  - <strong>Local Methods</strong>
     - Zeroth order
     - First order
     - Second order
     - Box Constraints
     - Constrained
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
     - Box Constraints
 </details>
 <details>
   <summary><strong>PRIMA</strong></summary>
-  - **Local Methods**
+  - <strong>Local Methods</strong>
     - Derivative-Free: ✅
   - **Constraints**
     - Box Constraints: ✅
@@ -167,7 +167,7 @@ to add the specific wrapper packages.
   <summary><strong>QuadDIRECT</strong></summary>
   - **Constraints**
     - Box Constraints: ✅
-  - **Global Methods**
+  - <strong>Global Methods</strong>
     - Unconstrained: ✅
 </details>
 ```
