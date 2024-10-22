@@ -55,7 +55,7 @@ For a more extensive documentation of all the algorithms and options, please con
 
 `Optim.jl` implements the following local constraint algorithms:
 
-  - [`Optim.IPNewton()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/ipnewton/)
+  - [`Optim.IPNewton()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/ipnewton/)
     
       + `μ0` specifies the initial barrier penalty coefficient as either a number or `:auto`
     
@@ -87,7 +87,7 @@ Derivative-free optimizers are optimizers that can be used even in cases where n
 
 `Optim.jl` implements the following derivative-free algorithms:
 
-  - [`Optim.NelderMead()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/nelder_mead/): **Nelder-Mead optimizer**
+  - [`Optim.NelderMead()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/nelder_mead/): **Nelder-Mead optimizer**
     
       + `solve(problem, NelderMead(parameters, initial_simplex))`
     
@@ -98,7 +98,7 @@ Derivative-free optimizers are optimizers that can be used even in cases where n
           * `parameters = AdaptiveParameters()`
           * `initial_simplex = AffineSimplexer()`
 
-  - [`Optim.SimulatedAnnealing()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/simulated_annealing/): **Simulated Annealing**
+  - [`Optim.SimulatedAnnealing()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/simulated_annealing/): **Simulated Annealing**
     
       + `solve(problem, SimulatedAnnealing(neighbor, T, p))`
     
@@ -110,7 +110,7 @@ Derivative-free optimizers are optimizers that can be used even in cases where n
           * `neighbor = default_neighbor!`
           * `T = default_temperature`
           * `p = kirkpatrick`
-  - [`Optim.ParticleSwarm()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/particle_swarm/)
+  - [`Optim.ParticleSwarm()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/particle_swarm/)
 
 The Rosenbrock function can be optimized using the `Optim.NelderMead()` as follows:
 
@@ -129,7 +129,7 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
 
 `Optim.jl` implements the following gradient-based algorithms:
 
-  - [`Optim.ConjugateGradient()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/cg/): **Conjugate Gradient Descent**
+  - [`Optim.ConjugateGradient()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/cg/): **Conjugate Gradient Descent**
     
       + `solve(problem, ConjugateGradient(alphaguess, linesearch, eta, P, precondprep))`
     
@@ -160,7 +160,7 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
           * `P = nothing`
           * `precondprep = (P, x) -> nothing`
 
-  - [`Optim.GradientDescent()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/gradientdescent/): **Gradient Descent (a quasi-Newton solver)**
+  - [`Optim.GradientDescent()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/gradientdescent/): **Gradient Descent (a quasi-Newton solver)**
     
       + `solve(problem, GradientDescent(alphaguess, linesearch, P, precondprep))`
     
@@ -188,7 +188,7 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
           * `linesearch = LineSearches.HagerZhang()`
           * `P = nothing`
           * `precondprep = (P, x) -> nothing`
-  - [`Optim.BFGS()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/lbfgs/): **Broyden-Fletcher-Goldfarb-Shanno algorithm**
+  - [`Optim.BFGS()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/lbfgs/): **Broyden-Fletcher-Goldfarb-Shanno algorithm**
     
       + `solve(problem, BFGS(alphaguess, linesearch, initial_invH, initial_stepnorm, manifold))`
     
@@ -210,7 +210,7 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
           * `Static`
       + `initial_invH` specifies an optional initial matrix
       + `initial_stepnorm` determines that `initial_invH` is an identity matrix scaled by the value of `initial_stepnorm` multiplied by the sup-norm of the gradient at the initial point
-      + `manifold` specifies a (Riemannian) manifold on which the function is to be minimized (for more information, consult [this source](https://julianlsolvers.github.io/Optim.jl/stable/#algo/manifolds/))
+      + `manifold` specifies a (Riemannian) manifold on which the function is to be minimized (for more information, consult [this source](https://julianlsolvers.github.io/Optim.jl/stable/algo/manifolds/))
         
           * available manifolds:
           * `Flat`
@@ -227,7 +227,7 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
           * `initial_invH = nothing`
           * `initial_stepnorm = nothing`
           * `manifold = Flat()`
-  - [`Optim.LBFGS()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/lbfgs/): **Limited-memory Broyden-Fletcher-Goldfarb-Shanno algorithm**
+  - [`Optim.LBFGS()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/lbfgs/): **Limited-memory Broyden-Fletcher-Goldfarb-Shanno algorithm**
     
       + `m` is the number of history points
     
@@ -249,7 +249,7 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
           * `Static`
       + `P` is an optional preconditioner (for more information, see [this source](https://julianlsolvers.github.io/Optim.jl/v0.9.3/algo/precondition/))
       + `precondpred` is used to update `P` as the state variable `x` changes
-      + `manifold` specifies a (Riemannian) manifold on which the function is to be minimized (for more information, consult [this source](https://julianlsolvers.github.io/Optim.jl/stable/#algo/manifolds/))
+      + `manifold` specifies a (Riemannian) manifold on which the function is to be minimized (for more information, consult [this source](https://julianlsolvers.github.io/Optim.jl/stable/algo/manifolds/))
         
           * available manifolds:
           * `Flat`
@@ -269,8 +269,8 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
           * `precondprep = (P, x) -> nothing`
           * `manifold = Flat()`
           * `scaleinvH0::Bool = true && (P isa Nothing)`
-  - [`Optim.NGMRES()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/ngmres/)
-  - [`Optim.OACCEL()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/ngmres/)
+  - [`Optim.NGMRES()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/ngmres/)
+  - [`Optim.OACCEL()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/ngmres/)
 
 The Rosenbrock function can be optimized using the `Optim.LBFGS()` as follows:
 
@@ -293,7 +293,7 @@ the Hessian in order to be appropriate.
 
 `Optim.jl` implements the following hessian-based algorithms:
 
-  - [`Optim.NewtonTrustRegion()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/newton_trust_region/): **Newton Trust Region method**
+  - [`Optim.NewtonTrustRegion()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/newton_trust_region/): **Newton Trust Region method**
     
       + `initial_delta`: The starting trust region radius
     
@@ -309,7 +309,7 @@ the Hessian in order to be appropriate.
           * `rho_lower = 0.25`
           * `rho_upper = 0.75`
 
-  - [`Optim.Newton()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/newton/): **Newton's method with line search**
+  - [`Optim.Newton()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/newton/): **Newton's method with line search**
     
       + `alphaguess` computes the initial step length (for more information, consult [this source](https://github.com/JuliaNLSolvers/LineSearches.jl) and [this example](https://julianlsolvers.github.io/LineSearches.jl/latest/examples/generated/optim_initialstep.html))
         
@@ -390,7 +390,7 @@ sol = solve(prob, Optim.KrylovTrustRegion())
 The following method in [`Optim`](https://github.com/JuliaNLSolvers/Optim.jl) performs global optimization on problems with or without
 box constraints. It works both with and without lower and upper bounds set by `lb` and `ub` in the `Optimization.OptimizationProblem`.
 
-  - [`Optim.ParticleSwarm()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/particle_swarm/): **Particle Swarm Optimization**
+  - [`Optim.ParticleSwarm()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/particle_swarm/): **Particle Swarm Optimization**
     
       + `solve(problem, ParticleSwarm(lower, upper, n_particles))`
       + `lower`/`upper` are vectors of lower/upper bounds respectively
@@ -414,7 +414,7 @@ sol = solve(prob, Optim.ParticleSwarm(lower = prob.lb, upper = prob.ub, n_partic
 The following method in [`Optim`](https://github.com/JuliaNLSolvers/Optim.jl) performs global optimization on problems with
 box constraints.
 
-  - [`Optim.SAMIN()`](https://julianlsolvers.github.io/Optim.jl/stable/#algo/samin/): **Simulated Annealing with bounds**
+  - [`Optim.SAMIN()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/samin/): **Simulated Annealing with bounds**
     
       + `solve(problem, SAMIN(nt, ns, rt, neps, f_tol, x_tol, coverage_ok, verbosity))`
     
