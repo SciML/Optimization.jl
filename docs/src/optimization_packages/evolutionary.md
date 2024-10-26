@@ -46,7 +46,7 @@ sol = solve(prob, Evolutionary.CMAES(μ = 40, λ = 100))
 The Rosenbrock and Ackley functions can be optimized using the `Evolutionary.NSGA2()` as follows:
 
 ```@example MOO-Evolutionary
-using Optimization, OptimizationEvolutionary
+using Optimization, OptimizationEvolutionary, Evolutionary
 function func(x, p=nothing)::Vector{Float64}
   f1 = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2  # Rosenbrock function
   f2 = -20.0 * exp(-0.2 * sqrt(0.5 * (x[1]^2 + x[2]^2))) - exp(0.5 * (cos(2π * x[1]) + cos(2π * x[2]))) + exp(1) + 20.0  # Ackley function
