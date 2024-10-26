@@ -45,7 +45,7 @@ function __map_optimizer_args(cache::Optimization.OptimizationCache, opt::LBFGS;
         @warn "common abstol is currently not used by $(opt)"
     end
     if !isnothing(maxtime)
-        @warn "common abstol is currently not used by $(opt)"
+        @warn "common maxtime is currently not used by $(opt)"
     end
 
     mapped_args = (;)
