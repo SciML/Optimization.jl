@@ -27,6 +27,9 @@ using Zygote
 
     sol = solve(prob, Optimisers.Adam(), maxiters = 1000)
     @test 10 * sol.objective < l1
+    @test sol.stats.iterations == 1000
+    @test sol.stats.fevals == 1000
+    @test sol.stats.gevals == 1000
 
     @testset "cache" begin
         objective(x, p) = (p[1] - x[1])^2
@@ -73,7 +76,7 @@ end
     using Optimization, OptimizationOptimisers, Lux, Zygote, MLUtils, Random,
           ComponentArrays
 
-    x = rand(10000)
+    x = rand(Float32, 10000)
     y = sin.(x)
     data = MLUtils.DataLoader((x, y), batchsize = 100)
 
@@ -96,7 +99,14 @@ end
     optf = OptimizationFunction(loss, AutoZygote())
     prob = OptimizationProblem(optf, ps_ca, data)
 
-    res = Optimization.solve(prob, Optimisers.Adam(), callback = callback, epochs = 10000)
+    res = Optimization.solve(prob, Optimisers.Adam(), epochs = 50)
+
+    @test res.objective < 1e-4
+    @test res.stats.iterations == 50*length(data)
+    @test res.stats.fevals == 50*length(data)
+    @test res.stats.gevals == 50*length(data)
+
+    res = Optimization.solve(prob, Optimisers.Adam(), callback = callback, epochs = 100)
 
     @test res.objective < 1e-4
 
