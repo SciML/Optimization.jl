@@ -644,9 +644,9 @@ version = "0.6.16"
 
 [[deps.DispatchDoctor]]
 deps = ["MacroTools", "Preferences"]
-git-tree-sha1 = "810cae95ca4db1c563be2d7d38fa9b7289d302db"
+git-tree-sha1 = "453df2ce2aef7de59c69a56d31dcd2ec3384dd77"
 uuid = "8d63f2c5-f18a-4cf2-ba9d-b3f60fc568c8"
-version = "0.4.16"
+version = "0.4.17"
 weakdeps = ["ChainRulesCore", "EnzymeCore"]
 
     [deps.DispatchDoctor.extensions]
@@ -2304,7 +2304,7 @@ version = "0.3.0"
 deps = ["LinearAlgebra", "MathOptInterface", "ModelingToolkit", "Optimization", "Reexport", "SciMLStructures", "SparseArrays", "SymbolicIndexingInterface", "Symbolics"]
 path = "../lib/OptimizationMOI"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
-version = "0.5.0"
+version = "0.5.1"
 
 [[deps.OptimizationManopt]]
 deps = ["LinearAlgebra", "ManifoldDiff", "Manifolds", "ManifoldsBase", "Manopt", "Optimization", "Reexport"]
