@@ -76,7 +76,7 @@ end
     using Optimization, OptimizationOptimisers, Lux, Zygote, MLUtils, Random,
           ComponentArrays
 
-    x = rand(10000)
+    x = rand(Float32, 10000)
     y = sin.(x)
     data = MLUtils.DataLoader((x, y), batchsize = 100)
 
@@ -99,13 +99,16 @@ end
     optf = OptimizationFunction(loss, AutoZygote())
     prob = OptimizationProblem(optf, ps_ca, data)
 
-    res = Optimization.solve(prob, Optimisers.Adam(), callback = callback, epochs = 10000)
+    res = Optimization.solve(prob, Optimisers.Adam(), epochs = 50)
 
     @test res.objective < 1e-4
-    @test res.stats.iterations == 10000*length(data)
-    @test res.stats.fevals == 10000*length(data)
-    @test res.stats.gevals == 10000*length(data)
+    @test res.stats.iterations == 50*length(data)
+    @test res.stats.fevals == 50*length(data)
+    @test res.stats.gevals == 50*length(data)
 
+    res = Optimization.solve(prob, Optimisers.Adam(), callback = callback, epochs = 100)
+
+    @test res.objective < 1e-4
 
     using MLDataDevices
     data = CPUDevice()(data)

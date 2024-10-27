@@ -79,8 +79,12 @@ function SciMLBase.__solve(cache::OptimizationCache{
     fevals = 0
     gevals = 0
     t0 = time()
+    breakall = false
     Optimization.@withprogress cache.progress name="Training" begin
         for epoch in 1:epochs
+            if breakall
+                break
+            end
             for (i, d) in enumerate(data)
                 if cache.f.fg !== nothing && dataiterate
                     x = cache.f.fg(G, θ, d)
@@ -111,10 +115,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
                     objective = x[1],
                     grad = G,
                     original = state)
-                cb_call = cache.callback(opt_state, x...)
-                if !(cb_call isa Bool)
+                breakall = cache.callback(opt_state, x...)
+                if !(breakall isa Bool)
                     error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the `solve` documentation for information.")
-                elseif cb_call
+                elseif breakall
                     break
                 end
                 msg = @sprintf("loss: %.3g", first(x)[1])
@@ -126,7 +130,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                         min_err = x
                         min_θ = copy(θ)
                     end
-                    if i == length(data)  #Last iter, revert to best.
+                    if i == length(data)*epochs  #Last iter, revert to best.
                         opt = min_opt
                         x = min_err
                         θ = min_θ
@@ -136,7 +140,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                             objective = x[1],
                             grad = G,
                             original = state)
-                        cache.callback(opt_state, x...)
+                        breakall = cache.callback(opt_state, x...)
                         break
                     end
                 end
