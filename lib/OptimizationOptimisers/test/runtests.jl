@@ -27,6 +27,9 @@ using Zygote
 
     sol = solve(prob, Optimisers.Adam(), maxiters = 1000)
     @test 10 * sol.objective < l1
+    @test sol.stats.iterations == 1000
+    @test sol.stats.fevals == 1000
+    @test sol.stats.gevals == 1000
 
     @testset "cache" begin
         objective(x, p) = (p[1] - x[1])^2
@@ -99,6 +102,10 @@ end
     res = Optimization.solve(prob, Optimisers.Adam(), callback = callback, epochs = 10000)
 
     @test res.objective < 1e-4
+    @test res.stats.iterations == 10000*length(data)
+    @test res.stats.fevals == 10000*length(data)
+    @test res.stats.gevals == 10000*length(data)
+
 
     using MLDataDevices
     data = CPUDevice()(data)

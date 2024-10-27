@@ -375,7 +375,7 @@ function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
         σ,
         μ) where {T}
     if evaluator.f.lag_h !== nothing
-        evaluator.f.lag_h(h, x, σ, μ)
+        evaluator.f.lag_h(h, x, σ, Vector(μ))
         return
     end
     if evaluator.f.hess === nothing

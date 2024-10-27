@@ -42,27 +42,27 @@ function SciMLBase.__solve(cache::OptimizationCache{
         P,
         C
 }
-    maxiters = if cache.solver_args.epochs === nothing
-        if cache.solver_args.maxiters === nothing
-            throw(ArgumentError("The number of epochs must be specified with either the epochs or maxiters kwarg."))
-        else
-            cache.solver_args.maxiters
-        end
-    else
-        cache.solver_args.epochs
-    end
-
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
-    if maxiters === nothing
-        throw(ArgumentError("The number of epochs must be specified as the epochs or maxiters kwarg."))
-    end
-
     if OptimizationBase.isa_dataiterator(cache.p)
         data = cache.p
         dataiterate = true
     else
         data = [cache.p]
         dataiterate = false
+    end
+
+    epochs = if cache.solver_args.epochs === nothing
+        if cache.solver_args.maxiters === nothing
+            throw(ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs*length(data)."))
+        else
+            cache.solver_args.maxiters / length(data)
+        end
+    else
+        cache.solver_args.epochs
+    end
+
+    epochs = Optimization._check_and_convert_maxiters(epochs)
+    if epochs === nothing
+        throw(ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs*length(data)."))
     end
 
     opt = cache.opt
@@ -75,21 +75,35 @@ function SciMLBase.__solve(cache::OptimizationCache{
     min_θ = cache.u0
 
     state = Optimisers.setup(opt, θ)
-
+    iterations = 0
+    fevals = 0
+    gevals = 0
     t0 = time()
     Optimization.@withprogress cache.progress name="Training" begin
-        for epoch in 1:maxiters
+        for epoch in 1:epochs
             for (i, d) in enumerate(data)
                 if cache.f.fg !== nothing && dataiterate
                     x = cache.f.fg(G, θ, d)
+                    iterations += 1
+                    fevals += 1
+                    gevals += 1
                 elseif dataiterate
                     cache.f.grad(G, θ, d)
                     x = cache.f(θ, d)
+                    iterations += 1
+                    fevals += 2
+                    gevals += 1
                 elseif cache.f.fg !== nothing
                     x = cache.f.fg(G, θ)
+                    iterations += 1
+                    fevals += 1
+                    gevals += 1
                 else
                     cache.f.grad(G, θ)
                     x = cache.f(θ)
+                    iterations += 1
+                    fevals += 2
+                    gevals += 1
                 end
                 opt_state = Optimization.OptimizationState(
                     iter = i + (epoch - 1) * length(data),
@@ -112,7 +126,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                         min_err = x
                         min_θ = copy(θ)
                     end
-                    if i == maxiters  #Last iter, revert to best.
+                    if i == length(data)  #Last iter, revert to best.
                         opt = min_opt
                         x = min_err
                         θ = min_θ
@@ -132,10 +146,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
     end
 
     t1 = time()
-    stats = Optimization.OptimizationStats(; iterations = maxiters,
-        time = t1 - t0, fevals = maxiters, gevals = maxiters)
+    stats = Optimization.OptimizationStats(; iterations,
+        time = t1 - t0, fevals, gevals)
     SciMLBase.build_solution(cache, cache.opt, θ, first(x)[1], stats = stats)
-    # here should be build_solution to create the output message
 end
 
 end
