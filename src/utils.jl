@@ -40,7 +40,7 @@ function _check_and_convert_maxiters(maxiters)
     if !(isnothing(maxiters)) && maxiters <= 0.0
         error("The number of maxiters has to be a non-negative and non-zero number.")
     elseif !(isnothing(maxiters))
-        return convert(Int, maxiters)
+        return convert(Int, round(maxiters))
     end
 end
 
