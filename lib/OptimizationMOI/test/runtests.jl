@@ -47,14 +47,14 @@ end
     @test (evaluator.f.cons_j !== nothing) || (evaluator.f.cons_jvp !== nothing)
     y = zeros(1)
     w = ones(2)
-    @test MathOptInterface.eval_constraint_jacobian_product(evaluator, y, x, w) isa Any
+    @test MathOptInterface.eval_constraint_jacobian_product(evaluator, y, x, w) === nothing
 
     # constraint jacobian-vector product
     @test (evaluator.f.cons_j !== nothing) || (evaluator.f.cons_vjp !== nothing)
     y = zeros(2)
     w = ones(1)
     @test MathOptInterface.eval_constraint_jacobian_transpose_product(
-        evaluator, y, x, w) isa Any
+        evaluator, y, x, w) === nothing
 end
 
 @testset "NLP" begin

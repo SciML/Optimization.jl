@@ -309,6 +309,7 @@ function MOI.eval_constraint_jacobian_product(
     else
         error("Thou shalt provide the v'J of the constraint jacobian, not doing so is associated with great misfortune and also no ice cream for you.")
     end
+    return nothing
 end
 
 function MOI.eval_constraint_jacobian_transpose_product(
@@ -326,6 +327,7 @@ function MOI.eval_constraint_jacobian_transpose_product(
     else
         error("Thou shalt provide the v'J of the constraint jacobian, not doing so is associated with great misfortune and also no ice cream for you.")
     end
+    return nothing
 end
 
 function MOI.hessian_lagrangian_structure(evaluator::MOIOptimizationNLPEvaluator)
