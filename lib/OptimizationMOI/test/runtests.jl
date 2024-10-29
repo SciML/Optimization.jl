@@ -2,6 +2,8 @@ using OptimizationMOI, Optimization, Ipopt, NLopt, Zygote, ModelingToolkit, Reve
 using AmplNLWriter, Ipopt_jll, Juniper, HiGHS
 using Test, SparseArrays
 
+import MathOptInterface
+
 function _test_sparse_derivatives_hs071(backend, optimizer)
     function objective(x, ::Any)
         return x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3]
@@ -27,6 +29,32 @@ function _test_sparse_derivatives_hs071(backend, optimizer)
     @test prod(sol.u) >= 25.0 - 1e-6
     @test isapprox(sum(sol.u .^ 2), 40.0; atol = 1e-6)
     return
+end
+
+@testset "Evaluator" begin
+    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+    x0 = zeros(2)
+    _p = [1.0, 100.0]
+    cons_circ = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
+    optprob = OptimizationFunction(
+        rosenbrock, Optimization.AutoZygote();
+        cons = cons_circ)
+    prob = OptimizationProblem(optprob, x0, _p, ucons = [Inf], lcons = [0.0])
+    evaluator = init(prob, Ipopt.Optimizer()).evaluator
+
+    x = prob.u0
+    # vector-constraint jacobian product
+    @test (evaluator.f.cons_j !== nothing) || (evaluator.f.cons_jvp !== nothing)
+    y = zeros(1)
+    w = ones(2)
+    @test MathOptInterface.eval_constraint_jacobian_product(evaluator, y, x, w) isa Any
+
+    # constraint jacobian-vector product
+    @test (evaluator.f.cons_j !== nothing) || (evaluator.f.cons_vjp !== nothing)
+    y = zeros(2)
+    w = ones(1)
+    @test MathOptInterface.eval_constraint_jacobian_transpose_product(
+        evaluator, y, x, w) isa Any
 end
 
 @testset "NLP" begin
