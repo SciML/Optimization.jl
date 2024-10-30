@@ -302,14 +302,14 @@ function MOI.eval_constraint_jacobian_product(
         evaluator::MOIOptimizationNLPEvaluator, y, x, w)
     if evaluator.f.cons_jvp !== nothing
         evaluator.f.cons_jvp(y, x, w)
-
     elseif evaluator.f.cons_j !== nothing
         J = evaluator.J
         evaluator.f.cons_j(J, x)
         mul!(y, J, w)
-        return
+    else
+        error("Thou shalt provide the v'J of the constraint jacobian, not doing so is associated with great misfortune and also no ice cream for you.")
     end
-    error("Thou shalt provide the v'J of the constraint jacobian, not doing so is associated with great misfortune and also no ice cream for you.")
+    return nothing
 end
 
 function MOI.eval_constraint_jacobian_transpose_product(
@@ -320,14 +320,14 @@ function MOI.eval_constraint_jacobian_transpose_product(
 )
     if evaluator.f.cons_vjp !== nothing
         evaluator.f.cons_vjp(y, x, w)
-
     elseif evaluator.f.cons_j !== nothing
         J = evaluator.J
         evaluator.f.cons_j(J, x)
         mul!(y, J', w)
-        return
+    else
+        error("Thou shalt provide the v'J of the constraint jacobian, not doing so is associated with great misfortune and also no ice cream for you.")
     end
-    error("Thou shalt provide the v'J of the constraint jacobian, not doing so is associated with great misfortune and also no ice cream for you.")
+    return nothing
 end
 
 function MOI.hessian_lagrangian_structure(evaluator::MOIOptimizationNLPEvaluator)
