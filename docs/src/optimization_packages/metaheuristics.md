@@ -105,19 +105,11 @@ npartitions = 100
 # reference points (Das and Dennis's method)
 weights = Metaheuristics.gen_ref_dirs(nobjectives, npartitions)
 
-# Choose the algorithm as required.
-alg1 = Metaheuristics.NSGA2()
-alg2 = Metaheuristics.NSGA3()
-alg3 = Metaheuristics.SPEA2()
-alg4 = Metaheuristics.CCMO(NSGA2(N=100, p_m=0.001))
-alg5 = Metaheuristics.MOEAD_DE(weights, options=Options(debug=false, iterations = 250))
-alg6 = Metaheuristics.SMS_EMOA()
-
-# Solve the problem
-sol1 = solve(prob, alg1; maxiters = 100, use_initial = true)
-sol2 = solve(prob, alg2; maxiters = 100, use_initial = true)
-sol3 = solve(prob, alg3; maxiters = 100, use_initial = true)
-sol4 = solve(prob, alg4)
-sol5 = solve(prob, alg5; maxiters = 100, use_initial = true)
-sol6 = solve(prob, alg6; maxiters = 100, use_initial = true)
+# Choose the algorithm and solve the problem
+sol1 = solve(prob, NSGA2(); maxiters = 100, use_initial = true)
+sol2 = solve(prob, NSGA3(); maxiters = 100, use_initial = true)
+sol3 = solve(prob, SPEA2(); maxiters = 100, use_initial = true)
+sol4 = solve(prob, CCMO(NSGA2(N=100, p_m=0.001)))
+sol5 = solve(prob, MOEAD_DE(weights, options=Options(debug=false, iterations = 250)); maxiters = 100, use_initial = true)
+sol6 = solve(prob, SMS_EMOA(); maxiters = 100, use_initial = true)
 ```
