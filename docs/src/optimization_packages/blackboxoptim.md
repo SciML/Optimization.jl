@@ -69,7 +69,7 @@ sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(), maxiters = 100000,
 ```
 
 ## Multi-objective optimization
-The optimizer for Multi-Objective Optimization is `BBO_borg_moea()`. Your objective function should return a tuple of the objective values and you should indicate the fitness scheme to be (typically) Pareto fitness and specify the number of objectives. Otherwise, the use is similar, here is an example:
+The optimizer for Multi-Objective Optimization is `BBO_borg_moea()`. Your objective function should return a vector of the objective values and you should indicate the fitness scheme to be (typically) Pareto fitness and specify the number of objectives. Otherwise, the use is similar, here is an example:
 
 ```@example MOO-BBO
 using OptimizationBBO, Optimization, BlackBoxOptim
