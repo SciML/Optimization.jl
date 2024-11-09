@@ -106,12 +106,12 @@ npartitions = 100
 weights = Metaheuristics.gen_ref_dirs(nobjectives, npartitions)
 
 # Choose the algorithm as required.
-alg1 = NSGA2()
-alg2 = NSGA3()
-alg3 = SPEA2()
-alg4 = CCMO(NSGA2(N=100, p_m=0.001))
-alg5 = MOEAD_DE(weights, options=Options(debug=false, iterations = 250))
-alg6 = SMS_EMOA()
+alg1 = Metaheuristics.NSGA2()
+alg2 = Metaheuristics.NSGA3()
+alg3 = Metaheuristics.SPEA2()
+alg4 = Metaheuristics.CCMO(NSGA2(N=100, p_m=0.001))
+alg5 = Metaheuristics.MOEAD_DE(weights, options=Options(debug=false, iterations = 250))
+alg6 = Metaheuristics.SMS_EMOA()
 
 # Solve the problem
 sol1 = solve(prob, alg1; maxiters = 100, use_initial = true)
