@@ -44,6 +44,7 @@ Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
 Metaheuristics = "bcdb8e00-2c21-11e9-3065-2b553b22f898"
+Evolutionary = "86b6b26d-c046-49b6-aa0b-5f0f74682bd6"
 
 [compat]
 AmplNLWriter = "1"
@@ -90,4 +91,5 @@ Tracker = ">= 0.2"
 Zygote = ">= 0.5"
 BlackBoxOptim = "0.6"
 Metaheuristics = "3"
+Evolutionary = "0.11"
 
