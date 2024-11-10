@@ -106,10 +106,10 @@ npartitions = 100
 weights = Metaheuristics.gen_ref_dirs(nobjectives, npartitions)
 
 # Choose the algorithm and solve the problem
-sol1 = solve(prob, NSGA2(); maxiters = 100, use_initial = true)
-sol2 = solve(prob, NSGA3(); maxiters = 100, use_initial = true)
-sol3 = solve(prob, SPEA2(); maxiters = 100, use_initial = true)
-sol4 = solve(prob, CCMO(NSGA2(N=100, p_m=0.001)))
-sol5 = solve(prob, MOEAD_DE(weights, options=Options(debug=false, iterations = 250)); maxiters = 100, use_initial = true)
-sol6 = solve(prob, SMS_EMOA(); maxiters = 100, use_initial = true)
+sol1 = solve(prob, Metaheuristics.NSGA2(); maxiters = 100, use_initial = true)
+sol2 = solve(prob, Metaheuristics.NSGA3(); maxiters = 100, use_initial = true)
+sol3 = solve(prob, Metaheuristics.SPEA2(); maxiters = 100, use_initial = true)
+sol4 = solve(prob, Metaheuristics.CCMO(NSGA2(N=100, p_m=0.001)))
+sol5 = solve(prob, Metaheuristics.MOEAD_DE(weights, options=Options(debug=false, iterations = 250)); maxiters = 100, use_initial = true)
+sol6 = solve(prob, Metaheuristics.SMS_EMOA(); maxiters = 100, use_initial = true)
 ```
