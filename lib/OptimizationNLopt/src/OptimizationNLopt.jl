@@ -44,7 +44,7 @@ function SciMLBase.requireshessian(opt::Union{NLopt.Algorithm, NLopt.Opt}) #http
         string(opt.algorithm)
     end
 
-    if str_opt[2] == 'N'
+    if str_opt[2] == 'N' || occursin('LD_LBFGS', str_opt) || occursin('LD_SLSQP', str_opt)
         return false
     else
         return true
