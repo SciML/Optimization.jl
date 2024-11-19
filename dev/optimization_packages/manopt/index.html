@@ -53,11 +53,11 @@ prob = OptimizationProblem(optf, U; manifold = M, maxiters = 1000)
 sol = Optimization.solve(
     prob, opt, sub_problem = (M, q, p, X) -&gt; closed_form_solution!(M, q, L, U, p, X))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Failure
 u: 5×5 Matrix{Float64}:
- 3.00076  2.00075  2.00055  2.00079  2.00065
- 2.00075  3.00075  2.00063  2.00082  2.00071
- 2.00055  2.00063  3.00051  2.00067  2.00055
- 2.00079  2.00082  2.00067  3.00095  2.00068
- 2.00065  2.00071  2.00055  2.00068  3.00052</code></pre><p>This example is based on the <a href="https://juliamanifolds.github.io/ManoptExamples.jl/stable/examples/Riemannian-mean/">example</a> in the Manopt and <a href="https://doi.org/10.1007/s10107-022-01840-5">Weber and Sra&#39;22</a>.</p><p>The following example is adapted from the Rayleigh Quotient example in ManoptExamples.jl. We solve the Rayleigh quotient problem on the Sphere manifold:</p><pre><code class="language-julia hljs">using Optimization, OptimizationManopt
+ 2.99999  2.00004  1.99986  1.99967  1.99994
+ 2.00004  3.00016  1.99992  1.99971  2.00003
+ 1.99986  1.99992  2.99979  1.99956  1.99985
+ 1.99967  1.99971  1.99956  2.99937  1.99967
+ 1.99994  2.00003  1.99985  1.99967  2.99984</code></pre><p>This example is based on the <a href="https://juliamanifolds.github.io/ManoptExamples.jl/stable/examples/Riemannian-mean/">example</a> in the Manopt and <a href="https://doi.org/10.1007/s10107-022-01840-5">Weber and Sra&#39;22</a>.</p><p>The following example is adapted from the Rayleigh Quotient example in ManoptExamples.jl. We solve the Rayleigh quotient problem on the Sphere manifold:</p><pre><code class="language-julia hljs">using Optimization, OptimizationManopt
 using Manifolds, LinearAlgebra
 using Manopt
 
@@ -74,24 +74,24 @@ prob = OptimizationProblem(optf, x0, manifold = manifold)
 
 sol = solve(prob, GradientDescentOptimizer())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Failure
 u: 1000-element Vector{Float64}:
- -0.013304686966795444
-  0.019677392368883818
-  0.054102102862140074
- -0.008695167075651596
- -0.027168914750768776
- -0.06779671069074027
- -0.006654059622183032
- -0.048373288544248674
-  0.024917970578943866
-  0.07971516698996385
+  0.016024472392845025
+  0.014763033394821243
+  0.04936347181896977
+  0.010893534745478009
+ -0.008179474391641269
+ -0.04944382343093034
+  0.015981034300590464
+  0.005249229822962184
+  0.004222843428039026
+ -0.018960294081004178
   ⋮
- -0.02682699784285902
- -0.04098637127411075
- -0.03360559063087841
-  0.03965665493250436
- -0.034276664005995716
- -0.006642133481697827
-  0.009255942039745705
-  0.014983145722722564
-  0.005351257600295365</code></pre><p>Let&#39;s check that this indeed corresponds to the minimum eigenvalue of the matrix <code>A</code>.</p><pre><code class="language-julia hljs">@show eigmin(A)
-@show sol.objective</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">-0.06223457030775065</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../gcmaes/">« GCMAES.jl</a><a class="docs-footer-nextpage" href="../mathoptinterface/">MathOptInterface.jl »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Monday 18 November 2024 07:34">Monday 18 November 2024</span>. Using Julia version 1.11.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ -0.010676949103916075
+  0.011535530885253192
+  0.01684714621448262
+  0.04643221832108764
+ -0.013477660542576193
+  0.04506053695498391
+  0.0707610510380012
+  0.05046031769374359
+  0.14954264872436648</code></pre><p>Let&#39;s check that this indeed corresponds to the minimum eigenvalue of the matrix <code>A</code>.</p><pre><code class="language-julia hljs">@show eigmin(A)
+@show sol.objective</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">-0.061991528123328005</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../gcmaes/">« GCMAES.jl</a><a class="docs-footer-nextpage" href="../mathoptinterface/">MathOptInterface.jl »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Tuesday 19 November 2024 20:27">Tuesday 19 November 2024</span>. Using Julia version 1.11.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
