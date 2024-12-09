@@ -1,7 +1,7 @@
 name = "OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.5"
+version = "0.3.6"
 
 [deps]
 Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
@@ -11,7 +11,7 @@ ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
-Optimisers = "0.2, 0.3"
+Optimisers = "0.2, 0.3, 0.4"
 Optimization = "4"
 ProgressLogging = "0.1"
 Reexport = "1.2"
