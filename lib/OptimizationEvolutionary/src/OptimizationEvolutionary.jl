@@ -57,15 +57,15 @@ function __map_optimizer_args(cache::OptimizationCache,
     end
 
     if !isnothing(maxtime)
-        mapped_args = (; mapped_args..., time_limit = maxtime)
+        mapped_args = (; mapped_args..., time_limit = Float64(maxtime))
     end
 
     if !isnothing(abstol)
-        mapped_args = (; mapped_args..., abstol = abstol)
+        mapped_args = (; mapped_args..., abstol = Float64(abstol))
     end
 
     if !isnothing(reltol)
-        mapped_args = (; mapped_args..., reltol = reltol)
+        mapped_args = (; mapped_args..., reltol = Float64(reltol))
     end
 
     return Evolutionary.Options(; mapped_args...)
