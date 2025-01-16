@@ -87,7 +87,7 @@ end
     smodel = StatefulLuxLayer{true}(model, nothing, st)
 
     function callback(state, l)
-        state.iter % 25 == 1 && @printf "Iteration: %5d, Loss: %.6e\n" state.iter l
+        state.iter % 25 == 1 && Printf.@printf "Iteration: %5d, Loss: %.6e\n" state.iter l
         return l < 1e-4
     end
 
