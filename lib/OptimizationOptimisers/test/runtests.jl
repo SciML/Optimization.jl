@@ -99,9 +99,9 @@ end
 
     res = Optimization.solve(prob, Optimisers.Adam(), epochs = 50)
 
-    @test res.stats.iterations == 50*length(data)
-    @test res.stats.fevals == 50*length(data)
-    @test res.stats.gevals == 50*length(data)
+    @test res.stats.iterations == 50 * length(data)
+    @test res.stats.fevals == 50 * length(data)
+    @test res.stats.gevals == 50 * length(data)
 
     res = Optimization.solve(prob, Optimisers.Adam(), callback = callback, epochs = 100)
 

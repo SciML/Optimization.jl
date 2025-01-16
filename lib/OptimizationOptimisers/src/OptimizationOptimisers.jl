@@ -130,7 +130,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                         min_err = x
                         min_θ = copy(θ)
                     end
-                    if iterations == length(data)*epochs  #Last iter, revert to best.
+                    if iterations == length(data) * epochs  #Last iter, revert to best.
                         opt = min_opt
                         x = min_err
                         θ = min_θ
