@@ -2415,7 +2415,7 @@ version = "0.3.0"
 deps = ["Evolutionary", "Optimization", "Reexport"]
 path = "../lib/OptimizationEvolutionary"
 uuid = "cb963754-43f6-435e-8d4b-99009ff27753"
-version = "0.4.0"
+version = "0.4.1"
 
 [[deps.OptimizationGCMAES]]
 deps = ["GCMAES", "Optimization", "Reexport"]
