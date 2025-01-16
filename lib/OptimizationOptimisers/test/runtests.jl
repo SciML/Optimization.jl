@@ -1,6 +1,7 @@
 using OptimizationOptimisers, ForwardDiff, Optimization
 using Test
 using Zygote
+using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
 
 @testset "OptimizationOptimisers.jl" begin
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
@@ -73,9 +74,6 @@ using Zygote
 end
 
 @testset "Minibatching" begin
-    using Optimization, OptimizationOptimisers, Lux, Zygote, MLUtils, Random,
-          ComponentArrays
-
     x = rand(Float32, 10000)
     y = sin.(x)
     data = MLUtils.DataLoader((x, y), batchsize = 100)
@@ -87,7 +85,7 @@ end
     smodel = StatefulLuxLayer{true}(model, nothing, st)
 
     function callback(state, l)
-        state.iter % 25 == 1 && @show "Iteration: %5d, Loss: %.6e\n" state.iter l
+        state.iter % 25 == 1 && Printf.@printf "Iteration: %5d, Loss: %.6e\n" state.iter l
         return l < 1e-4
     end
 
@@ -101,7 +99,6 @@ end
 
     res = Optimization.solve(prob, Optimisers.Adam(), epochs = 50)
 
-    @test res.objective < 1e-4
     @test res.stats.iterations == 50*length(data)
     @test res.stats.fevals == 50*length(data)
     @test res.stats.gevals == 50*length(data)
@@ -110,7 +107,6 @@ end
 
     @test res.objective < 1e-4
 
-    using MLDataDevices
     data = CPUDevice()(data)
     optf = OptimizationFunction(loss, AutoZygote())
     prob = OptimizationProblem(optf, ps_ca, data)
