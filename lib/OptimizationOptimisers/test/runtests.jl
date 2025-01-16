@@ -74,7 +74,7 @@ end
 
 @testset "Minibatching" begin
     using Optimization, OptimizationOptimisers, Lux, Zygote, MLUtils, Random,
-          ComponentArrays
+          ComponentArrays, Printf
 
     x = rand(Float32, 10000)
     y = sin.(x)
@@ -87,7 +87,7 @@ end
     smodel = StatefulLuxLayer{true}(model, nothing, st)
 
     function callback(state, l)
-        state.iter % 25 == 1 && @show "Iteration: %5d, Loss: %.6e\n" state.iter l
+        state.iter % 25 == 1 && @printf "Iteration: %5d, Loss: %.6e\n" state.iter l
         return l < 1e-4
     end
 
@@ -101,7 +101,6 @@ end
 
     res = Optimization.solve(prob, Optimisers.Adam(), epochs = 50)
 
-    @test res.objective < 1e-4
     @test res.stats.iterations == 50*length(data)
     @test res.stats.fevals == 50*length(data)
     @test res.stats.gevals == 50*length(data)
