@@ -1,6 +1,6 @@
 module OptimizationNLPModels
 
-using Reexport
+using Reexport, SparseArrays
 @reexport using NLPModels, Optimization, ADTypes
 
 """
@@ -21,9 +21,20 @@ function SciMLBase.OptimizationFunction(nlpmodel::AbstractNLPModel,
         cons(res, x, p) = NLPModels.cons!(nlpmodel, x, res)
         cons_j(J, x, p) = (J .= NLPModels.jac(nlpmodel, x))
         cons_jvp(Jv, v, x, p) = NLPModels.jprod!(nlpmodel, x, v, Jv)
+        function lag_h(h, θ, σ, λ)
+            H = NLPModels.hess(nlpmodel, θ, λ; obj_weight = σ)
+            k = 0
+            rows, cols, _ = findnz(H)
+            for (i, j) in zip(rows, cols)
+                if i <= j
+                    k += 1
+                    h[k] = H[i, j]
+                end
+            end
+        end
 
         return OptimizationFunction(
-            f, adtype; grad, hess, hv, cons, cons_j, cons_jvp, kwargs...)
+            f, adtype; grad, hess, hv, cons, cons_j, cons_jvp, lag_h, kwargs...)
     end
 
     return OptimizationFunction(f, adtype; grad, hess, hv, kwargs...)
