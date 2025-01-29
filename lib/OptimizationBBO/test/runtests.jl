@@ -68,8 +68,8 @@ using Test
 
             mof_1 = MultiObjectiveOptimizationFunction(multi_obj_func_1)
             prob_1 = Optimization.OptimizationProblem(mof_1, u0; lb = lb, ub = ub)
-            sol_1 = solve(prob_1, opt, NumDimensions = 2,
-                FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true))
+            sol_1 = solve(prob_1, opt, num_dimensions = 2,
+                fitness_scheme = ParetoFitnessScheme{2}(is_minimizing = true))
 
             @test sol_1 ≠ nothing
             println("Solution for Sphere and Rastrigin: ", sol_1)
@@ -88,8 +88,8 @@ using Test
 
             mof_2 = MultiObjectiveOptimizationFunction(multi_obj_func_2)
             prob_2 = Optimization.OptimizationProblem(mof_2, u0; lb = lb, ub = ub)
-            sol_2 = solve(prob_2, opt, NumDimensions = 2,
-                FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true))
+            sol_2 = solve(prob_2, opt, num_dimensions = 2,
+                fitness_scheme = ParetoFitnessScheme{2}(is_minimizing = true))
 
             @test sol_2 ≠ nothing
             println("Solution for Rosenbrock and Ackley: ", sol_2)
@@ -108,8 +108,8 @@ using Test
 
             mof_3 = MultiObjectiveOptimizationFunction(multi_obj_func_3)
             prob_3 = Optimization.OptimizationProblem(mof_3, u0; lb = lb, ub = ub)
-            sol_3 = solve(prob_3, opt, NumDimensions = 2,
-                FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true))
+            sol_3 = solve(prob_3, opt, num_dimensions = 2,
+                fitness_scheme = ParetoFitnessScheme{2}(is_minimizing = true))
 
             @test sol_3 ≠ nothing
             println("Solution for ZDT1: ", sol_3)
