@@ -73,7 +73,7 @@ also provides the Sophia optimisation algorithm.
         
           * `η = 0.001`
           * `β::Tuple = (0.9, 0.999)`
-  - [`Optimisers.RAdam`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.OAdam): **Optimistic Adam optimizer**
+  - [`Optimisers.OAdam`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.OAdam): **Optimistic Adam optimizer**
     
       + `solve(problem, OAdam(η, β::Tuple))`
     
