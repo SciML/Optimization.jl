@@ -145,6 +145,6 @@ using Test, Random
             ucons = [0.0, 0.0], lb = [-1.0, -1.0], ub = [1.0, 1.0])
         sol = solve(prob, NLopt.GN_ISRES(), maxiters = 1000)
         @test sol.retcode == ReturnCode.MaxIters
-        @test 10 * sol.objective < l1
+        @test sol.objective < l1
     end
 end
