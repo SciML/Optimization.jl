@@ -40,6 +40,14 @@ using Test, Random
     @test sol.retcode == ReturnCode.Success
     @test 10 * sol.objective < l1
 
+    # XTOL_REACHED
+    sol = solve(prob, NLopt.LD_LBFGS(), xtol_abs = 1e10)
+    @test sol.retcode == ReturnCode.Success
+
+    # STOPVAL_REACHED
+    sol = solve(prob, NLopt.LD_LBFGS(), stopval = 1e10)
+    @test sol.retcode == ReturnCode.Success
+
     prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
     sol = solve(prob, NLopt.LD_LBFGS())
     @test sol.retcode == ReturnCode.Success
@@ -79,7 +87,21 @@ using Test, Random
         @test sol.objective < 0.8
     end
 
+    @testset "MAXTIME_REACHED" begin
+        # without maxtime=... this will take time
+        n = 2000
+        A, b = rand(n, n), rand(n)
+        system(x, p) = sum((A * x - b) .^ 2)
+        x0 = zeros(n)
+        __p = Float64[]
+        optprob = OptimizationFunction((x, p) -> -system(x, p), Optimization.AutoZygote())
+        prob = OptimizationProblem(optprob, x0, __p; sense = Optimization.MaxSense)
+        sol = solve(prob, NLopt.Opt(:LD_LBFGS, n), maxtime = 1e-6)
+        @test sol.retcode == ReturnCode.MaxTime
+    end
+
     @testset "constrained" begin
+        Random.seed!(1)
         cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2 - 1.0]
         x0 = zeros(2)
         optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote();
@@ -108,13 +130,14 @@ using Test, Random
             res .= [x[1]^2 + x[2]^2 - 1.0, x[2] * sin(x[1]) - x[1] - 2.0]
         end
 
+        # FTOL_REACHED
         optprob = OptimizationFunction(
             rosenbrock, Optimization.AutoForwardDiff(); cons = con2_c)
         Random.seed!(1)
         prob = OptimizationProblem(
             optprob, rand(2), _p, lcons = [0.0, -Inf], ucons = [0.0, 0.0])
         sol = solve(prob, NLopt.LD_AUGLAG(), local_method = NLopt.LD_LBFGS())
-        # @test sol.retcode == ReturnCode.Success
+        @test sol.retcode == ReturnCode.Success
         @test 10 * sol.objective < l1
 
         Random.seed!(1)

@@ -100,8 +100,10 @@ function deduce_retcode(retcode::Symbol)
         return ReturnCode.Default
     elseif retcode == :Success || retcode == :EXACT_SOLUTION_LEFT ||
            retcode == :FLOATING_POINT_LIMIT || retcode == :true || retcode == :OPTIMAL ||
-           retcode == :LOCALLY_SOLVED || retcode == :ROUNDOFF_LIMITED || retcode == :SUCCESS ||
-           retcode == :STOPVAL_REACHED || retcode == :FTOL_REACHED || retcode == :XTOL_REACHED
+           retcode == :LOCALLY_SOLVED || retcode == :ROUNDOFF_LIMITED ||
+           retcode == :SUCCESS ||
+           retcode == :STOPVAL_REACHED || retcode == :FTOL_REACHED ||
+           retcode == :XTOL_REACHED
         return ReturnCode.Success
     elseif retcode == :Terminated
         return ReturnCode.Terminated
