@@ -21,10 +21,10 @@ function SciMLBase.OptimizationFunction(nlpmodel::AbstractNLPModel,
         cons(res, x, p) = NLPModels.cons!(nlpmodel, x, res)
         cons_j(J, x, p) = (J .= NLPModels.jac(nlpmodel, x))
         cons_jvp(Jv, v, x, p) = NLPModels.jprod!(nlpmodel, x, v, Jv)
-        function lag_h(h, θ, σ, λ)
+        function lag_h(h, θ, σ, λ, p)
             H = NLPModels.hess(nlpmodel, θ, λ; obj_weight = σ)
             k = 0
-            rows, cols, _ = findnz(H)
+            rows, cols, _ = findnz(H.data)
             for (i, j) in zip(rows, cols)
                 if i <= j
                     k += 1
