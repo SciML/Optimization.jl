@@ -15,7 +15,7 @@ ADTypes = "1.7"
 NLPModels = "0.21"
 Optimization = "4"
 Reexport = "1.2"
-SparseArrays = "1.11.0"
+SparseArrays = "1"
 julia = "1.9"
 
 [extras]
