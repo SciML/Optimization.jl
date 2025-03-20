@@ -104,8 +104,8 @@ result_neuralode = Optimization.solve(prob,
 
 prob2 = remake(prob, u0 = result_neuralode.u)
 result_neuralode2 = Optimization.solve(prob2,
-    BFGS(initial_stepnorm = 0.0001, allow_f_increases = true),
+    BFGS(initial_stepnorm = 0.0001),
     callback = callback,
-    maxiters = 300)
+    maxiters = 300, allow_f_increases = true)
 @test result_neuralode2.objective≈loss_neuralode(result_neuralode2.u)[1] rtol=1e-2
 @test result_neuralode2.objective < 10
