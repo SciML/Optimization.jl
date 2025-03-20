@@ -70,7 +70,7 @@ ode_data = Array(solve(prob_trueode, Tsit5(), saveat = tsteps))
 dudt2 = Lux.Chain(x -> x .^ 3,
     Lux.Dense(2, 50, tanh),
     Lux.Dense(50, 2))
-prob_neuralode = NeuralODE(dudt2, tspan, Tsit5(), saveat = tsteps)
+prob_neuralode = NeuralODE(dudt2, tspan, Tsit5(), saveat = tsteps, abstol = 1e-8, reltol = 1e-8)
 pp, st = Lux.setup(rng, dudt2)
 pp = ComponentArray(pp)
 
@@ -99,7 +99,7 @@ prob = Optimization.OptimizationProblem(optprob, pp)
 
 result_neuralode = Optimization.solve(prob,
     OptimizationOptimisers.ADAM(), callback = callback,
-    maxiters = 500)
+    maxiters = 1000)
 @test result_neuralode.objective≈loss_neuralode(result_neuralode.u)[1] rtol=1e-2
 
 prob2 = remake(prob, u0 = result_neuralode.u)
