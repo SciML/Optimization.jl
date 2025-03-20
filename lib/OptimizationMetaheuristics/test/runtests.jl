@@ -213,7 +213,7 @@ Random.seed!(42)
                     if (alg_name == "Metaheuristics.Algorithm{CCMO{NSGA2}}")
                         sol = solve(prob, alg)
                     else
-                        sol = solve(prob, alg; maxiters = 100, use_initial = true)
+                        sol = solve(prob, alg; maxiters = 1000, use_initial = true)
                     end
 
                     # Tests
