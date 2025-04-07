@@ -38,12 +38,13 @@ function __map_optimizer_args(cache::OptimizationCache,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         kwargs...)
-    if !isnothing(abstol)
-        @warn "common abstol is currently not used by $(opt)"
-    end
 
     mapped_args = (; extended_trace = true, kwargs...)
 
+    if !isnothing(abstol)
+        mapped_args = (; mapped_args..., f_abstol = abstol)
+    end
+    
     if !isnothing(callback)
         mapped_args = (; mapped_args..., callback = callback)
     end
@@ -72,7 +73,7 @@ function __map_optimizer_args(cache::OptimizationCache,
     end
 
     if !isnothing(reltol)
-        mapped_args = (; mapped_args..., f_tol = reltol)
+        mapped_args = (; mapped_args..., f_reltol = reltol)
     end
 
     return Optim.Options(; mapped_args...)
