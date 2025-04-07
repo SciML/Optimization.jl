@@ -42,7 +42,7 @@ function __map_optimizer_args(cache::OptimizationCache,
     mapped_args = (; extended_trace = true, kwargs...)
 
     if !isnothing(abstol)
-        mapped_args = (; mapped_args..., f_abstol = reltol)
+        mapped_args = (; mapped_args..., f_abstol = abstol)
     end
     
     if !isnothing(callback)
