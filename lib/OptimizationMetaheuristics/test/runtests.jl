@@ -115,17 +115,17 @@ Random.seed!(42)
         "Metaheuristics.Algorithm{CCMO{NSGA2}} for sphere" => [
             1.6659983952552437, 4.731690734657798],
         "Metaheuristics.Algorithm{MOEAD_DE} for sphere" => [
-            1.3118335977331483, 5.478715622895562],
+            0.989671094714782, 6.418963025927054],
         "Metaheuristics.Algorithm{SMS_EMOA} for sphere" => [
             0.5003293369817386, 7.837151299208113],
         "Metaheuristics.Algorithm{NSGA2} for rastrigin" => [0.0, 12.0],
         "Metaheuristics.Algorithm{NSGA3} for rastrigin" => [
-            9.754810555001253, 11.123569741993528],
+            7.597191334401674, 8.53603819834027],
         "Metaheuristics.Algorithm{SPEA2} for rastrigin" => [0.0, 12.0],
         "Metaheuristics.Algorithm{CCMO{NSGA2}} for rastrigin" => [
             2.600961284360525, 3.4282466721631755],
         "Metaheuristics.Algorithm{MOEAD_DE} for rastrigin" => [
-            2.4963842982482607, 10.377445766099369],
+            2.8812870528400936, 7.145617997943864],
         "Metaheuristics.Algorithm{SMS_EMOA} for rastrigin" => [0.0, 12.0],
         "Metaheuristics.Algorithm{NSGA2} for rosenbrock" => [
             17.500214034475118, 586.5039366722865],
@@ -136,19 +136,19 @@ Random.seed!(42)
         "Metaheuristics.Algorithm{CCMO{NSGA2}} for rosenbrock" => [
             2.600961284360525, 3.4282466721631755],
         "Metaheuristics.Algorithm{MOEAD_DE} for rosenbrock" => [
-            12.969698120217537, 642.4135236259822],
+            8.658481667869118, 644.4544222985385],
         "Metaheuristics.Algorithm{SMS_EMOA} for rosenbrock" => [
             61.6898556398449, 450.62433057243777],
         "Metaheuristics.Algorithm{NSGA2} for ackley" => [
             2.240787163704834, 5.990002878952371],
         "Metaheuristics.Algorithm{NSGA3} for ackley" => [
-            3.408535107623966, 5.459538604033934],
+            2.186720100012558, 6.125797156949968],
         "Metaheuristics.Algorithm{SPEA2} for ackley" => [
             4.440892098500626e-16, 6.593599079287213],
         "Metaheuristics.Algorithm{CCMO{NSGA2}} for ackley" => [
             2.600961284360525, 3.4282466721631755],
         "Metaheuristics.Algorithm{MOEAD_DE} for ackley" => [
-            4.440892098500626e-16, 6.593599079287213],
+            2.982885504039104, 5.052934325547806],
         "Metaheuristics.Algorithm{SMS_EMOA} for ackley" => [
             3.370770500897429, 5.510527199861947],
         "Metaheuristics.Algorithm{NSGA2} for dtlz2" => [
@@ -172,7 +172,7 @@ Random.seed!(42)
         "Metaheuristics.Algorithm{CCMO{NSGA2}} for schaffer_n2" => [
             3.632401400816196e-17, 4.9294679997494206e-17],
         "Metaheuristics.Algorithm{MOEAD_DE} for schaffer_n2" => [
-            2.50317097527324, 0.17460592430221922],
+            1.5886671796558842, 0.5469735282631156],
         "Metaheuristics.Algorithm{SMS_EMOA} for schaffer_n2" => [
             0.4978888767998813, 1.67543922644328]
     )
@@ -201,7 +201,7 @@ Random.seed!(42)
                 options = Options(debug = false, iterations = 250)),
             SMS_EMOA()
         ]
-
+        Random.seed!(42)
         # Run tests for each problem and algorithm
         for (prob_func, lb, ub) in problems
             prob_name = string(prob_func)
@@ -213,7 +213,7 @@ Random.seed!(42)
                     if (alg_name == "Metaheuristics.Algorithm{CCMO{NSGA2}}")
                         sol = solve(prob, alg)
                     else
-                        sol = solve(prob, alg; maxiters = 100, use_initial = true)
+                        sol = solve(prob, alg; maxiters = 10000, use_initial = true)
                     end
 
                     # Tests
