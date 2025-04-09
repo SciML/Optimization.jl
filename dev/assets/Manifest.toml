@@ -250,9 +250,9 @@ weakdeps = ["HTTP", "Sockets"]
 
 [[deps.BlockArrays]]
 deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra"]
-git-tree-sha1 = "c633e7cea8a6eb9bed5d67e8fb184df5789b82e6"
+git-tree-sha1 = "f29a91240c147f107a8f66eb9ae631358fab35c9"
 uuid = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
-version = "1.5.0"
+version = "1.6.0"
 
     [deps.BlockArrays.extensions]
     BlockArraysAdaptExt = "Adapt"
@@ -614,9 +614,9 @@ version = "6.167.2"
 
 [[deps.DiffEqCallbacks]]
 deps = ["ConcreteStructs", "DataStructures", "DiffEqBase", "DifferentiationInterface", "Functors", "LinearAlgebra", "Markdown", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArraysCore"]
-git-tree-sha1 = "c4966e57a993a181b6d613cf0d267c46fe49139d"
+git-tree-sha1 = "10481b5d8e046df5280cf081117c8058a7ce7376"
 uuid = "459566f4-90b8-5000-8ac3-15dfb0a30def"
-version = "4.3.0"
+version = "4.4.0"
 
 [[deps.DiffEqNoiseProcess]]
 deps = ["DiffEqBase", "Distributions", "GPUArraysCore", "LinearAlgebra", "Markdown", "Optim", "PoissonRandom", "QuadGK", "Random", "Random123", "RandomNumbers", "RecipesBase", "RecursiveArrayTools", "ResettableStacks", "SciMLBase", "StaticArraysCore", "Statistics"]
@@ -1379,9 +1379,9 @@ weakdeps = ["FastBroadcast"]
 
 [[deps.Juniper]]
 deps = ["Distributed", "JSON", "LinearAlgebra", "MathOptInterface", "MutableArithmetics", "Random", "Statistics"]
-git-tree-sha1 = "6a126e62fc507118f49dddd078bb1f04dbf7c1a7"
+git-tree-sha1 = "ff6d4e857df206763fbdee552a00bc88fd1b3dad"
 uuid = "2ddba703-00a4-53a7-87a5-e8b9971dde84"
-version = "0.9.2"
+version = "0.9.3"
 
 [[deps.KernelAbstractions]]
 deps = ["Adapt", "Atomix", "InteractiveUtils", "MacroTools", "PrecompileTools", "Requires", "StaticArrays", "UUIDs"]
@@ -2063,9 +2063,9 @@ version = "1.11.0"
 
 [[deps.ModelingToolkit]]
 deps = ["ADTypes", "AbstractTrees", "ArrayInterface", "BlockArrays", "Combinatorics", "CommonSolve", "Compat", "ConstructionBase", "DataStructures", "DiffEqBase", "DiffEqCallbacks", "DiffEqNoiseProcess", "DiffRules", "DifferentiationInterface", "Distributed", "Distributions", "DocStringExtensions", "DomainSets", "DynamicQuantities", "EnumX", "ExprTools", "FindFirstFunctions", "ForwardDiff", "FunctionWrappers", "FunctionWrappersWrappers", "Graphs", "InteractiveUtils", "JuliaFormatter", "JumpProcesses", "Latexify", "Libdl", "LinearAlgebra", "MLStyle", "Moshi", "NaNMath", "NonlinearSolve", "OffsetArrays", "OrderedCollections", "PrecompileTools", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SCCNonlinearSolve", "SciMLBase", "SciMLStructures", "Serialization", "Setfield", "SimpleNonlinearSolve", "SparseArrays", "SpecialFunctions", "StaticArrays", "SymbolicIndexingInterface", "SymbolicUtils", "Symbolics", "URIs", "UnPack", "Unitful"]
-git-tree-sha1 = "d26dd4b881a6c8097ceeb8421dbc90eb241ada4f"
+git-tree-sha1 = "378ca36cc938886760296eb61a0a996cf908fed8"
 uuid = "961ee093-0014-501f-94e3-6117800e7a78"
-version = "9.71.0"
+version = "9.72.0"
 
     [deps.ModelingToolkit.extensions]
     MTKBifurcationKitExt = "BifurcationKit"
@@ -3313,9 +3313,9 @@ version = "0.1.2"
 
 [[deps.SparseMatrixColorings]]
 deps = ["ADTypes", "DocStringExtensions", "LinearAlgebra", "Random", "SparseArrays"]
-git-tree-sha1 = "d59566cf03c67733edce6d80e0fb17e183ab31ba"
+git-tree-sha1 = "3abb70c9055dd01344fe2992b7909928ab60c1c5"
 uuid = "0a514795-09f3-496d-8182-132a7b665d35"
-version = "0.4.16"
+version = "0.4.17"
 
     [deps.SparseMatrixColorings.extensions]
     SparseMatrixColoringsCliqueTreesExt = "CliqueTrees"
@@ -3476,9 +3476,9 @@ version = "7.7.0+0"
 
 [[deps.SymbolicAnalysis]]
 deps = ["DSP", "DataStructures", "Dictionaries", "Distributions", "DomainSets", "IfElse", "LinearAlgebra", "LogExpFunctions", "Manifolds", "PDMats", "RecursiveArrayTools", "StatsBase", "SymbolicUtils", "Symbolics"]
-git-tree-sha1 = "64f26bb4a666bb97baa16f063164ade83ca29ec9"
+git-tree-sha1 = "81385471cdf41b5ffee0a74b5afca002cbdc2471"
 uuid = "4297ee4d-0239-47d8-ba5d-195ecdf594fe"
-version = "0.3.0"
+version = "0.3.1"
 
 [[deps.SymbolicIndexingInterface]]
 deps = ["Accessors", "ArrayInterface", "RuntimeGeneratedFunctions", "StaticArraysCore"]
@@ -3584,9 +3584,9 @@ version = "1.0.0"
 
 [[deps.ThreadingUtilities]]
 deps = ["ManualMemory"]
-git-tree-sha1 = "eda08f7e9818eb53661b3deb74e3159460dfbc27"
+git-tree-sha1 = "18ad3613e129312fe67789a71720c3747e598a61"
 uuid = "8290d209-cae3-49c0-8002-c8c24d57dab5"
-version = "0.5.2"
+version = "0.5.3"
 
 [[deps.TimerOutputs]]
 deps = ["ExprTools", "Printf"]
