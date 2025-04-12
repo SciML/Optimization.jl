@@ -59,9 +59,19 @@ function SciMLBase.__solve(cache::OptimizationCache{
     else
         cache.solver_args.epochs
     end
+    maxiters = if cache.solver_args.maxiters === nothing
+        if cache.solver_args.epochs === nothing
+            throw(ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs*length(data)."))
+        else
+            cache.solver_args.epochs * length(data)
+        end
+    else
+        cache.solver_args.maxiters
+    end
 
     epochs = Optimization._check_and_convert_maxiters(epochs)
-    if epochs === nothing
+    maxiters = Optimization._check_and_convert_maxiters(maxiters)
+    if epochs === nothing || maxiters === nothing
         throw(ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs*length(data)."))
     end
 
