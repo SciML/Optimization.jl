@@ -36,7 +36,7 @@ end
             include("AD_performance_regression.jl")
         end
         @safetestset "Optimization" begin
-            include("lbfgsb.jl")
+            include("native.jl")
         end
         @safetestset "Mini batching" begin
             include("minibatch.jl")

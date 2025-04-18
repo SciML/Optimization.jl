@@ -88,7 +88,7 @@ to add the specific wrapper packages.
     - Second order
     - Zeroth order
     - Box Constraints
-    - Constrained 🟡
+    - Constrained 
   - <strong>Global Methods</strong>
     - Zeroth order
     - Unconstrained
@@ -126,21 +126,21 @@ to add the specific wrapper packages.
     - Zeroth order
     - Unconstrained
     - Box Constraints
-    - Constrained 🟡
+    - Constrained 
 </details>
 <details>
   <summary><strong>NLopt</strong></summary>
   - <strong>Local Methods</strong>
     - First order
     - Zeroth order
-    - Second order 🟡
+    - Second order 
     - Box Constraints
-    - Local Constrained 🟡
+    - Local Constrained 
   - <strong>Global Methods</strong>
     - Zeroth order
     - First order
     - Unconstrained
-    - Constrained 🟡
+    - Constrained 
 </details>
 <details>
   <summary><strong>Optim</strong></summary>
@@ -158,21 +158,21 @@ to add the specific wrapper packages.
 <details>
   <summary><strong>PRIMA</strong></summary>
   - <strong>Local Methods</strong>
-    - Derivative-Free: ✅
+    - Derivative-Free: 
   - **Constraints**
-    - Box Constraints: ✅
-    - Local Constrained: ✅
+    - Box Constraints: 
+    - Local Constrained: 
 </details>
 <details>
   <summary><strong>QuadDIRECT</strong></summary>
   - **Constraints**
-    - Box Constraints: ✅
+    - Box Constraints: 
   - <strong>Global Methods</strong>
-    - Unconstrained: ✅
+    - Unconstrained: 
 </details>
 ```
 
-🟡 = supported in downstream library but not yet implemented in `Optimization.jl`; PR to add this functionality are welcome
+= supported in downstream library but not yet implemented in `Optimization.jl`; PR to add this functionality are welcome
 
 ## Citation
 

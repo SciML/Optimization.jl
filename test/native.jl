@@ -28,7 +28,7 @@ prob = OptimizationProblem(optf, x0, lcons = [1.0, -Inf],
 
 using MLUtils, OptimizationOptimisers
 
-x0 = -pi:0.001:pi
+x0 = (-pi):0.001:pi
 y0 = sin.(x0)
 data = MLUtils.DataLoader((x0, y0), batchsize = 100)
 function loss(coeffs, data)
@@ -44,12 +44,20 @@ end
 optf = OptimizationFunction(loss, AutoSparseForwardDiff(), cons = cons1)
 callback = (st, l) -> (@show l; return false)
 
-prob = OptimizationProblem(optf, rand(5), (x0, y0), lcons = [-0.5], ucons = [0.5], lb = [-10.0, -10.0, -10.0, -10.0, -10.0], ub = [10.0, 10.0, 10.0, 10.0, 10.0])
+initpars = rand(5)
+l0 = optf(initpars, (x0, y0))
+prob = OptimizationProblem(optf, initpars, (x0, y0), lcons = [-Inf], ucons = [0.5],
+    lb = [-10.0, -10.0, -10.0, -10.0, -10.0], ub = [10.0, 10.0, 10.0, 10.0, 10.0])
 opt1 = solve(prob, Optimization.LBFGS(), maxiters = 1000, callback = callback)
+@test opt1.objective < l0
 
-prob = OptimizationProblem(optf, rand(5), data, lcons = [0.0], ucons = [0.0], lb = [-10.0, -10.0, -10.0, -10.0, -10.0], ub = [10.0, 10.0, 10.0, 10.0, 10.0])
-opt = solve(prob, Optimization.AugLag(; inner = Adam()), maxiters = 500, callback = callback)
+prob = OptimizationProblem(optf, initpars, data, lcons = [-Inf], ucons = [1],
+    lb = [-10.0, -10.0, -10.0, -10.0, -10.0], ub = [10.0, 10.0, 10.0, 10.0, 10.0])
+opt = solve(
+    prob, Optimization.AugLag(; inner = Adam()), maxiters = 10000, callback = callback)
+@test opt.objective < l0
 
 optf1 = OptimizationFunction(loss, AutoSparseForwardDiff())
 prob1 = OptimizationProblem(optf1, rand(5), data)
 sol1 = solve(prob1, OptimizationOptimisers.Adam(), maxiters = 1000, callback = callback)
+@test sol1.objective < l0

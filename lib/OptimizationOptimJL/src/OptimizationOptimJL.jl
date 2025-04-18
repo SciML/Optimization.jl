@@ -38,13 +38,12 @@ function __map_optimizer_args(cache::OptimizationCache,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         kwargs...)
-
     mapped_args = (; extended_trace = true, kwargs...)
 
     if !isnothing(abstol)
         mapped_args = (; mapped_args..., f_abstol = abstol)
     end
-    
+
     if !isnothing(callback)
         mapped_args = (; mapped_args..., callback = callback)
     end
