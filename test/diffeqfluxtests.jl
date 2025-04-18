@@ -70,7 +70,8 @@ ode_data = Array(solve(prob_trueode, Tsit5(), saveat = tsteps))
 dudt2 = Lux.Chain(x -> x .^ 3,
     Lux.Dense(2, 50, tanh),
     Lux.Dense(50, 2))
-prob_neuralode = NeuralODE(dudt2, tspan, Tsit5(), saveat = tsteps, abstol = 1e-8, reltol = 1e-8)
+prob_neuralode = NeuralODE(
+    dudt2, tspan, Tsit5(), saveat = tsteps, abstol = 1e-8, reltol = 1e-8)
 pp, st = Lux.setup(rng, dudt2)
 pp = ComponentArray(pp)
 
