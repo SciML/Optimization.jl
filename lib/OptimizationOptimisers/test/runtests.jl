@@ -36,13 +36,18 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
         optprob = SciMLBase.OptimizationFunction(
             (u, data) -> sum(u) + sum(data), Optimization.AutoZygote())
         prob = SciMLBase.OptimizationProblem(optprob, ones(2), ones(2))
-        @test_throws ArgumentError solve(prob, Optimisers.Adam())
-        @test_throws ArgumentError solve(
+        @test_throws ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data).") solve(
+            prob, Optimisers.Adam())
+        @test_throws ArgumentError("Both maxiters and epochs were passed but maxiters != epochs * length(data).") solve(
             prob, Optimisers.Adam(), epochs = 2, maxiters = 2)
-        @test solve(prob, Optimisers.Adam(), epochs = 2)
-        @test solve(prob, Optimisers.Adam(), maxiters = 2)
-        @test solve(prob, Optimisers.Adam(), epochs = 2, maxiters = 4)
-        @test_throws AssertionError solve(prob, Optimisers.Adam(), maxiters = 3)
+        sol = solve(prob, Optimisers.Adam(), epochs = 2)
+        @test sol.stats.iterations == 4
+        sol = solve(prob, Optimisers.Adam(), maxiters = 2)
+        @test sol.stats.iterations == 2
+        sol = solve(prob, Optimisers.Adam(), epochs = 2, maxiters = 4)
+        @test sol.stats.iterations == 4
+        @test_throws AssertionError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data).") solve(
+            prob, Optimisers.Adam(), maxiters = 3)
     end
 
     @testset "cache" begin
