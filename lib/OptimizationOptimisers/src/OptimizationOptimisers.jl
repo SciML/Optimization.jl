@@ -50,30 +50,20 @@ function SciMLBase.__solve(cache::OptimizationCache{
         dataiterate = false
     end
 
-    epochs = if cache.solver_args.epochs === nothing
-        if cache.solver_args.maxiters === nothing
-            throw(ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs*length(data)."))
-        else
-            cache.solver_args.maxiters / length(data)
-        end
-    else
-        cache.solver_args.epochs
+    epochs, maxiters = if isnothing(cache.solver_args.maxiters) ==
+                          isnothing(cache.solver_args.epochs)
+        # both of them are `nothing` or have a value
+        throw(ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data)."))
+    elseif isnothing(cache.solver_args.maxiters)
+        cache.solver_args.epochs, cache.solver_args.epochs * length(data)
+    elseif isnothing(cache.solver_args.epochs)
+        cache.solver_args.maxiters / length(data), cache.solver_args.maxiters
     end
-    maxiters = if cache.solver_args.maxiters === nothing
-        if cache.solver_args.epochs === nothing
-            throw(ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs*length(data)."))
-        else
-            cache.solver_args.epochs * length(data)
-        end
-    else
-        cache.solver_args.maxiters
-    end
-
     epochs = Optimization._check_and_convert_maxiters(epochs)
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
-    if epochs === nothing || maxiters === nothing
-        throw(ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs*length(data)."))
-    end
+
+    # At this point, both of them should be fine; but, let's assert it.
+    @assert (isnothing(epochs)||isnothing(maxiters) || (maxiters != epochs * length(data))) "The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data)."
 
     opt = cache.opt
     θ = copy(cache.u0)
