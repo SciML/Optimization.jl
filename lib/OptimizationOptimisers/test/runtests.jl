@@ -32,6 +32,19 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
     @test sol.stats.fevals == 1000
     @test sol.stats.gevals == 1000
 
+    @testset "epochs & maxiters" begin
+        optprob = SciMLBase.OptimizationFunction(
+            (u, data) -> sum(u) + sum(data), Optimization.AutoZygote())
+        prob = SciMLBase.OptimizationProblem(optprob, ones(2), ones(2))
+        @test_throws ArgumentError solve(prob, Optimisers.Adam())
+        @test_throws ArgumentError solve(
+            prob, Optimisers.Adam(), epochs = 2, maxiters = 2)
+        @test solve(prob, Optimisers.Adam(), epochs = 2)
+        @test solve(prob, Optimisers.Adam(), maxiters = 2)
+        @test solve(prob, Optimisers.Adam(), epochs = 2, maxiters = 4)
+        @test_throws AssertionError solve(prob, Optimisers.Adam(), maxiters = 3)
+    end
+
     @testset "cache" begin
         objective(x, p) = (p[1] - x[1])^2
         x0 = zeros(1)
