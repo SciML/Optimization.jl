@@ -9,11 +9,13 @@ SciMLBase.requiresgradient(opt::AbstractRule) = true
 SciMLBase.allowsfg(opt::AbstractRule) = true
 
 function SciMLBase.__init(
-        prob::SciMLBase.OptimizationProblem, opt::AbstractRule; save_best = true,
-        callback = (args...) -> (false), epochs = nothing,
-        progress = false, kwargs...)
-    return OptimizationCache(prob, opt; save_best, callback, progress, epochs,
-        kwargs...)
+        prob::SciMLBase.OptimizationProblem, opt::AbstractRule;
+        callback = (args...) -> (false),
+        epochs::Union{Number, Nothing} = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        save_best::Bool = true, progress::Bool = false, kwargs...)
+    return OptimizationCache(prob, opt; callback, epochs, maxiters,
+        save_best, progress, kwargs...)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
@@ -50,20 +52,27 @@ function SciMLBase.__solve(cache::OptimizationCache{
         dataiterate = false
     end
 
-    epochs = if cache.solver_args.epochs === nothing
-        if cache.solver_args.maxiters === nothing
-            throw(ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs*length(data)."))
+    epochs, maxiters = if isnothing(cache.solver_args.maxiters) &&
+                          isnothing(cache.solver_args.epochs)
+        throw(ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data)."))
+    elseif !isnothing(cache.solver_args.maxiters) &&
+           !isnothing(cache.solver_args.epochs)
+        if cache.solver_args.maxiters == cache.solver_args.epochs * length(data)
+            cache.solver_args.epochs, cache.solver_args.maxiters
         else
-            cache.solver_args.maxiters / length(data)
+            throw(ArgumentError("Both maxiters and epochs were passed but maxiters != epochs * length(data)."))
         end
-    else
-        cache.solver_args.epochs
+    elseif isnothing(cache.solver_args.maxiters)
+        cache.solver_args.epochs, cache.solver_args.epochs * length(data)
+    elseif isnothing(cache.solver_args.epochs)
+        cache.solver_args.maxiters / length(data), cache.solver_args.maxiters
     end
-
     epochs = Optimization._check_and_convert_maxiters(epochs)
-    if epochs === nothing
-        throw(ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs*length(data)."))
-    end
+    maxiters = Optimization._check_and_convert_maxiters(maxiters)
+
+    # At this point, both of them should be fine; but, let's assert it.
+    @assert (!isnothing(epochs)&&!isnothing(maxiters) &&
+             (maxiters == epochs * length(data))) "The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data)."
 
     opt = cache.opt
     θ = copy(cache.u0)
