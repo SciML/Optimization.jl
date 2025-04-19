@@ -52,10 +52,16 @@ function SciMLBase.__solve(cache::OptimizationCache{
         dataiterate = false
     end
 
-    epochs, maxiters = if isnothing(cache.solver_args.maxiters) ==
+    epochs, maxiters = if isnothing(cache.solver_args.maxiters) &&
                           isnothing(cache.solver_args.epochs)
-        # both of them are `nothing` or have a value
         throw(ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data)."))
+    elseif !isnothing(cache.solver_args.maxiters) &&
+           !isnothing(cache.solver_args.epochs)
+        if cache.solver_args.maxiters == cache.solver_args.epochs * length(data)
+            cache.solver_args.epochs, cache.solver_args.maxiters
+        else
+            throw(ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data)."))
+        end
     elseif isnothing(cache.solver_args.maxiters)
         cache.solver_args.epochs, cache.solver_args.epochs * length(data)
     elseif isnothing(cache.solver_args.epochs)
