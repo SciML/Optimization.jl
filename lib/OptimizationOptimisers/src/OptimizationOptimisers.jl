@@ -9,11 +9,13 @@ SciMLBase.requiresgradient(opt::AbstractRule) = true
 SciMLBase.allowsfg(opt::AbstractRule) = true
 
 function SciMLBase.__init(
-        prob::SciMLBase.OptimizationProblem, opt::AbstractRule; save_best = true,
-        callback = (args...) -> (false), epochs = nothing,
-        progress = false, kwargs...)
-    return OptimizationCache(prob, opt; save_best, callback, progress, epochs,
-        kwargs...)
+        prob::SciMLBase.OptimizationProblem, opt::AbstractRule;
+        callback = (args...) -> (false),
+        epochs::Union{Number, Nothing} = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        save_best::Bool = true, progress::Bool = false, kwargs...)
+    return OptimizationCache(prob, opt; callback, epochs, maxiters,
+        save_best, progress, kwargs...)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
