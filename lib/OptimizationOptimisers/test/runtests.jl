@@ -35,7 +35,8 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
     @testset "epochs & maxiters" begin
         optprob = SciMLBase.OptimizationFunction(
             (u, data) -> sum(u) + sum(data), Optimization.AutoZygote())
-        prob = SciMLBase.OptimizationProblem(optprob, ones(2), ones(2))
+        prob = SciMLBase.OptimizationProblem(
+            optprob, ones(2), MLUtils.DataLoader(ones(2, 2)))
         @test_throws ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data).") solve(
             prob, Optimisers.Adam())
         @test_throws ArgumentError("Both maxiters and epochs were passed but maxiters != epochs * length(data).") solve(

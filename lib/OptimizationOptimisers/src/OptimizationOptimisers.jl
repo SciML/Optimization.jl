@@ -71,7 +71,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
 
     # At this point, both of them should be fine; but, let's assert it.
-    @assert (isnothing(epochs)||isnothing(maxiters) || (maxiters != epochs * length(data))) "The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data)."
+    @assert (!isnothing(epochs)&&!isnothing(maxiters) &&
+             (maxiters == epochs * length(data))) "The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data)."
 
     opt = cache.opt
     θ = copy(cache.u0)
