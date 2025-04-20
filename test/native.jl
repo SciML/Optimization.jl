@@ -30,7 +30,7 @@ using MLUtils, OptimizationOptimisers
 
 x0 = (-pi):0.001:pi
 y0 = sin.(x0)
-data = MLUtils.DataLoader((x0, y0), batchsize = 100)
+data = MLUtils.DataLoader((x0, y0), batchsize = 126)
 function loss(coeffs, data)
     ypred = [evalpoly(data[1][i], coeffs) for i in eachindex(data[1])]
     return sum(abs2, ypred .- data[2])
