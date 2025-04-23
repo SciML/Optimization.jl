@@ -83,6 +83,13 @@ function __map_optimizer_args(prob::Optimization.OptimizationCache, opt::BBO;
     return mapped_args
 end
 
+# single objective
+map_objective(obj) = obj
+# multiobjective
+function map_objective(obj::BlackBoxOptim.IndexedTupleFitness)
+    obj.orig
+end
+
 function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         F,
         RC,
@@ -117,12 +124,13 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         else
             n_steps = BlackBoxOptim.num_steps(trace)
             curr_u = decompose_trace(trace, cache.progress)
+            objective = map_objective(BlackBoxOptim.best_fitness(trace))
             opt_state = Optimization.OptimizationState(;
                 iter = n_steps,
                 u = curr_u,
-                objective = x[1],
+                objective,
                 original = trace)
-            cb_call = cache.callback(opt_state, x...)
+            cb_call = cache.callback(opt_state, objective)
         end
 
         if !(cb_call isa Bool)
