@@ -158,8 +158,6 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
 
     opt_setup = BlackBoxOptim.bbsetup(_loss; opt_args...)
 
-    t0 = time()
-
     if isnothing(cache.u0)
         opt_res = BlackBoxOptim.bboptimize(opt_setup)
     else
@@ -171,13 +169,11 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         Base.@logmsg(Base.LogLevel(-1), "", progress=1, _id=:OptimizationBBO)
     end
 
-    t1 = time()
-
     # Use the improved convert function
     opt_ret = Optimization.deduce_retcode(opt_res.stop_reason)
     stats = Optimization.OptimizationStats(;
         iterations = opt_res.iterations,
-        time = t1 - t0,
+        time = opt_res.elapsed_time,
         fevals = opt_res.f_calls)
     SciMLBase.build_solution(cache, cache.opt,
         BlackBoxOptim.best_candidate(opt_res),
