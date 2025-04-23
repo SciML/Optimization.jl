@@ -27,12 +27,14 @@ using Test
 
     fitness_progress_history = []
     function cb(state, fitness)
-        push!(fitness_progress_history, [state.u, fitness])
+        push!(fitness_progress_history, [deepcopy(state), fitness])
         return false
     end
     sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(), callback = cb)
     # println(fitness_progress_history)
     @test !isempty(fitness_progress_history)
+    fp1 = fitness_progress_history[1]
+    @test BlackBoxOptim.best_fitness(fp1[1].original) == fp1[1].objective == fp1[2]
 
     @test_logs begin
         (Base.LogLevel(-1), "loss: 0.0")
@@ -70,6 +72,34 @@ using Test
             prob_1 = Optimization.OptimizationProblem(mof_1, u0; lb = lb, ub = ub)
             sol_1 = solve(prob_1, opt, NumDimensions = 2,
                 FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true))
+
+            @test sol_1 ≠ nothing
+            println("Solution for Sphere and Rastrigin: ", sol_1)
+            @test sol_1.objective[1]≈6.9905986e-18 atol=1e-3
+            @test sol_1.objective[2]≈1.7763568e-15 atol=1e-3
+        end
+
+        @testset "Sphere and Rastrigin Functions with callback" begin
+            function multi_obj_func_1(x, p)
+                f1 = sum(x .^ 2)  # Sphere function
+                f2 = sum(x .^ 2 .- 10 .* cos.(2π .* x) .+ 10)  # Rastrigin function
+                return (f1, f2)
+            end
+
+            fitness_progress_history = []
+            function cb(state, fitness)
+                push!(fitness_progress_history, deepcopy(state))
+                return false
+            end
+
+            mof_1 = MultiObjectiveOptimizationFunction(multi_obj_func_1)
+            prob_1 = Optimization.OptimizationProblem(mof_1, u0; lb = lb, ub = ub)
+            sol_1 = solve(prob_1, opt, NumDimensions = 2,
+                FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true), callback=cb)
+
+            fp1 = fitness_progress_history[1]
+            @test BlackBoxOptim.best_fitness(fp1.original).orig == fp1.objective
+            @test length(fp1.objective) == 2
 
             @test sol_1 ≠ nothing
             println("Solution for Sphere and Rastrigin: ", sol_1)
