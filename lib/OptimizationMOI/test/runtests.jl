@@ -88,6 +88,10 @@ end
     sol = solve(prob, opt) #test reuse of optimizer
     @test 10 * sol.objective < l1
 
+    # test stats
+    @test sol.stats.time > 0
+    @test sol.stats.iterations > 0
+
     sol = solve(prob,
         OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
             "max_cpu_time" => 60.0))
