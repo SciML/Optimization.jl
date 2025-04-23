@@ -116,7 +116,6 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         P,
         C
 }
-    local x, cur, state
 
     function _cb(trace)
         if cache.callback === Optimization.DEFAULT_CALLBACK
@@ -147,13 +146,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     _loss = function (θ)
-        if isa(cache.f, MultiObjectiveOptimizationFunction)
-            x = (cache.f(θ, cache.p),)
-            return x[1]
-        else
-            x = cache.f(θ, cache.p)
-            return first(x)
-        end
+        cache.f(θ, cache.p)
     end
 
     opt_args = __map_optimizer_args(cache, cache.opt;
