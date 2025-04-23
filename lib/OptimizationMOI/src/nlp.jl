@@ -559,7 +559,8 @@ function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
         minimum = NaN
         opt_ret = SciMLBase.ReturnCode.Default
     end
-    stats = Optimization.OptimizationStats()
+    stats = Optimization.OptimizationStats(time = MOI.get(opt_setup, MOI.SolveTimeSec()),
+        iterations = MOI.get(opt_setup, MOI.BarrierIterations()))
     return SciMLBase.build_solution(cache,
         cache.opt,
         minimizer,
