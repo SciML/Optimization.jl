@@ -559,8 +559,19 @@ function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
         minimum = NaN
         opt_ret = SciMLBase.ReturnCode.Default
     end
-    stats = Optimization.OptimizationStats(time = MOI.get(opt_setup, MOI.SolveTimeSec()),
-        iterations = MOI.get(opt_setup, MOI.BarrierIterations()))
+
+    # check if the solver supports BarrierIterations
+    iterations = try
+        MOI.get(opt_setup, MOI.BarrierIterations())
+    catch e
+        if !(e isa MOI.GetAttributeNotAllowed)
+            rethrow(e)
+        end
+        0
+    end
+
+    stats = Optimization.OptimizationStats(; time = MOI.get(opt_setup, MOI.SolveTimeSec()),
+        iterations)
     return SciMLBase.build_solution(cache,
         cache.opt,
         minimizer,
