@@ -26,15 +26,20 @@ using Test
     @test 10 * sol.objective < l1
 
     fitness_progress_history = []
+    fitness_progress_history_orig = []
+    loss_history = []
     function cb(state, fitness)
-        push!(fitness_progress_history, [deepcopy(state), fitness])
+        push!(fitness_progress_history, state.objective)
+        push!(fitness_progress_history_orig, BlackBoxOptim.best_fitness(state.original))
+        push!(loss_history, fitness)
         return false
     end
     sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(), callback = cb)
     # println(fitness_progress_history)
     @test !isempty(fitness_progress_history)
     fp1 = fitness_progress_history[1]
-    @test BlackBoxOptim.best_fitness(fp1[1].original) == fp1[1].objective == fp1[2]
+    fp2 = fitness_progress_history_orig[1]
+    @test fp2 == fp1 == loss_history[1]
 
     @test_logs begin
         (Base.LogLevel(-1), "loss: 0.0")
@@ -87,19 +92,23 @@ using Test
             end
 
             fitness_progress_history = []
+            fitness_progress_history_orig = []
             function cb(state, fitness)
-                push!(fitness_progress_history, deepcopy(state))
+                push!(fitness_progress_history, state.objective)
+                push!(fitness_progress_history_orig, BlackBoxOptim.best_fitness(state.original))
                 return false
             end
 
             mof_1 = MultiObjectiveOptimizationFunction(multi_obj_func_1)
             prob_1 = Optimization.OptimizationProblem(mof_1, u0; lb = lb, ub = ub)
             sol_1 = solve(prob_1, opt, NumDimensions = 2,
-                FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true), callback=cb)
+                FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true),
+                callback=cb)
 
             fp1 = fitness_progress_history[1]
-            @test BlackBoxOptim.best_fitness(fp1.original).orig == fp1.objective
-            @test length(fp1.objective) == 2
+            fp2 = fitness_progress_history_orig[1]
+            @test fp2.orig == fp1
+            @test length(fp1) == 2
 
             @test sol_1 ≠ nothing
             println("Solution for Sphere and Rastrigin: ", sol_1)
