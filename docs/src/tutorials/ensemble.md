@@ -21,7 +21,7 @@ prob = OptimizationProblem(optf, x0, [1.0, 100.0])
 
 x0s = [x0, x0 .+ rand(2), x0 .+ rand(2), x0 .+ rand(2)]
 function prob_func(prob, i, repeat)
-    remake(prob, u0 = x0s)
+    remake(prob, u0 = x0s[1])
 end
 
 ensembleprob = Optimization.EnsembleProblem(prob; prob_func)
