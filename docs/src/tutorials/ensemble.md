@@ -19,9 +19,12 @@ prob = OptimizationProblem(optf, x0, [1.0, 100.0])
 
 @show sol1.objective
 
-ensembleprob = Optimization.EnsembleProblem(
-    prob, [x0, x0 .+ rand(2), x0 .+ rand(2), x0 .+ rand(2)])
+x0s = [x0, x0 .+ rand(2), x0 .+ rand(2), x0 .+ rand(2)]
+function prob_func(prob, i, repeat)
+    remake(prob, u0 = x0s[1])
+end
 
+ensembleprob = Optimization.EnsembleProblem(prob; prob_func)
 @time sol = Optimization.solve(ensembleprob, OptimizationOptimJL.BFGS(),
     EnsembleThreads(), trajectories = 4, maxiters = 5)
 @show findmin(i -> sol[i].objective, 1:4)[1]
