@@ -116,7 +116,6 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         P,
         C
 }
-
     function _cb(trace)
         if cache.callback === Optimization.DEFAULT_CALLBACK
             cb_call = false

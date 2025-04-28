@@ -95,7 +95,8 @@ using Test
             fitness_progress_history_orig = []
             function cb(state, fitness)
                 push!(fitness_progress_history, state.objective)
-                push!(fitness_progress_history_orig, BlackBoxOptim.best_fitness(state.original))
+                push!(fitness_progress_history_orig,
+                    BlackBoxOptim.best_fitness(state.original))
                 return false
             end
 
@@ -103,7 +104,7 @@ using Test
             prob_1 = Optimization.OptimizationProblem(mof_1, u0; lb = lb, ub = ub)
             sol_1 = solve(prob_1, opt, NumDimensions = 2,
                 FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true),
-                callback=cb)
+                callback = cb)
 
             fp1 = fitness_progress_history[1]
             fp2 = fitness_progress_history_orig[1]
