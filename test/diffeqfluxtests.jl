@@ -1,4 +1,4 @@
-using OrdinaryDiffEq, DiffEqFlux, Lux, Optimization, OptimizationOptimJL,
+using OrdinaryDiffEqTsit5, DiffEqFlux, Lux, Optimization, OptimizationOptimJL,
       OptimizationOptimisers, ForwardDiff, ComponentArrays, Random
 rng = Random.default_rng()
 Random.seed!(123)

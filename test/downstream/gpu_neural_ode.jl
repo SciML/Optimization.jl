@@ -1,4 +1,4 @@
-using DiffEqFlux, OrdinaryDiffEq, Flux, CUDA
+using DiffEqFlux, OrdinaryDiffEqTsit5, Flux, CUDA
 CUDA.allowscalar(false) # Makes sure no slow operations are occurring
 
 # Generate Data
