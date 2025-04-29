@@ -67,7 +67,7 @@ function call_manopt_optimizer(
         x0;
         stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
         evaluation::AbstractEvaluationType = Manopt.AllocatingEvaluation(),
-        stepsize::Stepsize = ArmijoLinesearchStepsize(M),
+        stepsize::Stepsize = default_stepsize(M, GradientDescentState),
         kwargs...)
     opts = gradient_descent(M,
         loss,
@@ -111,7 +111,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         x0;
         stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
         evaluation::AbstractEvaluationType = InplaceEvaluation(),
-        stepsize::Stepsize = ArmijoLinesearch(M),
+        stepsize::Stepsize = default_stepsize(M, ConjugateGradientDescentState),
         kwargs...)
     opts = conjugate_gradient_descent(M,
         loss,
@@ -308,7 +308,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
         evaluation::AbstractEvaluationType = InplaceEvaluation(),
         retraction_method::AbstractRetractionMethod = default_retraction_method(M),
-        stepsize::Stepsize = DecreasingLength(; length = 2.0, shift = 2),
+        stepsize::Stepsize = default_stepsize(M, FrankWolfeState),
         kwargs...)
     opt = Frank_Wolfe_method(M,
         loss,

@@ -33,7 +33,9 @@ end
     x0 = zeros(2)
     p = [1.0, 100.0]
 
-    stepsize = Manopt.ArmijoLinesearch()
+    stepsize = default_stepsize(
+        R2, GradientDescentState
+    )
     opt = OptimizationManopt.GradientDescentOptimizer()
 
     optprob_forwarddiff = OptimizationFunction(rosenbrock, Optimization.AutoEnzyme())
@@ -65,13 +67,12 @@ end
     x0 = zeros(2)
     p = [1.0, 100.0]
 
-    stepsize = Manopt.ArmijoLinesearch(R2)
     opt = OptimizationManopt.ConjugateGradientDescentOptimizer()
 
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
     prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
-    sol = Optimization.solve(prob, opt, stepsize = stepsize)
+    sol = Optimization.solve(prob, opt)
     @test sol.minimum < 0.5
 end
 
