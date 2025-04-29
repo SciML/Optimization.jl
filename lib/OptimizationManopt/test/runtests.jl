@@ -33,7 +33,7 @@ end
     x0 = zeros(2)
     p = [1.0, 100.0]
 
-    stepsize = Manopt.ArmijoLinesearch(R2)
+    stepsize = Manopt.ArmijoLinesearch()
     opt = OptimizationManopt.GradientDescentOptimizer()
 
     optprob_forwarddiff = OptimizationFunction(rosenbrock, Optimization.AutoEnzyme())
