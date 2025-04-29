@@ -26,13 +26,20 @@ using Test
     @test 10 * sol.objective < l1
 
     fitness_progress_history = []
+    fitness_progress_history_orig = []
+    loss_history = []
     function cb(state, fitness)
-        push!(fitness_progress_history, [state.u, fitness])
+        push!(fitness_progress_history, state.objective)
+        push!(fitness_progress_history_orig, BlackBoxOptim.best_fitness(state.original))
+        push!(loss_history, fitness)
         return false
     end
     sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(), callback = cb)
     # println(fitness_progress_history)
     @test !isempty(fitness_progress_history)
+    fp1 = fitness_progress_history[1]
+    fp2 = fitness_progress_history_orig[1]
+    @test fp2 == fp1 == loss_history[1]
 
     @test_logs begin
         (Base.LogLevel(-1), "loss: 0.0")
@@ -70,6 +77,39 @@ using Test
             prob_1 = Optimization.OptimizationProblem(mof_1, u0; lb = lb, ub = ub)
             sol_1 = solve(prob_1, opt, NumDimensions = 2,
                 FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true))
+
+            @test sol_1 ≠ nothing
+            println("Solution for Sphere and Rastrigin: ", sol_1)
+            @test sol_1.objective[1]≈6.9905986e-18 atol=1e-3
+            @test sol_1.objective[2]≈1.7763568e-15 atol=1e-3
+        end
+
+        @testset "Sphere and Rastrigin Functions with callback" begin
+            function multi_obj_func_1(x, p)
+                f1 = sum(x .^ 2)  # Sphere function
+                f2 = sum(x .^ 2 .- 10 .* cos.(2π .* x) .+ 10)  # Rastrigin function
+                return (f1, f2)
+            end
+
+            fitness_progress_history = []
+            fitness_progress_history_orig = []
+            function cb(state, fitness)
+                push!(fitness_progress_history, state.objective)
+                push!(fitness_progress_history_orig,
+                    BlackBoxOptim.best_fitness(state.original))
+                return false
+            end
+
+            mof_1 = MultiObjectiveOptimizationFunction(multi_obj_func_1)
+            prob_1 = Optimization.OptimizationProblem(mof_1, u0; lb = lb, ub = ub)
+            sol_1 = solve(prob_1, opt, NumDimensions = 2,
+                FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true),
+                callback = cb)
+
+            fp1 = fitness_progress_history[1]
+            fp2 = fitness_progress_history_orig[1]
+            @test fp2.orig == fp1
+            @test length(fp1) == 2
 
             @test sol_1 ≠ nothing
             println("Solution for Sphere and Rastrigin: ", sol_1)

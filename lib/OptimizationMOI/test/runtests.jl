@@ -77,7 +77,7 @@ end
     # cache interface
     cache = init(prob, Ipopt.Optimizer())
     sol = solve!(cache)
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
     prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MinSense)
@@ -88,15 +88,29 @@ end
     sol = solve(prob, opt) #test reuse of optimizer
     @test 10 * sol.objective < l1
 
+    # test stats
+    @test sol.stats.time > 0
+    @test sol.stats.iterations > 0
+
     sol = solve(prob,
         OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
             "max_cpu_time" => 60.0))
     @test 10 * sol.objective < l1
 
+    # test stats with AbstractBridgeOptimizer
+    sol = solve(prob,
+        OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
+            "max_cpu_time" => 60.0, "max_iter" => 5))
+
+    @test 60 > sol.stats.time > 0
+    @test sol.stats.iterations == 5
+
     sol = solve(prob,
         OptimizationMOI.MOI.OptimizerWithAttributes(NLopt.Optimizer,
             "algorithm" => :LN_BOBYQA))
     @test 10 * sol.objective < l1
+
+    @test sol.stats.time > 0
 
     sol = solve(prob,
         OptimizationMOI.MOI.OptimizerWithAttributes(NLopt.Optimizer,
@@ -161,6 +175,7 @@ end
         res = solve(optprob, minlp_solver)
         @test res.u == [0.0, 0.0, 1.0, 0.0]
         @test res.objective == -4.0
+        @test res.stats.time > 0
     end
 
     @testset "Integer Domain" begin
