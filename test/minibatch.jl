@@ -1,4 +1,4 @@
-using Optimization, OrdinaryDiffEq, OptimizationOptimisers,
+using Optimization, OrdinaryDiffEqTsit5, OptimizationOptimisers,
       SciMLSensitivity, Lux, Random, ComponentArrays, MLUtils
 using Test
 
