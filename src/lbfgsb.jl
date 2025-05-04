@@ -179,13 +179,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
             res = optimizer(_loss, aug_grad, θ, bounds; solver_kwargs...,
                 m = cache.opt.m, pgtol = sqrt(ϵ), maxiter = maxiters / 100)
-            # @show res[2]
-            # @show res[1]
-            # @show cons_tmp
-            # @show λ
-            # @show β
-            # @show μ
-            # @show ρ
 
             θ = res[2]
             cons_tmp .= 0.0
