@@ -393,14 +393,22 @@ function SciMLBase.__solve(cache::OptimizationCache{
         end
     end
     u0_type = eltype(cache.u0)
-    optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, cache.u0,
-        real(zero(u0_type)),
-        Optim.NLSolversBase.alloc_DF(cache.u0,
-            real(zero(u0_type))),
-        isnothing(cache.f.hess_prototype) ?
-        Optim.NLSolversBase.alloc_H(cache.u0,
-            real(zero(u0_type))) :
-        convert.(u0_type, cache.f.hess_prototype))
+
+    optim_f = if SciMLBase.requireshessian(cache.opt)
+        Optim.TwiceDifferentiable(_loss, gg, fg!, hh, cache.u0,
+            real(zero(u0_type)),
+            Optim.NLSolversBase.alloc_DF(cache.u0,
+                real(zero(u0_type))),
+            isnothing(cache.f.hess_prototype) ?
+            Optim.NLSolversBase.alloc_H(cache.u0,
+                real(zero(u0_type))) :
+            convert.(u0_type, cache.f.hess_prototype))
+    else
+        Optim.OnceDifferentiable(_loss, gg, fg!, cache.u0, 
+                        real(zero(u0_type)),
+                        Optim.NLSolversBase.alloc_DF(cache.u0,
+                            real(zero(u0_type))))
+    end
 
     cons_hl! = function (h, θ, λ)
         res = [similar(h) for i in 1:length(λ)]
@@ -412,15 +420,26 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     lb = cache.lb === nothing ? [] : cache.lb
     ub = cache.ub === nothing ? [] : cache.ub
-    if cache.f.cons !== nothing
-        optim_fc = Optim.TwiceDifferentiableConstraints(cache.f.cons, cache.f.cons_j,
-            cons_hl!,
-            lb, ub,
-            cache.lcons, cache.ucons)
-    else
-        optim_fc = Optim.TwiceDifferentiableConstraints(lb, ub)
-    end
 
+    optim_fc = if SciMLBase.requireshessian(opt)
+        if cache.f.cons !== nothing
+            Optim.TwiceDifferentiableConstraints(cache.f.cons, cache.f.cons_j,
+                cons_hl!,
+                lb, ub,
+                cache.lcons, cache.ucons)
+        else
+            Optim.TwiceDifferentiableConstraints(lb, ub)
+        end
+    else
+        if cache.f.cons !== nothing
+            Optim.OnceDifferentiableConstraints(cache.f.cons, cache.f.cons_j
+                lb, ub,
+                cache.lcons, cache.ucons)
+        else
+            Optim.OnceDifferentiableConstraints(lb, ub)
+        end
+    end
+    
     opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb,
         maxiters = cache.solver_args.maxiters,
         maxtime = cache.solver_args.maxtime,
@@ -429,7 +448,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
         cache.solver_args...)
 
     t0 = time()
-    opt_res = Optim.optimize(optim_f, optim_fc, cache.u0, cache.opt, opt_args)
+    if lb === nothing && ub === nothing && cache.f.cons === nothing
+        opt_res = Optim.optimize(optim_f, cache.u0, cache.opt, opt_args)
+    else
+        opt_res = Optim.optimize(optim_f, optim_fc, cache.u0, cache.opt, opt_args)
+    end
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
     stats = Optimization.OptimizationStats(; iterations = opt_res.iterations,
