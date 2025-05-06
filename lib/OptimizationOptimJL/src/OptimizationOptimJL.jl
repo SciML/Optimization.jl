@@ -432,7 +432,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         end
     else
         if cache.f.cons !== nothing
-            Optim.OnceDifferentiableConstraints(cache.f.cons, cache.f.cons_j
+            Optim.OnceDifferentiableConstraints(cache.f.cons, cache.f.cons_j,
                 lb, ub,
                 cache.lcons, cache.ucons)
         else
