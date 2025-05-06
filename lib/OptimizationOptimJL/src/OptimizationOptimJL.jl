@@ -421,7 +421,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     lb = cache.lb === nothing ? [] : cache.lb
     ub = cache.ub === nothing ? [] : cache.ub
 
-    optim_fc = if SciMLBase.requireshessian(opt)
+    optim_fc = if SciMLBase.requireshessian(cache.opt)
         if cache.f.cons !== nothing
             Optim.TwiceDifferentiableConstraints(cache.f.cons, cache.f.cons_j,
                 cons_hl!,
