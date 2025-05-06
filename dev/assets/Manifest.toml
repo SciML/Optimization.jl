@@ -2483,7 +2483,7 @@ version = "0.3.1"
 deps = ["Optim", "Optimization", "PrecompileTools", "Reexport", "SparseArrays"]
 path = "../lib/OptimizationOptimJL"
 uuid = "36348300-93cb-4f02-beb5-3c3902f8871e"
-version = "0.4.2"
+version = "0.4.3"
 
 [[deps.OptimizationOptimisers]]
 deps = ["Optimisers", "Optimization", "Printf", "ProgressLogging", "Reexport"]
