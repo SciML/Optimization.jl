@@ -2,6 +2,14 @@
 
 In this tutorial, we introduce the basics of Optimization.jl by showing
 how to easily mix local optimizers and global optimizers on the Rosenbrock equation.
+
+The Rosenbrock equation is defined as follows:
+
+```math
+f(u,p) = (p_1 - u_1)^2 + p_2 * ( u_2 - u_1^2)^2
+```
+
+This is a parameterized optimization problem where we want to solve for the vector `u` s.t. `u` minimizes `f`.
 The simplest copy-pasteable code using a quasi-Newton method (LBFGS) to solve the Rosenbrock problem is the following:
 
 ```@example intro
@@ -16,6 +24,59 @@ prob = OptimizationProblem(optf, u0, p)
 
 sol = solve(prob, Optimization.LBFGS())
 ```
+
+```@example intro
+sol.u
+```
+
+```@example intro
+sol.objective
+```
+
+Tada! That's how you do it. Now let's dive in a little more into what each part means and how to customize it all to your needs.
+
+## Understanding the Solution Object
+
+The solution object is a `SciMLBase.AbstractNoTimeSolution`, and thus it follows the 
+[SciMLBase Solution Interface for non-timeseries objects](https://docs.sciml.ai/SciMLBase/stable/interfaces/Solutions/) and is documented at the [solution type page](@ref solution).
+However, for simplicity let's show a bit of it in action.
+
+An optimization solution has an array interface so that it acts like the array that it solves for. This array syntax is shorthand for simply grabbing the solution `u`. For example:
+
+```@example intro
+sol[1] == sol.u[1]
+```
+
+```@example intro
+Array(sol) == sol.u
+```
+
+`sol.objective` returns the final cost of the optimization. We can validate this by plugging it into our function:
+
+```@example intro
+rosenbrock(sol.u, p)
+```
+
+```@example intro
+sol.objective
+```
+
+The `sol.retcode` gives us more information about the solution process. 
+
+```@example intro
+sol.retcode
+```
+
+Here it says `ReturnCode.Success` which means that the solutuion successfully solved. We can learn more about the different return codes at 
+[the ReturnCode part of the SciMLBase documentation](https://docs.sciml.ai/SciMLBase/stable/interfaces/Solutions/#retcodes).
+
+If we are interested about some of the statistics of the solving process, for example to help choose a better solver, we can investigate the `sol.stats`
+
+```@example intro
+sol.stats
+```
+
+That's just a bit of what's in there, check out the other pages for more information but now let's move onto customization.
 
 ## Import a different solver package and solve the problem
 
