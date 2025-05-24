@@ -29,6 +29,7 @@ jobs:
           - OptimizationMultistartOptimization
           - OptimizationNLopt
           - OptimizationNOMAD
+          - OptimizationODE
           - OptimizationOptimJL
           - OptimizationOptimisers
           - OptimizationPRIMA
