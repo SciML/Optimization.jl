@@ -18,7 +18,7 @@ f(x, y; a, b) = \left(a - x\right)^2 + b \left(y - x^2\right)^2
 
 The domains $x$ and $y$ are first captured as a new vector $\hat{x}$. Parameters $a$ and $b$ are captured as a new vector $\hat{p} and assigned values to produce the desired Rosenbrock function.
 ```math
-\hat{x} = \begin{bmatrix} x \\ y \end{bmatrix}
+\hat{x} = \begin{bmatrix} x \\ y \end{bmatrix} \\
 \hat{p} = \begin{bmatrix} a \\ b \end{bmatrix} = \begin{bmatrix} 1 \\ 100 \end{bmatrix}
 ```
 
