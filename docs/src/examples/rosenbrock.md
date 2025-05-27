@@ -11,6 +11,19 @@ for common workflows of the package and give copy-pastable starting points.
     the installation and usage of OptimizationOptimJL.jl package, see the
     [Optim.jl page](@ref optim).
 
+The objective of this exercise is to determine the values $a$ and $b$ that minimize the Rosenbrock function, which is known to have a global minimum at $(a, a^2)$.
+```math
+f(x, y; a, b) = \left(a - x\right)^2 + b \left(y - x^2\right)^2
+``` 
+
+The domains $x$ and $y$ are first captured as a new vector $\hat{x}$. Parameters $a$ and $b$ are captured as a new vector $\hat{p} and assigned values to produce the desired Rosenbrock function.
+```math
+\hat{x} = \begin{bmatrix} x \\ y \end{bmatrix}
+\hat{p} = \begin{bmatrix} a \\ b \end{bmatrix} = \begin{bmatrix} 1 \\ 100 \end{bmatrix}
+```
+
+An optimization problem can now be defined and solved to estimate the values for $\hat{x}$ that minimize the output of this function.
+
 ```@example rosenbrock
 # Define the problem to solve
 using Optimization, ForwardDiff, Zygote
