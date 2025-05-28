@@ -2,44 +2,62 @@ module OptimizationODE
 
 using Reexport
 @reexport using Optimization, Optimization.SciMLBase
-using OrdinaryDiffEq
+using DifferentialEquations
 
 export ODEOptimizer, ODEGradientDescent, RKChebyshevDescent, RKAccelerated, PRKChebyshevDescent
 
-# ODEOptimizer is a simple wrapper
-struct ODEOptimizer{Solver} end
+abstract type AbstractODEOptimizer end
 
-# Define solver aliases using stable methods
-const ODEGradientDescent    = ODEOptimizer{Euler}()
-const RKChebyshevDescent    = ODEOptimizer{ROCK2}()
-const RKAccelerated         = ODEOptimizer{BS3}()
-const PRKChebyshevDescent   = ODEOptimizer{ROCK4}()
-
-function SciMLBase.supports_opt_cache_interface(::ODEOptimizer)
-    return true
+struct ODEOptimizer{T} <: AbstractODEOptimizer
+    alg::T
 end
 
-function SciMLBase.requiresgradient(::ODEOptimizer)
-    return true
+
+const ODEGradientDescent  = ODEOptimizer(Euler())
+const RKChebyshevDescent  = ODEOptimizer(ROCK2())
+const RKAccelerated       = ODEOptimizer(Tsit5())
+const PRKChebyshevDescent = ODEOptimizer(ROCK4())
+
+
+SciMLBase.supports_opt_cache_interface(::ODEOptimizer) = true
+SciMLBase.requiresgradient(::ODEOptimizer)             = true
+
+function Optimization.__map_optimizer_args(cache::OptimizationCache, opt::ODEOptimizer;
+        dt::Real = 0.01,
+        maxiters::Integer = 100,
+        callback = nothing,
+        progress = false,
+        kwargs...
+    )
+    cache.meta[:dt]      = dt
+    cache.meta[:maxiters]= maxiters
+    cache.meta[:callback]= callback
+    cache.meta[:progress]= progress
+    return nothing
 end
 
 function SciMLBase.__solve(
-    cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, ODEOptimizer{Solver}, D, P, C}
-) where {F, RC, LB, UB, LC, UC, S, Solver, D, P, C}
+    cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,<:ODEOptimizer,D,P,C}
+) where {F,RC,LB,UB,LC,UC,S,D,P,C}
+    dt = cache.solver_args[:dt]
+    maxiters = cache.solver_args[:maxiters]
+    tspan = (0.0, maxiters * dt)
 
-    prob = ODEProblem((du, u, p, t) -> begin
-        cache.f.grad(du, u, cache.p)
-        du .*= -1
-    end, cache.u0, (0.0, cache.solver_args[:maxiters] * cache.solver_args[:dt]), cache.p)
+    alg = cache.opt.alg
 
-    sol = solve(prob, Solver(); dt = cache.solver_args[:dt])
+    prob = SteadyStateProblem(
+        (du, u, p, t) -> begin
+            cache.f.grad(du, u, cache.p)
+            du .*= -1
+        end,
+        cache.u0,
+        cache.p
+    )
 
-    final_u = sol.u[end]
-    final_f = cache.f(final_u, cache.p)[1]
-    stats = Optimization.OptimizationStats(; time = sol.t[end])
+    sol = solve(prob, DynamicSS(alg); dt=dt)
 
-    return SciMLBase.build_solution(cache, ODEOptimizer{Solver}(), final_u, final_f;
-        original = sol, retcode = ReturnCode.Success, stats)
+    return SciMLBase.build_solution(cache, cache.opt, sol.u,
+        sol.resid; original = sol, retcode = sol.retcode)
 end
 
 end
