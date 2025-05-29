@@ -10,82 +10,38 @@ using Optimization: deduce_retcode
 SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 
-function SciMLBase.requiresgradient(opt::Union{NLopt.Algorithm, NLopt.Opt}) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
-    str_opt = if opt isa NLopt.Algorithm
-        string(opt)
-    else
-        string(opt.algorithm)
-    end
-    if str_opt[2] == 'N'
-        return false
-    else
-        return true
-    end
+function SciMLBase.requiresgradient(opt::Union{NLopt.Algorithm, NLopt.Opt})
+    # https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
+    str_opt = string(opt isa NLopt.Algorithm ? opt : opt.algorithm)
+    return str_opt[2] != 'N'
 end
 
 #interferes with callback handling
 # function SciMLBase.allowsfg(opt::Union{NLopt.Algorithm, NLopt.Opt})
-#     str_opt = if opt isa NLopt.Algorithm
-#         string(opt)
-#     else
-#         string(opt.algorithm)
-#     end
-#     if str_opt[2] == 'D'
-#         return true
-#     else
-#         return false
-#     end
+#     str_opt = string(opt isa NLopt.Algorithm ? opt : opt.algorithm)
+#     return str_opt[2] == 'D'
 # end
 
-function SciMLBase.requireshessian(opt::Union{NLopt.Algorithm, NLopt.Opt}) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
-    str_opt = if opt isa NLopt.Algorithm
-        string(opt)
-    else
-        string(opt.algorithm)
-    end
-
-    if str_opt[2] == 'N' || occursin("LD_LBFGS", str_opt) || occursin("LD_SLSQP", str_opt)
-        return false
-    else
-        return true
-    end
+function SciMLBase.requireshessian(opt::Union{NLopt.Algorithm, NLopt.Opt})
+    # https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
+    str_opt = string(opt isa NLopt.Algorithm ? opt : opt.algorithm)
+    return !(str_opt[2] == 'N' || occursin(r"LD_LBFGS|LD_SLSQP", str_opt))
 end
 
-function SciMLBase.requiresconsjac(opt::Union{NLopt.Algorithm, NLopt.Opt}) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
-    str_opt = if opt isa NLopt.Algorithm
-        string(opt)
-    else
-        string(opt.algorithm)
-    end
-    if str_opt[3] == 'O' || str_opt[3] == 'I' || str_opt[5] == 'G'
-        return true
-    else
-        return false
-    end
+function SciMLBase.requiresconsjac(opt::Union{NLopt.Algorithm, NLopt.Opt})
+    # https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
+    string(opt isa NLopt.Algorithm ? opt : opt.algorithm)
+    return str_opt[3] ∈ ['O', 'I'] || str_opt[5] == 'G'
 end
 
 function SciMLBase.allowsconstraints(opt::NLopt.Algorithm)
     str_opt = string(opt)
-    if occursin("AUGLAG", str_opt) || occursin("CCSA", str_opt) ||
-       occursin("MMA", str_opt) || occursin("COBYLA", str_opt) ||
-       occursin("ISRES", str_opt) || occursin("AGS", str_opt) ||
-       occursin("ORIG_DIRECT", str_opt) || occursin("SLSQP", str_opt)
-        return true
-    else
-        return false
-    end
+    return occursin(r"AUGLAG|CCSA|MMA|COBYLA|ISRES|AGS|ORIG_DIRECT|SLSQP", str_opt)
 end
 
 function SciMLBase.requiresconsjac(opt::NLopt.Algorithm)
     str_opt = string(opt)
-    if occursin("AUGLAG", str_opt) || occursin("CCSA", str_opt) ||
-       occursin("MMA", str_opt) || occursin("COBYLA", str_opt) ||
-       occursin("ISRES", str_opt) || occursin("AGS", str_opt) ||
-       occursin("ORIG_DIRECT", str_opt) || occursin("SLSQP", str_opt)
-        return true
-    else
-        return false
-    end
+    return occursin(r"AUGLAG|CCSA|MMA|COBYLA|ISRES|AGS|ORIG_DIRECT|SLSQP", str_opt)
 end
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::NLopt.Algorithm,
