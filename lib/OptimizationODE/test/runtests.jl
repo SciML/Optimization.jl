@@ -30,8 +30,8 @@ using LinearAlgebra
     f_manual = OptimizationFunction(f, SciMLBase.NoAD(); grad=g!)
     prob_manual = OptimizationProblem(f_manual, x0)
 
-    for opt in (ODEGradientDescent(), RKChebyshevDescent(), RKAccelerated(), HighOrderDescent())
-        sol = solve(prob_manual, opt; dt=0.01, maxiters=50_000)
+    for opt in (ODEGradientDescent(dt=0.01), RKChebyshevDescent(), RKAccelerated(), HighOrderDescent())
+        sol = solve(prob_manual, opt; maxiters=50_000)
         @test sol.u ≈ [0.0, 0.0] atol=1e-2
         @test sol.objective ≈ 0.0 atol=1e-2
         @test sol.retcode == ReturnCode.Success
