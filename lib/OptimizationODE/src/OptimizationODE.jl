@@ -3,7 +3,6 @@ module OptimizationODE
 using Reexport
 @reexport using Optimization, SciMLBase
 using OrdinaryDiffEq
-using Optimization.LinearAlgebra
 
 export ODEOptimizer, ODEGradientDescent, RKChebyshevDescent, RKAccelerated, HighOrderDescent
 
