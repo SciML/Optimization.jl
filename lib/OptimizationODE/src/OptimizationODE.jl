@@ -1,21 +1,21 @@
 module OptimizationODE
 
 using Reexport
-@reexport using Optimization, Optimization.SciMLBase
+@reexport using Optimization, SciMLBase
 using DifferentialEquations
 using Optimization.LinearAlgebra
 
-export ODEOptimizer, ODEGradientDescent, RKChebyshevDescent, RKAccelerated, PRKChebyshevDescent
+export ODEOptimizer, ODEGradientDescent, RKChebyshevDescent, RKAccelerated, HighOrderDescent
 
 struct ODEOptimizer{T}
-    solver::Type{T}
+    solver::T
 end
 
 # Solver Constructors (users call these)
-ODEGradientDescent()   = ODEOptimizer(Euler)
-RKChebyshevDescent()   = ODEOptimizer(ROCK2)
-RKAccelerated()        = ODEOptimizer(Tsit5)
-PRKChebyshevDescent()  = ODEOptimizer(Vern7)
+ODEGradientDescent()   = ODEOptimizer(Euler())
+RKChebyshevDescent()   = ODEOptimizer(ROCK2())
+RKAccelerated()        = ODEOptimizer(Tsit5())
+HighOrderDescent()  = ODEOptimizer(Vern7())
 
 
 SciMLBase.requiresbounds(::ODEOptimizer)              = false
@@ -29,11 +29,11 @@ SciMLBase.requiresconshess(::ODEOptimizer)            = false
 
 
 function SciMLBase.__init(prob::OptimizationProblem, opt::ODEOptimizer, data=Optimization.DEFAULT_DATA;
-    η=0.1, dt=nothing, tmax=100.0, callback=Optimization.DEFAULT_CALLBACK, progress=false,
+    dt=nothing, callback=Optimization.DEFAULT_CALLBACK, progress=false,
     maxiters=nothing, kwargs...)
 
     return OptimizationCache(prob, opt, data;
-        η=η, dt=dt, tmax=tmax, callback=callback, progress=progress,
+        dt=dt, callback=callback, progress=progress,
         maxiters=maxiters, kwargs...)
 end
 
@@ -41,9 +41,7 @@ function SciMLBase.__solve(
   cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}
   ) where {F,RC,LB,UB,LC,UC,S,O<:ODEOptimizer,D,P,C}
 
-    η     = get(cache.solver_args, :η, 0.1)
     dt    = get(cache.solver_args, :dt, nothing)
-    tmax  = get(cache.solver_args, :tmax, 100.0)
     maxit = get(cache.solver_args, :maxiters, 1000)
 
     u0 = copy(cache.u0)
@@ -55,13 +53,13 @@ function SciMLBase.__solve(
 
     function f!(du, u, p, t)
         cache.f.grad(du, u, p)
-        @. du = -η * du
+        @. du = -du
         return nothing
     end
 
     ss_prob = SteadyStateProblem(f!, u0, p)
 
-    algorithm = DynamicSS(cache.opt.solver())
+    algorithm = DynamicSS(cache.opt.solver)
 
     cb = cache.callback
     if cb != Optimization.DEFAULT_CALLBACK || get(cache.solver_args,:progress,false) === true
@@ -70,7 +68,7 @@ function SciMLBase.__solve(
         end
         function affect!(integrator)
             u_now = integrator.u
-            state = Optimization.OptimizationState(u=u_now, objective=cache.f(u_now, p))
+            state = Optimization.OptimizationState(u=u_now, objective=integrator(integrator.t, Val{1}))
             Optimization.callback_function(cb, state)
         end
         cb_struct = DiscreteCallback(condition, affect!)
