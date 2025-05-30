@@ -20,8 +20,8 @@ using LinearAlgebra
     f_autodiff = OptimizationFunction(f, ADTypes.AutoForwardDiff())
     prob_auto = OptimizationProblem(f_autodiff, x0, p)
 
-    for opt in (ODEGradientDescent(), RKChebyshevDescent(), RKAccelerated(), HighOrderDescent())
-        sol = solve(prob_auto, opt; dt=0.01, maxiters=50_000)
+    for opt in (ODEGradientDescent(dt=0.01), RKChebyshevDescent(), RKAccelerated(), HighOrderDescent())
+        sol = solve(prob_auto, opt; maxiters=50_000)
         @test sol.u ≈ [0.0, 0.0] atol=1e-2
         @test sol.objective ≈ 0.0 atol=1e-2
         @test sol.retcode == ReturnCode.Success
