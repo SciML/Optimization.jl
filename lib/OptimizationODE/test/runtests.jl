@@ -1,8 +1,5 @@
 using Test
-using Optimization, Optimization.SciMLBase
-using Optimization.ADTypes
-using OptimizationODE
-using LinearAlgebra
+using OptimizationODE, SciMLBase, ADTypes
 
 @testset "OptimizationODE Tests" begin
 
