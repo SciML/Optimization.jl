@@ -4,7 +4,6 @@ authors = ["Paras Puneet Singh <paras.puneet2204@gmail.com>"]
 version = "0.1.0"
 
 [deps]
-ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
@@ -16,3 +15,10 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Optimization = "4"
 Reexport = "1"
 julia = "1.10"
+
+[extras]
+ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["ADTypes", "Test"]
