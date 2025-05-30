@@ -30,7 +30,7 @@ end
 
 function SciMLBase.requiresconsjac(opt::Union{NLopt.Algorithm, NLopt.Opt})
     # https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
-    string(opt isa NLopt.Algorithm ? opt : opt.algorithm)
+    str_opt = string(opt isa NLopt.Algorithm ? opt : opt.algorithm)
     return str_opt[3] ∈ ['O', 'I'] || str_opt[5] == 'G'
 end
 
