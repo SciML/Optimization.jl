@@ -7,7 +7,7 @@ using Optimization.LinearAlgebra
 
 export ODEOptimizer, ODEGradientDescent, RKChebyshevDescent, RKAccelerated, HighOrderDescent
 
-struct ODEOptimizer{T}
+struct ODEOptimizer{T, T2}
     solver::T
     dt::T2
 end
