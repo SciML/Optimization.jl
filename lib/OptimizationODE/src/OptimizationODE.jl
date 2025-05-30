@@ -11,6 +11,7 @@ struct ODEOptimizer{T, T2}
     solver::T
     dt::T2
 end
+ODEOptimizer(solver ; dt=nothing) = ODEOptimizer(solver, dt)
 
 # Solver Constructors (users call these)
 ODEGradientDescent()   = ODEOptimizer(Euler())
