@@ -9,6 +9,7 @@ export ODEOptimizer, ODEGradientDescent, RKChebyshevDescent, RKAccelerated, High
 
 struct ODEOptimizer{T}
     solver::T
+    dt::T2
 end
 
 # Solver Constructors (users call these)
@@ -29,11 +30,10 @@ SciMLBase.requiresconshess(::ODEOptimizer)            = false
 
 
 function SciMLBase.__init(prob::OptimizationProblem, opt::ODEOptimizer, data=Optimization.DEFAULT_DATA;
-    dt=nothing, callback=Optimization.DEFAULT_CALLBACK, progress=false,
+    callback=Optimization.DEFAULT_CALLBACK, progress=false,
     maxiters=nothing, kwargs...)
 
-    return OptimizationCache(prob, opt, data;
-        dt=dt, callback=callback, progress=progress,
+    return OptimizationCache(prob, opt, data; callback=callback, progress=progress,
         maxiters=maxiters, kwargs...)
 end
 
