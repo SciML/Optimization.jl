@@ -42,7 +42,7 @@ function SciMLBase.__solve(
   cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}
   ) where {F,RC,LB,UB,LC,UC,S,O<:ODEOptimizer,D,P,C}
 
-    dt    = get(cache.solver_args, :dt, nothing)
+    dt    = cache.opt.dt
     maxit = get(cache.solver_args, :maxiters, 1000)
 
     u0 = copy(cache.u0)
