@@ -1851,9 +1851,9 @@ version = "1.0.0"
 
 [[deps.MLDataDevices]]
 deps = ["Adapt", "Compat", "Functors", "Preferences", "Random"]
-git-tree-sha1 = "328719b5432d476ac74b3560187195d96dd460e8"
+git-tree-sha1 = "a47f08b67298dee5778cf279a9a735ca2d11a890"
 uuid = "7e8f7934-dd98-4c1a-8fe8-92b47a384d40"
-version = "1.9.3"
+version = "1.10.0"
 
     [deps.MLDataDevices.extensions]
     MLDataDevicesAMDGPUExt = "AMDGPU"
@@ -2416,9 +2416,9 @@ version = "0.4.1"
 
 [[deps.OptimizationBase]]
 deps = ["ADTypes", "ArrayInterface", "DifferentiationInterface", "DocStringExtensions", "FastClosures", "LinearAlgebra", "PDMats", "Reexport", "Requires", "SciMLBase", "SparseArrays", "SparseConnectivityTracer", "SparseMatrixColorings"]
-git-tree-sha1 = "973008edcb819b6b83d7d8c39781dac0691726af"
+git-tree-sha1 = "918d9bf579a355222e62ceac955b5382fea7bd61"
 uuid = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-version = "2.6.0"
+version = "2.7.0"
 weakdeps = ["Enzyme", "FiniteDiff", "ForwardDiff", "MLDataDevices", "MLUtils", "ModelingToolkit", "ReverseDiff", "SymbolicAnalysis", "Zygote"]
 
     [deps.OptimizationBase.extensions]
