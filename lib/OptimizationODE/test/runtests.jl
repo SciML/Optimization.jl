@@ -40,8 +40,8 @@ using LinearAlgebra
     f_fail = OptimizationFunction(f, SciMLBase.NoAD())
     prob_fail = OptimizationProblem(f_fail, x0)
 
-    for opt in (ODEGradientDescent(), RKChebyshevDescent(), RKAccelerated(), HighOrderDescent())
-        @test_throws ErrorException solve(prob_fail, opt; dt=0.001, maxiters=20_000)
+    for opt in (ODEGradientDescent(dt=0.001), RKChebyshevDescent(), RKAccelerated(), HighOrderDescent())
+        @test_throws ErrorException solve(prob_fail, opt; maxiters=20_000)
     end
 
 end
