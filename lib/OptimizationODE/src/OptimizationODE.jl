@@ -29,11 +29,11 @@ SciMLBase.requiresconsjac(::ODEOptimizer)             = false
 SciMLBase.requiresconshess(::ODEOptimizer)            = false
 
 
-function SciMLBase.__init(prob::OptimizationProblem, opt::ODEOptimizer, data=Optimization.DEFAULT_DATA;
+function SciMLBase.__init(prob::OptimizationProblem, opt::ODEOptimizer;
     callback=Optimization.DEFAULT_CALLBACK, progress=false,
     maxiters=nothing, kwargs...)
 
-    return OptimizationCache(prob, opt, data; callback=callback, progress=progress,
+    return OptimizationCache(prob, opt; callback=callback, progress=progress,
         maxiters=maxiters, kwargs...)
 end
 
