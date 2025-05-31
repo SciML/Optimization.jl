@@ -3,11 +3,11 @@ using OptimizationODE, SciMLBase, ADTypes
 
 @testset "OptimizationODE Tests" begin
 
-    function f(x, p, args...)
+    function f(x, p)
         return sum(abs2, x)
     end
 
-    function g!(g, x, p, args...)
+    function g!(g, x, p)
         @. g = 2 * x
     end
 
