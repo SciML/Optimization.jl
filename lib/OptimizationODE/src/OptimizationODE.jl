@@ -13,7 +13,7 @@ end
 ODEOptimizer(solver ; dt=nothing) = ODEOptimizer(solver, dt)
 
 # Solver Constructors (users call these)
-ODEGradientDescent()   = ODEOptimizer(Euler())
+ODEGradientDescent(; dt)   = ODEOptimizer(Euler(); dt)
 RKChebyshevDescent()   = ODEOptimizer(ROCK2())
 RKAccelerated()        = ODEOptimizer(Tsit5())
 HighOrderDescent()  = ODEOptimizer(Vern7())
