@@ -16,7 +16,7 @@ ForwardDiff = "1"
 Optimization = "4"
 OrdinaryDiffEq = "7"
 Reexport = "1"
-SciMLBase = "2'
+SciMLBase = "2"
 SteadyStateDiffEq = "2"
 julia = "1.10"
 
