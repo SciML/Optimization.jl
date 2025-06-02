@@ -53,7 +53,3 @@ All optimizers require gradient information (either via automatic differentiatio
 * `callback` — function to observe progress.
 * `progress=true` — enables live progress display.
 
-## Development
-
-Please refer to the `runtests.jl` file for a complete set of tests that demonstrate how each optimizer is used.
-
