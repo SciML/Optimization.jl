@@ -176,7 +176,8 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         fevals = opt_res.f_calls)
     SciMLBase.build_solution(cache, cache.opt,
         BlackBoxOptim.best_candidate(opt_res),
-        BlackBoxOptim.best_fitness(opt_res);
+        cache.sense === Optimization.MaxSense ?
+        -BlackBoxOptim.best_fitness(opt_res) : BlackBoxOptim.best_fitness(opt_res);
         original = opt_res,
         retcode = opt_ret,
         stats = stats)

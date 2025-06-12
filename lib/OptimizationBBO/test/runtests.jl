@@ -157,4 +157,14 @@ using Test
             @test sol_3.objective[2]≈0.477079 atol=1e-3
         end
     end
+
+    @testset "Max sense test" begin
+        J(x,p) = x[1]
+    
+        F = OptimizationFunction(J)
+        prob = Optimization.OptimizationProblem(F, [0.0]; lb = [-10], ub =[10], sense = MaxSense)
+        sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
+    
+        @test sol.objective == 10.0
+    end
 end
