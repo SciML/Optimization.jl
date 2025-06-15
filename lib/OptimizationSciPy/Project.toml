@@ -1,0 +1,26 @@
+name = "OptimizationSciPy"
+uuid = "cce07bd8-c79b-4b00-aee8-8db9cce22837"
+authors = ["Aditya Pandey <adityapand3y666@gmail.com> and contributors"]
+version = "0.4.1"
+
+[deps]
+Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+
+[compat]
+Optimization = "4"
+PythonCall = "0.9"
+Reexport = "1.2"
+julia = "1"
+
+[extras]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+
+[targets]
+test = ["ForwardDiff", "ModelingToolkit", "Random", "ReverseDiff", "Test", "Zygote"]
