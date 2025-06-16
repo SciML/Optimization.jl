@@ -479,6 +479,7 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         end
         θ_vec = [θ]
         x = cache.f(θ_vec, cache.p)
+        x = isa(x, Tuple) ? x : (x,)
         opt_state = Optimization.OptimizationState(u = θ_vec, objective = x[1])
         if cache.callback(opt_state, x...)
             error("Optimization halted by callback")
@@ -623,6 +624,7 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         end
         θ_vec = [θ]
         x = cache.f(θ_vec, cache.p)
+        x = isa(x, Tuple) ? x : (x,)
         opt_state = Optimization.OptimizationState(u = θ_vec, objective = x[1])
         if cache.callback(opt_state, x...)
             error("Optimization halted by callback")
@@ -1355,8 +1357,11 @@ function _create_loss(cache; vector_output::Bool = false)
             end
             θ_julia = ensure_julia_array(θ, eltype(cache.u0))
             x = cache.f(θ_julia, cache.p)
-            x = isa(x, Tuple) ? x[1] : x
-            x = isa(x, Number) ? [x] : x
+            if isa(x, Tuple)
+                x = x
+            elseif isa(x, Number)
+                x = (x,)
+            end
             opt_state = Optimization.OptimizationState(u = θ_julia, objective = sum(abs2, x))
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback")
@@ -1372,6 +1377,11 @@ function _create_loss(cache; vector_output::Bool = false)
             end
             θ_julia = ensure_julia_array(θ, eltype(cache.u0))
             x = cache.f(θ_julia, cache.p)
+            if isa(x, Tuple)
+                x = x
+            elseif isa(x, Number)
+                x = (x,)
+            end
             opt_state = Optimization.OptimizationState(u = θ_julia, objective = x[1])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback")
