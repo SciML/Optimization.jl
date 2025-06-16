@@ -1,6 +1,6 @@
 using OptimizationSciPy, Optimization, Zygote, ReverseDiff, ForwardDiff
 using Test, Random
-using Optimization.SciMLBase: ReturnCode
+using Optimization.SciMLBase: ReturnCode, NonlinearLeastSquaresProblem
 using PythonCall
 
 function rosenbrock(x, p)
@@ -166,13 +166,12 @@ end
     @testset "ScipyLeastSquares" begin
         xdata = collect(0:0.1:1)
         ydata = 2.0 * xdata .+ 1.0 .+ 0.1 * randn(length(xdata))
-        function residuals(params, p)
+        function residuals(params, p=nothing)
             a, b = params
             return ydata .- (a .* xdata .+ b)
         end
         x0_ls = [1.0, 0.0]
-        optf = OptimizationFunction(residuals)
-        prob = OptimizationProblem(optf, x0_ls)
+        prob = NonlinearLeastSquaresProblem(residuals, x0_ls)
         sol = solve(prob, ScipyLeastSquaresTRF())
         @test sol.retcode == ReturnCode.Success
         @test sol.u[1] ≈ 2.0 atol=0.5
@@ -183,7 +182,7 @@ end
         sol = solve(prob, ScipyLeastSquaresLM())
         @test sol.retcode == ReturnCode.Success
         @test sol.u[1] ≈ 2.0 atol=0.5
-        prob_bounded = OptimizationProblem(optf, x0_ls, nothing, lb = [0.0, -2.0], ub = [5.0, 3.0])
+        prob_bounded = NonlinearLeastSquaresProblem(residuals, x0_ls; lb = [0.0, -2.0], ub = [5.0, 3.0])
         sol = solve(prob_bounded, ScipyLeastSquaresTRF())
         @test sol.retcode == ReturnCode.Success
         @test 0.0 <= sol.u[1] <= 5.0
@@ -194,12 +193,11 @@ end
         end
         ydata_outliers = copy(ydata)
         ydata_outliers[5] = 10.0
-        function residuals_outliers(params, p)
+        function residuals_outliers(params, p=nothing)
             a, b = params
             return ydata_outliers .- (a .* xdata .+ b)
         end
-        optf_outliers = OptimizationFunction(residuals_outliers)
-        prob_outliers = OptimizationProblem(optf_outliers, x0_ls)
+        prob_outliers = NonlinearLeastSquaresProblem(residuals_outliers, x0_ls)
         sol_robust = solve(prob_outliers, ScipyLeastSquares(method="trf", loss="huber"))
         @test sol_robust.retcode == ReturnCode.Success
     end

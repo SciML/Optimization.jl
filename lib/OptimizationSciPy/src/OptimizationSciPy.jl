@@ -17,31 +17,31 @@ function ensure_julia_array(x, ::Type{T}=Float64) where T
 end
 
 function safe_get_message(result)
-    try
-        pyconvert(String, result.message)
-    catch
-        "Optimization completed"
+    pyhasattr(result, "message") || return "Optimization completed"
+    msg = result.message
+    if pyisinstance(msg, pybuiltins.str)
+        return pyconvert(String, msg)
     end
+    if pyisinstance(msg, pybuiltins.list) || pyisinstance(msg, pybuiltins.tuple)
+        return join(pyconvert(Vector{String}, msg), ", ")
+    end
+    return string(pytypeof(msg))
 end
 
 function safe_to_float(x)
     x isa Float64 && return x
-    try
-        return pyconvert(Float64, x)
-    catch
-        
+    x isa Number  && return Float64(x)
+
+    if x isa Py
         if pyhasattr(x, "item")
-            try
-                return pyconvert(Float64, x.item())
-            catch
-            end
+            v = pyconvert(Float64, x.item(), nothing)
+            v !== nothing && return v
         end
-        try
-            return pyconvert(Float64, pybuiltins.float(x))
-        catch
-            error("Cannot convert Python object to Float64: $(typeof(x))")
-        end
+        v = pyconvert(Float64, x, nothing)
+        v !== nothing && return v
     end
+
+    error("Cannot convert object to Float64: $(typeof(x))")
 end
 
 function extract_stats(result, time_elapsed)
@@ -52,34 +52,19 @@ function extract_stats(result, time_elapsed)
         :gevals => 0,
         :hevals => 0
     )
-    if pyhasattr(result, "nit")
-        try
-            stats_dict[:iterations] = pyconvert(Int, result.nit)
-        catch
-        end
+    if pyhasattr(result, "nit") && !pyis(result.nit, pybuiltins.None)
+        stats_dict[:iterations] = pyconvert(Int, result.nit)
     end
-    if pyhasattr(result, "nfev")
-        try
-            stats_dict[:fevals] = pyconvert(Int, result.nfev)
-        catch
-        end
+    if pyhasattr(result, "nfev") && !pyis(result.nfev, pybuiltins.None)
+        stats_dict[:fevals] = pyconvert(Int, result.nfev)
     end
-    if pyhasattr(result, "njev")
-        try
-            stats_dict[:gevals] = pyconvert(Int, result.njev)
-        catch
-        end
-    elseif pyhasattr(result, "ngrad")
-        try
-            stats_dict[:gevals] = pyconvert(Int, result.ngrad)
-        catch
-        end
+    if pyhasattr(result, "njev") && !pyis(result.njev, pybuiltins.None)
+        stats_dict[:gevals] = pyconvert(Int, result.njev)
+    elseif pyhasattr(result, "ngrad") && !pyis(result.ngrad, pybuiltins.None)
+        stats_dict[:gevals] = pyconvert(Int, result.ngrad)
     end
-    if pyhasattr(result, "nhev")
-        try
-            stats_dict[:hevals] = pyconvert(Int, result.nhev)
-        catch
-        end
+    if pyhasattr(result, "nhev") && !pyis(result.nhev, pybuiltins.None)
+        stats_dict[:hevals] = pyconvert(Int, result.nhev)
     end
     return Optimization.OptimizationStats(; stats_dict...)
 end
@@ -105,7 +90,9 @@ function scipy_status_to_retcode(status::Int, success::Bool)
     end
 end
 
-struct ScipyMinimize
+abstract type ScipyOptimizer end
+
+struct ScipyMinimize <: ScipyOptimizer
     method::String
     function ScipyMinimize(method::String)
         valid_methods = ["Nelder-Mead", "Powell", "CG", "BFGS", "Newton-CG",
@@ -136,7 +123,7 @@ ScipyTrustNCG() = ScipyMinimize("trust-ncg")
 ScipyTrustKrylov() = ScipyMinimize("trust-krylov")
 ScipyTrustExact() = ScipyMinimize("trust-exact")
 
-struct ScipyMinimizeScalar
+struct ScipyMinimizeScalar <: ScipyOptimizer
     method::String
     function ScipyMinimizeScalar(method::String="brent")
         valid_methods = ["brent", "bounded", "golden"]
@@ -151,7 +138,7 @@ ScipyBrent() = ScipyMinimizeScalar("brent")
 ScipyBounded() = ScipyMinimizeScalar("bounded")
 ScipyGolden() = ScipyMinimizeScalar("golden")
 
-struct ScipyLeastSquares
+struct ScipyLeastSquares <: ScipyOptimizer
     method::String
     loss::String
     function ScipyLeastSquares(; method::String="trf", loss::String="linear")
@@ -171,7 +158,7 @@ ScipyLeastSquaresTRF() = ScipyLeastSquares(method="trf")
 ScipyLeastSquaresDogbox() = ScipyLeastSquares(method="dogbox")
 ScipyLeastSquaresLM() = ScipyLeastSquares(method="lm")
 
-struct ScipyRootScalar
+struct ScipyRootScalar <: ScipyOptimizer
     method::String
     function ScipyRootScalar(method::String="brentq")
         valid_methods = ["brentq", "brenth", "bisect", "ridder", "newton", "secant", "halley", "toms748"]
@@ -182,7 +169,7 @@ struct ScipyRootScalar
     end
 end
 
-struct ScipyRoot
+struct ScipyRoot <: ScipyOptimizer
     method::String
     function ScipyRoot(method::String="hybr")
         valid_methods = ["hybr", "lm", "broyden1", "broyden2", "anderson",
@@ -195,7 +182,7 @@ struct ScipyRoot
     end
 end
 
-struct ScipyLinprog
+struct ScipyLinprog <: ScipyOptimizer
     method::String
     function ScipyLinprog(method::String="highs")
         valid_methods = ["highs", "highs-ds", "highs-ipm", "interior-point", 
@@ -207,13 +194,13 @@ struct ScipyLinprog
     end
 end
 
-struct ScipyMilp end
-struct ScipyDifferentialEvolution end
-struct ScipyBasinhopping end
-struct ScipyDualAnnealing end
-struct ScipyShgo end
-struct ScipyDirect end
-struct ScipyBrute end
+struct ScipyMilp <: ScipyOptimizer end
+struct ScipyDifferentialEvolution <: ScipyOptimizer end
+struct ScipyBasinhopping <: ScipyOptimizer end
+struct ScipyDualAnnealing <: ScipyOptimizer end
+struct ScipyShgo <: ScipyOptimizer end
+struct ScipyDirect <: ScipyOptimizer end
+struct ScipyBrute <: ScipyOptimizer end
 
 for opt_type in [:ScipyMinimize, :ScipyDifferentialEvolution, :ScipyBasinhopping, 
                   :ScipyDualAnnealing, :ScipyShgo, :ScipyDirect, :ScipyBrute,
@@ -279,10 +266,7 @@ end
 
 SciMLBase.allowsbounds(::ScipyRoot) = false
 
-function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::Union{ScipyMinimize, 
-                         ScipyDifferentialEvolution, ScipyBasinhopping, ScipyDualAnnealing, 
-                         ScipyShgo, ScipyDirect, ScipyBrute, ScipyMinimizeScalar,
-                         ScipyLeastSquares, ScipyRootScalar, ScipyRoot, ScipyLinprog, ScipyMilp};
+function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::ScipyOptimizer;
                          cons_tol = 1e-6,
                          callback = (args...) -> (false),
                          progress = false, 
@@ -499,7 +483,7 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         if cache.callback(opt_state, x...)
             error("Optimization halted by callback")
         end
-        return cache.sense === Optimization.MaxSense ? -x[1] : x[1]
+        return x[1]
     end
     kwargs = Dict{Symbol, Any}()
     if cache.opt.method == "bounded"
@@ -550,7 +534,16 @@ end
 
 function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
                           {F,RC,LB,UB,LC,UC,S,O<:ScipyLeastSquares,D,P,C}
-    _residuals = _create_loss(cache; vector_output=true)
+    _residuals = nothing
+    if hasfield(typeof(cache.f), :f) && (cache.f.f isa ResidualObjective)
+        real_res = (cache.f.f)::ResidualObjective
+        _residuals = function(θ)
+            θ_julia = ensure_julia_array(θ, eltype(cache.u0))
+            return real_res.residual(θ_julia, cache.p)
+        end
+    else
+        _residuals = _create_loss(cache; vector_output=true)
+    end
     kwargs = Dict{Symbol, Any}()
     kwargs[:method] = cache.opt.method
     kwargs[:loss] = cache.opt.loss
@@ -1318,6 +1311,30 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
                                    stats = stats)
 end
 
+function SciMLBase.__init(prob::SciMLBase.NonlinearLeastSquaresProblem, opt::ScipyLeastSquares; kwargs...)
+    obj  = ResidualObjective(prob.f)               
+    optf = Optimization.OptimizationFunction(obj)  
+    
+    has_lb = hasproperty(prob, :lb)
+    has_ub = hasproperty(prob, :ub)
+    
+    if has_lb || has_ub
+        lb_val = has_lb ? getproperty(prob, :lb) : fill(-Inf, length(prob.u0))
+        ub_val = has_ub ? getproperty(prob, :ub) : fill( Inf, length(prob.u0))
+        optprob = Optimization.OptimizationProblem(optf, prob.u0, prob.p;
+                                                   lb = lb_val, ub = ub_val,
+                                                   sense = Optimization.MinSense)
+    else
+        optprob = Optimization.OptimizationProblem(optf, prob.u0, prob.p;
+                                                   sense = Optimization.MinSense)
+    end
+
+    return SciMLBase.__init(optprob, opt; kwargs...)
+end
+
+function SciMLBase.init(prob::SciMLBase.NonlinearLeastSquaresProblem, opt::ScipyLeastSquares; kwargs...)
+    SciMLBase.__init(prob, opt; kwargs...)
+end
 
 export ScipyMinimize, ScipyNelderMead, ScipyPowell, ScipyCG, ScipyBFGS, ScipyNewtonCG,
        ScipyLBFGSB, ScipyTNC, ScipyCOBYLA, ScipyCOBYQA, ScipySLSQP, ScipyTrustConstr,
@@ -1344,7 +1361,9 @@ function _create_loss(cache; vector_output::Bool = false)
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback")
             end
-            return cache.sense === Optimization.MaxSense ? -x : x
+          
+            arr = cache.sense === Optimization.MaxSense ? -x : x
+            return arr
         end
     else
         return function (θ)
@@ -1378,4 +1397,11 @@ function _build_bounds(lb::AbstractVector, ub::AbstractVector)
     return pylist([pytuple([lb[i], ub[i]]) for i in eachindex(lb)])
 end
 
+struct ResidualObjective{R}
+    residual::R
 end
+
+(r::ResidualObjective)(u, p) = sum(abs2, r.residual(u, p))
+
+end
+
