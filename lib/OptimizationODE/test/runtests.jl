@@ -4,6 +4,7 @@ using Optimization
 using LinearAlgebra, ForwardDiff
 using OrdinaryDiffEq, DifferentialEquations, SteadyStateDiffEq, Sundials
 
+# Test helper functions
 function rosenbrock(x, p,args...)
     return (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 end
@@ -27,20 +28,19 @@ function constrained_objective(x, p,args...)
     return x[1]^2 + x[2]^2
 end
 
-function constrained_objective_grad!(g, x, p, args...)
-    g .= 2 .* x .* p[1]
-    return nothing
+function constrained_objective_grad!(grad, x, p,args...)
+    grad[1] = 2.0 * x[1]
+    grad[2] = 2.0 * x[2]
 end
 
-# Constraint: x₁ - x₂ - p[1] = 0  (p[1] = 1 → x₁ - x₂ = 1)
-function constraint_func(x, p, args...)
-    return x[1] - x[2] - p[1]
+function constraint_func(res, x, p,args...)
+    res[1] = x[1] + x[2] - 1.0  # x[1] + x[2] = 1
+    return x[1] + x[2] - 1.0
 end
 
-function constraint_jac!(J, x,args...)
-    J[1, 1] = 1.0
-    J[1, 2] = -1.0
-    return nothing
+function constraint_jac!(jac, x, p,args...)
+    jac[1, 1] = 1.0
+    jac[1, 2] = -1.0
 end
 
 @testset "OptimizationODE.jl Tests" begin
@@ -101,6 +101,26 @@ end
        @testset "Equality Constrained Optimization" begin
     # Minimize f(x) = x₁² + x₂²
     # Subject to x₁ - x₂ = 1
+
+    function constrained_objective(x, p,args...)
+        return x[1]^2 + x[2]^2
+    end
+
+    function constrained_objective_grad!(g, x, p, args...)
+        g .= 2 .* x .* p[1]
+        return nothing
+    end
+
+    # Constraint: x₁ - x₂ - p[1] = 0  (p[1] = 1 → x₁ - x₂ = 1)
+    function constraint_func(x, p, args...)
+        return x[1] - x[2] - p[1]
+    end
+
+    function constraint_jac!(J, x,args...)
+        J[1, 1] = 1.0
+        J[1, 2] = -1.0
+        return nothing
+    end
 
     x0 = [1.0, 0.0]           # reasonable initial guess
     p  = [1.0]                 # enforce x₁ - x₂ = 1
@@ -195,7 +215,7 @@ end
             callback_values = Vector{Vector{Float64}}()
             
             function test_callback(x, p, t)
-                return false  
+                return false 
             end
             
             optf = OptimizationFunction(quadratic; grad=quadratic_grad!)
@@ -268,3 +288,4 @@ end
         end
     end
 end
+
