@@ -1,3 +1,4 @@
+#This file lets you drive SciPy optimizers through SciML's Optimization.jl API.
 module OptimizationSciPy
 
 using Reexport
@@ -5,17 +6,20 @@ using Reexport
 using Optimization.SciMLBase
 using PythonCall
 
+# We keep a handle to the actual Python SciPy module here.
 const scipy = PythonCall.pynew()
 
 function __init__()
     PythonCall.pycopy!(scipy, pyimport("scipy"))
 end
 
+# Make sure whatever we got back is a plain Julia Vector{T}.
 function ensure_julia_array(x, ::Type{T}=Float64) where T
     x isa Vector{T} && return x
     return convert(Vector{T}, x isa Py ? pyconvert(Vector, x) : x)
 end
 
+# Pull a human-readable message out of the SciPy result object.
 function safe_get_message(result)
     pyhasattr(result, "message") || return "Optimization completed"
     msg = result.message
@@ -28,6 +32,7 @@ function safe_get_message(result)
     return string(pytypeof(msg))
 end
 
+# Squash any kind of numeric object down to a Julia Float64.
 function safe_to_float(x)
     x isa Float64 && return x
     x isa Number  && return Float64(x)
@@ -44,6 +49,7 @@ function safe_to_float(x)
     error("Cannot convert object to Float64: $(typeof(x))")
 end
 
+# Gather timing / iteration counts and wrap them in OptimizationStats.
 function extract_stats(result, time_elapsed)
     stats_dict = Dict{Symbol, Any}(
         :iterations => 0,
@@ -69,6 +75,7 @@ function extract_stats(result, time_elapsed)
     return Optimization.OptimizationStats(; stats_dict...)
 end
 
+# Map SciPy status integers onto SciML ReturnCode symbols.
 function scipy_status_to_retcode(status::Int, success::Bool)
     if success
         return SciMLBase.ReturnCode.Success
@@ -90,6 +97,7 @@ function scipy_status_to_retcode(status::Int, success::Bool)
     end
 end
 
+# Tiny structs that tag which SciPy algorithm the user picked.
 abstract type ScipyOptimizer end
 
 struct ScipyMinimize <: ScipyOptimizer
@@ -400,18 +408,29 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
                 end
                 cons_jac = _cons_jac
             end
+            # user-controlled NonlinearConstraint extras
+            keep_feasible_flag = get(cache.solver_args, :keep_feasible, false)
+            jac_sparsity      = get(cache.solver_args, :jac_sparsity, nothing)
             nlc = scipy.optimize.NonlinearConstraint(
-                _cons_func, 
-                lcons, 
-                ucons,
-                jac = cons_jac,
-                keep_feasible = false,
-                finite_diff_rel_step = get(cache.solver_args, :cons_tol, 1e-8)
+                _cons_func,
+                lcons,
+                ucons;
+                jac                    = cons_jac,
+                keep_feasible          = keep_feasible_flag,
+                finite_diff_rel_step   = get(cache.solver_args, :cons_tol, 1e-8),
+                finite_diff_jac_sparsity = jac_sparsity,
             )
             constraints = pylist([nlc])
         end
     elseif !isnothing(cache.f.cons)
         throw(ArgumentError("Method $(cache.opt.method) does not support constraints. Use SLSQP, trust-constr, COBYLA, or COBYQA instead."))
+    end
+    # allow users to specify a Hessian update strategy (e.g. "BFGS", "SR1")
+    if cache.opt.method == "trust-constr"
+        hess_update = get(cache.solver_args, :hess_update, nothing)
+        if hess_update !== nothing
+            hess = hess_update
+        end
     end
     t0 = time()
     result = nothing
@@ -444,8 +463,12 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         throw(ErrorException("Optimization failed to return a result"))
     end
     t1 = time()
-    minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
-    minimum = safe_to_float(result.fun)
+    if pyis(result.x, pybuiltins.None)
+        minimizer = fill(NaN, length(cache.u0))
+    else
+        minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    end
+    minimum = pyis(result.fun, pybuiltins.None) ? NaN : safe_to_float(result.fun)
     py_success = pyconvert(Bool, pybool(result.success))
     py_message = safe_get_message(result)
     status = 0
@@ -519,8 +542,12 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         throw(ErrorException("Optimization failed to return a result"))
     end
     t1 = time()
-    minimizer = [safe_to_float(result.x)]
-    minimum = safe_to_float(result.fun)
+    if pyis(result.x, pybuiltins.None)
+        minimizer = [NaN]
+    else
+        minimizer = [safe_to_float(result.x)]
+    end
+    minimum = pyis(result.fun, pybuiltins.None) ? NaN : safe_to_float(result.fun)
     py_success = pyconvert(Bool, pybool(result.success))
     if cache.sense === Optimization.MaxSense
         minimum = -minimum
@@ -591,7 +618,11 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         throw(ErrorException("Optimization failed to return a result"))
     end
     t1 = time()
-    minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    if pyis(result.x, pybuiltins.None)
+        minimizer = fill(NaN, length(cache.u0))
+    else
+        minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    end
     minimum = safe_to_float(result.cost)
     py_success = pyconvert(Bool, pybool(result.success))
     py_message = safe_get_message(result)
@@ -693,9 +724,16 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         throw(ErrorException("Root finding failed to return a result"))
     end
     t1 = time()
-    minimizer = [safe_to_float(result.root)]
-    root_julia = safe_to_float(result.root)
-    minimum = abs(_func(root_julia))
+    if pyis(result.root, pybuiltins.None)
+        minimizer = [NaN]
+        root_julia = NaN
+        minimum = NaN
+    else
+        val = safe_to_float(result.root)
+        minimizer = [val]
+        root_julia = val
+        minimum = abs(_func(root_julia))
+    end
     converged = pyhasattr(result, "converged") ? pyconvert(Bool, pybool(result.converged)) : abs(_func(root_julia)) < 1e-10
     retcode = converged ? SciMLBase.ReturnCode.Success : SciMLBase.ReturnCode.Failure
     stats_dict = Dict{Symbol, Any}(:time => t1 - t0)
@@ -764,7 +802,11 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         throw(ErrorException("Root finding failed to return a result"))
     end
     t1 = time()
-    minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    if pyis(result.x, pybuiltins.None)
+        minimizer = fill(NaN, length(cache.u0))
+    else
+        minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    end
     fun_val = pyconvert(Vector{Float64}, result.fun)
     minimum = sum(abs2, fun_val)
     py_success = pyconvert(Bool, pybool(result.success))
@@ -812,12 +854,16 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         end
         bounds = pylist(bounds_list)
     end
-    A_ub = nothing
-    b_ub = nothing
-    A_eq = nothing
-    b_eq = nothing
-    if !isnothing(cache.f.cons) && !isnothing(cache.lcons)
-        @warn "Linear programming constraints implementation is simplified. For proper usage, provide constraints in standard LP form."
+    # Allow users to pass constraint matrices via solver kwargs
+    A_ub = get(cache.solver_args, :A_ub, nothing)
+    b_ub = get(cache.solver_args, :b_ub, nothing)
+    A_eq = get(cache.solver_args, :A_eq, nothing)
+    b_eq = get(cache.solver_args, :b_eq, nothing)
+    if !(isnothing(A_ub) == isnothing(b_ub))
+        throw(ArgumentError("Both A_ub and b_ub must be provided together"))
+    end
+    if !(isnothing(A_eq) == isnothing(b_eq))
+        throw(ArgumentError("Both A_eq and b_eq must be provided together"))
     end
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     options = nothing
@@ -849,8 +895,12 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         throw(ErrorException("Linear programming failed to return a result"))
     end
     t1 = time()
-    minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
-    minimum = safe_to_float(result.fun)
+    if pyis(result.x, pybuiltins.None)
+        minimizer = fill(NaN, length(cache.u0))
+    else
+        minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    end
+    minimum = pyis(result.fun, pybuiltins.None) ? NaN : safe_to_float(result.fun)
     py_success = pyconvert(Bool, pybool(result.success))
     py_message = safe_get_message(result)
     if cache.sense === Optimization.MaxSense
@@ -897,10 +947,17 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         ub = ub_new
     end
     bounds = scipy.optimize.Bounds(lb, ub)
-    integrality = nothing
+    integrality = get(cache.solver_args, :integrality, nothing)
+    A = get(cache.solver_args, :A, nothing)
+    lb_con = get(cache.solver_args, :lb_con, nothing)
+    ub_con = get(cache.solver_args, :ub_con, nothing)
     constraints = nothing
-    if !isnothing(cache.f.cons) && !isnothing(cache.lcons)
-        @warn "MILP constraints implementation is simplified. For proper usage, provide constraints in standard MILP form."
+    if !(isnothing(A) && isnothing(lb_con) && isnothing(ub_con))
+        if any(isnothing.((A, lb_con, ub_con)))
+            throw(ArgumentError("A, lb_con, and ub_con must all be provided for linear constraints"))
+        end
+        keep_feasible_flag = get(cache.solver_args, :keep_feasible, false)
+        constraints = scipy.optimize.LinearConstraint(A, lb_con, ub_con, keep_feasible = keep_feasible_flag)
     end
     t0 = time()
     result = nothing
@@ -924,8 +981,12 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         throw(ErrorException("MILP failed to return a result"))
     end
     t1 = time()
-    minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
-    minimum = safe_to_float(result.fun)
+    if pyis(result.x, pybuiltins.None)
+        minimizer = fill(NaN, length(cache.u0))
+    else
+        minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    end
+    minimum = pyis(result.fun, pybuiltins.None) ? NaN : safe_to_float(result.fun)
     py_success = pyconvert(Bool, pybool(result.success))
     py_message = safe_get_message(result)
     if cache.sense === Optimization.MaxSense
@@ -985,7 +1046,11 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         throw(ErrorException("Optimization failed to return a result"))
     end
     t1 = time()
-    minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    if pyis(result.x, pybuiltins.None)
+        minimizer = fill(NaN, length(cache.u0))
+    else
+        minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    end
     minimum = safe_to_float(result.fun)
     py_success = pyconvert(Bool, pybool(result.success))
     py_message = safe_get_message(result)
@@ -1039,7 +1104,11 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         throw(ErrorException("Optimization failed to return a result"))
     end
     t1 = time()
-    minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    if pyis(result.x, pybuiltins.None)
+        minimizer = fill(NaN, length(cache.u0))
+    else
+        minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    end
     minimum = safe_to_float(result.fun)
     lowest_result = result.lowest_optimization_result
     py_success = pyconvert(Bool, pybool(lowest_result.success))
@@ -1100,7 +1169,11 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         throw(ErrorException("Optimization failed to return a result"))
     end
     t1 = time()
-    minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    if pyis(result.x, pybuiltins.None)
+        minimizer = fill(NaN, length(cache.u0))
+    else
+        minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    end
     minimum = safe_to_float(result.fun)
     py_success = pyconvert(Bool, pybool(result.success))
     py_message = safe_get_message(result)
@@ -1190,7 +1263,11 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         throw(ErrorException("Optimization failed to return a result"))
     end
     t1 = time()
-    minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    if pyis(result.x, pybuiltins.None)
+        minimizer = fill(NaN, length(cache.u0))
+    else
+        minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    end
     minimum = safe_to_float(result.fun)
     py_success = pyconvert(Bool, pybool(result.success))
     py_message = safe_get_message(result)
@@ -1246,7 +1323,11 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         throw(ErrorException("Optimization failed to return a result"))
     end
     t1 = time()
-    minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    if pyis(result.x, pybuiltins.None)
+        minimizer = fill(NaN, length(cache.u0))
+    else
+        minimizer = pyconvert(Vector{eltype(cache.u0)}, result.x)
+    end
     minimum = safe_to_float(result.fun)
     py_success = pyconvert(Bool, pybool(result.success))
     py_message = safe_get_message(result)
@@ -1300,7 +1381,11 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         throw(ErrorException("Optimization failed to return a result"))
     end
     t1 = time()
-    minimizer = pyconvert(Vector{eltype(cache.u0)}, result[0])
+    if pyis(result[0], pybuiltins.None)
+        minimizer = fill(NaN, length(cache.u0))
+    else
+        minimizer = pyconvert(Vector{eltype(cache.u0)}, result[0])
+    end
     minimum = safe_to_float(result[1])
     if cache.sense === Optimization.MaxSense
         minimum = -minimum
@@ -1347,6 +1432,7 @@ export ScipyMinimize, ScipyNelderMead, ScipyPowell, ScipyCG, ScipyBFGS, ScipyNew
        ScipyDifferentialEvolution, ScipyBasinhopping, ScipyDualAnnealing, 
        ScipyShgo, ScipyDirect, ScipyBrute
 
+# Wrap the user's Julia objective so it matches what SciPy expects.
 function _create_loss(cache; vector_output::Bool = false)
     maxtime = get(cache.solver_args, :maxtime, nothing)
     start_time = !isnothing(maxtime) ? time() : 0.0
@@ -1391,7 +1477,13 @@ function _create_loss(cache; vector_output::Bool = false)
     end
 end
 
-const _DEFAULT_EXCLUDE = (:maxiters, :maxtime, :abstol, :reltol, :callback, :progress, :cons_tol)
+# These solver-args are handled specially elsewhere, so we skip them here.
+const _DEFAULT_EXCLUDE = (
+    :maxiters, :maxtime, :abstol, :reltol, :callback, :progress, :cons_tol,
+    :jac_sparsity, :keep_feasible, :hess_update
+)
+
+# Moving the remaining kwargs into a Dict that we pass straight to SciPy.
 function _merge_solver_kwargs!(dest::AbstractDict, solver_args; exclude = _DEFAULT_EXCLUDE)
     if isa(solver_args, NamedTuple)
         for (k, v) in pairs(solver_args)

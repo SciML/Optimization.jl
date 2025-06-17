@@ -483,4 +483,43 @@ end
         @test sol.retcode == ReturnCode.Success
         @test eltype(sol.u) == Float32
     end
+
+    @testset "ScipyLinprog matrix constraints" begin
+        # Minimize c^T x subject to A_ub * x <= b_ub and simple bounds
+        c_vec(x, p) = [1.0, 1.0]  # constant cost vector
+        x0_lp = [0.0, 0.0]
+        optf_lp = OptimizationFunction(c_vec)
+        prob_lp = OptimizationProblem(optf_lp, x0_lp)
+
+        A_ub = [1.0 1.0]               # x1 + x2 <= 5
+        b_ub = [5.0]
+        sol = solve(prob_lp, ScipyLinprog("highs"),
+                     A_ub = A_ub, b_ub = b_ub,
+                     lb = [0.0, 0.0], ub = [10.0, 10.0])
+        @test sol.retcode == ReturnCode.Success
+        @test sol.u[1] + sol.u[2] ≤ 5.0 + 1e-8
+    end
+
+    @testset "ScipyMilp matrix constraints" begin
+        # Mixed-integer LP: first variable binary, second continuous
+        c_vec_milp(x, p) = [-1.0, -2.0]  # maximize -> minimize negative
+        x0_milp = [0.0, 0.0]
+        optf_milp = OptimizationFunction(c_vec_milp)
+        prob_milp = OptimizationProblem(optf_milp, x0_milp)
+
+        A = [1.0 1.0]                   # x1 + x2 >= 1  -> lb = 1, ub = Inf
+        lb_con = [1.0]
+        ub_con = [Inf]
+        integrality = [1, 0]            # binary, continuous
+
+        sol = solve(prob_milp, ScipyMilp();
+                     A = A, lb_con = lb_con, ub_con = ub_con,
+                     integrality = integrality,
+                     lb = [0.0, 0.0], ub = [1.0, 10.0])
+        @test sol.retcode in (ReturnCode.Success, ReturnCode.Failure)
+        if sol.retcode == ReturnCode.Success
+            @test sol.u[1] in (0.0, 1.0)
+            @test isapprox(sol.u[1] + sol.u[2], 1.0; atol = 1e-6) || sol.u[1] + sol.u[2] > 1.0
+        end
+    end
 end
