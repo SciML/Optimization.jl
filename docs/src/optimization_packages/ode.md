@@ -35,7 +35,7 @@ sol = solve(prob_manual, opt; maxiters=50_000)
 @show sol.objective
 ```
 
-## Available Optimizers
+## Local Gradient-Based Optimizers
 
 All provided optimizers are **gradient-based local optimizers** that solve optimization problems by integrating gradient-based ODEs to convergence:
 
