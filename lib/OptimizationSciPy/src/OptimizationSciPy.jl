@@ -1398,31 +1398,6 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
                                    stats = stats)
 end
 
-function SciMLBase.__init(prob::SciMLBase.NonlinearLeastSquaresProblem, opt::ScipyLeastSquares; kwargs...)
-    obj  = ResidualObjective(prob.f)               
-    optf = Optimization.OptimizationFunction(obj)  
-    
-    has_lb = hasproperty(prob, :lb)
-    has_ub = hasproperty(prob, :ub)
-    
-    if has_lb || has_ub
-        lb_val = has_lb ? getproperty(prob, :lb) : fill(-Inf, length(prob.u0))
-        ub_val = has_ub ? getproperty(prob, :ub) : fill( Inf, length(prob.u0))
-        optprob = Optimization.OptimizationProblem(optf, prob.u0, prob.p;
-                                                   lb = lb_val, ub = ub_val,
-                                                   sense = Optimization.MinSense)
-    else
-        optprob = Optimization.OptimizationProblem(optf, prob.u0, prob.p;
-                                                   sense = Optimization.MinSense)
-    end
-
-    return SciMLBase.__init(optprob, opt; kwargs...)
-end
-
-function SciMLBase.init(prob::SciMLBase.NonlinearLeastSquaresProblem, opt::ScipyLeastSquares; kwargs...)
-    SciMLBase.__init(prob, opt; kwargs...)
-end
-
 export ScipyMinimize, ScipyNelderMead, ScipyPowell, ScipyCG, ScipyBFGS, ScipyNewtonCG,
        ScipyLBFGSB, ScipyTNC, ScipyCOBYLA, ScipyCOBYQA, ScipySLSQP, ScipyTrustConstr,
        ScipyDogleg, ScipyTrustNCG, ScipyTrustKrylov, ScipyTrustExact,

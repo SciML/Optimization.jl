@@ -163,45 +163,6 @@ end
         @test sol.retcode == ReturnCode.Success
     end
 
-    @testset "ScipyLeastSquares" begin
-        xdata = collect(0:0.1:1)
-        ydata = 2.0 * xdata .+ 1.0 .+ 0.1 * randn(length(xdata))
-        function residuals(params, p=nothing)
-            a, b = params
-            return ydata .- (a .* xdata .+ b)
-        end
-        x0_ls = [1.0, 0.0]
-        prob = NonlinearLeastSquaresProblem(residuals, x0_ls)
-        sol = solve(prob, ScipyLeastSquaresTRF())
-        @test sol.retcode == ReturnCode.Success
-        @test sol.u[1] ≈ 2.0 atol=0.5
-        @test sol.u[2] ≈ 1.0 atol=0.5
-        sol = solve(prob, ScipyLeastSquaresDogbox())
-        @test sol.retcode == ReturnCode.Success
-        @test sol.u[1] ≈ 2.0 atol=0.5
-        sol = solve(prob, ScipyLeastSquaresLM())
-        @test sol.retcode == ReturnCode.Success
-        @test sol.u[1] ≈ 2.0 atol=0.5
-        prob_bounded = NonlinearLeastSquaresProblem(residuals, x0_ls; lb = [0.0, -2.0], ub = [5.0, 3.0])
-        sol = solve(prob_bounded, ScipyLeastSquaresTRF())
-        @test sol.retcode == ReturnCode.Success
-        @test 0.0 <= sol.u[1] <= 5.0
-        @test -2.0 <= sol.u[2] <= 3.0
-        for loss in ["linear", "soft_l1", "huber", "cauchy", "arctan"]
-            sol = solve(prob, ScipyLeastSquares(method="trf", loss=loss))
-            @test sol.retcode == ReturnCode.Success
-        end
-        ydata_outliers = copy(ydata)
-        ydata_outliers[5] = 10.0
-        function residuals_outliers(params, p=nothing)
-            a, b = params
-            return ydata_outliers .- (a .* xdata .+ b)
-        end
-        prob_outliers = NonlinearLeastSquaresProblem(residuals_outliers, x0_ls)
-        sol_robust = solve(prob_outliers, ScipyLeastSquares(method="trf", loss="huber"))
-        @test sol_robust.retcode == ReturnCode.Success
-    end
-
     @testset "ScipyRootScalar" begin
         f_root(x, p) = x[1]^3 - 2*x[1] - 5
         x0_root = [2.0]
