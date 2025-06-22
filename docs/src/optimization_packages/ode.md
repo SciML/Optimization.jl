@@ -35,7 +35,7 @@ sol = solve(prob_manual, opt; maxiters=50_000)
 @show sol.objective
 ```
 
-## Available Optimizers
+## Local-gradient based Optimizers
 
 All provided optimizers are **gradient-based local optimizers** that solve optimization problems by integrating gradient-based ODEs to convergence:
 
@@ -52,11 +52,4 @@ You can also define a custom optimizer using the generic `ODEOptimizer(solver; d
 ## Interface Details
 
 All optimizers require gradient information (either via automatic differentiation or manually provided `grad!`). The optimization is performed by integrating the ODE defined by the negative gradient until a steady state is reached.
-
-### Keyword Arguments
-
-* `dt` — time step size (only for `ODEGradientDescent`).
-* `maxiters` — maximum number of ODE steps.
-* `callback` — function to observe progress.
-* `progress=true` — enables live progress display.
 
