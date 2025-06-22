@@ -72,7 +72,7 @@ res1 = Optimization.solve(optprob, Optimisers.Adam(0.05),
 @test 10res1.objective < l1
 
 optfun = OptimizationFunction(
-    (θ, p, batch, time_batch) -> loss_adjoint(θ, batch,
+    (θ, p) -> loss_adjoint(θ, batch,
         time_batch),
     Optimization.AutoModelingToolkit())
 optprob = OptimizationProblem(optfun, pp)
