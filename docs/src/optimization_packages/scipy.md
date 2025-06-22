@@ -97,7 +97,7 @@ sol = solve(prob, ScipyCOBYLA())
 ### Differential evolution (global) with custom options
 
 ```@example SciPy3
-using Optimization, OptimizationSciPy, Random
+using Optimization, OptimizationSciPy, Random, Statistics
 Random.seed!(123)
 
 ackley(x, p) = -20exp(-0.2*sqrt(mean(x .^ 2))) - exp(mean(cos.(2π .* x))) + 20 + ℯ
