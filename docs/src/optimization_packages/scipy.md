@@ -82,13 +82,13 @@ using Optimization, OptimizationSciPy
 # Objective
 obj(x, p) = (x[1] + x[2] - 1)^2
 
-# Single non-linear equality: x₁² + x₂² = 1
+# Single non-linear constraint: x₁² + x₂² ≈ 1 (with small tolerance)
 cons(res, x, p) = (res .= [x[1]^2 + x[2]^2 - 1.0])
 
 x0   = [0.5, 0.5]
 prob = OptimizationProblem(
     OptimizationFunction(obj; cons = cons),
-    x0, nothing, lcons = [0.0], ucons = [0.0])
+    x0, nothing, lcons = [-1e-6], ucons = [1e-6])  # Small tolerance instead of exact equality
 
 sol = solve(prob, ScipyCOBYLA())
 @show sol.u, sol.objective
@@ -130,3 +130,4 @@ If SciPy raises an error it is re-thrown as a Julia `ErrorException` carrying th
 ## Contributing
 
 Bug reports and feature requests are welcome in the [Optimization.jl](https://github.com/SciML/Optimization.jl) issue tracker.  Pull requests that improve either the Julia wrapper or the documentation are highly appreciated. 
+
