@@ -13,7 +13,7 @@ Pkg.add("OptimizationPyCMA")
 
 ## Methods
 
-`PyCMAOpt` supports the usual keyword arguments `maxiters`, `maxtime`, `abstol`, `reltol` in addition to any PyCMA-specific options (passed verbatim via keyword arguments to `solve`).
+`PyCMAOpt` supports the usual keyword arguments `maxiters`, `maxtime`, `abstol`, `reltol`, `callback` in addition to any PyCMA-specific options (passed verbatim via keyword arguments to `solve`).
 
 ## Example
 
