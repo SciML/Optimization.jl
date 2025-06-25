@@ -1108,11 +1108,11 @@ git-tree-sha1 = "f88e0ba1f6b42121a7c1dfe93a9687d8e164c91b"
 uuid = "c145ed77-6b09-5dd9-b285-bf645a82121e"
 version = "0.5.5"
 
-[[deps.Gettext_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "XML2_jll"]
-git-tree-sha1 = "9b02998aba7bf074d14de89f9d37ca24a1a0b046"
-uuid = "78b55507-aeef-58d4-861c-77aaff3498b1"
-version = "0.21.0+0"
+[[deps.GettextRuntime_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll"]
+git-tree-sha1 = "45288942190db7c5f760f59c04495064eedf9340"
+uuid = "b0724c58-0f36-5564-988d-3bb0596ebc4a"
+version = "0.22.4+0"
 
 [[deps.Git]]
 deps = ["Git_jll", "JLLWrappers", "OpenSSH_jll"]
@@ -1127,10 +1127,10 @@ uuid = "f8c6e375-362e-5223-8a59-34ff63f689eb"
 version = "2.50.0+0"
 
 [[deps.Glib_jll]]
-deps = ["Artifacts", "Gettext_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libiconv_jll", "Libmount_jll", "PCRE2_jll", "Zlib_jll"]
-git-tree-sha1 = "fee60557e4f19d0fe5cd169211fdda80e494f4e8"
+deps = ["Artifacts", "GettextRuntime_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libiconv_jll", "Libmount_jll", "PCRE2_jll", "Zlib_jll"]
+git-tree-sha1 = "35fbd0cefb04a516104b8e183ce0df11b70a3f1a"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
-version = "2.84.0+0"
+version = "2.84.3+0"
 
 [[deps.Glob]]
 git-tree-sha1 = "97285bbd5230dd766e9ef6749b80fc617126d496"
@@ -1447,9 +1447,9 @@ version = "4.0.1+0"
 
 [[deps.LLVM]]
 deps = ["CEnum", "LLVMExtra_jll", "Libdl", "Preferences", "Printf", "Unicode"]
-git-tree-sha1 = "cfedf80c59000507cc8115a0281931253f4a33cd"
+git-tree-sha1 = "9c7c721cfd800d87d48c745d8bfb65144f0a91df"
 uuid = "929cbde3-209d-540e-8aea-75f648917ca0"
-version = "9.4.1"
+version = "9.4.2"
 
     [deps.LLVM.extensions]
     BFloat16sExt = "BFloat16s"
@@ -2027,9 +2027,9 @@ version = "1.41.0"
 
 [[deps.MatrixEquations]]
 deps = ["LinearAlgebra", "LinearMaps"]
-git-tree-sha1 = "5451040479cb5f2494a62c570d407953878dc4ad"
+git-tree-sha1 = "9f7c8785cca4d07ac6ed1df7a2891b8ecb7448df"
 uuid = "99c1a7ee-ab34-5fd5-8076-27c950a045f4"
-version = "2.5.1"
+version = "2.5.2"
 
 [[deps.MaybeInplace]]
 deps = ["ArrayInterface", "LinearAlgebra", "MacroTools"]
@@ -2871,20 +2871,20 @@ version = "0.2.2"
 
 [[deps.Polynomials]]
 deps = ["LinearAlgebra", "OrderedCollections", "RecipesBase", "Requires", "Setfield", "SparseArrays"]
-git-tree-sha1 = "2660ba4e0e9354cf0f3deeefb61531bbdac5495d"
+git-tree-sha1 = "972089912ba299fba87671b025cd0da74f5f54f7"
 uuid = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
-version = "4.0.21"
+version = "4.1.0"
 
     [deps.Polynomials.extensions]
     PolynomialsChainRulesCoreExt = "ChainRulesCore"
     PolynomialsFFTWExt = "FFTW"
-    PolynomialsMakieCoreExt = "MakieCore"
+    PolynomialsMakieExt = "Makie"
     PolynomialsMutableArithmeticsExt = "MutableArithmetics"
 
     [deps.Polynomials.weakdeps]
     ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
     FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
-    MakieCore = "20f20a25-4f0e-4fdf-b5d1-57303727442b"
+    Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
     MutableArithmetics = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
 
 [[deps.PositiveFactorizations]]
@@ -3558,9 +3558,9 @@ version = "3.29.0"
 
 [[deps.Symbolics]]
 deps = ["ADTypes", "ArrayInterface", "Bijections", "CommonWorldInvalidations", "ConstructionBase", "DataStructures", "DiffRules", "Distributions", "DocStringExtensions", "DomainSets", "DynamicPolynomials", "LaTeXStrings", "Latexify", "Libdl", "LinearAlgebra", "LogExpFunctions", "MacroTools", "Markdown", "NaNMath", "OffsetArrays", "PrecompileTools", "Primes", "RecipesBase", "Reexport", "RuntimeGeneratedFunctions", "SciMLBase", "Setfield", "SparseArrays", "SpecialFunctions", "StaticArraysCore", "SymbolicIndexingInterface", "SymbolicLimits", "SymbolicUtils", "TermInterface"]
-git-tree-sha1 = "11bb86a9b2a967b303720fd60c0bd82387915906"
+git-tree-sha1 = "df665535546bb07078ee42e0972527b5d6bd3f69"
 uuid = "0c5d862f-8b57-4792-8d23-62f2024744c7"
-version = "6.42.0"
+version = "6.43.0"
 
     [deps.Symbolics.extensions]
     SymbolicsForwardDiffExt = "ForwardDiff"
