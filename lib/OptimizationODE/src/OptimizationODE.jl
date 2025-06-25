@@ -63,24 +63,6 @@ function SciMLBase.__init(prob::OptimizationProblem, opt::DAEOptimizer;
 end
 
 
-function solve_constrained_root(cache, u0, p)
-    n = length(u0)
-    cons_vals = cache.f.cons(u0, p)
-    m = length(cons_vals)
-    function resid!(res, u)
-        temp = similar(u)
-        f_mass!(temp, u, p, 0.0)
-        res .= temp
-    end
-    u0_ext = vcat(u0, zeros(m))
-    prob_nl = NonlinearProblem(resid!, u0_ext, p)
-    sol_nl = solve(prob_nl, Newton(); tol = 1e-8, maxiters = 100000,
-        callback = cache.callback, progress = get(cache.solver_args, :progress, false))
-    u_ext = sol_nl.u
-    return u_ext[1:n], sol_nl.retcode
-end
-
-
 function get_solver_type(opt::DAEOptimizer)
     if opt.solver isa Union{Rodas5, RadauIIA5, ImplicitEuler, Trapezoid}
         return :mass_matrix
@@ -88,6 +70,7 @@ function get_solver_type(opt::DAEOptimizer)
         return :indexing
     end
 end
+
 
 function handle_parameters(p)
     if p isa SciMLBase.NullParameters
@@ -240,8 +223,8 @@ function solve_dae_mass_matrix(cache, dt, maxit, u0, p)
     n = length(u0)
     m = length(cons_vals)
     u0_extended = vcat(u0, zeros(m))
-    M = zeros(n + m, n + m)
-    M[1:n, 1:n] = I(n)
+    M = Diagonal(ones(n + m))
+
 
     function f_mass!(du, u, p_, t)
         x = @view u[1:n]
@@ -253,24 +236,11 @@ function solve_dae_mass_matrix(cache, dt, maxit, u0, p)
             grad_f .= ForwardDiff.gradient(z -> cache.f.f(z, p_), x)
         end
         J = Matrix{eltype(x)}(undef, m, n)
-        if cache.f.cons_j !== nothing
-            cache.f.cons_j(J, x)
-        else
-            J .= finite_difference_jacobian(z -> cache.f.cons(z, p_), x)
-        end
+        cache.f.cons_j !== nothing && cache.f.cons_j(J, x)
+
         @. du[1:n] = -grad_f - (J' * λ)
         consv = cache.f.cons(x, p_)
-        if consv === nothing
-            fill!(du[n+1:end], zero(eltype(x)))
-        else
-            if isa(consv, Number)
-                @assert m == 1
-                du[n+1] = consv
-            else
-                @assert length(consv) == m
-                @. du[n+1:end] = consv
-            end
-        end
+        @. du[n+1:end] = consv
         return nothing
     end
 
@@ -327,11 +297,8 @@ function solve_dae_indexing(cache, dt, maxit, u0, p, differential_vars)
         grad_f = similar(x)
         cache.f.grad(grad_f, x, p_)
         J = zeros(m, n)
-        if cache.f.cons_j !== nothing
-            cache.f.cons_j(J, x)
-        else
-            J .= finite_difference_jacobian(z -> cache.f.cons(z,p_), x)
-        end
+        cache.f.cons_j !== nothing && cache.f.cons_j(J, x)
+
         @. res[1:n] = du_x + grad_f + J' * λ
         consv = cache.f.cons(x, p_)
         @. res[n+1:end] = consv
@@ -364,4 +331,4 @@ function solve_dae_indexing(cache, dt, maxit, u0, p, differential_vars)
 end
 
 
-end 
+end
