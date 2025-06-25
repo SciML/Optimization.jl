@@ -20,7 +20,7 @@ end
 # Defining the SciMLBase interface for PyCMAOpt
 SciMLBase.allowsbounds(::PyCMAOpt) = true
 SciMLBase.supports_opt_cache_interface(opt::PyCMAOpt) = true
-SciMLBase.allowscallback(::PyCMAOpt) = false
+SciMLBase.allowscallback(::PyCMAOpt) = true
 SciMLBase.requiresgradient(::PyCMAOpt) = false
 SciMLBase.requireshessian(::PyCMAOpt) = false
 SciMLBase.requiresconsjac(::PyCMAOpt) = false
@@ -47,7 +47,7 @@ function __map_optimizer_args(prob::OptimizationCache, opt::PyCMAOpt;
     
     # mapping Optimization.jl args
     mapped_args["bounds"] = (prob.lb, prob.ub)
-    
+
     if !("verbose" ∈ keys(mapped_args))
         mapped_args["verbose"] = -1   
     end 
@@ -116,15 +116,30 @@ function SciMLBase.__solve(cache::OptimizationCache{
 }
     local x
 
-    # doing conversions
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
-
     # wrapping the objective function
     _loss = function (θ)
         x = cache.f(θ, cache.p)    
         return first(x)
     end
+
+    _cb = function(es)
+        opt_state = Optimization.OptimizationState(; iter = pyconvert(Int, es.countiter),
+            u = pyconvert(Vector{Float64}, es.best.x),
+            objective = pyconvert(Float64, es.best.f),
+            original = es)
+
+        cb_call = cache.callback(opt_state, x...)
+        if !(cb_call isa Bool)
+            error("The callback should return a boolean `halt` for whether to stop the optimization process.")
+        end
+        if cb_call
+            es.opts.set(Dict("termination_callback" => es -> true))
+        end
+    end
+
+    # doing conversions
+    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     # converting the Optimization.jl Args to PyCMA format
     opt_args = __map_optimizer_args(cache, cache.opt; cache.solver_args...,
@@ -133,29 +148,25 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     # init the CMAopt class
     es = get_cma().CMAEvolutionStrategy(cache.u0, 1, pydict(opt_args))
-    logger = es.logger
 
     # running the optimization
     t0 = time()
-    opt_res = es.optimize(_loss)
+    opt_res = es.optimize(_loss, callback = _cb)
     t1 = time()
-
-    # loading logged files from disk
-    logger.load()
-
+    
     # reading the results
     opt_ret_dict = opt_res.stop()
     retcode = __map_pycma_retcode(pyconvert(Dict{String, Any}, opt_ret_dict))
     
     # logging and returning results of the optimization
     stats = Optimization.OptimizationStats(;
-        iterations = length(logger.xmean),
+        iterations = pyconvert(Int, es.countiter),
         time = t1 - t0,
-        fevals = length(logger.xmean))
+        fevals = pyconvert(Int, es.countevals))
     
     SciMLBase.build_solution(cache, cache.opt,
-        pyconvert(Float64, logger.xrecent[-1][-1]),
-        pyconvert(Float64, logger.f[-1][-1]); original = opt_res,
+    pyconvert(Vector{Float64}, opt_res.result.xbest),
+    pyconvert(Float64, opt_res.result.fbest); original = opt_res,
         retcode = retcode,
         stats = stats)
 end
