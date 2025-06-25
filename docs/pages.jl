@@ -24,6 +24,7 @@ pages = ["index.md",
         "API/FAQ.md"
     ],
     "Optimizer Packages" => [
+        "PyCMA.jl" => "optimization_packages/pycma.md",
         "BlackBoxOptim.jl" => "optimization_packages/blackboxoptim.md",
         "CMAEvolutionStrategy.jl" => "optimization_packages/cmaevolutionstrategy.md",
         "Evolutionary.jl" => "optimization_packages/evolutionary.md",

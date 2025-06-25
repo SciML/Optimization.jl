@@ -18,9 +18,9 @@ function get_cma()
 end
 
 # Defining the SciMLBase interface for PyCMAOpt
-
 SciMLBase.allowsbounds(::PyCMAOpt) = true
 SciMLBase.supports_opt_cache_interface(opt::PyCMAOpt) = true
+SciMLBase.allowscallback(::PyCMAOpt) = false
 SciMLBase.requiresgradient(::PyCMAOpt) = false
 SciMLBase.requireshessian(::PyCMAOpt) = false
 SciMLBase.requiresconsjac(::PyCMAOpt) = false
@@ -31,15 +31,26 @@ function __map_optimizer_args(prob::OptimizationCache, opt::PyCMAOpt;
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
-        reltol::Union{Number, Nothing} = nothing)
+        reltol::Union{Number, Nothing} = nothing,
+        PyCMAargs...)
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
+    
+    # Converting Optimization.jl args to PyCMA opts
+    # Optimization.jl kwargs will overwrite PyCMA kwargs supplied to solve() 
 
-    mapped_args = Dict(
-        "verbose" => -5,
-        "bounds" => (prob.lb, prob.ub),
-        )
+    mapped_args = Dict{String, Any}()
+
+    # adding PyCMA args
+    merge!(mapped_args, Dict(string(k) => v for (k, v) in PyCMAargs))
+    
+    # mapping Optimization.jl args
+    mapped_args["bounds"] = (prob.lb, prob.ub)
+    
+    if !("verbose" ∈ keys(mapped_args))
+        mapped_args["verbose"] = -1   
+    end 
 
     if !isnothing(abstol)
         mapped_args["tolfun"] = abstol
@@ -111,7 +122,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     # wrapping the objective function
     _loss = function (θ)
-        x = cache.f(θ, cache.p)
+        x = cache.f(θ, cache.p)    
         return first(x)
     end
 
@@ -119,7 +130,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     opt_args = __map_optimizer_args(cache, cache.opt; cache.solver_args...,
         maxiters = maxiters,
         maxtime = maxtime)
-    
+
     # init the CMAopt class
     es = get_cma().CMAEvolutionStrategy(cache.u0, 1, pydict(opt_args))
     logger = es.logger
