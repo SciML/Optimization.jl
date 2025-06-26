@@ -93,45 +93,6 @@ function setup_progress_callback(cache, solve_kwargs)
     return solve_kwargs
 end
 
-function finite_difference_jacobian(f, x; ϵ = 1e-8)
-    n = length(x)
-    fx = f(x)
-    if fx === nothing
-        return zeros(eltype(x), 0, n)
-    elseif isa(fx, Number)
-        J = zeros(eltype(fx), 1, n)
-        for j in 1:n
-            xj = copy(x)
-            xj[j] += ϵ
-            diff = f(xj)
-            if diff === nothing
-                diffval = zero(eltype(fx))
-            else
-                diffval = diff - fx
-            end
-            J[1, j] = diffval / ϵ
-        end
-        return J
-    else
-        m = length(fx)
-        J = zeros(eltype(fx), m, n)
-        for j in 1:n
-            xj = copy(x)
-            xj[j] += ϵ
-            fxj = f(xj)
-            if fxj === nothing
-                @inbounds for i in 1:m
-                    J[i, j] = -fx[i] / ϵ
-                end
-            else
-                @inbounds for i in 1:m
-                    J[i, j] = (fxj[i] - fx[i]) / ϵ
-                end
-            end
-        end
-        return J
-    end
-end
 
 function SciMLBase.__solve(
     cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}
@@ -331,4 +292,4 @@ function solve_dae_indexing(cache, dt, maxit, u0, p, differential_vars)
 end
 
 
-end
+end 
