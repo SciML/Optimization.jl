@@ -233,7 +233,7 @@ end
             x = [1.0, 2.0]
             f(x) = [x[1]^2 + x[2], x[1] * x[2]]
             
-            J = OptimizationODE.finite_difference_jacobian(f, x)
+            J = ForwardDiff.jacobian(f, x)
             
             expected_J = [2.0 1.0; 2.0 1.0]
             
