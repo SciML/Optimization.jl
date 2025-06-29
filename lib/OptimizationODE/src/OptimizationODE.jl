@@ -206,9 +206,9 @@ function solve_dae_mass_matrix(cache, dt, maxit, u0, p)
     end
 
     if m == 0
-        optf = ODEFunction(f_mass!, mass_matrix = I(n))
+        optf = ODEFunction(f_mass!)
         prob = ODEProblem(optf, u0, (0.0, 1.0), p)
-        return solve(prob, HighOrderDescent(); dt=dt, maxiters=maxit)
+        return solve(prob, cache.opt.solver; dt=dt, maxiters=maxit)
     end
 
     ss_prob = SteadyStateProblem(ODEFunction(f_mass!, mass_matrix = M), u0_extended, p)
