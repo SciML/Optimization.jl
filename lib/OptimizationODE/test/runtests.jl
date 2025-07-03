@@ -28,17 +28,17 @@ function constrained_objective(x, p,args...)
     return x[1]^2 + x[2]^2
 end
 
-function constrained_objective_grad!(grad, x, p,args...)
+function constrained_objective_grad!(grad, x, p)
     grad[1] = 2.0 * x[1]
     grad[2] = 2.0 * x[2]
 end
 
-function constraint_func(res, x, p,args...)
+function constraint_func(res, x, p)
     res[1] = x[1] + x[2] - 1.0  # x[1] + x[2] = 1
     return x[1] + x[2] - 1.0
 end
 
-function constraint_jac!(jac, x, p,args...)
+function constraint_jac!(jac, x, p)
     jac[1, 1] = 1.0
     jac[1, 2] = -1.0
 end
