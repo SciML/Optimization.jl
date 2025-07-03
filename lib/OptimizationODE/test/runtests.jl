@@ -5,26 +5,26 @@ using LinearAlgebra, ForwardDiff
 using OrdinaryDiffEq, DifferentialEquations, SteadyStateDiffEq, Sundials
 
 # Test helper functions
-function rosenbrock(x, p,args...)
+function rosenbrock(x, p)
     return (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 end
 
-function rosenbrock_grad!(grad, x, p,args...)
+function rosenbrock_grad!(grad, x, p)
     grad[1] = -2.0 * (p[1] - x[1]) - 4.0 * p[2] * (x[2] - x[1]^2) * x[1]
     grad[2] = 2.0 * p[2] * (x[2] - x[1]^2)
 end
 
-function quadratic(x, p,args...)
+function quadratic(x, p)
     return (x[1] - p[1])^2 + (x[2] - p[2])^2
 end
 
-function quadratic_grad!(grad, x, p,args...)
+function quadratic_grad!(grad, x, p)
     grad[1] = 2.0 * (x[1] - p[1])
     grad[2] = 2.0 * (x[2] - p[2])
 end
 
 # Constrained optimization problem
-function constrained_objective(x, p,args...)
+function constrained_objective(x, p)
     return x[1]^2 + x[2]^2
 end
 
