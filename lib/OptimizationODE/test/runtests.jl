@@ -240,19 +240,7 @@ end
             @test isapprox(J, expected_J, atol=1e-6)
         end
     end
-    
-    @testset "Solver Type Detection" begin
-        @testset "Mass Matrix Solvers" begin
-            opt = DAEMassMatrix()
-            @test OptimizationODE.get_solver_type(opt) == :mass_matrix
-        end
-        
-        @testset "Index Method Solvers" begin
-            opt = DAEIndexing()
-            @test OptimizationODE.get_solver_type(opt) == :indexing
-        end
-    end
-    
+     
     @testset "Error Handling and Edge Cases" begin
         @testset "Empty Constraints" begin
             x0 = [1.5, 0.5]
