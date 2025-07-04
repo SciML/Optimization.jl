@@ -23,7 +23,7 @@ struct DAEOptimizer{T}
     solver::T
 end
 
-DAEMassMatrix() = DAEOptimizer(Rodas5())
+DAEMassMatrix() = DAEOptimizer(Rosenbrock23(autodiff = false))
 DAEIndexing() = DAEOptimizer(IDA())
 
 
@@ -63,15 +63,6 @@ function SciMLBase.__init(prob::OptimizationProblem, opt::DAEOptimizer;
 end
 
 
-function get_solver_type(opt::DAEOptimizer)
-    if opt.solver isa Union{Rodas5, RadauIIA5, ImplicitEuler, Trapezoid}
-        return :mass_matrix
-    else
-        return :indexing
-    end
-end
-
-
 function handle_parameters(p)
     if p isa SciMLBase.NullParameters
         return Float64[]
@@ -107,8 +98,7 @@ function SciMLBase.__solve(
     if cache.opt isa ODEOptimizer
         return solve_ode(cache, dt, maxit, u0, p)
     else
-        solver_method = get_solver_type(cache.opt)
-        if solver_method == :mass_matrix
+        if cache.opt.solver == Rosenbrock23(autodiff = false)
             return solve_dae_mass_matrix(cache, dt, maxit, u0, p)
         else
             return solve_dae_indexing(cache, dt, maxit, u0, p, differential_vars)
