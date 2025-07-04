@@ -102,21 +102,21 @@ end
     # Minimize f(x) = x₁² + x₂²
     # Subject to x₁ - x₂ = 1
 
-    function constrained_objective(x, p,args...)
+    function constrained_objective(x, p)
         return x[1]^2 + x[2]^2
     end
 
-    function constrained_objective_grad!(g, x, p, args...)
+    function constrained_objective_grad!(g, x, p)
         g .= 2 .* x .* p[1]
         return nothing
     end
 
     # Constraint: x₁ - x₂ - p[1] = 0  (p[1] = 1 → x₁ - x₂ = 1)
-    function constraint_func(x, p, args...)
+    function constraint_func(x, p)
         return x[1] - x[2] - p[1]
     end
 
-    function constraint_jac!(J, x,args...)
+    function constraint_jac!(J, x)
         J[1, 1] = 1.0
         J[1, 2] = -1.0
         return nothing
@@ -159,8 +159,8 @@ end
             x0 = [0.0, 0.0]
             p=Float64[]  # No parameters provided
             # Create a problem with NullParameters
-            optf = OptimizationFunction((x, p, args...) -> sum(x.^2), 
-                                      grad=(grad, x, p, args...) -> (grad .= 2.0 .* x))
+            optf = OptimizationFunction((x, p) -> sum(x.^2), 
+                                      grad=(grad, x, p) -> (grad .= 2.0 .* x))
             prob = OptimizationProblem(optf, x0,p)  # No parameters provided
             
             opt = ODEGradientDescent()
@@ -262,8 +262,8 @@ end
             x0 = [0.5]
             p = [1.0]
             
-            single_var_func(x, p,args...) = (x[1] - p[1])^2
-            single_var_grad!(grad, x, p,args...) = (grad[1] = 2.0 * (x[1] - p[1]))
+            single_var_func(x, p) = (x[1] - p[1])^2
+            single_var_grad!(grad, x, p) = (grad[1] = 2.0 * (x[1] - p[1]))
             
             optf = OptimizationFunction(single_var_func; grad=single_var_grad!)
             prob = OptimizationProblem(optf, x0, p)
