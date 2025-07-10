@@ -28,8 +28,8 @@ p = []
 f_manual = OptimizationFunction(f, SciMLBase.NoAD(); grad = g!)
 prob_manual = OptimizationProblem(f_manual, x0)
 
-opt = ODEGradientDescent(dt=0.01)
-sol = solve(prob_manual, opt; maxiters=50_000)
+opt = ODEGradientDescent()
+sol = solve(prob_manual, opt; dt=0.01, maxiters=50_000)
 
 @show sol.u
 @show sol.objective
@@ -39,7 +39,7 @@ sol = solve(prob_manual, opt; maxiters=50_000)
 
 All provided optimizers are **gradient-based local optimizers** that solve optimization problems by integrating gradient-based ODEs to convergence:
 
-* `ODEGradientDescent(dt=...)` — performs basic gradient descent using the explicit Euler method. This is a simple and efficient method suitable for small-scale or well-conditioned problems.
+* `ODEGradientDescent()` — performs basic gradient descent using the explicit Euler method. This is a simple and efficient method suitable for small-scale or well-conditioned problems.
 
 * `RKChebyshevDescent()` — uses the ROCK2 solver, a stabilized explicit Runge-Kutta method suitable for stiff problems. It allows larger step sizes while maintaining stability.
 
@@ -47,7 +47,15 @@ All provided optimizers are **gradient-based local optimizers** that solve optim
 
 * `HighOrderDescent()` — applies Vern7, a high-order (7th-order) explicit Runge-Kutta method for even more accurate integration. This can be beneficial for problems requiring high precision.
 
-You can also define a custom optimizer using the generic `ODEOptimizer(solver; dt=nothing)` constructor by supplying any ODE solver supported by [OrdinaryDiffEq.jl](https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/).
+## DAE-based Optimizers
+
+In addition to ODE-based optimizers, OptimizationODE.jl provides optimizers for differential-algebraic equation (DAE) constrained problems:
+
+* `DAEMassMatrix()` — uses the Rodas5 solver (from OrdinaryDiffEq.jl) for DAE problems with a mass matrix formulation.
+
+* `DAEIndexing()` — uses the IDA solver (from Sundials.jl) for DAE problems with index variable support.
+
+You can also define a custom optimizer using the generic `ODEOptimizer(solver)` or `DAEOptimizer(solver)` constructor by supplying any ODE or DAE solver supported by [OrdinaryDiffEq.jl](https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/) or [Sundials.jl](https://github.com/SciML/Sundials.jl).
 
 ## DAE-based Optimizers
 
