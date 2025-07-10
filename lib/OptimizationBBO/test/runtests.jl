@@ -34,6 +34,50 @@ using Test
         push!(loss_history, fitness)
         return false
     end
+
+    @testset "In-place Multi-Objective Optimization" begin
+        function inplace_multi_obj!(cost, x, p)
+            cost[1] = sum(x .^ 2)
+            cost[2] = sum(x .^ 2 .- 10 .* cos.(2π .* x) .+ 10)
+            return nothing
+        end
+        u0 = [0.25, 0.25]
+        lb = [0.0, 0.0]
+        ub = [2.0, 2.0]
+        cost_prototype = zeros(2)
+        mof_inplace = MultiObjectiveOptimizationFunction(inplace_multi_obj!; cost_prototype=cost_prototype)
+        prob_inplace = Optimization.OptimizationProblem(mof_inplace, u0; lb=lb, ub=ub)
+        sol_inplace = solve(prob_inplace, opt, NumDimensions=2, FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true))
+        @test sol_inplace ≠ nothing
+        @test length(sol_inplace.objective) == 2
+        @test sol_inplace.objective[1] ≈ 6.9905986e-18 atol=1e-3
+        @test sol_inplace.objective[2] ≈ 1.7763568e-15 atol=1e-3
+    end
+
+    @testset "Custom coalesce for Multi-Objective" begin
+        function multi_obj_tuple(x, p)
+            f1 = sum(x .^ 2)
+            f2 = sum(x .^ 2 .- 10 .* cos.(2π .* x) .+ 10)
+            return (f1, f2)
+        end
+        coalesce_sum(cost, x, p) = sum(cost)
+        mof_coalesce = MultiObjectiveOptimizationFunction(multi_obj_tuple; coalesce=coalesce_sum)
+        prob_coalesce = Optimization.OptimizationProblem(mof_coalesce, u0; lb=lb, ub=ub)
+        sol_coalesce = solve(prob_coalesce, opt, NumDimensions=2, FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true))
+        @test sol_coalesce ≠ nothing
+        @test sol_coalesce.objective[1] ≈ 6.9905986e-18 atol=1e-3
+        @test sol_coalesce.objective[2] ≈ 1.7763568e-15 atol=1e-3
+        @test mof_coalesce.coalesce([1.0, 2.0], [0.0, 0.0], nothing) == 3.0
+    end
+
+    @testset "Error if in-place MultiObjectiveOptimizationFunction without cost_prototype" begin
+        function inplace_multi_obj_err!(cost, x, p)
+            cost[1] = sum(x .^ 2)
+            cost[2] = sum(x .^ 2 .- 10 .* cos.(2π .* x) .+ 10)
+            return nothing
+        end
+        @test_throws ArgumentError MultiObjectiveOptimizationFunction(inplace_multi_obj_err!)
+    end
     sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(), callback = cb)
     # println(fitness_progress_history)
     @test !isempty(fitness_progress_history)
