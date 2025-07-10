@@ -59,9 +59,25 @@ function __map_optimizer_args(prob::Optimization.OptimizationCache, opt::BBO;
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
-    mapped_args = (; kwargs...)
-    mapped_args = (; mapped_args..., Method = opt.method,
-        SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)])
+
+    # Determine number of objectives for multi-objective problems
+    if isa(prob.f, MultiObjectiveOptimizationFunction)
+        num_objectives = length(prob.f.cost_prototype)
+        mapped_args = (; kwargs...)
+        mapped_args = (; mapped_args..., Method = opt.method,
+            SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)],
+            NumDimensions = length(prob.lb),
+            NumObjectives = num_objectives)
+        # FitnessScheme should be in opt, not the function
+        if hasproperty(opt, :FitnessScheme)
+            mapped_args = (; mapped_args..., FitnessScheme = opt.FitnessScheme)
+        end
+    else
+        mapped_args = (; kwargs...)
+        mapped_args = (; mapped_args..., Method = opt.method,
+            SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)],
+            NumDimensions = length(prob.lb))
+    end
 
     if !isnothing(callback)
         mapped_args = (; mapped_args..., CallbackFunction = callback,
@@ -151,8 +167,16 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
-    _loss = function (θ)
-        cache.f(θ, cache.p)
+
+    # Multi-objective: use out-of-place or in-place as appropriate
+    if isa(cache.f, MultiObjectiveOptimizationFunction)
+        if cache.f.iip
+            _loss = θ -> (cost = similar(cache.f.cost_prototype); cache.f.f(cost, θ, cache.p); cost)
+        else
+            _loss = θ -> cache.f.f(θ, cache.p)
+        end
+    else
+        _loss = θ -> cache.f(θ, cache.p)
     end
 
     opt_args = __map_optimizer_args(cache, cache.opt;
