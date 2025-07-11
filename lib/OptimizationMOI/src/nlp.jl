@@ -1,5 +1,5 @@
 mutable struct MOIOptimizationNLPEvaluator{T, F <: OptimizationFunction, RC, LB, UB,
-    I, S, CB} <:
+    I, JT <: AbstractMatrix{T}, HT <: AbstractMatrix{T}, CHT <: AbstractMatrix{T}, S, CB} <:
                MOI.AbstractNLPEvaluator
     f::F
     reinit_cache::RC
@@ -9,9 +9,9 @@ mutable struct MOIOptimizationNLPEvaluator{T, F <: OptimizationFunction, RC, LB,
     lcons::Vector{T}
     ucons::Vector{T}
     sense::S
-    J::AbstractMatrix{T}
-    H::AbstractMatrix{T}
-    cons_H::Vector{AbstractMatrix{T}}
+    J::JT
+    H::HT
+    cons_H::Vector{CHT}
     callback::CB
     iteration::Int
     obj_expr::Union{Expr, Nothing}
