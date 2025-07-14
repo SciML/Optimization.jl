@@ -1,5 +1,5 @@
 using Optimization, OptimizationOptimJL, OptimizationMOI, Ipopt, Test
-using ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker
+using ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker, Mooncake
 using Enzyme, Random
 
 x0 = zeros(2)
