@@ -46,10 +46,13 @@ end
             @test sol.retcode == ReturnCode.Success
         end
 
-        sol = solve(prob, Optim.Newton())
-        @test 10 * sol.objective < l1
-        if adtype != AutoFiniteDiff()
-            @test sol.retcode == ReturnCode.Success
+         # `Newton` requires Hession, which Mooncake doesn't support at the moment. 
+        if adtype != AutoMooncake()
+            sol = solve(prob, Optim.Newton())
+            @test 10 * sol.objective < l1
+            if adtype != AutoFiniteDiff()
+                @test sol.retcode == ReturnCode.Success
+            end
         end
 
         sol = solve(prob, Optim.KrylovTrustRegion())
