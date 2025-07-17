@@ -1,0 +1,19 @@
+name = "OptimizationPyCMA"
+uuid = "fb0822aa-1fe5-41d8-99a6-e7bf6c238d3b"
+authors = ["Maximilian Pochapski <67759684+mxpoch@users.noreply.github.com>"]
+version = "1.0.0"
+
+[deps]
+CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
+Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[compat]
+CondaPkg = "0.2.29"
+Optimization = "4.4.0"
+PythonCall = "0.9.25"
+Reexport = "1.2.2"
+Test = "1.10.0"
+julia = "1.10"

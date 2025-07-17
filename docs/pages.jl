@@ -23,7 +23,7 @@ pages = ["index.md",
         "API/modelingtoolkit.md",
         "API/FAQ.md"
     ],
-    "Optimizer Packages" => [
+    "Optimizer Packages" => [   
         "BlackBoxOptim.jl" => "optimization_packages/blackboxoptim.md",
         "CMAEvolutionStrategy.jl" => "optimization_packages/cmaevolutionstrategy.md",
         "Evolutionary.jl" => "optimization_packages/evolutionary.md",
@@ -40,7 +40,9 @@ pages = ["index.md",
         "Optimization.jl" => "optimization_packages/optimization.md",
         "Polyalgorithms.jl" => "optimization_packages/polyopt.md",
         "PRIMA.jl" => "optimization_packages/prima.md",
+        "PyCMA.jl" => "optimization_packages/pycma.md",
         "QuadDIRECT.jl" => "optimization_packages/quaddirect.md",
-        "SpeedMapping.jl" => "optimization_packages/speedmapping.md"
+        "SpeedMapping.jl" => "optimization_packages/speedmapping.md",
+        "SciPy.jl" => "optimization_packages/scipy.md"
     ]
 ]

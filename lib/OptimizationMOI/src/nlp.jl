@@ -1,7 +1,5 @@
 mutable struct MOIOptimizationNLPEvaluator{T, F <: OptimizationFunction, RC, LB, UB,
-    I,
-    JT <: DenseOrSparse{T}, HT <: DenseOrSparse{T},
-    CHT <: DenseOrSparse{T}, S, CB} <:
+    I, JT <: AbstractMatrix{T}, HT <: AbstractMatrix{T}, CHT <: AbstractMatrix{T}, S, CB} <:
                MOI.AbstractNLPEvaluator
     f::F
     reinit_cache::RC
