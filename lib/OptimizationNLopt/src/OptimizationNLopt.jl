@@ -3,37 +3,53 @@ module OptimizationNLopt
 using Reexport
 @reexport using NLopt, Optimization
 using Optimization.SciMLBase
+using Optimization: deduce_retcode
 
 (f::NLopt.Algorithm)() = f
 
 SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 
-function SciMLBase.requiresgradient(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
-    str_opt = string(opt)
-    if str_opt[2] == "D"
-        return true
-    else
-        return false
-    end
+function SciMLBase.requiresgradient(opt::Union{NLopt.Algorithm, NLopt.Opt})
+    # https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
+    str_opt = string(opt isa NLopt.Algorithm ? opt : opt.algorithm)
+    return str_opt[2] != 'N'
 end
 
-function SciMLBase.requireshessian(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
-    str_opt = string(opt)
-    if (str_opt[2] == "D" && str_opt[4] == "N")
-        return true
-    else
-        return false
-    end
+#interferes with callback handling
+# function SciMLBase.allowsfg(opt::Union{NLopt.Algorithm, NLopt.Opt})
+#     str_opt = string(opt isa NLopt.Algorithm ? opt : opt.algorithm)
+#     return str_opt[2] == 'D'
+# end
+
+function SciMLBase.requireshessian(opt::Union{NLopt.Algorithm, NLopt.Opt})
+    # https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
+    str_opt = string(opt isa NLopt.Algorithm ? opt : opt.algorithm)
+    return !(str_opt[2] == 'N' || occursin(r"LD_LBFGS|LD_SLSQP", str_opt))
 end
 
-function SciMLBase.requiresconsjac(opt::NLopt.Algorithm) #https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
+function SciMLBase.requiresconsjac(opt::Union{NLopt.Algorithm, NLopt.Opt})
+    # https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
+    str_opt = string(opt isa NLopt.Algorithm ? opt : opt.algorithm)
+    return str_opt[3] ∈ ['O', 'I'] || str_opt[5] == 'G'
+end
+
+function SciMLBase.allowsconstraints(opt::NLopt.Algorithm)
     str_opt = string(opt)
-    if str_opt[3] == "O" || str_opt[3] == "I" || str_opt[5] == "G"
-        return true
-    else
-        return false
-    end
+    return occursin(r"AUGLAG|CCSA|MMA|COBYLA|ISRES|AGS|ORIG_DIRECT|SLSQP", str_opt)
+end
+
+function SciMLBase.requiresconsjac(opt::NLopt.Algorithm)
+    str_opt = string(opt)
+    return occursin(r"AUGLAG|CCSA|MMA|COBYLA|ISRES|AGS|ORIG_DIRECT|SLSQP", str_opt)
+end
+
+function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::NLopt.Algorithm,
+        ; cons_tol = 1e-6,
+        callback = (args...) -> (false),
+        progress = false, kwargs...)
+    return OptimizationCache(prob, opt; cons_tol, callback, progress,
+        kwargs...)
 end
 
 function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
@@ -76,7 +92,9 @@ function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
 
     # add optimiser options from kwargs
     for j in kwargs
-        eval(Meta.parse("NLopt." * string(j.first) * "!"))(opt, j.second)
+        if j.first != :cons_tol
+            eval(Meta.parse("NLopt." * string(j.first) * "!"))(opt, j.second)
+        end
     end
 
     if cache.ub !== nothing
@@ -103,31 +121,6 @@ function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
     end
 
     return nothing
-end
-
-function __nlopt_status_to_ReturnCode(status::Symbol)
-    if status in Symbol.([
-        NLopt.SUCCESS,
-        NLopt.STOPVAL_REACHED,
-        NLopt.FTOL_REACHED,
-        NLopt.XTOL_REACHED,
-        NLopt.ROUNDOFF_LIMITED
-    ])
-        return ReturnCode.Success
-    elseif status == Symbol(NLopt.MAXEVAL_REACHED)
-        return ReturnCode.MaxIters
-    elseif status == Symbol(NLopt.MAXTIME_REACHED)
-        return ReturnCode.MaxTime
-    elseif status in Symbol.([
-        NLopt.OUT_OF_MEMORY,
-        NLopt.INVALID_ARGS,
-        NLopt.FAILURE,
-        NLopt.FORCED_STOP
-    ])
-        return ReturnCode.Failure
-    else
-        return ReturnCode.Default
-    end
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
@@ -174,7 +167,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
         if length(G) > 0
             cache.f.grad(G, θ)
         end
-
         return _loss(θ)
     end
 
@@ -193,6 +185,60 @@ function SciMLBase.__solve(cache::OptimizationCache{
         NLopt.min_objective!(opt_setup, fg!)
     end
 
+    if cache.f.cons !== nothing
+        eqinds = map((y) -> y[1] == y[2], zip(cache.lcons, cache.ucons))
+        ineqinds = map((y) -> y[1] != y[2], zip(cache.lcons, cache.ucons))
+        cons_cache = zeros(eltype(cache.u0), sum(eqinds) + sum(ineqinds))
+        thetacache = rand(size(cache.u0))
+        Jthetacache = rand(size(cache.u0))
+        Jcache = zeros(eltype(cache.u0), sum(ineqinds) + sum(eqinds), length(cache.u0))
+        evalcons = function (θ, ineqoreq)
+            if thetacache != θ
+                cache.f.cons(cons_cache, θ)
+                thetacache = copy(θ)
+            end
+            if ineqoreq == :eq
+                return @view(cons_cache[eqinds])
+            else
+                return @view(cons_cache[ineqinds])
+            end
+        end
+
+        evalconj = function (θ, ineqoreq)
+            if Jthetacache != θ
+                cache.f.cons_j(Jcache, θ)
+                Jthetacache = copy(θ)
+            end
+
+            if ineqoreq == :eq
+                return @view(Jcache[eqinds, :])'
+            else
+                return @view(Jcache[ineqinds, :])'
+            end
+        end
+
+        if sum(ineqinds) > 0
+            ineqcons = function (res, θ, J)
+                res .= copy(evalcons(θ, :ineq))
+                if length(J) > 0
+                    J .= copy(evalconj(θ, :ineq))
+                end
+            end
+            NLopt.inequality_constraint!(
+                opt_setup, ineqcons, [cache.solver_args.cons_tol for i in 1:sum(ineqinds)])
+        end
+        if sum(eqinds) > 0
+            eqcons = function (res, θ, J)
+                res .= copy(evalcons(θ, :eq))
+                if length(J) > 0
+                    J .= copy(evalconj(θ, :eq))
+                end
+            end
+            NLopt.equality_constraint!(
+                opt_setup, eqcons, [cache.solver_args.cons_tol for i in 1:sum(eqinds)])
+        end
+    end
+
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
@@ -203,7 +249,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     t0 = time()
     (minf, minx, ret) = NLopt.optimize(opt_setup, cache.u0)
     t1 = time()
-    retcode = __nlopt_status_to_ReturnCode(ret)
+    retcode = deduce_retcode(ret)
 
     if retcode == ReturnCode.Failure
         @warn "NLopt failed to converge: $(ret)"

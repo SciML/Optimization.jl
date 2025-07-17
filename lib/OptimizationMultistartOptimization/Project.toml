@@ -1,7 +1,7 @@
 name = "OptimizationMultistartOptimization"
 uuid = "e4316d97-8bbb-4fd3-a7d8-3851d2a72823"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.2.0"
+version = "0.3.1"
 
 [deps]
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
@@ -10,14 +10,16 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
 julia = "1"
-MultistartOptimization = "0.2"
-Optimization = "3.21"
+MultistartOptimization = "0.2, 0.3"
+Optimization = "4"
 Reexport = "1.2"
 
 [extras]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+OptimizationNLopt= "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
+ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["ForwardDiff", "Pkg", "Test"]
+test = ["ForwardDiff", "OptimizationNLopt", "ReverseDiff", "Pkg", "Test"]

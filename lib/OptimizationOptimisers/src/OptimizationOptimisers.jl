@@ -2,18 +2,20 @@ module OptimizationOptimisers
 
 using Reexport, Printf, ProgressLogging
 @reexport using Optimisers, Optimization
-using Optimization.SciMLBase
+using Optimization.SciMLBase, Optimization.OptimizationBase
 
 SciMLBase.supports_opt_cache_interface(opt::AbstractRule) = true
 SciMLBase.requiresgradient(opt::AbstractRule) = true
-include("sophia.jl")
+SciMLBase.allowsfg(opt::AbstractRule) = true
 
-function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::AbstractRule,
-        data = Optimization.DEFAULT_DATA; save_best = true,
+function SciMLBase.__init(
+        prob::SciMLBase.OptimizationProblem, opt::AbstractRule;
         callback = (args...) -> (false),
-        progress = false, kwargs...)
-    return OptimizationCache(prob, opt, data; save_best, callback, progress,
-        kwargs...)
+        epochs::Union{Number, Nothing} = nothing,
+        maxiters::Union{Number, Nothing} = nothing,
+        save_best::Bool = true, progress::Bool = false, kwargs...)
+    return OptimizationCache(prob, opt; callback, epochs, maxiters,
+        save_best, progress, kwargs...)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{
@@ -42,16 +44,36 @@ function SciMLBase.__solve(cache::OptimizationCache{
         P,
         C
 }
-    if cache.data != Optimization.DEFAULT_DATA
-        maxiters = length(cache.data)
-        data = cache.data
+    if OptimizationBase.isa_dataiterator(cache.p)
+        data = cache.p
+        dataiterate = true
     else
-        maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-        if maxiters === nothing
-            throw(ArgumentError("The number of iterations must be specified as the maxiters kwarg."))
-        end
-        data = Optimization.take(cache.data, maxiters)
+        data = [cache.p]
+        dataiterate = false
     end
+
+    epochs, maxiters = if isnothing(cache.solver_args.maxiters) &&
+                          isnothing(cache.solver_args.epochs)
+        throw(ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data)."))
+    elseif !isnothing(cache.solver_args.maxiters) &&
+           !isnothing(cache.solver_args.epochs)
+        if cache.solver_args.maxiters == cache.solver_args.epochs * length(data)
+            cache.solver_args.epochs, cache.solver_args.maxiters
+        else
+            throw(ArgumentError("Both maxiters and epochs were passed but maxiters != epochs * length(data)."))
+        end
+    elseif isnothing(cache.solver_args.maxiters)
+        cache.solver_args.epochs, cache.solver_args.epochs * length(data)
+    elseif isnothing(cache.solver_args.epochs)
+        cache.solver_args.maxiters / length(data), cache.solver_args.maxiters
+    end
+    epochs = Optimization._check_and_convert_maxiters(epochs)
+    maxiters = Optimization._check_and_convert_maxiters(maxiters)
+
+    # At this point, both of them should be fine; but, let's assert it.
+    @assert (!isnothing(epochs)&&!isnothing(maxiters) &&
+             (maxiters == epochs * length(data))) "The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data)."
+
     opt = cache.opt
     θ = copy(cache.u0)
     G = copy(θ)
@@ -62,55 +84,84 @@ function SciMLBase.__solve(cache::OptimizationCache{
     min_θ = cache.u0
 
     state = Optimisers.setup(opt, θ)
-
+    iterations = 0
+    fevals = 0
+    gevals = 0
     t0 = time()
+    breakall = false
     Optimization.@withprogress cache.progress name="Training" begin
-        for (i, d) in enumerate(data)
-            cache.f.grad(G, θ, d...)
-            x = cache.f(θ, cache.p, d...)
-            opt_state = Optimization.OptimizationState(iter = i,
-                u = θ,
-                objective = x[1],
-                grad = G,
-                original = state)
-            cb_call = cache.callback(opt_state, x...)
-            if !(cb_call isa Bool)
-                error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the `solve` documentation for information.")
-            elseif cb_call
+        for epoch in 1:epochs
+            if breakall
                 break
             end
-            msg = @sprintf("loss: %.3g", first(x)[1])
-            cache.progress && ProgressLogging.@logprogress msg i/maxiters
-
-            if cache.solver_args.save_best
-                if first(x)[1] < first(min_err)[1]  #found a better solution
-                    min_opt = opt
-                    min_err = x
-                    min_θ = copy(θ)
+            for (i, d) in enumerate(data)
+                if cache.f.fg !== nothing && dataiterate
+                    x = cache.f.fg(G, θ, d)
+                    iterations += 1
+                    fevals += 1
+                    gevals += 1
+                elseif dataiterate
+                    cache.f.grad(G, θ, d)
+                    x = cache.f(θ, d)
+                    iterations += 1
+                    fevals += 2
+                    gevals += 1
+                elseif cache.f.fg !== nothing
+                    x = cache.f.fg(G, θ)
+                    iterations += 1
+                    fevals += 1
+                    gevals += 1
+                else
+                    cache.f.grad(G, θ)
+                    x = cache.f(θ)
+                    iterations += 1
+                    fevals += 2
+                    gevals += 1
                 end
-                if i == maxiters  #Last iter, revert to best.
-                    opt = min_opt
-                    x = min_err
-                    θ = min_θ
-                    cache.f.grad(G, θ, d...)
-                    opt_state = Optimization.OptimizationState(iter = i,
-                        u = θ,
-                        objective = x[1],
-                        grad = G,
-                        original = state)
-                    cache.callback(opt_state, x...)
+                opt_state = Optimization.OptimizationState(
+                    iter = i + (epoch - 1) * length(data),
+                    u = θ,
+                    objective = x[1],
+                    grad = G,
+                    original = state)
+                breakall = cache.callback(opt_state, x...)
+                if !(breakall isa Bool)
+                    error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the `solve` documentation for information.")
+                elseif breakall
                     break
                 end
+                msg = @sprintf("loss: %.3g", first(x)[1])
+                cache.progress && ProgressLogging.@logprogress msg i/maxiters
+
+                if cache.solver_args.save_best
+                    if first(x)[1] < first(min_err)[1]  #found a better solution
+                        min_opt = opt
+                        min_err = x
+                        min_θ = copy(θ)
+                    end
+                    if iterations == length(data) * epochs  #Last iter, revert to best.
+                        opt = min_opt
+                        x = min_err
+                        θ = min_θ
+                        cache.f.grad(G, θ, d)
+                        opt_state = Optimization.OptimizationState(iter = iterations,
+                            u = θ,
+                            objective = x[1],
+                            grad = G,
+                            original = state)
+                        breakall = cache.callback(opt_state, x...)
+                        break
+                    end
+                end
+                state, θ = Optimisers.update(state, θ, G)
             end
-            state, θ = Optimisers.update(state, θ, G)
         end
     end
 
     t1 = time()
-    stats = Optimization.OptimizationStats(; iterations = maxiters,
-        time = t1 - t0, fevals = maxiters, gevals = maxiters)
+    stats = Optimization.OptimizationStats(; iterations,
+        time = t1 - t0, fevals, gevals)
     SciMLBase.build_solution(cache, cache.opt, θ, first(x)[1], stats = stats)
-    # here should be build_solution to create the output message
 end
 
 end

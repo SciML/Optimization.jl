@@ -11,6 +11,7 @@ import ModelingToolkit: parameters, unknowns, varmap_to_vars, mergedefaults, toe
 import ModelingToolkit
 const MTK = ModelingToolkit
 using Symbolics
+using LinearAlgebra
 
 const MOI = MathOptInterface
 

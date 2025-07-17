@@ -66,11 +66,10 @@ function __map_optimizer_args!(cache::OptimizationCache,
 end
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
-        opt::Metaheuristics.AbstractAlgorithm,
-        data = Optimization.DEFAULT_DATA; use_initial = false,
+        opt::Metaheuristics.AbstractAlgorithm; use_initial = false,
         callback = (args...) -> (false),
         progress = false, kwargs...)
-    return OptimizationCache(prob, opt, data; use_initial = use_initial,
+    return OptimizationCache(prob, opt; use_initial = use_initial,
         callback = callback,
         progress = progress,
         kwargs...)
@@ -107,9 +106,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
-    f=cache.f
+    f = cache.f
     _loss = function (θ)
-        if isa(f,MultiObjectiveOptimizationFunction)
+        if isa(f, MultiObjectiveOptimizationFunction)
             return cache.f(θ, cache.p)
         else
             x = cache.f(θ, cache.p)

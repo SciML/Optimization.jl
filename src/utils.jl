@@ -40,7 +40,7 @@ function _check_and_convert_maxiters(maxiters)
     if !(isnothing(maxiters)) && maxiters <= 0.0
         error("The number of maxiters has to be a non-negative and non-zero number.")
     elseif !(isnothing(maxiters))
-        return convert(Int, maxiters)
+        return convert(Int, round(maxiters))
     end
 end
 
@@ -70,16 +70,17 @@ const STOP_REASON_MAP = Dict(
     r"InitialFailure" => ReturnCode.InitialFailure,
     r"ConvergenceFailure|ITERATION_LIMIT" => ReturnCode.ConvergenceFailure,
     r"Infeasible|INFEASIBLE|DUAL_INFEASIBLE|LOCALLY_INFEASIBLE|INFEASIBLE_OR_UNBOUNDED" => ReturnCode.Infeasible,
-    r"STOP: TOTAL NO. of ITERATIONS REACHED LIMIT" => ReturnCode.MaxIters,
-    r"STOP: TOTAL NO. of f AND g EVALUATIONS EXCEEDS LIMIT" => ReturnCode.MaxIters,
-    r"STOP: ABNORMAL_TERMINATION_IN_LNSRCH" => ReturnCode.Unstable,
-    r"STOP: ERROR INPUT DATA" => ReturnCode.InitialFailure,
-    r"STOP: FTOL.TOO.SMALL" => ReturnCode.ConvergenceFailure,
-    r"STOP: GTOL.TOO.SMALL" => ReturnCode.ConvergenceFailure,
-    r"STOP: XTOL.TOO.SMALL" => ReturnCode.ConvergenceFailure,
+    r"TOTAL NO. of ITERATIONS REACHED LIMIT" => ReturnCode.MaxIters,
+    r"TOTAL NO. of f AND g EVALUATIONS EXCEEDS LIMIT" => ReturnCode.MaxIters,
+    r"ABNORMAL_TERMINATION_IN_LNSRCH" => ReturnCode.Unstable,
+    r"ERROR INPUT DATA" => ReturnCode.InitialFailure,
+    r"FTOL.TOO.SMALL" => ReturnCode.ConvergenceFailure,
+    r"GTOL.TOO.SMALL" => ReturnCode.ConvergenceFailure,
+    r"XTOL.TOO.SMALL" => ReturnCode.ConvergenceFailure,
     r"STOP: TERMINATION" => ReturnCode.Terminated,
     r"Optimization completed" => ReturnCode.Success,
-    r"Convergence achieved" => ReturnCode.Success
+    r"Convergence achieved" => ReturnCode.Success,
+    r"ROUNDOFF_LIMITED" => ReturnCode.Success
 )
 
 # Function to deduce ReturnCode from a stop_reason string using the dictionary
@@ -99,13 +100,17 @@ function deduce_retcode(retcode::Symbol)
         return ReturnCode.Default
     elseif retcode == :Success || retcode == :EXACT_SOLUTION_LEFT ||
            retcode == :FLOATING_POINT_LIMIT || retcode == :true || retcode == :OPTIMAL ||
-           retcode == :LOCALLY_SOLVED
+           retcode == :LOCALLY_SOLVED || retcode == :ROUNDOFF_LIMITED ||
+           retcode == :SUCCESS ||
+           retcode == :STOPVAL_REACHED || retcode == :FTOL_REACHED ||
+           retcode == :XTOL_REACHED
         return ReturnCode.Success
     elseif retcode == :Terminated
         return ReturnCode.Terminated
-    elseif retcode == :MaxIters || retcode == :MAXITERS_EXCEED
+    elseif retcode == :MaxIters || retcode == :MAXITERS_EXCEED ||
+           retcode == :MAXEVAL_REACHED
         return ReturnCode.MaxIters
-    elseif retcode == :MaxTime || retcode == :TIME_LIMIT
+    elseif retcode == :MaxTime || retcode == :TIME_LIMIT || retcode == :MAXTIME_REACHED
         return ReturnCode.MaxTime
     elseif retcode == :DtLessThanMin
         return ReturnCode.DtLessThanMin

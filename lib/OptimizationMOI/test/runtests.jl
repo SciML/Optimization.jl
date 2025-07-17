@@ -1,6 +1,8 @@
-using OptimizationMOI, Optimization, Ipopt, NLopt, Zygote, ModelingToolkit
+using OptimizationMOI, Optimization, Ipopt, NLopt, Zygote, ModelingToolkit, ReverseDiff
 using AmplNLWriter, Ipopt_jll, Juniper, HiGHS
 using Test, SparseArrays
+
+import MathOptInterface
 
 function _test_sparse_derivatives_hs071(backend, optimizer)
     function objective(x, ::Any)
@@ -29,6 +31,32 @@ function _test_sparse_derivatives_hs071(backend, optimizer)
     return
 end
 
+@testset "Evaluator" begin
+    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+    x0 = zeros(2)
+    _p = [1.0, 100.0]
+    cons_circ = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
+    optprob = OptimizationFunction(
+        rosenbrock, Optimization.AutoZygote();
+        cons = cons_circ)
+    prob = OptimizationProblem(optprob, x0, _p, ucons = [Inf], lcons = [0.0])
+    evaluator = init(prob, Ipopt.Optimizer()).evaluator
+
+    x = prob.u0
+    # vector-constraint jacobian product
+    @test (evaluator.f.cons_j !== nothing) || (evaluator.f.cons_jvp !== nothing)
+    y = zeros(1)
+    w = ones(2)
+    @test MathOptInterface.eval_constraint_jacobian_product(evaluator, y, x, w) === nothing
+
+    # constraint jacobian-vector product
+    @test (evaluator.f.cons_j !== nothing) || (evaluator.f.cons_vjp !== nothing)
+    y = zeros(2)
+    w = ones(1)
+    @test MathOptInterface.eval_constraint_jacobian_transpose_product(
+        evaluator, y, x, w) === nothing
+end
+
 @testset "NLP" begin
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = zeros(2)
@@ -49,7 +77,7 @@ end
     # cache interface
     cache = init(prob, Ipopt.Optimizer())
     sol = solve!(cache)
-    @test 10 * sol.minimum < l1
+    @test 10 * sol.objective < l1
 
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
     prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MinSense)
@@ -60,15 +88,29 @@ end
     sol = solve(prob, opt) #test reuse of optimizer
     @test 10 * sol.objective < l1
 
+    # test stats
+    @test sol.stats.time > 0
+    @test sol.stats.iterations > 0
+
     sol = solve(prob,
         OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
             "max_cpu_time" => 60.0))
     @test 10 * sol.objective < l1
 
+    # test stats with AbstractBridgeOptimizer
+    sol = solve(prob,
+        OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
+            "max_cpu_time" => 60.0, "max_iter" => 5))
+
+    @test 60 > sol.stats.time > 0
+    @test sol.stats.iterations == 5
+
     sol = solve(prob,
         OptimizationMOI.MOI.OptimizerWithAttributes(NLopt.Optimizer,
             "algorithm" => :LN_BOBYQA))
     @test 10 * sol.objective < l1
+
+    @test sol.stats.time > 0
 
     sol = solve(prob,
         OptimizationMOI.MOI.OptimizerWithAttributes(NLopt.Optimizer,
@@ -133,6 +175,7 @@ end
         res = solve(optprob, minlp_solver)
         @test res.u == [0.0, 0.0, 1.0, 0.0]
         @test res.objective == -4.0
+        @test res.stats.time > 0
     end
 
     @testset "Integer Domain" begin

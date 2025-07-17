@@ -1,22 +1,24 @@
 name = "OptimizationNLopt"
 uuid = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.2.2"
+version = "0.3.2"
 
 [deps]
 NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
-NLopt = "0.6, 1"
-Optimization = "3.21"
+NLopt = "1.1"
+Optimization = "4"
 Reexport = "1.2"
 julia = "1"
 
 [extras]
+ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Test", "Zygote"]
+test = ["ReverseDiff", "Test", "Zygote"]

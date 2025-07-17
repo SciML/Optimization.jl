@@ -20,9 +20,13 @@ end
 SciMLBase.requiresgradient(::IPNewton) = true
 SciMLBase.requireshessian(::IPNewton) = true
 SciMLBase.requiresconsjac(::IPNewton) = true
-SciMLBase.requireshessian(opt::Optim.NewtonTrustRegion) = true
-SciMLBase.requireshessian(opt::Optim.Newton) = true
+SciMLBase.requiresconshess(::IPNewton) = true
+function SciMLBase.requireshessian(opt::Union{
+        Optim.Newton, Optim.NewtonTrustRegion, Optim.KrylovTrustRegion})
+    true
+end
 SciMLBase.requiresgradient(opt::Optim.Fminbox) = true
+# SciMLBase.allowsfg(opt::Union{Optim.AbstractOptimizer, Optim.ConstrainedOptimizer, Optim.Fminbox, Optim.SAMIN}) = true
 
 function __map_optimizer_args(cache::OptimizationCache,
         opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
@@ -34,11 +38,11 @@ function __map_optimizer_args(cache::OptimizationCache,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         kwargs...)
-    if !isnothing(abstol)
-        @warn "common abstol is currently not used by $(opt)"
-    end
-
     mapped_args = (; extended_trace = true, kwargs...)
+
+    if !isnothing(abstol)
+        mapped_args = (; mapped_args..., f_abstol = abstol)
+    end
 
     if !isnothing(callback)
         mapped_args = (; mapped_args..., callback = callback)
@@ -68,7 +72,7 @@ function __map_optimizer_args(cache::OptimizationCache,
     end
 
     if !isnothing(reltol)
-        mapped_args = (; mapped_args..., f_tol = reltol)
+        mapped_args = (; mapped_args..., f_reltol = reltol)
     end
 
     return Optim.Options(; mapped_args...)
@@ -77,8 +81,7 @@ end
 function SciMLBase.__init(prob::OptimizationProblem,
         opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
             Optim.SAMIN, Optim.ConstrainedOptimizer
-        },
-        data = Optimization.DEFAULT_DATA;
+        };
         callback = (args...) -> (false),
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -102,15 +105,9 @@ function SciMLBase.__init(prob::OptimizationProblem,
         end
     end
 
-    maxiters = if data != Optimization.DEFAULT_DATA
-        length(data)
-    else
-        maxiters
-    end
-
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
     maxtime = Optimization._check_and_convert_maxtime(maxtime)
-    return OptimizationCache(prob, opt, data; callback, maxiters, maxtime, abstol,
+    return OptimizationCache(prob, opt; callback, maxiters, maxtime, abstol,
         reltol, progress,
         kwargs...)
 end
@@ -138,8 +135,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
         P
 }
     local x, cur, state
-
-    cur, state = iterate(cache.data)
     !(cache.opt isa Optim.ZerothOrderOptimizer) && cache.f.grad === nothing &&
         error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
@@ -148,42 +143,40 @@ function SciMLBase.__solve(cache::OptimizationCache{
         θ = metadata[cache.opt isa Optim.NelderMead ? "centroid" : "x"]
         opt_state = Optimization.OptimizationState(iter = trace.iteration,
             u = θ,
-            objective = x[1],
+            objective = trace.value,
             grad = get(metadata, "g(x)", nothing),
             hess = get(metadata, "h(x)", nothing),
             original = trace)
-        cb_call = cache.callback(opt_state, x...)
+        cb_call = cache.callback(opt_state, trace.value)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
-        nx_itr = iterate(cache.data, state)
-        if isnothing(nx_itr)
-            true
-        else
-            cur, state = nx_itr
-            cb_call
-        end
+        cb_call
     end
 
     _loss = function (θ)
-        x = cache.f.f(θ, cache.p, cur...)
+        x = cache.f.f(θ, cache.p)
         __x = first(x)
         return cache.sense === Optimization.MaxSense ? -__x : __x
     end
 
-    fg! = function (G, θ)
-        if G !== nothing
-            cache.f.grad(G, θ, cur...)
-            if cache.sense === Optimization.MaxSense
-                G .*= -one(eltype(G))
+    if cache.f.fg === nothing
+        fg! = function (G, θ)
+            if G !== nothing
+                cache.f.grad(G, θ)
+                if cache.sense === Optimization.MaxSense
+                    G .*= -one(eltype(G))
+                end
             end
+            return _loss(θ)
         end
-        return _loss(θ)
+    else
+        fg! = cache.f.fg
     end
 
     if cache.opt isa Optim.KrylovTrustRegion
         hv = function (H, θ, v)
-            cache.f.hv(H, θ, v, cur...)
+            cache.f.hv(H, θ, v)
             if cache.sense === Optimization.MaxSense
                 H .*= -one(eltype(H))
             end
@@ -191,14 +184,14 @@ function SciMLBase.__solve(cache::OptimizationCache{
         optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, hv, cache.u0)
     else
         gg = function (G, θ)
-            cache.f.grad(G, θ, cur...)
+            cache.f.grad(G, θ)
             if cache.sense === Optimization.MaxSense
                 G .*= -one(eltype(G))
             end
         end
 
         hh = function (H, θ)
-            cache.f.hess(H, θ, cur...)
+            cache.f.hess(H, θ)
             if cache.sense === Optimization.MaxSense
                 H .*= -one(eltype(H))
             end
@@ -262,8 +255,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
 }
     local x, cur, state
 
-    cur, state = iterate(cache.data)
-
     function _cb(trace)
         metadata = decompose_trace(trace).metadata
         θ = !(cache.opt isa Optim.SAMIN) && cache.opt.method == Optim.NelderMead() ?
@@ -271,40 +262,39 @@ function SciMLBase.__solve(cache::OptimizationCache{
             metadata["x"]
         opt_state = Optimization.OptimizationState(iter = trace.iteration,
             u = θ,
-            objective = x[1],
+            objective = trace.value,
             grad = get(metadata, "g(x)", nothing),
             hess = get(metadata, "h(x)", nothing),
             original = trace)
-        cb_call = cache.callback(opt_state, x...)
+        cb_call = cache.callback(opt_state, trace.value)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
-        nx_itr = iterate(cache.data, state)
-        if isnothing(nx_itr)
-            true
-        else
-            cur, state = nx_itr
-            cb_call
-        end
+        cb_call
     end
 
     _loss = function (θ)
-        x = cache.f.f(θ, cache.p, cur...)
+        x = cache.f.f(θ, cache.p)
         __x = first(x)
         return cache.sense === Optimization.MaxSense ? -__x : __x
     end
-    fg! = function (G, θ)
-        if G !== nothing
-            cache.f.grad(G, θ, cur...)
-            if cache.sense === Optimization.MaxSense
-                G .*= -one(eltype(G))
+
+    if cache.f.fg === nothing
+        fg! = function (G, θ)
+            if G !== nothing
+                cache.f.grad(G, θ)
+                if cache.sense === Optimization.MaxSense
+                    G .*= -one(eltype(G))
+                end
             end
+            return _loss(θ)
         end
-        return _loss(θ)
+    else
+        fg! = cache.f.fg
     end
 
     gg = function (G, θ)
-        cache.f.grad(G, θ, cur...)
+        cache.f.grad(G, θ)
         if cache.sense === Optimization.MaxSense
             G .*= -one(eltype(G))
         end
@@ -354,65 +344,71 @@ function SciMLBase.__solve(cache::OptimizationCache{
 }
     local x, cur, state
 
-    cur, state = iterate(cache.data)
-
     function _cb(trace)
         metadata = decompose_trace(trace).metadata
         opt_state = Optimization.OptimizationState(iter = trace.iteration,
             u = metadata["x"],
             grad = get(metadata, "g(x)", nothing),
             hess = get(metadata, "h(x)", nothing),
-            objective = x[1],
+            objective = trace.value,
             original = trace)
-        cb_call = cache.callback(opt_state, x...)
+        cb_call = cache.callback(opt_state, trace.value)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
-        nx_itr = iterate(cache.data, state)
-        if isnothing(nx_itr)
-            true
-        else
-            cur, state = nx_itr
-            cb_call
-        end
+        cb_call
     end
 
     _loss = function (θ)
-        x = cache.f.f(θ, cache.p, cur...)
+        x = cache.f.f(θ, cache.p)
         __x = first(x)
         return cache.sense === Optimization.MaxSense ? -__x : __x
     end
-    fg! = function (G, θ)
-        if G !== nothing
-            cache.f.grad(G, θ, cur...)
-            if cache.sense === Optimization.MaxSense
-                G .*= -one(eltype(G))
+
+    if cache.f.fg === nothing
+        fg! = function (G, θ)
+            if G !== nothing
+                cache.f.grad(G, θ)
+                if cache.sense === Optimization.MaxSense
+                    G .*= -one(eltype(G))
+                end
             end
+            return _loss(θ)
         end
-        return _loss(θ)
+    else
+        fg! = cache.f.fg
     end
+
     gg = function (G, θ)
-        cache.f.grad(G, θ, cur...)
+        cache.f.grad(G, θ)
         if cache.sense === Optimization.MaxSense
             G .*= -one(eltype(G))
         end
     end
 
     hh = function (H, θ)
-        cache.f.hess(H, θ, cur...)
+        cache.f.hess(H, θ)
         if cache.sense === Optimization.MaxSense
             H .*= -one(eltype(H))
         end
     end
     u0_type = eltype(cache.u0)
-    optim_f = Optim.TwiceDifferentiable(_loss, gg, fg!, hh, cache.u0,
-        real(zero(u0_type)),
-        Optim.NLSolversBase.alloc_DF(cache.u0,
-            real(zero(u0_type))),
-        isnothing(cache.f.hess_prototype) ?
-        Optim.NLSolversBase.alloc_H(cache.u0,
-            real(zero(u0_type))) :
-        convert.(u0_type, cache.f.hess_prototype))
+
+    optim_f = if SciMLBase.requireshessian(cache.opt)
+        Optim.TwiceDifferentiable(_loss, gg, fg!, hh, cache.u0,
+            real(zero(u0_type)),
+            Optim.NLSolversBase.alloc_DF(cache.u0,
+                real(zero(u0_type))),
+            isnothing(cache.f.hess_prototype) ?
+            Optim.NLSolversBase.alloc_H(cache.u0,
+                real(zero(u0_type))) :
+            convert.(u0_type, cache.f.hess_prototype))
+    else
+        Optim.OnceDifferentiable(_loss, gg, fg!, cache.u0, 
+                        real(zero(u0_type)),
+                        Optim.NLSolversBase.alloc_DF(cache.u0,
+                            real(zero(u0_type))))
+    end
 
     cons_hl! = function (h, θ, λ)
         res = [similar(h) for i in 1:length(λ)]
@@ -424,15 +420,26 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     lb = cache.lb === nothing ? [] : cache.lb
     ub = cache.ub === nothing ? [] : cache.ub
-    if cache.f.cons !== nothing
-        optim_fc = Optim.TwiceDifferentiableConstraints(cache.f.cons, cache.f.cons_j,
-            cons_hl!,
-            lb, ub,
-            cache.lcons, cache.ucons)
-    else
-        optim_fc = Optim.TwiceDifferentiableConstraints(lb, ub)
-    end
 
+    optim_fc = if SciMLBase.requireshessian(cache.opt)
+        if cache.f.cons !== nothing
+            Optim.TwiceDifferentiableConstraints(cache.f.cons, cache.f.cons_j,
+                cons_hl!,
+                lb, ub,
+                cache.lcons, cache.ucons)
+        else
+            Optim.TwiceDifferentiableConstraints(lb, ub)
+        end
+    else
+        if cache.f.cons !== nothing
+            Optim.OnceDifferentiableConstraints(cache.f.cons, cache.f.cons_j,
+                lb, ub,
+                cache.lcons, cache.ucons)
+        else
+            Optim.OnceDifferentiableConstraints(lb, ub)
+        end
+    end
+    
     opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb,
         maxiters = cache.solver_args.maxiters,
         maxtime = cache.solver_args.maxtime,
@@ -441,7 +448,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
         cache.solver_args...)
 
     t0 = time()
-    opt_res = Optim.optimize(optim_f, optim_fc, cache.u0, cache.opt, opt_args)
+    if lb === nothing && ub === nothing && cache.f.cons === nothing
+        opt_res = Optim.optimize(optim_f, cache.u0, cache.opt, opt_args)
+    else
+        opt_res = Optim.optimize(optim_f, optim_fc, cache.u0, cache.opt, opt_args)
+    end
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
     stats = Optimization.OptimizationStats(; iterations = opt_res.iterations,
@@ -455,18 +466,17 @@ end
 
 using PrecompileTools
 PrecompileTools.@compile_workload begin
-
     function obj_f(x, p)
         A = p[1]
         b = p[2]
-        return sum((A * x - b) .^ 2)
+        return sum((A * x .- b) .^ 2)
     end
 
     function solve_nonnegative_least_squares(A, b, solver)
-
         optf = Optimization.OptimizationFunction(obj_f, Optimization.AutoForwardDiff())
-        prob = Optimization.OptimizationProblem(optf, ones(size(A, 2)), (A, b), lb=zeros(size(A, 2)), ub=Inf * ones(size(A, 2)))
-        x = OptimizationOptimJL.solve(prob, solver, maxiters=5000, maxtime=100)
+        prob = Optimization.OptimizationProblem(optf, ones(size(A, 2)), (A, b),
+            lb = zeros(size(A, 2)), ub = Inf * ones(size(A, 2)))
+        x = OptimizationOptimJL.solve(prob, solver, maxiters = 5000, maxtime = 100)
 
         return x
     end

@@ -55,9 +55,25 @@ function __map_optimizer_args(prob::Optimization.OptimizationCache, opt::BBO;
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
-    mapped_args = (; kwargs...)
-    mapped_args = (; mapped_args..., Method = opt.method,
-        SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)])
+
+    # Determine number of objectives for multi-objective problems
+    if isa(prob.f, MultiObjectiveOptimizationFunction)
+        num_objectives = length(prob.f.cost_prototype)
+        mapped_args = (; kwargs...)
+        mapped_args = (; mapped_args..., Method = opt.method,
+            SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)],
+            NumDimensions = length(prob.lb),
+            NumObjectives = num_objectives)
+        # FitnessScheme should be in opt, not the function
+        if hasproperty(opt, :FitnessScheme)
+            mapped_args = (; mapped_args..., FitnessScheme = opt.FitnessScheme)
+        end
+    else
+        mapped_args = (; kwargs...)
+        mapped_args = (; mapped_args..., Method = opt.method,
+            SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)],
+            NumDimensions = length(prob.lb))
+    end
 
     if !isnothing(callback)
         mapped_args = (; mapped_args..., CallbackFunction = callback,
@@ -95,6 +111,13 @@ function __map_optimizer_args(prob::Optimization.OptimizationCache, opt::BBO;
     return mapped_args
 end
 
+# single objective
+map_objective(obj) = obj
+# multiobjective
+function map_objective(obj::BlackBoxOptim.IndexedTupleFitness)
+    obj.orig
+end
+
 function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         F,
         RC,
@@ -121,26 +144,19 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         P,
         C
 }
-    local x, cur, state
-
-    if cache.data != Optimization.DEFAULT_DATA
-        maxiters = length(cache.data)
-    end
-
-    cur, state = iterate(cache.data)
-
     function _cb(trace)
         if cache.callback === Optimization.DEFAULT_CALLBACK
             cb_call = false
         else
             n_steps = BlackBoxOptim.num_steps(trace)
             curr_u = decompose_trace(trace, cache.progress)
+            objective = map_objective(BlackBoxOptim.best_fitness(trace))
             opt_state = Optimization.OptimizationState(;
                 iter = n_steps,
                 u = curr_u,
-                objective = x[1],
+                objective,
                 original = trace)
-            cb_call = cache.callback(opt_state, x...)
+            cb_call = cache.callback(opt_state, objective)
         end
 
         if !(cb_call isa Bool)
@@ -150,68 +166,32 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
             BlackBoxOptim.shutdown_optimizer!(trace) #doesn't work
         end
 
-        if cache.data !== Optimization.DEFAULT_DATA
-            cur, state = iterate(cache.data, state)
-        end
         cb_call
     end
 
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
-    _loss = function (θ)
-        if isa(cache.f, MultiObjectiveOptimizationFunction)
-            if cache.callback === Optimization.DEFAULT_CALLBACK &&
-               cache.data === Optimization.DEFAULT_DATA
-                return cache.f(θ, cache.p)
-            elseif cache.callback === Optimization.DEFAULT_CALLBACK
-                return cache.f(θ, cache.p, cur...)
-            elseif cache.data !== Optimization.DEFAULT_DATA
-                x = cache.f(θ, cache.p)
-                return x
-            else
-                x = cache.f(θ, cache.p, cur...)
-                return first(x)
-            end
+
+    # Multi-objective: use out-of-place or in-place as appropriate
+    if isa(cache.f, MultiObjectiveOptimizationFunction)
+        if cache.f.iip
+            _loss = θ -> (cost = similar(cache.f.cost_prototype); cache.f.f(cost, θ, cache.p); cost)
         else
-            if cache.callback === Optimization.DEFAULT_CALLBACK &&
-               cache.data === Optimization.DEFAULT_DATA
-                return first(cache.f(θ, cache.p))
-            elseif cache.callback === Optimization.DEFAULT_CALLBACK
-                return first(cache.f(θ, cache.p, cur...))
-            elseif cache.data !== Optimization.DEFAULT_DATA
-                x = cache.f(θ, cache.p)
-                return first(x)
-            else
-                x = cache.f(θ, cache.p, cur...)
-                return first(x)
-            end
+            _loss = θ -> cache.f.f(θ, cache.p)
         end
+    else
+        _loss = θ -> cache.f(θ, cache.p)
     end
 
-    if isa(cache.f, MultiObjectiveOptimizationFunction)
-        opt_args = __map_optimizer_args(cache, cache.opt;
-            callback = cache.callback === Optimization.DEFAULT_CALLBACK &&
-                    cache.data === Optimization.DEFAULT_DATA ?
-                    nothing : _cb,
-            cache.solver_args...,
-            maxiters = maxiters,
-            maxtime = maxtime,
-            num_dimensions = isnothing(cache.num_dimensions) ? nothing : cache.num_dimensions,
-            fitness_scheme = isnothing(cache.fitness_scheme) ? nothing : cache.fitness_scheme)
-    else
-        opt_args = __map_optimizer_args(cache, cache.opt;
-            callback = cache.callback === Optimization.DEFAULT_CALLBACK &&
-                    cache.data === Optimization.DEFAULT_DATA ?
-                    nothing : _cb,
-            cache.solver_args...,
-            maxiters = maxiters,
-            maxtime = maxtime)
-    end
+    opt_args = __map_optimizer_args(cache, cache.opt;
+        callback = cache.callback === Optimization.DEFAULT_CALLBACK ?
+                   nothing : _cb,
+        cache.solver_args...,
+        maxiters = maxiters,
+        maxtime = maxtime)
 
     opt_setup = BlackBoxOptim.bbsetup(_loss; opt_args...)
-
-    t0 = time()
 
     if isnothing(cache.u0)
         opt_res = BlackBoxOptim.bboptimize(opt_setup)
@@ -224,13 +204,11 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         Base.@logmsg(Base.LogLevel(-1), "", progress=1, _id=:OptimizationBBO)
     end
 
-    t1 = time()
-
     # Use the improved convert function
     opt_ret = Optimization.deduce_retcode(opt_res.stop_reason)
     stats = Optimization.OptimizationStats(;
         iterations = opt_res.iterations,
-        time = t1 - t0,
+        time = opt_res.elapsed_time,
         fevals = opt_res.f_calls)
     SciMLBase.build_solution(cache, cache.opt,
         BlackBoxOptim.best_candidate(opt_res),

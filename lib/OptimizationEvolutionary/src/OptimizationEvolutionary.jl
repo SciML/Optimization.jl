@@ -57,15 +57,15 @@ function __map_optimizer_args(cache::OptimizationCache,
     end
 
     if !isnothing(maxtime)
-        mapped_args = (; mapped_args..., time_limit = maxtime)
+        mapped_args = (; mapped_args..., time_limit = Float64(maxtime))
     end
 
     if !isnothing(abstol)
-        mapped_args = (; mapped_args..., abstol = abstol)
+        mapped_args = (; mapped_args..., abstol = Float64(abstol))
     end
 
     if !isnothing(reltol)
-        mapped_args = (; mapped_args..., reltol = reltol)
+        mapped_args = (; mapped_args..., reltol = Float64(reltol))
     end
 
     return Evolutionary.Options(; mapped_args...)
@@ -99,12 +99,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
 }
     local x, cur, state
 
-    if cache.data != Optimization.DEFAULT_DATA
-        maxiters = length(cache.data)
-    end
-
-    cur, state = iterate(cache.data)
-
     function _cb(trace)
         curr_u = decompose_trace(trace).metadata["curr_u"]
         opt_state = Optimization.OptimizationState(;
@@ -116,7 +110,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
-        cur, state = iterate(cache.data, state)
         cb_call
     end
 
@@ -127,10 +120,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     _loss = function (θ)
         if isa(f, MultiObjectiveOptimizationFunction)
-            x = f(θ, cache.p, cur...)
+            x = f(θ, cache.p)
             return x
         else
-            x = f(θ, cache.p, cur...)
+            x = f(θ, cache.p)
             return first(x)
         end
     end

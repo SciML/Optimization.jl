@@ -10,7 +10,7 @@ SpeedMapping = "f1835b91-879b-4a3f-a438-e4baacf14412"
 
 [compat]
 julia = "1"
-Optimization = "3.21"
+Optimization = "4"
 Reexport = "1.2"
 SpeedMapping = "0.3"
 

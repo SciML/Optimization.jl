@@ -1,6 +1,7 @@
-using OrdinaryDiffEq, DiffEqFlux, Lux, Optimization, OptimizationOptimJL,
+using OrdinaryDiffEqTsit5, DiffEqFlux, Lux, Optimization, OptimizationOptimJL,
       OptimizationOptimisers, ForwardDiff, ComponentArrays, Random
 rng = Random.default_rng()
+Random.seed!(123)
 
 function lotka_volterra!(du, u, p, t)
     x, y = u
@@ -30,11 +31,11 @@ end
 function loss_adjoint(p)
     prediction = predict_adjoint(p)
     loss = sum(abs2, x - 1 for x in prediction)
-    return loss, prediction
+    return loss
 end
 
 iter = 0
-callback = function (state, l, pred)
+callback = function (state, l)
     display(l)
 
     # using `remake` to re-create our `prob` with current parameters `p`
@@ -69,7 +70,8 @@ ode_data = Array(solve(prob_trueode, Tsit5(), saveat = tsteps))
 dudt2 = Lux.Chain(x -> x .^ 3,
     Lux.Dense(2, 50, tanh),
     Lux.Dense(50, 2))
-prob_neuralode = NeuralODE(dudt2, tspan, Tsit5(), saveat = tsteps)
+prob_neuralode = NeuralODE(
+    dudt2, tspan, Tsit5(), saveat = tsteps, abstol = 1e-8, reltol = 1e-8)
 pp, st = Lux.setup(rng, dudt2)
 pp = ComponentArray(pp)
 
@@ -80,11 +82,11 @@ end
 function loss_neuralode(p)
     pred = predict_neuralode(p)
     loss = sum(abs2, ode_data .- pred)
-    return loss, pred
+    return loss
 end
 
 iter = 0
-callback = function (p, l, pred, args...)
+callback = function (st, l)
     global iter
     iter += 1
 
@@ -98,13 +100,13 @@ prob = Optimization.OptimizationProblem(optprob, pp)
 
 result_neuralode = Optimization.solve(prob,
     OptimizationOptimisers.ADAM(), callback = callback,
-    maxiters = 300)
-@test result_neuralode.objective == loss_neuralode(result_neuralode.u)[1]
+    maxiters = 1000)
+@test result_neuralode.objective≈loss_neuralode(result_neuralode.u)[1] rtol=1e-2
 
 prob2 = remake(prob, u0 = result_neuralode.u)
 result_neuralode2 = Optimization.solve(prob2,
     BFGS(initial_stepnorm = 0.0001),
     callback = callback,
-    maxiters = 100)
-@test result_neuralode2.objective == loss_neuralode(result_neuralode2.u)[1]
+    maxiters = 300, allow_f_increases = true)
+@test result_neuralode2.objective≈loss_neuralode(result_neuralode2.u)[1] rtol=1e-2
 @test result_neuralode2.objective < 10

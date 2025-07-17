@@ -14,10 +14,16 @@ function activate_subpkg_env(subpkg)
     Pkg.instantiate()
 end
 
-if GROUP == "All" || GROUP == "Core" || GROUP == "GPU" ||
-   GROUP == "OptimizationPolyalgorithms"
+if GROUP == "All" || GROUP == "Core"
     dev_subpkg("OptimizationOptimJL")
     dev_subpkg("OptimizationOptimisers")
+    dev_subpkg("OptimizationMOI")
+elseif GROUP == "GPU" || GROUP == "OptimizationPolyalgorithms"
+    dev_subpkg("OptimizationOptimJL")
+    dev_subpkg("OptimizationOptimisers")
+elseif GROUP == "OptimizationNLPModels"
+    dev_subpkg("OptimizationOptimJL")
+    dev_subpkg("OptimizationMOI")
 end
 
 @time begin
@@ -30,7 +36,7 @@ end
             include("AD_performance_regression.jl")
         end
         @safetestset "Optimization" begin
-            include("lbfgsb.jl")
+            include("native.jl")
         end
         @safetestset "Mini batching" begin
             include("minibatch.jl")
