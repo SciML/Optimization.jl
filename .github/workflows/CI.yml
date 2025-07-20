@@ -33,7 +33,9 @@ jobs:
           - OptimizationOptimJL
           - OptimizationOptimisers
           - OptimizationPRIMA
+          - OptimizationPyCMA
           - OptimizationQuadDIRECT
+          - OptimizationSciPy
           - OptimizationSpeedMapping
           - OptimizationPolyalgorithms
           - OptimizationNLPModels

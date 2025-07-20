@@ -49,6 +49,8 @@ function __map_optimizer_args(prob::Optimization.OptimizationCache, opt::BBO;
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         verbose::Bool = false,
+        num_dimensions::Union{Number, Nothing} = nothing,
+        fitness_scheme::Union{String, Nothing} = nothing,
         kwargs...)
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
@@ -96,6 +98,16 @@ function __map_optimizer_args(prob::Optimization.OptimizationCache, opt::BBO;
         mapped_args = (; mapped_args..., TraceMode = :silent)
     end
 
+    if isa(prob.f, MultiObjectiveOptimizationFunction)
+        if isnothing(num_dimensions) && isnothing(fitness_scheme)
+            mapped_args = (; mapped_args..., NumDimensions = 2, FitnessScheme = BlackBoxOptim.ParetoFitnessScheme{2}(is_minimizing=true))
+        elseif isnothing(num_dimensions)
+            mapped_args = (; mapped_args..., NumDimensions = 2, FitnessScheme = fitness_scheme)
+        elseif isnothing(fitness_scheme)
+            mapped_args = (; mapped_args..., NumDimensions = num_dimensions, FitnessScheme = BlackBoxOptim.ParetoFitnessScheme{2}(is_minimizing=true))
+        end
+    end
+    
     return mapped_args
 end
 
