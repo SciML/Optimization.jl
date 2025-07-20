@@ -1,9 +1,9 @@
 module OptimizationBBO
 
 using Reexport
-import Optimization
-import BlackBoxOptim, Optimization.SciMLBase
-import Optimization.SciMLBase: MultiObjectiveOptimizationFunction
+@reexport using Optimization
+using BlackBoxOptim, Optimization.SciMLBase
+using Optimization.SciMLBase: MultiObjectiveOptimizationFunction
 
 abstract type BBO end
 
@@ -126,8 +126,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         LC,
         UC,
         S,
-        O <:
-        BBO,
+        O <: BBO,
         D,
         P,
         C
@@ -163,7 +162,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
 
     # Multi-objective: use out-of-place or in-place as appropriate
     if isa(cache.f, MultiObjectiveOptimizationFunction)
-        if cache.f.iip
+        if is_inplace(cache.f)
             _loss = θ -> (cost = similar(cache.f.cost_prototype); cache.f.f(cost, θ, cache.p); cost)
         else
             _loss = θ -> cache.f.f(θ, cache.p)
