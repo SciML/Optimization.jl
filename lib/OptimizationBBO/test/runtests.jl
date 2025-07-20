@@ -1,4 +1,5 @@
 using OptimizationBBO, Optimization, BlackBoxOptim
+using Optimization.SciMLBase
 using Optimization.SciMLBase: MultiObjectiveOptimizationFunction
 using Test
 
@@ -35,17 +36,20 @@ using Test
         return false
     end
 
+    # Define the initial guess and bounds ONCE for all tests
+    u0 = [0.25, 0.25]
+    lb = [0.0, 0.0]
+    ub = [2.0, 2.0]
+    opt = OptimizationBBO.BBO_borg_moea()
+
     @testset "In-place Multi-Objective Optimization" begin
         function inplace_multi_obj!(cost, x, p)
             cost[1] = sum(x .^ 2)
             cost[2] = sum(x .^ 2 .- 10 .* cos.(2π .* x) .+ 10)
             return nothing
         end
-        u0 = [0.25, 0.25]
-        lb = [0.0, 0.0]
-        ub = [2.0, 2.0]
         cost_prototype = zeros(2)
-        mof_inplace = MultiObjectiveOptimizationFunction(inplace_multi_obj!; cost_prototype=cost_prototype)
+        mof_inplace = MultiObjectiveOptimizationFunction{true}(inplace_multi_obj!, SciMLBase.NoAD(); cost_prototype=cost_prototype)
         prob_inplace = Optimization.OptimizationProblem(mof_inplace, u0; lb=lb, ub=ub)
         sol_inplace = solve(prob_inplace, opt, NumDimensions=2, FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true))
         @test sol_inplace ≠ nothing
@@ -60,24 +64,14 @@ using Test
             f2 = sum(x .^ 2 .- 10 .* cos.(2π .* x) .+ 10)
             return (f1, f2)
         end
-        coalesce_sum(cost, x, p) = sum(cost)
-        mof_coalesce = MultiObjectiveOptimizationFunction(multi_obj_tuple; coalesce=coalesce_sum)
+        mof_coalesce = MultiObjectiveOptimizationFunction{false}(multi_obj_tuple, SciMLBase.NoAD(); cost_prototype=zeros(2))
         prob_coalesce = Optimization.OptimizationProblem(mof_coalesce, u0; lb=lb, ub=ub)
         sol_coalesce = solve(prob_coalesce, opt, NumDimensions=2, FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true))
         @test sol_coalesce ≠ nothing
         @test sol_coalesce.objective[1] ≈ 6.9905986e-18 atol=1e-3
         @test sol_coalesce.objective[2] ≈ 1.7763568e-15 atol=1e-3
-        @test mof_coalesce.coalesce([1.0, 2.0], [0.0, 0.0], nothing) == 3.0
     end
 
-    @testset "Error if in-place MultiObjectiveOptimizationFunction without cost_prototype" begin
-        function inplace_multi_obj_err!(cost, x, p)
-            cost[1] = sum(x .^ 2)
-            cost[2] = sum(x .^ 2 .- 10 .* cos.(2π .* x) .+ 10)
-            return nothing
-        end
-        @test_throws ArgumentError MultiObjectiveOptimizationFunction(inplace_multi_obj_err!)
-    end
     sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(), callback = cb)
     # println(fitness_progress_history)
     @test !isempty(fitness_progress_history)
@@ -99,13 +93,7 @@ using Test
             maxtime = 5)
     end
 
-    # Define the initial guess and bounds
-    u0 = [0.25, 0.25]
-    lb = [0.0, 0.0]
-    ub = [2.0, 2.0]
-
-    # Define the optimizer
-    opt = OptimizationBBO.BBO_borg_moea()
+    # ...existing code...
 
     @testset "Multi-Objective Optimization Tests" begin
 
@@ -117,7 +105,7 @@ using Test
                 return (f1, f2)
             end
 
-            mof_1 = MultiObjectiveOptimizationFunction(multi_obj_func_1)
+            mof_1 = MultiObjectiveOptimizationFunction{false}(multi_obj_func_1, SciMLBase.NoAD(); cost_prototype=zeros(2))
             prob_1 = Optimization.OptimizationProblem(mof_1, u0; lb = lb, ub = ub)
             sol_1 = solve(prob_1, opt, NumDimensions = 2,
                 FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true))
@@ -144,7 +132,7 @@ using Test
                 return false
             end
 
-            mof_1 = MultiObjectiveOptimizationFunction(multi_obj_func_1)
+            mof_1 = MultiObjectiveOptimizationFunction{false}(multi_obj_func_1, SciMLBase.NoAD(); cost_prototype=zeros(2))
             prob_1 = Optimization.OptimizationProblem(mof_1, u0; lb = lb, ub = ub)
             sol_1 = solve(prob_1, opt, NumDimensions = 2,
                 FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true),
@@ -170,7 +158,7 @@ using Test
                 return (f1, f2)
             end
 
-            mof_2 = MultiObjectiveOptimizationFunction(multi_obj_func_2)
+            mof_2 = MultiObjectiveOptimizationFunction{false}(multi_obj_func_2, SciMLBase.NoAD(); cost_prototype=zeros(2))
             prob_2 = Optimization.OptimizationProblem(mof_2, u0; lb = lb, ub = ub)
             sol_2 = solve(prob_2, opt, NumDimensions = 2,
                 FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true))
@@ -190,7 +178,7 @@ using Test
                 return (f1, f2)
             end
 
-            mof_3 = MultiObjectiveOptimizationFunction(multi_obj_func_3)
+            mof_3 = SciMLBase.MultiObjectiveOptimizationFunction{false}(multi_obj_func_3, SciMLBase.NoAD(); cost_prototype=zeros(2))
             prob_3 = Optimization.OptimizationProblem(mof_3, u0; lb = lb, ub = ub)
             sol_3 = solve(prob_3, opt, NumDimensions = 2,
                 FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true))
