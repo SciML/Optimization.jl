@@ -67,7 +67,7 @@ function call_manopt_optimizer(
         x0;
         stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
         evaluation::AbstractEvaluationType = Manopt.AllocatingEvaluation(),
-        stepsize::Manopt.ManifoldDefaultsFactory = ArmijoLinesearch(),
+        stepsize::Stepsize = ArmijoLinesearch(M),
         kwargs...)
     opts = gradient_descent(M,
         loss,
@@ -111,7 +111,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         x0;
         stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
         evaluation::AbstractEvaluationType = InplaceEvaluation(),
-        stepsize::Manopt.ManifoldDefaultsFactory = ArmijoLinesearch(),
+        stepsize::Stepsize = ArmijoLinesearch(M),
         kwargs...)
     opts = conjugate_gradient_descent(M,
         loss,
@@ -171,7 +171,7 @@ function call_manopt_optimizer(M::Manopt.AbstractManifold,
         evaluation::AbstractEvaluationType = InplaceEvaluation(),
         retraction_method::AbstractRetractionMethod = default_retraction_method(M),
         vector_transport_method::AbstractVectorTransportMethod = default_vector_transport_method(M),
-        stepsize::Manopt.ManifoldDefaultsFactory = WolfePowellLinesearch(;
+        stepsize = WolfePowellLinesearch(M;
             retraction_method = retraction_method,
             vector_transport_method = vector_transport_method,
             linesearch_stopsize = 1e-12),
@@ -308,7 +308,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         stopping_criterion::Union{Manopt.StoppingCriterion, Manopt.StoppingCriterionSet},
         evaluation::AbstractEvaluationType = InplaceEvaluation(),
         retraction_method::AbstractRetractionMethod = default_retraction_method(M),
-        stepsize::Manopt.ManifoldDefaultsFactory = DecreasingStepsize(; length = 2.0, shift = 2),
+        stepsize::Stepsize = DecreasingStepsize(; length = 2.0, shift = 2),
         kwargs...)
     opt = Frank_Wolfe_method(M,
         loss,
