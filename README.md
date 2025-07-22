@@ -21,6 +21,7 @@ unified interface.
 
 ## Installation
 
+
 Assuming that you already have Julia correctly installed, it suffices to import
 Optimization.jl in the standard way:
 
