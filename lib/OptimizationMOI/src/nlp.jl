@@ -491,10 +491,10 @@ function _add_moi_variables!(opt_setup, evaluator::MOIOptimizationNLPEvaluator)
 
     for i in 1:num_variables
         if evaluator.lb !== nothing && evaluator.lb[i] > -Inf
-            MOI.add_constraint(opt_setup, θ[i], MOI.GreaterThan(evaluator.lb[i]))
+            MOI.add_constraint(opt_setup, θ[i], MOI.GreaterThan(Float64(evaluator.lb[i])))
         end
         if evaluator.ub !== nothing && evaluator.ub[i] < Inf
-            MOI.add_constraint(opt_setup, θ[i], MOI.LessThan(evaluator.ub[i]))
+            MOI.add_constraint(opt_setup, θ[i], MOI.LessThan(Float64(evaluator.ub[i])))
         end
         if evaluator.int !== nothing && evaluator.int[i]
             if evaluator.lb !== nothing && evaluator.lb[i] == 0 &&
