@@ -20,7 +20,8 @@ function __map_optimizer_args(prob::OptimizationCache, opt::CMAEvolutionStrategy
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
-        reltol::Union{Number, Nothing} = nothing)
+        reltol::Union{Number, Nothing} = nothing,
+        verbose::Bool = false)
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
@@ -28,7 +29,7 @@ function __map_optimizer_args(prob::OptimizationCache, opt::CMAEvolutionStrategy
     mapped_args = (; lower = prob.lb,
         upper = prob.ub,
         logger = CMAEvolutionStrategy.BasicLogger(prob.u0;
-            verbosity = 0,
+            verbosity = verbose ? 1 : 0,
             callback = callback))
 
     if !isnothing(maxiters)
