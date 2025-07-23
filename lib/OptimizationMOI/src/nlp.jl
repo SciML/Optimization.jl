@@ -239,6 +239,7 @@ function MOI.eval_objective(evaluator::MOIOptimizationNLPEvaluator, x)
         evaluator.iteration += 1
         state = Optimization.OptimizationState(iter = evaluator.iteration,
             u = x,
+            p = evaluator.p,
             objective = l[1])
         evaluator.callback(state, l)
         return l

@@ -126,6 +126,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
             opt_state = Optimization.OptimizationState(;
                 iter = n_steps,
                 u = curr_u,
+                p = cache.p,
                 objective,
                 original = trace)
             cb_call = cache.callback(opt_state, objective)
