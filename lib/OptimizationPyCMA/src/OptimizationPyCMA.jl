@@ -125,6 +125,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     _cb = function(es)
         opt_state = Optimization.OptimizationState(; iter = pyconvert(Int, es.countiter),
             u = pyconvert(Vector{Float64}, es.best.x),
+            p = cache.p,
             objective = pyconvert(Float64, es.best.f),
             original = es)
 

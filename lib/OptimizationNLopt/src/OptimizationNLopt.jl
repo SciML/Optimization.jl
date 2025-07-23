@@ -156,7 +156,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     _loss = function (θ)
         x = cache.f(θ, cache.p)
-        opt_state = Optimization.OptimizationState(u = θ, objective = x[1])
+        opt_state = Optimization.OptimizationState(u = θ, p = cache.p, objective = x[1])
         if cache.callback(opt_state, x...)
             NLopt.force_stop!(opt_setup)
         end

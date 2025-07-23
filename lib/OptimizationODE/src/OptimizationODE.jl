@@ -68,7 +68,7 @@ function SciMLBase.__solve(
         end
         function affect!(integrator)
             u_now = integrator.u
-            state = Optimization.OptimizationState(u=u_now, objective=cache.f(integrator.u, integrator.p))
+            state = Optimization.OptimizationState(u=u_now, p=integrator.p, objective=cache.f(integrator.u, integrator.p))
             Optimization.callback_function(cb, state)
         end
         cb_struct = DiscreteCallback(condition, affect!)

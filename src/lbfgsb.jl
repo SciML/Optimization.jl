@@ -124,7 +124,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cache.f.cons(cons_tmp, θ)
             cons_tmp[eq_inds] .= cons_tmp[eq_inds] - cache.lcons[eq_inds]
             cons_tmp[ineq_inds] .= cons_tmp[ineq_inds] .- cache.ucons[ineq_inds]
-            opt_state = Optimization.OptimizationState(u = θ, objective = x[1], iter = iter_count[])
+            opt_state = Optimization.OptimizationState(u = θ, objective = x[1], p = cache.p, iter = iter_count[])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
             end
@@ -212,8 +212,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         _loss = function (θ)
             x = cache.f(θ, cache.p)
             iter_count[] += 1
-
-            opt_state = Optimization.OptimizationState(u = θ, objective = x[1], iter = iter_count[])
+            opt_state = Optimization.OptimizationState(u = θ, objective = x[1], p = cache.p, iter = iter_count[])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
             end
