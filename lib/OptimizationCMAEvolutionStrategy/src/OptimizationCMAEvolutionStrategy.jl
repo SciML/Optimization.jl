@@ -78,6 +78,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         curr_u = opt.logger.xbest[end]
         opt_state = Optimization.OptimizationState(; iter = length(opt.logger.fmedian),
             u = curr_u,
+            p = cache.p,
             objective = opt.logger.fbest[end],
             original = opt.logger)
 

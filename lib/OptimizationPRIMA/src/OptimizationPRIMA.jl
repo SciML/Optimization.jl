@@ -133,7 +133,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     _loss = function (θ)
         x = cache.f(θ, cache.p)
         iter += 1
-        opt_state = Optimization.OptimizationState(u = θ, objective = x[1], iter = iter)
+        opt_state = Optimization.OptimizationState(u = θ, p = cache.p, objective = x[1], iter = iter)
         if cache.callback(opt_state, x...)
             error("Optimization halted by callback.")
         end
