@@ -7,6 +7,7 @@ pages = ["index.md",
         "tutorials/linearandinteger.md",
         "tutorials/minibatch.md",
         "tutorials/remakecomposition.md",
+        "tutorials/reusage_interface.md",
         "tutorials/symbolic.md"
     ],
     "Examples" => [
