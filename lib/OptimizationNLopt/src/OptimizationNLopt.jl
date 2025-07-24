@@ -93,12 +93,7 @@ function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
     # add optimiser options from kwargs
     for j in kwargs
         if j.first != :cons_tol
-            # Handle special parameters that use nlopt_set_param
-            if j.first == :dual_ftol_rel
-                NLopt.nlopt_set_param(opt, "dual_ftol_rel", j.second)
-            else
-                eval(Meta.parse("NLopt." * string(j.first) * "!"))(opt, j.second)
-            end
+            eval(Meta.parse("NLopt." * string(j.first) * "!"))(opt, j.second)
         end
     end
 
