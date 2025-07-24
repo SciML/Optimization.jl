@@ -47,11 +47,15 @@ p_values = [[1.0, 100.0], [2.0, 100.0], [3.0, 100.0]]
 # Create initial cache
 cache = Optimization.init(prob, Optim.BFGS())
 
-for p in p_values
-    cache = Optimization.reinit!(cache; p = p)
-    sol = Optimization.solve!(cache)
-    push!(results, (p = p, u = sol.u, objective = sol.objective))
+function sweep(cache, p_values)
+    for p in p_values
+        cache = Optimization.reinit!(cache; p = p)
+        sol = Optimization.solve!(cache)
+        push!(results, (p = p, u = sol.u, objective = sol.objective))
+    end
 end
+
+sweep(cache, p_values)
 ```
 
 ### Example: Updating Initial Values
