@@ -65,6 +65,7 @@ sweep(cache, p_values)
 u0_values = [[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]]
 
 for u0 in u0_values
+    local cache
     cache = Optimization.reinit!(cache; u0 = u0)
     sol = Optimization.solve!(cache)
     println("Starting from ", u0, " converged to ", sol.u)
