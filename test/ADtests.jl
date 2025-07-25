@@ -55,10 +55,13 @@ end
             end
         end
 
-        sol = solve(prob, Optim.KrylovTrustRegion())
-        @test 10 * sol.objective < l1
-        if adtype != AutoFiniteDiff()
-            @test sol.retcode == ReturnCode.Success
+        # Requires Hession, which Mooncake doesn't support at the moment. 
+        if adtype != AutoMooncake()
+            sol = solve(prob, Optim.KrylovTrustRegion())
+            @test 10 * sol.objective < l1
+            if adtype != AutoFiniteDiff()
+                @test sol.retcode == ReturnCode.Success
+            end
         end
 
         sol = solve(prob, Optimization.LBFGS(), maxiters = 1000)
@@ -80,8 +83,11 @@ end
         sol = solve(prob, Optimization.LBFGS(), maxiters = 1000)
         @test 10 * sol.objective < l1
 
-        sol = solve(prob, Ipopt.Optimizer(), max_iter = 1000; print_level = 0)
-        @test 10 * sol.objective < l1
+        # Requires Hession, which Mooncake doesn't support at the moment. 
+        if adtype != AutoMooncake()
+            sol = solve(prob, Ipopt.Optimizer(), max_iter = 1000; print_level = 0)
+            @test 10 * sol.objective < l1
+        end
     end
 end
 
@@ -102,7 +108,10 @@ end
         sol = solve(prob, Optimization.LBFGS(), maxiters = 1000)
         @test 10 * sol.objective < l1
 
-        sol = solve(prob, Ipopt.Optimizer(), max_iter = 1000; print_level = 0)
-        @test 10 * sol.objective < l1
+        # Requires Hession, which Mooncake doesn't support at the moment. 
+        if adtype != AutoMooncake()
+            sol = solve(prob, Ipopt.Optimizer(), max_iter = 1000; print_level = 0)
+            @test 10 * sol.objective < l1
+        end
     end
 end
