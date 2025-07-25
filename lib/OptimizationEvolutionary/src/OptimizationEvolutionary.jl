@@ -104,6 +104,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         opt_state = Optimization.OptimizationState(;
             iter = decompose_trace(trace).iteration,
             u = curr_u,
+            p = cache.p,
             objective = x[1],
             original = trace)
         cb_call = cache.callback(opt_state, decompose_trace(trace).value...)
