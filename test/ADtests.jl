@@ -1,5 +1,5 @@
 using Optimization, OptimizationOptimJL, OptimizationMOI, Ipopt, Test
-using ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker
+using ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker, Mooncake
 using Enzyme, Random
 
 x0 = zeros(2)
@@ -35,7 +35,7 @@ end
 @testset "No constraint" begin
     for adtype in [AutoEnzyme(), AutoForwardDiff(), AutoZygote(), AutoReverseDiff(),
         AutoFiniteDiff(), AutoModelingToolkit(), AutoSparseForwardDiff(),
-        AutoSparseReverseDiff(), AutoSparse(AutoZygote()), AutoModelingToolkit(true, true)]
+        AutoSparseReverseDiff(), AutoSparse(AutoZygote()), AutoModelingToolkit(true, true), AutoMooncake()]
         optf = OptimizationFunction(rosenbrock, adtype)
 
         prob = OptimizationProblem(optf, x0)
@@ -46,16 +46,22 @@ end
             @test sol.retcode == ReturnCode.Success
         end
 
-        sol = solve(prob, Optim.Newton())
-        @test 10 * sol.objective < l1
-        if adtype != AutoFiniteDiff()
-            @test sol.retcode == ReturnCode.Success
+         # `Newton` requires Hession, which Mooncake doesn't support at the moment. 
+        if adtype != AutoMooncake()
+            sol = solve(prob, Optim.Newton())
+            @test 10 * sol.objective < l1
+            if adtype != AutoFiniteDiff()
+                @test sol.retcode == ReturnCode.Success
+            end
         end
 
-        sol = solve(prob, Optim.KrylovTrustRegion())
-        @test 10 * sol.objective < l1
-        if adtype != AutoFiniteDiff()
-            @test sol.retcode == ReturnCode.Success
+        # Requires Hession, which Mooncake doesn't support at the moment. 
+        if adtype != AutoMooncake()
+            sol = solve(prob, Optim.KrylovTrustRegion())
+            @test 10 * sol.objective < l1
+            if adtype != AutoFiniteDiff()
+                @test sol.retcode == ReturnCode.Success
+            end
         end
 
         sol = solve(prob, Optimization.LBFGS(), maxiters = 1000)
@@ -67,7 +73,7 @@ end
 @testset "One constraint" begin
     for adtype in [AutoEnzyme(), AutoForwardDiff(), AutoZygote(), AutoReverseDiff(),
         AutoFiniteDiff(), AutoModelingToolkit(), AutoSparseForwardDiff(),
-        AutoSparseReverseDiff(), AutoSparse(AutoZygote()), AutoModelingToolkit(true, true)]
+        AutoSparseReverseDiff(), AutoSparse(AutoZygote()), AutoModelingToolkit(true, true), AutoMooncake()]
         cons = (res, x, p) -> (res[1] = x[1]^2 + x[2]^2 - 1.0; return nothing)
         optf = OptimizationFunction(rosenbrock, adtype, cons = cons)
 
@@ -77,15 +83,18 @@ end
         sol = solve(prob, Optimization.LBFGS(), maxiters = 1000)
         @test 10 * sol.objective < l1
 
-        sol = solve(prob, Ipopt.Optimizer(), max_iter = 1000; print_level = 0)
-        @test 10 * sol.objective < l1
+        # Requires Hession, which Mooncake doesn't support at the moment. 
+        if adtype != AutoMooncake()
+            sol = solve(prob, Ipopt.Optimizer(), max_iter = 1000; print_level = 0)
+            @test 10 * sol.objective < l1
+        end
     end
 end
 
 @testset "Two constraints" begin
     for adtype in [AutoForwardDiff(), AutoZygote(), AutoReverseDiff(),
         AutoFiniteDiff(), AutoModelingToolkit(), AutoSparseForwardDiff(),
-        AutoSparseReverseDiff(), AutoSparse(AutoZygote()), AutoModelingToolkit(true, true)]
+        AutoSparseReverseDiff(), AutoSparse(AutoZygote()), AutoModelingToolkit(true, true), AutoMooncake()]
         function con2_c(res, x, p)
             res[1] = x[1]^2 + x[2]^2
             res[2] = x[2] * sin(x[1]) - x[1]
@@ -99,7 +108,10 @@ end
         sol = solve(prob, Optimization.LBFGS(), maxiters = 1000)
         @test 10 * sol.objective < l1
 
-        sol = solve(prob, Ipopt.Optimizer(), max_iter = 1000; print_level = 0)
-        @test 10 * sol.objective < l1
+        # Requires Hession, which Mooncake doesn't support at the moment. 
+        if adtype != AutoMooncake()
+            sol = solve(prob, Ipopt.Optimizer(), max_iter = 1000; print_level = 0)
+            @test 10 * sol.objective < l1
+        end
     end
 end

@@ -9,6 +9,7 @@ The choices for the auto-AD fill-ins with quick descriptions are:
   - `AutoFiniteDiff()`: Finite differencing, not optimal but always applicable
   - `AutoModelingToolkit()`: The fastest choice for large scalar optimizations
   - `AutoEnzyme()`: Highly performant AD choice for type stable and optimized code
+  - `AutoMooncake()`: Like Zygote and ReverseDiff, but supports GPU and mutating code
 
 ## Automatic Differentiation Choice API
 
@@ -22,4 +23,5 @@ OptimizationBase.AutoZygote
 OptimizationBase.AutoTracker
 OptimizationBase.AutoModelingToolkit
 OptimizationBase.AutoEnzyme
+OptimizationBase.AutoMooncake
 ```
