@@ -416,6 +416,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     function _cb(x, θ)
         opt_state = Optimization.OptimizationState(iter = 0,
             u = θ,
+            p = cache.p,
             objective = x[1])
         cb_call = cache.callback(opt_state, x...)
         if !(cb_call isa Bool)

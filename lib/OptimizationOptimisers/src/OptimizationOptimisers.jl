@@ -121,6 +121,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                 opt_state = Optimization.OptimizationState(
                     iter = i + (epoch - 1) * length(data),
                     u = θ,
+                    p = d,
                     objective = x[1],
                     grad = G,
                     original = state)
@@ -146,6 +147,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                         cache.f.grad(G, θ, d)
                         opt_state = Optimization.OptimizationState(iter = iterations,
                             u = θ,
+                            p = d,
                             objective = x[1],
                             grad = G,
                             original = state)

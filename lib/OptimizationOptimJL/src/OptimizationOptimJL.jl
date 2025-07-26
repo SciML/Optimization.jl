@@ -143,6 +143,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         θ = metadata[cache.opt isa Optim.NelderMead ? "centroid" : "x"]
         opt_state = Optimization.OptimizationState(iter = trace.iteration,
             u = θ,
+            p = cache.p,
             objective = trace.value,
             grad = get(metadata, "g(x)", nothing),
             hess = get(metadata, "h(x)", nothing),
@@ -262,6 +263,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             metadata["x"]
         opt_state = Optimization.OptimizationState(iter = trace.iteration,
             u = θ,
+            p = cache.p,
             objective = trace.value,
             grad = get(metadata, "g(x)", nothing),
             hess = get(metadata, "h(x)", nothing),
@@ -348,6 +350,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         metadata = decompose_trace(trace).metadata
         opt_state = Optimization.OptimizationState(iter = trace.iteration,
             u = metadata["x"],
+            p = cache.p,
             grad = get(metadata, "g(x)", nothing),
             hess = get(metadata, "h(x)", nothing),
             objective = trace.value,

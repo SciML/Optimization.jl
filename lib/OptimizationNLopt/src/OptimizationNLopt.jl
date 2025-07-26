@@ -75,7 +75,7 @@ function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
 
         if !isnothing(local_options)
             for j in Dict(pairs(local_options))
-                eval(Meta.parse("NLopt." * string(j.first) * "!"))(local_meth, j.second)
+                NLopt.nlopt_set_param(opt, j.first, j.second)
             end
         end
 
@@ -93,7 +93,7 @@ function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
     # add optimiser options from kwargs
     for j in kwargs
         if j.first != :cons_tol
-            eval(Meta.parse("NLopt." * string(j.first) * "!"))(opt, j.second)
+            NLopt.nlopt_set_param(opt, j.first, j.second)
         end
     end
 
@@ -156,7 +156,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     _loss = function (θ)
         x = cache.f(θ, cache.p)
-        opt_state = Optimization.OptimizationState(u = θ, objective = x[1])
+        opt_state = Optimization.OptimizationState(u = θ, p = cache.p, objective = x[1])
         if cache.callback(opt_state, x...)
             NLopt.force_stop!(opt_setup)
         end

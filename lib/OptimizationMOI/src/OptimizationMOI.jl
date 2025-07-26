@@ -15,8 +15,6 @@ using LinearAlgebra
 
 const MOI = MathOptInterface
 
-const DenseOrSparse{T} = Union{Matrix{T}, SparseMatrixCSC{T}}
-
 function SciMLBase.requiresgradient(opt::Union{
         MOI.AbstractOptimizer, MOI.OptimizerWithAttributes})
     true
