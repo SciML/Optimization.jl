@@ -65,12 +65,12 @@ end
     end
 end
 
-@testset "cache" begin
+@testset "MTK cache" begin
     @variables x
     @parameters a = 1.0
     @named sys = OptimizationSystem((x - a)^2, [x], [a];)
     sys = complete(sys)
-    prob = OptimizationProblem(sys, [x => 0.0], []; grad = true, hess = true)
+    prob = OptimizationProblem(sys, [x => 0.0]; grad = true, hess = true)
     cache = init(prob, IpoptOptimizer(); print_level = 0)
     @test cache isa OptimizationIpopt.IpoptCache
     sol = solve!(cache)
