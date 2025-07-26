@@ -37,7 +37,7 @@ Tada! That's how you do it. Now let's dive in a little more into what each part 
 
 ## Understanding the Solution Object
 
-The solution object is a `SciMLBase.AbstractNoTimeSolution`, and thus it follows the 
+The solution object is a `SciMLBase.AbstractNoTimeSolution`, and thus it follows the
 [SciMLBase Solution Interface for non-timeseries objects](https://docs.sciml.ai/SciMLBase/stable/interfaces/Solutions/) and is documented at the [solution type page](@ref solution).
 However, for simplicity let's show a bit of it in action.
 
@@ -61,13 +61,13 @@ rosenbrock(sol.u, p)
 sol.objective
 ```
 
-The `sol.retcode` gives us more information about the solution process. 
+The `sol.retcode` gives us more information about the solution process.
 
 ```@example intro
 sol.retcode
 ```
 
-Here it says `ReturnCode.Success` which means that the solutuion successfully solved. We can learn more about the different return codes at 
+Here it says `ReturnCode.Success` which means that the solutuion successfully solved. We can learn more about the different return codes at
 [the ReturnCode part of the SciMLBase documentation](https://docs.sciml.ai/SciMLBase/stable/interfaces/Solutions/#retcodes).
 
 If we are interested about some of the statistics of the solving process, for example to help choose a better solver, we can investigate the `sol.stats`
