@@ -4,6 +4,7 @@ using Symbolics
 using Test
 using SparseArrays
 using ModelingToolkit
+using ReverseDiff
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
@@ -54,10 +55,11 @@ function _test_sparse_derivatives_hs071(backend, optimizer)
 end
 
 @testset "backends" begin
-    backends = (Optimization.AutoModelingToolkit(false, false),
-        Optimization.AutoModelingToolkit(true, false),
-        Optimization.AutoModelingToolkit(false, true),
-        Optimization.AutoModelingToolkit(true, true))
+    backends = (
+        AutoForwardDiff(),
+        AutoReverseDiff(),
+        AutoSparse(AutoForwardDiff())
+    )
     for backend in backends
         @testset "$backend" begin
             _test_sparse_derivatives_hs071(backend, IpoptOptimizer())
@@ -71,7 +73,7 @@ end
     @named sys = OptimizationSystem((x - a)^2, [x], [a];)
     sys = complete(sys)
     prob = OptimizationProblem(sys, [x => 0.0]; grad = true, hess = true)
-    cache = init(prob, IpoptOptimizer(); print_level = 0)
+    cache = init(prob, IpoptOptimizer(); verbose = false)
     @test cache isa OptimizationIpopt.IpoptCache
     sol = solve!(cache)
     @test sol.u ≈ [1.0] # ≈ [1]
@@ -105,3 +107,8 @@ end
 
     @test SciMLBase.successful_retcode(sol)
 end
+
+# Include additional tests based on Ipopt examples
+include("additional_tests.jl")
+include("advanced_features.jl")
+include("problem_types.jl")
