@@ -116,6 +116,18 @@ function __map_optimizer_args(cache,
     end
     Ipopt.AddIpoptStrOption(prob, "hessian_approximation", hessian_approximation)
 
+    for kw in pairs(kwargs)
+        if kw[2] isa Int
+            Ipopt.AddIpoptIntOption(prob, string(kw[1]), kw[2])
+        elseif kw[2] isa Float64
+            Ipopt.AddIpoptNumOption(prob, string(kw[1]), kw[2])
+        elseif kw[2] isa String
+            Ipopt.AddIpoptStrOption(prob, string(kw[1]), kw[2])
+        else
+            error("Keyword argument type $(typeof(kw[2])) not recognized")
+        end
+    end
+
     return prob
 end
 
