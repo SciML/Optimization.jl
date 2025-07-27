@@ -18,7 +18,7 @@ using SparseArrays
 
         # Test with tight tolerances
         sol = solve(prob, IpoptOptimizer();
-                   abstol = 1e-10,
+                   reltol = 1e-10,
                    acceptable_tol = 1e-8,
                    acceptable_iter = 5)
 

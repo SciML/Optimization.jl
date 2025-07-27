@@ -93,7 +93,7 @@ using LinearAlgebra
         prob = OptimizationProblem(optfunc, x0, nothing;
                                  lcons = fill(4.0, n-2),
                                  ucons = fill(6.0, n-2))
-        sol = solve(prob, IpoptOptimizer(); maxiters = 1000, abstol=1e-6)
+        sol = solve(prob, IpoptOptimizer(); maxiters = 1000, reltol=1e-6)
 
         @test SciMLBase.successful_retcode(sol)
         @test length(sol.u) == n
