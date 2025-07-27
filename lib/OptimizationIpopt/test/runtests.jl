@@ -67,23 +67,10 @@ end
     end
 end
 
-@testset "MTK cache" begin
-    @variables x
-    @parameters a = 1.0
-    @named sys = OptimizationSystem((x - a)^2, [x], [a];)
-    sys = complete(sys)
-    prob = OptimizationProblem(sys, [x => 0.0]; grad = true, hess = true)
-    cache = init(prob, IpoptOptimizer(); verbose = false)
-    @test cache isa OptimizationIpopt.IpoptCache
-    sol = solve!(cache)
-    @test sol.u ≈ [1.0] # ≈ [1]
-
-    @test_broken begin # needs reinit/remake fixes
-        cache = Optimization.reinit!(cache; p = [2.0])
-        sol = solve!(cache)
-        @test sol.u ≈ [2.0]  # ≈ [2]
-    end
-end
+# Include additional tests based on Ipopt examples
+include("additional_tests.jl")
+include("advanced_features.jl")
+include("problem_types.jl")
 
 @testset "tutorial" begin
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
@@ -108,7 +95,20 @@ end
     @test SciMLBase.successful_retcode(sol)
 end
 
-# Include additional tests based on Ipopt examples
-include("additional_tests.jl")
-include("advanced_features.jl")
-include("problem_types.jl")
+@testset "MTK cache" begin
+    @variables x
+    @parameters a = 1.0
+    @named sys = OptimizationSystem((x - a)^2, [x], [a];)
+    sys = complete(sys)
+    prob = OptimizationProblem(sys, [x => 0.0]; grad = true, hess = true)
+    cache = init(prob, IpoptOptimizer(); verbose = false)
+    @test cache isa OptimizationIpopt.IpoptCache
+    sol = solve!(cache)
+    @test sol.u ≈ [1.0] # ≈ [1]
+
+    @test_broken begin # needs reinit/remake fixes
+        cache = Optimization.reinit!(cache; p = [2.0])
+        sol = solve!(cache)
+        @test sol.u ≈ [2.0]  # ≈ [2]
+    end
+end
