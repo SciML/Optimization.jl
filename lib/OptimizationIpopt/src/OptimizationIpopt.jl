@@ -203,14 +203,12 @@ function SciMLBase.__init(prob::OptimizationProblem,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
-        mtkize = false,
         kwargs...)
     cache = IpoptCache(prob, opt;
         maxiters,
         maxtime,
         abstol,
         reltol,
-        mtkize,
         kwargs...
     )
     cache.reinit_cache.u0 .= prob.u0

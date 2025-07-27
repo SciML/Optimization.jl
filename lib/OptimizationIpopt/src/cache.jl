@@ -72,7 +72,6 @@ function SciMLBase.get_paramsyms(sol::SciMLBase.OptimizationSolution{
 end
 
 function IpoptCache(prob, opt;
-        mtkize,
         callback = nothing,
         progress = false,
         kwargs...)
@@ -115,50 +114,11 @@ function IpoptCache(prob, opt;
     lcons = prob.lcons === nothing ? fill(T(-Inf), num_cons) : prob.lcons
     ucons = prob.ucons === nothing ? fill(T(Inf), num_cons) : prob.ucons
 
-    # if f.sys isa SymbolicIndexingInterface.SymbolCache{Nothing, Nothing, Nothing} && mtkize
-    #     try
-    #         sys = MTK.modelingtoolkitize(prob)
-    #     catch err
-    #         throw(ArgumentError("Automatic symbolic expression generation with ModelingToolkit failed with error: $err.
-    #         Try by setting `mtkize = false` instead if the solver doesn't require symbolic expressions."))
-    #     end
-    #     if !isnothing(prob.p) && !(prob.p isa SciMLBase.NullParameters)
-    #         unames = variable_symbols(sys)
-    #         pnames = parameter_symbols(sys)
-    #         us = [unames[i] => prob.u0[i] for i in 1:length(prob.u0)]
-    #         ps = [pnames[i] => prob.p[i] for i in 1:length(prob.p)]
-    #         sysprob = OptimizationProblem(sys, us, ps)
-    #     else
-    #         unames = variable_symbols(sys)
-    #         us = [unames[i] => prob.u0[i] for i in 1:length(prob.u0)]
-    #         sysprob = OptimizationProblem(sys, us)
-    #     end
+    sys = f.sys isa SymbolicIndexingInterface.SymbolCache{Nothing, Nothing, Nothing} ?
+            nothing : f.sys
+    obj_expr = f.expr
+    cons_expr = f.cons_expr
 
-    #     obj_expr = sysprob.f.expr
-    #     cons_expr = sysprob.f.cons_expr
-    # else
-        sys = f.sys isa SymbolicIndexingInterface.SymbolCache{Nothing, Nothing, Nothing} ?
-              nothing : f.sys
-        obj_expr = f.expr
-        cons_expr = f.cons_expr
-    # end
-
-    # if sys === nothing
-        expr = obj_expr
-        _cons_expr = cons_expr
-    # else
-    #     error("Expressions are not supported")
-    #     expr_map = get_expr_map(sys)
-    #     expr = convert_to_expr(obj_expr, expr_map; expand_expr = false)
-    #     expr = repl_getindex!(expr)
-    #     cons = MTK.constraints(sys)
-    #     _cons_expr = Vector{Expr}(undef, length(cons))
-    #     for i in eachindex(cons)
-    #         _cons_expr[i] = repl_getindex!(convert_to_expr(cons_expr[i],
-    #             expr_map;
-    #             expand_expr = false))
-    #     end
-    # end
     solver_args = NamedTuple(kwargs)
 
     return IpoptCache(
@@ -180,8 +140,8 @@ function IpoptCache(prob, opt;
         0,
         0,
         Cint(0),
-        expr,
-        _cons_expr,
+        obj_expr,
+        cons_expr,
         opt,
         solver_args
     )
