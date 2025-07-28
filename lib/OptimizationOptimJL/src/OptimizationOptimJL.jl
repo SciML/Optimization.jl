@@ -344,6 +344,9 @@ function SciMLBase.__solve(cache::OptimizationCache{
         D,
         P
 }
+    # Check constraint validation for constrained optimizers
+    Optimization._check_constrained_problem(cache)
+    
     local x, cur, state
 
     function _cb(trace)

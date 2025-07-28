@@ -97,6 +97,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
         P,
         C
 }
+    # Check constraint validation if constraints are present
+    if !isnothing(cache.f.cons)
+        Optimization._check_constrained_problem(cache)
+    end
+    
     local x, cur, state
 
     function _cb(trace)

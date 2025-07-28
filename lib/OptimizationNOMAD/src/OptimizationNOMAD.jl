@@ -52,6 +52,14 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::NOMADOpt;
         reltol::Union{Number, Nothing} = nothing,
         cons_method = ExtremeBarrierMethod,
         kwargs...)
+    # Check constraint validation for NOMAD
+    if !isnothing(prob.f.cons)
+        if isnothing(prob.lcons) || isnothing(prob.ucons)
+            throw(ArgumentError("Constrained optimization problem requires both `lcons` and `ucons` to be provided to OptimizationProblem. " *
+                                "Example: OptimizationProblem(optf, u0, p; lcons=[-Inf], ucons=[0.0])"))
+        end
+    end
+    
     local x
 
     maxiters = Optimization._check_and_convert_maxiters(maxiters)

@@ -152,6 +152,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
         P,
         C
 }
+    # Check constraint validation if this solver supports constraints
+    if SciMLBase.allowsconstraints(cache.opt)
+        Optimization._check_constrained_problem(cache)
+    end
+    
     local x
 
     _loss = function (θ)

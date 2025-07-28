@@ -308,6 +308,11 @@ end
 
 function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
                           {F,RC,LB,UB,LC,UC,S,O<:ScipyMinimize,D,P,C}
+    # Check constraint validation if this solver supports constraints
+    if SciMLBase.allowsconstraints(cache.opt)
+        Optimization._check_constrained_problem(cache)
+    end
+    
     local cons_cache = nothing
     if !isnothing(cache.f.cons) && !isnothing(cache.lcons)
         cons_cache = zeros(eltype(cache.u0), length(cache.lcons))
@@ -1193,6 +1198,9 @@ end
 
 function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
                           {F,RC,LB,UB,LC,UC,S,O<:ScipyShgo,D,P,C}
+    # Check constraint validation for ScipyShgo
+    Optimization._check_constrained_problem(cache)
+    
     local cons_cache = nothing
     if !isnothing(cache.f.cons) && !isnothing(cache.lcons)
         cons_cache = zeros(eltype(cache.u0), length(cache.lcons))

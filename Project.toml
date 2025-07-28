@@ -7,6 +7,7 @@ ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
 ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
 ConsoleProgressMonitor = "88cd18e8-d9cc-4ea6-8889-5259c0d15c8b"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 LBFGSB = "5be7bae1-8223-5378-bac3-9e7378a2f6e6"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
@@ -43,6 +44,7 @@ Lux = "1.12.4"
 MLUtils = "0.4"
 ModelingToolkit = "9"
 Optim = ">= 1.4.1"
+Optimisers = ">= 0.2.5"
 OptimizationBase = "2"
 OptimizationMOI = "0.5"
 OptimizationOptimJL = "0.4"
@@ -51,7 +53,7 @@ OrdinaryDiffEqTsit5 = "1"
 Pkg = "1"
 Printf = "1.10"
 ProgressLogging = "0.1"
-Random = "1.10" 
+Random = "1.10"
 Reexport = "1.2"
 ReverseDiff = "1"
 SafeTestsets = "0.1"
@@ -63,7 +65,6 @@ Symbolics = "6"
 TerminalLoggers = "0.1"
 Test = "1.10"
 Tracker = "0.2"
-Optimisers = ">= 0.2.5"
 Zygote = "0.6, 0.7"
 julia = "1.10"
 
@@ -101,7 +102,4 @@ Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Aqua", "BenchmarkTools", "Boltz", "ComponentArrays", "DiffEqFlux", "Enzyme", "FiniteDiff", "Flux", "ForwardDiff",
-    "Ipopt", "IterTools", "Lux", "MLUtils", "ModelingToolkit", "Optim", "OptimizationMOI", "OptimizationOptimJL", "OptimizationOptimisers", 
-    "OrdinaryDiffEqTsit5", "Pkg", "Random", "ReverseDiff", "SafeTestsets", "SciMLSensitivity", "SparseArrays", "SparseDiffTools",
-    "Symbolics",  "Test", "Tracker", "Zygote"]
+test = ["Aqua", "BenchmarkTools", "Boltz", "ComponentArrays", "DiffEqFlux", "Enzyme", "FiniteDiff", "Flux", "ForwardDiff", "Ipopt", "IterTools", "Lux", "MLUtils", "ModelingToolkit", "Optim", "OptimizationMOI", "OptimizationOptimJL", "OptimizationOptimisers", "OrdinaryDiffEqTsit5", "Pkg", "Random", "ReverseDiff", "SafeTestsets", "SciMLSensitivity", "SparseArrays", "SparseDiffTools", "Symbolics", "Test", "Tracker", "Zygote"]
