@@ -80,6 +80,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
     solver_kwargs = __map_optimizer_args(cache, cache.opt; maxiters, cache.solver_args...)
 
     if !isnothing(cache.f.cons)
+        if isnothing(cache.lcons) || isnothing(cache.ucons)
+            throw(ArgumentError("Constrained optimization problem requires both `lcons` and `ucons` to be provided to OptimizationProblem. " *
+                                "Example: OptimizationProblem(optf, u0, p; lcons=[-Inf], ucons=[0.0])"))
+        end
         eq_inds = [cache.lcons[i] == cache.ucons[i] for i in eachindex(cache.lcons)]
         ineq_inds = (!).(eq_inds)
 

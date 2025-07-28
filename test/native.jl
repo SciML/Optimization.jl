@@ -61,3 +61,52 @@ optf1 = OptimizationFunction(loss, AutoSparseForwardDiff())
 prob1 = OptimizationProblem(optf1, rand(5), data)
 sol1 = solve(prob1, OptimizationOptimisers.Adam(), maxiters = 1000, callback = callback)
 @test sol1.objective < l0
+
+# Test constraint bounds validation (issue #959)
+@testset "Constraint bounds validation" begin
+    # Test case from issue #959 - missing lcons and ucons should give helpful error
+    rosenbrock_constrained(u, p) = (p[1] - u[1])^2 + p[2] * (u[2] - u[1]^2)^2
+
+    function cons_missing_bounds!(out, x, p)
+        out[1] = sum(x)
+    end
+
+    optf_missing = OptimizationFunction(
+        rosenbrock_constrained, AutoForwardDiff(), cons = cons_missing_bounds!)
+    prob_missing = OptimizationProblem(optf_missing, [-1, 1.0], [1.0, 100.0])
+
+    # Test LBFGS
+    @test_throws ArgumentError solve(prob_missing, Optimization.LBFGS())
+
+    # Verify the error message is helpful
+    try
+        solve(prob_missing, Optimization.LBFGS())
+    catch e
+        @test isa(e, ArgumentError)
+        @test occursin("lcons", e.msg)
+        @test occursin("ucons", e.msg)
+        @test occursin("OptimizationProblem", e.msg)
+        @test occursin("Example:", e.msg)
+    end
+
+    # Test AugLag
+    @test_throws ArgumentError solve(prob_missing, Optimization.AugLag())
+
+    # Verify the error message is helpful for AugLag too
+    try
+        solve(prob_missing, Optimization.AugLag())
+    catch e
+        @test isa(e, ArgumentError)
+        @test occursin("lcons", e.msg)
+        @test occursin("ucons", e.msg)
+        @test occursin("OptimizationProblem", e.msg)
+        @test occursin("Example:", e.msg)
+    end
+
+    # Test that it works when lcons and ucons are provided
+    prob_with_bounds = OptimizationProblem(
+        optf_missing, [-1, 1.0], [1.0, 100.0], lcons = [-Inf], ucons = [0.0])
+    # This should not throw an error (though it may not converge)
+    sol = solve(prob_with_bounds, Optimization.LBFGS(), maxiters = 10)
+    @test !isnothing(sol)
+end
