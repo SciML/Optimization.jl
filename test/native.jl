@@ -61,3 +61,29 @@ optf1 = OptimizationFunction(loss, AutoSparseForwardDiff())
 prob1 = OptimizationProblem(optf1, rand(5), data)
 sol1 = solve(prob1, OptimizationOptimisers.Adam(), maxiters = 1000, callback = callback)
 @test sol1.objective < l0
+
+# Test for issue #958: LBFGS with constraints and no maxiters specified
+rosenbrock_issue958(u, p) = (p[1] - u[1])^2 + p[2] * (u[2] - u[1]^2)^2
+p_issue958 = [1.0, 100.0]
+function cons_issue958!(out, x, p)
+    out[1] = sum(x)
+end
+
+optf_issue958 = OptimizationFunction(
+    rosenbrock_issue958, AutoForwardDiff(), cons = cons_issue958!)
+prob_issue958 = OptimizationProblem(
+    optf_issue958, [-1, 1.0], p_issue958, lcons = [0.0], ucons = [0.0])
+
+# This should not throw an error (issue #958)
+sol_issue958 = solve(prob_issue958, Optimization.LBFGS())
+# The key test is that it doesn't throw an error about maxiters being nothing
+# It may return MaxIters if it doesn't converge in the default 1000 iterations
+@test sol_issue958.retcode in [
+    Optimization.SciMLBase.ReturnCode.Success, Optimization.SciMLBase.ReturnCode.MaxIters]
+
+# If it did converge, verify the constraint is satisfied
+if sol_issue958.retcode == Optimization.SciMLBase.ReturnCode.Success
+    cons_result_issue958 = zeros(1)
+    cons_issue958!(cons_result_issue958, sol_issue958.u, p_issue958)
+    @test abs(cons_result_issue958[1]) < 1e-6
+end
