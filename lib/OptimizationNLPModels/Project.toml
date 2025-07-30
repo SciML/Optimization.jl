@@ -14,7 +14,7 @@ ADTypes = "1.7"
 NLPModels = "0.21"
 Optimization = "4"
 Reexport = "1.2"
-julia = "1.9"
+julia = "1.10"
 
 [extras]
 NLPModelsTest = "7998695d-6960-4d3a-85c4-e1bceb8cd856"

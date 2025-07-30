@@ -9,7 +9,7 @@ NOMAD = "02130f1c-4665-5b79-af82-ff1385104aa0"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
-julia = "1"
+julia = "1.10"
 NOMAD = "2.4.1"
 Optimization = "4"
 Reexport = "1.2"
