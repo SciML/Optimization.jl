@@ -1,0 +1,57 @@
+name: Downgrade Sublibraries
+on:
+  pull_request:
+    branches:
+      - master
+    paths-ignore:
+      - 'docs/**'
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - 'docs/**'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        downgrade_mode: ['alldeps']
+        julia-version: ['1.10']
+        project:
+          - 'lib/OptimizationBBO'
+          - 'lib/OptimizationCMAEvolutionStrategy'
+          - 'lib/OptimizationEvolutionary'
+          - 'lib/OptimizationGCMAES'
+          - 'lib/OptimizationMOI'
+          - 'lib/OptimizationManopt'
+          - 'lib/OptimizationMetaheuristics'
+          - 'lib/OptimizationMultistartOptimization'
+          - 'lib/OptimizationNLPModels'
+          - 'lib/OptimizationNLopt'
+          - 'lib/OptimizationNOMAD'
+          - 'lib/OptimizationODE'
+          - 'lib/OptimizationOptimJL'
+          - 'lib/OptimizationOptimisers'
+          - 'lib/OptimizationPRIMA'
+          - 'lib/OptimizationPolyalgorithms'
+          - 'lib/OptimizationPyCMA'
+          - 'lib/OptimizationQuadDIRECT'
+          - 'lib/OptimizationSciPy'
+          - 'lib/OptimizationSpeedMapping'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.julia-version }}
+      - uses: julia-actions/julia-downgrade-compat@v2
+        with:
+          project: ${{ matrix.project }}
+          skip: Pkg,TOML
+      - uses: julia-actions/julia-buildpkg@v1
+        with:
+          project: ${{ matrix.project }}
+      - uses: julia-actions/julia-runtest@v1
+        with:
+          project: ${{ matrix.project }}
+          ALLOW_RERESOLVE: false
