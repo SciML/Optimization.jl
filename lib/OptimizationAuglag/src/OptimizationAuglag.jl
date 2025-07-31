@@ -1,3 +1,5 @@
+module OptimizationAuglag
+
 @kwdef struct AugLag
     inner::Any
     τ = 0.5
@@ -182,4 +184,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cache, cache.opt, θ, x,
             stats = stats, retcode = opt_ret)
     end
+end
+
 end
