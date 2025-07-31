@@ -24,7 +24,7 @@ pages = ["index.md",
         "API/modelingtoolkit.md",
         "API/FAQ.md"
     ],
-    "Optimizer Packages" => [   
+    "Optimizer Packages" => [
         "BlackBoxOptim.jl" => "optimization_packages/blackboxoptim.md",
         "CMAEvolutionStrategy.jl" => "optimization_packages/cmaevolutionstrategy.md",
         "Evolutionary.jl" => "optimization_packages/evolutionary.md",

@@ -39,7 +39,7 @@ end
     sol = solve(prob,
         Optim.NelderMead(;
             initial_simplex = Optim.AffineSimplexer(; a = 0.025,
-                b = 0.5)); callback = CallbackTester(length(x0)))
+            b = 0.5)); callback = CallbackTester(length(x0)))
     @test 10 * sol.objective < l1
 
     f = OptimizationFunction(rosenbrock, AutoReverseDiff())

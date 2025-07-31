@@ -36,7 +36,7 @@ function __map_optimizer_args(prob::OptimizationCache, opt::PyCMAOpt;
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
-    
+
     # Converting Optimization.jl args to PyCMA opts
     # Optimization.jl kwargs will overwrite PyCMA kwargs supplied to solve() 
 
@@ -44,25 +44,25 @@ function __map_optimizer_args(prob::OptimizationCache, opt::PyCMAOpt;
 
     # adding PyCMA args
     merge!(mapped_args, Dict(string(k) => v for (k, v) in PyCMAargs))
-    
+
     # mapping Optimization.jl args
     mapped_args["bounds"] = (prob.lb, prob.ub)
 
     if !("verbose" ∈ keys(mapped_args))
-        mapped_args["verbose"] = -1   
-    end 
+        mapped_args["verbose"] = -1
+    end
 
     if !isnothing(abstol)
         mapped_args["tolfun"] = abstol
     end
 
     if !isnothing(reltol)
-        mapped_args["tolfunrel"] = reltol 
+        mapped_args["tolfunrel"] = reltol
     end
 
     if !isnothing(maxtime)
         mapped_args["timeout"] = maxtime
-    end 
+    end
 
     if !isnothing(maxiters)
         mapped_args["maxiter"] = maxiters
@@ -73,15 +73,17 @@ end
 
 function __map_pycma_retcode(stop_dict::Dict{String, Any})
     # mapping termination conditions to SciMLBase return codes
-    if any(k ∈ keys(stop_dict) for k in ["ftarget", "tolfun", "tolx"])
+    if any(k in keys(stop_dict) for k in ["ftarget", "tolfun", "tolx"])
         return ReturnCode.Success
-    elseif any(k ∈ keys(stop_dict) for k in ["maxiter", "maxfevals"])
+    elseif any(k in keys(stop_dict) for k in ["maxiter", "maxfevals"])
         return ReturnCode.MaxIters
     elseif "timeout" ∈ keys(stop_dict)
         return ReturnCode.MaxTime
     elseif "callback" ∈ keys(stop_dict)
         return ReturnCode.Terminated
-    elseif any(k ∈ keys(stop_dict) for k in ["tolupsigma", "tolconditioncov", "noeffectcoord", "noeffectaxis", "tolxstagnation", "tolflatfitness", "tolfacupx", "tolstagnation"])
+    elseif any(k in keys(stop_dict)
+    for k in ["tolupsigma", "tolconditioncov", "noeffectcoord", "noeffectaxis",
+        "tolxstagnation", "tolflatfitness", "tolfacupx", "tolstagnation"])
         return ReturnCode.Failure
     else
         return ReturnCode.Default
@@ -118,11 +120,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     # wrapping the objective function
     _loss = function (θ)
-        x = cache.f(θ, cache.p)    
+        x = cache.f(θ, cache.p)
         return first(x)
     end
 
-    _cb = function(es)
+    _cb = function (es)
         opt_state = Optimization.OptimizationState(; iter = pyconvert(Int, es.countiter),
             u = pyconvert(Vector{Float64}, es.best.x),
             p = cache.p,
@@ -154,20 +156,20 @@ function SciMLBase.__solve(cache::OptimizationCache{
     t0 = time()
     opt_res = es.optimize(_loss, callback = _cb)
     t1 = time()
-    
+
     # reading the results
     opt_ret_dict = opt_res.stop()
     retcode = __map_pycma_retcode(pyconvert(Dict{String, Any}, opt_ret_dict))
-    
+
     # logging and returning results of the optimization
     stats = Optimization.OptimizationStats(;
         iterations = pyconvert(Int, es.countiter),
         time = t1 - t0,
         fevals = pyconvert(Int, es.countevals))
-    
+
     SciMLBase.build_solution(cache, cache.opt,
-    pyconvert(Vector{Float64}, opt_res.result.xbest),
-    pyconvert(Float64, opt_res.result.fbest); original = opt_res,
+        pyconvert(Vector{Float64}, opt_res.result.xbest),
+        pyconvert(Float64, opt_res.result.fbest); original = opt_res,
         retcode = retcode,
         stats = stats)
 end
