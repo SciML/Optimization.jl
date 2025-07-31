@@ -1,17 +1,18 @@
 """
 $(TYPEDEF)
 
-Stores the optimization run's state at the current iteration 
+Stores the optimization run's state at the current iteration
 and is passed to the callback function as the first argument.
 
 ## Fields
-- `iter`: current iteration
-- `u`: current solution
-- `objective`: current objective value
-- `gradient`: current gradient
-- `hessian`: current hessian
-- `original`: if the solver has its own state object then it is stored here
-- `p`: optimization parameters
+
+  - `iter`: current iteration
+  - `u`: current solution
+  - `objective`: current objective value
+  - `gradient`: current gradient
+  - `hessian`: current hessian
+  - `original`: if the solver has its own state object then it is stored here
+  - `p`: optimization parameters
 """
 struct OptimizationState{X, O, G, H, S, P}
     iter::Int

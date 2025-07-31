@@ -407,10 +407,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
                 real(zero(u0_type))) :
             convert.(u0_type, cache.f.hess_prototype))
     else
-        Optim.OnceDifferentiable(_loss, gg, fg!, cache.u0, 
-                        real(zero(u0_type)),
-                        Optim.NLSolversBase.alloc_DF(cache.u0,
-                            real(zero(u0_type))))
+        Optim.OnceDifferentiable(_loss, gg, fg!, cache.u0,
+            real(zero(u0_type)),
+            Optim.NLSolversBase.alloc_DF(cache.u0,
+                real(zero(u0_type))))
     end
 
     cons_hl! = function (h, θ, λ)
@@ -442,7 +442,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             Optim.OnceDifferentiableConstraints(lb, ub)
         end
     end
-    
+
     opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb,
         maxiters = cache.solver_args.maxiters,
         maxtime = cache.solver_args.maxtime,

@@ -8,9 +8,9 @@ It is a quasi-Newton optimization algorithm that supports bounds.
 
 References
 
-- R. H. Byrd, P. Lu and J. Nocedal. A Limited Memory Algorithm for Bound Constrained Optimization, (1995), SIAM Journal on Scientific and Statistical Computing , 16, 5, pp. 1190-1208.
-- C. Zhu, R. H. Byrd and J. Nocedal. L-BFGS-B: Algorithm 778: L-BFGS-B, FORTRAN routines for large scale bound constrained optimization (1997), ACM Transactions on Mathematical Software, Vol 23, Num. 4, pp. 550 - 560.
-- J.L. Morales and J. Nocedal. L-BFGS-B: Remark on Algorithm 778: L-BFGS-B, FORTRAN routines for large scale bound constrained optimization (2011), to appear in ACM Transactions on Mathematical Software.
+  - R. H. Byrd, P. Lu and J. Nocedal. A Limited Memory Algorithm for Bound Constrained Optimization, (1995), SIAM Journal on Scientific and Statistical Computing , 16, 5, pp. 1190-1208.
+  - C. Zhu, R. H. Byrd and J. Nocedal. L-BFGS-B: Algorithm 778: L-BFGS-B, FORTRAN routines for large scale bound constrained optimization (1997), ACM Transactions on Mathematical Software, Vol 23, Num. 4, pp. 550 - 560.
+  - J.L. Morales and J. Nocedal. L-BFGS-B: Remark on Algorithm 778: L-BFGS-B, FORTRAN routines for large scale bound constrained optimization (2011), to appear in ACM Transactions on Mathematical Software.
 """
 @kwdef struct LBFGS
     m::Int = 10
@@ -124,7 +124,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cache.f.cons(cons_tmp, θ)
             cons_tmp[eq_inds] .= cons_tmp[eq_inds] - cache.lcons[eq_inds]
             cons_tmp[ineq_inds] .= cons_tmp[ineq_inds] .- cache.ucons[ineq_inds]
-            opt_state = Optimization.OptimizationState(u = θ, objective = x[1], p = cache.p, iter = iter_count[])
+            opt_state = Optimization.OptimizationState(
+                u = θ, objective = x[1], p = cache.p, iter = iter_count[])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
             end
@@ -166,10 +167,12 @@ function SciMLBase.__solve(cache::OptimizationCache{
         n = length(cache.u0)
 
         if cache.lb === nothing
-            optimizer, bounds = LBFGSB._opt_bounds(
+            optimizer,
+            bounds = LBFGSB._opt_bounds(
                 n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n])
         else
-            optimizer, bounds = LBFGSB._opt_bounds(
+            optimizer,
+            bounds = LBFGSB._opt_bounds(
                 n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
         end
 
@@ -212,7 +215,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
         _loss = function (θ)
             x = cache.f(θ, cache.p)
             iter_count[] += 1
-            opt_state = Optimization.OptimizationState(u = θ, objective = x[1], p = cache.p, iter = iter_count[])
+            opt_state = Optimization.OptimizationState(
+                u = θ, objective = x[1], p = cache.p, iter = iter_count[])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
             end
@@ -222,10 +226,12 @@ function SciMLBase.__solve(cache::OptimizationCache{
         n = length(cache.u0)
 
         if cache.lb === nothing
-            optimizer, bounds = LBFGSB._opt_bounds(
+            optimizer,
+            bounds = LBFGSB._opt_bounds(
                 n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n])
         else
-            optimizer, bounds = LBFGSB._opt_bounds(
+            optimizer,
+            bounds = LBFGSB._opt_bounds(
                 n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
         end
 

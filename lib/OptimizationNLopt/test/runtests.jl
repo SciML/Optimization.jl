@@ -106,20 +106,20 @@ using Test, Random
         x0_test = zeros(2)
         optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
         prob = OptimizationProblem(optprob, x0_test, _p)
-        
+
         # Test with NLopt.Opt interface
         opt = NLopt.Opt(:LD_MMA, 2)
         # This should not throw an error - the PR fixed the UndefVarError
         sol = solve(prob, opt, dual_ftol_rel = 1e-6, maxiters = 100)
         @test sol.retcode ∈ [ReturnCode.Success, ReturnCode.MaxIters]
-        
+
         # Test with direct algorithm interface
         sol = solve(prob, NLopt.LD_MMA(), dual_ftol_rel = 1e-5, maxiters = 100)
         @test sol.retcode ∈ [ReturnCode.Success, ReturnCode.MaxIters]
-        
+
         # Verify it works with other solver options
-        sol = solve(prob, NLopt.LD_MMA(), dual_ftol_rel = 1e-4, ftol_rel = 1e-6, 
-                   xtol_rel = 1e-6, maxiters = 100)
+        sol = solve(prob, NLopt.LD_MMA(), dual_ftol_rel = 1e-4, ftol_rel = 1e-6,
+            xtol_rel = 1e-6, maxiters = 100)
         @test sol.retcode ∈ [ReturnCode.Success, ReturnCode.MaxIters]
     end
 
