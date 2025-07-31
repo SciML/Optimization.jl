@@ -21,7 +21,6 @@ TerminalLoggers = "5d786b92-1e48-4d6f-9151-6b4477ca9bed"
 
 [compat]
 ADTypes = "1.2"
-SciMLStructures = "1"
 Aqua = "0.8"
 ArrayInterface = "7.10"
 BenchmarkTools = "1"
