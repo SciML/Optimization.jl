@@ -1,5 +1,7 @@
 module OptimizationAuglag
 
+using Optimization.SciMLBase, Optimization
+
 @kwdef struct AugLag
     inner::Any
     τ = 0.5
