@@ -19,3 +19,15 @@ SciMLBase = "2.90.0"
 SparseArrays = "1.11.0"
 SymbolicIndexingInterface = "0.3.40"
 julia = "1.10"
+
+[extras]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+
+[targets]
+test = ["Aqua", "ModelingToolkit", "Random", "ReverseDiff", "Test", "Symbolics", "Zygote"]
