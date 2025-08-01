@@ -11,7 +11,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 [compat]
 julia = "1.10"
 NOMAD = "2.4.1"
-Optimization = "4"
+Optimization = "4.4"
 Reexport = "1.2"
 
 [extras]
