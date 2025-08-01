@@ -1,4 +1,12 @@
-using Optimization.SciMLBase, LBFGSB
+module OptimizationLBFGS
+
+using Optimization
+using DocStringExtensions
+using LBFGSB
+using OptimizationBase.SciMLBase: OptimizationStats, OptimizationFunction
+using OptimizationBase: ReturnCode
+using OptimizationBase.LinearAlgebra: norm
+using Optimization: deduce_retcode
 
 """
 $(TYPEDEF)
@@ -38,7 +46,7 @@ function task_message_to_string(task::Vector{UInt8})
     return String(task)
 end
 
-function __map_optimizer_args(cache::Optimization.OptimizationCache, opt::LBFGS;
+function __map_optimizer_args(cache::OptimizationCache, opt::LBFGS;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -130,7 +138,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cons_tmp[eq_inds] .= cons_tmp[eq_inds] - cache.lcons[eq_inds]
             cons_tmp[ineq_inds] .= cons_tmp[ineq_inds] .- cache.ucons[ineq_inds]
             opt_state = Optimization.OptimizationState(
-                u = θ, objective = x[1], p = cache.p, iter = iter_count[])
+                u = θ, objective = x[1])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
             end
@@ -209,7 +217,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             end
         end
 
-        stats = Optimization.OptimizationStats(; iterations = maxiters,
+        stats = OptimizationStats(; iterations = maxiters,
             time = 0.0, fevals = maxiters, gevals = maxiters)
         return SciMLBase.build_solution(
             cache, cache.opt, res[2], cache.f(res[2], cache.p)[1],
@@ -220,7 +228,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             x = cache.f(θ, cache.p)
             iter_count[] += 1
             opt_state = Optimization.OptimizationState(
-                u = θ, objective = x[1], p = cache.p, iter = iter_count[])
+                u = θ, objective = x[1])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
             end
@@ -260,4 +268,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
         return SciMLBase.build_solution(cache, cache.opt, res[2], res[1], stats = stats,
             retcode = opt_ret, original = optimizer)
     end
+end
+
 end
