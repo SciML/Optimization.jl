@@ -1,6 +1,6 @@
 module OptimizationAuglag
 
-using OptimizationBase.SciMLBase, Optimization
+using Optimization
 using OptimizationBase.SciMLBase: OptimizationProblem, OptimizationFunction, OptimizationStats
 using OptimizationBase.LinearAlgebra: norm
 
