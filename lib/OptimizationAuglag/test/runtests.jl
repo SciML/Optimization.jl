@@ -1,5 +1,10 @@
-using MLUtils, OptimizationOptimisers
+using OptimizationBase
+using MLUtils
+using OptimizationOptimisers
+using OptimizationAuglag
 using ForwardDiff
+using OptimizationBase: OptimizationCache
+using OptimizationBase.SciMLBase: OptimizationFunction
 using Test
 
 @testset "OptimizationAuglag.jl" begin
@@ -17,7 +22,7 @@ using Test
         return nothing
     end
 
-    optf = OptimizationFunction(loss, AutoSparseForwardDiff(), cons = cons1)
+    optf = OptimizationFunction(loss, OptimizationBase.AutoSparseForwardDiff(), cons = cons1)
     callback = (st, l) -> (@show l; return false)
 
     initpars = rand(5)
@@ -26,6 +31,6 @@ using Test
     prob = OptimizationProblem(optf, initpars, data, lcons = [-Inf], ucons = [1],
         lb = [-10.0, -10.0, -10.0, -10.0, -10.0], ub = [10.0, 10.0, 10.0, 10.0, 10.0])
     opt = solve(
-        prob, Optimization.AugLag(; inner = Adam()), maxiters = 10000, callback = callback)
+        prob, OptimizationAuglag.AugLag(; inner = Adam()), maxiters = 10000, callback = callback)
     @test opt.objective < l0
 end
