@@ -232,8 +232,7 @@ end
     @parameters b = 4.0
     @parameters d = 2.0
     @named sys = OptimizationSystem(
-        a * x[1]^2 + b * x[2]^2 + d * x[1] * x[2] + 5 * x[1] +
-        x[2], [x...], [a, b, c, d];
+        a * x[1]^2 + b * x[2]^2 + d * x[1] * x[2] + 5 * x[1] + x[2], [x...], [a, b, c, d];
         constraints = [
             x[1] + 2 * x[2] ~ 1.0
         ])

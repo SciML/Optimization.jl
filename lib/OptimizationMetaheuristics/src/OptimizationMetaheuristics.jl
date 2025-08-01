@@ -15,8 +15,7 @@ function initial_population!(opt, cache, bounds, f)
     Metaheuristics.optimize(f, bounds, opt_init)
 
     pop_size = opt_init.parameters.N
-    population_rand = [bounds[1, :] +
-                       rand(length(cache.u0)) .* (bounds[2, :] - bounds[1, :])
+    population_rand = [bounds[1, :] + rand(length(cache.u0)) .* (bounds[2, :] - bounds[1, :])
                        for i in 1:(pop_size - 1)]
     push!(population_rand, cache.u0)
     population_init = [Metaheuristics.create_child(x, f(x)) for x in population_rand]
