@@ -30,12 +30,12 @@ function decompose_trace(opt::BlackBoxOptim.OptRunController, progress)
         if iszero(max_time)
             # we stop at either convergence or max_steps
             n_steps = BlackBoxOptim.num_steps(opt)
-            Base.@logmsg(Base.LogLevel(-1), msg, progress=n_steps / maxiters,
+            Base.@logmsg(Base.LogLevel(-1), msg, progress=n_steps/maxiters,
                 _id=:OptimizationBBO)
         else
             # we stop at either convergence or max_time
             elapsed = BlackBoxOptim.elapsed_time(opt)
-            Base.@logmsg(Base.LogLevel(-1), msg, progress=elapsed / max_time,
+            Base.@logmsg(Base.LogLevel(-1), msg, progress=elapsed/max_time,
                 _id=:OptimizationBBO)
         end
     end

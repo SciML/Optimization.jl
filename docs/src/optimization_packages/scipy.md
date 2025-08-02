@@ -3,6 +3,7 @@
 [`SciPy`](https://scipy.org/) is a mature Python library that offers a rich family of optimization, root–finding and linear‐programming algorithms.  `OptimizationSciPy.jl` gives access to these routines through the unified `Optimization.jl` interface just like any native Julia optimizer.
 
 !!! note
+    
     `OptimizationSciPy.jl` relies on [`PythonCall`](https://github.com/cjdoris/PythonCall.jl).  A minimal Python distribution containing SciPy will be installed automatically on first use, so no manual Python set-up is required.
 
 ## Installation: OptimizationSciPy.jl
@@ -20,37 +21,37 @@ Below is a catalogue of the solver families exposed by `OptimizationSciPy.jl` to
 
 #### Derivative-Free
 
-  * `ScipyNelderMead()` – Simplex Nelder–Mead algorithm
-  * `ScipyPowell()` – Powell search along conjugate directions
-  * `ScipyCOBYLA()` – Linear approximation of constraints (supports nonlinear constraints)
+  - `ScipyNelderMead()` – Simplex Nelder–Mead algorithm
+  - `ScipyPowell()` – Powell search along conjugate directions
+  - `ScipyCOBYLA()` – Linear approximation of constraints (supports nonlinear constraints)
 
 #### Gradient-Based
 
-  * `ScipyCG()` – Non-linear conjugate gradient
-  * `ScipyBFGS()` – Quasi-Newton BFGS
-  * `ScipyLBFGSB()` – Limited-memory BFGS with simple bounds
-  * `ScipyNewtonCG()` – Newton-conjugate gradient (requires Hessian-vector products)
-  * `ScipyTNC()` – Truncated Newton with bounds
-  * `ScipySLSQP()` – Sequential least-squares programming (supports constraints)
-  * `ScipyTrustConstr()` – Trust-region method for non-linear constraints
+  - `ScipyCG()` – Non-linear conjugate gradient
+  - `ScipyBFGS()` – Quasi-Newton BFGS
+  - `ScipyLBFGSB()` – Limited-memory BFGS with simple bounds
+  - `ScipyNewtonCG()` – Newton-conjugate gradient (requires Hessian-vector products)
+  - `ScipyTNC()` – Truncated Newton with bounds
+  - `ScipySLSQP()` – Sequential least-squares programming (supports constraints)
+  - `ScipyTrustConstr()` – Trust-region method for non-linear constraints
 
 #### Hessian–Based / Trust-Region
 
-  * `ScipyDogleg()`, `ScipyTrustNCG()`, `ScipyTrustKrylov()`, `ScipyTrustExact()` – Trust-region algorithms that optionally use or build Hessian information
+  - `ScipyDogleg()`, `ScipyTrustNCG()`, `ScipyTrustKrylov()`, `ScipyTrustExact()` – Trust-region algorithms that optionally use or build Hessian information
 
 ### Global Optimizer
 
-  * `ScipyDifferentialEvolution()` – Differential evolution (requires bounds)
-  * `ScipyBasinhopping()` – Basin-hopping with local search
-  * `ScipyDualAnnealing()` – Dual annealing simulated annealing
-  * `ScipyShgo()` – Simplicial homology global optimisation (supports constraints)
-  * `ScipyDirect()` – Deterministic `DIRECT` algorithm (requires bounds)
-  * `ScipyBrute()` – Brute-force grid search (requires bounds)
+  - `ScipyDifferentialEvolution()` – Differential evolution (requires bounds)
+  - `ScipyBasinhopping()` – Basin-hopping with local search
+  - `ScipyDualAnnealing()` – Dual annealing simulated annealing
+  - `ScipyShgo()` – Simplicial homology global optimisation (supports constraints)
+  - `ScipyDirect()` – Deterministic `DIRECT` algorithm (requires bounds)
+  - `ScipyBrute()` – Brute-force grid search (requires bounds)
 
 ### Linear & Mixed-Integer Programming
 
-  * `ScipyLinprog("highs")` – LP solvers from the HiGHS project and legacy interior-point/simplex methods
-  * `ScipyMilp()` – Mixed-integer linear programming via HiGHS branch-and-bound
+  - `ScipyLinprog("highs")` – LP solvers from the HiGHS project and legacy interior-point/simplex methods
+  - `ScipyMilp()` – Mixed-integer linear programming via HiGHS branch-and-bound
 
 ### Root Finding & Non-Linear Least Squares *(experimental)*
 
@@ -65,9 +66,9 @@ using Optimization, OptimizationSciPy
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
-p  = [1.0, 100.0]
+p = [1.0, 100.0]
 
-f   = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+f = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
 prob = OptimizationProblem(f, x0, p)
 
 sol = solve(prob, ScipyBFGS())
@@ -85,7 +86,7 @@ obj(x, p) = (x[1] + x[2] - 1)^2
 # Single non-linear constraint: x₁² + x₂² ≈ 1 (with small tolerance)
 cons(res, x, p) = (res .= [x[1]^2 + x[2]^2 - 1.0])
 
-x0   = [0.5, 0.5]
+x0 = [0.5, 0.5]
 prob = OptimizationProblem(
     OptimizationFunction(obj; cons = cons),
     x0, nothing, lcons = [-1e-6], ucons = [1e-6])  # Small tolerance instead of exact equality
@@ -129,5 +130,4 @@ If SciPy raises an error it is re-thrown as a Julia `ErrorException` carrying th
 
 ## Contributing
 
-Bug reports and feature requests are welcome in the [Optimization.jl](https://github.com/SciML/Optimization.jl) issue tracker.  Pull requests that improve either the Julia wrapper or the documentation are highly appreciated. 
-
+Bug reports and feature requests are welcome in the [Optimization.jl](https://github.com/SciML/Optimization.jl) issue tracker.  Pull requests that improve either the Julia wrapper or the documentation are highly appreciated.

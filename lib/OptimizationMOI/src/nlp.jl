@@ -362,6 +362,7 @@ function MOI.hessian_lagrangian_structure(evaluator::MOIOptimizationNLPEvaluator
         # Performance optimization. If both are dense, no need to repeat
     else
         for col in 1:N, row in 1:col
+
             push!(inds, (row, col))
         end
     end
@@ -399,6 +400,7 @@ function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
         end
     else
         for i in 1:size(H, 1), j in 1:i
+
             k += 1
             h[k] = σ * H[i, j]
         end
@@ -428,6 +430,7 @@ function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
                 # `nnz_objective` if the objective is sprase, and `0` otherwise.
                 k = sparse_objective ? nnz_objective : 0
                 for i in 1:size(Hi, 1), j in 1:i
+
                     k += 1
                     h[k] += μi * Hi[i, j]
                 end

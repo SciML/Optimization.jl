@@ -18,9 +18,9 @@ ManifoldDiff = "0.3.10"
 Manifolds = "0.9.18"
 ManifoldsBase = "0.15.10"
 Manopt = "0.4.63"
-Optimization = "4"
+Optimization = "4.4"
 Reexport = "1.2"
-julia = "1.9"
+julia = "1.10"
 
 [extras]
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"

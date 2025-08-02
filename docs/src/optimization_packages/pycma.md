@@ -31,9 +31,9 @@ sol = solve(prob, PyCMAOpt())
 
 ## Passing solver-specific options
 
-Any keyword that `Optimization.jl` does not interpret is forwarded directly to PyCMA. 
+Any keyword that `Optimization.jl` does not interpret is forwarded directly to PyCMA.
 
-In the event an `Optimization.jl` keyword overlaps with a `PyCMA` keyword, the `Optimization.jl` keyword takes precedence. 
+In the event an `Optimization.jl` keyword overlaps with a `PyCMA` keyword, the `Optimization.jl` keyword takes precedence.
 
 An exhaustive list of keyword arguments can be found by running the following python script:
 
@@ -44,6 +44,7 @@ print(options)
 ```
 
 An example passing the `PyCMA` keywords "verbose" and "seed":
+
 ```julia
 sol = solve(prob, PyCMA(), verbose = -9, seed = 42)
 ```
@@ -54,10 +55,9 @@ The original Python result object is attached to the solution in the `original` 
 
 ```julia
 sol = solve(prob, PyCMAOpt())
-println(sol.original) 
+println(sol.original)
 ```
 
 ## Contributing
 
-Bug reports and feature requests are welcome in the [Optimization.jl](https://github.com/SciML/Optimization.jl) issue tracker.  Pull requests that improve either the Julia wrapper or the documentation are highly appreciated. 
-
+Bug reports and feature requests are welcome in the [Optimization.jl](https://github.com/SciML/Optimization.jl) issue tracker.  Pull requests that improve either the Julia wrapper or the documentation are highly appreciated.
