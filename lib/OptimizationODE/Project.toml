@@ -13,7 +13,7 @@ SteadyStateDiffEq = "9672c7b4-1e72-59bd-8a11-6ac3964bc41f"
 
 [compat]
 ForwardDiff = "0.10, 1"
-Optimization = "4"
+Optimization = "4.4"
 OrdinaryDiffEq = "6.70"
 Reexport = "1"
 SciMLBase = "2"
