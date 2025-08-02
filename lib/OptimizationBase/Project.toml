@@ -1,0 +1,69 @@
+name = "OptimizationBase"
+uuid = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
+authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
+version = "2.10.0"
+
+[deps]
+ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
+ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
+DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
+DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
+FastClosures = "9aa1b823-49e4-5ca5-8b0f-3971ec8bab6a"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+PDMats = "90014a1f-27ba-587c-ab20-58faa44d9150"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+SparseConnectivityTracer = "9f842d2f-2579-4b1d-911e-f412cf18a3f5"
+SparseMatrixColorings = "0a514795-09f3-496d-8182-132a7b665d35"
+
+[weakdeps]
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+MLDataDevices = "7e8f7934-dd98-4c1a-8fe8-92b47a384d40"
+MLUtils = "f1d291b0-491e-4a28-83b9-f70985020b54"
+ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
+ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
+SymbolicAnalysis = "4297ee4d-0239-47d8-ba5d-195ecdf594fe"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+
+[extensions]
+OptimizationEnzymeExt = "Enzyme"
+OptimizationFiniteDiffExt = "FiniteDiff"
+OptimizationForwardDiffExt = "ForwardDiff"
+OptimizationMLDataDevicesExt = "MLDataDevices"
+OptimizationMLUtilsExt = "MLUtils"
+OptimizationMTKExt = "ModelingToolkit"
+OptimizationReverseDiffExt = "ReverseDiff"
+OptimizationSymbolicAnalysisExt = "SymbolicAnalysis"
+OptimizationZygoteExt = "Zygote"
+
+[compat]
+ADTypes = "1.9"
+ArrayInterface = "7.6"
+DifferentiationInterface = "0.7"
+DocStringExtensions = "0.9"
+Enzyme = "0.13.2"
+FastClosures = "0.3"
+FiniteDiff = "2.12"
+ForwardDiff = "0.10.26, 1"
+LinearAlgebra = "1.9, 1.10"
+MLDataDevices = "1"
+MLUtils = "0.4"
+ModelingToolkit = "9, 10"
+PDMats = "0.11"
+Reexport = "1.2"
+ReverseDiff = "1.14"
+SciMLBase = "2"
+SparseConnectivityTracer = "0.6, 1"
+SparseMatrixColorings = "0.4"
+SymbolicAnalysis = "0.3"
+Zygote = "0.6.67, 0.7"
+julia = "1.10"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
