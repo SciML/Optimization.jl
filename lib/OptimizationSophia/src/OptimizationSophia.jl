@@ -1,3 +1,9 @@
+module OptimizationSophia
+
+using OptimizationBase.SciMLBase
+using OptimizationBase: OptimizationCache
+using Optimization
+
 """
     Sophia(; η = 1e-3, βs = (0.9, 0.999), ϵ = 1e-8, λ = 1e-1, k = 10, ρ = 0.04)
 
@@ -170,4 +176,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
     return SciMLBase.build_solution(cache, cache.opt,
         θ,
         x, retcode = ReturnCode.Success)
+end
+
 end
