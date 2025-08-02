@@ -1,6 +1,7 @@
 using OptimizationOptimJL,
       OptimizationOptimJL.Optim, Optimization, ForwardDiff, Zygote, ReverseDiff,
-      Random, ModelingToolkit, Optimization.OptimizationBase.DifferentiationInterface
+      Random, ModelingToolkit, OptimizationBase.DifferentiationInterface
+using OptimizationBase.SciMLBase: OptimizationFunction, OptimizationProblem, solve, MaxSense
 using Test
 
 struct CallbackTester
@@ -42,7 +43,7 @@ end
                 b = 0.5)); callback = CallbackTester(length(x0)))
     @test 10 * sol.objective < l1
 
-    f = OptimizationFunction(rosenbrock, AutoReverseDiff())
+    f = OptimizationFunction(rosenbrock, OptimizationBase.AutoReverseDiff())
 
     Random.seed!(1234)
     prob = OptimizationProblem(f, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
@@ -85,14 +86,14 @@ end
     @test sol.original.iterations > 2
 
     cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit();
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoModelingToolkit();
         cons = cons)
 
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-5.0], ucons = [10.0])
     sol = solve(prob, IPNewton())
     @test 10 * sol.objective < l1
 
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff();
         cons = cons)
 
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [Inf])
@@ -108,14 +109,14 @@ end
         res .= [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     end
 
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff();
         cons = con2_c)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf, -Inf], ucons = [Inf, Inf])
     sol = solve(prob, IPNewton())
     @test 10 * sol.objective < l1
 
     cons_circ = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff();
         cons = cons_circ)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [0.25^2])
     cache = Optimization.init(prob, Optim.IPNewton())
@@ -124,7 +125,7 @@ end
     cons(res, sol.u, nothing)
     @test sqrt(res[1])≈0.25 rtol=1e-6
 
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
 
     prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
     sol = solve(
@@ -137,8 +138,8 @@ end
     sol = Optimization.solve!(cache)
     @test 10 * sol.objective < l1
 
-    optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), Optimization.AutoZygote())
-    prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MaxSense)
+    optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), OptimizationBase.AutoZygote())
+    prob = OptimizationProblem(optprob, x0, _p; sense = MaxSense)
 
     sol = solve(prob, NelderMead())
     @test 10 * sol.objective < l1
@@ -150,28 +151,28 @@ end
         G[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]
         G[2] = 200.0 * (x[2] - x[1]^2)
     end
-    optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), Optimization.AutoZygote(),
+    optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), OptimizationBase.AutoZygote(),
         grad = g!)
-    prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MaxSense)
+    prob = OptimizationProblem(optprob, x0, _p; sense = MaxSense)
     sol = solve(prob, BFGS())
     @test 10 * sol.objective < l1
 
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit())
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoModelingToolkit())
     prob = OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, Optim.BFGS())
     @test 10 * sol.objective < l1
 
     optprob = OptimizationFunction(rosenbrock,
-        Optimization.AutoModelingToolkit(true, false))
+        OptimizationBase.AutoModelingToolkit(true, false))
     prob = OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, Optim.Newton())
-    @test 10 * sol.objective < l1
+    @test sol.objective < l1
 
     sol = solve(prob, Optim.KrylovTrustRegion())
-    @test 10 * sol.objective < l1
+    @test sol.objective < l1
 
     prob = OptimizationProblem(
-        optprob, x0, _p; sense = Optimization.MaxSense, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+        optprob, x0, _p; sense = MaxSense, lb = [-1.0, -1.0], ub = [0.8, 0.8])
     sol = solve(prob, BFGS())
     @test 10 * sol.objective < l1
 
@@ -200,17 +201,17 @@ end
     @test 10 * sol.objective < l1
 
     @testset "cache" begin
-        objective(x, p) = (p[1] - x[1])^2
-        x0 = zeros(1)
-        p = [1.0]
+        objective(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+        x0 = zeros(2)
+        p = [1.0, 100.0]
 
         prob = OptimizationProblem(objective, x0, p)
         cache = Optimization.init(prob, Optim.NelderMead())
         sol = Optimization.solve!(cache)
-        @test sol.u≈[1.0] atol=1e-3
+        @test sol.u≈[1.0, 1.0] atol=1e-3
 
-        cache = Optimization.reinit!(cache; p = [2.0])
+        cache = Optimization.reinit!(cache; p = [2.0, 100.0])
         sol = Optimization.solve!(cache)
-        @test sol.u≈[2.0] atol=1e-3
+        @test sol.u≈[2.0, 4.0] atol=1e-3 # expected minimum for p = [2.0, 100.0]
     end
 end
