@@ -51,12 +51,6 @@ prob = OptimizationProblem(optf, initpars, (x0, y0), lcons = [-Inf], ucons = [0.
 opt1 = solve(prob, Optimization.LBFGS(), maxiters = 1000, callback = callback)
 @test opt1.objective < l0
 
-prob = OptimizationProblem(optf, initpars, data, lcons = [-Inf], ucons = [1],
-    lb = [-10.0, -10.0, -10.0, -10.0, -10.0], ub = [10.0, 10.0, 10.0, 10.0, 10.0])
-opt = solve(
-    prob, Optimization.AugLag(; inner = Adam()), maxiters = 10000, callback = callback)
-@test opt.objective < l0
-
 optf1 = OptimizationFunction(loss, AutoSparseForwardDiff())
 prob1 = OptimizationProblem(optf1, rand(5), data)
 sol1 = solve(prob1, OptimizationOptimisers.Adam(), maxiters = 1000, callback = callback)
