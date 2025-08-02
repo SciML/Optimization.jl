@@ -13,7 +13,6 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 Optim = "1"
-Optimization = "4"
 OptimizationBase = "2.10.0"
 Optimization = "4.4"
 PrecompileTools = "1.2"
