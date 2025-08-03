@@ -3,8 +3,8 @@ module OptimizationOptimJL
 using Reexport
 @reexport using Optim
 using Optimization
-using OptimizationBase.SciMLBase, SparseArrays
 using OptimizationBase: OptimizationCache
+using OptimizationBase.SciMLBase, SparseArrays
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace::Optim.OptimizationState) = trace
 
@@ -30,7 +30,7 @@ end
 SciMLBase.requiresgradient(opt::Optim.Fminbox) = true
 # SciMLBase.allowsfg(opt::Union{Optim.AbstractOptimizer, Optim.ConstrainedOptimizer, Optim.Fminbox, Optim.SAMIN}) = true
 
-function __map_optimizer_args(cache::OptimizationCache,
+function __map_optimizer_args(cache::OptimizationBase.OptimizationCache,
         opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
             Optim.SAMIN, Optim.ConstrainedOptimizer};
         callback = nothing,
@@ -109,12 +109,12 @@ function SciMLBase.__init(prob::OptimizationProblem,
 
     maxiters = Optimization._check_and_convert_maxiters(maxiters)
     maxtime = Optimization._check_and_convert_maxtime(maxtime)
-    return OptimizationCache(prob, opt; callback, maxiters, maxtime, abstol,
+    return OptimizationBase.OptimizationCache(prob, opt; callback, maxiters, maxtime, abstol,
         reltol, progress,
         kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -231,7 +231,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -324,7 +324,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         original = opt_res, retcode = opt_ret, stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
