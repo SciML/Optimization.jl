@@ -5,12 +5,7 @@ module Optimization
 
 using DocStringExtensions
 using Reexport
-@reexport using SciMLBase, ADTypes
-
-# Include OptimizationBase as a submodule
-include("../lib/OptimizationBase/src/OptimizationBase.jl")
-using .OptimizationBase
-export OptimizationBase
+@reexport using SciMLBase, ADTypes, OptimizationBase
 
 if !isdefined(Base, :get_extension)
     using Requires
