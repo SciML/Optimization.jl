@@ -14,7 +14,7 @@ end
 using Logging, ProgressLogging, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 
-import .OptimizationBase: instantiate_function, OptimizationCache, ReInitCache
+import OptimizationBase: instantiate_function, OptimizationCache, ReInitCache
 import SciMLBase: OptimizationProblem,
                   OptimizationFunction, ObjSense,
                   MaxSense, MinSense, OptimizationStats
