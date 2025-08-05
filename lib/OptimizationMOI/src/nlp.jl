@@ -1,7 +1,5 @@
 mutable struct MOIOptimizationNLPEvaluator{T, F <: OptimizationFunction, RC, LB, UB,
-    I,
-    JT <: DenseOrSparse{T}, HT <: DenseOrSparse{T},
-    CHT <: DenseOrSparse{T}, S, CB} <:
+    I, JT <: AbstractMatrix{T}, HT <: AbstractMatrix{T}, CHT <: AbstractMatrix{T}, S, CB} <:
                MOI.AbstractNLPEvaluator
     f::F
     reinit_cache::RC
@@ -241,6 +239,7 @@ function MOI.eval_objective(evaluator::MOIOptimizationNLPEvaluator, x)
         evaluator.iteration += 1
         state = Optimization.OptimizationState(iter = evaluator.iteration,
             u = x,
+            p = evaluator.p,
             objective = l[1])
         evaluator.callback(state, l)
         return l
@@ -363,6 +362,7 @@ function MOI.hessian_lagrangian_structure(evaluator::MOIOptimizationNLPEvaluator
         # Performance optimization. If both are dense, no need to repeat
     else
         for col in 1:N, row in 1:col
+
             push!(inds, (row, col))
         end
     end
@@ -400,6 +400,7 @@ function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
         end
     else
         for i in 1:size(H, 1), j in 1:i
+
             k += 1
             h[k] = σ * H[i, j]
         end
@@ -429,6 +430,7 @@ function MOI.eval_hessian_lagrangian(evaluator::MOIOptimizationNLPEvaluator{T},
                 # `nnz_objective` if the objective is sprase, and `0` otherwise.
                 k = sparse_objective ? nnz_objective : 0
                 for i in 1:size(Hi, 1), j in 1:i
+
                     k += 1
                     h[k] += μi * Hi[i, j]
                 end
@@ -492,10 +494,10 @@ function _add_moi_variables!(opt_setup, evaluator::MOIOptimizationNLPEvaluator)
 
     for i in 1:num_variables
         if evaluator.lb !== nothing && evaluator.lb[i] > -Inf
-            MOI.add_constraint(opt_setup, θ[i], MOI.GreaterThan(evaluator.lb[i]))
+            MOI.add_constraint(opt_setup, θ[i], MOI.GreaterThan(Float64(evaluator.lb[i])))
         end
         if evaluator.ub !== nothing && evaluator.ub[i] < Inf
-            MOI.add_constraint(opt_setup, θ[i], MOI.LessThan(evaluator.ub[i]))
+            MOI.add_constraint(opt_setup, θ[i], MOI.LessThan(Float64(evaluator.ub[i])))
         end
         if evaluator.int !== nothing && evaluator.int[i]
             if evaluator.lb !== nothing && evaluator.lb[i] == 0 &&

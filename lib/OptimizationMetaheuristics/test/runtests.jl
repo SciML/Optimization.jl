@@ -70,10 +70,8 @@ Random.seed!(42)
     end
 
     function rosenbrock(x)
-        f1 = sum(100 .* (x[2:end] .- x[1:(end - 1)] .^ 2) .^ 2 .+
-                 (x[1:(end - 1)] .- 1) .^ 2)
-        f2 = sum(100 .* ((x[2:end] .- 2.0) .- (x[1:(end - 1)] .^ 2)) .^ 2 .+
-                 ((x[1:(end - 1)] .- 1.0) .^ 2))
+        f1 = sum(100 .* (x[2:end] .- x[1:(end - 1)] .^ 2) .^ 2 .+ (x[1:(end - 1)] .- 1) .^ 2)
+        f2 = sum(100 .* ((x[2:end] .- 2.0) .- (x[1:(end - 1)] .^ 2)) .^ 2 .+ ((x[1:(end - 1)] .- 1.0) .^ 2))
         gx = [0.0]
         hx = [0.0]
         return [f1, f2], gx, hx
@@ -208,7 +206,8 @@ Random.seed!(42)
             for alg in algs
                 alg_name = string(typeof(alg))
                 @testset "$alg_name on $prob_name" begin
-                    multi_obj_fun = MultiObjectiveOptimizationFunction((x, p) -> prob_func(x))
+                    multi_obj_fun = MultiObjectiveOptimizationFunction((
+                        x, p) -> prob_func(x))
                     prob = OptimizationProblem(multi_obj_fun, lb; lb = lb, ub = ub)
                     if (alg_name == "Metaheuristics.Algorithm{CCMO{NSGA2}}")
                         sol = solve(prob, alg)

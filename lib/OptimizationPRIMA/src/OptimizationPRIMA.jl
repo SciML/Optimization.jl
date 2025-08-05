@@ -133,7 +133,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     _loss = function (θ)
         x = cache.f(θ, cache.p)
         iter += 1
-        opt_state = Optimization.OptimizationState(u = θ, objective = x[1], iter = iter)
+        opt_state = Optimization.OptimizationState(u = θ, p = cache.p, objective = x[1], iter = iter)
         if cache.callback(opt_state, x...)
             error("Optimization halted by callback.")
         end
@@ -176,14 +176,15 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         A₂ = J[linineqsinds, :]
         b₂ = cache.ucons[linineqsinds]
 
-        (minx, inf) = optfunc(_loss,
+        (minx,
+            inf) = optfunc(_loss,
             cache.u0;
             linear_eq = (A₁, b₁),
             linear_ineq = (A₂, b₂),
             nonlinear_ineq = x -> (res = zeros(eltype(x), length(nonlininds));
-            nonlincons(
-                res, x);
-            res),
+                nonlincons(
+                    res, x);
+                res),
             kws...)
     else
         (minx, inf) = optfunc(_loss, cache.u0; kws...)

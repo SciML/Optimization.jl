@@ -9,8 +9,8 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SpeedMapping = "f1835b91-879b-4a3f-a438-e4baacf14412"
 
 [compat]
-julia = "1"
-Optimization = "4"
+julia = "1.10"
+Optimization = "4.4"
 Reexport = "1.2"
 SpeedMapping = "0.3"
 

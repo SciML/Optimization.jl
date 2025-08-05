@@ -28,8 +28,7 @@ using Test
     # https://jso.dev/NLPModelsTest.jl/dev/reference/#NLPModelsTest.BROWNDEN
     # Problem without bounds
     function brown_dennis(u, p)
-        return sum([((u[1] + (i / 5) * u[2] - exp(i / 5))^2 +
-                     (u[3] + sin(i / 5) * u[4] - cos(i / 5))^2)^2 for i in 1:20])
+        return sum([((u[1] + (i / 5) * u[2] - exp(i / 5))^2 + (u[3] + sin(i / 5) * u[4] - cos(i / 5))^2)^2 for i in 1:20])
     end
     f = Optimization.OptimizationFunction(brown_dennis, Optimization.AutoZygote())
     u0 = [25.0; 5.0; -5.0; -1.0]

@@ -29,10 +29,13 @@ end
 @time begin
     if GROUP == "All" || GROUP == "Core"
         @safetestset "Quality Assurance" include("qa.jl")
-        VERSION >= v"1.9" && @safetestset "AD Tests" begin
+        @safetestset "Utils Tests" begin
+            include("utils.jl")
+        end
+        @safetestset "AD Tests" begin
             include("ADtests.jl")
         end
-        VERSION >= v"1.9" && @safetestset "AD Performance Regression Tests" begin
+        @safetestset "AD Performance Regression Tests" begin
             include("AD_performance_regression.jl")
         end
         @safetestset "Optimization" begin

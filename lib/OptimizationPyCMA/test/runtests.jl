@@ -11,12 +11,13 @@ using OptimizationPyCMA, Test
     @test 10 * sol.objective < l1
 
     # test callback function
-    callback = function (state, l) 
+    callback = function (state, l)
         if state.iter > 10
             return true
         end
         return false
     end
-    
-    sol = solve(prob, PyCMAOpt(), callback = callback, maxiters = 25, verbose=-1, seed=42)
+
+    sol = solve(
+        prob, PyCMAOpt(), callback = callback, maxiters = 25, verbose = -1, seed = 42)
 end

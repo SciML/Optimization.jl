@@ -10,42 +10,39 @@ struct ODEOptimizer{T, T2}
     solver::T
     dt::T2
 end
-ODEOptimizer(solver ; dt=nothing) = ODEOptimizer(solver, dt)
+ODEOptimizer(solver; dt = nothing) = ODEOptimizer(solver, dt)
 
 # Solver Constructors (users call these)
-ODEGradientDescent(; dt)   = ODEOptimizer(Euler(); dt)
-RKChebyshevDescent()   = ODEOptimizer(ROCK2())
-RKAccelerated()        = ODEOptimizer(Tsit5())
-HighOrderDescent()  = ODEOptimizer(Vern7())
+ODEGradientDescent(; dt) = ODEOptimizer(Euler(); dt)
+RKChebyshevDescent() = ODEOptimizer(ROCK2())
+RKAccelerated() = ODEOptimizer(Tsit5())
+HighOrderDescent() = ODEOptimizer(Vern7())
 
-
-SciMLBase.requiresbounds(::ODEOptimizer)              = false
-SciMLBase.allowsbounds(::ODEOptimizer)                = false
-SciMLBase.allowscallback(::ODEOptimizer)              = true
+SciMLBase.requiresbounds(::ODEOptimizer) = false
+SciMLBase.allowsbounds(::ODEOptimizer) = false
+SciMLBase.allowscallback(::ODEOptimizer) = true
 SciMLBase.supports_opt_cache_interface(::ODEOptimizer) = true
-SciMLBase.requiresgradient(::ODEOptimizer)            = true
-SciMLBase.requireshessian(::ODEOptimizer)             = false
-SciMLBase.requiresconsjac(::ODEOptimizer)             = false
-SciMLBase.requiresconshess(::ODEOptimizer)            = false
-
+SciMLBase.requiresgradient(::ODEOptimizer) = true
+SciMLBase.requireshessian(::ODEOptimizer) = false
+SciMLBase.requiresconsjac(::ODEOptimizer) = false
+SciMLBase.requiresconshess(::ODEOptimizer) = false
 
 function SciMLBase.__init(prob::OptimizationProblem, opt::ODEOptimizer;
-    callback=Optimization.DEFAULT_CALLBACK, progress=false,
-    maxiters=nothing, kwargs...)
-
-    return OptimizationCache(prob, opt; callback=callback, progress=progress,
-        maxiters=maxiters, kwargs...)
+        callback = Optimization.DEFAULT_CALLBACK, progress = false,
+        maxiters = nothing, kwargs...)
+    return OptimizationCache(prob, opt; callback = callback, progress = progress,
+        maxiters = maxiters, kwargs...)
 end
 
 function SciMLBase.__solve(
-  cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}
-  ) where {F,RC,LB,UB,LC,UC,S,O<:ODEOptimizer,D,P,C}
-
-    dt    = cache.opt.dt
+        cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P,
+        C}
+) where {F, RC, LB, UB, LC, UC, S, O <: ODEOptimizer, D, P, C}
+    dt = cache.opt.dt
     maxit = get(cache.solver_args, :maxiters, 1000)
 
     u0 = copy(cache.u0)
-    p  = cache.p
+    p = cache.p
 
     if cache.f.grad === nothing
         error("ODEOptimizer requires a gradient. Please provide a function with `grad` defined.")
@@ -62,13 +59,15 @@ function SciMLBase.__solve(
     algorithm = DynamicSS(cache.opt.solver)
 
     cb = cache.callback
-    if cb != Optimization.DEFAULT_CALLBACK || get(cache.solver_args,:progress,false) === true
+    if cb != Optimization.DEFAULT_CALLBACK ||
+       get(cache.solver_args, :progress, false) === true
         function condition(u, t, integrator)
             true
         end
         function affect!(integrator)
             u_now = integrator.u
-            state = Optimization.OptimizationState(u=u_now, objective=cache.f(integrator.u, integrator.p))
+            state = Optimization.OptimizationState(u = u_now, p = integrator.p,
+                objective = cache.f(integrator.u, integrator.p))
             Optimization.callback_function(cb, state)
         end
         cb_struct = DiscreteCallback(condition, affect!)
@@ -86,16 +85,17 @@ function SciMLBase.__solve(
     end
 
     sol = solve(ss_prob, algorithm; solve_kwargs...)
-has_destats = hasproperty(sol, :destats)
-has_t = hasproperty(sol, :t) && !isempty(sol.t)
+    has_destats = hasproperty(sol, :destats)
+    has_t = hasproperty(sol, :t) && !isempty(sol.t)
 
-stats = Optimization.OptimizationStats(
-    iterations = has_destats ? get(sol.destats, :iters, 10) : (has_t ? length(sol.t) - 1 : 10),
-    time = has_t ? sol.t[end] : 0.0,
-    fevals = has_destats ? get(sol.destats, :f_calls, 0) : 0,
-    gevals = has_destats ? get(sol.destats, :iters, 0) : 0,
-    hevals = 0
-)
+    stats = Optimization.OptimizationStats(
+        iterations = has_destats ? get(sol.destats, :iters, 10) :
+                     (has_t ? length(sol.t) - 1 : 10),
+        time = has_t ? sol.t[end] : 0.0,
+        fevals = has_destats ? get(sol.destats, :f_calls, 0) : 0,
+        gevals = has_destats ? get(sol.destats, :iters, 0) : 0,
+        hevals = 0
+    )
 
     SciMLBase.build_solution(cache, cache.opt, sol.u, cache.f(sol.u, p);
         retcode = ReturnCode.Success,

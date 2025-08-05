@@ -14,7 +14,7 @@ function __init__()
 end
 
 # Make sure whatever we got back is a plain Julia Vector{T}.
-function ensure_julia_array(x, ::Type{T}=Float64) where T
+function ensure_julia_array(x, ::Type{T} = Float64) where {T}
     x isa Vector{T} && return x
     return convert(Vector{T}, x isa Py ? pyconvert(Vector, x) : x)
 end
@@ -35,7 +35,7 @@ end
 # Squash any kind of numeric object down to a Julia Float64.
 function safe_to_float(x)
     x isa Float64 && return x
-    x isa Number  && return Float64(x)
+    x isa Number && return Float64(x)
 
     if x isa Py
         if pyhasattr(x, "item")
@@ -90,7 +90,7 @@ function scipy_status_to_retcode(status::Int, success::Bool)
         SciMLBase.ReturnCode.Unstable
     elseif status == 4
         SciMLBase.ReturnCode.Terminated
-    elseif status == 9  
+    elseif status == 9
         SciMLBase.ReturnCode.MaxIters
     else
         SciMLBase.ReturnCode.Failure
@@ -104,9 +104,9 @@ struct ScipyMinimize <: ScipyOptimizer
     method::String
     function ScipyMinimize(method::String)
         valid_methods = ["Nelder-Mead", "Powell", "CG", "BFGS", "Newton-CG",
-                        "L-BFGS-B", "TNC", "COBYLA", "COBYQA", "SLSQP",
-                        "trust-constr", "dogleg", "trust-ncg", "trust-krylov",
-                        "trust-exact"]
+            "L-BFGS-B", "TNC", "COBYLA", "COBYQA", "SLSQP",
+            "trust-constr", "dogleg", "trust-ncg", "trust-krylov",
+            "trust-exact"]
         if !(method in valid_methods)
             throw(ArgumentError("Invalid method: $method. Valid methods are: $(join(valid_methods, ", "))"))
         end
@@ -133,7 +133,7 @@ ScipyTrustExact() = ScipyMinimize("trust-exact")
 
 struct ScipyMinimizeScalar <: ScipyOptimizer
     method::String
-    function ScipyMinimizeScalar(method::String="brent")
+    function ScipyMinimizeScalar(method::String = "brent")
         valid_methods = ["brent", "bounded", "golden"]
         if !(method in valid_methods)
             throw(ArgumentError("Invalid method: $method. Valid methods are: $(join(valid_methods, ", "))"))
@@ -149,7 +149,7 @@ ScipyGolden() = ScipyMinimizeScalar("golden")
 struct ScipyLeastSquares <: ScipyOptimizer
     method::String
     loss::String
-    function ScipyLeastSquares(; method::String="trf", loss::String="linear")
+    function ScipyLeastSquares(; method::String = "trf", loss::String = "linear")
         valid_methods = ["trf", "dogbox", "lm"]
         valid_losses = ["linear", "soft_l1", "huber", "cauchy", "arctan"]
         if !(method in valid_methods)
@@ -162,14 +162,15 @@ struct ScipyLeastSquares <: ScipyOptimizer
     end
 end
 
-ScipyLeastSquaresTRF() = ScipyLeastSquares(method="trf")
-ScipyLeastSquaresDogbox() = ScipyLeastSquares(method="dogbox")
-ScipyLeastSquaresLM() = ScipyLeastSquares(method="lm")
+ScipyLeastSquaresTRF() = ScipyLeastSquares(method = "trf")
+ScipyLeastSquaresDogbox() = ScipyLeastSquares(method = "dogbox")
+ScipyLeastSquaresLM() = ScipyLeastSquares(method = "lm")
 
 struct ScipyRootScalar <: ScipyOptimizer
     method::String
-    function ScipyRootScalar(method::String="brentq")
-        valid_methods = ["brentq", "brenth", "bisect", "ridder", "newton", "secant", "halley", "toms748"]
+    function ScipyRootScalar(method::String = "brentq")
+        valid_methods = [
+            "brentq", "brenth", "bisect", "ridder", "newton", "secant", "halley", "toms748"]
         if !(method in valid_methods)
             throw(ArgumentError("Invalid method: $method. Valid methods are: $(join(valid_methods, ", "))"))
         end
@@ -179,10 +180,10 @@ end
 
 struct ScipyRoot <: ScipyOptimizer
     method::String
-    function ScipyRoot(method::String="hybr")
+    function ScipyRoot(method::String = "hybr")
         valid_methods = ["hybr", "lm", "broyden1", "broyden2", "anderson",
-                        "linearmixing", "diagbroyden", "excitingmixing", 
-                        "krylov", "df-sane"]
+            "linearmixing", "diagbroyden", "excitingmixing",
+            "krylov", "df-sane"]
         if !(method in valid_methods)
             throw(ArgumentError("Invalid method: $method. Valid methods are: $(join(valid_methods, ", "))"))
         end
@@ -192,9 +193,9 @@ end
 
 struct ScipyLinprog <: ScipyOptimizer
     method::String
-    function ScipyLinprog(method::String="highs")
-        valid_methods = ["highs", "highs-ds", "highs-ipm", "interior-point", 
-                        "revised simplex", "simplex"]
+    function ScipyLinprog(method::String = "highs")
+        valid_methods = ["highs", "highs-ds", "highs-ipm", "interior-point",
+            "revised simplex", "simplex"]
         if !(method in valid_methods)
             throw(ArgumentError("Invalid method: $method. Valid methods are: $(join(valid_methods, ", "))"))
         end
@@ -210,9 +211,9 @@ struct ScipyShgo <: ScipyOptimizer end
 struct ScipyDirect <: ScipyOptimizer end
 struct ScipyBrute <: ScipyOptimizer end
 
-for opt_type in [:ScipyMinimize, :ScipyDifferentialEvolution, :ScipyBasinhopping, 
-                  :ScipyDualAnnealing, :ScipyShgo, :ScipyDirect, :ScipyBrute,
-                  :ScipyLinprog, :ScipyMilp]
+for opt_type in [:ScipyMinimize, :ScipyDifferentialEvolution, :ScipyBasinhopping,
+    :ScipyDualAnnealing, :ScipyShgo, :ScipyDirect, :ScipyBrute,
+    :ScipyLinprog, :ScipyMilp]
     @eval begin
         SciMLBase.allowsbounds(::$opt_type) = true
         SciMLBase.supports_opt_cache_interface(::$opt_type) = true
@@ -232,10 +233,10 @@ function SciMLBase.requiresgradient(opt::ScipyMinimize)
     return !(opt.method in gradient_free)
 end
 
-for opt_type in [:ScipyDifferentialEvolution, :ScipyBasinhopping, 
-                  :ScipyDualAnnealing, :ScipyShgo, :ScipyDirect, :ScipyBrute,
-                  :ScipyMinimizeScalar, :ScipyLeastSquares, :ScipyRootScalar,
-                  :ScipyRoot, :ScipyLinprog, :ScipyMilp]
+for opt_type in [:ScipyDifferentialEvolution, :ScipyBasinhopping,
+    :ScipyDualAnnealing, :ScipyShgo, :ScipyDirect, :ScipyBrute,
+    :ScipyMinimizeScalar, :ScipyLeastSquares, :ScipyRootScalar,
+    :ScipyRoot, :ScipyLinprog, :ScipyMilp]
     @eval SciMLBase.requiresgradient(::$opt_type) = false
 end
 
@@ -275,11 +276,12 @@ end
 SciMLBase.allowsbounds(::ScipyRoot) = false
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::ScipyOptimizer;
-                         cons_tol = 1e-6,
-                         callback = (args...) -> (false),
-                         progress = false, 
-                         kwargs...)
-    requires_bounds = opt isa Union{ScipyDifferentialEvolution, ScipyDirect, ScipyDualAnnealing, ScipyBrute}
+        cons_tol = 1e-6,
+        callback = (args...) -> (false),
+        progress = false,
+        kwargs...)
+    requires_bounds = opt isa Union{
+        ScipyDifferentialEvolution, ScipyDirect, ScipyDualAnnealing, ScipyBrute}
     if requires_bounds && (isnothing(prob.lb) || isnothing(prob.ub))
         throw(SciMLBase.IncompatibleOptimizerError("$(typeof(opt)) requires bounds"))
     end
@@ -306,8 +308,9 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::ScipyOptimiz
     return OptimizationCache(prob, opt; cons_tol, callback, progress, kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
-                          {F,RC,LB,UB,LC,UC,S,O<:ScipyMinimize,D,P,C}
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P,
+        C}) where
+        {F, RC, LB, UB, LC, UC, S, O <: ScipyMinimize, D, P, C}
     local cons_cache = nothing
     if !isnothing(cache.f.cons) && !isnothing(cache.lcons)
         cons_cache = zeros(eltype(cache.u0), length(cache.lcons))
@@ -340,14 +343,15 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         end
     end
     if !isnothing(reltol)
-        if cache.opt.method in ["CG", "BFGS", "Newton-CG", "L-BFGS-B", "TNC", "SLSQP", "trust-constr"]
+        if cache.opt.method in [
+            "CG", "BFGS", "Newton-CG", "L-BFGS-B", "TNC", "SLSQP", "trust-constr"]
             options["gtol"] = reltol
         end
     end
     _merge_solver_kwargs!(options, cache.solver_args)
     jac = nothing
     if SciMLBase.requiresgradient(cache.opt) && !isnothing(cache.f.grad)
-        _grad = function(θ)
+        _grad = function (θ)
             θ_julia = ensure_julia_array(θ, eltype(cache.u0))
             grad = zeros(eltype(cache.u0), length(θ_julia))
             cache.f.grad(grad, θ_julia, cache.p)
@@ -358,7 +362,7 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
     hess = nothing
     if SciMLBase.requireshessian(cache.opt)
         if !isnothing(cache.f.hess)
-            _hess = function(θ)
+            _hess = function (θ)
                 θ_julia = ensure_julia_array(θ, eltype(cache.u0))
                 H = zeros(eltype(cache.u0), length(θ_julia), length(θ_julia))
                 cache.f.hess(H, θ_julia, cache.p)
@@ -366,7 +370,8 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
             end
             hess = _hess
         else
-            if cache.opt.method in ["trust-constr", "dogleg", "trust-ncg", "trust-krylov", "trust-exact"]
+            if cache.opt.method in [
+                "trust-constr", "dogleg", "trust-ncg", "trust-krylov", "trust-exact"]
                 options["hess"] = "BFGS"
             else
                 throw(ArgumentError("Method $(cache.opt.method) requires Hessian but none was provided"))
@@ -375,7 +380,8 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
     end
     bounds = nothing
     if !isnothing(cache.lb) && !isnothing(cache.ub)
-        if cache.opt.method in ["L-BFGS-B", "TNC", "SLSQP", "trust-constr", "COBYLA", "COBYQA"]
+        if cache.opt.method in [
+            "L-BFGS-B", "TNC", "SLSQP", "trust-constr", "COBYLA", "COBYQA"]
             bounds = scipy.optimize.Bounds(cache.lb, cache.ub)
         end
     end
@@ -384,10 +390,11 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         if !isnothing(cache.f.cons) && !isnothing(cons_cache)
             lcons = cache.lcons
             ucons = cache.ucons
-            _cons_func = function(θ)
+            _cons_func = function (θ)
                 θ_julia = ensure_julia_array(θ, eltype(cache.u0))
                 cons_cache .= zero(eltype(cons_cache))
-                if hasmethod(cache.f.cons, Tuple{typeof(cons_cache), typeof(θ_julia), typeof(cache.p)})
+                if hasmethod(cache.f.cons, Tuple{
+                    typeof(cons_cache), typeof(θ_julia), typeof(cache.p)})
                     cache.f.cons(cons_cache, θ_julia, cache.p)
                 else
                     cache.f.cons(cons_cache, θ_julia)
@@ -397,9 +404,10 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
             cons_jac = "2-point"
             if SciMLBase.requiresconsjac(cache.opt) && !isnothing(cache.f.cons_j)
                 cons_j_cache = zeros(eltype(cache.u0), length(lcons), length(cache.u0))
-                _cons_jac = function(θ)
+                _cons_jac = function (θ)
                     θ_julia = ensure_julia_array(θ, eltype(cache.u0))
-                    if hasmethod(cache.f.cons_j, Tuple{typeof(cons_j_cache), typeof(θ_julia), typeof(cache.p)})
+                    if hasmethod(cache.f.cons_j, Tuple{
+                        typeof(cons_j_cache), typeof(θ_julia), typeof(cache.p)})
                         cache.f.cons_j(cons_j_cache, θ_julia, cache.p)
                     else
                         cache.f.cons_j(cons_j_cache, θ_julia)
@@ -410,15 +418,15 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
             end
             # user-controlled NonlinearConstraint extras
             keep_feasible_flag = get(cache.solver_args, :keep_feasible, false)
-            jac_sparsity      = get(cache.solver_args, :jac_sparsity, nothing)
+            jac_sparsity = get(cache.solver_args, :jac_sparsity, nothing)
             nlc = scipy.optimize.NonlinearConstraint(
                 _cons_func,
                 lcons,
                 ucons;
-                jac                    = cons_jac,
-                keep_feasible          = keep_feasible_flag,
-                finite_diff_rel_step   = get(cache.solver_args, :cons_tol, 1e-8),
-                finite_diff_jac_sparsity = jac_sparsity,
+                jac = cons_jac,
+                keep_feasible = keep_feasible_flag,
+                finite_diff_rel_step = get(cache.solver_args, :cons_tol, 1e-8),
+                finite_diff_jac_sparsity = jac_sparsity
             )
             constraints = pylist([nlc])
         end
@@ -487,23 +495,24 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
     end
     stats = extract_stats(result, t1 - t0)
     return SciMLBase.build_solution(cache, cache.opt, minimizer, minimum;
-                                   original = result,
-                                   retcode = retcode,
-                                   stats = stats)
+        original = result,
+        retcode = retcode,
+        stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
-                          {F,RC,LB,UB,LC,UC,S,O<:ScipyMinimizeScalar,D,P,C}
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P,
+        C}) where
+        {F, RC, LB, UB, LC, UC, S, O <: ScipyMinimizeScalar, D, P, C}
     maxtime = get(cache.solver_args, :maxtime, nothing)
     start_time = time()
-    _loss = function(θ)
+    _loss = function (θ)
         if !isnothing(maxtime) && (time() - start_time) > maxtime
             error("Optimization halted: time limit exceeded")
         end
         θ_vec = [θ]
         x = cache.f(θ_vec, cache.p)
         x = isa(x, Tuple) ? x : (x,)
-        opt_state = Optimization.OptimizationState(u = θ_vec, objective = x[1])
+        opt_state = Optimization.OptimizationState(u = θ_vec, p = cache.p, objective = x[1])
         if cache.callback(opt_state, x...)
             error("Optimization halted by callback")
         end
@@ -555,22 +564,23 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
     retcode = py_success ? SciMLBase.ReturnCode.Success : SciMLBase.ReturnCode.Failure
     stats = extract_stats(result, t1 - t0)
     return SciMLBase.build_solution(cache, cache.opt, minimizer, minimum;
-                                   original = result,
-                                   retcode = retcode,
-                                   stats = stats)
+        original = result,
+        retcode = retcode,
+        stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
-                          {F,RC,LB,UB,LC,UC,S,O<:ScipyLeastSquares,D,P,C}
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P,
+        C}) where
+        {F, RC, LB, UB, LC, UC, S, O <: ScipyLeastSquares, D, P, C}
     _residuals = nothing
     if hasfield(typeof(cache.f), :f) && (cache.f.f isa ResidualObjective)
         real_res = (cache.f.f)::ResidualObjective
-        _residuals = function(θ)
+        _residuals = function (θ)
             θ_julia = ensure_julia_array(θ, eltype(cache.u0))
             return real_res.residual(θ_julia, cache.p)
         end
     else
-        _residuals = _create_loss(cache; vector_output=true)
+        _residuals = _create_loss(cache; vector_output = true)
     end
     kwargs = Dict{Symbol, Any}()
     kwargs[:method] = cache.opt.method
@@ -639,24 +649,25 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
     end
     stats = extract_stats(result, t1 - t0)
     return SciMLBase.build_solution(cache, cache.opt, minimizer, minimum;
-                                   original = result,
-                                   retcode = retcode,
-                                   stats = stats)
+        original = result,
+        retcode = retcode,
+        stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
-                          {F,RC,LB,UB,LC,UC,S,O<:ScipyRootScalar,D,P,C}
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P,
+        C}) where
+        {F, RC, LB, UB, LC, UC, S, O <: ScipyRootScalar, D, P, C}
     x0 = cache.u0[1]
     maxtime = get(cache.solver_args, :maxtime, nothing)
     start_time = time()
-    _func = function(θ)
+    _func = function (θ)
         if !isnothing(maxtime) && (time() - start_time) > maxtime
             error("Optimization halted: time limit exceeded")
         end
         θ_vec = [θ]
         x = cache.f(θ_vec, cache.p)
         x = isa(x, Tuple) ? x : (x,)
-        opt_state = Optimization.OptimizationState(u = θ_vec, objective = x[1])
+        opt_state = Optimization.OptimizationState(u = θ_vec, p = cache.p, objective = x[1])
         if cache.callback(opt_state, x...)
             error("Optimization halted by callback")
         end
@@ -675,7 +686,7 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         kwargs[:x0] = x0
     end
     if cache.opt.method == "newton" && !isnothing(cache.f.grad)
-        _fprime = function(θ)
+        _fprime = function (θ)
             grad = zeros(eltype(cache.u0), 1)
             cache.f.grad(grad, [θ], cache.p)
             return grad[1]
@@ -683,12 +694,12 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         kwargs[:fprime] = _fprime
     elseif cache.opt.method == "halley"
         if !isnothing(cache.f.grad) && !isnothing(cache.f.hess)
-            _fprime = function(θ)
+            _fprime = function (θ)
                 grad = zeros(eltype(cache.u0), 1)
                 cache.f.grad(grad, [θ], cache.p)
                 return grad[1]
             end
-            _fprime2 = function(θ)
+            _fprime2 = function (θ)
                 hess = zeros(eltype(cache.u0), 1, 1)
                 cache.f.hess(hess, [θ], cache.p)
                 return hess[1, 1]
@@ -734,29 +745,39 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
         root_julia = val
         minimum = abs(_func(root_julia))
     end
-    converged = pyhasattr(result, "converged") ? pyconvert(Bool, pybool(result.converged)) : abs(_func(root_julia)) < 1e-10
+    converged = pyhasattr(result, "converged") ? pyconvert(Bool, pybool(result.converged)) :
+                abs(_func(root_julia)) < 1e-10
     retcode = converged ? SciMLBase.ReturnCode.Success : SciMLBase.ReturnCode.Failure
     stats_dict = Dict{Symbol, Any}(:time => t1 - t0)
     if pyhasattr(result, "iterations")
-        try stats_dict[:iterations] = pyconvert(Int, result.iterations) catch; end
+        try
+            stats_dict[:iterations] = pyconvert(Int, result.iterations)
+        catch
+            ;
+        end
     end
     if pyhasattr(result, "function_calls")
-        try stats_dict[:fevals] = pyconvert(Int, result.function_calls) catch; end
+        try
+            stats_dict[:fevals] = pyconvert(Int, result.function_calls)
+        catch
+            ;
+        end
     end
     stats = Optimization.OptimizationStats(; stats_dict...)
     return SciMLBase.build_solution(cache, cache.opt, minimizer, minimum;
-                                   original = result,
-                                   retcode = retcode,
-                                   stats = stats)
+        original = result,
+        retcode = retcode,
+        stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
-                          {F,RC,LB,UB,LC,UC,S,O<:ScipyRoot,D,P,C}
-    _func = _create_loss(cache, vector_output=true)
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P,
+        C}) where
+        {F, RC, LB, UB, LC, UC, S, O <: ScipyRoot, D, P, C}
+    _func = _create_loss(cache, vector_output = true)
     kwargs = Dict{Symbol, Any}()
     kwargs[:method] = cache.opt.method
     if !isnothing(cache.f.grad) && cache.opt.method in ["hybr", "lm"]
-        _jac = function(θ)
+        _jac = function (θ)
             θ_julia = ensure_julia_array(θ, eltype(cache.u0))
             fval = cache.f(θ_julia, cache.p)
             if isa(fval, Tuple)
@@ -817,13 +838,14 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
     end
     stats = extract_stats(result, t1 - t0)
     return SciMLBase.build_solution(cache, cache.opt, minimizer, minimum;
-                                   original = result,
-                                   retcode = retcode,
-                                   stats = stats)
+        original = result,
+        retcode = retcode,
+        stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
-                          {F,RC,LB,UB,LC,UC,S,O<:ScipyLinprog,D,P,C}
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P,
+        C}) where
+        {F, RC, LB, UB, LC, UC, S, O <: ScipyLinprog, D, P, C}
     c = cache.f(cache.u0, cache.p)
     if isa(c, Tuple)
         c = c[1]
@@ -919,13 +941,14 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
     end
     stats = extract_stats(result, t1 - t0)
     return SciMLBase.build_solution(cache, cache.opt, minimizer, minimum;
-                                   original = result,
-                                   retcode = retcode,
-                                   stats = stats)
+        original = result,
+        retcode = retcode,
+        stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
-                          {F,RC,LB,UB,LC,UC,S,O<:ScipyMilp,D,P,C}
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P,
+        C}) where
+        {F, RC, LB, UB, LC, UC, S, O <: ScipyMilp, D, P, C}
     c = cache.f(cache.u0, cache.p)
     if isa(c, Tuple)
         c = c[1]
@@ -998,27 +1021,28 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
     end
     stats = extract_stats(result, t1 - t0)
     return SciMLBase.build_solution(cache, cache.opt, minimizer, minimum;
-                                   original = result,
-                                   retcode = retcode,
-                                   stats = stats)
+        original = result,
+        retcode = retcode,
+        stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
-                          {F,RC,LB,UB,LC,UC,S,O<:ScipyDifferentialEvolution,D,P,C}
-    _loss  = _create_loss(cache)
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P,
+        C}) where
+        {F, RC, LB, UB, LC, UC, S, O <: ScipyDifferentialEvolution, D, P, C}
+    _loss = _create_loss(cache)
     bounds = _build_bounds(cache.lb, cache.ub)
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     de_kwargs = Dict{Symbol, Any}()
-    de_kwargs[:maxiter]       = isnothing(maxiters) ? 1000 : maxiters
-    de_kwargs[:popsize]       = 15
-    de_kwargs[:atol]          = 0.0
-    de_kwargs[:tol]           = 0.01
-    de_kwargs[:mutation]      = (0.5, 1)
+    de_kwargs[:maxiter] = isnothing(maxiters) ? 1000 : maxiters
+    de_kwargs[:popsize] = 15
+    de_kwargs[:atol] = 0.0
+    de_kwargs[:tol] = 0.01
+    de_kwargs[:mutation] = (0.5, 1)
     de_kwargs[:recombination] = 0.7
-    de_kwargs[:polish]        = true
-    de_kwargs[:init]          = "latinhypercube"
-    de_kwargs[:updating]      = "immediate"
-    de_kwargs[:workers]       = 1
+    de_kwargs[:polish] = true
+    de_kwargs[:init] = "latinhypercube"
+    de_kwargs[:updating] = "immediate"
+    de_kwargs[:workers] = 1
     _merge_solver_kwargs!(de_kwargs, cache.solver_args)
     t0 = time()
     result = nothing
@@ -1063,20 +1087,21 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
     end
     stats = extract_stats(result, t1 - t0)
     return SciMLBase.build_solution(cache, cache.opt, minimizer, minimum;
-                                   original = result,
-                                   retcode = retcode,
-                                   stats = stats)
+        original = result,
+        retcode = retcode,
+        stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
-                          {F,RC,LB,UB,LC,UC,S,O<:ScipyBasinhopping,D,P,C}
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P,
+        C}) where
+        {F, RC, LB, UB, LC, UC, S, O <: ScipyBasinhopping, D, P, C}
     _loss = _create_loss(cache)
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     bh_kwargs = Dict{Symbol, Any}()
-    bh_kwargs[:niter]     = isnothing(maxiters) ? 100 : maxiters
-    bh_kwargs[:T]         = 1.0
-    bh_kwargs[:stepsize]  = 0.5
-    bh_kwargs[:interval]  = 50
+    bh_kwargs[:niter] = isnothing(maxiters) ? 100 : maxiters
+    bh_kwargs[:T] = 1.0
+    bh_kwargs[:stepsize] = 0.5
+    bh_kwargs[:interval] = 50
     _merge_solver_kwargs!(bh_kwargs, cache.solver_args)
     t0 = time()
     result = nothing
@@ -1122,25 +1147,26 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
     end
     stats = extract_stats(lowest_result, t1 - t0)
     return SciMLBase.build_solution(cache, cache.opt, minimizer, minimum;
-                                   original = result,
-                                   retcode = retcode,
-                                   stats = stats)
+        original = result,
+        retcode = retcode,
+        stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
-                          {F,RC,LB,UB,LC,UC,S,O<:ScipyDualAnnealing,D,P,C}
-    _loss  = _create_loss(cache)
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P,
+        C}) where
+        {F, RC, LB, UB, LC, UC, S, O <: ScipyDualAnnealing, D, P, C}
+    _loss = _create_loss(cache)
     bounds = _build_bounds(cache.lb, cache.ub)
     da_kwargs = Dict{Symbol, Any}()
-    da_kwargs[:maxiter]         = begin
+    da_kwargs[:maxiter] = begin
         mi = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
         isnothing(mi) ? 1000 : mi
     end
-    da_kwargs[:initial_temp]    = 5230.0
+    da_kwargs[:initial_temp] = 5230.0
     da_kwargs[:restart_temp_ratio] = 2e-5
-    da_kwargs[:visit]           = 2.62
-    da_kwargs[:accept]          = -5.0
-    da_kwargs[:maxfun]          = 1e7
+    da_kwargs[:visit] = 2.62
+    da_kwargs[:accept] = -5.0
+    da_kwargs[:maxfun] = 1e7
     da_kwargs[:no_local_search] = false
     _merge_solver_kwargs!(da_kwargs, cache.solver_args)
     t0 = time()
@@ -1186,13 +1212,14 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
     end
     stats = extract_stats(result, t1 - t0)
     return SciMLBase.build_solution(cache, cache.opt, minimizer, minimum;
-                                   original = result,
-                                   retcode = retcode,
-                                   stats = stats)
+        original = result,
+        retcode = retcode,
+        stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
-                          {F,RC,LB,UB,LC,UC,S,O<:ScipyShgo,D,P,C}
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P,
+        C}) where
+        {F, RC, LB, UB, LC, UC, S, O <: ScipyShgo, D, P, C}
     local cons_cache = nothing
     if !isnothing(cache.f.cons) && !isnothing(cache.lcons)
         cons_cache = zeros(eltype(cache.u0), length(cache.lcons))
@@ -1202,10 +1229,11 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
     constraints = nothing
     if !isnothing(cons_cache)
         cons_list = []
-        _cons_func = function(θ)
+        _cons_func = function (θ)
             θ_julia = ensure_julia_array(θ, eltype(cache.u0))
             cons_cache .= zero(eltype(cons_cache))
-            if hasmethod(cache.f.cons, Tuple{typeof(cons_cache), typeof(θ_julia), typeof(cache.p)})
+            if hasmethod(cache.f.cons, Tuple{
+                typeof(cons_cache), typeof(θ_julia), typeof(cache.p)})
                 cache.f.cons(cons_cache, θ_julia, cache.p)
             else
                 cache.f.cons(cons_cache, θ_julia)
@@ -1280,22 +1308,23 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
     end
     stats = extract_stats(result, t1 - t0)
     return SciMLBase.build_solution(cache, cache.opt, minimizer, minimum;
-                                   original = result,
-                                   retcode = retcode,
-                                   stats = stats)
+        original = result,
+        retcode = retcode,
+        stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
-                          {F,RC,LB,UB,LC,UC,S,O<:ScipyDirect,D,P,C}
-    _loss  = _create_loss(cache)
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P,
+        C}) where
+        {F, RC, LB, UB, LC, UC, S, O <: ScipyDirect, D, P, C}
+    _loss = _create_loss(cache)
     bounds = _build_bounds(cache.lb, cache.ub)
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     direct_kwargs = Dict{Symbol, Any}()
-    direct_kwargs[:eps]            = 0.0001
-    direct_kwargs[:maxiter]        = isnothing(maxiters) ? 1000 : maxiters
+    direct_kwargs[:eps] = 0.0001
+    direct_kwargs[:maxiter] = isnothing(maxiters) ? 1000 : maxiters
     direct_kwargs[:locally_biased] = true
-    direct_kwargs[:vol_tol]        = 1e-16
-    direct_kwargs[:len_tol]        = 1e-6
+    direct_kwargs[:vol_tol] = 1e-16
+    direct_kwargs[:len_tol] = 1e-6
     _merge_solver_kwargs!(direct_kwargs, cache.solver_args)
     t0 = time()
     result = nothing
@@ -1340,13 +1369,14 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
     end
     stats = extract_stats(result, t1 - t0)
     return SciMLBase.build_solution(cache, cache.opt, minimizer, minimum;
-                                   original = result,
-                                   retcode = retcode,
-                                   stats = stats)
+        original = result,
+        retcode = retcode,
+        stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}) where 
-                      {F,RC,LB,UB,LC,UC,S,O<:ScipyBrute,D,P,C}
+function SciMLBase.__solve(cache::OptimizationCache{F, RC, LB, UB, LC, UC, S, O, D, P,
+        C}) where
+        {F, RC, LB, UB, LC, UC, S, O <: ScipyBrute, D, P, C}
     _loss = _create_loss(cache)
     ranges = _build_bounds(cache.lb, cache.ub)
     brute_kwargs = Dict{Symbol, Any}()
@@ -1393,18 +1423,19 @@ function SciMLBase.__solve(cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C})
     retcode = SciMLBase.ReturnCode.Success
     stats = Optimization.OptimizationStats(; time = t1 - t0)
     return SciMLBase.build_solution(cache, cache.opt, minimizer, minimum;
-                                   original = result,
-                                   retcode = retcode,
-                                   stats = stats)
+        original = result,
+        retcode = retcode,
+        stats = stats)
 end
 
 export ScipyMinimize, ScipyNelderMead, ScipyPowell, ScipyCG, ScipyBFGS, ScipyNewtonCG,
        ScipyLBFGSB, ScipyTNC, ScipyCOBYLA, ScipyCOBYQA, ScipySLSQP, ScipyTrustConstr,
        ScipyDogleg, ScipyTrustNCG, ScipyTrustKrylov, ScipyTrustExact,
        ScipyMinimizeScalar, ScipyBrent, ScipyBounded, ScipyGolden,
-       ScipyLeastSquares, ScipyLeastSquaresTRF, ScipyLeastSquaresDogbox, ScipyLeastSquaresLM,
+       ScipyLeastSquares, ScipyLeastSquaresTRF, ScipyLeastSquaresDogbox,
+       ScipyLeastSquaresLM,
        ScipyRootScalar, ScipyRoot, ScipyLinprog, ScipyMilp,
-       ScipyDifferentialEvolution, ScipyBasinhopping, ScipyDualAnnealing, 
+       ScipyDifferentialEvolution, ScipyBasinhopping, ScipyDualAnnealing,
        ScipyShgo, ScipyDirect, ScipyBrute
 
 # Wrap the user's Julia objective so it matches what SciPy expects.
@@ -1423,11 +1454,11 @@ function _create_loss(cache; vector_output::Bool = false)
             elseif isa(x, Number)
                 x = (x,)
             end
-            opt_state = Optimization.OptimizationState(u = θ_julia, objective = sum(abs2, x))
+            opt_state = Optimization.OptimizationState(u = θ_julia, p = cache.p, objective = sum(abs2, x))
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback")
             end
-          
+
             arr = cache.sense === Optimization.MaxSense ? -x : x
             return arr
         end
@@ -1443,7 +1474,7 @@ function _create_loss(cache; vector_output::Bool = false)
             elseif isa(x, Number)
                 x = (x,)
             end
-            opt_state = Optimization.OptimizationState(u = θ_julia, objective = x[1])
+            opt_state = Optimization.OptimizationState(u = θ_julia, p = cache.p, objective = x[1])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback")
             end
@@ -1481,4 +1512,3 @@ end
 (r::ResidualObjective)(u, p) = sum(abs2, r.residual(u, p))
 
 end
-
