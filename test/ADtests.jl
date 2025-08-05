@@ -46,7 +46,7 @@ end
             @test sol.retcode == ReturnCode.Success
         end
 
-        sol = solve(prob, Optim.NewtonTrustRegion())
+        sol = solve(prob, Optim.Newton())
         @test 10 * sol.objective < l1
         if adtype != AutoFiniteDiff()
             @test sol.retcode == ReturnCode.Success
