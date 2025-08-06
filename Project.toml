@@ -44,6 +44,7 @@ MLUtils = "0.4"
 ModelingToolkit = "10"
 Mooncake = "0.4.138"
 Optim = ">= 1.4.1"
+Optimisers = ">= 0.2.5"
 OptimizationBase = "2"
 OptimizationMOI = "0.5"
 OptimizationOptimJL = "0.4"
@@ -52,7 +53,7 @@ OrdinaryDiffEqTsit5 = "1"
 Pkg = "1"
 Printf = "1.10"
 ProgressLogging = "0.1"
-Random = "1.10" 
+Random = "1.10"
 Reexport = "1.2"
 ReverseDiff = "1"
 SafeTestsets = "0.1"
@@ -64,7 +65,6 @@ Symbolics = "6"
 TerminalLoggers = "0.1"
 Test = "1.10"
 Tracker = "0.2"
-Optimisers = ">= 0.2.5"
 Zygote = "0.6, 0.7"
 julia = "1.10"
 
@@ -103,7 +103,4 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
 
 [targets]
-test = ["Aqua", "BenchmarkTools", "Boltz", "ComponentArrays", "DiffEqFlux", "Enzyme", "FiniteDiff", "Flux", "ForwardDiff",
-    "Ipopt", "IterTools", "Lux", "MLUtils", "ModelingToolkit", "Optim", "OptimizationMOI", "OptimizationOptimJL", "OptimizationOptimisers", 
-    "OrdinaryDiffEqTsit5", "Pkg", "Random", "ReverseDiff", "SafeTestsets", "SciMLSensitivity", "SparseArrays", "SparseDiffTools",
-    "Symbolics",  "Test", "Tracker", "Zygote", "Mooncake"]
+test = ["Aqua", "BenchmarkTools", "Boltz", "ComponentArrays", "DiffEqFlux", "Enzyme", "FiniteDiff", "Flux", "ForwardDiff", "Ipopt", "IterTools", "Lux", "MLUtils", "ModelingToolkit", "Optim", "OptimizationMOI", "OptimizationOptimJL", "OptimizationOptimisers", "OrdinaryDiffEqTsit5", "Pkg", "Random", "ReverseDiff", "SafeTestsets", "SciMLSensitivity", "SparseArrays", "SparseDiffTools", "Symbolics", "Test", "Tracker", "Zygote", "Mooncake"]
