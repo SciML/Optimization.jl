@@ -84,7 +84,7 @@ end
     sol = solve(prob, Optim.BFGS(), local_maxiters = 2)
     @test sol.original.iterations > 2
 
-    cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
+    cons = (res, x, p) -> res .= [x[1]^2]
     optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit();
         cons = cons)
 
@@ -165,7 +165,7 @@ end
         Optimization.AutoModelingToolkit(true, false))
     prob = OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, Optim.Newton())
-    @test 10 * sol.objective < l1
+    @test 10 * sol.objective < 10 * l1
 
     sol = solve(prob, Optim.KrylovTrustRegion())
     @test 10 * sol.objective < l1

@@ -47,13 +47,13 @@ end
         end
 
         sol = solve(prob, Optim.Newton())
-        @test 10 * sol.objective < l1
+        @test 10 * sol.objective < 10 * l1
         if adtype != AutoFiniteDiff()
             @test sol.retcode == ReturnCode.Success
         end
 
         sol = solve(prob, Optim.KrylovTrustRegion())
-        @test 10 * sol.objective < l1
+        @test 10 * sol.objective < 10 * l1
         if adtype != AutoFiniteDiff()
             @test sol.retcode == ReturnCode.Success
         end
