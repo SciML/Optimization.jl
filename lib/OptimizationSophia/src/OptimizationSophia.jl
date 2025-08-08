@@ -1,3 +1,9 @@
+module OptimizationSophia
+
+using OptimizationBase.SciMLBase
+using OptimizationBase: OptimizationCache
+using Optimization
+
 struct Sophia
     η::Float64
     βs::Tuple{Float64, Float64}
@@ -118,4 +124,6 @@ function SciMLBase.__solve(cache::OptimizationCache{
     return SciMLBase.build_solution(cache, cache.opt,
         θ,
         x)
+end
+
 end
