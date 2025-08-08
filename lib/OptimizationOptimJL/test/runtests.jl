@@ -213,4 +213,27 @@ end
         sol = Optimization.solve!(cache)
         @test sol.u≈[2.0] atol=1e-3
     end
+
+    @testset "store_trace=true" begin
+        # Test that store_trace=true works without throwing errors (issue #990)
+        rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+        x0 = zeros(2)
+        _p = [1.0, 100.0]
+
+        # Test with NelderMead
+        prob = OptimizationProblem(rosenbrock, x0, _p)
+        sol = solve(prob, NelderMead(), store_trace = true)
+        @test sol isa Any  # just test it doesn't throw
+
+        # Test with Fminbox(NelderMead)
+        optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+        prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+        sol = solve(prob, Optim.Fminbox(NelderMead()), store_trace = true)
+        @test sol isa Any  # just test it doesn't throw
+
+        # Test with BFGS
+        prob = OptimizationProblem(optprob, x0, _p)
+        sol = solve(prob, BFGS(), store_trace = true)
+        @test sol isa Any  # just test it doesn't throw
+    end
 end

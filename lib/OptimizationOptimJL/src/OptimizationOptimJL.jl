@@ -139,16 +139,17 @@ function SciMLBase.__solve(cache::OptimizationCache{
         error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
     function _cb(trace)
-        metadata = decompose_trace(trace).metadata
+        trace_state = decompose_trace(trace)
+        metadata = trace_state.metadata
         θ = metadata[cache.opt isa Optim.NelderMead ? "centroid" : "x"]
-        opt_state = Optimization.OptimizationState(iter = trace.iteration,
+        opt_state = Optimization.OptimizationState(iter = trace_state.iteration,
             u = θ,
             p = cache.p,
-            objective = trace.value,
+            objective = trace_state.value,
             grad = get(metadata, "g(x)", nothing),
             hess = get(metadata, "h(x)", nothing),
             original = trace)
-        cb_call = cache.callback(opt_state, trace.value)
+        cb_call = cache.callback(opt_state, trace_state.value)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -257,18 +258,19 @@ function SciMLBase.__solve(cache::OptimizationCache{
     local x, cur, state
 
     function _cb(trace)
-        metadata = decompose_trace(trace).metadata
+        trace_state = decompose_trace(trace)
+        metadata = trace_state.metadata
         θ = !(cache.opt isa Optim.SAMIN) && cache.opt.method == Optim.NelderMead() ?
             metadata["centroid"] :
             metadata["x"]
-        opt_state = Optimization.OptimizationState(iter = trace.iteration,
+        opt_state = Optimization.OptimizationState(iter = trace_state.iteration,
             u = θ,
             p = cache.p,
-            objective = trace.value,
+            objective = trace_state.value,
             grad = get(metadata, "g(x)", nothing),
             hess = get(metadata, "h(x)", nothing),
             original = trace)
-        cb_call = cache.callback(opt_state, trace.value)
+        cb_call = cache.callback(opt_state, trace_state.value)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
