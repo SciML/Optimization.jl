@@ -90,6 +90,29 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
     end
 
     @test_throws ArgumentError sol=solve(prob, Optimisers.Adam())
+
+    @testset "Issue #995: Parameters in OptimizationState" begin
+        # Regression test for https://github.com/SciML/Optimization.jl/issues/995
+        # Ensure that OptimizationState contains the parameters p in callbacks
+        rosenbrock_ = (x,p) -> (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+        x0 = zeros(2)
+        p = [1.0, 100.0]
+        
+        optfun = OptimizationFunction(rosenbrock_, Optimization.AutoForwardDiff())
+        prob = OptimizationProblem(optfun, x0, p)
+        
+        parameters_seen = []
+        function cb(state, l)
+            push!(parameters_seen, state.p)
+            return false
+        end
+        
+        sol = solve(prob, Optimisers.Adam(0.1), maxiters=10, callback=cb)
+        
+        # Check that all parameters seen in callbacks match the expected parameters
+        @test all(p_seen -> p_seen == p, parameters_seen)
+        @test length(parameters_seen) == 11  # One callback per iteration plus final callback
+    end
 end
 
 @testset "Minibatching" begin
