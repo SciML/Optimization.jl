@@ -345,3 +345,40 @@ end
     prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, 0.5])
     sol = solve(prob, Ipopt.Optimizer())
 end
+
+@testset "common maxiters interface" begin
+    # Test that the common maxiters interface works without warnings
+    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+    x0 = zeros(2)
+    _p = [1.0, 100.0]
+    
+    optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+    prob = OptimizationProblem(optprob, x0, _p)
+    
+    # Test with Ipopt using maxiters parameter
+    @testset "Ipopt maxiters" begin
+        # This should not produce a warning and should respect the iteration limit
+        sol = solve(prob, Ipopt.Optimizer(); maxiters = 5, print_level = 0)
+        # Should terminate due to iteration limit
+        @test sol.stats.iterations <= 5
+    end
+    
+    # Test with cache interface
+    @testset "Cache interface maxiters" begin
+        cache = init(prob, Ipopt.Optimizer(); maxiters = 3, print_level = 0)
+        sol = solve!(cache)
+        @test sol.stats.iterations <= 3
+    end
+    
+    # Test that unknown solver fallback works gracefully
+    @testset "Generic fallback" begin
+        # Mock optimizer that doesn't match any known pattern
+        struct MockOptimizer <: MathOptInterface.AbstractOptimizer end
+        
+        # This should not error, but may show a warning for unknown solver
+        mock_opt = MockOptimizer()
+        # We can't actually solve with this mock optimizer, but we can test
+        # that the parameter setting doesn't crash
+        @test_nowarn OptimizationMOI._set_maxiters!(mock_opt, 10)
+    end
+end
