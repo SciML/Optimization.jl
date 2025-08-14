@@ -1,4 +1,4 @@
-module OptimizationLBFGS
+module OptimizationLBFGSB
 
 using Optimization
 using DocStringExtensions

@@ -1,4 +1,4 @@
-name = "OptimizationLBFGS"
+name = "OptimizationLBFGSB"
 uuid = "22f7324a-a79d-40f2-bebe-3af60c77bd15"
 authors = ["paramthakkar123 <paramthakkar864@gmail.com>"]
 version = "0.1.0"
