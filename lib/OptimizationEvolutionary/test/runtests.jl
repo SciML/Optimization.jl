@@ -40,6 +40,44 @@ Random.seed!(1234)
         if state.iter % 10 == 0
             println(state.u)
         end
+
+    @testset "In-place Multi-Objective Optimization" begin
+        function inplace_multi_obj!(cost, x, p)
+            cost[1] = sum(x .^ 2)
+            cost[2] = sum(x .^ 2 .- 10 .* cos.(2π .* x) .+ 10)
+            return nothing
+        end
+        u0 = [0.25, 0.25]
+        cost_prototype = zeros(2)
+        mof_inplace = MultiObjectiveOptimizationFunction(inplace_multi_obj!; cost_prototype=cost_prototype)
+        prob_inplace = OptimizationProblem(mof_inplace, u0)
+        sol_inplace = solve(prob_inplace, NSGA2())
+        @test sol_inplace ≠ nothing
+        @test length(sol_inplace.objective) == 2
+    end
+
+    @testset "Custom coalesce for Multi-Objective" begin
+        function multi_obj_tuple(x, p)
+            f1 = sum(x .^ 2)
+            f2 = sum(x .^ 2 .- 10 .* cos.(2π .* x) .+ 10)
+            return (f1, f2)
+        end
+        coalesce_sum(cost, x, p) = sum(cost)
+        mof_coalesce = MultiObjectiveOptimizationFunction(multi_obj_tuple; coalesce=coalesce_sum)
+        prob_coalesce = OptimizationProblem(mof_coalesce, u0)
+        sol_coalesce = solve(prob_coalesce, NSGA2())
+        @test sol_coalesce ≠ nothing
+        @test mof_coalesce.coalesce([1.0, 2.0], [0.0, 0.0], nothing) == 3.0
+    end
+
+    @testset "Error if in-place MultiObjectiveOptimizationFunction without cost_prototype" begin
+        function inplace_multi_obj_err!(cost, x, p)
+            cost[1] = sum(x .^ 2)
+            cost[2] = sum(x .^ 2 .- 10 .* cos.(2π .* x) .+ 10)
+            return nothing
+        end
+        @test_throws ArgumentError MultiObjectiveOptimizationFunction(inplace_multi_obj_err!)
+    end
         return false
     end
     solve(prob, CMAES(μ = 40, λ = 100), callback = cb, maxiters = 100)
