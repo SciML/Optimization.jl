@@ -1,3 +1,49 @@
+"""
+    Sophia(; η = 1e-3, βs = (0.9, 0.999), ϵ = 1e-8, λ = 1e-1, k = 10, ρ = 0.04)
+
+A second-order optimizer that incorporates diagonal Hessian information for faster convergence.
+
+Based on the paper "Sophia: A Scalable Stochastic Second-order Optimizer for Language Model Pre-training" 
+(https://arxiv.org/abs/2305.14342). Sophia uses an efficient estimate of the diagonal of the Hessian
+matrix to adaptively adjust the learning rate for each parameter, achieving faster convergence than 
+first-order methods like Adam and SGD while avoiding the computational cost of full second-order methods.
+
+## Arguments
+
+  - `η::Float64 = 1e-3`: Learning rate (step size)
+  - `βs::Tuple{Float64, Float64} = (0.9, 0.999)`: Exponential decay rates for the first moment (β₁) 
+    and diagonal Hessian (β₂) estimates
+  - `ϵ::Float64 = 1e-8`: Small constant for numerical stability
+  - `λ::Float64 = 1e-1`: Weight decay coefficient for L2 regularization
+  - `k::Integer = 10`: Frequency of Hessian diagonal estimation (every k iterations)
+  - `ρ::Float64 = 0.04`: Clipping threshold for the update to maintain stability
+
+## Example
+
+```julia
+using Optimization, OptimizationOptimisers
+
+# Define optimization problem
+rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+x0 = zeros(2)
+optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+prob = OptimizationProblem(optf, x0)
+
+# Solve with Sophia
+sol = solve(prob, Sophia(η=0.01, k=5))
+```
+
+## Notes
+
+Sophia is particularly effective for:
+  - Large-scale optimization problems
+  - Neural network training
+  - Problems where second-order information can significantly improve convergence
+  
+The algorithm maintains computational efficiency by only estimating the diagonal of the Hessian
+matrix using a Hutchinson trace estimator with random vectors, making it more scalable than 
+full second-order methods while still leveraging curvature information.
+"""
 struct Sophia
     η::Float64
     βs::Tuple{Float64, Float64}
