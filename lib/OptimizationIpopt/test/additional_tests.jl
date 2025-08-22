@@ -4,36 +4,6 @@ using Test
 using LinearAlgebra
 
 @testset "Additional Ipopt Examples" begin
-
-    # @testset "Recursive NLP Example" begin
-    #     # Based on recursive_nlp example from Ipopt
-    #     # Inner problem: minimize exp[0.5 * (x - a)^2 + 0.5 * x^2] w.r.t x
-    #     # Outer problem: minimize exp[0.5 * (y(a) - a)^2 + 0.5 * y(a)^2] w.r.t a
-
-    #     function inner_objective(x, a)
-    #         arg = 0.5 * (x[1] - a)^2 + 0.5 * x[1]^2
-    #         return exp(arg)
-    #     end
-
-    #     function outer_objective(a, p)
-    #         # Solve inner problem
-    #         inner_optfunc = OptimizationFunction((x, _) -> inner_objective(x, a[1]), Optimization.AutoZygote())
-    #         inner_prob = OptimizationProblem(inner_optfunc, [2.0], nothing)
-    #         inner_sol = solve(inner_prob, IpoptOptimizer())
-
-    #         y = inner_sol.u[1]
-    #         arg = 0.5 * (y - a[1])^2 + 0.5 * y^2
-    #         return exp(arg)
-    #     end
-
-    #     optfunc = OptimizationFunction(outer_objective, Optimization.AutoZygote())
-    #     prob = OptimizationProblem(optfunc, [2.0], nothing)
-    #     sol = solve(prob, IpoptOptimizer())
-
-    #     @test SciMLBase.successful_retcode(sol)
-    #     @test sol.u[1] ≈ 0.0 atol=1e-4
-    # end
-
     @testset "Simple 2D Example (MyNLP)" begin
         # Based on MyNLP example from Ipopt
         # minimize -x[1] - x[2]
