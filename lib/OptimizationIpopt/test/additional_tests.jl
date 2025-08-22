@@ -3,6 +3,10 @@ using Zygote
 using Test
 using LinearAlgebra
 
+# These tests were automatically translated from the Ipopt tests, https://github.com/coin-or/Ipopt
+# licensed under Eclipse Public License - v 2.0
+# https://github.com/coin-or/Ipopt/blob/stable/3.14/LICENSE
+
 @testset "Additional Ipopt Examples" begin
     @testset "Simple 2D Example (MyNLP)" begin
         # Based on MyNLP example from Ipopt

@@ -4,6 +4,10 @@ using Test
 using LinearAlgebra
 using SparseArrays
 
+# These tests were automatically translated from the Ipopt tests, https://github.com/coin-or/Ipopt
+# licensed under Eclipse Public License - v 2.0
+# https://github.com/coin-or/Ipopt/blob/stable/3.14/LICENSE
+
 @testset "Specific Problem Types" begin
 
     @testset "Optimal Control Problem" begin

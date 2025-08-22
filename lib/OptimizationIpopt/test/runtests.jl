@@ -68,6 +68,9 @@ end
 end
 
 # Include additional tests based on Ipopt examples
+# These tests were automatically translated from the Ipopt tests, https://github.com/coin-or/Ipopt
+# licensed under Eclipse Public License - v 2.0
+# https://github.com/coin-or/Ipopt/blob/stable/3.14/LICENSE
 include("additional_tests.jl")
 include("advanced_features.jl")
 include("problem_types.jl")
