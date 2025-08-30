@@ -71,15 +71,6 @@ res1 = Optimization.solve(optprob, Optimisers.Adam(0.05),
     callback = callback, maxiters = numEpochs)
 @test 10res1.objective < l1
 
-# Test Sophia with ComponentArrays + Enzyme (shadow generation fix)
-optfun_enzyme = OptimizationFunction(loss_adjoint, Optimization.AutoEnzyme())
-optprob_enzyme = OptimizationProblem(optfun_enzyme, pp, train_loader)
-
-res_sophia_enzyme = Optimization.solve(optprob_enzyme,
-    Optimization.Sophia(η=0.01, k=5), callback = callback,
-    maxiters = 50)
-@test res_sophia_enzyme.objective < Inf  # Test that it runs without MethodError
-
 optfun = OptimizationFunction(
     (θ, p) -> loss_adjoint(θ, batch,
         time_batch),
