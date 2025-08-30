@@ -11,18 +11,33 @@ for common workflows of the package and give copy-pastable starting points.
     the installation and usage of OptimizationOptimJL.jl package, see the
     [Optim.jl page](@ref optim).
 
-The objective of this exercise is to determine the values $a$ and $b$ that minimize the Rosenbrock function, which is known to have a global minimum at $(a, a^2)$.
+The objective of this exercise is to determine the $(x, y)$ value pair that minimizes the result of a Rosenbrock function $f$ with some parameter values $a$ and $b$. The Rosenbrock function is useful for testing because it is known *a priori* to have a global minimum at $(a, a^2)$.
 ```math
-f(x, y; a, b) = \left(a - x\right)^2 + b \left(y - x^2\right)^2
+f(x,\,y;\,a,\,b) = \left(a - x\right)^2 + b \left(y - x^2\right)^2
 ``` 
 
-The domains $x$ and $y$ are first captured as a new vector $\hat{x}$. Parameters $a$ and $b$ are captured as a new vector $\hat{p} and assigned values to produce the desired Rosenbrock function.
+The Optimization.jl interface expects functions to be defined with a vector of optimization arguments $\bar{x}$ and a vector of parameters $\bar{p}$, i.e.:
 ```math
-\hat{x} = \begin{bmatrix} x \\ y \end{bmatrix} \\
-\hat{p} = \begin{bmatrix} a \\ b \end{bmatrix} = \begin{bmatrix} 1 \\ 100 \end{bmatrix}
+f(\bar{x},\,\bar{p}) = \left(p_1 - x_1\right)^2 + p_2 \left(x_2 - x_1^2\right)^2
+``` 
+
+Parameters $a$ and $b$ are captured in a vector $\bar{p}$ and assigned some arbitrary values to produce a particular Rosenbrock function to be minimized.
+```math
+\bar{p} = \begin{bmatrix} a \\ b \end{bmatrix} = \begin{bmatrix} 1 \\ 100 \end{bmatrix}
 ```
 
-An optimization problem can now be defined and solved to estimate the values for $\hat{x}$ that minimize the output of this function.
+The original $x$ and $y$ domains are captured in a vector $\bar{x}$.
+```math
+\bar{x} = \begin{bmatrix} x \\ y \end{bmatrix}
+```
+
+An initial estimate $\bar{x}_0$ of the minima location is required to initialize the optimizer.
+```math
+\bar{x}_0 = \begin{bmatrix} x_0 \\ y_0 \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \end{bmatrix}
+```
+
+
+An optimization problem can now be defined and solved to estimate the values for $\bar{x}$ that minimize the output of this function.
 
 ```@example rosenbrock
 # Define the problem to solve
