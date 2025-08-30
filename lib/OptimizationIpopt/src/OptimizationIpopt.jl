@@ -104,7 +104,7 @@ function __map_optimizer_args(cache,
         Ipopt.AddIpoptIntOption(prob, "max_iter", maxiters)
     end
     if !isnothing(maxtime)
-        Ipopt.AddIpoptNumOption(prob, "max_cpu_time", maxtime)
+        Ipopt.AddIpoptNumOption(prob, "max_wall_time", float(maxtime))
     end
     if !isnothing(reltol)
         Ipopt.AddIpoptNumOption(prob, "tol", reltol)
