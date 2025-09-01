@@ -151,7 +151,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
             if i % cache.opt.k == 1
                 hₜ₋₁ = copy(hₜ)
-                u = randn(uType, length(θ))
+                u = similar(θ)
+                randn!(u)
                 f.hv(hₜ, θ, u, d)
                 hₜ = βs[2] .* hₜ₋₁ + (1 - βs[2]) .* (u .* hₜ)
             end
