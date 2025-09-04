@@ -21,13 +21,14 @@ function OptimizationBase.instantiate_function(
             num_cons))))
     #sys = ModelingToolkit.structural_simplify(sys)
     # don't need to pass `x` or `p` since they're defaults now
-    f = OptimizationProblem(sys, nothing; grad = g, hess = h,
+    mtkprob = OptimizationProblem(sys, nothing; grad = g, hess = h,
         sparse = true, cons_j = cons_j, cons_h = cons_h,
-        cons_sparse = true).f
+        cons_sparse = true)
+    f = mtkprob.f
 
-    grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
+    grad = (G, θ, args...) -> f.grad(G, θ, mtkprob.p, args...)
 
-    hess = (H, θ, args...) -> f.hess(H, θ, p, args...)
+    hess = (H, θ, args...) -> f.hess(H, θ, mtkprob.p, args...)
 
     hv = function (H, θ, v, args...)
         res = (eltype(θ)).(f.hess_prototype)
@@ -36,9 +37,9 @@ function OptimizationBase.instantiate_function(
     end
 
     if !isnothing(f.cons)
-        cons = (res, θ) -> f.cons(res, θ, p)
-        cons_j = (J, θ) -> f.cons_j(J, θ, p)
-        cons_h = (res, θ) -> f.cons_h(res, θ, p)
+        cons = (res, θ) -> f.cons(res, θ, mtkprob.p)
+        cons_j = (J, θ) -> f.cons_j(J, θ, mtkprob.p)
+        cons_h = (res, θ) -> f.cons_h(res, θ, mtkprob.p)
     else
         cons = nothing
         cons_j = nothing
@@ -72,24 +73,24 @@ function OptimizationBase.instantiate_function(
             num_cons))))
     #sys = ModelingToolkit.structural_simplify(sys)
     # don't need to pass `x` or `p` since they're defaults now
-    f = OptimizationProblem(sys, nothing; grad = g, hess = h,
+    mtkprob = OptimizationProblem(sys, nothing; grad = g, hess = h,
         sparse = true, cons_j = cons_j, cons_h = cons_h,
-        cons_sparse = true).f
+        cons_sparse = true)
+    f = mtkprob.f
 
-    grad = (G, θ, args...) -> f.grad(G, θ, cache.p, args...)
+    grad = (G, θ, args...) -> f.grad(G, θ, mtkprob.p, args...)
 
-    hess = (H, θ, args...) -> f.hess(H, θ, cache.p, args...)
+    hess = (H, θ, args...) -> f.hess(H, θ, mtkprob.p, args...)
 
     hv = function (H, θ, v, args...)
         res = (eltype(θ)).(f.hess_prototype)
         hess(res, θ, args...)
         H .= res * v
     end
-
     if !isnothing(f.cons)
-        cons = (res, θ) -> f.cons(res, θ, cache.p)
-        cons_j = (J, θ) -> f.cons_j(J, θ, cache.p)
-        cons_h = (res, θ) -> f.cons_h(res, θ, cache.p)
+        cons = (res, θ) -> f.cons(res, θ, mtkprob.p)
+        cons_j = (J, θ) -> f.cons_j(J, θ, mtkprob.p)
+        cons_h = (res, θ) -> f.cons_h(res, θ, mtkprob.p)
     else
         cons = nothing
         cons_j = nothing
@@ -121,13 +122,14 @@ function OptimizationBase.instantiate_function(
             num_cons))))
     #sys = ModelingToolkit.structural_simplify(sys)
     # don't need to pass `x` or `p` since they're defaults now
-    f = OptimizationProblem(sys, nothing; grad = g, hess = h,
+    mtkprob = OptimizationProblem(sys, nothing; grad = g, hess = h,
         sparse = false, cons_j = cons_j, cons_h = cons_h,
-        cons_sparse = false).f
+        cons_sparse = false)
+    f = mtkprob.f
 
-    grad = (G, θ, args...) -> f.grad(G, θ, p, args...)
+    grad = (G, θ, args...) -> f.grad(G, θ, mtkprob.p, args...)
 
-    hess = (H, θ, args...) -> f.hess(H, θ, p, args...)
+    hess = (H, θ, args...) -> f.hess(H, θ, mtkprob.p, args...)
 
     hv = function (H, θ, v, args...)
         res = ArrayInterface.zeromatrix(θ)
@@ -136,9 +138,9 @@ function OptimizationBase.instantiate_function(
     end
 
     if !isnothing(f.cons)
-        cons = (res, θ) -> f.cons(res, θ, p)
-        cons_j = (J, θ) -> f.cons_j(J, θ, p)
-        cons_h = (res, θ) -> f.cons_h(res, θ, p)
+        cons = (res, θ) -> f.cons(res, θ, mtkprob.p)
+        cons_j = (J, θ) -> f.cons_j(J, θ, mtkprob.p)
+        cons_h = (res, θ) -> f.cons_h(res, θ, mtkprob.p)
     else
         cons = nothing
         cons_j = nothing
@@ -172,13 +174,14 @@ function OptimizationBase.instantiate_function(
             num_cons))))
     #sys = ModelingToolkit.structural_simplify(sys)
     # don't need to pass `x` or `p` since they're defaults now
-    f = OptimizationProblem(sys, nothing; grad = g, hess = h,
+    mtkprob = OptimizationProblem(sys, nothing; grad = g, hess = h,
         sparse = false, cons_j = cons_j, cons_h = cons_h,
-        cons_sparse = false).f
+        cons_sparse = false)
+    f = mtkprob.f
 
-    grad = (G, θ, args...) -> f.grad(G, θ, cache.p, args...)
+    grad = (G, θ, args...) -> f.grad(G, θ, mtkprob.p, args...)
 
-    hess = (H, θ, args...) -> f.hess(H, θ, cache.p, args...)
+    hess = (H, θ, args...) -> f.hess(H, θ, mtkprob.p, args...)
 
     hv = function (H, θ, v, args...)
         res = ArrayInterface.zeromatrix(θ)
@@ -187,9 +190,9 @@ function OptimizationBase.instantiate_function(
     end
 
     if !isnothing(f.cons)
-        cons = (res, θ) -> f.cons(res, θ, cache.p)
-        cons_j = (J, θ) -> f.cons_j(J, θ, cache.p)
-        cons_h = (res, θ) -> f.cons_h(res, θ, cache.p)
+        cons = (res, θ) -> f.cons(res, θ, mtkprob.p)
+        cons_j = (J, θ) -> f.cons_j(J, θ, mtkprob.p)
+        cons_h = (res, θ) -> f.cons_h(res, θ, mtkprob.p)
     else
         cons = nothing
         cons_j = nothing
