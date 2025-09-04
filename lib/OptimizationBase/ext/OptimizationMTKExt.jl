@@ -31,7 +31,7 @@ function OptimizationBase.instantiate_function(
     hess = (H, θ, args...) -> f.hess(H, θ, mtkprob.p, args...)
 
     hv = function (H, θ, v, args...)
-        res = (eltype(θ)).(f.hess_prototype)
+        res = similar(f.hess_prototype, eltype(θ))
         hess(res, θ, args...)
         H .= res * v
     end
@@ -83,7 +83,7 @@ function OptimizationBase.instantiate_function(
     hess = (H, θ, args...) -> f.hess(H, θ, mtkprob.p, args...)
 
     hv = function (H, θ, v, args...)
-        res = (eltype(θ)).(f.hess_prototype)
+        res = similar(f.hess_prototype, eltype(θ))
         hess(res, θ, args...)
         H .= res * v
     end
