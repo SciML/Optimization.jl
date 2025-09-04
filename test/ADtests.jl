@@ -33,7 +33,7 @@ end
 end
 
 @testset "No constraint" begin
-    for adtype in [AutoEnzyme(), AutoForwardDiff(), AutoZygote(), AutoReverseDiff(),
+    @testset "$adtype" for adtype in [AutoEnzyme(), AutoForwardDiff(), AutoZygote(), AutoReverseDiff(),
         AutoFiniteDiff(), AutoModelingToolkit(), AutoSparseForwardDiff(),
         AutoSparseReverseDiff(), AutoSparse(AutoZygote()), AutoModelingToolkit(true, true), AutoMooncake()]
         optf = OptimizationFunction(rosenbrock, adtype)
@@ -71,7 +71,7 @@ end
 end
 
 @testset "One constraint" begin
-    for adtype in [AutoEnzyme(), AutoForwardDiff(), AutoZygote(), AutoReverseDiff(),
+    @testset "$adtype" for adtype in [AutoEnzyme(), AutoForwardDiff(), AutoZygote(), AutoReverseDiff(),
         AutoFiniteDiff(), AutoModelingToolkit(), AutoSparseForwardDiff(),
         AutoSparseReverseDiff(), AutoSparse(AutoZygote()), AutoModelingToolkit(true, true), AutoMooncake()]
         cons = (res, x, p) -> (res[1] = x[1]^2 + x[2]^2 - 1.0; return nothing)
@@ -92,7 +92,7 @@ end
 end
 
 @testset "Two constraints" begin
-    for adtype in [AutoForwardDiff(), AutoZygote(), AutoReverseDiff(),
+    @testset "$adtype" for adtype in [AutoForwardDiff(), AutoZygote(), AutoReverseDiff(),
         AutoFiniteDiff(), AutoModelingToolkit(), AutoSparseForwardDiff(),
         AutoSparseReverseDiff(), AutoSparse(AutoZygote()), AutoModelingToolkit(true, true), AutoMooncake()]
         function con2_c(res, x, p)
