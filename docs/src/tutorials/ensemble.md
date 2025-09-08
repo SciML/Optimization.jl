@@ -5,6 +5,8 @@ of optimization, this is useful for performing multistart optimization.
 
 This can be useful for complex, low dimensional problems. We demonstrate this, again, on the rosenbrock function.
 
+We first execute a single local optimization with `OptimizationOptimJL.BFGS` and `maxiters=5`:
+
 ```@example ensemble
 using Optimization, OptimizationOptimJL, Random
 
@@ -18,10 +20,14 @@ prob = OptimizationProblem(optf, x0, [1.0, 100.0])
 @time sol1 = Optimization.solve(prob, OptimizationOptimJL.BFGS(), maxiters = 5)
 
 @show sol1.objective
+```
 
+This results is compared to a multistart approach with 4 random initial points:
+
+```@example ensemble
 x0s = [x0, x0 .+ rand(2), x0 .+ rand(2), x0 .+ rand(2)]
 function prob_func(prob, i, repeat)
-    remake(prob, u0 = x0s[1])
+    remake(prob, u0 = x0s[i])
 end
 
 ensembleprob = Optimization.EnsembleProblem(prob; prob_func)
