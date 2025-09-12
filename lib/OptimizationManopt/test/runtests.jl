@@ -151,6 +151,8 @@ R2 = Euclidean(2)
 
         opt = OptimizationManopt.AdaptiveRegularizationCubicOptimizer()
 
+        #TODO: This autodiff currently provides a Hessian that seem to not procide a Hessian
+        # ARC Fails but also AD before that warns. So it passes _some_ hessian but a wrong one, even in format
         optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
@@ -164,6 +166,8 @@ R2 = Euclidean(2)
 
         opt = OptimizationManopt.TrustRegionsOptimizer()
 
+        #TODO: This autodiff currently provides a Hessian that seem to not procide a Hessian
+        # TR Fails but also AD before that warns. So it passes _some_ hessian but a wrong one, even in format
         optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
@@ -219,7 +223,6 @@ R2 = Euclidean(2)
         @test sol.u≈q rtol=1e-2
 
         function closed_form_solution(M::SymmetricPositiveDefinite, L, U, p, X)
-            q = copy(M, p)
             # extract p^1/2 and p^{-1/2}
             (p_sqrt_inv, p_sqrt) = Manifolds.spd_sqrt_and_sqrt_inv(p)
             # Compute D & Q
@@ -231,8 +234,7 @@ R2 = Euclidean(2)
             P = cholesky(Hermitian(Uprime - Lprime))
 
             z = P.U' * D * P.U + Lprime
-            copyto!(M, q, p_sqrt * Q * z * Q' * p_sqrt)
-            return q
+            return p_sqrt * Q * z * Q' * p_sqrt
         end
         N = m
         U = mean(data2)
@@ -243,7 +245,7 @@ R2 = Euclidean(2)
         prob = OptimizationProblem(optf, data2[1]; manifold = M)
 
         @time sol = Optimization.solve(
-            prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X),
+            prob, opt, sub_problem = (M, p, X) -> closed_form_solution(M, p, L, U, X),
             maxiters = 1000)
         @test sol.u≈q rtol=1e-2
     end
