@@ -128,7 +128,7 @@ R2 = Euclidean(2)
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
         sol = Optimization.solve(
-            prob, opt, sub_problem = Manopt.convex_bundle_method_subsolver!)
+            prob, opt, sub_problem = Manopt.convex_bundle_method_subsolver)
         @test sol.minimum < 0.1
     end
 
@@ -197,6 +197,7 @@ R2 = Euclidean(2)
 
         optprob_cons = OptimizationFunction(rosenbrock; grad = rosenbrock_grad!, cons = cons)
         prob_cons = OptimizationProblem(optprob_cons, x0, p)
+        #TODO: What is this?
         @test_throws SciMLBase.IncompatibleOptimizerError Optimization.solve(prob_cons, opt)
     end
 
@@ -217,7 +218,8 @@ R2 = Euclidean(2)
 
         @test sol.u≈q rtol=1e-2
 
-        function closed_form_solution!(M::SymmetricPositiveDefinite, q, L, U, p, X)
+        function closed_form_solution(M::SymmetricPositiveDefinite, L, U, p, X)
+            q = copy(M, p)
             # extract p^1/2 and p^{-1/2}
             (p_sqrt_inv, p_sqrt) = Manifolds.spd_sqrt_and_sqrt_inv(p)
             # Compute D & Q
