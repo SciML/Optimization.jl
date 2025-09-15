@@ -7,7 +7,11 @@ using Optimization.SciMLBase
 SciMLBase.requiresbounds(opt::Metaheuristics.AbstractAlgorithm) = true
 SciMLBase.allowsbounds(opt::Metaheuristics.AbstractAlgorithm) = true
 SciMLBase.allowscallback(opt::Metaheuristics.AbstractAlgorithm) = false
-SciMLBase.supports_opt_cache_interface(opt::Metaheuristics.AbstractAlgorithm) = true
+if isdefined(SciMLBase, :supports_opt_cache_interface)
+    SciMLBase.supports_opt_cache_interface(opt::Metaheuristics.AbstractAlgorithm) = true
+elseif isdefined(OptimizationBase, :supports_opt_cache_interface)
+    OptimizationBase.supports_opt_cache_interface(opt::Metaheuristics.AbstractAlgorithm) = true
+end
 
 function initial_population!(opt, cache, bounds, f)
     opt_init = deepcopy(opt)

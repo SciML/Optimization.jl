@@ -4,7 +4,11 @@ using Reexport, Printf, ProgressLogging
 @reexport using Optimisers, Optimization
 using Optimization.SciMLBase, Optimization.OptimizationBase
 
-SciMLBase.supports_opt_cache_interface(opt::AbstractRule) = true
+if isdefined(SciMLBase, :supports_opt_cache_interface)
+    SciMLBase.supports_opt_cache_interface(opt::AbstractRule) = true
+elseif isdefined(OptimizationBase, :supports_opt_cache_interface)
+    OptimizationBase.supports_opt_cache_interface(opt::AbstractRule) = true
+end
 SciMLBase.requiresgradient(opt::AbstractRule) = true
 SciMLBase.allowsfg(opt::AbstractRule) = true
 

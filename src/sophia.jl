@@ -53,7 +53,11 @@ struct Sophia
     ρ::Float64
 end
 
-SciMLBase.supports_opt_cache_interface(opt::Sophia) = true
+if isdefined(SciMLBase, :supports_opt_cache_interface)
+    SciMLBase.supports_opt_cache_interface(opt::Sophia) = true
+elseif isdefined(OptimizationBase, :supports_opt_cache_interface)
+    OptimizationBase.supports_opt_cache_interface(opt::Sophia) = true
+end
 SciMLBase.requiresgradient(opt::Sophia) = true
 SciMLBase.allowsfg(opt::Sophia) = true
 SciMLBase.requireshessian(opt::Sophia) = true

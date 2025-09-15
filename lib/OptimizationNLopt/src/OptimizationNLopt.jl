@@ -8,7 +8,11 @@ using Optimization: deduce_retcode
 (f::NLopt.Algorithm)() = f
 
 SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
-SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
+if isdefined(SciMLBase, :supports_opt_cache_interface)
+    SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
+elseif isdefined(OptimizationBase, :supports_opt_cache_interface)
+    OptimizationBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
+end
 
 function SciMLBase.requiresgradient(opt::Union{NLopt.Algorithm, NLopt.Opt})
     # https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
