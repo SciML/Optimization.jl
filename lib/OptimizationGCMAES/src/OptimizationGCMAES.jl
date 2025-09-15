@@ -11,10 +11,10 @@ struct GCMAESOpt end
 SciMLBase.requiresbounds(::GCMAESOpt) = true
 SciMLBase.allowsbounds(::GCMAESOpt) = true
 SciMLBase.allowscallback(::GCMAESOpt) = false
-if isdefined(SciMLBase, :supports_opt_cache_interface)
+@static if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(opt::GCMAESOpt) = true
 end
-if isdefined(OptimizationBase, :supports_opt_cache_interface)
+@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(opt::GCMAESOpt) = true
 end
 SciMLBase.requiresgradient(::GCMAESOpt) = true

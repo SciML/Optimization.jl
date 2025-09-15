@@ -8,10 +8,10 @@ using Optimization: deduce_retcode
 (f::NLopt.Algorithm)() = f
 
 SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
-if isdefined(SciMLBase, :supports_opt_cache_interface)
+@static if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 end
-if isdefined(OptimizationBase, :supports_opt_cache_interface)
+@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 end
 

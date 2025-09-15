@@ -12,10 +12,10 @@ internal state.
 """
 abstract type AbstractManoptOptimizer end
 
-if isdefined(SciMLBase, :supports_opt_cache_interface)
+@static if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(opt::AbstractManoptOptimizer) = true
 end
-if isdefined(OptimizationBase, :supports_opt_cache_interface)
+@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(opt::AbstractManoptOptimizer) = true
 end
 

@@ -13,12 +13,12 @@ const DenseOrSparse{T} = Union{Matrix{T}, SparseMatrixCSC{T}}
 
 struct IpoptOptimizer end
 
-if isdefined(SciMLBase, :supports_opt_cache_interface)
+@static if isdefined(SciMLBase, :supports_opt_cache_interface)
     function SciMLBase.supports_opt_cache_interface(alg::IpoptOptimizer)
         true
     end
 end
-if isdefined(OptimizationBase, :supports_opt_cache_interface)
+@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
     function OptimizationBase.supports_opt_cache_interface(alg::IpoptOptimizer)
         true
     end

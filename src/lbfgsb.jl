@@ -23,10 +23,10 @@ References
     ϵ = 1e-8
 end
 
-if isdefined(SciMLBase, :supports_opt_cache_interface)
+@static if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(::LBFGS) = true
 end
-if isdefined(OptimizationBase, :supports_opt_cache_interface)
+@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(::LBFGS) = true
 end
 SciMLBase.allowsbounds(::LBFGS) = true

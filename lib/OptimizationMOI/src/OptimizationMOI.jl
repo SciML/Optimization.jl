@@ -283,13 +283,13 @@ end
 include("nlp.jl")
 include("moi.jl")
 
-if isdefined(SciMLBase, :supports_opt_cache_interface)
+@static if isdefined(SciMLBase, :supports_opt_cache_interface)
     function SciMLBase.supports_opt_cache_interface(alg::Union{MOI.AbstractOptimizer,
             MOI.OptimizerWithAttributes})
         true
     end
 end
-if isdefined(OptimizationBase, :supports_opt_cache_interface)
+@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
     function OptimizationBase.supports_opt_cache_interface(alg::Union{MOI.AbstractOptimizer,
             MOI.OptimizerWithAttributes})
         true

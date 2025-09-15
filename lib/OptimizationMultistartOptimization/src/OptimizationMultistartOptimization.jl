@@ -7,10 +7,10 @@ using Optimization.SciMLBase
 SciMLBase.requiresbounds(opt::MultistartOptimization.TikTak) = true
 SciMLBase.allowsbounds(opt::MultistartOptimization.TikTak) = true
 SciMLBase.allowscallback(opt::MultistartOptimization.TikTak) = false
-if isdefined(SciMLBase, :supports_opt_cache_interface)
+@static if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(opt::MultistartOptimization.TikTak) = true
 end
-if isdefined(OptimizationBase, :supports_opt_cache_interface)
+@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(opt::MultistartOptimization.TikTak) = true
 end
 

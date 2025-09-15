@@ -216,10 +216,10 @@ for opt_type in [:ScipyMinimize, :ScipyDifferentialEvolution, :ScipyBasinhopping
     :ScipyLinprog, :ScipyMilp]
     @eval begin
         SciMLBase.allowsbounds(::$opt_type) = true
-        if isdefined(SciMLBase, :supports_opt_cache_interface)
+        @static if isdefined(SciMLBase, :supports_opt_cache_interface)
             SciMLBase.supports_opt_cache_interface(::$opt_type) = true
         end
-        if isdefined(OptimizationBase, :supports_opt_cache_interface)
+        @static if isdefined(OptimizationBase, :supports_opt_cache_interface)
             OptimizationBase.supports_opt_cache_interface(::$opt_type) = true
         end
     end
@@ -227,19 +227,19 @@ end
 
 for opt_type in [:ScipyMinimizeScalar, :ScipyRootScalar, :ScipyLeastSquares]
     @eval begin
-        if isdefined(SciMLBase, :supports_opt_cache_interface)
+        @static if isdefined(SciMLBase, :supports_opt_cache_interface)
             SciMLBase.supports_opt_cache_interface(::$opt_type) = true
         end
-        if isdefined(OptimizationBase, :supports_opt_cache_interface)
+        @static if isdefined(OptimizationBase, :supports_opt_cache_interface)
             OptimizationBase.supports_opt_cache_interface(::$opt_type) = true
         end
     end
 end
 
-if isdefined(SciMLBase, :supports_opt_cache_interface)
+@static if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(::ScipyRoot) = true
 end
-if isdefined(OptimizationBase, :supports_opt_cache_interface)
+@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(::ScipyRoot) = true
 end
 
