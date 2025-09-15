@@ -21,7 +21,12 @@ HighOrderDescent() = ODEOptimizer(Vern7())
 SciMLBase.requiresbounds(::ODEOptimizer) = false
 SciMLBase.allowsbounds(::ODEOptimizer) = false
 SciMLBase.allowscallback(::ODEOptimizer) = true
-SciMLBase.supports_opt_cache_interface(::ODEOptimizer) = true
+@static if isdefined(SciMLBase, :supports_opt_cache_interface)
+    SciMLBase.supports_opt_cache_interface(::ODEOptimizer) = true
+end
+@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
+    OptimizationBase.supports_opt_cache_interface(::ODEOptimizer) = true
+end
 SciMLBase.requiresgradient(::ODEOptimizer) = true
 SciMLBase.requireshessian(::ODEOptimizer) = false
 SciMLBase.requiresconsjac(::ODEOptimizer) = false
