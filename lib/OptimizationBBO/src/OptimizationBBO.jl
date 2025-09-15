@@ -11,7 +11,8 @@ SciMLBase.requiresbounds(::BBO) = true
 SciMLBase.allowsbounds(::BBO) = true
 if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(opt::BBO) = true
-elseif isdefined(OptimizationBase, :supports_opt_cache_interface)
+end
+if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(opt::BBO) = true
 end
 

@@ -8,7 +8,8 @@ SciMLBase.allowsbounds(opt::Evolutionary.AbstractOptimizer) = true
 SciMLBase.allowsconstraints(opt::Evolutionary.AbstractOptimizer) = true
 if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(opt::Evolutionary.AbstractOptimizer) = true
-elseif isdefined(OptimizationBase, :supports_opt_cache_interface)
+end
+if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(opt::Evolutionary.AbstractOptimizer) = true
 end
 SciMLBase.requiresgradient(opt::Evolutionary.AbstractOptimizer) = false

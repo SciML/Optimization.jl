@@ -21,7 +21,8 @@ end
 SciMLBase.allowsbounds(::PyCMAOpt) = true
 if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(opt::PyCMAOpt) = true
-elseif isdefined(OptimizationBase, :supports_opt_cache_interface)
+end
+if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(opt::PyCMAOpt) = true
 end
 SciMLBase.allowscallback(::PyCMAOpt) = true

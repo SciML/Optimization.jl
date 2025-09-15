@@ -55,7 +55,8 @@ end
 
 if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(opt::Sophia) = true
-elseif isdefined(OptimizationBase, :supports_opt_cache_interface)
+end
+if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(opt::Sophia) = true
 end
 SciMLBase.requiresgradient(opt::Sophia) = true

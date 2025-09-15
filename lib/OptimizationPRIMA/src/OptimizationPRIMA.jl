@@ -13,7 +13,8 @@ struct COBYLA <: PRIMASolvers end
 
 if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(::PRIMASolvers) = true
-elseif isdefined(OptimizationBase, :supports_opt_cache_interface)
+end
+if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(::PRIMASolvers) = true
 end
 SciMLBase.allowsconstraints(::Union{LINCOA, COBYLA}) = true

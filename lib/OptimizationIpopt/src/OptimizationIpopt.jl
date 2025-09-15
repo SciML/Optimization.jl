@@ -17,7 +17,8 @@ if isdefined(SciMLBase, :supports_opt_cache_interface)
     function SciMLBase.supports_opt_cache_interface(alg::IpoptOptimizer)
         true
     end
-elseif isdefined(OptimizationBase, :supports_opt_cache_interface)
+end
+if isdefined(OptimizationBase, :supports_opt_cache_interface)
     function OptimizationBase.supports_opt_cache_interface(alg::IpoptOptimizer)
         true
     end

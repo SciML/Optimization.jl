@@ -11,7 +11,8 @@ end
 
 if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(::AugLag) = true
-elseif isdefined(OptimizationBase, :supports_opt_cache_interface)
+end
+if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(::AugLag) = true
 end
 SciMLBase.allowsbounds(::AugLag) = true

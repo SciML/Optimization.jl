@@ -23,7 +23,8 @@ SciMLBase.allowsbounds(::ODEOptimizer) = false
 SciMLBase.allowscallback(::ODEOptimizer) = true
 if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(::ODEOptimizer) = true
-elseif isdefined(OptimizationBase, :supports_opt_cache_interface)
+end
+if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(::ODEOptimizer) = true
 end
 SciMLBase.requiresgradient(::ODEOptimizer) = true

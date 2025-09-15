@@ -15,7 +15,8 @@ if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(opt::Optim.AbstractOptimizer) = true
     SciMLBase.supports_opt_cache_interface(opt::Union{Optim.Fminbox, Optim.SAMIN}) = true
     SciMLBase.supports_opt_cache_interface(opt::Optim.ConstrainedOptimizer) = true
-elseif isdefined(OptimizationBase, :supports_opt_cache_interface)
+end
+if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(opt::Optim.AbstractOptimizer) = true
     OptimizationBase.supports_opt_cache_interface(opt::Union{Optim.Fminbox, Optim.SAMIN}) = true
     OptimizationBase.supports_opt_cache_interface(opt::Optim.ConstrainedOptimizer) = true

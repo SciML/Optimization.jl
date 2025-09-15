@@ -25,7 +25,8 @@ end
 
 if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(::LBFGS) = true
-elseif isdefined(OptimizationBase, :supports_opt_cache_interface)
+end
+if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(::LBFGS) = true
 end
 SciMLBase.allowsbounds(::LBFGS) = true

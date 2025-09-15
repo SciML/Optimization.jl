@@ -288,7 +288,8 @@ if isdefined(SciMLBase, :supports_opt_cache_interface)
             MOI.OptimizerWithAttributes})
         true
     end
-elseif isdefined(OptimizationBase, :supports_opt_cache_interface)
+end
+if isdefined(OptimizationBase, :supports_opt_cache_interface)
     function OptimizationBase.supports_opt_cache_interface(alg::Union{MOI.AbstractOptimizer,
             MOI.OptimizerWithAttributes})
         true
