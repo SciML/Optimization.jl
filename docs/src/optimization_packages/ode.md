@@ -6,7 +6,7 @@
 
 ```julia
 using Pkg
-Pkg.add(url="OptimizationODE.jl")
+Pkg.add("OptimizationODE")
 ```
 
 ## Usage
@@ -49,7 +49,16 @@ All provided optimizers are **gradient-based local optimizers** that solve optim
 
 You can also define a custom optimizer using the generic `ODEOptimizer(solver; dt=nothing)` constructor by supplying any ODE solver supported by [OrdinaryDiffEq.jl](https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/).
 
+## DAE-based Optimizers
+
+In addition to ODE-based optimizers, OptimizationODE.jl provides optimizers for differential-algebraic equation (DAE) constrained problems:
+
+* `DAEMassMatrix()` — uses the Rodas5P solver (from OrdinaryDiffEq.jl) for DAE problems with a mass matrix formulation.
+
+* `DAEOptimizer(IDA())` — uses the IDA solver (from Sundials.jl) for DAE problems with index variable support (requires `using Sundials`)
+
+You can also define a custom optimizer using the generic `ODEOptimizer(solver)` or `DAEOptimizer(solver)` constructor by supplying any ODE or DAE solver supported by [OrdinaryDiffEq.jl](https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/) or [Sundials.jl](https://github.com/SciML/Sundials.jl).
+
 ## Interface Details
 
 All optimizers require gradient information (either via automatic differentiation or manually provided `grad!`). The optimization is performed by integrating the ODE defined by the negative gradient until a steady state is reached.
-

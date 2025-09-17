@@ -5,7 +5,7 @@ using Reexport
 using LinearAlgebra, ForwardDiff
 
 using NonlinearSolve
-using OrdinaryDiffEq, SteadyStateDiffEq, Sundials
+using OrdinaryDiffEq, SteadyStateDiffEq
 
 export ODEOptimizer, ODEGradientDescent, RKChebyshevDescent, RKAccelerated, HighOrderDescent
 export DAEOptimizer, DAEMassMatrix
