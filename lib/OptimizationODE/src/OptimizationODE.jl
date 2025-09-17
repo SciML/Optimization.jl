@@ -3,6 +3,7 @@ module OptimizationODE
 using Reexport
 @reexport using Optimization, SciMLBase
 using LinearAlgebra, ForwardDiff
+using DiffEqBase
 
 using NonlinearSolve
 using OrdinaryDiffEq, SteadyStateDiffEq
@@ -225,7 +226,7 @@ function solve_dae_implicit(cache, dt, maxit, u0, p)
 
     if maxit !== nothing; solve_kwargs[:maxiters] = maxit; end
     if dt !== nothing; solve_kwargs[:dt] = dt; end
-    solve_kwargs[:initializealg] = ShampineCollocationInit()
+    solve_kwargs[:initializealg] = DiffEqBase.ShampineCollocationInit()
 
     sol = solve(prob, cache.opt.solver; solve_kwargs...)
     u_ext = sol.u

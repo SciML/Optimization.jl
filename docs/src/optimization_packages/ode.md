@@ -51,6 +51,9 @@ You can also define a custom optimizer using the generic `ODEOptimizer(solver; d
 
 ## DAE-based Optimizers
 
+!!! warn
+    DAE-based optimizers are still experimental and a research project. Use with caution.
+
 In addition to ODE-based optimizers, OptimizationODE.jl provides optimizers for differential-algebraic equation (DAE) constrained problems:
 
 * `DAEMassMatrix()` — uses the Rodas5P solver (from OrdinaryDiffEq.jl) for DAE problems with a mass matrix formulation.

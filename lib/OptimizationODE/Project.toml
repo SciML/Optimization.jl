@@ -4,6 +4,7 @@ authors = ["Paras Puneet Singh <paras.puneet2204@gmail.com>"]
 version = "0.1.1"
 
 [deps]
+DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
