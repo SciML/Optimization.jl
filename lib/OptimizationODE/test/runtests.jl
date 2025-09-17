@@ -142,7 +142,7 @@ end
 
     @testset "Equality Constrained - Index Method" begin
         prob = OptimizationProblem(optf, x0, p)
-        opt = DAEIndexing()
+        opt = DAEOptimizer(IDA())
         differential_vars = [true, true, false]  # x vars = differential, λ = algebraic
         sol = solve(prob, opt; dt=0.01, maxiters=1_000_000,
                     differential_vars = differential_vars)
@@ -207,14 +207,14 @@ end
     end
     
     @testset "Callback Functionality" begin
-        @testset "Progress Callback" begin
+                @testset "Progress Callback" begin
             x0 = [0.0, 0.0]
             p = [1.0, 1.0]
             
             callback_called = Ref(false)
             callback_values = Vector{Vector{Float64}}()
             
-            function test_callback(x, p, t)
+            function test_callback(state, l)
                 return false 
             end
             
@@ -222,7 +222,19 @@ end
             prob = OptimizationProblem(optf, x0, p)
             
             opt = RKAccelerated()
-            sol = solve(prob, opt, dt=0.1, maxiters=100000, callback=test_callback, progress=true)
+            sol = solve(prob, opt, dt=0.1, maxiters=100000, callback=test_callback)
+            
+            @test sol.retcode == ReturnCode.Success || sol.retcode == ReturnCode.Default
+        end
+        @testset "Progress Bar" begin
+            x0 = [0.0, 0.0]
+            p = [1.0, 1.0]
+            
+            optf = OptimizationFunction(quadratic; grad=quadratic_grad!)
+            prob = OptimizationProblem(optf, x0, p)
+            
+            opt = RKAccelerated()
+            sol = solve(prob, opt, dt=0.1, maxiters=100000, progress=true)
             
             @test sol.retcode == ReturnCode.Success || sol.retcode == ReturnCode.Default
         end

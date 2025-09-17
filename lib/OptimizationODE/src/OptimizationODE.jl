@@ -5,10 +5,10 @@ using Reexport
 using LinearAlgebra, ForwardDiff
 
 using NonlinearSolve
-using OrdinaryDiffEq, DifferentialEquations, SteadyStateDiffEq, Sundials
+using OrdinaryDiffEq, SteadyStateDiffEq, Sundials
 
 export ODEOptimizer, ODEGradientDescent, RKChebyshevDescent, RKAccelerated, HighOrderDescent
-export DAEOptimizer, DAEMassMatrix, DAEIndexing
+export DAEOptimizer, DAEMassMatrix
 
 struct ODEOptimizer{T}
     solver::T
@@ -23,8 +23,7 @@ struct DAEOptimizer{T}
     solver::T
 end
 
-DAEMassMatrix() = DAEOptimizer(Rosenbrock23(autodiff = false))
-DAEIndexing() = DAEOptimizer(IDA())
+DAEMassMatrix() = DAEOptimizer(Rodas5P(autodiff = false))
 
 
 SciMLBase.requiresbounds(::ODEOptimizer) = false
@@ -62,29 +61,6 @@ function SciMLBase.__init(prob::OptimizationProblem, opt::DAEOptimizer;
         maxiters=maxiters, differential_vars=differential_vars, kwargs...)
 end
 
-
-function handle_parameters(p)
-    if p isa SciMLBase.NullParameters
-        return Float64[]
-    else
-        return p
-    end
-end
-
-function setup_progress_callback(cache, solve_kwargs)
-    if get(cache.solver_args, :progress, false)
-        condition = (u, t, integrator) -> true
-        affect! = (integrator) -> begin
-            u_opt = integrator.u isa AbstractArray ? integrator.u : integrator.u.u
-            cache.solver_args[:callback](u_opt, integrator.p, integrator.t)
-        end
-        cb = DiscreteCallback(condition, affect!)
-        solve_kwargs[:callback] = cb
-    end
-    return solve_kwargs
-end
-
-
 function SciMLBase.__solve(
     cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}
     ) where {F,RC,LB,UB,LC,UC,S,O<:Union{ODEOptimizer,DAEOptimizer},D,P,C}
@@ -93,15 +69,15 @@ function SciMLBase.__solve(
     maxit = get(cache.solver_args, :maxiters, nothing)
     differential_vars = get(cache.solver_args, :differential_vars, nothing)
     u0 = copy(cache.u0)
-    p = handle_parameters(cache.p)  # Properly handle NullParameters
+    p = cache.p # Properly handle NullParameters
 
     if cache.opt isa ODEOptimizer
         return solve_ode(cache, dt, maxit, u0, p)
     else
-        if cache.opt.solver == Rosenbrock23(autodiff = false)
-            return solve_dae_mass_matrix(cache, dt, maxit, u0, p)
+        if cache.opt.solver isa SciMLBase.AbstractDAEAlgorithm
+            return solve_dae_implicit(cache, dt, maxit, u0, p, differential_vars)
         else
-            return solve_dae_indexing(cache, dt, maxit, u0, p, differential_vars)
+            return solve_dae_mass_matrix(cache, dt, maxit, u0, p)
         end
     end
 end
@@ -112,13 +88,8 @@ function solve_ode(cache, dt, maxit, u0, p)
     end
 
     function f!(du, u, p, t)
-        grad_vec = similar(u)
-        if isempty(p)
-            cache.f.grad(grad_vec, u)
-        else
-            cache.f.grad(grad_vec, u, p)
-        end
-        @. du = -grad_vec
+        cache.f.grad(du, u, p)
+        @. du = -du
         return nothing
     end
 
@@ -126,26 +97,27 @@ function solve_ode(cache, dt, maxit, u0, p)
 
     algorithm = DynamicSS(cache.opt.solver)
 
-    cb = cache.callback
-    if cb != Optimization.DEFAULT_CALLBACK || get(cache.solver_args,:progress,false)
-        function condition(u, t, integrator) true end
-        function affect!(integrator)
-            u_now = integrator.u
-            cache.callback(u_now, integrator.p, integrator.t)
+    if cache.callback !== Optimization.DEFAULT_CALLBACK
+        condition = (u, t, integrator) -> true
+        affect! = (integrator) -> begin
+            u_opt = integrator.u isa AbstractArray ? integrator.u : integrator.u.u
+            l = cache.f(integrator.u, integrator.p)
+            cache.callback(integrator.u, l)
         end
-        cb_struct = DiscreteCallback(condition, affect!)
-        callback = CallbackSet(cb_struct)
+        cb = DiscreteCallback(condition, affect!)
+        solve_kwargs = Dict{Symbol, Any}(:callback => cb)
     else
-        callback = nothing
+        solve_kwargs = Dict{Symbol, Any}()
     end
-
-    solve_kwargs = Dict{Symbol, Any}(:callback => callback)
+    
     if !isnothing(maxit)
         solve_kwargs[:maxiters] = maxit
     end
     if dt !== nothing
         solve_kwargs[:dt] = dt
     end
+
+    solve_kwargs[:progress] = cache.progress
 
     sol = solve(ss_prob, algorithm; solve_kwargs...)
     has_destats = hasproperty(sol, :destats)
@@ -218,7 +190,7 @@ function solve_dae_mass_matrix(cache, dt, maxit, u0, p)
 end
 
 
-function solve_dae_indexing(cache, dt, maxit, u0, p, differential_vars)
+function solve_dae_implicit(cache, dt, maxit, u0, p, differential_vars)
     if cache.f.cons === nothing
         return solve_ode(cache, dt, maxit, u0, p)
     end
