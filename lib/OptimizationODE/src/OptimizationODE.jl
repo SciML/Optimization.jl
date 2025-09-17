@@ -56,9 +56,9 @@ end
 
 function SciMLBase.__init(prob::OptimizationProblem, opt::DAEOptimizer;
     callback=Optimization.DEFAULT_CALLBACK, progress=false, dt=nothing,
-    maxiters=nothing, differential_vars=nothing, kwargs...)
+    maxiters=nothing, kwargs...)
     return OptimizationCache(prob, opt; callback=callback, progress=progress, dt=dt,
-        maxiters=maxiters, differential_vars=differential_vars, kwargs...)
+        maxiters=maxiters, kwargs...)
 end
 
 function SciMLBase.__solve(
@@ -67,7 +67,6 @@ function SciMLBase.__solve(
 
     dt = get(cache.solver_args, :dt, nothing)
     maxit = get(cache.solver_args, :maxiters, nothing)
-    differential_vars = get(cache.solver_args, :differential_vars, nothing)
     u0 = copy(cache.u0)
     p = cache.p # Properly handle NullParameters
 
@@ -75,7 +74,7 @@ function SciMLBase.__solve(
         return solve_ode(cache, dt, maxit, u0, p)
     else
         if cache.opt.solver isa SciMLBase.AbstractDAEAlgorithm
-            return solve_dae_implicit(cache, dt, maxit, u0, p, differential_vars)
+            return solve_dae_implicit(cache, dt, maxit, u0, p)
         else
             return solve_dae_mass_matrix(cache, dt, maxit, u0, p)
         end
@@ -139,43 +138,39 @@ end
 
 function solve_dae_mass_matrix(cache, dt, maxit, u0, p)
     if cache.f.cons === nothing
-        return solve_ode(cache, dt, maxit, u0, p)
+        error("DAEOptimizer requires constraints. Please provide a function with `cons` defined.")
     end
-    x=u0
-    cons_vals = cache.f.cons(x, p)
     n = length(u0)
-    m = length(cons_vals)
-    u0_extended = vcat(u0, zeros(m))
-    M = Diagonal(ones(n + m))
+    m = length(cache.ucons)
 
-
+    if m > n
+        error("DAEOptimizer with mass matrix method requires the number of constraints to be less than or equal to the number of variables.")
+    end
+    M = Diagonal([ones(n-m); zeros(m)])
     function f_mass!(du, u, p_, t)
-        x = @view u[1:n]
-        λ = @view u[n+1:end]
-        grad_f = similar(x)
-        if cache.f.grad !== nothing
-            cache.f.grad(grad_f, x, p_)
-        else
-            grad_f .= ForwardDiff.gradient(z -> cache.f.f(z, p_), x)
-        end
-        J = Matrix{eltype(x)}(undef, m, n)
-        cache.f.cons_j !== nothing && cache.f.cons_j(J, x)
-
-        @. du[1:n] = -grad_f - (J' * λ)
-        consv = cache.f.cons(x, p_)
-        @. du[n+1:end] = consv
+        cache.f.grad(du, u, p)
+        @. du = -du
+        consout = @view du[(n-m)+1:end]
+        cache.f.cons(consout, u)
         return nothing
     end
 
-    if m == 0
-        optf = ODEFunction(f_mass!)
-        prob = ODEProblem(optf, u0, (0.0, 1.0), p)
-        return solve(prob, cache.opt.solver; dt=dt, maxiters=maxit)
+    ss_prob = SteadyStateProblem(ODEFunction(f_mass!, mass_matrix = M), u0, p)
+
+    if cache.callback !== Optimization.DEFAULT_CALLBACK
+        condition = (u, t, integrator) -> true
+        affect! = (integrator) -> begin
+            u_opt = integrator.u isa AbstractArray ? integrator.u : integrator.u.u
+            l = cache.f(integrator.u, integrator.p)
+            cache.callback(integrator.u, l)
+        end
+        cb = DiscreteCallback(condition, affect!)
+        solve_kwargs = Dict{Symbol, Any}(:callback => cb)
+    else
+        solve_kwargs = Dict{Symbol, Any}()
     end
-
-    ss_prob = SteadyStateProblem(ODEFunction(f_mass!, mass_matrix = M), u0_extended, p)
-
-    solve_kwargs = setup_progress_callback(cache, Dict())
+    
+    solve_kwargs[:progress] = cache.progress
     if maxit !== nothing; solve_kwargs[:maxiters] = maxit; end
     if dt   !== nothing; solve_kwargs[:dt] = dt; end
 
@@ -189,61 +184,48 @@ function solve_dae_mass_matrix(cache, dt, maxit, u0, p)
         retcode = sol.retcode)
 end
 
-
-function solve_dae_implicit(cache, dt, maxit, u0, p, differential_vars)
+function solve_dae_implicit(cache, dt, maxit, u0, p)
     if cache.f.cons === nothing
-        return solve_ode(cache, dt, maxit, u0, p)
+        error("DAEOptimizer requires constraints. Please provide a function with `cons` defined.")
     end
-    x=u0
-    cons_vals = cache.f.cons(x, p)
-    n = length(u0)
-    m = length(cons_vals)
-    u0_ext = vcat(u0, zeros(m))
-    du0_ext = zeros(n + m)
 
-    if differential_vars === nothing
-        differential_vars = vcat(fill(true, n), fill(false, m))
-    else
-        if length(differential_vars) == n
-            differential_vars = vcat(differential_vars, fill(false, m))
-        elseif length(differential_vars) == n + m
-            # use as is
-        else
-            error("differential_vars length must be number of variables ($n) or extended size ($(n+m))")
-        end
+    n = length(u0)
+    m = length(cache.ucons)
+
+    if m > n
+        error("DAEOptimizer with mass matrix method requires the number of constraints to be less than or equal to the number of variables.")
     end
 
     function dae_residual!(res, du, u, p_, t)
-        x = @view u[1:n]
-        λ = @view u[n+1:end]
-        du_x = @view du[1:n]
-        grad_f = similar(x)
-        cache.f.grad(grad_f, x, p_)
-        J = zeros(m, n)
-        cache.f.cons_j !== nothing && cache.f.cons_j(J, x)
-
-        @. res[1:n] = du_x + grad_f + J' * λ
-        consv = cache.f.cons(x, p_)
-        @. res[n+1:end] = consv
+        cache.f.grad(res, u, p)
+        @. res = du-res
+        consout = @view res[(n-m)+1:end]
+        cache.f.cons(consout, u)
         return nothing
     end
 
-    if m == 0
-        optf = ODEFunction(dae_residual!, differential_vars = differential_vars)
-        prob = ODEProblem(optf, du0_ext, (0.0, 1.0), p)
-        return solve(prob, HighOrderDescent(); dt=dt, maxiters=maxit)
-    end
-
     tspan = (0.0, 10.0)
-    prob = DAEProblem(dae_residual!, du0_ext, u0_ext, tspan, p;
-                      differential_vars = differential_vars)
+    du0 = zero(u0)
+    prob = DAEProblem(dae_residual!, du0, u0, tspan, p)
 
-    solve_kwargs = setup_progress_callback(cache, Dict())
+    if cache.callback !== Optimization.DEFAULT_CALLBACK
+        condition = (u, t, integrator) -> true
+        affect! = (integrator) -> begin
+            u_opt = integrator.u isa AbstractArray ? integrator.u : integrator.u.u
+            l = cache.f(integrator.u, integrator.p)
+            cache.callback(integrator.u, l)
+        end
+        cb = DiscreteCallback(condition, affect!)
+        solve_kwargs = Dict{Symbol, Any}(:callback => cb)
+    else
+        solve_kwargs = Dict{Symbol, Any}()
+    end
+    
+    solve_kwargs[:progress] = cache.progress
+
     if maxit !== nothing; solve_kwargs[:maxiters] = maxit; end
     if dt !== nothing; solve_kwargs[:dt] = dt; end
-    if hasfield(typeof(cache.opt.solver), :initializealg)
-        solve_kwargs[:initializealg] = BrownFullBasicInit()
-    end
+    solve_kwargs[:initializealg] = ShampineCollocationInit()
 
     sol = solve(prob, cache.opt.solver; solve_kwargs...)
     u_ext = sol.u
