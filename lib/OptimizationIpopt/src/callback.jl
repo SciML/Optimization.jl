@@ -10,8 +10,10 @@ struct IpoptState
     alpha_du::Float64
     alpha_pr::Float64
     ls_trials::Cint
+    u::Vector{Float64}
     z_L::Vector{Float64}
     z_U::Vector{Float64}
+    g::Vector{Float64}
     lambda::Vector{Float64}
 end
 
@@ -23,6 +25,21 @@ struct IpoptProgressLogger{C, P}
     num_cons::Int
     maxiters::Union{Nothing, Int}
     iterations::Ref{Int}
+    # caches for GetIpoptCurrentIterate
+    u::Vector{Float64}
+    z_L::Vector{Float64}
+    z_U::Vector{Float64}
+    g::Vector{Float64}
+    lambda::Vector{Float64}
+end
+
+function IpoptProgressLogger(progress::Bool, callback::C, prob::P, n::Int, num_cons::Int,
+        maxiters::Union{Nothing, Int}, iterations::Ref{Int}) where {C, P}
+    # Initialize caches
+    u, z_L, z_U = zeros(n), zeros(n), zeros(n)
+    g, lambda = zeros(num_cons), zeros(num_cons)
+    IpoptProgressLogger(
+        progress, callback, prob, n, num_cons, maxiters, iterations, u, z_L, z_U, g, lambda)
 end
 
 function (cb::IpoptProgressLogger)(
@@ -38,12 +55,9 @@ function (cb::IpoptProgressLogger)(
         alpha_pr::Float64,
         ls_trials::Cint
 )
-    n = cb.n
-    m = cb.num_cons
-    u, z_L, z_U = zeros(n), zeros(n), zeros(n)
-    g, lambda = zeros(m), zeros(m)
     scaled = false
-    Ipopt.GetIpoptCurrentIterate(cb.prob, scaled, n, u, z_L, z_U, m, g, lambda)
+    Ipopt.GetIpoptCurrentIterate(
+        cb.prob, scaled, cb.n, cb.u, cb.z_L, cb.z_U, cb.num_cons, cb.g, cb.lambda)
 
     original = IpoptState(
         alg_mod,
@@ -57,13 +71,15 @@ function (cb::IpoptProgressLogger)(
         alpha_du,
         alpha_pr,
         ls_trials,
-        z_L,
-        z_U,
-        lambda
+        cb.u,
+        cb.z_L,
+        cb.z_U,
+        cb.g,
+        cb.lambda
     )
 
     opt_state = Optimization.OptimizationState(;
-        iter = Int(iter_count), u, objective = obj_value, original)
+        iter = Int(iter_count), cb.u, objective = obj_value, original)
     cb.iterations[] = Int(iter_count)
 
     if cb.progress
