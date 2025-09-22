@@ -21,10 +21,10 @@ using SparseArrays
         prob = OptimizationProblem(optfunc, x0, p)
 
         # Test with tight tolerances
-        sol = solve(prob, IpoptOptimizer();
-                   reltol = 1e-10,
+        sol = solve(prob, IpoptOptimizer(
                    acceptable_tol = 1e-8,
-                   acceptable_iter = 5)
+                   acceptable_iter = 5);
+                   reltol = 1e-10)
 
         @test SciMLBase.successful_retcode(sol)
         @test sol.u ≈ [1.0, 1.0] atol=1e-8
@@ -46,8 +46,8 @@ using SparseArrays
                                  lcons = [0.0, 0.0],
                                  ucons = [0.0, 0.0])
 
-        sol = solve(prob, IpoptOptimizer();
-                   constr_viol_tol = 1e-8)
+        sol = solve(prob, IpoptOptimizer(
+                   constr_viol_tol = 1e-8))
 
         @test SciMLBase.successful_retcode(sol)
         @test sol.u[1] + sol.u[2] ≈ 2.0 atol=1e-7
@@ -64,9 +64,11 @@ using SparseArrays
         prob = OptimizationProblem(optfunc, [0.1, 0.1], nothing)
 
         # Run with derivative test level 1 (first derivatives only)
-        sol = solve(prob, IpoptOptimizer();
-                   derivative_test = "first-order",
-                   derivative_test_tol = 1e-4)
+        sol = solve(prob, IpoptOptimizer(
+                   additional_options = Dict(
+                       "derivative_test" => "first-order",
+                       "derivative_test_tol" => 1e-4
+                   )))
 
         @test SciMLBase.successful_retcode(sol)
     end
@@ -92,8 +94,8 @@ using SparseArrays
         prob = OptimizationProblem(optfunc, x0, p)
 
         # Test with different linear solver strategies
-        sol = solve(prob, IpoptOptimizer();
-                   linear_solver = "mumps")  # or "ma27", "ma57", etc. if available
+        sol = solve(prob, IpoptOptimizer(
+                   linear_solver = "mumps"))  # or "ma27", "ma57", etc. if available
 
         @test SciMLBase.successful_retcode(sol)
         # Check that odd indices are close to 1
@@ -117,8 +119,8 @@ using SparseArrays
                                  ucons = [0.0])
 
         # Solve with automatic scaling
-        sol = solve(prob, IpoptOptimizer();
-                   nlp_scaling_method = "gradient-based")
+        sol = solve(prob, IpoptOptimizer(
+                   nlp_scaling_method = "gradient-based"))
 
         @test SciMLBase.successful_retcode(sol)
         # Check constraint satisfaction
@@ -145,8 +147,10 @@ using SparseArrays
                                  lcons = [0.0, 0.0],
                                  ucons = [0.0, 0.0])
 
-        sol = solve(prob, IpoptOptimizer();
-                   required_infeasibility_reduction = 0.9)
+        sol = solve(prob, IpoptOptimizer(
+                   additional_options = Dict(
+                       "required_infeasibility_reduction" => 0.9
+                   )))
 
         if SciMLBase.successful_retcode(sol)
             # Check constraint satisfaction if successful
@@ -167,16 +171,16 @@ using SparseArrays
         prob = OptimizationProblem(optfunc, x0, p)
 
         # Test adaptive mu strategy
-        sol = solve(prob, IpoptOptimizer();
+        sol = solve(prob, IpoptOptimizer(
                    mu_strategy = "adaptive",
-                   mu_init = 0.1)
+                   mu_init = 0.1))
 
         @test SciMLBase.successful_retcode(sol)
         @test sol.u ≈ [1.0, 1.0] atol=1e-4
 
         # Test monotone mu strategy
-        sol2 = solve(prob, IpoptOptimizer();
-                    mu_strategy = "monotone")
+        sol2 = solve(prob, IpoptOptimizer(
+                    mu_strategy = "monotone"))
 
         @test SciMLBase.successful_retcode(sol2)
         @test sol2.u ≈ [1.0, 1.0] atol=1e-4
@@ -194,8 +198,10 @@ using SparseArrays
                                  lb = [-Inf, 2.0, -Inf],
                                  ub = [Inf, 2.0, Inf])
 
-        sol = solve(prob, IpoptOptimizer();
-                   fixed_variable_treatment = "make_parameter")
+        sol = solve(prob, IpoptOptimizer(
+                   additional_options = Dict(
+                       "fixed_variable_treatment" => "make_parameter"
+                   )))
 
         @test SciMLBase.successful_retcode(sol)
         @test sol.u ≈ [1.0, 2.0, 3.0] atol=1e-6
@@ -213,9 +219,9 @@ using SparseArrays
         prob = OptimizationProblem(optfunc, zeros(n), nothing;
                                  sense = Optimization.MaxSense)
 
-        sol = solve(prob, IpoptOptimizer();
+        sol = solve(prob, IpoptOptimizer(
                    acceptable_tol = 1e-4,
-                   acceptable_iter = 10,
+                   acceptable_iter = 10);
                    maxiters = 50)
 
         @test SciMLBase.successful_retcode(sol)
@@ -240,7 +246,7 @@ end
     end
 
     @testset "Timing statistics" begin
-        sol = solve(prob, IpoptOptimizer(); print_timing_statistics = "yes")
+        sol = solve(prob, IpoptOptimizer(print_timing_statistics = "yes"))
         @test SciMLBase.successful_retcode(sol)
     end
 end

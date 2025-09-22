@@ -220,8 +220,8 @@ end
     @testset "BFGS approximation" begin
         optfunc = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
         prob = OptimizationProblem(optfunc, x0, p)
-        sol = solve(prob, IpoptOptimizer();
-                   hessian_approximation = "limited-memory")
+        sol = solve(prob, IpoptOptimizer(
+                   hessian_approximation = "limited-memory"))
 
         @test SciMLBase.successful_retcode(sol)
         @test sol.u ≈ [1.0, 1.0] atol=1e-4
@@ -230,9 +230,9 @@ end
     @testset "SR1 approximation" begin
         optfunc = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
         prob = OptimizationProblem(optfunc, x0, p)
-        sol = solve(prob, IpoptOptimizer();
+        sol = solve(prob, IpoptOptimizer(
                    hessian_approximation = "limited-memory",
-                   limited_memory_update_type = "sr1")
+                   limited_memory_update_type = "sr1"))
 
         @test SciMLBase.successful_retcode(sol)
         @test sol.u ≈ [1.0, 1.0] atol=1e-4
