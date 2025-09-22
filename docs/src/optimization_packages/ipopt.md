@@ -42,61 +42,130 @@ The algorithm supports:
 - Box constraints via `lb` and `ub` in the `OptimizationProblem`
 - General nonlinear equality and inequality constraints via `lcons` and `ucons`
 
+### Basic Usage
+
+```julia
+using Optimization, OptimizationIpopt
+
+# Create optimizer with default settings
+opt = IpoptOptimizer()
+
+# Or configure Ipopt-specific options
+opt = IpoptOptimizer(
+    acceptable_tol = 1e-8,
+    mu_strategy = "adaptive"
+)
+
+# Solve the problem
+sol = solve(prob, opt)
+```
+
 ## Options and Parameters
 
-### Common Options
+### Common Interface Options
 
-The following options can be passed as keyword arguments to `solve`:
+The following options can be passed as keyword arguments to `solve` and follow the common Optimization.jl interface:
 
-- `maxiters`: Maximum number of iterations (maps to Ipopt's `max_iter`)
-- `maxtime`: Maximum wall time in seconds (maps to Ipopt's `max_wall_time`)
+- `maxiters`: Maximum number of iterations (overrides Ipopt's `max_iter`)
+- `maxtime`: Maximum wall time in seconds (overrides Ipopt's `max_wall_time`)
 - `abstol`: Absolute tolerance (not directly used by Ipopt)
-- `reltol`: Convergence tolerance (maps to Ipopt's `tol`)
-- `verbose`: Control output verbosity
+- `reltol`: Convergence tolerance (overrides Ipopt's `tol`)
+- `verbose`: Control output verbosity (overrides Ipopt's `print_level`)
   - `false` or `0`: No output
   - `true` or `5`: Standard output
-  - Integer values 0-12: Different verbosity levels (maps to `print_level`)
-- `hessian_approximation`: Method for Hessian computation
-  - `"exact"` (default): Use exact Hessian
-  - `"limited-memory"`: Use L-BFGS approximation
+  - Integer values 0-12: Different verbosity levels
 
-### Advanced Ipopt Options
+### IpoptOptimizer Constructor Options
 
-Any Ipopt option can be passed directly as keyword arguments. The full list of available options is documented in the [Ipopt Options Reference](https://coin-or.github.io/Ipopt/OPTIONS.html). Common options include:
+Ipopt-specific options are passed to the `IpoptOptimizer` constructor. The most commonly used options are available as struct fields:
 
-#### Convergence Options
-- `tol`: Desired convergence tolerance (relative)
-- `dual_inf_tol`: Dual infeasibility tolerance
-- `constr_viol_tol`: Constraint violation tolerance
-- `compl_inf_tol`: Complementarity tolerance
+#### Termination Options
+- `acceptable_tol::Float64 = 1e-6`: Acceptable convergence tolerance (relative)
+- `acceptable_iter::Int = 15`: Number of acceptable iterations before termination
+- `dual_inf_tol::Float64 = 1.0`: Desired threshold for dual infeasibility
+- `constr_viol_tol::Float64 = 1e-4`: Desired threshold for constraint violation
+- `compl_inf_tol::Float64 = 1e-4`: Desired threshold for complementarity conditions
 
-#### Algorithm Options
-- `linear_solver`: Linear solver to use
+#### Linear Solver Options
+- `linear_solver::String = "mumps"`: Linear solver to use
   - Default: "mumps" (included with Ipopt)
   - HSL solvers: "ma27", "ma57", "ma86", "ma97" (require [separate installation](https://github.com/jump-dev/Ipopt.jl?tab=readme-ov-file#linear-solvers))
   - Others: "pardiso", "spral" (require [separate installation](https://github.com/jump-dev/Ipopt.jl?tab=readme-ov-file#linear-solvers))
-- `nlp_scaling_method`: Scaling method ("gradient-based", "none", "equilibration-based")
-- `limited_memory_max_history`: History size for L-BFGS (when using `hessian_approximation="limited-memory"`)
-- `mu_strategy`: Update strategy for barrier parameter ("monotone", "adaptive")
+- `linear_system_scaling::String = "none"`: Method for scaling linear system. Use "mc19" for HSL solvers.
+
+#### NLP Scaling Options
+- `nlp_scaling_method::String = "gradient-based"`: Scaling method for NLP
+  - Options: "none", "user-scaling", "gradient-based", "equilibration-based"
+- `nlp_scaling_max_gradient::Float64 = 100.0`: Maximum gradient after scaling
+
+#### Barrier Parameter Options
+- `mu_strategy::String = "monotone"`: Update strategy for barrier parameter ("monotone", "adaptive")
+- `mu_init::Float64 = 0.1`: Initial value for barrier parameter
+- `mu_oracle::String = "quality-function"`: Oracle for adaptive mu strategy
+
+#### Hessian Options
+- `hessian_approximation::String = "exact"`: How to approximate the Hessian
+  - `"exact"`: Use exact Hessian
+  - `"limited-memory"`: Use L-BFGS approximation
+- `limited_memory_max_history::Int = 6`: History size for L-BFGS
+- `limited_memory_update_type::String = "bfgs"`: Quasi-Newton update formula ("bfgs", "sr1")
 
 #### Line Search Options
-- `line_search_method`: Line search method ("filter", "penalty")
-- `alpha_for_y`: Step size for constraint multipliers
-- `recalc_y`: Control when multipliers are recalculated
+- `line_search_method::String = "filter"`: Line search method ("filter", "penalty")
+- `accept_every_trial_step::String = "no"`: Accept every trial step (disables line search)
 
 #### Output Options
-- `print_timing_statistics`: Print detailed timing information ("yes"/"no")
-- `print_info_string`: Print user-defined info string ("yes"/"no")
+- `print_timing_statistics::String = "no"`: Print detailed timing information
+- `print_info_string::String = "no"`: Print algorithm info string
 
-Example with advanced options:
+#### Warm Start Options
+- `warm_start_init_point::String = "no"`: Use warm start from previous solution
+
+#### Restoration Phase Options
+- `expect_infeasible_problem::String = "no"`: Enable if problem is expected to be infeasible
+
+### Additional Options Dictionary
+
+For Ipopt options not available as struct fields, use the `additional_options` dictionary:
 
 ```julia
-sol = solve(prob, IpoptOptimizer();
-    maxiters = 1000,
-    tol = 1e-8,
+opt = IpoptOptimizer(
     linear_solver = "ma57",
-    mu_strategy = "adaptive",
-    print_timing_statistics = "yes"
+    additional_options = Dict(
+        "derivative_test" => "first-order",
+        "derivative_test_tol" => 1e-4,
+        "fixed_variable_treatment" => "make_parameter",
+        "alpha_for_y" => "primal"
+    )
+)
+```
+
+The full list of available options is documented in the [Ipopt Options Reference](https://coin-or.github.io/Ipopt/OPTIONS.html).
+
+### Option Priority
+
+Options follow this priority order (highest to lowest):
+1. Common interface arguments passed to `solve` (e.g., `reltol`, `maxiters`)
+2. Options in `additional_options` dictionary
+3. Struct field values in `IpoptOptimizer`
+
+Example with multiple option sources:
+
+```julia
+opt = IpoptOptimizer(
+    acceptable_tol = 1e-6,           # Struct field
+    mu_strategy = "adaptive",        # Struct field
+    linear_solver = "ma57",          # Struct field (needs HSL)
+    print_timing_statistics = "yes", # Struct field
+    additional_options = Dict(
+        "alpha_for_y" => "primal",   # Not a struct field
+        "max_iter" => 500            # Will be overridden by maxiters below
+    )
+)
+
+sol = solve(prob, opt;
+    maxiters = 1000,  # Overrides max_iter in additional_options
+    reltol = 1e-8     # Sets Ipopt's tol
 )
 ```
 
@@ -189,9 +258,9 @@ optfunc = OptimizationFunction(rosenbrock_nd, AutoZygote())
 prob = OptimizationProblem(optfunc, x0, p)
 
 # Use L-BFGS approximation for Hessian
-sol = solve(prob, IpoptOptimizer();
+sol = solve(prob, IpoptOptimizer(
            hessian_approximation = "limited-memory",
-           limited_memory_max_history = 10,
+           limited_memory_max_history = 10);
            maxiters = 1000)
 ```
 
@@ -235,8 +304,8 @@ prob = OptimizationProblem(optfunc, w0;
                           ucons = [0.0, Inf])
 
 sol = solve(prob, IpoptOptimizer();
-           tol = 1e-8,
-           print_level = 5)
+           reltol = 1e-8,
+           verbose = 5)
 
 println("Optimal weights: ", sol.u)
 println("Expected return: ", dot(μ, sol.u))
@@ -249,13 +318,13 @@ println("Portfolio variance: ", sol.objective)
 
 2. **Initial Points**: Provide good initial guesses when possible. Ipopt is a local optimizer and the solution quality depends on the starting point.
 
-3. **Hessian Approximation**: For large problems or when Hessian computation is expensive, use `hessian_approximation = "limited-memory"`.
+3. **Hessian Approximation**: For large problems or when Hessian computation is expensive, use `hessian_approximation = "limited-memory"` in the `IpoptOptimizer` constructor.
 
 4. **Linear Solver Selection**: The choice of linear solver can significantly impact performance. For large problems, consider using HSL solvers (ma27, ma57, ma86, ma97). Note that HSL solvers require [separate installation](https://github.com/jump-dev/Ipopt.jl?tab=readme-ov-file#linear-solvers) - see the Ipopt.jl documentation for setup instructions. The default MUMPS solver works well for small to medium problems.
 
 5. **Constraint Formulation**: Ipopt handles equality constraints well. When possible, formulate constraints as equalities rather than pairs of inequalities.
 
-6. **Warm Starting**: When solving a sequence of similar problems, use the solution from the previous problem as the initial point for the next.
+6. **Warm Starting**: When solving a sequence of similar problems, use the solution from the previous problem as the initial point for the next. You can enable warm starting with `IpoptOptimizer(warm_start_init_point = "yes")`.
 
 ## References
 

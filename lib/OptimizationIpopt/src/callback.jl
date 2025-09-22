@@ -10,15 +10,36 @@ struct IpoptState
     alpha_du::Float64
     alpha_pr::Float64
     ls_trials::Cint
+    u::Vector{Float64}
     z_L::Vector{Float64}
     z_U::Vector{Float64}
+    g::Vector{Float64}
     lambda::Vector{Float64}
 end
 
-struct IpoptProgressLogger{C <: IpoptCache, P}
+struct IpoptProgressLogger{C, P}
     progress::Bool
-    cache::C
+    callback::C
     prob::P
+    n::Int
+    num_cons::Int
+    maxiters::Union{Nothing, Int}
+    iterations::Ref{Int}
+    # caches for GetIpoptCurrentIterate
+    u::Vector{Float64}
+    z_L::Vector{Float64}
+    z_U::Vector{Float64}
+    g::Vector{Float64}
+    lambda::Vector{Float64}
+end
+
+function IpoptProgressLogger(progress::Bool, callback::C, prob::P, n::Int, num_cons::Int,
+        maxiters::Union{Nothing, Int}, iterations::Ref{Int}) where {C, P}
+    # Initialize caches
+    u, z_L, z_U = zeros(n), zeros(n), zeros(n)
+    g, lambda = zeros(num_cons), zeros(num_cons)
+    IpoptProgressLogger(
+        progress, callback, prob, n, num_cons, maxiters, iterations, u, z_L, z_U, g, lambda)
 end
 
 function (cb::IpoptProgressLogger)(
@@ -34,12 +55,9 @@ function (cb::IpoptProgressLogger)(
         alpha_pr::Float64,
         ls_trials::Cint
 )
-    n = cb.cache.n
-    m = cb.cache.num_cons
-    u, z_L, z_U = zeros(n), zeros(n), zeros(n)
-    g, lambda = zeros(m), zeros(m)
     scaled = false
-    Ipopt.GetIpoptCurrentIterate(cb.prob, scaled, n, u, z_L, z_U, m, g, lambda)
+    Ipopt.GetIpoptCurrentIterate(
+        cb.prob, scaled, cb.n, cb.u, cb.z_L, cb.z_U, cb.num_cons, cb.g, cb.lambda)
 
     original = IpoptState(
         alg_mod,
@@ -53,17 +71,19 @@ function (cb::IpoptProgressLogger)(
         alpha_du,
         alpha_pr,
         ls_trials,
-        z_L,
-        z_U,
-        lambda
+        cb.u,
+        cb.z_L,
+        cb.z_U,
+        cb.g,
+        cb.lambda
     )
 
     opt_state = Optimization.OptimizationState(;
-        iter = Int(iter_count), u, objective = obj_value, original)
-    cb.cache.iterations = iter_count
+        iter = Int(iter_count), cb.u, objective = obj_value, original)
+    cb.iterations[] = Int(iter_count)
 
-    if cb.cache.progress
-        maxiters = cb.cache.solver_args.maxiters
+    if cb.progress
+        maxiters = cb.maxiters
         msg = "objective: " *
               sprint(show, obj_value, context = :compact => true)
         if !isnothing(maxiters)
@@ -72,10 +92,10 @@ function (cb::IpoptProgressLogger)(
                 _id=:OptimizationIpopt)
         end
     end
-    if !isnothing(cb.cache.callback)
+    if !isnothing(cb.callback)
         # return `true` to keep going, or `false` to terminate the optimization
         # this is the other way around compared to Optimization.jl callbacks
-        !cb.cache.callback(opt_state, obj_value)
+        !cb.callback(opt_state, obj_value)
     else
         true
     end

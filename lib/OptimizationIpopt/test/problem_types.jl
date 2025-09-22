@@ -155,7 +155,9 @@ using SparseArrays
                                  lb = [0.0, 0.0, -1.0],  # a, b > 0
                                  ub = [10.0, 10.0, 1.0])
 
-        sol = solve(prob, IpoptOptimizer(), tol=1e-10, acceptable_tol=1e-10)
+        sol = solve(prob, IpoptOptimizer(
+                   acceptable_tol = 1e-10);
+                   reltol = 1e-10)
 
         @test SciMLBase.successful_retcode(sol)
         # Parameters should be close to true values (within noise)
@@ -320,8 +322,8 @@ end
                                  lb = fill(-2π, n),
                                  ub = fill(2π, n))
 
-        sol = solve(prob, IpoptOptimizer();
-                   hessian_approximation = "limited-memory")
+        sol = solve(prob, IpoptOptimizer(
+                   hessian_approximation = "limited-memory"))
 
         @test SciMLBase.successful_retcode(sol)
     end

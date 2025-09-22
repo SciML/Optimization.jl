@@ -18,7 +18,7 @@ mutable struct IpoptCache{T, F <: OptimizationFunction, RC, LB, UB, I, S,
     const progress::Bool
     f_calls::Int
     f_grad_calls::Int
-    iterations::Cint
+    const iterations::Ref{Int}
     obj_expr::Union{Expr, Nothing}
     cons_expr::Union{Vector{Expr}, Nothing}
     const opt::O
@@ -139,7 +139,7 @@ function IpoptCache(prob, opt;
         progress,
         0,
         0,
-        Cint(0),
+        Ref(0),
         obj_expr,
         cons_expr,
         opt,
