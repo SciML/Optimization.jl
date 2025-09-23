@@ -9,7 +9,12 @@
     ϵ = 1e-8
 end
 
-SciMLBase.supports_opt_cache_interface(::AugLag) = true
+@static if isdefined(SciMLBase, :supports_opt_cache_interface)
+    SciMLBase.supports_opt_cache_interface(::AugLag) = true
+end
+@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
+    OptimizationBase.supports_opt_cache_interface(::AugLag) = true
+end
 SciMLBase.allowsbounds(::AugLag) = true
 SciMLBase.requiresgradient(::AugLag) = true
 SciMLBase.allowsconstraints(::AugLag) = true

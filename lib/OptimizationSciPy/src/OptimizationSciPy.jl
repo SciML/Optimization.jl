@@ -216,17 +216,32 @@ for opt_type in [:ScipyMinimize, :ScipyDifferentialEvolution, :ScipyBasinhopping
     :ScipyLinprog, :ScipyMilp]
     @eval begin
         SciMLBase.allowsbounds(::$opt_type) = true
-        SciMLBase.supports_opt_cache_interface(::$opt_type) = true
+        @static if isdefined(SciMLBase, :supports_opt_cache_interface)
+            SciMLBase.supports_opt_cache_interface(::$opt_type) = true
+        end
+        @static if isdefined(OptimizationBase, :supports_opt_cache_interface)
+            OptimizationBase.supports_opt_cache_interface(::$opt_type) = true
+        end
     end
 end
 
 for opt_type in [:ScipyMinimizeScalar, :ScipyRootScalar, :ScipyLeastSquares]
     @eval begin
-        SciMLBase.supports_opt_cache_interface(::$opt_type) = true
+        @static if isdefined(SciMLBase, :supports_opt_cache_interface)
+            SciMLBase.supports_opt_cache_interface(::$opt_type) = true
+        end
+        @static if isdefined(OptimizationBase, :supports_opt_cache_interface)
+            OptimizationBase.supports_opt_cache_interface(::$opt_type) = true
+        end
     end
 end
 
-SciMLBase.supports_opt_cache_interface(::ScipyRoot) = true
+@static if isdefined(SciMLBase, :supports_opt_cache_interface)
+    SciMLBase.supports_opt_cache_interface(::ScipyRoot) = true
+end
+@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
+    OptimizationBase.supports_opt_cache_interface(::ScipyRoot) = true
+end
 
 function SciMLBase.requiresgradient(opt::ScipyMinimize)
     gradient_free = ["Nelder-Mead", "Powell", "COBYLA", "COBYQA"]

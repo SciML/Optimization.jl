@@ -18,4 +18,5 @@ using Test
         return false
     end
     sol = solve(prob, CMAEvolutionStrategyOpt(), callback = cb, maxiters = 100)
+    @test sol.u == OptimizationCMAEvolutionStrategy.CMAEvolutionStrategy.xbest(sol.original)
 end

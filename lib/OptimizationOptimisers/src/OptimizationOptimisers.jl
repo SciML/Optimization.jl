@@ -4,7 +4,12 @@ using Reexport, Printf, ProgressLogging
 @reexport using Optimisers, Optimization
 using Optimization.SciMLBase, Optimization.OptimizationBase
 
-SciMLBase.supports_opt_cache_interface(opt::AbstractRule) = true
+@static if isdefined(SciMLBase, :supports_opt_cache_interface)
+    SciMLBase.supports_opt_cache_interface(opt::AbstractRule) = true
+end
+@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
+    OptimizationBase.supports_opt_cache_interface(opt::AbstractRule) = true
+end
 SciMLBase.requiresgradient(opt::AbstractRule) = true
 SciMLBase.allowsfg(opt::AbstractRule) = true
 
@@ -133,7 +138,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                     break
                 end
                 msg = @sprintf("loss: %.3g", first(x)[1])
-                cache.progress && ProgressLogging.@logprogress msg i/maxiters
+                cache.progress && ProgressLogging.@logprogress msg iterations/maxiters
 
                 if cache.solver_args.save_best
                     if first(x)[1] < first(min_err)[1]  #found a better solution

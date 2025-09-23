@@ -1,7 +1,7 @@
 name = "OptimizationSpeedMapping"
 uuid = "3d669222-0d7d-4eb9-8a9f-d8528b0d9b91"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"

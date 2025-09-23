@@ -9,7 +9,12 @@ export CMAEvolutionStrategyOpt
 struct CMAEvolutionStrategyOpt end
 
 SciMLBase.allowsbounds(::CMAEvolutionStrategyOpt) = true
-SciMLBase.supports_opt_cache_interface(opt::CMAEvolutionStrategyOpt) = true
+@static if isdefined(SciMLBase, :supports_opt_cache_interface)
+    SciMLBase.supports_opt_cache_interface(opt::CMAEvolutionStrategyOpt) = true
+end
+@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
+    OptimizationBase.supports_opt_cache_interface(opt::CMAEvolutionStrategyOpt) = true
+end
 SciMLBase.requiresgradient(::CMAEvolutionStrategyOpt) = false
 SciMLBase.requireshessian(::CMAEvolutionStrategyOpt) = false
 SciMLBase.requiresconsjac(::CMAEvolutionStrategyOpt) = false
@@ -76,11 +81,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
     local x, cur, state
 
     function _cb(opt, y, fvals, perm)
-        curr_u = opt.logger.xbest[end]
+        curr_u = xbest(opt)
         opt_state = Optimization.OptimizationState(; iter = length(opt.logger.fmedian),
             u = curr_u,
             p = cache.p,
-            objective = opt.logger.fbest[end],
+            objective = fbest(opt),
             original = opt.logger)
 
         cb_call = cache.callback(opt_state, x...)
@@ -112,8 +117,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
         time = t1 - t0,
         fevals = length(opt_res.logger.fmedian))
     SciMLBase.build_solution(cache, cache.opt,
-        opt_res.logger.xbest[end],
-        opt_res.logger.fbest[end]; original = opt_res,
+        xbest(opt_res),
+        fbest(opt_res); original = opt_res,
         retcode = opt_ret,
         stats = stats)
 end

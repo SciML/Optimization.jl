@@ -1,6 +1,6 @@
 name = "OptimizationManopt"
 uuid = "e57b7fff-7ee7-4550-b4f0-90e9476e9fb6"
-authors = ["Mateusz Baran <mateuszbaran89@gmail.com>"]
+authors = ["Mateusz Baran <mateuszbaran89@gmail.com>", "Ronny Bergmann <manopt@ronnybergmann.net>"]
 version = "0.1.0"
 
 [deps]

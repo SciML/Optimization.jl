@@ -19,11 +19,11 @@ callback = function (state, l)
     return false
 end
 
-sol = solve(prob, IpoptOptimizer(); callback, hessian_approximation = "exact")
+sol = solve(prob, IpoptOptimizer(hessian_approximation = "exact"); callback)
 @test SciMLBase.successful_retcode(sol)
 @test sol ≈ [1, 1]
 
-sol = solve(prob, IpoptOptimizer(); callback, hessian_approximation = "limited-memory")
+sol = solve(prob, IpoptOptimizer(hessian_approximation = "limited-memory"); callback)
 @test SciMLBase.successful_retcode(sol)
 @test sol ≈ [1, 1]
 
@@ -75,6 +75,7 @@ include("additional_tests.jl")
 include("advanced_features.jl")
 include("problem_types.jl")
 
+
 @testset "tutorial" begin
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = zeros(2)
@@ -113,5 +114,83 @@ end
         cache = Optimization.reinit!(cache; p = [2.0])
         sol = solve!(cache)
         @test sol.u ≈ [2.0]  # ≈ [2]
+    end
+end
+
+@testset "Additional Options and Common Interface" begin
+    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+    x0 = zeros(2)
+    p = [1.0, 100.0]
+
+    @testset "additional_options dictionary" begin
+        optfunc = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        prob = OptimizationProblem(optfunc, x0, p)
+
+        # Test with various option types
+        opt = IpoptOptimizer(
+            additional_options = Dict(
+                "derivative_test" => "first-order",  # String
+                "derivative_test_tol" => 1e-4,       # Float64
+                "derivative_test_print_all" => "yes" # String
+            )
+        )
+        sol = solve(prob, opt)
+        @test SciMLBase.successful_retcode(sol)
+
+        # Test options not in struct fields
+        opt2 = IpoptOptimizer(
+            additional_options = Dict(
+                "fixed_variable_treatment" => "make_parameter",
+                "required_infeasibility_reduction" => 0.9,
+                "alpha_for_y" => "primal"
+            )
+        )
+        sol2 = solve(prob, opt2)
+        @test SciMLBase.successful_retcode(sol2)
+    end
+
+    @testset "Common interface arguments override" begin
+        optfunc = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        prob = OptimizationProblem(optfunc, x0, p)
+
+        # Test that reltol overrides default tolerance
+        sol1 = solve(prob, IpoptOptimizer(); reltol = 1e-12)
+        @test SciMLBase.successful_retcode(sol1)
+        @test sol1.u ≈ [1.0, 1.0] atol=1e-10
+
+        # Test that maxiters limits iterations
+        sol2 = solve(prob, IpoptOptimizer(); maxiters = 5)
+        # May not converge with only 5 iterations
+        @test sol2.stats.iterations <= 5
+
+        # Test verbose levels
+        for verbose in [false, true, 0, 3, 5]
+            sol = solve(prob, IpoptOptimizer(); verbose = verbose, maxiters = 10)
+            @test sol isa SciMLBase.OptimizationSolution
+        end
+
+        # Test maxtime
+        sol3 = solve(prob, IpoptOptimizer(); maxtime = 10.0)
+        @test SciMLBase.successful_retcode(sol3)
+    end
+
+    @testset "Priority: struct < additional_options < solve args" begin
+        optfunc = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        prob = OptimizationProblem(optfunc, x0, p)
+
+        # Struct field is overridden by solve argument
+        opt = IpoptOptimizer(
+            acceptable_tol = 1e-4,  # Struct field
+            additional_options = Dict(
+                "max_iter" => 100  # Will be overridden by maxiters
+            )
+        )
+
+        sol = solve(prob, opt;
+                   maxiters = 50,  # Should override additional_options
+                   reltol = 1e-10) # Should set tol
+
+        @test sol.stats.iterations <= 50
+        @test SciMLBase.successful_retcode(sol)
     end
 end
