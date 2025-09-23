@@ -344,7 +344,7 @@ function SciMLBase.__solve(cache::IpoptCache)
         maxtime = maxtime,
         verbose = get(cache.solver_args, :verbose, false),
         progress = cache.progress,
-        callback = get(cache.solver_args, :callback, nothing))
+        callback = cache.callback)
 
     opt_setup.x .= cache.reinit_cache.u0
 
