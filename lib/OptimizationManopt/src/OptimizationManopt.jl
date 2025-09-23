@@ -65,6 +65,7 @@ function call_manopt_optimizer(
         loss,
         gradF,
         x0;
+        hessF=nothing, # ignore that keyword for this solver
         kwargs...)
     opts = Manopt.gradient_descent(M,
         loss,
@@ -84,6 +85,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold, opt::NelderMea
         loss,
         gradF,
         x0;
+        hessF=nothing, # ignore that keyword for this solver
         kwargs...)
     opts = NelderMead(M, loss; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opts)
@@ -98,6 +100,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         loss,
         gradF,
         x0;
+        hessF=nothing, # ignore that keyword for this solver
         kwargs...)
     opts = Manopt.conjugate_gradient_descent(M,
         loss,
@@ -106,7 +109,6 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         return_state = true,
         kwargs...
     )
-    # we unwrap DebugOptions here
     minimizer = Manopt.get_solver_result(opts)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
 end
@@ -119,6 +121,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         loss,
         gradF,
         x0;
+        hessF=nothing, # ignore that keyword for this solver
         population_size::Int = 100,
         kwargs...)
     swarm = [x0, [rand(M) for _ in 1:(population_size - 1)]...]
@@ -136,10 +139,10 @@ function call_manopt_optimizer(M::Manopt.AbstractManifold,
         loss,
         gradF,
         x0;
+        hessF=nothing, # ignore that keyword for this solver
         kwargs...
 )
     opts = quasi_Newton(M, loss, gradF, x0; return_state = true, kwargs...)
-    # we unwrap DebugOptions here
     minimizer = Manopt.get_solver_result(opts)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
 end
@@ -151,9 +154,9 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         loss,
         gradF,
         x0;
+        hessF=nothing, # ignore that keyword for this solver
         kwargs...)
     opt = cma_es(M, loss, x0; return_state = true, kwargs...)
-    # we unwrap DebugOptions here
     minimizer = Manopt.get_solver_result(opt)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
@@ -165,9 +168,9 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         loss,
         gradF,
         x0;
+        hessF=nothing, # ignore that keyword for this solver
         kwargs...)
     opt = convex_bundle_method(M, loss, gradF, x0; return_state = true, kwargs...)
-    # we unwrap DebugOptions here
     minimizer = Manopt.get_solver_result(opt)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
@@ -205,7 +208,6 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
     else
         trust_regions(M, loss, gradF, hessF, x0; return_state = true, kwargs...)
     end
-    # we unwrap DebugOptions here
     minimizer = Manopt.get_solver_result(opt)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
@@ -217,9 +219,9 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         loss,
         gradF,
         x0;
+        hessF=nothing, # ignore that keyword for this solver
         kwargs...)
     opt = Frank_Wolfe_method(M, loss, gradF, x0; return_state = true, kwargs...)
-    # we unwrap DebugOptions here
     minimizer = Manopt.get_solver_result(opt)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
@@ -238,6 +240,9 @@ function SciMLBase.requireshessian(opt::Union{
 end
 
 function build_loss(f::OptimizationFunction, prob, cb)
+    # TODO: I do not understand this. Why is the manifold not used?
+    # Either this is an Euclidean cost, then we should probably still call `embed`,
+    # or it is not, then we need M.
     return function (::AbstractManifold, θ)
         x = f.f(θ, prob.p)
         cb(x, θ)
@@ -351,13 +356,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
         stopping_criterion = Manopt.StopAfterIteration(500)
     end
 
-    # TODO: With the new keyword warnings we can not just always pass down hessF!
     opt_res = call_manopt_optimizer(manifold, cache.opt, _loss, gradF, cache.u0;
         solver_kwarg..., stopping_criterion = stopping_criterion, hessF)
 
     asc = get_stopping_criterion(opt_res.options)
-    # TODO: Switch to `has_converged` once that was released.
-    opt_ret = Manopt.indicates_convergence(asc) ? ReturnCode.Success : ReturnCode.Failure
+    opt_ret = Manopt.has_converged(asc) ? ReturnCode.Success : ReturnCode.Failure
 
     return SciMLBase.build_solution(cache,
         cache.opt,

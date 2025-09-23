@@ -1,7 +1,9 @@
 # Manopt.jl
 
-[Manopt.jl](https://github.com/JuliaManifolds/Manopt.jl) is a package with implementations of a variety of optimization solvers on manifolds supported by
-[Manifolds](https://github.com/JuliaManifolds/Manifolds.jl).
+[Manopt.jl](https://github.com/JuliaManifolds/Manopt.jl) is a package providing solvers
+for optimization problems defined on Riemannian manifolds.
+The implementation is based on [ManifoldsBase.jl](https://github.com/JuliaManifolds/ManifoldsBase.jl) interface and can hence be used for all maniolds defined in
+[Manifolds](https://github.com/JuliaManifolds/Manifolds.jl) or any other manifold implemented using the interface.
 
 ## Installation: OptimizationManopt.jl
 
@@ -29,7 +31,7 @@ The common kwargs `maxiters`, `maxtime` and `abstol` are supported by all the op
 function or `OptimizationProblem`.
 
 !!! note
-    
+
     The `OptimizationProblem` has to be passed the manifold as the `manifold` keyword argument.
 
 ## Examples

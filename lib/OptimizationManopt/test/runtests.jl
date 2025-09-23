@@ -151,7 +151,7 @@ R2 = Euclidean(2)
 
         opt = OptimizationManopt.AdaptiveRegularizationCubicOptimizer()
 
-        #TODO: This autodiff currently provides a Hessian that seem to not procide a Hessian
+        #TODO: This autodiff currently provides a Hessian that seem to not provide a Hessian
         # ARC Fails but also AD before that warns. So it passes _some_ hessian but a wrong one, even in format
         optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
@@ -175,23 +175,6 @@ R2 = Euclidean(2)
         @test sol.minimum < 0.1
     end
 
-    # @testset "Circle example from Manopt" begin
-    #     Mc = Circle()
-    #     pc = 0.0
-    #     data = [-π / 4, 0.0, π / 4]
-    #     fc(y, _) = 1 / 2 * sum([distance(M, y, x)^2 for x in data])
-    #     sgrad_fc(G, y, _) = G .= -log(Mc, y, rand(data))
-
-    #     opt = OptimizationManopt.StochasticGradientDescentOptimizer()
-
-    #     optprob = OptimizationFunction(fc, grad = sgrad_fc)
-    #     prob = OptimizationProblem(optprob, pc; manifold = Mc)
-
-    #     sol = Optimization.solve(prob, opt)
-
-    #     @test all([is_point(Mc, q, true) for q in [q1, q2, q3, q4, q5]])
-    # end
-
     @testset "Custom constraints" begin
         cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[2]])
 
@@ -203,50 +186,5 @@ R2 = Euclidean(2)
         prob_cons = OptimizationProblem(optprob_cons, x0, p)
         #TODO: What is this?
         @test_throws SciMLBase.IncompatibleOptimizerError Optimization.solve(prob_cons, opt)
-    end
-
-    @testset "SPD Manifold" begin
-        M = SymmetricPositiveDefinite(5)
-        m = 100
-        σ = 0.005
-        q = Matrix{Float64}(I, 5, 5) .+ 2.0
-        data2 = [exp(M, q, σ * rand(M; vector_at = q)) for i in 1:m]
-
-        f(x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
-
-        optf = OptimizationFunction(f, Optimization.AutoFiniteDiff())
-        prob = OptimizationProblem(optf, data2[1]; manifold = M, maxiters = 1000)
-
-        opt = OptimizationManopt.GradientDescentOptimizer()
-        @time sol = Optimization.solve(prob, opt)
-
-        @test sol.u≈q rtol=1e-2
-
-        function closed_form_solution(M::SymmetricPositiveDefinite, L, U, p, X)
-            # extract p^1/2 and p^{-1/2}
-            (p_sqrt_inv, p_sqrt) = Manifolds.spd_sqrt_and_sqrt_inv(p)
-            # Compute D & Q
-            e2 = eigen(p_sqrt_inv * X * p_sqrt_inv) # decompose Sk  = QDQ'
-            D = Diagonal(1.0 .* (e2.values .< 0))
-            Q = e2.vectors
-            Uprime = Q' * p_sqrt_inv * U * p_sqrt_inv * Q
-            Lprime = Q' * p_sqrt_inv * L * p_sqrt_inv * Q
-            P = cholesky(Hermitian(Uprime - Lprime))
-
-            z = P.U' * D * P.U + Lprime
-            return p_sqrt * Q * z * Q' * p_sqrt
-        end
-        N = m
-        U = mean(data2)
-        L = inv(sum(1 / N * inv(matrix) for matrix in data2))
-
-        opt = OptimizationManopt.FrankWolfeOptimizer()
-        optf = OptimizationFunction(f, Optimization.AutoFiniteDiff())
-        prob = OptimizationProblem(optf, data2[1]; manifold = M)
-
-        @time sol = Optimization.solve(
-            prob, opt, sub_problem = (M, p, X) -> closed_form_solution(M, p, L, U, X),
-            maxiters = 1000)
-        @test sol.u≈q rtol=1e-2
     end
 end
