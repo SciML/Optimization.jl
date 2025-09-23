@@ -251,7 +251,9 @@ function build_loss(f::OptimizationFunction, prob, cb)
     end
 end
 
-#TODO: What does the “true” mean here?
+# cf. https://github.com/SciML/SciMLBase.jl/blob/master/src/problems/optimization_problems.jl
+# {iip} is the parameter here – nowhere explained but very much probably “is in place”
+# so this refers to whether the gradient/hessian is computed in place or not
 function build_gradF(f::OptimizationFunction{true})
     function g(M::AbstractManifold, G, θ)
         f.grad(G, θ)
@@ -268,14 +270,16 @@ end
 function build_hessF(f::OptimizationFunction{true})
     function h(M::AbstractManifold, H1, θ, X)
         H = zeros(eltype(θ), length(θ))
+        # an Optimization function has both hess (the matrix) and hv (Hessian with direction)
+        # we need hv here
         f.hv(H, θ, X)
         G = zeros(eltype(θ), length(θ))
         f.grad(G, θ)
         riemannian_Hessian!(M, H1, θ, G, H, X)
     end
     function h(M::AbstractManifold, θ, X)
-        H = zeros(eltype(θ), length(θ), length(θ))
-        f.hess(H, θ)
+        H = zeros(eltype(θ), length(θ))
+        f.hv(H, θ, X)
         G = zeros(eltype(θ), length(θ))
         f.grad(G, θ)
         return riemannian_Hessian(M, θ, G, H, X)
