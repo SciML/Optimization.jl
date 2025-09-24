@@ -2,6 +2,7 @@ module OptimizationBBO
 
 using Reexport
 import Optimization
+import Optimization: OptimizationBase
 import BlackBoxOptim, Optimization.SciMLBase
 import Optimization.SciMLBase: MultiObjectiveOptimizationFunction
 
