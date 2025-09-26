@@ -1,6 +1,6 @@
 mutable struct IpoptCache{T, F <: OptimizationFunction, RC, LB, UB, I, S,
-    JT <: DenseOrSparse{T}, HT <: DenseOrSparse{T},
-    CHT <: DenseOrSparse{T}, CB, O} <: SciMLBase.AbstractOptimizationCache
+    JT <: AbstractMatrix{T}, HT <: AbstractMatrix{T},
+    CHT <: AbstractMatrix{T}, CB, O} <: SciMLBase.AbstractOptimizationCache
     const f::F
     const n::Int
     const num_cons::Int

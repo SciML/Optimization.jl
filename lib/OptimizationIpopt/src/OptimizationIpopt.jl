@@ -9,8 +9,6 @@ using SymbolicIndexingInterface
 
 export IpoptOptimizer
 
-const DenseOrSparse{T} = Union{Matrix{T}, SparseMatrixCSC{T}}
-
 """
     IpoptOptimizer(; kwargs...)
 
