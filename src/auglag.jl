@@ -128,7 +128,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         function aug_grad(G, θ, p)
             cache.f.grad(G, θ, p)
             if !isnothing(cache.f.cons_jac_prototype)
-                J = Float64.(cache.f.cons_jac_prototype)
+                J = similar(cache.f.cons_jac_prototype, Float64)
             else
                 J = zeros((length(cache.lcons), length(θ)))
             end

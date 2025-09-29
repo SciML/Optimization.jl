@@ -94,13 +94,13 @@ function IpoptCache(prob, opt;
     J = if isnothing(f.cons_jac_prototype)
         zeros(T, num_cons, n)
     else
-        convert.(T, f.cons_jac_prototype)
+        similar(f.cons_jac_prototype, T)
     end
     lagh = !isnothing(f.lag_hess_prototype)
     H = if lagh # lag hessian takes precedence
-        convert.(T, f.lag_hess_prototype)
+        similar(f.lag_hess_prototype, T)
     elseif !isnothing(f.hess_prototype)
-        convert.(T, f.hess_prototype)
+        similar(f.hess_prototype, T)
     else
         zeros(T, n, n)
     end
@@ -109,7 +109,7 @@ function IpoptCache(prob, opt;
     elseif isnothing(f.cons_hess_prototype)
         Matrix{T}[zeros(T, n, n) for i in 1:num_cons]
     else
-        [convert.(T, f.cons_hess_prototype[i]) for i in 1:num_cons]
+        [similar(f.cons_hess_prototype[i], T) for i in 1:num_cons]
     end
     lcons = prob.lcons === nothing ? fill(T(-Inf), num_cons) : prob.lcons
     ucons = prob.ucons === nothing ? fill(T(Inf), num_cons) : prob.ucons
