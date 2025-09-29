@@ -149,6 +149,10 @@ using Test, Random
         # @test sol.retcode == ReturnCode.Success
         @test 10 * sol.objective < l1
 
+        # Test that AUGLAG without local_method throws an error
+        @test_throws ErrorException solve(prob, NLopt.LN_AUGLAG())
+        @test_throws ErrorException solve(prob, NLopt.LD_AUGLAG())
+
         function con2_c(res, x, p)
             res .= [x[1]^2 + x[2]^2 - 1.0, x[2] * sin(x[1]) - x[1] - 2.0]
         end
