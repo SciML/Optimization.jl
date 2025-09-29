@@ -70,8 +70,7 @@ function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
         kwargs...)
 
     # Check if AUGLAG algorithm requires local_method
-    alg_str = string(opt.algorithm)
-    if occursin("AUGLAG", alg_str) && local_method === nothing
+    if opt.algorithm ∈ (NLopt.LN_AUGLAG, NLopt.LD_AUGLAG, NLopt.AUGLAG) && local_method === nothing
         error("NLopt.$(opt.algorithm) requires a local optimization method. " *
               "Please specify a local_method, e.g., solve(prob, NLopt.$(opt.algorithm)(); " *
               "local_method = NLopt.LN_NELDERMEAD())")
