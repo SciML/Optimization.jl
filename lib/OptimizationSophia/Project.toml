@@ -24,9 +24,9 @@ MLUtils = "0.4.8"
 Optimization = "4.5.0"
 OptimizationBase = "2.10.0"
 OrdinaryDiffEqTsit5 = "1.2.0"
-Random = "1.11.0"
+Random = "1.10.0"
 SciMLSensitivity = "7.88.0"
-Test = "1.11.0"
+Test = "1.10.0"
 Zygote = "0.7.10"
 
 [targets]
