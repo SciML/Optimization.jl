@@ -4,11 +4,13 @@ authors = ["paramthakkar123 <paramthakkar864@gmail.com>"]
 version = "0.1.0"
 
 [deps]
+Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
+
+[extras]
 ComponentArrays = "b0b7db55-cfe3-40fc-9ded-d10e2dbeff66"
 Lux = "b2108857-7c20-44ae-9111-449ecde12c47"
 MLUtils = "f1d291b0-491e-4a28-83b9-f70985020b54"
-Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 OrdinaryDiffEqTsit5 = "b1df2697-797e-41e3-8120-5422d3b24e4a"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SciMLSensitivity = "1ed8b502-d754-442c-8d5d-10ac956f44a1"
@@ -26,3 +28,6 @@ Random = "1.11.0"
 SciMLSensitivity = "7.88.0"
 Test = "1.11.0"
 Zygote = "0.7.10"
+
+[targets]
+test = ["Test", "ComponentArrays", "Lux", "MLUtils", "OrdinaryDiffEqTsit5", "Random", "SciMLSensitivity", "Zygote"]
