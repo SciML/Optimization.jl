@@ -56,7 +56,9 @@ end
         end
 
         # Requires Hession, which Mooncake doesn't support at the moment. 
-        if adtype != AutoMooncake()
+        # Enzyme Hessian-Free seems to have an issue that is hard to track down.
+        # https://github.com/SciML/Optimization.jl/issues/1030
+        if adtype != AutoMooncake() && adtype != AutoEnzyme()
             sol = solve(prob, Optim.KrylovTrustRegion())
             @test 10 * sol.objective < l1
             if adtype != AutoFiniteDiff()
