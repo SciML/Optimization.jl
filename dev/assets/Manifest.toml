@@ -2539,7 +2539,7 @@ version = "0.2.2"
 deps = ["LinearAlgebra", "MathOptInterface", "ModelingToolkit", "Optimization", "Reexport", "SciMLStructures", "SparseArrays", "SymbolicIndexingInterface", "Symbolics"]
 path = "../lib/OptimizationMOI"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
-version = "0.5.6"
+version = "0.5.7"
 
 [[deps.OptimizationManopt]]
 deps = ["LinearAlgebra", "ManifoldDiff", "Manifolds", "ManifoldsBase", "Manopt", "Optimization", "Reexport"]
@@ -2551,7 +2551,7 @@ version = "0.0.5"
 deps = ["Metaheuristics", "Optimization", "Reexport"]
 path = "../lib/OptimizationMetaheuristics"
 uuid = "3aafef2f-86ae-4776-b337-85a36adf0b55"
-version = "0.3.1"
+version = "0.3.2"
 
 [[deps.OptimizationNLPModels]]
 deps = ["ADTypes", "NLPModels", "Optimization", "Reexport"]
@@ -2563,7 +2563,7 @@ version = "0.0.2"
 deps = ["NLopt", "Optimization", "Random", "Reexport"]
 path = "../lib/OptimizationNLopt"
 uuid = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
-version = "0.3.3"
+version = "0.3.4"
 
 [[deps.OptimizationNOMAD]]
 deps = ["NOMAD", "Optimization", "Reexport"]
