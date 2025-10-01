@@ -275,8 +275,6 @@ end
 function build_hessF(f::OptimizationFunction{true})
     function h(M::AbstractManifold, H1, θ, X)
         H = zeros(eltype(θ), length(θ))
-        # an Optimization function has both hess (the matrix) and hv (Hessian with direction)
-        # we need hv here
         f.hv(H, θ, X)
         G = zeros(eltype(θ), length(θ))
         f.grad(G, θ)
