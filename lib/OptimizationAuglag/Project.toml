@@ -9,6 +9,8 @@ MLUtils = "f1d291b0-491e-4a28-83b9-f70985020b54"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 OptimizationOptimisers = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
+
+[extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
@@ -18,3 +20,6 @@ Optimization = "4.4.0"
 OptimizationBase = "2.10.0"
 OptimizationOptimisers = "0.3.8"
 Test = "1.11.0"
+
+[targets]
+test = ["Test"]
