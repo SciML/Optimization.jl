@@ -19,7 +19,7 @@ MLUtils = "0.4.8"
 Optimization = "4.4.0"
 OptimizationBase = "2.10.0"
 OptimizationOptimisers = "0.3.8"
-Test = "1.11.0"
+Test = "1.10.0"
 
 [targets]
 test = ["Test"]
