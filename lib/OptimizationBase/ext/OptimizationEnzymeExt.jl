@@ -28,16 +28,15 @@ function inner_grad(mode::Mode, θ, bθ, f, p) where {Mode}
     return nothing
 end
 
-function hv_f2_alloc(mode::Mode, x, f, p) where {Mode}
-    dx = Enzyme.make_zero(x)
+function hv_f2_alloc(mode::Mode, xdup, f, p) where {Mode}
     Enzyme.autodiff(mode,
         Const(firstapply),
         Active,
         Const(f),
-        Enzyme.Duplicated(x, dx),
+        xdup,
         Const(p)
     )
-    return dx
+    return xdup
 end
 
 function inner_cons(x, fcons::Function, p::Union{SciMLBase.NullParameters, Nothing},
@@ -200,10 +199,12 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
 
     if hv == true && f.hv === nothing
         function hv!(H, θ, v, p = p)
+            x = Duplicated(θ, v)
+            dx = Enzyme.make_zero(x)
             H .= Enzyme.autodiff(
-                fmode, hv_f2_alloc, Const(rmode), Duplicated(θ, v),
+                fmode, hv_f2_alloc, Const(rmode), Duplicated(x,dx),
                 Const(f.f), Const(p)
-            )[1]
+            )[1].dval
         end
     elseif hv == true
         hv! = (H, θ, v, p = p) -> f.hv(H, θ, v, p)
@@ -553,10 +554,12 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{false}, x
 
     if hv == true && f.hv === nothing
         function hv!(θ, v, p = p)
+            x = Duplicated(θ, v)
+            dx = Enzyme.make_zero(x)
             return Enzyme.autodiff(
-                fmode, hv_f2_alloc, DuplicatedNoNeed, Const(rmode), Duplicated(θ, v),
+                fmode, hv_f2_alloc, DuplicatedNoNeed, Const(rmode), Duplicated(x, dx), 
                 Const(_f), Const(f.f), Const(p)
-            )[1]
+            )[1].dval
         end
     elseif hv == true
         hv! = (θ, v, p = p) -> f.hv(θ, v, p)
