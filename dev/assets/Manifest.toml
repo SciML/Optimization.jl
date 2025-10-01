@@ -2497,7 +2497,7 @@ version = "0.4.3"
 deps = ["ADTypes", "ArrayInterface", "DifferentiationInterface", "DocStringExtensions", "FastClosures", "LinearAlgebra", "PDMats", "Reexport", "SciMLBase", "SparseArrays", "SparseConnectivityTracer", "SparseMatrixColorings"]
 path = "../lib/OptimizationBase"
 uuid = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-version = "2.11.0"
+version = "2.12.0"
 weakdeps = ["Enzyme", "FiniteDiff", "ForwardDiff", "MLDataDevices", "MLUtils", "ModelingToolkit", "ReverseDiff", "SymbolicAnalysis", "Zygote"]
 
     [deps.OptimizationBase.extensions]
@@ -2533,7 +2533,7 @@ version = "0.3.1"
 deps = ["Ipopt", "LinearAlgebra", "Optimization", "SciMLBase", "SparseArrays", "SymbolicIndexingInterface"]
 path = "../lib/OptimizationIpopt"
 uuid = "43fad042-7963-4b32-ab19-e2a4f9a67124"
-version = "0.2.1"
+version = "0.2.2"
 
 [[deps.OptimizationMOI]]
 deps = ["LinearAlgebra", "MathOptInterface", "ModelingToolkit", "Optimization", "Reexport", "SciMLStructures", "SparseArrays", "SymbolicIndexingInterface", "Symbolics"]
