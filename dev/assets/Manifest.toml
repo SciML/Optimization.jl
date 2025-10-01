@@ -2,7 +2,7 @@
 
 julia_version = "1.11.7"
 manifest_format = "2.0"
-project_hash = "9bbf0a57ece2214b5296f1053bd78eea8dd987ad"
+project_hash = "2b0d68f3f2661e7b135c242dfd13aa37ac3298d1"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "27cecae79e5cc9935255f90c53bb831cc3c870d7"
@@ -362,15 +362,19 @@ version = "3.31.0"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
-git-tree-sha1 = "b10d0b65641d57b8b4d5e234446582de5047050d"
+git-tree-sha1 = "67e11ee83a43eb71ddc950302c53bf33f0690dfe"
 uuid = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
-version = "0.11.5"
+version = "0.12.1"
+weakdeps = ["StyledStrings"]
+
+    [deps.ColorTypes.extensions]
+    StyledStringsExt = "StyledStrings"
 
 [[deps.ColorVectorSpace]]
 deps = ["ColorTypes", "FixedPointNumbers", "LinearAlgebra", "Requires", "Statistics", "TensorCore"]
-git-tree-sha1 = "a1f44953f2382ebb937d60dafbe2deea4bd23249"
+git-tree-sha1 = "8b3b6f87ce8f65a2b4f857528fd8d70086cd72b1"
 uuid = "c3611d14-8923-5661-9e6a-0046d554d3a4"
-version = "0.10.0"
+version = "0.11.0"
 weakdeps = ["SpecialFunctions"]
 
     [deps.ColorVectorSpace.extensions]
@@ -378,9 +382,9 @@ weakdeps = ["SpecialFunctions"]
 
 [[deps.Colors]]
 deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
-git-tree-sha1 = "362a287c3aa50601b0bc359053d5c2468f0e7ce0"
+git-tree-sha1 = "37ea44092930b1811e666c3bc38065d7d87fcc74"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
-version = "0.12.11"
+version = "0.13.1"
 
 [[deps.Combinatorics]]
 git-tree-sha1 = "08c8b6831dc00bfea825826be0bc8336fc369860"
@@ -1233,12 +1237,6 @@ git-tree-sha1 = "3d468106a05408f9f7b6f161d9e7715159af247b"
 uuid = "e33a78d0-f292-5ffc-b300-72abe9b543c8"
 version = "2.12.2+0"
 
-[[deps.HybridArrays]]
-deps = ["LinearAlgebra", "Requires", "StaticArrays"]
-git-tree-sha1 = "6c3e57bc26728b99f470b267a437f0d380eac4fc"
-uuid = "1baab800-613f-4b0a-84e4-9cd3431bfbb9"
-version = "0.4.16"
-
 [[deps.HypergeometricFunctions]]
 deps = ["LinearAlgebra", "OpenLibm_jll", "SpecialFunctions"]
 git-tree-sha1 = "68c173f4f449de5b438ee67ed0c9c748dc31a2ec"
@@ -1976,17 +1974,10 @@ uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 version = "0.5.16"
 
 [[deps.ManifoldDiff]]
-deps = ["LinearAlgebra", "ManifoldsBase", "Markdown", "Random", "Requires"]
-git-tree-sha1 = "98f62a403fe67e32d69a25f9e7b2c8c7ad04f9cc"
+deps = ["ADTypes", "DifferentiationInterface", "LinearAlgebra", "ManifoldsBase", "Markdown", "Random", "Requires"]
+git-tree-sha1 = "71c0198fc1aaf21048dfc1fb1f63e5aaa975977c"
 uuid = "af67fdf4-a580-4b9f-bbec-742ef357defd"
-version = "0.3.13"
-
-    [deps.ManifoldDiff.extensions]
-    ManifoldDiffFiniteDiffExt = "FiniteDiff"
-    ManifoldDiffFiniteDifferencesExt = "FiniteDifferences"
-    ManifoldDiffForwardDiffExt = "ForwardDiff"
-    ManifoldDiffReverseDiffExt = "ReverseDiff"
-    ManifoldDiffZygoteExt = "Zygote"
+version = "0.4.4"
 
     [deps.ManifoldDiff.weakdeps]
     FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
@@ -1996,33 +1987,39 @@ version = "0.3.13"
     Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [[deps.Manifolds]]
-deps = ["Distributions", "Einsum", "Graphs", "HybridArrays", "Kronecker", "LinearAlgebra", "ManifoldDiff", "ManifoldsBase", "Markdown", "MatrixEquations", "Quaternions", "Random", "RecursiveArrayTools", "Requires", "SimpleWeightedGraphs", "SpecialFunctions", "StaticArrays", "Statistics", "StatsBase"]
-git-tree-sha1 = "4649ea331c26f459448f922a3b2ff1578d33dd96"
+deps = ["Einsum", "Graphs", "Kronecker", "LinearAlgebra", "ManifoldDiff", "ManifoldsBase", "Markdown", "MatrixEquations", "Quaternions", "Random", "SimpleWeightedGraphs", "SpecialFunctions", "StaticArrays", "Statistics", "StatsBase"]
+git-tree-sha1 = "97b4a6af8c8f1a4e93285a77fd99e0ff5d255402"
 uuid = "1cead3c2-87b3-11e9-0ccd-23c62b72b94e"
-version = "0.9.18"
+version = "0.10.23"
 
     [deps.Manifolds.extensions]
     ManifoldsBoundaryValueDiffEqExt = "BoundaryValueDiffEq"
+    ManifoldsDistributionsExt = ["Distributions", "RecursiveArrayTools"]
+    ManifoldsHybridArraysExt = "HybridArrays"
     ManifoldsNLsolveExt = "NLsolve"
-    ManifoldsOrdinaryDiffEqDiffEqCallbacksExt = ["DiffEqCallbacks", "OrdinaryDiffEq"]
+    ManifoldsOrdinaryDiffEqDiffEqCallbacksExt = ["DiffEqCallbacks", "OrdinaryDiffEq", "RecursiveArrayTools"]
     ManifoldsOrdinaryDiffEqExt = "OrdinaryDiffEq"
     ManifoldsRecipesBaseExt = ["Colors", "RecipesBase"]
+    ManifoldsRecursiveArrayToolsExt = "RecursiveArrayTools"
     ManifoldsTestExt = "Test"
 
     [deps.Manifolds.weakdeps]
     BoundaryValueDiffEq = "764a87c0-6b3e-53db-9096-fe964310641d"
     Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
     DiffEqCallbacks = "459566f4-90b8-5000-8ac3-15dfb0a30def"
+    Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+    HybridArrays = "1baab800-613f-4b0a-84e4-9cd3431bfbb9"
     NLsolve = "2774e3e8-f4cf-5e23-947b-6d7e65073b56"
     OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
     RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+    RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
     Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [[deps.ManifoldsBase]]
 deps = ["LinearAlgebra", "Markdown", "Printf", "Random"]
-git-tree-sha1 = "51dc79aa9c8326341e819b764d29737ee1de00d3"
+git-tree-sha1 = "709f625f52184ebc4e0d4c56e1409dd2bff4ea11"
 uuid = "3362f125-f0bb-47a3-aa74-596ffd7ef2fb"
-version = "0.15.24"
+version = "1.2.0"
 weakdeps = ["Plots", "Quaternions", "RecursiveArrayTools", "Statistics"]
 
     [deps.ManifoldsBase.extensions]
@@ -2032,16 +2029,17 @@ weakdeps = ["Plots", "Quaternions", "RecursiveArrayTools", "Statistics"]
     ManifoldsBaseStatisticsExt = "Statistics"
 
 [[deps.Manopt]]
-deps = ["ColorSchemes", "ColorTypes", "Colors", "DataStructures", "Dates", "LinearAlgebra", "ManifoldDiff", "ManifoldsBase", "Markdown", "Preferences", "Printf", "Random", "Requires", "SparseArrays", "Statistics"]
-git-tree-sha1 = "035b6c9a247f96e19fa763561f576ff0075a3bb0"
+deps = ["ColorSchemes", "ColorTypes", "Colors", "DataStructures", "Dates", "LinearAlgebra", "ManifoldDiff", "ManifoldsBase", "Markdown", "Preferences", "Printf", "Random", "SparseArrays", "Statistics"]
+git-tree-sha1 = "daa307e2b6ecd0080123423cb62f88da84e39508"
 uuid = "0fc0a36d-df90-57f3-8f93-d78a9fc72bb5"
-version = "0.4.69"
+version = "0.5.23"
 
     [deps.Manopt.extensions]
     ManoptJuMPExt = "JuMP"
     ManoptLRUCacheExt = "LRUCache"
     ManoptLineSearchesExt = "LineSearches"
     ManoptManifoldsExt = "Manifolds"
+    ManoptRecursiveArrayToolsExt = "RecursiveArrayTools"
     ManoptRipQPQuadraticModelsExt = ["RipQP", "QuadraticModels"]
 
     [deps.Manopt.weakdeps]
@@ -2051,6 +2049,7 @@ version = "0.4.69"
     Manifolds = "1cead3c2-87b3-11e9-0ccd-23c62b72b94e"
     Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
     QuadraticModels = "f468eda6-eac5-11e8-05a5-ff9e497bcd19"
+    RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
     RipQP = "1e40b3f8-35eb-4cd8-8edd-3e515bb9de08"
 
 [[deps.ManualMemory]]
@@ -2083,9 +2082,9 @@ version = "1.45.0"
 
 [[deps.MatrixEquations]]
 deps = ["LinearAlgebra", "LinearMaps"]
-git-tree-sha1 = "7b17940d8f89faa6468e6dd73e8eb749965ce3d7"
+git-tree-sha1 = "f765b4eda3ea9be8e644b9127809ca5151f3d9ea"
 uuid = "99c1a7ee-ab34-5fd5-8076-27c950a045f4"
-version = "2.5.4"
+version = "2.4.2"
 
 [[deps.MaybeInplace]]
 deps = ["ArrayInterface", "LinearAlgebra", "MacroTools"]
@@ -2483,7 +2482,7 @@ version = "0.4.6"
 
 [[deps.Optimization]]
 deps = ["ADTypes", "ArrayInterface", "ConsoleProgressMonitor", "DocStringExtensions", "LBFGSB", "LinearAlgebra", "Logging", "LoggingExtras", "OptimizationBase", "Printf", "ProgressLogging", "Random", "Reexport", "SciMLBase", "SparseArrays", "TerminalLoggers"]
-path = "/home/runner/work/Optimization.jl/Optimization.jl"
+path = "/home/chrisrackauckas/github-runners/deepsea3-3/_work/Optimization.jl/Optimization.jl"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 version = "4.8.0"
 
@@ -2545,7 +2544,7 @@ version = "0.5.7"
 deps = ["LinearAlgebra", "ManifoldDiff", "Manifolds", "ManifoldsBase", "Manopt", "Optimization", "Reexport"]
 path = "../lib/OptimizationManopt"
 uuid = "e57b7fff-7ee7-4550-b4f0-90e9476e9fb6"
-version = "0.0.5"
+version = "0.1.0"
 
 [[deps.OptimizationMetaheuristics]]
 deps = ["Metaheuristics", "Optimization", "Reexport"]
