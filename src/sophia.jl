@@ -169,5 +169,5 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     return SciMLBase.build_solution(cache, cache.opt,
         θ,
-        x)
+        x, retcode = ReturnCode.Success)
 end
