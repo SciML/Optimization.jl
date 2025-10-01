@@ -238,10 +238,9 @@ function SciMLBase.requiresgradient(opt::Union{
         AdaptiveRegularizationCubicOptimizer, TrustRegionsOptimizer})
     true
 end
-# TODO: WHY? they both still accept not passing it
 function SciMLBase.requireshessian(opt::Union{
         AdaptiveRegularizationCubicOptimizer, TrustRegionsOptimizer})
-    true
+    false
 end
 
 function build_loss(f::OptimizationFunction, prob, cb)
