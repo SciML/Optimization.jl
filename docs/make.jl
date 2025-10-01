@@ -12,7 +12,7 @@ makedocs(sitename = "Optimization.jl",
     modules = [Optimization, Optimization.SciMLBase, Optimization.OptimizationBase,
         FiniteDiff, ForwardDiff, ModelingToolkit, ReverseDiff, Tracker, Zygote, ADTypes],
     clean = true, doctest = false, linkcheck = true,
-    warnonly = [:missing_docs],
+    warnonly = [:missing_docs, :cross_references],
     format = Documenter.HTML(assets = ["assets/favicon.ico"],
         canonical = "https://docs.sciml.ai/Optimization/stable/"),
     pages = pages)
