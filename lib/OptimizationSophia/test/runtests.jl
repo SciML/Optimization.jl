@@ -65,3 +65,14 @@ res1 = solve(optprob,
     OptimizationSophia.Sophia(), callback = callback,
     maxiters = 2000)
 @test 10res1.objective < l1
+
+# Test Sophia with ComponentArrays + Enzyme (shadow generation fix)
+using ComponentArrays
+x0_comp = ComponentVector(a = 0.0, b = 0.0)
+rosenbrock_comp(x, p = nothing) = (1 - x.a)^2 + 100 * (x.b - x.a^2)^2
+
+optf_sophia = OptimizationFunction(rosenbrock_comp, AutoEnzyme())
+prob_sophia = OptimizationProblem(optf_sophia, x0_comp)
+res_sophia = solve(prob_sophia, Optimization.Sophia(η=0.01, k=5), maxiters = 50)
+@test res_sophia.objective < rosenbrock_comp(x0_comp)  # Test optimization progress
+@test res_sophia.retcode == Optimization.SciMLBase.ReturnCode.Success
