@@ -1,7 +1,7 @@
 name = "OptimizationPolyalgorithms"
 uuid = "500b13db-7e66-49ce-bda4-eed966be6282"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"

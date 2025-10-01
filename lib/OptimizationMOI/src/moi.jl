@@ -34,9 +34,18 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
     cons = MTK.constraints(f.sys)
     cons_expr = Vector{Expr}(undef, length(cons))
     Threads.@sync for i in eachindex(cons)
-        Threads.@spawn cons_expr[i] = repl_getindex!(convert_to_expr(f.cons_expr[i],
+        Threads.@spawn if prob.lcons[i] == prob.ucons[i] == 0
+            cons_expr[i] = Expr(:call, :(==), 
+            repl_getindex!(convert_to_expr(f.cons_expr[i],
             expr_map;
-            expand_expr = false))
+            expand_expr = false)), 0) 
+        else
+            # MTK canonicalizes the expression form
+            cons_expr[i] = Expr(:call, :(<=), 
+            repl_getindex!(convert_to_expr(f.cons_expr[i],
+            expr_map;
+            expand_expr = false)), 0) 
+        end
     end
 
     return MOIOptimizationCache(f,
@@ -122,7 +131,8 @@ function SciMLBase.__solve(cache::MOIOptimizationCache)
                 get_moi_function(expr) # find: f(x) + c == 0 or f(x) + c <= 0
             catch e
                 if e isa MalformedExprException
-                    rethrow(MalformedExprException("$expr"))
+                    rethrow(e)
+                    #rethrow(MalformedExprException("$expr"))
                 else
                     rethrow(e)
                 end

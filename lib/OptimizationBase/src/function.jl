@@ -56,11 +56,11 @@ function OptimizationBase.instantiate_function(
     cons_vjp = f.cons_vjp === nothing ? nothing : (res, x) -> f.cons_vjp(res, x, p)
     cons_h = f.cons_h === nothing ? nothing : (res, x) -> f.cons_h(res, x, p)
     hess_prototype = f.hess_prototype === nothing ? nothing :
-                     convert.(eltype(x), f.hess_prototype)
+                     similar(f.hess_prototype, eltype(x))
     cons_jac_prototype = f.cons_jac_prototype === nothing ? nothing :
-                         convert.(eltype(x), f.cons_jac_prototype)
+                         similar(f.cons_jac_prototype, eltype(x))
     cons_hess_prototype = f.cons_hess_prototype === nothing ? nothing :
-                          [convert.(eltype(x), f.cons_hess_prototype[i])
+                          [similar(f.cons_hess_prototype[i], eltype(x))
                            for i in 1:num_cons]
     expr = symbolify(f.expr)
     cons_expr = symbolify.(f.cons_expr)
@@ -90,11 +90,11 @@ function OptimizationBase.instantiate_function(
     cons_vjp = f.cons_vjp === nothing ? nothing : (res, x) -> f.cons_vjp(res, x, cache.p)
     cons_h = f.cons_h === nothing ? nothing : (res, x) -> f.cons_h(res, x, cache.p)
     hess_prototype = f.hess_prototype === nothing ? nothing :
-                     convert.(eltype(cache.u0), f.hess_prototype)
+                     similar(f.hess_prototype, eltype(cache.u0))
     cons_jac_prototype = f.cons_jac_prototype === nothing ? nothing :
-                         convert.(eltype(cache.u0), f.cons_jac_prototype)
+                         similar(f.cons_jac_prototype, eltype(cache.u0))
     cons_hess_prototype = f.cons_hess_prototype === nothing ? nothing :
-                          [convert.(eltype(cache.u0), f.cons_hess_prototype[i])
+                          [similar(f.cons_hess_prototype[i], eltype(cache.u0))
                            for i in 1:num_cons]
     expr = symbolify(f.expr)
     cons_expr = symbolify.(f.cons_expr)
@@ -196,11 +196,11 @@ function OptimizationBase.instantiate_function(
         end
     end
     hess_prototype = f.hess_prototype === nothing ? nothing :
-                     convert.(eltype(x), f.hess_prototype)
+                     similar(f.hess_prototype, eltype(x))
     cons_jac_prototype = f.cons_jac_prototype === nothing ? nothing :
-                         convert.(eltype(x), f.cons_jac_prototype)
+                         similar(f.cons_jac_prototype, eltype(x))
     cons_hess_prototype = f.cons_hess_prototype === nothing ? nothing :
-                          [convert.(eltype(x), f.cons_hess_prototype[i])
+                          [similar(f.cons_hess_prototype[i], eltype(x))
                            for i in 1:num_cons]
     expr = symbolify(f.expr)
     cons_expr = symbolify.(f.cons_expr)

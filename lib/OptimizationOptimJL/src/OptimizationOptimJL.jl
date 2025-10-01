@@ -213,7 +213,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             isnothing(cache.f.hess_prototype) ?
             Optim.NLSolversBase.alloc_H(cache.u0,
                 real(zero(u0_type))) :
-            convert.(u0_type, cache.f.hess_prototype))
+            similar(cache.f.hess_prototype, u0_type))
     end
 
     opt_args = __map_optimizer_args(cache, cache.opt, callback = _cb,
@@ -414,7 +414,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             isnothing(cache.f.hess_prototype) ?
             Optim.NLSolversBase.alloc_H(cache.u0,
                 real(zero(u0_type))) :
-            convert.(u0_type, cache.f.hess_prototype))
+            similar(cache.f.hess_prototype, u0_type))
     else
         Optim.OnceDifferentiable(_loss, gg, fg!, cache.u0,
             real(zero(u0_type)),

@@ -107,7 +107,7 @@ function OptimizationBase.instantiate_function(
     end
 
     if hv == true && f.hv === nothing
-        prep_hvp = prepare_hvp(f.f, soadtype, x, (zeros(eltype(x), size(x)),), Constant(p))
+        prep_hvp = prepare_hvp(f.f, soadtype, x, (zeros(eltype(x), size(x)),), Constant(p), strict = Val(false))
         function hv!(H, θ, v)
             hvp!(f.f, (H,), prep_hvp, soadtype, θ, (v,), Constant(p))
         end
