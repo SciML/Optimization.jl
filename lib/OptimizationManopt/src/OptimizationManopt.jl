@@ -256,9 +256,6 @@ function build_loss(f::OptimizationFunction, prob, cb)
     end
 end
 
-# cf. https://github.com/SciML/SciMLBase.jl/blob/master/src/problems/optimization_problems.jl
-# {iip} is the parameter here – nowhere explained but very much probably “is in place”
-# so this refers to whether the gradient/hessian is computed in place or not
 function build_gradF(f::OptimizationFunction{true})
     function g(M::AbstractManifold, G, θ)
         f.grad(G, θ)
