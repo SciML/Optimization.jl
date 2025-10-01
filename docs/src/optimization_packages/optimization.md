@@ -9,7 +9,7 @@ There are some solvers that are available in the Optimization.jl package directl
     This can also handle arbitrary non-linear constraints through a Augmented Lagrangian method with bounds constraints described in 17.4 of Numerical Optimization by Nocedal and Wright. Thus serving as a general-purpose nonlinear optimization solver available directly in Optimization.jl.
 
 ```@docs
-Sophia
+Optimization.Sophia
 ```
 
 ## Examples

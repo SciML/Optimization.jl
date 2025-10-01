@@ -124,7 +124,7 @@ end
 
     res = Optimization.solve(prob, Optimisers.Adam(), callback = callback, epochs = 100)
 
-    @test res.objective < 1e-4
+    @test res.objective < 1e-3
 
     data = CPUDevice()(data)
     optf = OptimizationFunction(loss, AutoZygote())

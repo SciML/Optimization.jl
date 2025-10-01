@@ -23,5 +23,5 @@ OptimizationBase.AutoZygote
 OptimizationBase.AutoTracker
 OptimizationBase.AutoModelingToolkit
 OptimizationBase.AutoEnzyme
-OptimizationBase.AutoMooncake
+ADTypes.AutoMooncake
 ```
