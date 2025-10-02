@@ -4,16 +4,18 @@ authors = ["Maximilian Pochapski <67759684+mxpoch@users.noreply.github.com>"]
 version = "1.1.0"
 
 [deps]
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
-Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
-Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
 
 [compat]
-CondaPkg = "0.2"
-Optimization = "4.4"
-PythonCall = "0.9"
-Reexport = "1.2"
-Test = "1.10"
 julia = "1.10"
+OptimizationBase = "2.10"
+CondaPkg = "0.2"
+Test = "1.10"
+SciMLBase = "2.58"
+Reexport = "1.2"
+PythonCall = "0.9"

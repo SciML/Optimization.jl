@@ -1,6 +1,6 @@
 module OptimizationIpopt
 
-using Optimization
+using OptimizationBase
 using Ipopt
 using LinearAlgebra
 using SparseArrays
@@ -84,7 +84,7 @@ The following common optimization arguments can be passed to `solve`:
 # Examples
 
 ```julia
-using Optimization, OptimizationIpopt
+using OptimizationBase, OptimizationIpopt
 
 # Basic usage with default settings
 opt = IpoptOptimizer()
@@ -331,8 +331,8 @@ function map_retcode(solvestat)
 end
 
 function SciMLBase.__solve(cache::IpoptCache)
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
+    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     opt_setup = __map_optimizer_args(cache,
         cache.opt;
@@ -359,7 +359,7 @@ function SciMLBase.__solve(cache::IpoptCache)
     minimum = opt_setup.obj_val
     minimizer = opt_setup.x
 
-    stats = Optimization.OptimizationStats(; time = time() - start_time,
+    stats = OptimizationBase.OptimizationStats(; time = time() - start_time,
         iterations = cache.iterations[], fevals = cache.f_calls, gevals = cache.f_grad_calls)
 
     finalize(opt_setup)

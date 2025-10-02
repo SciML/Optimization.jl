@@ -1,8 +1,8 @@
 module OptimizationEvolutionary
 
 using Reexport
-@reexport using Evolutionary, Optimization
-using Optimization.SciMLBase
+@reexport using Evolutionary, OptimizationBase
+using SciMLBase
 
 SciMLBase.allowsbounds(opt::Evolutionary.AbstractOptimizer) = true
 SciMLBase.allowsconstraints(opt::Evolutionary.AbstractOptimizer) = true
@@ -43,7 +43,7 @@ function Evolutionary.trace!(tr, iteration, objfun, state, population,
         options.callback)
 end
 
-function __map_optimizer_args(cache::OptimizationCache,
+function __map_optimizer_args(cache::OptimizationBase.OptimizationCache,
         opt::Evolutionary.AbstractOptimizer;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
@@ -76,7 +76,7 @@ function __map_optimizer_args(cache::OptimizationCache,
     return Evolutionary.Options(; mapped_args...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -106,7 +106,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     function _cb(trace)
         curr_u = decompose_trace(trace).metadata["curr_u"]
-        opt_state = Optimization.OptimizationState(;
+        opt_state = OptimizationBase.OptimizationState(;
             iter = decompose_trace(trace).iteration,
             u = curr_u,
             p = cache.p,
@@ -119,8 +119,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
         cb_call
     end
 
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
+    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     f = cache.f
 
@@ -174,7 +174,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     end
     t1 = time()
     opt_ret = Symbol(Evolutionary.converged(opt_res))
-    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations,
+    stats = OptimizationBase.OptimizationStats(; iterations = opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls)
     if !isa(f, MultiObjectiveOptimizationFunction)
         SciMLBase.build_solution(cache, cache.opt,

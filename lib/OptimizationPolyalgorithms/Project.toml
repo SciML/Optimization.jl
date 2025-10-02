@@ -4,21 +4,23 @@ authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.3.1"
 
 [deps]
-Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-OptimizationOptimJL = "36348300-93cb-4f02-beb5-3c3902f8871e"
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 OptimizationOptimisers = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
-
-[compat]
-Optimization = "4.4"
-OptimizationOptimJL = "0.4"
-OptimizationOptimisers = "0.3"
-Reexport = "1.2"
-julia = "1.10"
+OptimizationOptimJL = "36348300-93cb-4f02-beb5-3c3902f8871e"
 
 [extras]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[compat]
+julia = "1.10"
+OptimizationBase = "2.10"
+OptimizationOptimisers = "0.3"
+SciMLBase = "2.58"
+Reexport = "1.2"
+OptimizationOptimJL = "0.4"
 
 [targets]
 test = ["ForwardDiff", "Test"]

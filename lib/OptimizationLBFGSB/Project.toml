@@ -6,8 +6,8 @@ version = "1.0.0"
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 LBFGSB = "5be7bae1-8223-5378-bac3-9e7378a2f6e6"
-Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 
 [extras]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
@@ -20,8 +20,8 @@ DocStringExtensions = "0.9.5"
 ForwardDiff = "1.0.1"
 LBFGSB = "0.4.1"
 MLUtils = "0.4.8"
-Optimization = "4.4.0"
-OptimizationBase = "2.10.0"
+OptimizationBase = "2.10"
+SciMLBase = "2.58"
 Zygote = "0.7.10"
 julia = "1.10"
 

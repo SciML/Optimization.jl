@@ -1,4 +1,4 @@
-struct MOIOptimizationCache{F <: OptimizationFunction, RC, LB, UB, I, S, EX,
+struct MOIOptimizationBase.OptimizationCache{F <: OptimizationFunction, RC, LB, UB, I, S, EX,
     CEX, O} <: SciMLBase.AbstractOptimizationCache
     f::F
     reinit_cache::RC
@@ -107,8 +107,8 @@ function _add_moi_variables!(opt_setup, cache::MOIOptimizationCache)
 end
 
 function SciMLBase.__solve(cache::MOIOptimizationCache)
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
+    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
     opt_setup = __map_optimizer_args(cache,
         cache.opt;
         abstol = cache.solver_args.abstol,
@@ -171,7 +171,7 @@ function SciMLBase.__solve(cache::MOIOptimizationCache)
         minimum = NaN
         opt_ret = SciMLBase.ReturnCode.Default
     end
-    stats = Optimization.OptimizationStats()
+    stats = OptimizationBase.OptimizationStats()
     return SciMLBase.build_solution(cache,
         cache.opt,
         minimizer,

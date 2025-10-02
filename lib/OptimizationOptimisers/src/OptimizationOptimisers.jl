@@ -1,8 +1,8 @@
 module OptimizationOptimisers
 
 using Reexport, Printf, ProgressLogging
-@reexport using Optimisers, Optimization
-using Optimization.SciMLBase, Optimization.OptimizationBase
+@reexport using Optimisers, OptimizationBase
+using SciMLBase
 
 @static if isdefined(SciMLBase, :supports_opt_cache_interface)
     SciMLBase.supports_opt_cache_interface(opt::AbstractRule) = true
@@ -23,7 +23,7 @@ function SciMLBase.__init(
         save_best, progress, kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -73,8 +73,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
     elseif isnothing(cache.solver_args.epochs)
         cache.solver_args.maxiters / length(data), cache.solver_args.maxiters
     end
-    epochs = Optimization._check_and_convert_maxiters(epochs)
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
+    epochs = OptimizationBase._check_and_convert_maxiters(epochs)
+    maxiters = OptimizationBase._check_and_convert_maxiters(maxiters)
 
     # At this point, both of them should be fine; but, let's assert it.
     @assert (!isnothing(epochs)&&!isnothing(maxiters) &&
@@ -124,7 +124,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                     fevals += 2
                     gevals += 1
                 end
-                opt_state = Optimization.OptimizationState(
+                opt_state = OptimizationBase.OptimizationState(
                     iter = i + (epoch - 1) * length(data),
                     u = θ,
                     p = d,
@@ -151,7 +151,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                         x = min_err
                         θ = min_θ
                         cache.f.grad(G, θ, d)
-                        opt_state = Optimization.OptimizationState(iter = iterations,
+                        opt_state = OptimizationBase.OptimizationState(iter = iterations,
                             u = θ,
                             p = d,
                             objective = x[1],
@@ -167,7 +167,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     end
 
     t1 = time()
-    stats = Optimization.OptimizationStats(; iterations,
+    stats = OptimizationBase.OptimizationStats(; iterations,
         time = t1 - t0, fevals, gevals)
     SciMLBase.build_solution(cache, cache.opt, θ, first(x)[1], stats = stats)
 end

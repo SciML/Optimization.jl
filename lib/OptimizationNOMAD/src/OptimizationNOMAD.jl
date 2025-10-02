@@ -1,8 +1,8 @@
 module OptimizationNOMAD
 
 using Reexport
-@reexport using Optimization
-using NOMAD, Optimization.SciMLBase
+@reexport using OptimizationBase
+using NOMAD, SciMLBase
 
 export NOMADOpt
 struct NOMADOpt end
@@ -54,8 +54,8 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::NOMADOpt;
         kwargs...)
     local x
 
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(maxtime)
+    maxiters = OptimizationBase._check_and_convert_maxiters(maxiters)
+    maxtime = OptimizationBase._check_and_convert_maxtime(maxtime)
 
     _loss = function (θ)
         x = prob.f(θ, prob.p)
@@ -108,7 +108,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::NOMADOpt;
     t0 = time()
     opt_res = NOMAD.solve(opt_setup, prob.u0)
     t1 = time()
-    stats = Optimization.OptimizationStats(; time = t1 - t0)
+    stats = OptimizationBase.OptimizationStats(; time = t1 - t0)
     SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
         opt_res.x_best_feas, first(opt_res.bbo_best_feas);
         original = opt_res, stats = stats)

@@ -1,8 +1,8 @@
 module OptimizationMultistartOptimization
 
 using Reexport
-@reexport using MultistartOptimization, Optimization
-using Optimization.SciMLBase
+@reexport using MultistartOptimization, OptimizationBase
+using SciMLBase
 
 SciMLBase.requiresbounds(opt::MultistartOptimization.TikTak) = true
 SciMLBase.allowsbounds(opt::MultistartOptimization.TikTak) = true
@@ -24,7 +24,7 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
         kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -73,7 +73,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         use_threads = cache.solver_args.use_threads)
     t1 = time()
     opt_ret = hasproperty(opt_res, :ret) ? opt_res.ret : nothing
-    stats = Optimization.OptimizationStats(; time = t1 - t0)
+    stats = OptimizationBase.OptimizationStats(; time = t1 - t0)
     SciMLBase.build_solution(cache,
         (cache.opt, cache.solver_args.local_opt), opt_res.location,
         opt_res.value;

@@ -78,7 +78,7 @@ function (cb::IpoptProgressLogger)(
         cb.lambda
     )
 
-    opt_state = Optimization.OptimizationState(;
+    opt_state = OptimizationBase.OptimizationState(;
         iter = Int(iter_count), cb.u, objective = obj_value, original)
     cb.iterations[] = Int(iter_count)
 

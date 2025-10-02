@@ -1,6 +1,6 @@
 module OptimizationPRIMA
 
-using Optimization, Optimization.SciMLBase, Reexport
+using OptimizationBase, SciMLBase, Reexport
 @reexport using PRIMA
 
 abstract type PRIMASolvers end
@@ -25,7 +25,7 @@ SciMLBase.requiresconshess(opt::COBYLA) = true
 
 function Optimization.OptimizationCache(prob::SciMLBase.OptimizationProblem,
         opt::PRIMASolvers;
-        callback = Optimization.DEFAULT_CALLBACK,
+        callback = OptimizationBase.DEFAULT_CALLBACK,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
@@ -109,7 +109,7 @@ function sciml_prima_retcode(rc::AbstractString)
     end
 end
 
-function SciMLBase.__solve(cache::Optimization.OptimizationCache{
+function SciMLBase.__solve(cache::Optimization.OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -138,7 +138,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     _loss = function (θ)
         x = cache.f(θ, cache.p)
         iter += 1
-        opt_state = Optimization.OptimizationState(u = θ, p = cache.p, objective = x[1], iter = iter)
+        opt_state = OptimizationBase.OptimizationState(u = θ, p = cache.p, objective = x[1], iter = iter)
         if cache.callback(opt_state, x...)
             error("Optimization halted by callback.")
         end
@@ -147,8 +147,8 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
 
     optfunc = get_solve_func(cache.opt)
 
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
+    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     kws = __map_optimizer_args!(cache, cache.opt; callback = cache.callback,
         maxiters = maxiters,
@@ -197,7 +197,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     t1 = time()
 
     retcode = sciml_prima_retcode(PRIMA.reason(inf))
-    stats = Optimization.OptimizationStats(; time = t1 - t0, fevals = inf.nf)
+    stats = OptimizationBase.OptimizationStats(; time = t1 - t0, fevals = inf.nf)
     SciMLBase.build_solution(cache, cache.opt, minx,
         inf.fx; retcode = retcode,
         stats = stats, original = inf)

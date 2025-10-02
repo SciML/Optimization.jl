@@ -1,7 +1,7 @@
 module OptimizationNLPModels
 
 using Reexport
-@reexport using NLPModels, Optimization, ADTypes
+@reexport using NLPModels, OptimizationBase, ADTypes
 
 """
     OptimizationFunction(nlpmodel::AbstractNLPModel, adtype::AbstractADType = NoAD())

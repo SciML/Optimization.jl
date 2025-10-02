@@ -1,7 +1,6 @@
 module OptimizationAuglag
 
-using Optimization
-using OptimizationBase.SciMLBase: OptimizationProblem, OptimizationFunction, OptimizationStats
+using SciMLBase: OptimizationProblem, OptimizationFunction, OptimizationStats
 using OptimizationBase.LinearAlgebra: norm
 
 @kwdef struct AugLag

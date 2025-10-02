@@ -1,7 +1,7 @@
 module OptimizationODE
 
 using Reexport
-@reexport using Optimization, SciMLBase
+@reexport using OptimizationBase, SciMLBase
 using LinearAlgebra, ForwardDiff
 using DiffEqBase
 
@@ -49,21 +49,21 @@ SciMLBase.requiresconshess(::DAEOptimizer) = false
 
 
 function SciMLBase.__init(prob::OptimizationProblem, opt::ODEOptimizer;
-    callback=Optimization.DEFAULT_CALLBACK, progress=false, dt=nothing,
+    callback=OptimizationBase.DEFAULT_CALLBACK, progress=false, dt=nothing,
     maxiters=nothing, kwargs...)
     return OptimizationCache(prob, opt; callback=callback, progress=progress, dt=dt,
         maxiters=maxiters, kwargs...)
 end
 
 function SciMLBase.__init(prob::OptimizationProblem, opt::DAEOptimizer;
-    callback=Optimization.DEFAULT_CALLBACK, progress=false, dt=nothing,
+    callback=OptimizationBase.DEFAULT_CALLBACK, progress=false, dt=nothing,
     maxiters=nothing, kwargs...)
     return OptimizationCache(prob, opt; callback=callback, progress=progress, dt=dt,
         maxiters=maxiters, kwargs...)
 end
 
 function SciMLBase.__solve(
-    cache::OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}
+    cache::OptimizationBase.OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}
     ) where {F,RC,LB,UB,LC,UC,S,O<:Union{ODEOptimizer,DAEOptimizer},D,P,C}
 
     dt = get(cache.solver_args, :dt, nothing)
@@ -97,7 +97,7 @@ function solve_ode(cache, dt, maxit, u0, p)
 
     algorithm = DynamicSS(cache.opt.solver)
 
-    if cache.callback !== Optimization.DEFAULT_CALLBACK
+    if cache.callback !== OptimizationBase.DEFAULT_CALLBACK
         condition = (u, t, integrator) -> true
         affect! = (integrator) -> begin
             u_opt = integrator.u isa AbstractArray ? integrator.u : integrator.u.u
@@ -123,7 +123,7 @@ function solve_ode(cache, dt, maxit, u0, p)
     has_destats = hasproperty(sol, :destats)
     has_t = hasproperty(sol, :t) && !isempty(sol.t)
 
-    stats = Optimization.OptimizationStats(
+    stats = OptimizationBase.OptimizationStats(
         iterations = has_destats ? get(sol.destats, :iters, 10) : (has_t ? length(sol.t) - 1 : 10),
         time = has_t ? sol.t[end] : 0.0,
         fevals = has_destats ? get(sol.destats, :f_calls, 0) : 0,
@@ -158,7 +158,7 @@ function solve_dae_mass_matrix(cache, dt, maxit, u0, p)
 
     ss_prob = SteadyStateProblem(ODEFunction(f_mass!, mass_matrix = M), u0, p)
 
-    if cache.callback !== Optimization.DEFAULT_CALLBACK
+    if cache.callback !== OptimizationBase.DEFAULT_CALLBACK
         condition = (u, t, integrator) -> true
         affect! = (integrator) -> begin
             u_opt = integrator.u isa AbstractArray ? integrator.u : integrator.u.u
@@ -209,7 +209,7 @@ function solve_dae_implicit(cache, dt, maxit, u0, p)
     du0 = zero(u0)
     prob = DAEProblem(dae_residual!, du0, u0, tspan, p)
 
-    if cache.callback !== Optimization.DEFAULT_CALLBACK
+    if cache.callback !== OptimizationBase.DEFAULT_CALLBACK
         condition = (u, t, integrator) -> true
         affect! = (integrator) -> begin
             u_opt = integrator.u isa AbstractArray ? integrator.u : integrator.u.u

@@ -28,6 +28,8 @@ include("OptimizationDIExt.jl")
 include("OptimizationDISparseExt.jl")
 include("function.jl")
 include("solve.jl")
+include("utils.jl")
+include("state.jl")
 
 export solve, OptimizationCache, DEFAULT_CALLBACK, DEFAULT_DATA,
        IncompatibleOptimizerError, OptimizerMissingError, _check_opt_alg,

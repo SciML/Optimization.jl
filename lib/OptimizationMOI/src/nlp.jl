@@ -237,7 +237,7 @@ function MOI.eval_objective(evaluator::MOIOptimizationNLPEvaluator, x)
     else
         l = evaluator.f(x, evaluator.p)
         evaluator.iteration += 1
-        state = Optimization.OptimizationState(iter = evaluator.iteration,
+        state = OptimizationBase.OptimizationState(iter = evaluator.iteration,
             u = x,
             p = evaluator.p,
             objective = l[1])
@@ -521,8 +521,8 @@ function _add_moi_variables!(opt_setup, evaluator::MOIOptimizationNLPEvaluator)
 end
 
 function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
+    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
     opt_setup = __map_optimizer_args(cache,
         cache.opt;
         abstol = cache.solver_args.abstol,
@@ -572,7 +572,7 @@ function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
         0
     end
 
-    stats = Optimization.OptimizationStats(; time = MOI.get(opt_setup, MOI.SolveTimeSec()),
+    stats = OptimizationBase.OptimizationStats(; time = MOI.get(opt_setup, MOI.SolveTimeSec()),
         iterations)
     return SciMLBase.build_solution(cache,
         cache.opt,

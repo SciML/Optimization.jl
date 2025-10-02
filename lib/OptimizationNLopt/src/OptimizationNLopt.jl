@@ -1,9 +1,9 @@
 module OptimizationNLopt
 
 using Reexport
-@reexport using NLopt, Optimization
-using Optimization.SciMLBase
-using Optimization: deduce_retcode
+@reexport using NLopt, OptimizationBase
+using SciMLBase
+using OptimizationBase: deduce_retcode
 
 (f::NLopt.Algorithm)() = f
 
@@ -57,7 +57,7 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::NLopt.Algori
         kwargs...)
 end
 
-function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
+function __map_optimizer_args!(cache::OptimizationBase.OptimizationCache, opt::NLopt.Opt;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -136,7 +136,7 @@ function __map_optimizer_args!(cache::OptimizationCache, opt::NLopt.Opt;
     return nothing
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -169,7 +169,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     _loss = function (θ)
         x = cache.f(θ, cache.p)
-        opt_state = Optimization.OptimizationState(u = θ, p = cache.p, objective = x[1])
+        opt_state = OptimizationBase.OptimizationState(u = θ, p = cache.p, objective = x[1])
         if cache.callback(opt_state, x...)
             NLopt.force_stop!(opt_setup)
         end
@@ -252,8 +252,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
         end
     end
 
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
+    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     __map_optimizer_args!(cache, opt_setup; callback = cache.callback, maxiters = maxiters,
         maxtime = maxtime,
@@ -267,7 +267,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     if retcode == ReturnCode.Failure
         @warn "NLopt failed to converge: $(ret)"
     end
-    stats = Optimization.OptimizationStats(; time = t1 - t0)
+    stats = OptimizationBase.OptimizationStats(; time = t1 - t0)
     SciMLBase.build_solution(cache, cache.opt, minx,
         minf; original = opt_setup, retcode = retcode,
         stats = stats)

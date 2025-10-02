@@ -1,8 +1,8 @@
 module OptimizationOptimJL
 
 using Reexport
-@reexport using Optim, Optimization
-using Optimization.SciMLBase, SparseArrays
+@reexport using Optim, OptimizationBase
+using SciMLBase, SparseArrays
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace::Optim.OptimizationState) = trace
 
@@ -35,7 +35,7 @@ end
 SciMLBase.requiresgradient(opt::Optim.Fminbox) = true
 # SciMLBase.allowsfg(opt::Union{Optim.AbstractOptimizer, Optim.ConstrainedOptimizer, Optim.Fminbox, Optim.SAMIN}) = true
 
-function __map_optimizer_args(cache::OptimizationCache,
+function __map_optimizer_args(cache::OptimizationBase.OptimizationCache,
         opt::Union{Optim.AbstractOptimizer, Optim.Fminbox,
             Optim.SAMIN, Optim.ConstrainedOptimizer};
         callback = nothing,
@@ -112,14 +112,14 @@ function SciMLBase.__init(prob::OptimizationProblem,
         end
     end
 
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(maxtime)
+    maxiters = OptimizationBase._check_and_convert_maxiters(maxiters)
+    maxtime = OptimizationBase._check_and_convert_maxtime(maxtime)
     return OptimizationCache(prob, opt; callback, maxiters, maxtime, abstol,
         reltol, progress,
         kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -149,7 +149,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         trace_state = decompose_trace(trace)
         metadata = trace_state.metadata
         θ = metadata[cache.opt isa Optim.NelderMead ? "centroid" : "x"]
-        opt_state = Optimization.OptimizationState(iter = trace_state.iteration,
+        opt_state = OptimizationBase.OptimizationState(iter = trace_state.iteration,
             u = θ,
             p = cache.p,
             objective = trace_state.value,
@@ -227,7 +227,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     opt_res = Optim.optimize(optim_f, cache.u0, cache.opt, opt_args)
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
-    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations,
+    stats = OptimizationBase.OptimizationStats(; iterations = opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls,
         hevals = opt_res.h_calls)
     SciMLBase.build_solution(cache, cache.opt,
@@ -237,7 +237,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -270,7 +270,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         θ = !(cache.opt isa Optim.SAMIN) && cache.opt.method == Optim.NelderMead() ?
             metadata["centroid"] :
             metadata["x"]
-        opt_state = Optimization.OptimizationState(iter = trace_state.iteration,
+        opt_state = OptimizationBase.OptimizationState(iter = trace_state.iteration,
             u = θ,
             p = cache.p,
             objective = trace_state.value,
@@ -323,7 +323,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     opt_res = Optim.optimize(optim_f, cache.lb, cache.ub, cache.u0, cache.opt, opt_args)
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
-    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations,
+    stats = OptimizationBase.OptimizationStats(; iterations = opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls,
         hevals = opt_res.h_calls)
     SciMLBase.build_solution(cache, cache.opt,
@@ -331,7 +331,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         original = opt_res, retcode = opt_ret, stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -357,7 +357,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     function _cb(trace)
         metadata = decompose_trace(trace).metadata
-        opt_state = Optimization.OptimizationState(iter = trace.iteration,
+        opt_state = OptimizationBase.OptimizationState(iter = trace.iteration,
             u = metadata["x"],
             p = cache.p,
             grad = get(metadata, "g(x)", nothing),
@@ -467,7 +467,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     end
     t1 = time()
     opt_ret = Symbol(Optim.converged(opt_res))
-    stats = Optimization.OptimizationStats(; iterations = opt_res.iterations,
+    stats = OptimizationBase.OptimizationStats(; iterations = opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls,
         hevals = opt_res.h_calls)
     SciMLBase.build_solution(cache, cache.opt,
