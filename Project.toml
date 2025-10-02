@@ -7,7 +7,7 @@ ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
 ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
 ConsoleProgressMonitor = "88cd18e8-d9cc-4ea6-8889-5259c0d15c8b"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
-LBFGSB = "5be7bae1-8223-5378-bac3-9e7378a2f6e6"
+OptimizationLBFGSB = "22f7324a-a79d-40f2-bebe-3af60c77bd15"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 LoggingExtras = "e6f89c97-d47a-5376-807f-9c37f3926c36"
@@ -22,6 +22,7 @@ TerminalLoggers = "5d786b92-1e48-4d6f-9151-6b4477ca9bed"
 
 [sources]
 OptimizationBase = {path = "lib/OptimizationBase"}
+OptimizationLBFGSB = {path = "lib/OptimizationLBFGSB"}
 
 [compat]
 ADTypes = "1.2"
