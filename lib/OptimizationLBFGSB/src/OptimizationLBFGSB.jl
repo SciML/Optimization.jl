@@ -1,4 +1,12 @@
-using Optimization.SciMLBase, LBFGSB
+module OptimizationLBFGSB
+
+using Optimization
+using DocStringExtensions
+import LBFGSB as LBFGSBJL
+using OptimizationBase.SciMLBase: OptimizationStats, OptimizationFunction
+using OptimizationBase: ReturnCode
+using OptimizationBase.LinearAlgebra: norm
+using Optimization: deduce_retcode
 
 """
 $(TYPEDEF)
@@ -12,7 +20,7 @@ References
   - C. Zhu, R. H. Byrd and J. Nocedal. L-BFGS-B: Algorithm 778: L-BFGS-B, FORTRAN routines for large scale bound constrained optimization (1997), ACM Transactions on Mathematical Software, Vol 23, Num. 4, pp. 550 - 560.
   - J.L. Morales and J. Nocedal. L-BFGS-B: Remark on Algorithm 778: L-BFGS-B, FORTRAN routines for large scale bound constrained optimization (2011), to appear in ACM Transactions on Mathematical Software.
 """
-@kwdef struct LBFGS
+@kwdef struct LBFGSB
     m::Int = 10
     τ = 0.5
     γ = 10.0
@@ -24,21 +32,21 @@ References
 end
 
 @static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(::LBFGS) = true
+    SciMLBase.supports_opt_cache_interface(::LBFGSB) = true
 end
 @static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(::LBFGS) = true
+    OptimizationBase.supports_opt_cache_interface(::LBFGSB) = true
 end
-SciMLBase.allowsbounds(::LBFGS) = true
-SciMLBase.requiresgradient(::LBFGS) = true
-SciMLBase.allowsconstraints(::LBFGS) = true
-SciMLBase.requiresconsjac(::LBFGS) = true
+SciMLBase.allowsbounds(::LBFGSB) = true
+SciMLBase.requiresgradient(::LBFGSB) = true
+SciMLBase.allowsconstraints(::LBFGSB) = true
+SciMLBase.requiresconsjac(::LBFGSB) = true
 
 function task_message_to_string(task::Vector{UInt8})
     return String(task)
 end
 
-function __map_optimizer_args(cache::Optimization.OptimizationCache, opt::LBFGS;
+function __map_optimizer_args(cache::OptimizationCache, opt::LBFGSB;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -91,7 +99,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         UC,
         S,
         O <:
-        LBFGS,
+        LBFGSB,
         D,
         P,
         C
@@ -130,7 +138,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cons_tmp[eq_inds] .= cons_tmp[eq_inds] - cache.lcons[eq_inds]
             cons_tmp[ineq_inds] .= cons_tmp[ineq_inds] .- cache.ucons[ineq_inds]
             opt_state = Optimization.OptimizationState(
-                u = θ, objective = x[1], p = cache.p, iter = iter_count[])
+                u = θ, objective = x[1])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
             end
@@ -172,11 +180,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
         if cache.lb === nothing
             optimizer,
-            bounds = LBFGSB._opt_bounds(
+            bounds = LBFGSBJL._opt_bounds(
                 n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n])
         else
             optimizer,
-            bounds = LBFGSB._opt_bounds(
+            bounds = LBFGSBJL._opt_bounds(
                 n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
         end
 
@@ -209,7 +217,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             end
         end
 
-        stats = Optimization.OptimizationStats(; iterations = maxiters,
+        stats = OptimizationStats(; iterations = maxiters,
             time = 0.0, fevals = maxiters, gevals = maxiters)
         return SciMLBase.build_solution(
             cache, cache.opt, res[2], cache.f(res[2], cache.p)[1],
@@ -220,7 +228,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             x = cache.f(θ, cache.p)
             iter_count[] += 1
             opt_state = Optimization.OptimizationState(
-                u = θ, objective = x[1], p = cache.p, iter = iter_count[])
+                u = θ, objective = x[1])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
             end
@@ -231,11 +239,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
         if cache.lb === nothing
             optimizer,
-            bounds = LBFGSB._opt_bounds(
+            bounds = LBFGSBJL._opt_bounds(
                 n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n])
         else
             optimizer,
-            bounds = LBFGSB._opt_bounds(
+            bounds = LBFGSBJL._opt_bounds(
                 n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
         end
 
@@ -260,4 +268,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
         return SciMLBase.build_solution(cache, cache.opt, res[2], res[1], stats = stats,
             retcode = opt_ret, original = optimizer)
     end
+end
+
+export LBFGSB
+
 end
