@@ -1,7 +1,7 @@
 name = "OptimizationSophia"
 uuid = "892fee11-dca1-40d6-b698-84ba0d87399a"
 authors = ["paramthakkar123 <paramthakkar864@gmail.com>"]
-version = "0.1.0"
+version = "1.0.0"
 
 [deps]
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
