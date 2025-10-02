@@ -24,6 +24,7 @@ jobs:
           - OptimizationCMAEvolutionStrategy
           - OptimizationEvolutionary
           - OptimizationGCMAES
+          - OptimizationLBFGSB
           - OptimizationIpopt
           - OptimizationManopt
           - OptimizationMetaheuristics
