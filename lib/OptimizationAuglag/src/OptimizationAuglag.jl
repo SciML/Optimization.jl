@@ -1,3 +1,9 @@
+module OptimizationAuglag
+
+using Optimization
+using OptimizationBase.SciMLBase: OptimizationProblem, OptimizationFunction, OptimizationStats
+using OptimizationBase.LinearAlgebra: norm
+
 @kwdef struct AugLag
     inner::Any
     τ = 0.5
@@ -20,7 +26,7 @@ SciMLBase.requiresgradient(::AugLag) = true
 SciMLBase.allowsconstraints(::AugLag) = true
 SciMLBase.requiresconsjac(::AugLag) = true
 
-function __map_optimizer_args(cache::Optimization.OptimizationCache, opt::AugLag;
+function __map_optimizer_args(cache::OptimizationBase.OptimizationCache, opt::AugLag;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -110,7 +116,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cache.f.cons(cons_tmp, θ)
             cons_tmp[eq_inds] .= cons_tmp[eq_inds] - cache.lcons[eq_inds]
             cons_tmp[ineq_inds] .= cons_tmp[ineq_inds] .- cache.ucons[ineq_inds]
-            opt_state = Optimization.OptimizationState(u = θ, objective = x[1], p = p)
+            opt_state = Optimization.OptimizationState(u = θ, objective = x[1])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
             end
@@ -176,10 +182,12 @@ function SciMLBase.__solve(cache::OptimizationCache{
                 break
             end
         end
-        stats = Optimization.OptimizationStats(; iterations = maxiters,
+        stats = OptimizationStats(; iterations = maxiters,
             time = 0.0, fevals = maxiters, gevals = maxiters)
         return SciMLBase.build_solution(
             cache, cache.opt, θ, x,
             stats = stats, retcode = opt_ret)
     end
+end
+
 end

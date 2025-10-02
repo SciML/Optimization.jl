@@ -19,6 +19,7 @@ jobs:
       matrix:
         group:
           - Core
+          - OptimizationAuglag
           - OptimizationBBO
           - OptimizationCMAEvolutionStrategy
           - OptimizationEvolutionary

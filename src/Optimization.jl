@@ -24,7 +24,6 @@ include("utils.jl")
 include("state.jl")
 include("lbfgsb.jl")
 include("sophia.jl")
-include("auglag.jl")
 
 export solve
 
