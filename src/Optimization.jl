@@ -26,11 +26,4 @@ include("sophia.jl")
 
 export solve
 
-# Legacy Exports
-# Remove in Optimization v5
-
-import OptimizationLBFGSB
-const LBFGS = OptimizationLBFGSB.LBFGSB
-export LBFGS
-
 end # module
