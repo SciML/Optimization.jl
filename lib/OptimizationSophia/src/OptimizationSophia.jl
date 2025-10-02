@@ -33,7 +33,7 @@ using OptimizationBase, OptimizationOptimisers
 # Define optimization problem
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
-optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
 prob = OptimizationProblem(optf, x0)
 
 # Solve with Sophia

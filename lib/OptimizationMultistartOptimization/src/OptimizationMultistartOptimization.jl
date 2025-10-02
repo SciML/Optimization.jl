@@ -4,18 +4,18 @@ using Reexport
 @reexport using MultistartOptimization, OptimizationBase
 using SciMLBase
 
-SciMLBase.requiresbounds(opt::MultistartOptimization.TikTak) = true
-SciMLBase.allowsbounds(opt::MultistartOptimization.TikTak) = true
-SciMLBase.allowscallback(opt::MultistartOptimization.TikTak) = false
+SciMLBase.requiresbounds(opt::MultistartOptimizationBase.TikTak) = true
+SciMLBase.allowsbounds(opt::MultistartOptimizationBase.TikTak) = true
+SciMLBase.allowscallback(opt::MultistartOptimizationBase.TikTak) = false
 @static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(opt::MultistartOptimization.TikTak) = true
+    SciMLBase.supports_opt_cache_interface(opt::MultistartOptimizationBase.TikTak) = true
 end
 @static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(opt::MultistartOptimization.TikTak) = true
+    OptimizationBase.supports_opt_cache_interface(opt::MultistartOptimizationBase.TikTak) = true
 end
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
-        opt::MultistartOptimization.TikTak,
+        opt::MultistartOptimizationBase.TikTak,
         local_opt;
         use_threads = true,
         kwargs...)
@@ -45,7 +45,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         UC,
         S,
         O <:
-        MultistartOptimization.TikTak,
+        MultistartOptimizationBase.TikTak,
         D,
         P,
         C
@@ -57,7 +57,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         return first(x)
     end
 
-    opt_setup = MultistartOptimization.MinimizationProblem(_loss, cache.lb, cache.ub)
+    opt_setup = MultistartOptimizationBase.MinimizationProblem(_loss, cache.lb, cache.ub)
 
     _local_optimiser = function (pb, θ0, prob)
         prob_tmp = remake(prob, u0 = θ0)

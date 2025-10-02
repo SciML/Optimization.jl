@@ -251,7 +251,7 @@ function build_loss(f::OptimizationFunction, prob, cb)
         x = f.f(θ, prob.p)
         cb(x, θ)
         __x = first(x)
-        return prob.sense === Optimization.MaxSense ? -__x : __x
+        return prob.sense === OptimizationBase.MaxSense ? -__x : __x
     end
 end
 
@@ -367,7 +367,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
     return SciMLBase.build_solution(cache,
         cache.opt,
         opt_res.minimizer,
-        cache.sense === Optimization.MaxSense ?
+        cache.sense === OptimizationBase.MaxSense ?
         -opt_res.minimum : opt_res.minimum;
         original = opt_res.options,
         retcode = opt_ret)

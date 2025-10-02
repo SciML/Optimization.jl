@@ -14,11 +14,11 @@ end
 
 function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
     f = prob.f
-    reinit_cache = Optimization.ReInitCache(prob.u0, prob.p)
+    reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p)
     if isnothing(f.sys)
-        if f.adtype isa Optimization.AutoModelingToolkit
+        if f.adtype isa OptimizationBase.AutoModelingToolkit
             num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
-            f = Optimization.instantiate_function(prob.f,
+            f = OptimizationBase.instantiate_function(prob.f,
                 reinit_cache,
                 prob.f.adtype,
                 num_cons)
@@ -120,7 +120,7 @@ function SciMLBase.__solve(cache::MOIOptimizationCache)
     Theta = _add_moi_variables!(opt_setup, cache)
     MOI.set(opt_setup,
         MOI.ObjectiveSense(),
-        cache.sense === Optimization.MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE)
+        cache.sense === OptimizationBase.MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE)
 
     if !isnothing(cache.cons_expr)
         for cons_expr in cache.cons_expr

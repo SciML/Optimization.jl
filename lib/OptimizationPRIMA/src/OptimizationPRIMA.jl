@@ -23,7 +23,7 @@ SciMLBase.requiresconstraints(opt::COBYLA) = true
 SciMLBase.requiresconsjac(opt::COBYLA) = true
 SciMLBase.requiresconshess(opt::COBYLA) = true
 
-function Optimization.OptimizationCache(prob::SciMLBase.OptimizationProblem,
+function OptimizationBase.OptimizationCache(prob::SciMLBase.OptimizationProblem,
         opt::PRIMASolvers;
         callback = OptimizationBase.DEFAULT_CALLBACK,
         maxiters::Union{Number, Nothing} = nothing,
@@ -32,26 +32,26 @@ function Optimization.OptimizationCache(prob::SciMLBase.OptimizationProblem,
         reltol::Union{Number, Nothing} = nothing,
         progress = false,
         kwargs...)
-    reinit_cache = Optimization.ReInitCache(prob.u0, prob.p)
+    reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p)
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     if prob.f.adtype isa SciMLBase.NoAD && opt isa COBYLA
         throw("We evaluate the jacobian and hessian of the constraints once to automatically detect 
         linear and nonlinear constraints, please provide a valid AD backend for using COBYLA.")
     else
         if opt isa COBYLA
-            f = Optimization.instantiate_function(
+            f = OptimizationBase.instantiate_function(
                 prob.f, reinit_cache.u0, prob.f.adtype, reinit_cache.p, num_cons,
                 cons_j = true, cons_h = true)
         else
-            f = Optimization.instantiate_function(
+            f = OptimizationBase.instantiate_function(
                 prob.f, reinit_cache.u0, prob.f.adtype, reinit_cache.p, num_cons)
         end
     end
 
-    return Optimization.OptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons,
+    return OptimizationBase.OptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
         opt, progress, callback, nothing,
-        Optimization.OptimizationBase.AnalysisResults(nothing, nothing),
+        OptimizationBase.OptimizationBase.AnalysisResults(nothing, nothing),
         merge((; maxiters, maxtime, abstol, reltol),
             NamedTuple(kwargs)))
 end
@@ -70,7 +70,7 @@ function get_solve_func(opt::PRIMASolvers)
     end
 end
 
-function __map_optimizer_args!(cache::Optimization.OptimizationCache, opt::PRIMASolvers;
+function __map_optimizer_args!(cache::OptimizationBase.OptimizationCache, opt::PRIMASolvers;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -109,7 +109,7 @@ function sciml_prima_retcode(rc::AbstractString)
     end
 end
 
-function SciMLBase.__solve(cache::Optimization.OptimizationBase.OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,

@@ -110,7 +110,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         maxtime = maxtime)
 
     t0 = time()
-    if cache.sense === Optimization.MaxSense
+    if cache.sense === OptimizationBase.MaxSense
         opt_xmin, opt_fmin,
         opt_ret = GCMAES.maximize(
             isnothing(cache.f.grad) ? _loss :

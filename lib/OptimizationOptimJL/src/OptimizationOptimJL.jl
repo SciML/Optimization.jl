@@ -166,14 +166,14 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
     _loss = function (θ)
         x = cache.f.f(θ, cache.p)
         __x = first(x)
-        return cache.sense === Optimization.MaxSense ? -__x : __x
+        return cache.sense === OptimizationBase.MaxSense ? -__x : __x
     end
 
     if cache.f.fg === nothing
         fg! = function (G, θ)
             if G !== nothing
                 cache.f.grad(G, θ)
-                if cache.sense === Optimization.MaxSense
+                if cache.sense === OptimizationBase.MaxSense
                     G .*= -one(eltype(G))
                 end
             end
@@ -186,7 +186,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
     if cache.opt isa Optim.KrylovTrustRegion
         hv = function (H, θ, v)
             cache.f.hv(H, θ, v)
-            if cache.sense === Optimization.MaxSense
+            if cache.sense === OptimizationBase.MaxSense
                 H .*= -one(eltype(H))
             end
         end
@@ -194,14 +194,14 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
     else
         gg = function (G, θ)
             cache.f.grad(G, θ)
-            if cache.sense === Optimization.MaxSense
+            if cache.sense === OptimizationBase.MaxSense
                 G .*= -one(eltype(G))
             end
         end
 
         hh = function (H, θ)
             cache.f.hess(H, θ)
-            if cache.sense === Optimization.MaxSense
+            if cache.sense === OptimizationBase.MaxSense
                 H .*= -one(eltype(H))
             end
         end
@@ -232,7 +232,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         hevals = opt_res.h_calls)
     SciMLBase.build_solution(cache, cache.opt,
         opt_res.minimizer,
-        cache.sense === Optimization.MaxSense ? -opt_res.minimum :
+        cache.sense === OptimizationBase.MaxSense ? -opt_res.minimum :
         opt_res.minimum; original = opt_res, retcode = opt_ret,
         stats = stats)
 end
@@ -287,14 +287,14 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
     _loss = function (θ)
         x = cache.f.f(θ, cache.p)
         __x = first(x)
-        return cache.sense === Optimization.MaxSense ? -__x : __x
+        return cache.sense === OptimizationBase.MaxSense ? -__x : __x
     end
 
     if cache.f.fg === nothing
         fg! = function (G, θ)
             if G !== nothing
                 cache.f.grad(G, θ)
-                if cache.sense === Optimization.MaxSense
+                if cache.sense === OptimizationBase.MaxSense
                     G .*= -one(eltype(G))
                 end
             end
@@ -306,7 +306,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
 
     gg = function (G, θ)
         cache.f.grad(G, θ)
-        if cache.sense === Optimization.MaxSense
+        if cache.sense === OptimizationBase.MaxSense
             G .*= -one(eltype(G))
         end
     end
@@ -374,14 +374,14 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
     _loss = function (θ)
         x = cache.f.f(θ, cache.p)
         __x = first(x)
-        return cache.sense === Optimization.MaxSense ? -__x : __x
+        return cache.sense === OptimizationBase.MaxSense ? -__x : __x
     end
 
     if cache.f.fg === nothing
         fg! = function (G, θ)
             if G !== nothing
                 cache.f.grad(G, θ)
-                if cache.sense === Optimization.MaxSense
+                if cache.sense === OptimizationBase.MaxSense
                     G .*= -one(eltype(G))
                 end
             end
@@ -393,14 +393,14 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
 
     gg = function (G, θ)
         cache.f.grad(G, θ)
-        if cache.sense === Optimization.MaxSense
+        if cache.sense === OptimizationBase.MaxSense
             G .*= -one(eltype(G))
         end
     end
 
     hh = function (H, θ)
         cache.f.hess(H, θ)
-        if cache.sense === Optimization.MaxSense
+        if cache.sense === OptimizationBase.MaxSense
             H .*= -one(eltype(H))
         end
     end
@@ -485,8 +485,8 @@ PrecompileTools.@compile_workload begin
     end
 
     function solve_nonnegative_least_squares(A, b, solver)
-        optf = Optimization.OptimizationFunction(obj_f, Optimization.AutoForwardDiff())
-        prob = Optimization.OptimizationProblem(optf, ones(size(A, 2)), (A, b),
+        optf = OptimizationBase.OptimizationFunction(obj_f, OptimizationBase.AutoForwardDiff())
+        prob = OptimizationBase.OptimizationProblem(optf, ones(size(A, 2)), (A, b),
             lb = zeros(size(A, 2)), ub = Inf * ones(size(A, 2)))
         x = OptimizationOptimJL.solve(prob, solver, maxiters = 5000, maxtime = 100)
 

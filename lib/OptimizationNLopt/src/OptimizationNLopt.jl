@@ -192,7 +192,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         NLopt.Opt(cache.opt, length(cache.u0))
     end
 
-    if cache.sense === Optimization.MaxSense
+    if cache.sense === OptimizationBase.MaxSense
         NLopt.max_objective!(opt_setup, fg!)
     else
         NLopt.min_objective!(opt_setup, fg!)

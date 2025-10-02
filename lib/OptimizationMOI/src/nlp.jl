@@ -113,11 +113,11 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     if prob.f.adtype isa ADTypes.AutoSymbolics || (prob.f.adtype isa ADTypes.AutoSparse &&
         prob.f.adtype.dense_ad isa ADTypes.AutoSymbolics)
-        f = Optimization.instantiate_function(
+        f = OptimizationBase.instantiate_function(
             prob.f, reinit_cache, prob.f.adtype, num_cons;
             g = true, h = true, cons_j = true, cons_h = true)
     else
-        f = Optimization.instantiate_function(
+        f = OptimizationBase.instantiate_function(
             prob.f, reinit_cache, prob.f.adtype, num_cons;
             g = true, h = true, cons_j = true, cons_vjp = true, lag_h = true)
     end
@@ -534,7 +534,7 @@ function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
     θ = _add_moi_variables!(opt_setup, cache.evaluator)
     MOI.set(opt_setup,
         MOI.ObjectiveSense(),
-        cache.evaluator.sense === Optimization.MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE)
+        cache.evaluator.sense === OptimizationBase.MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE)
     xor(isnothing(cache.evaluator.lcons), isnothing(cache.evaluator.ucons)) &&
         throw(ArgumentError("Expected `cache.evaluator.lcons` and `cache.evaluator.lcons` to be supplied both or none."))
     if isnothing(cache.evaluator.lcons) && isnothing(cache.evaluator.ucons)

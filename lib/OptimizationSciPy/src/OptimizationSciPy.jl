@@ -370,7 +370,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{F, RC, LB, 
             θ_julia = ensure_julia_array(θ, eltype(cache.u0))
             grad = zeros(eltype(cache.u0), length(θ_julia))
             cache.f.grad(grad, θ_julia, cache.p)
-            return cache.sense === Optimization.MaxSense ? -grad : grad
+            return cache.sense === OptimizationBase.MaxSense ? -grad : grad
         end
         jac = _grad
     end
@@ -381,7 +381,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{F, RC, LB, 
                 θ_julia = ensure_julia_array(θ, eltype(cache.u0))
                 H = zeros(eltype(cache.u0), length(θ_julia), length(θ_julia))
                 cache.f.hess(H, θ_julia, cache.p)
-                return cache.sense === Optimization.MaxSense ? -H : H
+                return cache.sense === OptimizationBase.MaxSense ? -H : H
             end
             hess = _hess
         else
@@ -501,7 +501,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{F, RC, LB, 
         catch
         end
     end
-    if cache.sense === Optimization.MaxSense
+    if cache.sense === OptimizationBase.MaxSense
         minimum = -minimum
     end
     retcode = scipy_status_to_retcode(status, py_success)
@@ -573,7 +573,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{F, RC, LB, 
     end
     minimum = pyis(result.fun, pybuiltins.None) ? NaN : safe_to_float(result.fun)
     py_success = pyconvert(Bool, pybool(result.success))
-    if cache.sense === Optimization.MaxSense
+    if cache.sense === OptimizationBase.MaxSense
         minimum = -minimum
     end
     retcode = py_success ? SciMLBase.ReturnCode.Success : SciMLBase.ReturnCode.Failure
@@ -940,7 +940,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{F, RC, LB, 
     minimum = pyis(result.fun, pybuiltins.None) ? NaN : safe_to_float(result.fun)
     py_success = pyconvert(Bool, pybool(result.success))
     py_message = safe_get_message(result)
-    if cache.sense === Optimization.MaxSense
+    if cache.sense === OptimizationBase.MaxSense
         minimum = -minimum
     end
     status = 0
@@ -1027,7 +1027,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{F, RC, LB, 
     minimum = pyis(result.fun, pybuiltins.None) ? NaN : safe_to_float(result.fun)
     py_success = pyconvert(Bool, pybool(result.success))
     py_message = safe_get_message(result)
-    if cache.sense === Optimization.MaxSense
+    if cache.sense === OptimizationBase.MaxSense
         minimum = -minimum
     end
     retcode = py_success ? SciMLBase.ReturnCode.Success : SciMLBase.ReturnCode.Failure
@@ -1093,7 +1093,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{F, RC, LB, 
     minimum = safe_to_float(result.fun)
     py_success = pyconvert(Bool, pybool(result.success))
     py_message = safe_get_message(result)
-    if cache.sense === Optimization.MaxSense
+    if cache.sense === OptimizationBase.MaxSense
         minimum = -minimum
     end
     retcode = py_success ? SciMLBase.ReturnCode.Success : SciMLBase.ReturnCode.Failure
@@ -1153,7 +1153,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{F, RC, LB, 
     lowest_result = result.lowest_optimization_result
     py_success = pyconvert(Bool, pybool(lowest_result.success))
     py_message = safe_get_message(lowest_result)
-    if cache.sense === Optimization.MaxSense
+    if cache.sense === OptimizationBase.MaxSense
         minimum = -minimum
     end
     retcode = py_success ? SciMLBase.ReturnCode.Success : SciMLBase.ReturnCode.Failure
@@ -1218,7 +1218,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{F, RC, LB, 
     minimum = safe_to_float(result.fun)
     py_success = pyconvert(Bool, pybool(result.success))
     py_message = safe_get_message(result)
-    if cache.sense === Optimization.MaxSense
+    if cache.sense === OptimizationBase.MaxSense
         minimum = -minimum
     end
     retcode = py_success ? SciMLBase.ReturnCode.Success : SciMLBase.ReturnCode.Failure
@@ -1314,7 +1314,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{F, RC, LB, 
     minimum = safe_to_float(result.fun)
     py_success = pyconvert(Bool, pybool(result.success))
     py_message = safe_get_message(result)
-    if cache.sense === Optimization.MaxSense
+    if cache.sense === OptimizationBase.MaxSense
         minimum = -minimum
     end
     retcode = py_success ? SciMLBase.ReturnCode.Success : SciMLBase.ReturnCode.Failure
@@ -1375,7 +1375,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{F, RC, LB, 
     minimum = safe_to_float(result.fun)
     py_success = pyconvert(Bool, pybool(result.success))
     py_message = safe_get_message(result)
-    if cache.sense === Optimization.MaxSense
+    if cache.sense === OptimizationBase.MaxSense
         minimum = -minimum
     end
     retcode = py_success ? SciMLBase.ReturnCode.Success : SciMLBase.ReturnCode.Failure
@@ -1432,7 +1432,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{F, RC, LB, 
         minimizer = pyconvert(Vector{eltype(cache.u0)}, result[0])
     end
     minimum = safe_to_float(result[1])
-    if cache.sense === Optimization.MaxSense
+    if cache.sense === OptimizationBase.MaxSense
         minimum = -minimum
     end
     retcode = SciMLBase.ReturnCode.Success
@@ -1474,7 +1474,7 @@ function _create_loss(cache; vector_output::Bool = false)
                 error("Optimization halted by callback")
             end
 
-            arr = cache.sense === Optimization.MaxSense ? -x : x
+            arr = cache.sense === OptimizationBase.MaxSense ? -x : x
             return arr
         end
     else
@@ -1493,7 +1493,7 @@ function _create_loss(cache; vector_output::Bool = false)
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback")
             end
-            return cache.sense === Optimization.MaxSense ? -x[1] : x[1]
+            return cache.sense === OptimizationBase.MaxSense ? -x[1] : x[1]
         end
     end
 end
