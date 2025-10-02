@@ -30,4 +30,4 @@ Test = "1.10.0"
 Zygote = "0.7.10"
 
 [targets]
-test = ["Test", "ComponentArrays", "Lux", "MLUtils", "OrdinaryDiffEqTsit5", "Random", "SciMLSensitivity", "Zygote"]
+test = ["Test", "ComponentArrays", "Lux", "MLUtils", "OrdinaryDiffEqTsit5", "SciMLSensitivity", "Zygote"]
