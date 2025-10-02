@@ -1,6 +1,5 @@
 using OptimizationNLPModels, Optimization, NLPModelsTest, Ipopt, OptimizationMOI, Zygote,
-      ReverseDiff,
-      OptimizationOptimJL
+      ReverseDiff, OptimizationLBFGSB, OptimizationOptimJL
 using Test
 
 @testset "NLPModels" begin
@@ -18,8 +17,8 @@ using Test
     nlpmo = NLPModelsTest.HS5()
     converted = OptimizationNLPModels.OptimizationProblem(nlpmo, Optimization.AutoZygote())
 
-    sol_native = solve(oprob, Optimization.LBFGS(), maxiters = 1000)
-    sol_converted = solve(converted, Optimization.LBFGS(), maxiters = 1000)
+    sol_native = solve(oprob, OptimizationLBFGSB.LBFGSB(), maxiters = 1000)
+    sol_converted = solve(converted, OptimizationLBFGSB.LBFGSB(), maxiters = 1000)
 
     @test sol_converted.retcode == sol_native.retcode
     @test sol_converted.u ≈ sol_native.u
