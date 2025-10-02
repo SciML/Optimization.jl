@@ -39,6 +39,7 @@ jobs:
           - OptimizationPyCMA
           - OptimizationQuadDIRECT
           - OptimizationSciPy
+          - OptimizationSophia
           - OptimizationSpeedMapping
           - OptimizationPolyalgorithms
           - OptimizationNLPModels

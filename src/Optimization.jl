@@ -12,7 +12,7 @@ if !isdefined(Base, :get_extension)
 end
 
 using Logging, ProgressLogging, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
-using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra, Random
+using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 
 import OptimizationBase: instantiate_function, OptimizationCache, ReInitCache
 import SciMLBase: OptimizationProblem,
@@ -22,7 +22,6 @@ export ObjSense, MaxSense, MinSense
 
 include("utils.jl")
 include("state.jl")
-include("sophia.jl")
 
 export solve
 
