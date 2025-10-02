@@ -2,7 +2,7 @@ module OptimizationLBFGSB
 
 using Optimization
 using DocStringExtensions
-using LBFGSB
+import LBFGSB as LBFGSBJL
 using OptimizationBase.SciMLBase: OptimizationStats, OptimizationFunction
 using OptimizationBase: ReturnCode
 using OptimizationBase.LinearAlgebra: norm
@@ -180,11 +180,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
         if cache.lb === nothing
             optimizer,
-            bounds = LBFGSB._opt_bounds(
+            bounds = LBFGSBJL._opt_bounds(
                 n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n])
         else
             optimizer,
-            bounds = LBFGSB._opt_bounds(
+            bounds = LBFGSBJL._opt_bounds(
                 n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
         end
 
@@ -239,11 +239,11 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
         if cache.lb === nothing
             optimizer,
-            bounds = LBFGSB._opt_bounds(
+            bounds = LBFGSBJL._opt_bounds(
                 n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n])
         else
             optimizer,
-            bounds = LBFGSB._opt_bounds(
+            bounds = LBFGSBJL._opt_bounds(
                 n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
         end
 
