@@ -20,7 +20,7 @@ References
   - C. Zhu, R. H. Byrd and J. Nocedal. L-BFGS-B: Algorithm 778: L-BFGS-B, FORTRAN routines for large scale bound constrained optimization (1997), ACM Transactions on Mathematical Software, Vol 23, Num. 4, pp. 550 - 560.
   - J.L. Morales and J. Nocedal. L-BFGS-B: Remark on Algorithm 778: L-BFGS-B, FORTRAN routines for large scale bound constrained optimization (2011), to appear in ACM Transactions on Mathematical Software.
 """
-@kwdef struct LBFGS
+@kwdef struct LBFGSB
     m::Int = 10
     τ = 0.5
     γ = 10.0
@@ -32,21 +32,21 @@ References
 end
 
 @static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(::LBFGS) = true
+    SciMLBase.supports_opt_cache_interface(::LBFGSB) = true
 end
 @static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(::LBFGS) = true
+    OptimizationBase.supports_opt_cache_interface(::LBFGSB) = true
 end
-SciMLBase.allowsbounds(::LBFGS) = true
-SciMLBase.requiresgradient(::LBFGS) = true
-SciMLBase.allowsconstraints(::LBFGS) = true
-SciMLBase.requiresconsjac(::LBFGS) = true
+SciMLBase.allowsbounds(::LBFGSB) = true
+SciMLBase.requiresgradient(::LBFGSB) = true
+SciMLBase.allowsconstraints(::LBFGSB) = true
+SciMLBase.requiresconsjac(::LBFGSB) = true
 
 function task_message_to_string(task::Vector{UInt8})
     return String(task)
 end
 
-function __map_optimizer_args(cache::OptimizationCache, opt::LBFGS;
+function __map_optimizer_args(cache::OptimizationCache, opt::LBFGSB;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -99,7 +99,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         UC,
         S,
         O <:
-        LBFGS,
+        LBFGSB,
         D,
         P,
         C
@@ -269,5 +269,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             retcode = opt_ret, original = optimizer)
     end
 end
+
+export LBFGSB
 
 end
