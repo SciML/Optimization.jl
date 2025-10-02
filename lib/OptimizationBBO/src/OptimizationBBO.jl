@@ -55,13 +55,31 @@ function __map_optimizer_args(prob::Optimization.OptimizationCache, opt::BBO;
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         verbose::Bool = false,
+        num_dimensions::Union{Number, Nothing} = nothing,
+        fitness_scheme::Union{String, Nothing} = nothing,
         kwargs...)
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
-    mapped_args = (; kwargs...)
-    mapped_args = (; mapped_args..., Method = opt.method,
-        SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)])
+
+    # Determine number of objectives for multi-objective problems
+    if isa(prob.f, MultiObjectiveOptimizationFunction)
+        num_objectives = length(prob.f.cost_prototype)
+        mapped_args = (; kwargs...)
+        mapped_args = (; mapped_args..., Method = opt.method,
+            SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)],
+            NumDimensions = length(prob.lb),
+            NumObjectives = num_objectives)
+        # FitnessScheme should be in opt, not the function
+        if hasproperty(opt, :FitnessScheme)
+            mapped_args = (; mapped_args..., FitnessScheme = opt.FitnessScheme)
+        end
+    else
+        mapped_args = (; kwargs...)
+        mapped_args = (; mapped_args..., Method = opt.method,
+            SearchRange = [(prob.lb[i], prob.ub[i]) for i in 1:length(prob.lb)],
+            NumDimensions = length(prob.lb))
+    end
 
     if !isnothing(callback)
         mapped_args = (; mapped_args..., CallbackFunction = callback,
@@ -86,6 +104,16 @@ function __map_optimizer_args(prob::Optimization.OptimizationCache, opt::BBO;
         mapped_args = (; mapped_args..., TraceMode = :silent)
     end
 
+    if isa(prob.f, MultiObjectiveOptimizationFunction)
+        if isnothing(num_dimensions) && isnothing(fitness_scheme)
+            mapped_args = (; mapped_args..., NumDimensions = 2, FitnessScheme = BlackBoxOptim.ParetoFitnessScheme{2}(is_minimizing=true))
+        elseif isnothing(num_dimensions)
+            mapped_args = (; mapped_args..., NumDimensions = 2, FitnessScheme = fitness_scheme)
+        elseif isnothing(fitness_scheme)
+            mapped_args = (; mapped_args..., NumDimensions = num_dimensions, FitnessScheme = BlackBoxOptim.ParetoFitnessScheme{2}(is_minimizing=true))
+        end
+    end
+    
     return mapped_args
 end
 
@@ -116,8 +144,7 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         LC,
         UC,
         S,
-        O <:
-        BBO,
+        O <: BBO,
         D,
         P,
         C
@@ -151,16 +178,37 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
 
-    _loss = function (θ)
-        cache.f(θ, cache.p)
+
+    # Multi-objective: use out-of-place or in-place as appropriate
+    if isa(cache.f, MultiObjectiveOptimizationFunction)
+        if is_inplace(cache.f)
+            _loss = θ -> (cost = similar(cache.f.cost_prototype); cache.f.f(cost, θ, cache.p); cost)
+        else
+            _loss = θ -> cache.f.f(θ, cache.p)
+        end
+    else
+        _loss = θ -> cache.f(θ, cache.p)
     end
 
-    opt_args = __map_optimizer_args(cache, cache.opt;
-        callback = cache.callback === Optimization.DEFAULT_CALLBACK ?
-                   nothing : _cb,
-        cache.solver_args...,
-        maxiters = maxiters,
-        maxtime = maxtime)
+    if isa(cache.f, MultiObjectiveOptimizationFunction)
+        opt_args = __map_optimizer_args(cache, cache.opt;
+            callback = cache.callback === Optimization.DEFAULT_CALLBACK &&
+                    cache.data === Optimization.DEFAULT_DATA ?
+                    nothing : _cb,
+            cache.solver_args...,
+            maxiters = maxiters,
+            maxtime = maxtime,
+            num_dimensions = isnothing(cache.num_dimensions) ? nothing : cache.num_dimensions,
+            fitness_scheme = isnothing(cache.fitness_scheme) ? nothing : cache.fitness_scheme)
+    else
+        opt_args = __map_optimizer_args(cache, cache.opt;
+            callback = cache.callback === Optimization.DEFAULT_CALLBACK &&
+                    cache.data === Optimization.DEFAULT_DATA ?
+                    nothing : _cb,
+            cache.solver_args...,
+            maxiters = maxiters,
+            maxtime = maxtime)
+    end
 
     opt_setup = BlackBoxOptim.bbsetup(_loss; opt_args...)
 
