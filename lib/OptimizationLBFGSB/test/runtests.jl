@@ -14,11 +14,11 @@ using Test
 
     optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
     prob = OptimizationProblem(optf, x0)
-    @time res = solve(prob, OptimizationLBFGSB.LBFGS(), maxiters = 100)
+    @time res = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 100)
     @test res.retcode == ReturnCode.Success
 
     prob = OptimizationProblem(optf, x0, lb = [-1.0, -1.0], ub = [1.0, 1.0])
-    @time res = solve(prob, OptimizationLBFGSB.LBFGS(), maxiters = 100)
+    @time res = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 100)
     @test res.retcode == ReturnCode.Success
 
     function con2_c(res, x, p)
@@ -29,7 +29,7 @@ using Test
     prob = OptimizationProblem(optf, x0, lcons = [1.0, -Inf],
         ucons = [1.0, 0.0], lb = [-1.0, -1.0],
         ub = [1.0, 1.0])
-    @time res = solve(prob, OptimizationLBFGSB.LBFGS(), maxiters = 100)
+    @time res = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 100)
     @test res.retcode == SciMLBase.ReturnCode.Success
 
     x0 = (-pi):0.001:pi
@@ -52,6 +52,6 @@ using Test
     l0 = optf(initpars, (x0, y0))
     prob = OptimizationProblem(optf, initpars, (x0, y0), lcons = [-Inf], ucons = [0.5],
         lb = [-10.0, -10.0, -10.0, -10.0, -10.0], ub = [10.0, 10.0, 10.0, 10.0, 10.0])
-    opt1 = solve(prob, OptimizationLBFGSB.LBFGS(), maxiters = 1000, callback = callback)
+    opt1 = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 1000, callback = callback)
     @test opt1.objective < l0
 end
