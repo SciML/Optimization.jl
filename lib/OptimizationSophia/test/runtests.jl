@@ -1,5 +1,5 @@
 using OptimizationBase, Optimization
-using OptimizationBase.SciMLBase: solve, OptimizationFunction, OptimizationProblem
+using SciMLBase: solve, OptimizationFunction, OptimizationProblem
 using OptimizationSophia
 using Lux, MLUtils, Random, ComponentArrays
 using SciMLSensitivity
@@ -75,4 +75,4 @@ optf_sophia = OptimizationFunction(rosenbrock_comp, AutoEnzyme())
 prob_sophia = OptimizationProblem(optf_sophia, x0_comp)
 res_sophia = solve(prob_sophia, OptimizationSophia.Sophia(η=0.01, k=5), maxiters = 50)
 @test res_sophia.objective < rosenbrock_comp(x0_comp)  # Test optimization progress
-@test res_sophia.retcode == Optimization.SciMLBase.ReturnCode.Success
+@test res_sophia.retcode == SciMLBase.ReturnCode.Success

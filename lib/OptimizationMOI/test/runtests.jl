@@ -17,7 +17,7 @@ function _test_sparse_derivatives_hs071(backend, optimizer)
     prob = OptimizationProblem(
         OptimizationFunction(objective, backend; cons = constraints),
         [1.0, 5.0, 5.0, 1.0];
-        sense = Optimization.MinSense,
+        sense = OptimizationBase.MinSense,
         lb = [1.0, 1.0, 1.0, 1.0],
         ub = [5.0, 5.0, 5.0, 5.0],
         lcons = [25.0, 40.0],
@@ -37,7 +37,7 @@ end
     _p = [1.0, 100.0]
     cons_circ = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
     optprob = OptimizationFunction(
-        rosenbrock, Optimization.AutoZygote();
+        rosenbrock, OptimizationBase.AutoZygote();
         cons = cons_circ)
     prob = OptimizationProblem(optprob, x0, _p, ucons = [Inf], lcons = [0.0])
     evaluator = init(prob, Ipopt.Optimizer()).evaluator
@@ -63,8 +63,8 @@ end
     _p = [1.0, 100.0]
     l1 = rosenbrock(x0, _p)
 
-    optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), Optimization.AutoZygote())
-    prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MaxSense)
+    optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), OptimizationBase.AutoZygote())
+    prob = OptimizationProblem(optprob, x0, _p; sense = OptimizationBase.MaxSense)
 
     callback = function (state, l)
         display(l)
@@ -79,8 +79,8 @@ end
     sol = solve!(cache)
     @test 10 * sol.objective < l1
 
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
-    prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MinSense)
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
+    prob = OptimizationProblem(optprob, x0, _p; sense = OptimizationBase.MinSense)
 
     opt = Ipopt.Optimizer()
     sol = solve(prob, opt)
@@ -126,7 +126,7 @@ end
 
     cons_circ = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
     optprob = OptimizationFunction(
-        rosenbrock, Optimization.AutoModelingToolkit(true, true);
+        rosenbrock, OptimizationBase.AutoModelingToolkit(true, true);
         cons = cons_circ)
     prob = OptimizationProblem(optprob, x0, _p, ucons = [Inf], lcons = [0.0])
 
@@ -141,10 +141,10 @@ end
 
 @testset "backends" begin
     backends = (
-        Optimization.AutoModelingToolkit(false, false),
-        Optimization.AutoModelingToolkit(true, false),
-        Optimization.AutoModelingToolkit(false, true),
-        Optimization.AutoModelingToolkit(true, true))
+        OptimizationBase.AutoModelingToolkit(false, false),
+        OptimizationBase.AutoModelingToolkit(true, false),
+        OptimizationBase.AutoModelingToolkit(false, true),
+        OptimizationBase.AutoModelingToolkit(true, true))
     for backend in backends
         @testset "$backend" begin
             _test_sparse_derivatives_hs071(backend, Ipopt.Optimizer())
@@ -167,7 +167,7 @@ end
         u0 = [0.0, 0.0, 0.0, 1.0]
 
         optfun = OptimizationFunction((u, p) -> -v'u, cons = (res, u, p) -> res .= w'u,
-            Optimization.AutoForwardDiff())
+            OptimizationBase.AutoForwardDiff())
 
         optprob = OptimizationProblem(optfun, u0; lb = zero.(u0), ub = one.(u0),
             int = ones(Bool, length(u0)),
@@ -185,7 +185,7 @@ end
         u0 = [1.0]
 
         optfun = OptimizationFunction((u, p) -> sum(abs2, x * u[1] .- y),
-            Optimization.AutoForwardDiff())
+            OptimizationBase.AutoForwardDiff())
 
         optprob = OptimizationProblem(optfun, u0; lb = one.(u0), ub = 6.0 .* u0,
             int = ones(Bool, length(u0)))
@@ -264,7 +264,7 @@ end
 
     cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[2]])
 
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit();
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoModelingToolkit();
         cons = cons)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, 0.5])
     sol = solve(prob, AmplNLWriter.Optimizer(Ipopt_jll.amplexe))
@@ -285,7 +285,7 @@ end
     end
     lag_hess_prototype = sparse([1 1; 0 1])
 
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff();
         cons = cons, lag_h = lagh, lag_hess_prototype)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, 0.5])
     sol = solve(prob, Ipopt.Optimizer())

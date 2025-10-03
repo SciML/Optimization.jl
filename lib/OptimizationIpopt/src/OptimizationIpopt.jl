@@ -12,7 +12,7 @@ export IpoptOptimizer
 """
     IpoptOptimizer(; kwargs...)
 
-Optimizer using the Interior Point Optimizer (Ipopt) for nonlinear optimization.
+Optimizer using the Interior Point Optimizer (Ipopt) for nonlinear OptimizationBase.
 
 Ipopt is designed to find (local) solutions of mathematical optimization problems of the form:
 

@@ -1,6 +1,6 @@
 using OptimizationBase
 import OptimizationBase.ArrayInterface
-import OptimizationBase.SciMLBase: OptimizationFunction
+import SciMLBase: OptimizationFunction
 import OptimizationBase.LinearAlgebra: I
 import DifferentiationInterface
 import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,

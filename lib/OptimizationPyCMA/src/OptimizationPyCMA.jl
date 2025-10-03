@@ -31,7 +31,7 @@ SciMLBase.requireshessian(::PyCMAOpt) = false
 SciMLBase.requiresconsjac(::PyCMAOpt) = false
 SciMLBase.requiresconshess(::PyCMAOpt) = false
 
-# wrapping Optimization.jl args into a python dict as arguments to PyCMA opts
+# wrapping OptimizationBase.jl args into a python dict as arguments to PyCMA opts
 function __map_optimizer_args(prob::OptimizationBase.OptimizationCache, opt::PyCMAOpt;
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -42,15 +42,15 @@ function __map_optimizer_args(prob::OptimizationBase.OptimizationCache, opt::PyC
         @warn "common reltol is currently not used by $(opt)"
     end
 
-    # Converting Optimization.jl args to PyCMA opts
-    # Optimization.jl kwargs will overwrite PyCMA kwargs supplied to solve() 
+    # Converting OptimizationBase.jl args to PyCMA opts
+    # OptimizationBase.jl kwargs will overwrite PyCMA kwargs supplied to solve() 
 
     mapped_args = Dict{String, Any}()
 
     # adding PyCMA args
     merge!(mapped_args, Dict(string(k) => v for (k, v) in PyCMAargs))
 
-    # mapping Optimization.jl args
+    # mapping OptimizationBase.jl args
     mapped_args["bounds"] = (prob.lb, prob.ub)
 
     if !("verbose" ∈ keys(mapped_args))
@@ -149,7 +149,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
-    # converting the Optimization.jl Args to PyCMA format
+    # converting the OptimizationBase.jl Args to PyCMA format
     opt_args = __map_optimizer_args(cache, cache.opt; cache.solver_args...,
         maxiters = maxiters,
         maxtime = maxtime)

@@ -231,7 +231,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
-## Optimization.jl stuff
+## OptimizationBase.jl stuff
 function SciMLBase.requiresgradient(opt::Union{
         GradientDescentOptimizer, ConjugateGradientDescentOptimizer,
         QuasiNewtonOptimizer, ConvexBundleOptimizer, FrankWolfeOptimizer,

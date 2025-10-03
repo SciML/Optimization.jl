@@ -22,7 +22,7 @@ using LinearAlgebra
             res[1] = x[2] - x[1]^2
         end
 
-        optfunc = OptimizationFunction(simple_objective, Optimization.AutoZygote();
+        optfunc = OptimizationFunction(simple_objective, OptimizationBase.AutoZygote();
                                       cons = simple_constraint)
         prob = OptimizationProblem(optfunc, [0.0, 0.0], nothing;
                                  lb = [-1.0, -Inf],
@@ -62,7 +62,7 @@ using LinearAlgebra
         n = 5
         x0 = fill(3.0, n)
 
-        optfunc = OptimizationFunction(lv1_objective, Optimization.AutoZygote();
+        optfunc = OptimizationFunction(lv1_objective, OptimizationBase.AutoZygote();
                                       cons = lv1_constraints)
         prob = OptimizationProblem(optfunc, x0, nothing;
                                  lcons = fill(4.0, n-2),
@@ -84,7 +84,7 @@ using LinearAlgebra
 
         quadratic(x, p) = (x[1] - 2)^2 + (x[2] - 3)^2
 
-        optfunc = OptimizationFunction(quadratic, Optimization.AutoZygote())
+        optfunc = OptimizationFunction(quadratic, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, [0.5, 1.0], nothing;
                                  lb = [0.0, 0.0],
                                  ub = [1.0, 2.0])
@@ -112,7 +112,7 @@ using LinearAlgebra
             return sum_sq
         end
 
-        optfunc = OptimizationFunction(nls_objective, Optimization.AutoZygote())
+        optfunc = OptimizationFunction(nls_objective, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, [1.0, 0.5], nothing)
         sol = solve(prob, IpoptOptimizer())
 
@@ -133,7 +133,7 @@ using LinearAlgebra
             res[1] = x[1] + x[2]
         end
 
-        optfunc = OptimizationFunction(objective, Optimization.AutoZygote();
+        optfunc = OptimizationFunction(objective, OptimizationBase.AutoZygote();
                                       cons = constraint)
         prob = OptimizationProblem(optfunc, [2.0, 2.0], nothing;
                                  lb = [0.0, 0.0],
@@ -164,7 +164,7 @@ using LinearAlgebra
             res[1] = x[1] + x[2]
         end
 
-        optfunc = OptimizationFunction(barrier_objective, Optimization.AutoZygote();
+        optfunc = OptimizationFunction(barrier_objective, OptimizationBase.AutoZygote();
                                       cons = barrier_constraint)
         prob = OptimizationProblem(optfunc, [0.5, 0.5], nothing;
                                  lb = [1e-6, 1e-6],
@@ -196,7 +196,7 @@ using LinearAlgebra
             res[1] = x[1] + x[n]
         end
 
-        optfunc = OptimizationFunction(sparse_objective, Optimization.AutoZygote();
+        optfunc = OptimizationFunction(sparse_objective, OptimizationBase.AutoZygote();
                                       cons = sparse_constraint)
         x0 = fill(0.1, n)
         prob = OptimizationProblem(optfunc, x0, nothing;
@@ -218,7 +218,7 @@ end
     p = [1.0, 100.0]
 
     @testset "BFGS approximation" begin
-        optfunc = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optfunc = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, x0, p)
         sol = solve(prob, IpoptOptimizer(
                    hessian_approximation = "limited-memory"))
@@ -228,7 +228,7 @@ end
     end
 
     @testset "SR1 approximation" begin
-        optfunc = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optfunc = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, x0, p)
         sol = solve(prob, IpoptOptimizer(
                    hessian_approximation = "limited-memory",
@@ -247,7 +247,7 @@ end
     x0 = [0.5, 0.5]
     p = [1.0, 100.0]
 
-    optfunc = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+    optfunc = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
     prob = OptimizationProblem(optfunc, x0, p)
 
     # First solve

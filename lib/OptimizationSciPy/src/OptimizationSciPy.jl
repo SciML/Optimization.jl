@@ -1,4 +1,4 @@
-#This file lets you drive SciPy optimizers through SciML's Optimization.jl API.
+#This file lets you drive SciPy optimizers through SciML's OptimizationBase.jl API.
 module OptimizationSciPy
 
 using Reexport

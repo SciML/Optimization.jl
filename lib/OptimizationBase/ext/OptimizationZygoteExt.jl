@@ -3,7 +3,7 @@ module OptimizationZygoteExt
 using OptimizationBase, SparseArrays
 using OptimizationBase.FastClosures
 import OptimizationBase.ArrayInterface
-import OptimizationBase.SciMLBase: OptimizationFunction
+import SciMLBase: OptimizationFunction
 import OptimizationBase.LinearAlgebra: I, dot
 import DifferentiationInterface
 import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,

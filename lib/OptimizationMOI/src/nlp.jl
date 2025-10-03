@@ -359,7 +359,7 @@ function MOI.hessian_lagrangian_structure(evaluator::MOIOptimizationNLPEvaluator
             end
         end
     elseif !sparse_obj
-        # Performance optimization. If both are dense, no need to repeat
+        # Performance OptimizationBase. If both are dense, no need to repeat
     else
         for col in 1:N, row in 1:col
 

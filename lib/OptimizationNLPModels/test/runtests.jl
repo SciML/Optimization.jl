@@ -7,15 +7,15 @@ using Test
     # https://jso.dev/NLPModelsTest.jl/dev/reference/#NLPModelsTest.HS5
     # Problem with box bounds
     hs5f(u, p) = sin(u[1] + u[2]) + (u[1] - u[2])^2 - (3 / 2) * u[1] + (5 / 2)u[2] + 1
-    f = Optimization.OptimizationFunction(hs5f, Optimization.AutoZygote())
+    f = OptimizationBase.OptimizationFunction(hs5f, OptimizationBase.AutoZygote())
     lb = [-1.5; -3]
     ub = [4.0; 3.0]
     u0 = [0.0; 0.0]
-    oprob = Optimization.OptimizationProblem(
-        f, u0, lb = lb, ub = ub, sense = Optimization.MinSense)
+    oprob = OptimizationBase.OptimizationProblem(
+        f, u0, lb = lb, ub = ub, sense = OptimizationBase.MinSense)
 
     nlpmo = NLPModelsTest.HS5()
-    converted = OptimizationNLPModels.OptimizationProblem(nlpmo, Optimization.AutoZygote())
+    converted = OptimizationNLPModels.OptimizationProblem(nlpmo, OptimizationBase.AutoZygote())
 
     sol_native = solve(oprob, OptimizationLBFGSB.LBFGSB(), maxiters = 1000)
     sol_converted = solve(converted, OptimizationLBFGSB.LBFGSB(), maxiters = 1000)
@@ -29,12 +29,12 @@ using Test
     function brown_dennis(u, p)
         return sum([((u[1] + (i / 5) * u[2] - exp(i / 5))^2 + (u[3] + sin(i / 5) * u[4] - cos(i / 5))^2)^2 for i in 1:20])
     end
-    f = Optimization.OptimizationFunction(brown_dennis, Optimization.AutoZygote())
+    f = OptimizationBase.OptimizationFunction(brown_dennis, OptimizationBase.AutoZygote())
     u0 = [25.0; 5.0; -5.0; -1.0]
-    oprob = Optimization.OptimizationProblem(f, u0, sense = Optimization.MinSense)
+    oprob = OptimizationBase.OptimizationProblem(f, u0, sense = OptimizationBase.MinSense)
 
     nlpmo = NLPModelsTest.BROWNDEN()
-    converted = OptimizationNLPModels.OptimizationProblem(nlpmo, Optimization.AutoZygote())
+    converted = OptimizationNLPModels.OptimizationProblem(nlpmo, OptimizationBase.AutoZygote())
 
     sol_native = solve(oprob, BFGS())
     sol_converted = solve(converted, BFGS())
@@ -50,14 +50,14 @@ using Test
     lcons = [0.0]
     ucons = [Inf]
     u0 = [-10.0; 10.0]
-    f = Optimization.OptimizationFunction(
-        hs10, Optimization.AutoForwardDiff(); cons = hs10_cons)
-    oprob = Optimization.OptimizationProblem(
-        f, u0, lcons = lcons, ucons = ucons, sense = Optimization.MinSense)
+    f = OptimizationBase.OptimizationFunction(
+        hs10, OptimizationBase.AutoForwardDiff(); cons = hs10_cons)
+    oprob = OptimizationBase.OptimizationProblem(
+        f, u0, lcons = lcons, ucons = ucons, sense = OptimizationBase.MinSense)
 
     nlpmo = NLPModelsTest.HS10()
     converted = OptimizationNLPModels.OptimizationProblem(
-        nlpmo, Optimization.AutoForwardDiff())
+        nlpmo, OptimizationBase.AutoForwardDiff())
 
     sol_native = solve(oprob, Ipopt.Optimizer())
     sol_converted = solve(converted, Ipopt.Optimizer())
@@ -75,14 +75,14 @@ using Test
     lb = [0.0; 0.0]
     ub = [Inf; Inf]
     u0 = [-2.0; -2.0]
-    f = Optimization.OptimizationFunction(
-        hs13, Optimization.AutoForwardDiff(); cons = hs13_cons)
-    oprob = Optimization.OptimizationProblem(f, u0, lb = lb, ub = ub, lcons = lcons,
-        ucons = ucons, sense = Optimization.MinSense)
+    f = OptimizationBase.OptimizationFunction(
+        hs13, OptimizationBase.AutoForwardDiff(); cons = hs13_cons)
+    oprob = OptimizationBase.OptimizationProblem(f, u0, lb = lb, ub = ub, lcons = lcons,
+        ucons = ucons, sense = OptimizationBase.MinSense)
 
     nlpmo = NLPModelsTest.HS13()
     converted = OptimizationNLPModels.OptimizationProblem(
-        nlpmo, Optimization.AutoForwardDiff())
+        nlpmo, OptimizationBase.AutoForwardDiff())
 
     sol_native = solve(oprob, Ipopt.Optimizer())
     sol_converted = solve(converted, Ipopt.Optimizer())
@@ -99,14 +99,14 @@ using Test
     lcons = [-1.0; 0.0]
     ucons = [-1.0; Inf]
     u0 = [2.0; 2.0]
-    f = Optimization.OptimizationFunction(
-        hs14, Optimization.AutoForwardDiff(); cons = hs14_cons)
-    oprob = Optimization.OptimizationProblem(
-        f, u0, lcons = lcons, ucons = ucons, sense = Optimization.MinSense)
+    f = OptimizationBase.OptimizationFunction(
+        hs14, OptimizationBase.AutoForwardDiff(); cons = hs14_cons)
+    oprob = OptimizationBase.OptimizationProblem(
+        f, u0, lcons = lcons, ucons = ucons, sense = OptimizationBase.MinSense)
 
     nlpmo = NLPModelsTest.HS14()
     converted = OptimizationNLPModels.OptimizationProblem(
-        nlpmo, Optimization.AutoForwardDiff())
+        nlpmo, OptimizationBase.AutoForwardDiff())
 
     sol_native = solve(oprob, Ipopt.Optimizer())
     sol_converted = solve(converted, Ipopt.Optimizer())

@@ -1,5 +1,5 @@
 using OptimizationEvolutionary, Optimization, Random
-using Optimization.SciMLBase: MultiObjectiveOptimizationFunction
+using SciMLBase: MultiObjectiveOptimizationFunction
 using Test
 
 Random.seed!(1234)
@@ -9,12 +9,12 @@ Random.seed!(1234)
     _p = [1.0, 100.0]
     l1 = rosenbrock(x0, _p)
     optprob = OptimizationFunction(rosenbrock)
-    prob = Optimization.OptimizationProblem(optprob, x0, _p)
+    prob = OptimizationBase.OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, CMAES(μ = 40, λ = 100), abstol = 1e-15)
     @test 10 * sol.objective < l1
 
     x0 = [-0.7, 0.3]
-    prob = Optimization.OptimizationProblem(optprob, x0, _p, lb = [0.0, 0.0],
+    prob = OptimizationBase.OptimizationProblem(optprob, x0, _p, lb = [0.0, 0.0],
         ub = [0.5, 0.5])
     sol = solve(prob, CMAES(μ = 50, λ = 60))
     @test sol.u == zeros(2)
