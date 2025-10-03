@@ -4,7 +4,7 @@ using OptimizationOptimisers
 using OptimizationAuglag
 using ForwardDiff
 using OptimizationBase: OptimizationCache
-using OptimizationBase.SciMLBase: OptimizationFunction
+using SciMLBase: OptimizationFunction
 using Test
 
 @testset "OptimizationAuglag.jl" begin

@@ -1,7 +1,7 @@
 module OptimizationNLPModels
 
 using Reexport
-@reexport using NLPModels, Optimization, ADTypes
+@reexport using NLPModels, OptimizationBase, ADTypes
 
 """
     OptimizationFunction(nlpmodel::AbstractNLPModel, adtype::AbstractADType = NoAD())
@@ -51,12 +51,12 @@ function SciMLBase.OptimizationProblem(nlpmodel::AbstractNLPModel,
     else
         (nothing, nothing)
     end
-    sense = nlpmodel.meta.minimize ? Optimization.MinSense : Optimization.MaxSense
+    sense = nlpmodel.meta.minimize ? OptimizationBase.MinSense : OptimizationBase.MaxSense
 
     # The number of variables, geometry of u0, etc.. are valid and were checked when the
     # nlpmodel was created.
 
-    return Optimization.OptimizationProblem(
+    return OptimizationBase.OptimizationProblem(
         f, u0; lb = lb, ub = ub, lcons = lcons, ucons = ucons, sense = sense, kwargs...)
 end
 

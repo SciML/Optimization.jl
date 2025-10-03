@@ -1,10 +1,10 @@
 module OptimizationBBO
 
 using Reexport
-import Optimization
-import Optimization: OptimizationBase
-import BlackBoxOptim, Optimization.SciMLBase
-import Optimization.SciMLBase: MultiObjectiveOptimizationFunction
+import OptimizationBase
+import OptimizationBase: SciMLBase
+import BlackBoxOptim
+import SciMLBase: MultiObjectiveOptimizationFunction
 
 abstract type BBO end
 
@@ -48,7 +48,7 @@ function decompose_trace(opt::BlackBoxOptim.OptRunController, progress)
     return BlackBoxOptim.best_candidate(opt)
 end
 
-function __map_optimizer_args(prob::Optimization.OptimizationCache, opt::BBO;
+function __map_optimizer_args(prob::OptimizationBase.OptimizationCache, opt::BBO;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -96,7 +96,7 @@ function map_objective(obj::BlackBoxOptim.IndexedTupleFitness)
     obj.orig
 end
 
-function SciMLBase.__solve(cache::Optimization.OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -123,13 +123,13 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         C
 }
     function _cb(trace)
-        if cache.callback === Optimization.DEFAULT_CALLBACK
+        if cache.callback === OptimizationBase.DEFAULT_CALLBACK
             cb_call = false
         else
             n_steps = BlackBoxOptim.num_steps(trace)
             curr_u = decompose_trace(trace, cache.progress)
             objective = map_objective(BlackBoxOptim.best_fitness(trace))
-            opt_state = Optimization.OptimizationState(;
+            opt_state = OptimizationBase.OptimizationState(;
                 iter = n_steps,
                 u = curr_u,
                 p = cache.p,
@@ -148,15 +148,15 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
         cb_call
     end
 
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
+    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     _loss = function (θ)
         cache.f(θ, cache.p)
     end
 
     opt_args = __map_optimizer_args(cache, cache.opt;
-        callback = cache.callback === Optimization.DEFAULT_CALLBACK ?
+        callback = cache.callback === OptimizationBase.DEFAULT_CALLBACK ?
                    nothing : _cb,
         cache.solver_args...,
         maxiters = maxiters,
@@ -176,8 +176,8 @@ function SciMLBase.__solve(cache::Optimization.OptimizationCache{
     end
 
     # Use the improved convert function
-    opt_ret = Optimization.deduce_retcode(opt_res.stop_reason)
-    stats = Optimization.OptimizationStats(;
+    opt_ret = OptimizationBase.deduce_retcode(opt_res.stop_reason)
+    stats = OptimizationBase.OptimizationStats(;
         iterations = opt_res.iterations,
         time = opt_res.elapsed_time,
         fevals = opt_res.f_calls)

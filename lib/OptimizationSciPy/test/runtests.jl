@@ -1,6 +1,6 @@
 using OptimizationSciPy, Optimization, Zygote, ReverseDiff, ForwardDiff
 using Test, Random
-using Optimization.SciMLBase: ReturnCode, NonlinearLeastSquaresProblem
+using SciMLBase: ReturnCode, NonlinearLeastSquaresProblem
 using PythonCall
 
 function rosenbrock(x, p)
@@ -21,15 +21,15 @@ end
     l1 = rosenbrock(x0, _p)
 
     @testset "MaxSense" begin
-        optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), Optimization.AutoZygote())
-        prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MaxSense)
+        optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), OptimizationBase.AutoZygote())
+        prob = OptimizationProblem(optprob, x0, _p; sense = OptimizationBase.MaxSense)
         sol = solve(prob, ScipyNelderMead())
         @test sol.retcode == ReturnCode.Success
         @test 10 * sol.objective < l1
     end
 
     @testset "unconstrained with gradient" begin
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optprob, x0, _p)
         sol = solve(prob, ScipyBFGS())
         @test sol.retcode == ReturnCode.Success
@@ -40,7 +40,7 @@ end
     end
 
     @testset "bounded" begin
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
         sol = solve(prob, ScipyLBFGSB())
         @test sol.retcode == ReturnCode.Success
@@ -48,7 +48,7 @@ end
     end
 
     @testset "global optimization" begin
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
         sol = solve(prob, ScipyDifferentialEvolution(), maxiters = 100)
         @test sol.retcode == ReturnCode.Success
@@ -73,7 +73,7 @@ end
     end
 
     @testset "various methods" begin
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optprob, x0, _p)
         sol = solve(prob, ScipyNelderMead())
         @test sol.retcode == ReturnCode.Success
@@ -90,7 +90,7 @@ end
     end
 
     @testset "with Hessian" begin
-        optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); hess = rosenbrock_hess)
+        optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff(); hess = rosenbrock_hess)
         prob = OptimizationProblem(optf, x0, _p)
         sol = solve(prob, ScipyNewtonCG(), maxiters = 200)
         @test sol.retcode == ReturnCode.Success
@@ -98,7 +98,7 @@ end
     end
 
     @testset "bounded optimization" begin
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
         sol = solve(prob, ScipyLBFGSB())
         @test sol.retcode == ReturnCode.Success
@@ -109,7 +109,7 @@ end
     end
 
     @testset "trust region with Hessian" begin
-        optf_hess = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); hess = rosenbrock_hess)
+        optf_hess = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff(); hess = rosenbrock_hess)
         x0_trust = [0.5, 0.5]
         prob = OptimizationProblem(optf_hess, x0_trust, _p)
         for method in
@@ -162,7 +162,7 @@ end
         prob_multidim = OptimizationProblem(rosenbrock, x0, _p)
         @test_throws ArgumentError solve(prob_multidim, ScipyMinimizeScalar("brent"))
         @test_throws ArgumentError solve(prob, ScipyBounded())
-        optf_grad = OptimizationFunction(f_scalar, Optimization.AutoZygote())
+        optf_grad = OptimizationFunction(f_scalar, OptimizationBase.AutoZygote())
         prob_grad = OptimizationProblem(optf_grad, x0_scalar, p_scalar)
         sol = solve(prob_grad, ScipyBrent())
         @test sol.retcode == ReturnCode.Success
@@ -276,14 +276,14 @@ end
         objective(x, p) = (p[1] - x[1])^2
         x0 = zeros(1)
         p = [1.0]
-        optf = OptimizationFunction(objective, Optimization.AutoZygote())
+        optf = OptimizationFunction(objective, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optf, x0, p)
-        cache = Optimization.init(prob, ScipyBFGS())
-        sol = Optimization.solve!(cache)
+        cache = OptimizationBase.init(prob, ScipyBFGS())
+        sol = OptimizationBase.solve!(cache)
         @test sol.retcode == ReturnCode.Success
         @test sol.u ≈ [1.0] atol=1e-3
-        cache = Optimization.reinit!(cache; p = [2.0])
-        sol = Optimization.solve!(cache)
+        cache = OptimizationBase.reinit!(cache; p = [2.0])
+        sol = OptimizationBase.solve!(cache)
         @test sol.u ≈ [2.0] atol=1e-3
     end
 
@@ -291,7 +291,7 @@ end
         cbstopping = function (state, loss)
             return state.objective < 0.7
         end
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optprob, x0, _p)
         @test_throws ErrorException solve(prob, ScipyBFGS(), callback = cbstopping)
     end
@@ -304,7 +304,7 @@ end
             res[1, 2] = 2*x[2]
         end
         x0 = zeros(2)
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = cons, cons_j = cons_j)
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff(); cons = cons, cons_j = cons_j)
         prob_cobyla = OptimizationProblem(optprob, x0, _p, lcons = [-1e-6], ucons = [1e-6])
         sol = solve(prob_cobyla, ScipyCOBYLA(), maxiters = 10000)
         @test sol.retcode == ReturnCode.Success
@@ -322,7 +322,7 @@ end
         function con2_c(res, x, p)
             res .= [x[1]^2 + x[2]^2 - 1.0, x[2] * sin(x[1]) - x[1] - 2.0]
         end
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = con2_c)
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff(); cons = con2_c)
         Random.seed!(456)
         prob = OptimizationProblem(
             optprob, rand(2), _p, lcons = [0.0, -Inf], ucons = [0.0, 0.0])
@@ -338,7 +338,7 @@ end
     end
 
     @testset "method-specific options" begin
-        simple_optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        simple_optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         unconstrained_prob = OptimizationProblem(
             simple_optprob, x0, _p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
         sol = solve(unconstrained_prob, ScipyDifferentialEvolution(),
@@ -370,9 +370,9 @@ end
     end
 
     @testset "AutoDiff backends" begin
-        for adtype in [Optimization.AutoZygote(),
-            Optimization.AutoReverseDiff(),
-            Optimization.AutoForwardDiff()]
+        for adtype in [OptimizationBase.AutoZygote(),
+            OptimizationBase.AutoReverseDiff(),
+            OptimizationBase.AutoForwardDiff()]
             optf = OptimizationFunction(rosenbrock, adtype)
             prob = OptimizationProblem(optf, x0, _p)
             sol = solve(prob, ScipyBFGS())
@@ -382,14 +382,14 @@ end
     end
 
     @testset "optimization stats" begin
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optprob, x0, _p)
         sol = solve(prob, ScipyBFGS())
         @test sol.stats.time > 0
     end
 
     @testset "original result access" begin
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optprob, x0, _p)
         sol = solve(prob, ScipyBFGS())
         @test !isnothing(sol.original)
@@ -398,7 +398,7 @@ end
     end
 
     @testset "tolerance settings" begin
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optprob, x0, _p)
         sol = solve(prob, ScipyNelderMead(), abstol = 1e-8)
         @test sol.objective < 1e-7
@@ -408,7 +408,7 @@ end
 
     @testset "constraint satisfaction" begin
         cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2 - 1.0]
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = cons)
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff(); cons = cons)
         prob = OptimizationProblem(optprob, [0.5, 0.5], _p, lcons = [-0.01], ucons = [0.01])
         sol = solve(prob, ScipySLSQP())
         @test sol.retcode == ReturnCode.Success
@@ -433,7 +433,7 @@ end
         sol = solve(prob, ScipyBFGS())
         @test sol.retcode == ReturnCode.Success
         @test sol.u ≈ [3.0] atol=1e-6
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optprob, x0, _p)
         @test_throws SciMLBase.IncompatibleOptimizerError solve(prob, ScipyDifferentialEvolution())
         @test_throws SciMLBase.IncompatibleOptimizerError solve(prob, ScipyDirect())
@@ -446,7 +446,7 @@ end
     @testset "Type stability" begin
         x0_f32 = Float32[0.0, 0.0]
         p_f32 = Float32[1.0, 100.0]
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optprob, x0_f32, p_f32)
         sol = solve(prob, ScipyBFGS())
         @test sol.retcode == ReturnCode.Success

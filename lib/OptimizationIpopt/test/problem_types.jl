@@ -196,7 +196,7 @@ using SparseArrays
             res[4] = flows[4] + flows[5] - required_flow
         end
 
-        optfunc = OptimizationFunction(flow_cost, Optimization.AutoZygote();
+        optfunc = OptimizationFunction(flow_cost, OptimizationBase.AutoZygote();
                                       cons = flow_constraints)
         flows0 = fill(required_flow / 2, 5)
         prob = OptimizationProblem(optfunc, flows0, nothing;
@@ -233,7 +233,7 @@ using SparseArrays
         end
 
         n = 3
-        optfunc = OptimizationFunction(robust_objective, Optimization.AutoZygote();
+        optfunc = OptimizationFunction(robust_objective, OptimizationBase.AutoZygote();
                                       cons = robust_constraints)
         x0 = fill(1.0/n, n)
         prob = OptimizationProblem(optfunc, x0, nothing;
@@ -263,7 +263,7 @@ using SparseArrays
     #         res[2] = x[1] + x[2] - 1.0
     #     end
 
-    #     optfunc = OptimizationFunction(mpcc_objective, Optimization.AutoZygote();
+    #     optfunc = OptimizationFunction(mpcc_objective, OptimizationBase.AutoZygote();
     #                                   cons = mpcc_constraints)
     #     x0 = [0.5, 0.5]
     #     prob = OptimizationProblem(optfunc, x0, nothing;
@@ -294,7 +294,7 @@ end
             return 0.5 * dot(x, Q * x) - dot(b, x)
         end
 
-        optfunc = OptimizationFunction(large_quadratic, Optimization.AutoZygote())
+        optfunc = OptimizationFunction(large_quadratic, OptimizationBase.AutoZygote())
         x0 = randn(n)
         prob = OptimizationProblem(optfunc, x0)
 
@@ -316,7 +316,7 @@ end
         end
 
         n = 10
-        optfunc = OptimizationFunction(trig_objective, Optimization.AutoZygote())
+        optfunc = OptimizationFunction(trig_objective, OptimizationBase.AutoZygote())
         x0 = randn(n)
         prob = OptimizationProblem(optfunc, x0;
                                  lb = fill(-2π, n),

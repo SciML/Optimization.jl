@@ -1,12 +1,12 @@
 module OptimizationLBFGSB
 
-using Optimization
+using OptimizationBase
 using DocStringExtensions
 import LBFGSB as LBFGSBJL
-using OptimizationBase.SciMLBase: OptimizationStats, OptimizationFunction
+using SciMLBase: OptimizationStats, OptimizationFunction
 using OptimizationBase: ReturnCode
 using OptimizationBase.LinearAlgebra: norm
-using Optimization: deduce_retcode
+using OptimizationBase: deduce_retcode
 
 """
 $(TYPEDEF)
@@ -46,7 +46,7 @@ function task_message_to_string(task::Vector{UInt8})
     return String(task)
 end
 
-function __map_optimizer_args(cache::OptimizationCache, opt::LBFGSB;
+function __map_optimizer_args(cache::OptimizationBase.OptimizationCache, opt::LBFGSB;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -78,7 +78,7 @@ function __map_optimizer_args(cache::OptimizationCache, opt::LBFGSB;
     return mapped_args
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -104,7 +104,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         P,
         C
 }
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
 
     local x
 
@@ -137,7 +137,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cache.f.cons(cons_tmp, θ)
             cons_tmp[eq_inds] .= cons_tmp[eq_inds] - cache.lcons[eq_inds]
             cons_tmp[ineq_inds] .= cons_tmp[ineq_inds] .- cache.ucons[ineq_inds]
-            opt_state = Optimization.OptimizationState(
+            opt_state = OptimizationBase.OptimizationState(
                 u = θ, objective = x[1])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
@@ -227,7 +227,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         _loss = function (θ)
             x = cache.f(θ, cache.p)
             iter_count[] += 1
-            opt_state = Optimization.OptimizationState(
+            opt_state = OptimizationBase.OptimizationState(
                 u = θ, objective = x[1])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
@@ -262,7 +262,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
         t1 = time()
 
-        stats = Optimization.OptimizationStats(; iterations = optimizer.isave[30],
+        stats = OptimizationBase.OptimizationStats(; iterations = optimizer.isave[30],
             time = t1 - t0, fevals = optimizer.isave[34], gevals = optimizer.isave[34])
 
         return SciMLBase.build_solution(cache, cache.opt, res[2], res[1], stats = stats,

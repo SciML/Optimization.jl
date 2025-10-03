@@ -1,8 +1,8 @@
 module OptimizationPyCMA
 
 using Reexport
-@reexport using Optimization
-using PythonCall, Optimization.SciMLBase
+@reexport using OptimizationBase
+using PythonCall, SciMLBase
 
 export PyCMAOpt
 
@@ -31,8 +31,8 @@ SciMLBase.requireshessian(::PyCMAOpt) = false
 SciMLBase.requiresconsjac(::PyCMAOpt) = false
 SciMLBase.requiresconshess(::PyCMAOpt) = false
 
-# wrapping Optimization.jl args into a python dict as arguments to PyCMA opts
-function __map_optimizer_args(prob::OptimizationCache, opt::PyCMAOpt;
+# wrapping OptimizationBase.jl args into a python dict as arguments to PyCMA opts
+function __map_optimizer_args(prob::OptimizationBase.OptimizationCache, opt::PyCMAOpt;
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
@@ -42,15 +42,15 @@ function __map_optimizer_args(prob::OptimizationCache, opt::PyCMAOpt;
         @warn "common reltol is currently not used by $(opt)"
     end
 
-    # Converting Optimization.jl args to PyCMA opts
-    # Optimization.jl kwargs will overwrite PyCMA kwargs supplied to solve() 
+    # Converting OptimizationBase.jl args to PyCMA opts
+    # OptimizationBase.jl kwargs will overwrite PyCMA kwargs supplied to solve() 
 
     mapped_args = Dict{String, Any}()
 
     # adding PyCMA args
     merge!(mapped_args, Dict(string(k) => v for (k, v) in PyCMAargs))
 
-    # mapping Optimization.jl args
+    # mapping OptimizationBase.jl args
     mapped_args["bounds"] = (prob.lb, prob.ub)
 
     if !("verbose" ∈ keys(mapped_args))
@@ -95,7 +95,7 @@ function __map_pycma_retcode(stop_dict::Dict{String, Any})
     end
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -130,7 +130,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     end
 
     _cb = function (es)
-        opt_state = Optimization.OptimizationState(; iter = pyconvert(Int, es.countiter),
+        opt_state = OptimizationBase.OptimizationState(; iter = pyconvert(Int, es.countiter),
             u = pyconvert(Vector{Float64}, es.best.x),
             p = cache.p,
             objective = pyconvert(Float64, es.best.f),
@@ -146,10 +146,10 @@ function SciMLBase.__solve(cache::OptimizationCache{
     end
 
     # doing conversions
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
+    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
-    # converting the Optimization.jl Args to PyCMA format
+    # converting the OptimizationBase.jl Args to PyCMA format
     opt_args = __map_optimizer_args(cache, cache.opt; cache.solver_args...,
         maxiters = maxiters,
         maxtime = maxtime)
@@ -167,7 +167,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     retcode = __map_pycma_retcode(pyconvert(Dict{String, Any}, opt_ret_dict))
 
     # logging and returning results of the optimization
-    stats = Optimization.OptimizationStats(;
+    stats = OptimizationBase.OptimizationStats(;
         iterations = pyconvert(Int, es.countiter),
         time = t1 - t0,
         fevals = pyconvert(Int, es.countevals))

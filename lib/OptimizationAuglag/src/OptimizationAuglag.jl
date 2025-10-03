@@ -1,7 +1,6 @@
 module OptimizationAuglag
 
-using Optimization
-using OptimizationBase.SciMLBase: OptimizationProblem, OptimizationFunction, OptimizationStats
+using SciMLBase: OptimizationProblem, OptimizationFunction, OptimizationStats
 using OptimizationBase.LinearAlgebra: norm
 
 @kwdef struct AugLag
@@ -84,7 +83,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
         P,
         C
 }
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
 
     local x
 
@@ -116,7 +115,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cache.f.cons(cons_tmp, θ)
             cons_tmp[eq_inds] .= cons_tmp[eq_inds] - cache.lcons[eq_inds]
             cons_tmp[ineq_inds] .= cons_tmp[ineq_inds] .- cache.ucons[ineq_inds]
-            opt_state = Optimization.OptimizationState(u = θ, objective = x[1])
+            opt_state = OptimizationBase.OptimizationState(u = θ, objective = x[1])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
             end

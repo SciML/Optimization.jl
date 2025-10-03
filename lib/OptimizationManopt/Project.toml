@@ -3,35 +3,40 @@ uuid = "e57b7fff-7ee7-4550-b4f0-90e9476e9fb6"
 authors = ["Mateusz Baran <mateuszbaran89@gmail.com>", "Ronny Bergmann <manopt@ronnybergmann.net>"]
 version = "1.0.0"
 
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
+
 [deps]
+Manopt = "0fc0a36d-df90-57f3-8f93-d78a9fc72bb5"
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+ManifoldsBase = "3362f125-f0bb-47a3-aa74-596ffd7ef2fb"
 ManifoldDiff = "af67fdf4-a580-4b9f-bbec-742ef357defd"
 Manifolds = "1cead3c2-87b3-11e9-0ccd-23c62b72b94e"
-ManifoldsBase = "3362f125-f0bb-47a3-aa74-596ffd7ef2fb"
-Manopt = "0fc0a36d-df90-57f3-8f93-d78a9fc72bb5"
-Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
-
-[compat]
-LinearAlgebra = "1.10"
-ManifoldDiff = "0.4"
-Manifolds = "0.10"
-ManifoldsBase = "1"
-Manopt = "0.5"
-Optimization = "4.4"
-Reexport = "1.2"
-julia = "1.10"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 
 [extras]
-Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
-FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-QuadraticModels = "f468eda6-eac5-11e8-05a5-ff9e497bcd19"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 RipQP = "1e40b3f8-35eb-4cd8-8edd-3e515bb9de08"
+QuadraticModels = "f468eda6-eac5-11e8-05a5-ff9e497bcd19"
+ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
+
+[compat]
+julia = "1.10"
+Manopt = "0.5"
+OptimizationBase = "2.13"
+LinearAlgebra = "1.10"
+ManifoldsBase = "1"
+ManifoldDiff = "0.4"
+Manifolds = "0.10"
+Reexport = "1.2"
+SciMLBase = "2.58"
 
 [targets]
 test = ["Enzyme", "ForwardDiff", "FiniteDiff", "QuadraticModels", "Random", "ReverseDiff", "RipQP", "Test", "Zygote"]

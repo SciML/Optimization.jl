@@ -3,28 +3,33 @@ uuid = "36348300-93cb-4f02-beb5-3c3902f8871e"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.4.5"
 
-[deps]
-Optim = "429524aa-4258-5aef-a3af-852621145aeb"
-Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
-Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
-SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
 
-[compat]
-Optim = "1"
-Optimization = "4.4"
-PrecompileTools = "1.2"
-Reexport = "1.2"
-SparseArrays = "1.6"
-julia = "1.10"
+[deps]
+PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 
 [extras]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
+
+[compat]
+julia = "1.10"
+PrecompileTools = "1.2"
+OptimizationBase = "2.13"
+SparseArrays = "1.6"
+Optim = "1"
+Reexport = "1.2"
+SciMLBase = "2.58"
 
 [targets]
 test = ["ForwardDiff", "ModelingToolkit", "Random", "ReverseDiff", "Test", "Zygote"]

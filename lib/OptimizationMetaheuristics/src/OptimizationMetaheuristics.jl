@@ -1,8 +1,8 @@
 module OptimizationMetaheuristics
 
 using Reexport
-@reexport using Metaheuristics, Optimization
-using Optimization.SciMLBase
+@reexport using Metaheuristics, OptimizationBase
+using SciMLBase
 
 SciMLBase.requiresbounds(opt::Metaheuristics.AbstractAlgorithm) = true
 SciMLBase.allowsbounds(opt::Metaheuristics.AbstractAlgorithm) = true
@@ -31,7 +31,7 @@ function initial_population!(opt, cache, bounds, f)
     return nothing
 end
 
-function __map_optimizer_args!(cache::OptimizationCache,
+function __map_optimizer_args!(cache::OptimizationBase.OptimizationCache,
         opt::Metaheuristics.AbstractAlgorithm;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
@@ -79,7 +79,7 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
         kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -107,8 +107,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
 }
     local x
 
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
+    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     f = cache.f
     _loss = function (θ)
@@ -148,7 +148,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     t0 = time()
     opt_res = Metaheuristics.optimize(_loss, opt_bounds, cache.opt)
     t1 = time()
-    stats = Optimization.OptimizationStats(; time = t1 - t0)
+    stats = OptimizationBase.OptimizationStats(; time = t1 - t0)
     SciMLBase.build_solution(cache, cache.opt,
         Metaheuristics.minimizer(opt_res),
         Metaheuristics.minimum(opt_res); original = opt_res,

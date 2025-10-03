@@ -8,15 +8,15 @@ using Test
     l1 = rosenbrock(x0, _p)
 
     prob = OptimizationProblem(rosenbrock, x0, _p)
-    sol = Optimization.solve(prob, UOBYQA(), maxiters = 1000)
+    sol = OptimizationBase.solve(prob, UOBYQA(), maxiters = 1000)
     @test 10 * sol.objective < l1
-    sol = Optimization.solve(prob, NEWUOA(), maxiters = 1000)
+    sol = OptimizationBase.solve(prob, NEWUOA(), maxiters = 1000)
     @test 10 * sol.objective < l1
-    sol = Optimization.solve(prob, BOBYQA(), maxiters = 1000)
+    sol = OptimizationBase.solve(prob, BOBYQA(), maxiters = 1000)
     @test 10 * sol.objective < l1
-    sol = Optimization.solve(prob, LINCOA(), maxiters = 1000)
+    sol = OptimizationBase.solve(prob, LINCOA(), maxiters = 1000)
     @test 10 * sol.objective < l1
-    @test_throws SciMLBase.IncompatibleOptimizerError Optimization.solve(prob,
+    @test_throws SciMLBase.IncompatibleOptimizerError OptimizationBase.solve(prob,
         COBYLA(),
         maxiters = 1000)
 
@@ -25,7 +25,7 @@ using Test
     end
     optprob = OptimizationFunction(rosenbrock, AutoForwardDiff(), cons = con2_c)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [1, -100], ucons = [1, 100])
-    sol = Optimization.solve(prob, COBYLA(), maxiters = 1000)
+    sol = OptimizationBase.solve(prob, COBYLA(), maxiters = 1000)
     @test sol.objective < l1
 
     function con2_c(res, x, p)
@@ -33,11 +33,11 @@ using Test
     end
     optprob = OptimizationFunction(rosenbrock, AutoForwardDiff(), cons = con2_c)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [1], ucons = [1])
-    sol = Optimization.solve(prob, COBYLA(), maxiters = 1000)
+    sol = OptimizationBase.solve(prob, COBYLA(), maxiters = 1000)
     @test sol.objective < l1
 
     prob = OptimizationProblem(optprob, x0, _p, lcons = [1], ucons = [5])
-    sol = Optimization.solve(prob, COBYLA(), maxiters = 1000)
+    sol = OptimizationBase.solve(prob, COBYLA(), maxiters = 1000)
     @test sol.objective < l1
 
     function con2_c(res, x, p)
@@ -45,6 +45,6 @@ using Test
     end
     optprob = OptimizationFunction(rosenbrock, AutoModelingToolkit(), cons = con2_c)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [10], ucons = [50])
-    sol = Optimization.solve(prob, COBYLA(), maxiters = 1000)
+    sol = OptimizationBase.solve(prob, COBYLA(), maxiters = 1000)
     @test 10 * sol.objective < l1
 end

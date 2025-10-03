@@ -1,5 +1,5 @@
 using OptimizationBBO, Optimization, BlackBoxOptim
-using Optimization.SciMLBase: MultiObjectiveOptimizationFunction
+using SciMLBase: MultiObjectiveOptimizationFunction
 using Test
 
 @testset "OptimizationBBO.jl" begin
@@ -9,14 +9,14 @@ using Test
     l1 = rosenbrock(x0, _p)
 
     optprob = OptimizationFunction(rosenbrock)
-    prob = Optimization.OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0],
+    prob = OptimizationBase.OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0],
         ub = [0.8, 0.8])
     sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
     @test 10 * sol.objective < l1
 
     @test (@allocated solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())) < 1e7
 
-    prob = Optimization.OptimizationProblem(optprob, nothing, _p, lb = [-1.0, -1.0],
+    prob = OptimizationBase.OptimizationProblem(optprob, nothing, _p, lb = [-1.0, -1.0],
         ub = [0.8, 0.8])
     sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
     @test 10 * sol.objective < l1
@@ -74,7 +74,7 @@ using Test
             end
 
             mof_1 = MultiObjectiveOptimizationFunction(multi_obj_func_1)
-            prob_1 = Optimization.OptimizationProblem(mof_1, u0; lb = lb, ub = ub)
+            prob_1 = OptimizationBase.OptimizationProblem(mof_1, u0; lb = lb, ub = ub)
             sol_1 = solve(prob_1, opt, NumDimensions = 2,
                 FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true))
 
@@ -101,7 +101,7 @@ using Test
             end
 
             mof_1 = MultiObjectiveOptimizationFunction(multi_obj_func_1)
-            prob_1 = Optimization.OptimizationProblem(mof_1, u0; lb = lb, ub = ub)
+            prob_1 = OptimizationBase.OptimizationProblem(mof_1, u0; lb = lb, ub = ub)
             sol_1 = solve(prob_1, opt, NumDimensions = 2,
                 FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true),
                 callback = cb)
@@ -127,7 +127,7 @@ using Test
             end
 
             mof_2 = MultiObjectiveOptimizationFunction(multi_obj_func_2)
-            prob_2 = Optimization.OptimizationProblem(mof_2, u0; lb = lb, ub = ub)
+            prob_2 = OptimizationBase.OptimizationProblem(mof_2, u0; lb = lb, ub = ub)
             sol_2 = solve(prob_2, opt, NumDimensions = 2,
                 FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true))
 
@@ -147,7 +147,7 @@ using Test
             end
 
             mof_3 = MultiObjectiveOptimizationFunction(multi_obj_func_3)
-            prob_3 = Optimization.OptimizationProblem(mof_3, u0; lb = lb, ub = ub)
+            prob_3 = OptimizationBase.OptimizationProblem(mof_3, u0; lb = lb, ub = ub)
             sol_3 = solve(prob_3, opt, NumDimensions = 2,
                 FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true))
 

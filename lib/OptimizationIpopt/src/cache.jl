@@ -80,11 +80,11 @@ function IpoptCache(prob, opt;
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     if prob.f.adtype isa ADTypes.AutoSymbolics || (prob.f.adtype isa ADTypes.AutoSparse &&
         prob.f.adtype.dense_ad isa ADTypes.AutoSymbolics)
-        f = Optimization.instantiate_function(
+        f = OptimizationBase.instantiate_function(
             prob.f, reinit_cache, prob.f.adtype, num_cons;
             g = true, h = true, cons_j = true, cons_h = true)
     else
-        f = Optimization.instantiate_function(
+        f = OptimizationBase.instantiate_function(
             prob.f, reinit_cache, prob.f.adtype, num_cons;
             g = true, h = true, cons_j = true, cons_vjp = true, lag_h = true)
     end
@@ -150,7 +150,7 @@ end
 function eval_objective(cache::IpoptCache, x)
     l = cache.f(x, cache.p)
     cache.f_calls += 1
-    return cache.sense === Optimization.MaxSense ? -l : l
+    return cache.sense === OptimizationBase.MaxSense ? -l : l
 end
 
 function eval_constraint(cache::IpoptCache, g, x)
@@ -167,7 +167,7 @@ function eval_objective_gradient(cache::IpoptCache, G, x)
     cache.f.grad(G, x)
     cache.f_grad_calls += 1
 
-    if cache.sense === Optimization.MaxSense
+    if cache.sense === OptimizationBase.MaxSense
         G .*= -one(eltype(G))
     end
 
@@ -239,7 +239,7 @@ function hessian_lagrangian_structure(cache::IpoptCache)
             end
         end
     elseif !sparse_obj
-        # Performance optimization. If both are dense, no need to repeat
+        # Performance OptimizationBase. If both are dense, no need to repeat
     else
         for col in 1:N, row in 1:col
             push!(inds, (row, col))
@@ -256,7 +256,7 @@ function eval_hessian_lagrangian(cache::IpoptCache{T},
     if cache.f.lag_h !== nothing
         cache.f.lag_h(h, x, σ, Vector(μ))
 
-        if cache.sense === Optimization.MaxSense
+        if cache.sense === OptimizationBase.MaxSense
             h .*= -one(eltype(h))
         end
 
@@ -320,7 +320,7 @@ function eval_hessian_lagrangian(cache::IpoptCache{T},
         end
     end
 
-    if cache.sense === Optimization.MaxSense
+    if cache.sense === OptimizationBase.MaxSense
         h .*= -one(eltype(h))
     end
 

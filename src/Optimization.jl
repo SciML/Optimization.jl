@@ -20,9 +20,6 @@ import SciMLBase: OptimizationProblem,
                   MaxSense, MinSense, OptimizationStats
 export ObjSense, MaxSense, MinSense
 
-include("utils.jl")
-include("state.jl")
-
 export solve
 
 end # module

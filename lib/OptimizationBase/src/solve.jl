@@ -12,11 +12,11 @@ end
 const OPTIMIZER_MISSING_ERROR_MESSAGE = """
                                         Optimization algorithm not found. Either the chosen algorithm is not a valid solver
                                         choice for the `OptimizationProblem`, or the Optimization solver library is not loaded.
-                                        Make sure that you have loaded an appropriate Optimization.jl solver library, for example,
+                                        Make sure that you have loaded an appropriate OptimizationBase.jl solver library, for example,
                                         `solve(prob,Optim.BFGS())` requires `using OptimizationOptimJL` and
                                         `solve(prob,Adam())` requires `using OptimizationOptimisers`.
 
-                                        For more information, see the Optimization.jl documentation: <https://docs.sciml.ai/Optimization/stable/>.
+                                        For more information, see the OptimizationBase.jl documentation: <https://docs.sciml.ai/Optimization/stable/>.
                                         """
 
 struct OptimizerMissingError <: Exception

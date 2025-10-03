@@ -1,9 +1,9 @@
 module OptimizationMOI
 
 using Reexport
-@reexport using Optimization
+@reexport using OptimizationBase
 using MathOptInterface
-using Optimization.SciMLBase
+using SciMLBase
 using SciMLStructures
 using SymbolicIndexingInterface
 using SparseArrays

@@ -1,8 +1,8 @@
 module OptimizationEnzymeExt
 
 import OptimizationBase, OptimizationBase.ArrayInterface
-import OptimizationBase.SciMLBase: OptimizationFunction
-import OptimizationBase.SciMLBase
+import SciMLBase: OptimizationFunction
+import SciMLBase
 import OptimizationBase.LinearAlgebra: I, dot
 import OptimizationBase.ADTypes: AutoEnzyme
 using Enzyme

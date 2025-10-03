@@ -1,8 +1,8 @@
 module OptimizationQuadDIRECT
 
 using Reexport
-@reexport using Optimization
-using QuadDIRECT, Optimization.SciMLBase
+@reexport using OptimizationBase
+using QuadDIRECT, SciMLBase
 
 export QuadDirect
 
@@ -48,7 +48,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::QuadDirect;
         kwargs...)
     local x, _loss
 
-    maxiters = Optimization._check_and_convert_maxiters(maxiters)
+    maxiters = OptimizationBase._check_and_convert_maxiters(maxiters)
 
     if splits === nothing
         error("You must provide the initial locations at which to evaluate the function in `splits` (a list of 3-vectors with values in strictly increasing order and within the specified bounds).")
@@ -66,7 +66,7 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::QuadDirect;
     root, x0 = QuadDIRECT.analyze(_loss, splits, prob.lb, prob.ub; opt_arg...)
     box = minimum(root)
     t1 = time()
-    stats = Optimization.OptimizationStats(; time = t1 - t0)
+    stats = OptimizationBase.OptimizationStats(; time = t1 - t0)
     SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
         QuadDIRECT.position(box, x0), QuadDIRECT.value(box);
         original = root, stats = stats)

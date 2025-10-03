@@ -11,8 +11,8 @@ x0 = zeros(2)
 _p = [1.0, 100.0]
 l1 = rosenbrock(x0, _p)
 
-optfunc = OptimizationFunction((x, p) -> -rosenbrock(x, p), Optimization.AutoZygote())
-prob = OptimizationProblem(optfunc, x0, _p; sense = Optimization.MaxSense)
+optfunc = OptimizationFunction((x, p) -> -rosenbrock(x, p), OptimizationBase.AutoZygote())
+prob = OptimizationProblem(optfunc, x0, _p; sense = OptimizationBase.MaxSense)
 
 callback = function (state, l)
     display(l)
@@ -40,7 +40,7 @@ function _test_sparse_derivatives_hs071(backend, optimizer)
     prob = OptimizationProblem(
         OptimizationFunction(objective, backend; cons = constraints),
         [1.0, 5.0, 5.0, 1.0];
-        sense = Optimization.MinSense,
+        sense = OptimizationBase.MinSense,
         lb = [1.0, 1.0, 1.0, 1.0],
         ub = [5.0, 5.0, 5.0, 5.0],
         lcons = [25.0, 40.0],
@@ -91,7 +91,7 @@ include("problem_types.jl")
     end
     lag_hess_prototype = sparse([1 1; 0 1])
 
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff();
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff();
         cons = cons, lag_h = lagh, lag_hess_prototype)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, 0.5])
     sol = solve(prob, IpoptOptimizer())
@@ -111,7 +111,7 @@ end
     @test sol.u ≈ [1.0] # ≈ [1]
 
     @test_broken begin # needs reinit/remake fixes
-        cache = Optimization.reinit!(cache; p = [2.0])
+        cache = OptimizationBase.reinit!(cache; p = [2.0])
         sol = solve!(cache)
         @test sol.u ≈ [2.0]  # ≈ [2]
     end
@@ -123,7 +123,7 @@ end
     p = [1.0, 100.0]
 
     @testset "additional_options dictionary" begin
-        optfunc = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optfunc = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, x0, p)
 
         # Test with various option types
@@ -150,7 +150,7 @@ end
     end
 
     @testset "Common interface arguments override" begin
-        optfunc = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optfunc = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, x0, p)
 
         # Test that reltol overrides default tolerance
@@ -175,7 +175,7 @@ end
     end
 
     @testset "Priority: struct < additional_options < solve args" begin
-        optfunc = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optfunc = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, x0, p)
 
         # Struct field is overridden by solve argument

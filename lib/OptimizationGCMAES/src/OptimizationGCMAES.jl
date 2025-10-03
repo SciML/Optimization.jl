@@ -1,8 +1,8 @@
 module OptimizationGCMAES
 
 using Reexport
-@reexport using Optimization
-using GCMAES, Optimization.SciMLBase
+@reexport using OptimizationBase
+using GCMAES, SciMLBase
 
 export GCMAESOpt
 
@@ -22,7 +22,7 @@ SciMLBase.requireshessian(::GCMAESOpt) = false
 SciMLBase.requiresconsjac(::GCMAESOpt) = false
 SciMLBase.requiresconshess(::GCMAESOpt) = false
 
-function __map_optimizer_args(cache::OptimizationCache, opt::GCMAESOpt;
+function __map_optimizer_args(cache::OptimizationBase.OptimizationCache, opt::GCMAESOpt;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -61,7 +61,7 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
         kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -102,15 +102,15 @@ function SciMLBase.__solve(cache::OptimizationCache{
         end
     end
 
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
+    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     opt_args = __map_optimizer_args(cache, cache.opt; cache.solver_args...,
         maxiters = maxiters,
         maxtime = maxtime)
 
     t0 = time()
-    if cache.sense === Optimization.MaxSense
+    if cache.sense === OptimizationBase.MaxSense
         opt_xmin, opt_fmin,
         opt_ret = GCMAES.maximize(
             isnothing(cache.f.grad) ? _loss :
@@ -126,7 +126,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
             cache.ub; opt_args...)
     end
     t1 = time()
-    stats = Optimization.OptimizationStats(;
+    stats = OptimizationBase.OptimizationStats(;
         iterations = maxiters === nothing ? 0 : maxiters,
         time = t1 - t0)
     SciMLBase.build_solution(cache, cache.opt,

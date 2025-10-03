@@ -3,10 +3,13 @@ uuid = "dfa73e59-e644-4d8a-bf84-188d7ecb34e4"
 authors = ["Paras Puneet Singh <paras.puneet2204@gmail.com>"]
 version = "0.1.2"
 
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
+
 [deps]
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
@@ -17,7 +20,7 @@ NonlinearSolve = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
 [compat]
 DiffEqBase = "6.190"
 ForwardDiff = "0.10, 1"
-Optimization = "4.4"
+OptimizationBase = "2.13"
 OrdinaryDiffEq = "6.70"
 NonlinearSolve = "4"
 Reexport = "1"
