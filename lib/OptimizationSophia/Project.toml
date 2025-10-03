@@ -3,6 +3,9 @@ uuid = "892fee11-dca1-40d6-b698-84ba0d87399a"
 authors = ["paramthakkar123 <paramthakkar864@gmail.com>"]
 version = "1.0.0"
 
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
+
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -21,7 +24,7 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 ComponentArrays = "0.15.29"
 Lux = "1.16.0"
 MLUtils = "0.4.8"
-OptimizationBase = "2.10"
+OptimizationBase = "2.13"
 OrdinaryDiffEqTsit5 = "1.2.0"
 Random = "1.10.0"
 SciMLBase = "2.58"

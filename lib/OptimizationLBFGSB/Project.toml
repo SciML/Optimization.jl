@@ -3,6 +3,9 @@ uuid = "22f7324a-a79d-40f2-bebe-3af60c77bd15"
 authors = ["paramthakkar123 <paramthakkar864@gmail.com>"]
 version = "1.0.0"
 
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
+
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 LBFGSB = "5be7bae1-8223-5378-bac3-9e7378a2f6e6"
@@ -20,7 +23,7 @@ DocStringExtensions = "0.9.5"
 ForwardDiff = "1.0.1"
 LBFGSB = "0.4.1"
 MLUtils = "0.4.8"
-OptimizationBase = "2.10"
+OptimizationBase = "2.13"
 SciMLBase = "2.58"
 Zygote = "0.7.10"
 julia = "1.10"

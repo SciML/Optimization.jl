@@ -3,6 +3,9 @@ uuid = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.3.4"
 
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
+
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -17,7 +20,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 julia = "1.10"
-OptimizationBase = "2.10"
+OptimizationBase = "2.13"
 NLopt = "1.1"
 SciMLBase = "2.58"
 Reexport = "1.2"

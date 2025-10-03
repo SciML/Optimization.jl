@@ -3,6 +3,9 @@ uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.5.7"
 
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
+
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
@@ -28,7 +31,7 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
 HiGHS = "1"
-OptimizationBase = "2.10"
+OptimizationBase = "2.13"
 Test = "1.6"
 Symbolics = "6"
 AmplNLWriter = "1"
