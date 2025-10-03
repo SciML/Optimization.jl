@@ -1,7 +1,7 @@
 name = "OptimizationSciPy"
 uuid = "cce07bd8-c79b-4b00-aee8-8db9cce22837"
 authors = ["Aditya Pandey <adityapand3y666@gmail.com> and contributors"]
-version = "0.4.3"
+version = "0.4.2"
 
 [deps]
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
