@@ -5,6 +5,7 @@ version = "0.3.1"
 
 [sources]
 OptimizationBase = {path = "../OptimizationBase"}
+OptimizationNLopt = {path = "../OptimizationNLopt"}
 
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
