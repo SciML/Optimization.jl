@@ -5,7 +5,6 @@ version = "1.0.0"
 
 [sources]
 OptimizationBase = {path = "../OptimizationBase"}
-OptimizationOptimisers = {path = "../OptimizationOptimisers"}
 
 [deps]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
