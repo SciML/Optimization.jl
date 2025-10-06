@@ -1,7 +1,7 @@
 name = "OptimizationPolyalgorithms"
 uuid = "500b13db-7e66-49ce-bda4-eed966be6282"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.1"
+version = "0.3.2"
 
 [sources]
 OptimizationBase = {path = "../OptimizationBase"}
@@ -19,7 +19,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 julia = "1.10"
-OptimizationBase = "2.13"
+OptimizationBase = "3"
 OptimizationOptimisers = "0.3"
 SciMLBase = "2.58"
 Reexport = "1.2"

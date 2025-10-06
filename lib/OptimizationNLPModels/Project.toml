@@ -1,7 +1,7 @@
 name = "OptimizationNLPModels"
 uuid = "064b21be-54cf-11ef-1646-cdfee32b588f"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.0.2"
+version = "0.0.3"
 
 [sources]
 OptimizationBase = {path = "../OptimizationBase"}
@@ -26,7 +26,7 @@ OptimizationOptimJL = "36348300-93cb-4f02-beb5-3c3902f8871e"
 julia = "1.10"
 NLPModels = "0.21"
 ADTypes = "1.7"
-OptimizationBase = "2.13"
+OptimizationBase = "3"
 SciMLBase = "2.58"
 Reexport = "1.2"
 

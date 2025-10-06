@@ -1,7 +1,7 @@
 name = "OptimizationCMAEvolutionStrategy"
 uuid = "bd407f91-200f-4536-9381-e4ba712f53f8"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.2"
+version = "0.3.3"
 
 [sources]
 OptimizationBase = {path = "../OptimizationBase"}
@@ -18,7 +18,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [compat]
 CMAEvolutionStrategy = "0.2"
 julia = "1.10"
-OptimizationBase = "2.13"
+OptimizationBase = "3"
 SciMLBase = "2.58"
 Reexport = "1.2"
 

@@ -1,7 +1,7 @@
 name = "OptimizationIpopt"
 uuid = "43fad042-7963-4b32-ab19-e2a4f9a67124"
 authors = ["Sebastian Micluța-Câmpeanu <sebastian.mc95@proton.me> and contributors"]
-version = "0.2.2"
+version = "0.2.3"
 
 [sources]
 OptimizationBase = {path = "../OptimizationBase"}
@@ -18,7 +18,7 @@ SymbolicIndexingInterface = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
 Ipopt = "1.10.3"
 LinearAlgebra = "1.10.0"
 ModelingToolkit = "10.23"
-OptimizationBase = "2.13"
+OptimizationBase = "3"
 SciMLBase = "2.90.0"
 SparseArrays = "1.10.0"
 SymbolicIndexingInterface = "0.3.40"

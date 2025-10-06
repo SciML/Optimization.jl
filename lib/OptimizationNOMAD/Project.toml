@@ -1,7 +1,7 @@
 name = "OptimizationNOMAD"
 uuid = "2cab0595-8222-4775-b714-9828e6a9e01b"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.2"
+version = "0.3.3"
 
 [sources]
 OptimizationBase = {path = "../OptimizationBase"}
@@ -17,7 +17,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 julia = "1.10"
-OptimizationBase = "2.13"
+OptimizationBase = "3"
 NOMAD = "2.4.1"
 SciMLBase = "2.58"
 Reexport = "1.2"

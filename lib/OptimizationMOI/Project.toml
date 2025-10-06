@@ -1,7 +1,7 @@
 name = "OptimizationMOI"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.5.7"
+version = "0.5.8"
 
 [sources]
 OptimizationBase = {path = "../OptimizationBase"}
@@ -31,7 +31,7 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
 HiGHS = "1"
-OptimizationBase = "2.13"
+OptimizationBase = "3"
 Test = "1.6"
 Symbolics = "6"
 AmplNLWriter = "1"

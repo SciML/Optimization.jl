@@ -1,7 +1,7 @@
 name = "OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.11"
+version = "0.3.12"
 
 [sources]
 OptimizationBase = {path = "../OptimizationBase"}
@@ -26,7 +26,7 @@ Lux = "b2108857-7c20-44ae-9111-449ecde12c47"
 
 [compat]
 julia = "1.10"
-OptimizationBase = "2.13"
+OptimizationBase = "3"
 ProgressLogging = "0.1"
 SciMLBase = "2.58"
 Optimisers = "0.2, 0.3, 0.4"

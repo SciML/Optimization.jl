@@ -1,7 +1,7 @@
 name = "OptimizationSciPy"
 uuid = "cce07bd8-c79b-4b00-aee8-8db9cce22837"
 authors = ["Aditya Pandey <adityapand3y666@gmail.com> and contributors"]
-version = "0.4.2"
+version = "0.4.3"
 
 [sources]
 OptimizationBase = {path = "../OptimizationBase"}
@@ -22,7 +22,7 @@ ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 
 [compat]
 julia = "1.10"
-OptimizationBase = "2.13"
+OptimizationBase = "3"
 SciMLBase = "2.58"
 Reexport = "1.2"
 PythonCall = "0.9"
