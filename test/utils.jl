@@ -1,6 +1,6 @@
 using Test
 using Optimization
-using Optimization: get_maxiters,
+using OptimizationBase: get_maxiters,
                     decompose_trace, _check_and_convert_maxiters,
                     _check_and_convert_maxtime,
                     deduce_retcode, STOP_REASON_MAP
