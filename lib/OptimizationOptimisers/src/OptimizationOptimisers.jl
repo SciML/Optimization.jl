@@ -95,7 +95,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
     gevals = 0
     t0 = time()
     breakall = false
-    OptimizationBase.@withprogress cache.progress name="Training" begin
+    begin
         for epoch in 1:epochs
             if breakall
                 break
