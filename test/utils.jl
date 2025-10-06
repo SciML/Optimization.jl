@@ -1,15 +1,10 @@
 using Test
 using Optimization
-using Optimization: get_maxiters, maybe_with_logger, default_logger, @withprogress,
+using Optimization: get_maxiters,
                     decompose_trace, _check_and_convert_maxiters,
                     _check_and_convert_maxtime,
                     deduce_retcode, STOP_REASON_MAP
 using SciMLBase: ReturnCode
-using Logging
-using ProgressLogging
-using LoggingExtras
-using ConsoleProgressMonitor
-using TerminalLoggers
 
 @testset "Utils Tests" begin
     @testset "get_maxiters" begin
@@ -23,43 +18,6 @@ using TerminalLoggers
             # If the function has issues, we can skip detailed testing
             @test_skip false
         end
-    end
-
-    @testset "maybe_with_logger" begin
-        # Test with no logger (nothing)
-        result = maybe_with_logger(() -> 42, nothing)
-        @test result == 42
-
-        # Test with logger
-        test_logger = NullLogger()
-        result = maybe_with_logger(() -> 24, test_logger)
-        @test result == 24
-    end
-
-    @testset "default_logger" begin
-        # Test with logger that has progress level enabled
-        progress_logger = ConsoleLogger(stderr, Logging.Debug)
-        result = default_logger(progress_logger)
-        @test result === nothing
-
-        # Test with logger that doesn't have progress level enabled
-        info_logger = ConsoleLogger(stderr, Logging.Info)
-        result = default_logger(info_logger)
-        @test result isa LoggingExtras.TeeLogger
-    end
-
-    @testset "@withprogress macro" begin
-        # Test with progress = false
-        result = @withprogress false begin
-            42
-        end
-        @test result == 42
-
-        # Test with progress = true
-        result = @withprogress true begin
-            24
-        end
-        @test result == 24
     end
 
     @testset "decompose_trace" begin
