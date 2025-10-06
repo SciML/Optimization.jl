@@ -1,8 +1,8 @@
 module OptimizationSophia
 
-using OptimizationBase.SciMLBase
+using SciMLBase
 using OptimizationBase: OptimizationCache
-using Optimization
+using OptimizationBase
 using Random
 
 """
@@ -28,12 +28,12 @@ first-order methods like Adam and SGD while avoiding the computational cost of f
 ## Example
 
 ```julia
-using Optimization, OptimizationOptimisers
+using OptimizationBase, OptimizationOptimisers
 
 # Define optimization problem
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
-optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
 prob = OptimizationProblem(optf, x0)
 
 # Solve with Sophia
@@ -84,7 +84,7 @@ function SciMLBase.__init(prob::OptimizationProblem, opt::Sophia;
         save_best, kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -118,7 +118,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     λ = uType(cache.opt.λ)
     ρ = uType(cache.opt.ρ)
 
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
 
     if OptimizationBase.isa_dataiterator(cache.p)
         data = cache.p
@@ -146,7 +146,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
                 cache.f.grad(gₜ, θ)
                 x = cache.f(θ)
             end
-            opt_state = Optimization.OptimizationState(;
+            opt_state = OptimizationBase.OptimizationState(;
                 iter = i + (epoch - 1) * length(data),
                 u = θ,
                 objective = first(x),

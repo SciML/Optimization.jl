@@ -17,7 +17,7 @@ using SparseArrays
         x0 = [0.0, 0.0]
         p = [1.0, 100.0]
 
-        optfunc = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optfunc = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, x0, p)
 
         # Test with tight tolerances
@@ -41,7 +41,7 @@ using SparseArrays
             res[2] = x[1]^2 + x[2]^2 - 2.0
         end
 
-        optfunc = OptimizationFunction(obj, Optimization.AutoZygote(); cons = cons)
+        optfunc = OptimizationFunction(obj, OptimizationBase.AutoZygote(); cons = cons)
         prob = OptimizationProblem(optfunc, [0.5, 0.5], nothing;
                                  lcons = [0.0, 0.0],
                                  ucons = [0.0, 0.0])
@@ -60,7 +60,7 @@ using SparseArrays
             return sin(x[1]) * cos(x[2]) + exp(-x[1]^2 - x[2]^2)
         end
 
-        optfunc = OptimizationFunction(complex_obj, Optimization.AutoZygote())
+        optfunc = OptimizationFunction(complex_obj, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, [0.1, 0.1], nothing)
 
         # Run with derivative test level 1 (first derivatives only)
@@ -90,7 +90,7 @@ using SparseArrays
             return sum
         end
 
-        optfunc = OptimizationFunction(rosenbrock_n, Optimization.AutoZygote())
+        optfunc = OptimizationFunction(rosenbrock_n, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, x0, p)
 
         # Test with different linear solver strategies
@@ -112,7 +112,7 @@ using SparseArrays
             res[1] = 1e3 * x[1] + 1e-3 * x[2] - 1.0
         end
 
-        optfunc = OptimizationFunction(scaled_obj, Optimization.AutoZygote();
+        optfunc = OptimizationFunction(scaled_obj, OptimizationBase.AutoZygote();
                                       cons = scaled_cons)
         prob = OptimizationProblem(optfunc, [1.0, 1.0], nothing;
                                  lcons = [0.0],
@@ -140,7 +140,7 @@ using SparseArrays
             res[2] = x[1]^2 + x[2]^2 - 0.5
         end
 
-        optfunc = OptimizationFunction(difficult_obj, Optimization.AutoZygote();
+        optfunc = OptimizationFunction(difficult_obj, OptimizationBase.AutoZygote();
                                       cons = difficult_cons)
         # Start from an infeasible point
         prob = OptimizationProblem(optfunc, [2.0, 2.0], nothing;
@@ -167,7 +167,7 @@ using SparseArrays
         x0 = [0.0, 0.0]
         p = [1.0, 100.0]
 
-        optfunc = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optfunc = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, x0, p)
 
         # Test adaptive mu strategy
@@ -192,7 +192,7 @@ using SparseArrays
             return (x[1] - 1)^2 + (x[2] - 2)^2 + (x[3] - 3)^2
         end
 
-        optfunc = OptimizationFunction(fixed_var_obj, Optimization.AutoZygote())
+        optfunc = OptimizationFunction(fixed_var_obj, OptimizationBase.AutoZygote())
         # Fix x[2] = 2.0 by setting equal bounds
         prob = OptimizationProblem(optfunc, [0.0, 2.0, 0.0], nothing;
                                  lb = [-Inf, 2.0, -Inf],
@@ -215,9 +215,9 @@ using SparseArrays
 
         n = 5
         optfunc = OptimizationFunction(slow_converge_obj,
-                                      Optimization.AutoZygote())
+                                      OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, zeros(n), nothing;
-                                 sense = Optimization.MaxSense)
+                                 sense = OptimizationBase.MaxSense)
 
         sol = solve(prob, IpoptOptimizer(
                    acceptable_tol = 1e-4,
@@ -235,7 +235,7 @@ end
     x0 = [0.0, 0.0]
     p = [1.0, 100.0]
 
-    optfunc = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+    optfunc = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
     prob = OptimizationProblem(optfunc, x0, p)
 
     @testset "Verbose levels" begin

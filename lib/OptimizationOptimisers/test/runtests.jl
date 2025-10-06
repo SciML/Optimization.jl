@@ -9,7 +9,7 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
     _p = [1.0, 100.0]
     l1 = rosenbrock(x0, _p)
 
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
 
     prob = OptimizationProblem(optprob, x0, _p)
 
@@ -22,7 +22,7 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
     sumfunc(x0, _p) = sum(abs2, (x0 - _p))
     l1 = sumfunc(x0, _p)
 
-    optprob = OptimizationFunction(sumfunc, Optimization.AutoZygote())
+    optprob = OptimizationFunction(sumfunc, OptimizationBase.AutoZygote())
 
     prob = OptimizationProblem(optprob, x0, _p)
 
@@ -34,7 +34,7 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
 
     @testset "epochs & maxiters" begin
         optprob = SciMLBase.OptimizationFunction(
-            (u, data) -> sum(u) + sum(data), Optimization.AutoZygote())
+            (u, data) -> sum(u) + sum(data), OptimizationBase.AutoZygote())
         prob = SciMLBase.OptimizationProblem(
             optprob, ones(2), MLUtils.DataLoader(ones(2, 2)))
         @test_throws ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data).") solve(
@@ -58,14 +58,14 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
 
         prob = OptimizationProblem(
             OptimizationFunction(objective,
-                Optimization.AutoForwardDiff()), x0,
+                OptimizationBase.AutoForwardDiff()), x0,
             p)
-        cache = Optimization.init(prob, Optimisers.Adam(0.1), maxiters = 1000)
-        sol = Optimization.solve!(cache)
+        cache = OptimizationBase.init(prob, Optimisers.Adam(0.1), maxiters = 1000)
+        sol = OptimizationBase.solve!(cache)
         @test sol.u≈[1.0] atol=1e-3
 
-        cache = Optimization.reinit!(cache; p = [2.0])
-        sol = Optimization.solve!(cache)
+        cache = OptimizationBase.reinit!(cache; p = [2.0])
+        sol = OptimizationBase.solve!(cache)
         @test_broken sol.u≈[2.0] atol=1e-3
     end
 
@@ -75,7 +75,7 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
         _p = [1.0, 100.0]
         l1 = rosenbrock(x0, _p)
 
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
 
         prob = OptimizationProblem(optprob, x0, _p)
         function callback(state, l)
@@ -116,13 +116,13 @@ end
     optf = OptimizationFunction(loss, AutoZygote())
     prob = OptimizationProblem(optf, ps_ca, data)
 
-    res = Optimization.solve(prob, Optimisers.Adam(), epochs = 50)
+    res = OptimizationBase.solve(prob, Optimisers.Adam(), epochs = 50)
 
     @test res.stats.iterations == 50 * length(data)
     @test res.stats.fevals == 50 * length(data)
     @test res.stats.gevals == 50 * length(data)
 
-    res = Optimization.solve(prob, Optimisers.Adam(), callback = callback, epochs = 100)
+    res = OptimizationBase.solve(prob, Optimisers.Adam(), callback = callback, epochs = 100)
 
     @test res.objective < 1e-3
 
@@ -130,7 +130,7 @@ end
     optf = OptimizationFunction(loss, AutoZygote())
     prob = OptimizationProblem(optf, ps_ca, data)
 
-    res = Optimization.solve(prob, Optimisers.Adam(), callback = callback, epochs = 10000)
+    res = OptimizationBase.solve(prob, Optimisers.Adam(), callback = callback, epochs = 10000)
 
     @test res.objective < 1e-4
 end

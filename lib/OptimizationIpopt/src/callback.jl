@@ -78,7 +78,7 @@ function (cb::IpoptProgressLogger)(
         cb.lambda
     )
 
-    opt_state = Optimization.OptimizationState(;
+    opt_state = OptimizationBase.OptimizationState(;
         iter = Int(iter_count), cb.u, objective = obj_value, original)
     cb.iterations[] = Int(iter_count)
 
@@ -94,7 +94,7 @@ function (cb::IpoptProgressLogger)(
     end
     if !isnothing(cb.callback)
         # return `true` to keep going, or `false` to terminate the optimization
-        # this is the other way around compared to Optimization.jl callbacks
+        # this is the other way around compared to OptimizationBase.jl callbacks
         !cb.callback(opt_state, obj_value)
     else
         true

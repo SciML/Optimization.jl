@@ -1,4 +1,5 @@
-using Optimization, OptimizationOptimJL, OptimizationMOI, Ipopt, Test
+using Optimization, OptimizationOptimJL, OptimizationMOI, OptimizationLBFGSB
+using Ipopt, Test
 using ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker, Mooncake
 using Enzyme, Random
 
@@ -22,7 +23,7 @@ end
     optf = OptimizationFunction(rosenbrock; grad = g!, hess = h!)
 
     prob = OptimizationProblem(optf, x0)
-    sol = solve(prob, Optimization.LBFGS())
+    sol = solve(prob, OptimizationLBFGSB.LBFGSB())
 
     @test 10 * sol.objective < l1
     @test sol.retcode == ReturnCode.Success
@@ -66,7 +67,7 @@ end
             end
         end
 
-        sol = solve(prob, Optimization.LBFGS(), maxiters = 1000)
+        sol = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 1000)
         @test 10 * sol.objective < l1
         @test sol.retcode == ReturnCode.Success
     end
@@ -82,7 +83,7 @@ end
         prob = OptimizationProblem(
             optf, x0, lb = [-1.0, -1.0], ub = [1.0, 1.0], lcons = [0.0], ucons = [0.0])
 
-        sol = solve(prob, Optimization.LBFGS(), maxiters = 1000)
+        sol = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 1000)
         @test 10 * sol.objective < l1
 
         # Requires Hession, which Mooncake doesn't support at the moment. 
@@ -107,7 +108,7 @@ end
         prob = OptimizationProblem(optf, x0, lb = [-1.0, -1.0], ub = [1.0, 1.0],
             lcons = [1.0, -2.0], ucons = [1.0, 2.0])
 
-        sol = solve(prob, Optimization.LBFGS(), maxiters = 1000)
+        sol = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 1000)
         @test 10 * sol.objective < l1
 
         # Requires Hession, which Mooncake doesn't support at the moment. 

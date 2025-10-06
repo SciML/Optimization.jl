@@ -3,19 +3,24 @@ uuid = "2cab0595-8222-4775-b714-9828e6a9e01b"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.3.2"
 
-[deps]
-Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-NOMAD = "02130f1c-4665-5b79-af82-ff1385104aa0"
-Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
 
-[compat]
-julia = "1.10"
-NOMAD = "2.4.1"
-Optimization = "4.4"
-Reexport = "1.2"
+[deps]
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
+NOMAD = "02130f1c-4665-5b79-af82-ff1385104aa0"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[compat]
+julia = "1.10"
+OptimizationBase = "2.13"
+NOMAD = "2.4.1"
+SciMLBase = "2.58"
+Reexport = "1.2"
 
 [targets]
 test = ["Test"]

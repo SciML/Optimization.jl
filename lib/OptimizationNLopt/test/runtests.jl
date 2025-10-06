@@ -7,13 +7,13 @@ using Test, Random
     _p = [1.0, 100.0]
     l1 = rosenbrock(x0, _p)
 
-    optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), Optimization.AutoZygote())
-    prob = OptimizationProblem(optprob, x0, _p; sense = Optimization.MaxSense)
+    optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), OptimizationBase.AutoZygote())
+    prob = OptimizationProblem(optprob, x0, _p; sense = OptimizationBase.MaxSense)
     sol = solve(prob, NLopt.Opt(:LN_BOBYQA, 2))
     @test sol.retcode == ReturnCode.Success
     @test 10 * sol.objective < l1
 
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
     prob = OptimizationProblem(optprob, x0, _p)
 
     sol = solve(prob, NLopt.Opt(:LD_LBFGS, 2))
@@ -63,15 +63,15 @@ using Test, Random
         x0 = zeros(1)
         p = [1.0]
 
-        optf = OptimizationFunction(objective, Optimization.AutoZygote())
+        optf = OptimizationFunction(objective, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optf, x0, p)
-        cache = Optimization.init(prob, NLopt.Opt(:LD_LBFGS, 1))
-        sol = Optimization.solve!(cache)
+        cache = OptimizationBase.init(prob, NLopt.Opt(:LD_LBFGS, 1))
+        sol = OptimizationBase.solve!(cache)
         @test sol.retcode == ReturnCode.Success
         @test sol.u≈[1.0] atol=1e-3
 
-        cache = Optimization.reinit!(cache; p = [2.0])
-        sol = Optimization.solve!(cache)
+        cache = OptimizationBase.reinit!(cache; p = [2.0])
+        sol = OptimizationBase.solve!(cache)
         # @test sol.retcode == ReturnCode.Success
         @test sol.u≈[2.0] atol=1e-3
     end
@@ -94,8 +94,8 @@ using Test, Random
         system(x, p) = sum((A * x - b) .^ 2)
         x0 = zeros(n)
         __p = Float64[]
-        optprob = OptimizationFunction((x, p) -> -system(x, p), Optimization.AutoZygote())
-        prob = OptimizationProblem(optprob, x0, __p; sense = Optimization.MaxSense)
+        optprob = OptimizationFunction((x, p) -> -system(x, p), OptimizationBase.AutoZygote())
+        prob = OptimizationProblem(optprob, x0, __p; sense = OptimizationBase.MaxSense)
         sol = solve(prob, NLopt.Opt(:LD_LBFGS, n), maxtime = 1e-6)
         @test sol.retcode == ReturnCode.MaxTime
     end
@@ -104,7 +104,7 @@ using Test, Random
         # Test that dual_ftol_rel parameter can be passed to NLopt without errors
         # This parameter is specific to MMA/CCSA algorithms for dual optimization tolerance
         x0_test = zeros(2)
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optprob, x0_test, _p)
 
         # Test with NLopt.Opt interface
@@ -127,7 +127,7 @@ using Test, Random
         Random.seed!(1)
         cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2 - 1.0]
         x0 = zeros(2)
-        optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote();
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote();
             cons = cons)
         prob = OptimizationProblem(optprob, x0, _p, lcons = [0.0], ucons = [0.0])
         sol = solve(prob, NLopt.LN_COBYLA())
@@ -159,7 +159,7 @@ using Test, Random
 
         # FTOL_REACHED
         optprob = OptimizationFunction(
-            rosenbrock, Optimization.AutoForwardDiff(); cons = con2_c)
+            rosenbrock, OptimizationBase.AutoForwardDiff(); cons = con2_c)
         Random.seed!(1)
         prob = OptimizationProblem(
             optprob, rand(2), _p, lcons = [0.0, -Inf], ucons = [0.0, 0.0])

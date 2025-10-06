@@ -2,7 +2,7 @@ module OptimizationManopt
 
 using Reexport
 @reexport using Manopt
-using Optimization, Manopt, ManifoldsBase, ManifoldDiff, Optimization.SciMLBase
+using OptimizationBase, Manopt, ManifoldsBase, ManifoldDiff, SciMLBase
 
 """
     abstract type AbstractManoptOptimizer end
@@ -19,7 +19,7 @@ end
     OptimizationBase.supports_opt_cache_interface(opt::AbstractManoptOptimizer) = true
 end
 
-function __map_optimizer_args!(cache::OptimizationCache,
+function __map_optimizer_args!(cache::OptimizationBase.OptimizationCache,
         opt::AbstractManoptOptimizer;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
@@ -231,7 +231,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
-## Optimization.jl stuff
+## OptimizationBase.jl stuff
 function SciMLBase.requiresgradient(opt::Union{
         GradientDescentOptimizer, ConjugateGradientDescentOptimizer,
         QuasiNewtonOptimizer, ConvexBundleOptimizer, FrankWolfeOptimizer,
@@ -251,7 +251,7 @@ function build_loss(f::OptimizationFunction, prob, cb)
         x = f.f(θ, prob.p)
         cb(x, θ)
         __x = first(x)
-        return prob.sense === Optimization.MaxSense ? -__x : __x
+        return prob.sense === OptimizationBase.MaxSense ? -__x : __x
     end
 end
 
@@ -286,7 +286,7 @@ function build_hessF(f::OptimizationFunction{true})
     return h
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -324,7 +324,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     end
 
     function _cb(x, θ)
-        opt_state = Optimization.OptimizationState(iter = 0,
+        opt_state = OptimizationBase.OptimizationState(iter = 0,
             u = θ,
             p = cache.p,
             objective = x[1])
@@ -367,7 +367,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     return SciMLBase.build_solution(cache,
         cache.opt,
         opt_res.minimizer,
-        cache.sense === Optimization.MaxSense ?
+        cache.sense === OptimizationBase.MaxSense ?
         -opt_res.minimum : opt_res.minimum;
         original = opt_res.options,
         retcode = opt_ret)

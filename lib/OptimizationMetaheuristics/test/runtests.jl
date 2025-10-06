@@ -8,7 +8,7 @@ Random.seed!(42)
     _p = [1.0, 100.0]
     l1 = rosenbrock(x0, _p)
     optprob = OptimizationFunction(rosenbrock)
-    prob = Optimization.OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0],
+    prob = OptimizationBase.OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0],
         ub = [1.0, 1.0])
     sol = solve(prob, ECA())
     @test 10 * sol.objective < l1

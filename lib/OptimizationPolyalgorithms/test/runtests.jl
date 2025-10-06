@@ -7,8 +7,8 @@ using Test
     _p = [1.0, 100.0]
     l1 = rosenbrock(x0, _p)
 
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
     prob = OptimizationProblem(optprob, x0, _p)
-    sol = Optimization.solve(prob, PolyOpt(), maxiters = 1000)
+    sol = OptimizationBase.solve(prob, PolyOpt(), maxiters = 1000)
     @test 10 * sol.objective < l1
 end

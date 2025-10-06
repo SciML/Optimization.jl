@@ -6,7 +6,7 @@ using Test
     x0 = zeros(2)
     _p = [1.0, 100.0]
     l1 = rosenbrock(x0, _p)
-    f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+    f = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
     prob = OptimizationProblem(f, x0, _p)
     sol = solve(prob, SpeedMappingOpt())
     @test 10 * sol.objective < l1
@@ -30,12 +30,12 @@ using Test
         p = [1.0]
 
         prob = OptimizationProblem(objective, x0, p)
-        cache = Optimization.init(prob, SpeedMappingOpt())
-        sol = Optimization.solve!(cache)
+        cache = OptimizationBase.init(prob, SpeedMappingOpt())
+        sol = OptimizationBase.solve!(cache)
         @test sol.u≈[1.0] atol=1e-3
 
-        cache = Optimization.reinit!(cache; p = [2.0])
-        sol = Optimization.solve!(cache)
+        cache = OptimizationBase.reinit!(cache; p = [2.0])
+        sol = OptimizationBase.solve!(cache)
         @test sol.u≈[2.0] atol=1e-3
     end
 end

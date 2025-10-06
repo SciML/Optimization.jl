@@ -1,8 +1,8 @@
 module OptimizationMTKExt
 
 import OptimizationBase, OptimizationBase.ArrayInterface
-import OptimizationBase.SciMLBase
-import OptimizationBase.SciMLBase: OptimizationFunction
+import SciMLBase
+import SciMLBase: OptimizationFunction
 import OptimizationBase.ADTypes: AutoModelingToolkit, AutoSymbolics, AutoSparse
 using ModelingToolkit
 

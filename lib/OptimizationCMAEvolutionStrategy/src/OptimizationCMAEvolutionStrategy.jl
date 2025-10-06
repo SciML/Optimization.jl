@@ -1,8 +1,9 @@
 module OptimizationCMAEvolutionStrategy
 
 using Reexport
-@reexport using Optimization
-using CMAEvolutionStrategy, Optimization.SciMLBase
+@reexport using OptimizationBase
+using CMAEvolutionStrategy
+using OptimizationBase: SciMLBase
 
 export CMAEvolutionStrategyOpt
 
@@ -20,7 +21,7 @@ SciMLBase.requireshessian(::CMAEvolutionStrategyOpt) = false
 SciMLBase.requiresconsjac(::CMAEvolutionStrategyOpt) = false
 SciMLBase.requiresconshess(::CMAEvolutionStrategyOpt) = false
 
-function __map_optimizer_args(prob::OptimizationCache, opt::CMAEvolutionStrategyOpt;
+function __map_optimizer_args(prob::OptimizationBase.OptimizationCache, opt::CMAEvolutionStrategyOpt;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -52,7 +53,7 @@ function __map_optimizer_args(prob::OptimizationCache, opt::CMAEvolutionStrategy
     return mapped_args
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         F,
         RC,
         LB,
@@ -82,7 +83,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
 
     function _cb(opt, y, fvals, perm)
         curr_u = xbest(opt)
-        opt_state = Optimization.OptimizationState(; iter = length(opt.logger.fmedian),
+        opt_state = OptimizationBase.OptimizationState(; iter = length(opt.logger.fmedian),
             u = curr_u,
             p = cache.p,
             objective = fbest(opt),
@@ -95,8 +96,8 @@ function SciMLBase.__solve(cache::OptimizationCache{
         cb_call
     end
 
-    maxiters = Optimization._check_and_convert_maxiters(cache.solver_args.maxiters)
-    maxtime = Optimization._check_and_convert_maxtime(cache.solver_args.maxtime)
+    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     _loss = function (θ)
         x = cache.f(θ, cache.p)
@@ -112,7 +113,7 @@ function SciMLBase.__solve(cache::OptimizationCache{
     t1 = time()
 
     opt_ret = opt_res.stop.reason
-    stats = Optimization.OptimizationStats(;
+    stats = OptimizationBase.OptimizationStats(;
         iterations = length(opt_res.logger.fmedian),
         time = t1 - t0,
         fevals = length(opt_res.logger.fmedian))

@@ -1,6 +1,6 @@
 using OptimizationBase
 using OptimizationBase: ReturnCode
-using OptimizationBase.SciMLBase: OptimizationFunction, OptimizationProblem
+using SciMLBase: OptimizationFunction, OptimizationProblem
 using ForwardDiff, Zygote
 using OptimizationLBFGSB
 using MLUtils
