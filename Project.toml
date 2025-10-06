@@ -20,6 +20,7 @@ TerminalLoggers = "5d786b92-1e48-4d6f-9151-6b4477ca9bed"
 
 [sources]
 OptimizationBase = {path = "lib/OptimizationBase"}
+OptimizationLBFGSB = {path = "lib/OptimizationLBFGSB"}
 OptimizationMOI = {path = "lib/OptimizationMOI"}
 OptimizationOptimJL = {path = "lib/OptimizationOptimJL"}
 OptimizationOptimisers = {path = "lib/OptimizationOptimisers"}
