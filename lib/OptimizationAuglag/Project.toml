@@ -4,23 +4,25 @@ authors = ["paramthakkar123 <paramthakkar864@gmail.com>"]
 version = "1.1.0"
 
 [deps]
-ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-MLUtils = "f1d291b0-491e-4a28-83b9-f70985020b54"
-OptimizationOptimisers = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 
 [extras]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+MLUtils = "f1d291b0-491e-4a28-83b9-f70985020b54"
+OptimizationOptimisers = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 ForwardDiff = "1.0.1"
 OptimizationBase = "3"
 MLUtils = "0.4.8"
+LinearAlgebra = "1.10"
 OptimizationOptimisers = "0.3.8"
 Test = "1.10.0"
 SciMLBase = "2.58"
 julia = "1.10"
 
 [targets]
-test = ["Test"]
+test = ["Test", "ForwardDiff", "MLUtils", "OptimizationOptimisers"]
