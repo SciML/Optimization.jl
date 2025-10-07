@@ -18,12 +18,20 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 TerminalLoggers = "5d786b92-1e48-4d6f-9151-6b4477ca9bed"
 
-[sources]
-OptimizationBase = {path = "lib/OptimizationBase"}
-OptimizationLBFGSB = {path = "lib/OptimizationLBFGSB"}
-OptimizationMOI = {path = "lib/OptimizationMOI"}
-OptimizationOptimJL = {path = "lib/OptimizationOptimJL"}
-OptimizationOptimisers = {path = "lib/OptimizationOptimisers"}
+[sources.OptimizationBase]
+path = "lib/OptimizationBase"
+
+[sources.OptimizationLBFGSB]
+path = "lib/OptimizationLBFGSB"
+
+[sources.OptimizationMOI]
+path = "lib/OptimizationMOI"
+
+[sources.OptimizationOptimJL]
+path = "lib/OptimizationOptimJL"
+
+[sources.OptimizationOptimisers]
+path = "lib/OptimizationOptimisers"
 
 [compat]
 ADTypes = "1.2"
@@ -50,7 +58,7 @@ ModelingToolkit = "10.23"
 Mooncake = "0.4.138"
 Optim = ">= 1.4.1"
 Optimisers = ">= 0.2.5"
-OptimizationBase = "2"
+OptimizationBase = "2, 3"
 OptimizationLBFGSB = "1"
 OptimizationMOI = "0.5"
 OptimizationOptimJL = "0.4"
@@ -88,9 +96,10 @@ IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 Lux = "b2108857-7c20-44ae-9111-449ecde12c47"
 MLUtils = "f1d291b0-491e-4a28-83b9-f70985020b54"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
+Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
-OptimizationLBFGSB = "22f7324a-a79d-40f2-bebe-3af60c77bd15"
 Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
+OptimizationLBFGSB = "22f7324a-a79d-40f2-bebe-3af60c77bd15"
 OptimizationMOI = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
 OptimizationOptimJL = "36348300-93cb-4f02-beb5-3c3902f8871e"
 OptimizationOptimisers = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
@@ -105,10 +114,6 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
-Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
 
 [targets]
-test = ["Aqua", "BenchmarkTools", "Boltz", "ComponentArrays", "DiffEqFlux", "Enzyme", "FiniteDiff", "Flux", "ForwardDiff",
-    "Ipopt", "IterTools", "Lux", "MLUtils", "ModelingToolkit", "Optim", "OptimizationLBFGSB", "OptimizationMOI", "OptimizationOptimJL", "OptimizationOptimisers", 
-    "OrdinaryDiffEqTsit5", "Pkg", "Random", "ReverseDiff", "SafeTestsets", "SciMLSensitivity", "SparseArrays",
-    "Symbolics",  "Test", "Tracker", "Zygote", "Mooncake"]
+test = ["Aqua", "BenchmarkTools", "Boltz", "ComponentArrays", "DiffEqFlux", "Enzyme", "FiniteDiff", "Flux", "ForwardDiff", "Ipopt", "IterTools", "Lux", "MLUtils", "ModelingToolkit", "Optim", "OptimizationLBFGSB", "OptimizationMOI", "OptimizationOptimJL", "OptimizationOptimisers", "OrdinaryDiffEqTsit5", "Pkg", "Random", "ReverseDiff", "SafeTestsets", "SciMLSensitivity", "SparseArrays", "Symbolics", "Test", "Tracker", "Zygote", "Mooncake"]
