@@ -1,4 +1,4 @@
-using Optimization, OptimizationBase, ForwardDiff, SymbolicAnalysis, LinearAlgebra,
+using OptimizationBase, OptimizationBase, ForwardDiff, SymbolicAnalysis, LinearAlgebra,
       Manifolds, OptimizationManopt, OptimizationLBFGSB
 
 function f(x, p = nothing)

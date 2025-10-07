@@ -1,4 +1,4 @@
-using OptimizationPRIMA, Optimization, ForwardDiff, ModelingToolkit, ReverseDiff
+using OptimizationPRIMA, OptimizationBase, ForwardDiff, ModelingToolkit, ReverseDiff
 using Test
 
 @testset "OptimizationPRIMA.jl" begin

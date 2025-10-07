@@ -1,4 +1,4 @@
-using Optimization, OptimizationIpopt
+using OptimizationBase, OptimizationIpopt
 using Zygote
 using Test
 using LinearAlgebra

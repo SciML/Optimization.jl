@@ -1,4 +1,4 @@
-using OptimizationSciPy, Optimization, Zygote, ReverseDiff, ForwardDiff
+using OptimizationSciPy, OptimizationBase, Zygote, ReverseDiff, ForwardDiff
 using Test, Random
 using SciMLBase: ReturnCode, NonlinearLeastSquaresProblem
 using PythonCall

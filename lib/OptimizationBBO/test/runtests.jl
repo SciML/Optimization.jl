@@ -1,4 +1,4 @@
-using OptimizationBBO, Optimization, BlackBoxOptim
+using OptimizationBBO, OptimizationBase, BlackBoxOptim
 using SciMLBase: MultiObjectiveOptimizationFunction
 using Test
 

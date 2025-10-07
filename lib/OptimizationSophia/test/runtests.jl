@@ -1,4 +1,4 @@
-using OptimizationBase, Optimization
+using OptimizationBase, OptimizationBase
 using SciMLBase: solve, OptimizationFunction, OptimizationProblem
 using OptimizationSophia
 using Lux, MLUtils, Random, ComponentArrays

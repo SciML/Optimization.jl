@@ -1,4 +1,4 @@
-using OptimizationEvolutionary, Optimization, Random
+using OptimizationEvolutionary, OptimizationBase, Random
 using SciMLBase: MultiObjectiveOptimizationFunction
 using Test
 

@@ -1,5 +1,5 @@
 using OptimizationManopt
-using Optimization
+using OptimizationBase
 using Manifolds
 using ForwardDiff, Zygote, Enzyme, FiniteDiff, ReverseDiff
 using Manopt, RipQP, QuadraticModels

@@ -1,4 +1,4 @@
-using OptimizationNLPModels, Optimization, NLPModelsTest, Ipopt, OptimizationMOI, Zygote,
+using OptimizationNLPModels, OptimizationBase, NLPModelsTest, Ipopt, OptimizationMOI, Zygote,
       ReverseDiff, OptimizationLBFGSB, OptimizationOptimJL
 using Test
 

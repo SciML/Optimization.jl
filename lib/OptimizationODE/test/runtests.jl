@@ -1,6 +1,6 @@
 using Test
 using OptimizationODE
-using Optimization
+using OptimizationBase
 using LinearAlgebra, ForwardDiff
 using OrdinaryDiffEq, SteadyStateDiffEq, Sundials
 

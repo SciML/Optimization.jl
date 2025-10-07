@@ -1,4 +1,4 @@
-using OptimizationNLopt, Optimization, Zygote, ReverseDiff
+using OptimizationNLopt, OptimizationBase, Zygote, ReverseDiff
 using Test, Random
 
 @testset "OptimizationNLopt.jl" begin
