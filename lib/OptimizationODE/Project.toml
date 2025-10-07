@@ -2,10 +2,6 @@ name = "OptimizationODE"
 uuid = "dfa73e59-e644-4d8a-bf84-188d7ecb34e4"
 authors = ["Paras Puneet Singh <paras.puneet2204@gmail.com>"]
 version = "0.1.3"
-
-[sources]
-OptimizationBase = {path = "../OptimizationBase"}
-
 [deps]
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"

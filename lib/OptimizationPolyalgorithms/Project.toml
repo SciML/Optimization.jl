@@ -2,10 +2,6 @@ name = "OptimizationPolyalgorithms"
 uuid = "500b13db-7e66-49ce-bda4-eed966be6282"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.3.2"
-
-[sources]
-OptimizationBase = {path = "../OptimizationBase"}
-
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 OptimizationOptimisers = "42dfb2eb-d2b4-4451-abcd-913932933ac1"

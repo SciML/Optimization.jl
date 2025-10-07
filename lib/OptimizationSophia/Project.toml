@@ -2,10 +2,6 @@ name = "OptimizationSophia"
 uuid = "892fee11-dca1-40d6-b698-84ba0d87399a"
 authors = ["paramthakkar123 <paramthakkar864@gmail.com>"]
 version = "1.1.0"
-
-[sources]
-OptimizationBase = {path = "../OptimizationBase"}
-
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"

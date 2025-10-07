@@ -2,10 +2,6 @@ name = "OptimizationSpeedMapping"
 uuid = "3d669222-0d7d-4eb9-8a9f-d8528b0d9b91"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.2.2"
-
-[sources]
-OptimizationBase = {path = "../OptimizationBase"}
-
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 SpeedMapping = "f1835b91-879b-4a3f-a438-e4baacf14412"

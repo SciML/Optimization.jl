@@ -2,10 +2,6 @@ name = "OptimizationOptimJL"
 uuid = "36348300-93cb-4f02-beb5-3c3902f8871e"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.4.6"
-
-[sources]
-OptimizationBase = {path = "../OptimizationBase"}
-
 [deps]
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
