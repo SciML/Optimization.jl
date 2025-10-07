@@ -1,11 +1,7 @@
 name = "OptimizationMultistartOptimization"
 uuid = "e4316d97-8bbb-4fd3-a7d8-3851d2a72823"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.1"
-
-[sources]
-OptimizationBase = {path = "../OptimizationBase"}
-
+version = "0.3.2"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 MultistartOptimization = "3933049c-43be-478e-a8bb-6e0f7fd53575"
@@ -21,7 +17,7 @@ OptimizationNLopt = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
 
 [compat]
 julia = "1.10"
-OptimizationBase = "2.13"
+OptimizationBase = "3"
 MultistartOptimization = "0.2, 0.3"
 SciMLBase = "2.58"
 Reexport = "1.2"

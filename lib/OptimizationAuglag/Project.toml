@@ -1,10 +1,7 @@
 name = "OptimizationAuglag"
 uuid = "2ea93f80-9333-43a1-a68d-1f53b957a421"
 authors = ["paramthakkar123 <paramthakkar864@gmail.com>"]
-version = "1.0.0"
-
-[sources]
-OptimizationBase = {path = "../OptimizationBase"}
+version = "1.1.0"
 
 [deps]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
@@ -18,7 +15,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 ForwardDiff = "1.0.1"
-OptimizationBase = "2.13"
+OptimizationBase = "3"
 MLUtils = "0.4.8"
 OptimizationOptimisers = "0.3.8"
 Test = "1.10.0"

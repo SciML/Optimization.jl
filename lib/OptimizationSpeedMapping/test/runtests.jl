@@ -1,4 +1,4 @@
-using OptimizationSpeedMapping, Optimization, ForwardDiff
+using OptimizationSpeedMapping, OptimizationBase, ForwardDiff
 using Test
 
 @testset "OptimizationSpeedMapping.jl" begin

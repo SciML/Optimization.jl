@@ -1,4 +1,4 @@
-using OptimizationMultistartOptimization, Optimization, ForwardDiff, OptimizationNLopt
+using OptimizationMultistartOptimization, OptimizationBase, ForwardDiff, OptimizationNLopt
 using Test, ReverseDiff
 
 @testset "OptimizationMultistartOptimization.jl" begin

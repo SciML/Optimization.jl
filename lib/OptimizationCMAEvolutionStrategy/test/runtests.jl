@@ -1,4 +1,4 @@
-using OptimizationCMAEvolutionStrategy, Optimization
+using OptimizationCMAEvolutionStrategy, OptimizationBase
 using Test
 
 @testset "OptimizationCMAEvolutionStrategy.jl" begin

@@ -1,4 +1,4 @@
-using OptimizationOptimisers, ForwardDiff, Optimization
+using OptimizationOptimisers, ForwardDiff, OptimizationBase
 using Test
 using Zygote
 using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices

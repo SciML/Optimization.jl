@@ -1,4 +1,4 @@
-using OptimizationQuadDIRECT, Optimization
+using OptimizationQuadDIRECT, OptimizationBase
 using Test
 
 @testset "OptimizationQuadDIRECT.jl" begin

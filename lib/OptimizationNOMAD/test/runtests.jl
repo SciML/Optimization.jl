@@ -1,4 +1,4 @@
-using OptimizationNOMAD, Optimization
+using OptimizationNOMAD, OptimizationBase
 using Test
 
 @testset "OptimizationNOMAD.jl" begin

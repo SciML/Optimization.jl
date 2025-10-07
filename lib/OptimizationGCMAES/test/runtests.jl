@@ -1,4 +1,4 @@
-using OptimizationGCMAES, Optimization, ForwardDiff
+using OptimizationGCMAES, OptimizationBase, ForwardDiff
 using Test
 
 @testset "OptimizationGCMAES.jl" begin

@@ -1,4 +1,4 @@
-using OptimizationPolyalgorithms, Optimization, ForwardDiff
+using OptimizationPolyalgorithms, OptimizationBase, ForwardDiff
 using Test
 
 @testset "OptimizationPolyalgorithms.jl" begin

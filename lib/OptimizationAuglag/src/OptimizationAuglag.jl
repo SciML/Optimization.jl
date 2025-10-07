@@ -1,7 +1,9 @@
 module OptimizationAuglag
 
+using SciMLBase
+using OptimizationBase
 using SciMLBase: OptimizationProblem, OptimizationFunction, OptimizationStats
-using OptimizationBase.LinearAlgebra: norm
+using LinearAlgebra: norm
 
 @kwdef struct AugLag
     inner::Any

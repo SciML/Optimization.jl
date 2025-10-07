@@ -1,4 +1,4 @@
-using OptimizationMetaheuristics, Optimization, Random
+using OptimizationMetaheuristics, OptimizationBase, Random
 using Test
 
 Random.seed!(42)
