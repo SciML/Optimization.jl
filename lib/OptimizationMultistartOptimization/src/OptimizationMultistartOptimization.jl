@@ -57,7 +57,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         return first(x)
     end
 
-    opt_setup = MultistartOptimizationBase.MinimizationProblem(_loss, cache.lb, cache.ub)
+    opt_setup = MultistartOptimization.MinimizationProblem(_loss, cache.lb, cache.ub)
 
     _local_optimiser = function (pb, θ0, prob)
         prob_tmp = remake(prob, u0 = θ0)
