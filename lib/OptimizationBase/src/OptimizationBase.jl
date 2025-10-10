@@ -7,7 +7,7 @@ using Reexport
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 import SciMLBase: OptimizationProblem,
                   OptimizationFunction, ObjSense,
-                  MaxSense, MinSense, OptimizationStats, solve
+                  MaxSense, MinSense, OptimizationStats, NonConcreteEltypeError
 export ObjSense, MaxSense, MinSense
 
 using FastClosures
