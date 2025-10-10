@@ -19,6 +19,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 TerminalLoggers = "5d786b92-1e48-4d6f-9151-6b4477ca9bed"
 
 [sources]
+SciMLBase = {url = "https://github.com/SciML/SciMLBase.jl", rev = "master"}
 OptimizationBase = {path = "lib/OptimizationBase"}
 OptimizationLBFGSB = {path = "lib/OptimizationLBFGSB"}
 OptimizationMOI = {path = "lib/OptimizationMOI"}
