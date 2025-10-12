@@ -7,8 +7,16 @@ using Reexport
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 import SciMLBase: OptimizationProblem,
                   OptimizationFunction, ObjSense,
-                  MaxSense, MinSense, OptimizationStats
+                  MaxSense, MinSense, OptimizationStats,
+                  allowsbounds, requiresbounds,
+                  allowsconstraints, requiresconstraints,
+                  allowscallback, requiresgradient,
+                  requireshessian, requiresconsjac,
+                  requiresconshess, supports_opt_cache_interface
 export ObjSense, MaxSense, MinSense
+export allowsbounds, requiresbounds, allowsconstraints, requiresconstraints,
+       allowscallback, requiresgradient, requireshessian,
+       requiresconsjac, requiresconshess, supports_opt_cache_interface
 
 using FastClosures
 
@@ -24,15 +32,12 @@ Base.length(::NullData) = 0
 include("adtypes.jl")
 include("symify.jl")
 include("cache.jl")
+include("solve.jl")
 include("OptimizationDIExt.jl")
 include("OptimizationDISparseExt.jl")
 include("function.jl")
-include("solve.jl")
-include("utils.jl")
-include("state.jl")
 
-export solve, OptimizationCache, DEFAULT_CALLBACK, DEFAULT_DATA,
-       IncompatibleOptimizerError, OptimizerMissingError, _check_opt_alg,
-       supports_opt_cache_interface
+export solve, OptimizationCache, DEFAULT_CALLBACK, DEFAULT_DATA
+export IncompatibleOptimizerError, OptimizerMissingError
 
 end
