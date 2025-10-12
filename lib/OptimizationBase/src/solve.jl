@@ -92,51 +92,51 @@ from NLopt for an example. The common local optimizer arguments are:
   - `local_reltol`: relative tolerance  in changes of the objective value
   - `local_options`: `NamedTuple` of keyword arguments for local optimizer
 """
-function SciMLBase.solve(prob::SciMLBase.OptimizationProblem, alg, args...;
+function solve(prob::SciMLBase.OptimizationProblem, alg, args...;
         kwargs...)::SciMLBase.AbstractOptimizationSolution
-    if SciMLBase.supports_opt_cache_interface(alg)
-        SciMLBase.solve!(SciMLBase.init(prob, alg, args...; kwargs...))
+    if supports_opt_cache_interface(alg)
+        solve!(init(prob, alg, args...; kwargs...))
     else
         if prob.u0 !== nothing && !isconcretetype(eltype(prob.u0))
             throw(SciMLBase.NonConcreteEltypeError(eltype(prob.u0)))
         end
         _check_opt_alg(prob, alg; kwargs...)
-        SciMLBase.__solve(prob, alg, args...; kwargs...)
+        __solve(prob, alg, args...; kwargs...)
     end
 end
 
-function SciMLBase.solve(
+function solve(
         prob::SciMLBase.EnsembleProblem{T}, args...; kwargs...) where {T <:
                                                                        SciMLBase.OptimizationProblem}
-    return SciMLBase.__solve(prob, args...; kwargs...)
+    return __solve(prob, args...; kwargs...)
 end
 
 function _check_opt_alg(prob::SciMLBase.OptimizationProblem, alg; kwargs...)
-    !SciMLBase.allowsbounds(alg) && (!isnothing(prob.lb) || !isnothing(prob.ub)) &&
+    !allowsbounds(alg) && (!isnothing(prob.lb) || !isnothing(prob.ub)) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) does not support box constraints. Either remove the `lb` or `ub` bounds passed to `OptimizationProblem` or use a different algorithm."))
-    SciMLBase.requiresbounds(alg) && isnothing(prob.lb) &&
+    requiresbounds(alg) && isnothing(prob.lb) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) requires box constraints. Either pass `lb` and `ub` bounds to `OptimizationProblem` or use a different algorithm."))
-    !SciMLBase.allowsconstraints(alg) && !isnothing(prob.f.cons) &&
+    !allowsconstraints(alg) && !isnothing(prob.f.cons) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) does not support constraints. Either remove the `cons` function passed to `OptimizationFunction` or use a different algorithm."))
-    SciMLBase.requiresconstraints(alg) && isnothing(prob.f.cons) &&
+    requiresconstraints(alg) && isnothing(prob.f.cons) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) requires constraints, pass them with the `cons` kwarg in `OptimizationFunction`."))
     # Check that if constraints are present and the algorithm supports constraints, both lcons and ucons are provided
-    SciMLBase.allowsconstraints(alg) && !isnothing(prob.f.cons) &&
+    allowsconstraints(alg) && !isnothing(prob.f.cons) &&
         (isnothing(prob.lcons) || isnothing(prob.ucons)) &&
         throw(ArgumentError("Constrained optimization problem requires both `lcons` and `ucons` to be provided to OptimizationProblem. " *
                             "Example: OptimizationProblem(optf, u0, p; lcons=[-Inf], ucons=[0.0])"))
-    !SciMLBase.allowscallback(alg) && haskey(kwargs, :callback) &&
+    !allowscallback(alg) && haskey(kwargs, :callback) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) does not support callbacks, remove the `callback` keyword argument from the `solve` call."))
-    SciMLBase.requiresgradient(alg) &&
+    requiresgradient(alg) &&
         !(prob.f isa SciMLBase.AbstractOptimizationFunction) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) requires gradients, hence use `OptimizationFunction` to generate them with an automatic differentiation backend e.g. `OptimizationFunction(f, AutoForwardDiff())` or pass it in with `grad` kwarg."))
-    SciMLBase.requireshessian(alg) &&
+    requireshessian(alg) &&
         !(prob.f isa SciMLBase.AbstractOptimizationFunction) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) requires hessians, hence use `OptimizationFunction` to generate them with an automatic differentiation backend e.g. `OptimizationFunction(f, AutoFiniteDiff(); kwargs...)` or pass them in with `hess` kwarg."))
-    SciMLBase.requiresconsjac(alg) &&
+    requiresconsjac(alg) &&
         !(prob.f isa SciMLBase.AbstractOptimizationFunction) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) requires constraint jacobians, hence use `OptimizationFunction` to generate them with an automatic differentiation backend e.g. `OptimizationFunction(f, AutoFiniteDiff(); kwargs...)` or pass them in with `cons` kwarg."))
-    SciMLBase.requiresconshess(alg) &&
+    requiresconshess(alg) &&
         !(prob.f isa SciMLBase.AbstractOptimizationFunction) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) requires constraint hessians, hence use `OptimizationFunction` to generate them with an automatic differentiation backend e.g. `OptimizationFunction(f, AutoFiniteDiff(), AutoFiniteDiff(hess=true); kwargs...)` or pass them in with `cons` kwarg."))
     return
@@ -184,13 +184,13 @@ These arguments can be passed as `kwargs...` to `init`.
 
 See also [`solve(prob::OptimizationProblem, alg, args...; kwargs...)`](@ref)
 """
-function SciMLBase.init(prob::SciMLBase.OptimizationProblem, alg, args...;
+function init(prob::SciMLBase.OptimizationProblem, alg, args...;
         kwargs...)::SciMLBase.AbstractOptimizationCache
     if prob.u0 !== nothing && !isconcretetype(eltype(prob.u0))
         throw(SciMLBase.NonConcreteEltypeError(eltype(prob.u0)))
     end
     _check_opt_alg(prob::SciMLBase.OptimizationProblem, alg; kwargs...)
-    cache = SciMLBase.__init(prob, alg, args...; prob.kwargs..., kwargs...)
+    cache = __init(prob, alg, args...; prob.kwargs..., kwargs...)
     return cache
 end
 
@@ -203,19 +203,19 @@ Solves the given optimization cache.
 
 See also [`init(prob::OptimizationProblem, alg, args...; kwargs...)`](@ref)
 """
-function SciMLBase.solve!(cache::SciMLBase.AbstractOptimizationCache)::SciMLBase.AbstractOptimizationSolution
-    SciMLBase.__solve(cache)
+function solve!(cache::SciMLBase.AbstractOptimizationCache)::SciMLBase.AbstractOptimizationSolution
+    __solve(cache)
 end
 
 # needs to be defined for each cache
-SciMLBase.supports_opt_cache_interface(alg) = false
-function SciMLBase.__solve(cache::SciMLBase.AbstractOptimizationCache)::SciMLBase.AbstractOptimizationSolution end
-function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, alg, args...;
+supports_opt_cache_interface(alg) = false
+function __solve(cache::SciMLBase.AbstractOptimizationCache)::SciMLBase.AbstractOptimizationSolution end
+function __init(prob::SciMLBase.OptimizationProblem, alg, args...;
         kwargs...)::SciMLBase.AbstractOptimizationCache
     throw(OptimizerMissingError(alg))
 end
 
 # if no cache interface is supported at least the following method has to be defined
-function SciMLBase.__solve(prob::SciMLBase.OptimizationProblem, alg, args...; kwargs...)
+function __solve(prob::SciMLBase.OptimizationProblem, alg, args...; kwargs...)
     throw(OptimizerMissingError(alg))
 end

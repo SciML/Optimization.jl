@@ -12,7 +12,8 @@ import SciMLBase: OptimizationProblem,
                   allowsconstraints, requiresconstraints,
                   allowscallback, requiresgradient,
                   requireshessian, requiresconsjac,
-                  requiresconshess, supports_opt_cache_interface
+                  requiresconshess, supports_opt_cache_interface,
+                  __init, __solve, init, solve, solve!
 export ObjSense, MaxSense, MinSense
 export allowsbounds, requiresbounds, allowsconstraints, requiresconstraints,
        allowscallback, requiresgradient, requireshessian,
