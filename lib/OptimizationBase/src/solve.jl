@@ -1,5 +1,3 @@
-# Skip the DiffEqBase handling
-
 struct IncompatibleOptimizerError <: Exception
     err::String
 end

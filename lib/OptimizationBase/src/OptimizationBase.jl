@@ -5,6 +5,7 @@ using Reexport
 @reexport using SciMLBase, ADTypes
 
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
+import CommonSolve: init, solve, solve!
 import SciMLBase: OptimizationProblem,
                   OptimizationFunction, ObjSense,
                   MaxSense, MinSense, OptimizationStats,
@@ -13,7 +14,7 @@ import SciMLBase: OptimizationProblem,
                   allowscallback, requiresgradient,
                   requireshessian, requiresconsjac,
                   requiresconshess, supports_opt_cache_interface,
-                  __init, __solve, init, solve, solve!
+                  __init, __solve
 export ObjSense, MaxSense, MinSense
 export allowsbounds, requiresbounds, allowsconstraints, requiresconstraints,
        allowscallback, requiresgradient, requireshessian,
