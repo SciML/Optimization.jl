@@ -31,12 +31,7 @@ References
     ϵ = 1e-8
 end
 
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(::LBFGSB) = true
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(::LBFGSB) = true
-end
+OptimizationBase.supports_opt_cache_interface(::LBFGSB) = true
 SciMLBase.allowsbounds(::LBFGSB) = true
 SciMLBase.requiresgradient(::LBFGSB) = true
 SciMLBase.allowsconstraints(::LBFGSB) = true

@@ -11,12 +11,7 @@ struct BOBYQA <: PRIMASolvers end
 struct LINCOA <: PRIMASolvers end
 struct COBYLA <: PRIMASolvers end
 
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(::PRIMASolvers) = true
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(::PRIMASolvers) = true
-end
+OptimizationBase.supports_opt_cache_interface(::PRIMASolvers) = true
 SciMLBase.allowsconstraints(::Union{LINCOA, COBYLA}) = true
 SciMLBase.allowsbounds(opt::Union{BOBYQA, LINCOA, COBYLA}) = true
 SciMLBase.requiresconstraints(opt::COBYLA) = true
@@ -35,7 +30,7 @@ function OptimizationBase.OptimizationCache(prob::SciMLBase.OptimizationProblem,
     reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p)
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     if prob.f.adtype isa SciMLBase.NoAD && opt isa COBYLA
-        throw("We evaluate the jacobian and hessian of the constraints once to automatically detect 
+        throw("We evaluate the jacobian and hessian of the constraints once to automatically detect
         linear and nonlinear constraints, please provide a valid AD backend for using COBYLA.")
     else
         if opt isa COBYLA

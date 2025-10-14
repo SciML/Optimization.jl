@@ -19,12 +19,7 @@ end
 
 # Defining the SciMLBase interface for PyCMAOpt
 SciMLBase.allowsbounds(::PyCMAOpt) = true
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(opt::PyCMAOpt) = true
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(opt::PyCMAOpt) = true
-end
+OptimizationBase.supports_opt_cache_interface(opt::PyCMAOpt) = true
 SciMLBase.allowscallback(::PyCMAOpt) = true
 SciMLBase.requiresgradient(::PyCMAOpt) = false
 SciMLBase.requireshessian(::PyCMAOpt) = false
@@ -43,7 +38,7 @@ function __map_optimizer_args(prob::OptimizationBase.OptimizationCache, opt::PyC
     end
 
     # Converting OptimizationBase.jl args to PyCMA opts
-    # OptimizationBase.jl kwargs will overwrite PyCMA kwargs supplied to solve() 
+    # OptimizationBase.jl kwargs will overwrite PyCMA kwargs supplied to solve()
 
     mapped_args = Dict{String, Any}()
 

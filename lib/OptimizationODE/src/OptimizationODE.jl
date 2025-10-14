@@ -30,7 +30,7 @@ DAEMassMatrix() = DAEOptimizer(Rodas5P(autodiff = false))
 SciMLBase.requiresbounds(::ODEOptimizer) = false
 SciMLBase.allowsbounds(::ODEOptimizer) = false
 SciMLBase.allowscallback(::ODEOptimizer) = true
-SciMLBase.supports_opt_cache_interface(::ODEOptimizer) = true
+OptimizationBase.supports_opt_cache_interface(::ODEOptimizer) = true
 SciMLBase.requiresgradient(::ODEOptimizer) = true
 SciMLBase.requireshessian(::ODEOptimizer) = false
 SciMLBase.requiresconsjac(::ODEOptimizer) = false
@@ -41,7 +41,7 @@ SciMLBase.requiresbounds(::DAEOptimizer) = false
 SciMLBase.allowsbounds(::DAEOptimizer) = false
 SciMLBase.allowsconstraints(::DAEOptimizer) = true
 SciMLBase.allowscallback(::DAEOptimizer) = true
-SciMLBase.supports_opt_cache_interface(::DAEOptimizer) = true
+OptimizationBase.supports_opt_cache_interface(::DAEOptimizer) = true
 SciMLBase.requiresgradient(::DAEOptimizer) = true
 SciMLBase.requireshessian(::DAEOptimizer) = false
 SciMLBase.requiresconsjac(::DAEOptimizer) = true
@@ -109,7 +109,7 @@ function solve_ode(cache, dt, maxit, u0, p)
     else
         solve_kwargs = Dict{Symbol, Any}()
     end
-    
+
     if !isnothing(maxit)
         solve_kwargs[:maxiters] = maxit
     end
@@ -170,7 +170,7 @@ function solve_dae_mass_matrix(cache, dt, maxit, u0, p)
     else
         solve_kwargs = Dict{Symbol, Any}()
     end
-    
+
     solve_kwargs[:progress] = cache.progress
     if maxit !== nothing; solve_kwargs[:maxiters] = maxit; end
     if dt   !== nothing; solve_kwargs[:dt] = dt; end
@@ -179,7 +179,7 @@ function solve_dae_mass_matrix(cache, dt, maxit, u0, p)
     # if sol.retcode ≠ ReturnCode.Success
     #     # you may still accept Default or warn
     # end
-    u_ext = sol.u  
+    u_ext = sol.u
     u_final = u_ext[1:n]
     return SciMLBase.build_solution(cache, cache.opt, u_final, cache.f(u_final, p);
         retcode = sol.retcode)
@@ -221,7 +221,7 @@ function solve_dae_implicit(cache, dt, maxit, u0, p)
     else
         solve_kwargs = Dict{Symbol, Any}()
     end
-    
+
     solve_kwargs[:progress] = cache.progress
 
     if maxit !== nothing; solve_kwargs[:maxiters] = maxit; end
@@ -237,4 +237,4 @@ function solve_dae_implicit(cache, dt, maxit, u0, p)
 end
 
 
-end 
+end
