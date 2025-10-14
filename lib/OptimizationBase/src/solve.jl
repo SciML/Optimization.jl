@@ -238,7 +238,6 @@ function solve!(cache::SciMLBase.AbstractOptimizationCache)::SciMLBase.AbstractO
 end
 
 # needs to be defined for each cache
-supports_opt_cache_interface(alg) = false
 function __solve(cache::SciMLBase.AbstractOptimizationCache)::SciMLBase.AbstractOptimizationSolution end
 function __init(prob::SciMLBase.OptimizationProblem, alg, args...;
         kwargs...)::SciMLBase.AbstractOptimizationCache
