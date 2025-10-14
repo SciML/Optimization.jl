@@ -29,15 +29,6 @@ function Base.showerror(io::IO, e::OptimizerMissingError)
     print(e.alg)
 end
 
-# Algorithm compatibility checking function
-struct IncompatibleOptimizerError <: Exception
-    err::String
-end
-
-function Base.showerror(io::IO, e::IncompatibleOptimizerError)
-    print(io, e.err)
-end
-
 """
 ```julia
 solve(prob::OptimizationProblem, alg::AbstractOptimizationAlgorithm,
