@@ -21,7 +21,6 @@ else
     supports_opt_cache_interface(alg) = false
 end
 
-end
 export ObjSense, MaxSense, MinSense
 export allowsbounds, requiresbounds, allowsconstraints, requiresconstraints,
        allowscallback, requiresgradient, requireshessian,
