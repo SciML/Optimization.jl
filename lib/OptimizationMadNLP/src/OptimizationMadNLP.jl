@@ -103,6 +103,7 @@ end
 
 function NLPModels.grad!(nlp::NLPModelsAdaptor, x::AbstractVector, g::AbstractVector)
     nlp.cache.f.grad(g, x, nlp.cache.p)
+    return g
 end
 
 function NLPModels.cons!(nlp::NLPModelsAdaptor, x::AbstractVector, c::AbstractVector)
@@ -266,11 +267,13 @@ function _get_nnzj(f)
     end
 end
 
-function _get_nnzh(f)
-    hess_proto = f.lag_hess_prototype
+function _get_nnzh(f, ncon, nvar)
+    # For constrained problems, use Lagrangian Hessian; for unconstrained, use objective Hessian
+    hess_proto = ncon > 0 ? f.lag_hess_prototype : f.hess_prototype
 
     if isnothing(hess_proto)
-        return 0  # Unknown, let NLPModels compute it
+        # No prototype provided - assume dense Hessian
+        return div(nvar * (nvar + 1), 2)
     elseif hess_proto isa SparseMatrixCSC
         # Only count lower triangle
         I, J, _ = findnz(hess_proto)
@@ -309,7 +312,7 @@ function __map_optimizer_args(cache,
         nvar;
         ncon,
         nnzj = _get_nnzj(cache.f),
-        nnzh = _get_nnzh(cache.f),
+        nnzh = _get_nnzh(cache.f, ncon, nvar),
         x0 = cache.u0,
         y0 = zeros(eltype(cache.u0), ncon),
         lvar,
