@@ -10,7 +10,9 @@ SciMLBase.allowsconstraints(opt::Evolutionary.AbstractOptimizer) = true
     SciMLBase.supports_opt_cache_interface(opt::Evolutionary.AbstractOptimizer) = true
 end
 @static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(opt::Evolutionary.AbstractOptimizer) = true
+    function OptimizationBase.supports_opt_cache_interface(opt::Evolutionary.AbstractOptimizer)
+        true
+    end
 end
 SciMLBase.requiresgradient(opt::Evolutionary.AbstractOptimizer) = false
 SciMLBase.requiresgradient(opt::Evolutionary.NSGA2) = false
@@ -76,32 +78,8 @@ function __map_optimizer_args(cache::OptimizationBase.OptimizationCache,
     return Evolutionary.Options(; mapped_args...)
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <:
-        Evolutionary.AbstractOptimizer,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <:
+                                                               Evolutionary.AbstractOptimizer}
     local x, cur, state
 
     function _cb(trace)

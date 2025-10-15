@@ -1,10 +1,9 @@
 module OptimizationBBO
 
 using Reexport
-import OptimizationBase
-import OptimizationBase: SciMLBase
-import BlackBoxOptim
-import SciMLBase: MultiObjectiveOptimizationFunction
+using OptimizationBase
+using SciMLBase
+using BlackBoxOptim: BlackBoxOptim
 
 abstract type BBO end
 
@@ -36,19 +35,19 @@ function decompose_trace(opt::BlackBoxOptim.OptRunController, progress)
         if iszero(max_time)
             # we stop at either convergence or max_steps
             n_steps = BlackBoxOptim.num_steps(opt)
-            Base.@logmsg(Base.LogLevel(-1), msg, progress=n_steps/maxiters,
+            Base.@logmsg(Base.LogLevel(-1), msg, progress=n_steps / maxiters,
                 _id=:OptimizationBBO)
         else
             # we stop at either convergence or max_time
             elapsed = BlackBoxOptim.elapsed_time(opt)
-            Base.@logmsg(Base.LogLevel(-1), msg, progress=elapsed/max_time,
+            Base.@logmsg(Base.LogLevel(-1), msg, progress=elapsed / max_time,
                 _id=:OptimizationBBO)
         end
     end
     return BlackBoxOptim.best_candidate(opt)
 end
 
-function __map_optimizer_args(prob::OptimizationBase.OptimizationCache, opt::BBO;
+function __map_optimizer_args(prob::OptimizationCache, opt::BBO;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -96,32 +95,7 @@ function map_objective(obj::BlackBoxOptim.IndexedTupleFitness)
     obj.orig
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <:
-        BBO,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: BBO}
     function _cb(trace)
         if cache.callback === OptimizationBase.DEFAULT_CALLBACK
             cb_call = false

@@ -18,8 +18,10 @@ SciMLBase.requiresbounds(opt::Optim.SAMIN) = true
 end
 @static if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(opt::Optim.AbstractOptimizer) = true
-    OptimizationBase.supports_opt_cache_interface(opt::Union{
-        Optim.Fminbox, Optim.SAMIN}) = true
+    function OptimizationBase.supports_opt_cache_interface(opt::Union{
+            Optim.Fminbox, Optim.SAMIN})
+        true
+    end
     OptimizationBase.supports_opt_cache_interface(opt::Optim.ConstrainedOptimizer) = true
 end
 function SciMLBase.requiresgradient(opt::Optim.AbstractOptimizer)
@@ -120,28 +122,7 @@ function SciMLBase.__init(prob::OptimizationProblem,
         kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P
-}) where {
-        F,
-        RC,
-        LB,
-        UB, LC, UC,
-        S,
-        O <:
-        Optim.AbstractOptimizer,
-        D,
-        P
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.AbstractOptimizer}
     local x, cur, state
     !(cache.opt isa Optim.ZerothOrderOptimizer) && cache.f.grad === nothing &&
         error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
@@ -241,31 +222,8 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P
-}) where {
-        F,
-        RC,
-        LB,
-        UB, LC, UC,
-        S,
-        O <:
-        Union{
-            Optim.Fminbox,
-            Optim.SAMIN
-        },
-        D,
-        P
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Union{
+        Optim.Fminbox, Optim.SAMIN}}
     local x, cur, state
 
     function _cb(trace)
@@ -338,28 +296,8 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         original = opt_res, retcode = opt_ret, stats = stats)
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P
-}) where {
-        F,
-        RC,
-        LB,
-        UB, LC, UC,
-        S,
-        O <:
-        Optim.ConstrainedOptimizer,
-        D,
-        P
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <:
+                                                    Optim.ConstrainedOptimizer}
     local x, cur, state
 
     function _cb(trace)
@@ -495,7 +433,8 @@ PrecompileTools.@compile_workload begin
     end
 
     function solve_nonnegative_least_squares(A, b, solver)
-        optf = OptimizationBase.OptimizationFunction(obj_f, OptimizationBase.AutoForwardDiff())
+        optf = OptimizationBase.OptimizationFunction(
+            obj_f, OptimizationBase.AutoForwardDiff())
         prob = OptimizationBase.OptimizationProblem(optf, ones(size(A, 2)), (A, b),
             lb = zeros(size(A, 2)), ub = Inf * ones(size(A, 2)))
         x = OptimizationOptimJL.solve(prob, solver, maxiters = 5000, maxtime = 100)

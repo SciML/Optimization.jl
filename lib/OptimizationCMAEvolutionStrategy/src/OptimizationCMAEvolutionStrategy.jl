@@ -21,7 +21,8 @@ SciMLBase.requireshessian(::CMAEvolutionStrategyOpt) = false
 SciMLBase.requiresconsjac(::CMAEvolutionStrategyOpt) = false
 SciMLBase.requiresconshess(::CMAEvolutionStrategyOpt) = false
 
-function __map_optimizer_args(prob::OptimizationBase.OptimizationCache, opt::CMAEvolutionStrategyOpt;
+function __map_optimizer_args(
+        prob::OptimizationBase.OptimizationCache, opt::CMAEvolutionStrategyOpt;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -53,32 +54,7 @@ function __map_optimizer_args(prob::OptimizationBase.OptimizationCache, opt::CMA
     return mapped_args
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <:
-        CMAEvolutionStrategyOpt,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: CMAEvolutionStrategyOpt}
     local x, cur, state
 
     function _cb(opt, y, fvals, perm)

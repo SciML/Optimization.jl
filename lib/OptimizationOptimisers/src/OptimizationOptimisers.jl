@@ -23,32 +23,7 @@ function SciMLBase.__init(
         save_best, progress, kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <:
-        AbstractRule,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule}
     if OptimizationBase.isa_dataiterator(cache.p)
         data = cache.p
         dataiterate = true

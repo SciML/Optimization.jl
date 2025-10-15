@@ -70,7 +70,7 @@ function call_manopt_optimizer(
         loss,
         gradF,
         x0;
-        hessF=nothing, # ignore that keyword for this solver
+        hessF = nothing, # ignore that keyword for this solver
         kwargs...)
     opts = Manopt.gradient_descent(M,
         loss,
@@ -90,7 +90,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold, opt::NelderMea
         loss,
         gradF,
         x0;
-        hessF=nothing, # ignore that keyword for this solver
+        hessF = nothing, # ignore that keyword for this solver
         kwargs...)
     opts = NelderMead(M, loss; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opts)
@@ -105,7 +105,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         loss,
         gradF,
         x0;
-        hessF=nothing, # ignore that keyword for this solver
+        hessF = nothing, # ignore that keyword for this solver
         kwargs...)
     opts = Manopt.conjugate_gradient_descent(M,
         loss,
@@ -126,7 +126,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         loss,
         gradF,
         x0;
-        hessF=nothing, # ignore that keyword for this solver
+        hessF = nothing, # ignore that keyword for this solver
         population_size::Int = 100,
         kwargs...)
     swarm = [x0, [rand(M) for _ in 1:(population_size - 1)]...]
@@ -144,7 +144,7 @@ function call_manopt_optimizer(M::Manopt.AbstractManifold,
         loss,
         gradF,
         x0;
-        hessF=nothing, # ignore that keyword for this solver
+        hessF = nothing, # ignore that keyword for this solver
         kwargs...
 )
     opts = quasi_Newton(M, loss, gradF, x0; return_state = true, kwargs...)
@@ -159,7 +159,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         loss,
         gradF,
         x0;
-        hessF=nothing, # ignore that keyword for this solver
+        hessF = nothing, # ignore that keyword for this solver
         kwargs...)
     opt = cma_es(M, loss, x0; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opt)
@@ -173,7 +173,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         loss,
         gradF,
         x0;
-        hessF=nothing, # ignore that keyword for this solver
+        hessF = nothing, # ignore that keyword for this solver
         kwargs...)
     opt = convex_bundle_method(M, loss, gradF, x0; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opt)
@@ -189,11 +189,12 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         x0;
         hessF = nothing,
         kwargs...)
-
     opt = if isnothing(hessF)
-        adaptive_regularization_with_cubics(M, loss, gradF, x0; return_state = true, kwargs...)
+        adaptive_regularization_with_cubics(
+            M, loss, gradF, x0; return_state = true, kwargs...)
     else
-        adaptive_regularization_with_cubics(M, loss, gradF, hessF, x0; return_state = true, kwargs...)
+        adaptive_regularization_with_cubics(
+            M, loss, gradF, hessF, x0; return_state = true, kwargs...)
     end
     minimizer = Manopt.get_solver_result(opt)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
@@ -224,7 +225,7 @@ function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
         loss,
         gradF,
         x0;
-        hessF=nothing, # ignore that keyword for this solver
+        hessF = nothing, # ignore that keyword for this solver
         kwargs...)
     opt = Frank_Wolfe_method(M, loss, gradF, x0; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opt)
@@ -286,31 +287,7 @@ function build_hessF(f::OptimizationFunction{true})
     return h
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <: AbstractManoptOptimizer,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractManoptOptimizer}
     local x, cur, state
 
     manifold = cache.manifold
