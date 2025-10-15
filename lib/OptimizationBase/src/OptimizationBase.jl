@@ -15,10 +15,9 @@ import SciMLBase: solve, init, solve!, __init, __solve,
                   requireshessian, requiresconsjac,
                   requiresconshess
 
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    import SciMLBase: supports_opt_cache_interface
-else
-    supports_opt_cache_interface(alg) = false
+import SciMLBase: supports_opt_cache_interface
+@static if !hasmethod(SciMLBase.__solve, Tuple{OptimizationProblem, SciMLBase.AbstractOptimizationAlgorithm})
+    include("solve.jl")
 end
 
 export ObjSense, MaxSense, MinSense
@@ -43,7 +42,6 @@ include("cache.jl")
 include("OptimizationDIExt.jl")
 include("OptimizationDISparseExt.jl")
 include("function.jl")
-include("solve.jl")
 include("utils.jl")
 include("state.jl")
 
