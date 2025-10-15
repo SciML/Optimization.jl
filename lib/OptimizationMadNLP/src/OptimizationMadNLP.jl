@@ -273,6 +273,11 @@ function __map_optimizer_args(cache,
     nvar = length(cache.u0)
     ncon = length(cache.lcons)
 
+    if !isnothing(progress) || !isnothing(callback)
+        @warn("MadNLP doesn't currently support user defined callbacks.")
+    end
+    # TODO: add support for user callbacks in MadNLP
+
     meta = NLPModels.NLPModelMeta(
         nvar;
         ncon,
@@ -352,14 +357,10 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         maxtime = maxtime,
         verbose = get(cache.solver_args, :verbose, false),
         progress = cache.progress,
-        callback = cache.callback)
+        callback = cache.callback
+    )
 
     results = MadNLP.solve!(solver)
-
-    # if cache.progress
-    #     # Set progressbar to 1 to finish it
-    #     Base.@logmsg(Base.LogLevel(-1), "", progress = 1, _id = :OptimizationMadNLP)
-    # end
 
     stats = OptimizationBase.OptimizationStats(; time = results.counters.total_time,
         iterations = results.iter,
@@ -374,7 +375,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         results.objective;
         original = results,
         retcode,
-        stats = stats)
+        stats)
 end
 
 end
