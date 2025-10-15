@@ -15,7 +15,7 @@ import SciMLBase: solve, init, solve!, __init, __solve,
                   requireshessian, requiresconsjac,
                   requiresconshess
 
-import SciMLBase: supports_opt_cache_interface
+supports_opt_cache_interface(alg) = false
 @static if !hasmethod(SciMLBase.__solve, Tuple{OptimizationProblem, SciMLBase.AbstractOptimizationAlgorithm})
     include("solve.jl")
 end
@@ -39,7 +39,6 @@ Base.length(::NullData) = 0
 include("adtypes.jl")
 include("symify.jl")
 include("cache.jl")
-include("solve.jl")
 include("OptimizationDIExt.jl")
 include("OptimizationDISparseExt.jl")
 include("function.jl")
