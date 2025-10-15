@@ -92,7 +92,7 @@ from NLopt for an example. The common local optimizer arguments are:
 """
 function solve(prob::SciMLBase.OptimizationProblem, alg, args...;
         kwargs...)::SciMLBase.AbstractOptimizationSolution
-    if supports_opt_cache_interface(alg)
+    if SciMLBase.supports_opt_cache_interface(alg)
         solve!(init(prob, alg, args...; kwargs...))
     else
         if prob.u0 !== nothing && !isconcretetype(eltype(prob.u0))
