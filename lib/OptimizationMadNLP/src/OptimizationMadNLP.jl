@@ -1,13 +1,14 @@
 module OptimizationMadNLP
 
 using OptimizationBase
+using OptimizationBase: MinSense, MaxSense, DEFAULT_CALLBACK
 using MadNLP
 using NLPModels
 using SparseArrays
 
 export MadNLPOptimizer
 
-struct NLPModelsAdaptor{C, T} <: NLPModels.AbstractNLPModel{T, Vector{T}}
+struct NLPModelsAdaptor{C, T, HB} <: NLPModels.AbstractNLPModel{T, Vector{T}}
     cache::C
     meta::NLPModels.NLPModelMeta{T, Vector{T}}
     counters::NLPModels.Counters
@@ -16,7 +17,7 @@ struct NLPModelsAdaptor{C, T} <: NLPModels.AbstractNLPModel{T, Vector{T}}
     jac_buffer::AbstractMatrix{T}
     hess_rows::Vector{Int}
     hess_cols::Vector{Int}
-    hess_buffer::AbstractMatrix{T}
+    hess_buffer::HB  # Can be Vector{T} or Matrix{T}
 end
 
 function _enumerate_dense_structure(ncon, nvar)
@@ -79,11 +80,13 @@ function NLPModelsAdaptor(
         lower_mask = I .>= J
         hess_rows = I[lower_mask]
         hess_cols = J[lower_mask]
-        hess_buffer = similar(hess_proto)
+        # Create a values buffer matching the number of lower triangle elements
+        hess_buffer = zeros(T, sum(lower_mask))
     elseif !isnothing(hess_proto)
         # Dense Hessian
         n = size(hess_proto, 1)
         hess_rows, hess_cols = _enumerate_lower_triangle(n)
+        # For dense, store the full matrix but we'll extract values later
         hess_buffer = similar(hess_proto)
     else
         # No prototype - create dense structure
@@ -92,7 +95,7 @@ function NLPModelsAdaptor(
         hess_buffer = zeros(T, n, n)
     end
 
-    return NLPModelsAdaptor{C, T}(cache, meta, counters,
+    return NLPModelsAdaptor{C, T, typeof(hess_buffer)}(cache, meta, counters,
         jac_rows, jac_cols, jac_buffer,
         hess_rows, hess_cols, hess_buffer)
 end
@@ -152,7 +155,13 @@ function NLPModels.hess_coord!(
         nlp::NLPModelsAdaptor, x, y, H::AbstractVector; obj_weight = 1.0)
     if !isnothing(nlp.cache.f.lag_h)
         # Use Lagrangian Hessian directly
-        nlp.cache.f.lag_h(nlp.hess_buffer, x, obj_weight, y)
+        if nlp.hess_buffer isa AbstractVector
+            # For sparse prototypes, hess_buffer is already a values vector
+            nlp.cache.f.lag_h(nlp.hess_buffer, x, obj_weight, y)
+        else
+            # For dense matrices, we need to pass the full matrix and extract values
+            nlp.cache.f.lag_h(nlp.hess_buffer, x, obj_weight, y)
+        end
     else
         # Manual computation: objective + constraint Hessians
         nlp.cache.f.hess(nlp.hess_buffer, x)
@@ -169,9 +178,15 @@ function NLPModels.hess_coord!(
     end
 
     if !isempty(H)
-        # Extract lower triangle values
-        for (idx, (i, j)) in enumerate(zip(nlp.hess_rows, nlp.hess_cols))
-            H[idx] = nlp.hess_buffer[i, j]
+        # Extract values depending on buffer type
+        if nlp.hess_buffer isa AbstractVector
+            # For sparse, hess_buffer already contains just the values
+            copyto!(H, nlp.hess_buffer)
+        else
+            # For dense matrices, extract lower triangle values
+            for (idx, (i, j)) in enumerate(zip(nlp.hess_rows, nlp.hess_cols))
+                H[idx] = nlp.hess_buffer[i, j]
+            end
         end
     end
 
@@ -255,11 +270,12 @@ function map_madnlp_status(status::MadNLP.Status)
     end
 end
 
-function _get_nnzj(f)
+function _get_nnzj(f, ncon, nvar)
     jac_prototype = f.cons_jac_prototype
 
     if isnothing(jac_prototype)
-        return 0
+        # No prototype - assume dense structure if there are constraints
+        return ncon > 0 ? ncon * nvar : 0
     elseif jac_prototype isa SparseMatrixCSC
         nnz(jac_prototype)
     else
@@ -311,7 +327,7 @@ function __map_optimizer_args(cache,
     meta = NLPModels.NLPModelMeta(
         nvar;
         ncon,
-        nnzj = _get_nnzj(cache.f),
+        nnzj = _get_nnzj(cache.f, ncon, nvar),
         nnzh = _get_nnzh(cache.f, ncon, nvar),
         x0 = cache.u0,
         y0 = zeros(eltype(cache.u0), ncon),
@@ -319,7 +335,7 @@ function __map_optimizer_args(cache,
         uvar,
         lcon,
         ucon,
-        minimize = cache.sense == MinSense
+        minimize = cache.sense !== MaxSense  # Default to minimization when sense is nothing or MinSense
     )
 
     nlp = NLPModelsAdaptor(cache, meta, NLPModels.Counters())
