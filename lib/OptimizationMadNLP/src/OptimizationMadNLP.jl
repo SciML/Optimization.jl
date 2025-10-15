@@ -68,8 +68,10 @@ function NLPModelsAdaptor(
         jac_buffer = zeros(T, ncon, nvar)
     end
 
+    ncon = !isnothing(cache.lcons) ? length(cache.lcons) : 0
+
     # Extract Hessian structure
-    hess_proto = something(cache.f.lag_hess_prototype, cache.f.hess_prototype, nothing)
+    hess_proto = ncon > 0 ? cache.f.lag_hess_prototype : cache.f.hess_prototype
 
     if !isnothing(hess_proto) && hess_proto isa SparseMatrixCSC
         I, J, _ = findnz(hess_proto)
@@ -104,7 +106,10 @@ function NLPModels.grad!(nlp::NLPModelsAdaptor, x::AbstractVector, g::AbstractVe
 end
 
 function NLPModels.cons!(nlp::NLPModelsAdaptor, x::AbstractVector, c::AbstractVector)
-    nlp.cache.f.cons(c, x)
+    if !isempty(c)
+        nlp.cache.f.cons(c, x)
+    end
+    return c
 end
 
 function NLPModels.jac_structure!(
@@ -116,17 +121,19 @@ end
 
 function NLPModels.jac_coord!(
         nlp::NLPModelsAdaptor, x::AbstractVector, vals::AbstractVector)
-    # Evaluate Jacobian into preallocated buffer
-    nlp.cache.f.cons_j(nlp.jac_buffer, x)
+    if !isempty(vals)
+        # Evaluate Jacobian into preallocated buffer
+        nlp.cache.f.cons_j(nlp.jac_buffer, x)
 
-    # Extract values in COO order
-    if nlp.jac_buffer isa SparseMatrixCSC
-        _, _, v = findnz(nlp.jac_buffer)
-        copyto!(vals, v)
-    else
-        # Dense case: extract in column-major order matching structure
-        for (idx, (i, j)) in enumerate(zip(nlp.jac_rows, nlp.jac_cols))
-            vals[idx] = nlp.jac_buffer[i, j]
+        # Extract values in COO order
+        if nlp.jac_buffer isa SparseMatrixCSC
+            _, _, v = findnz(nlp.jac_buffer)
+            copyto!(vals, v)
+        else
+            # Dense case: extract in column-major order matching structure
+            for (idx, (i, j)) in enumerate(zip(nlp.jac_rows, nlp.jac_cols))
+                vals[idx] = nlp.jac_buffer[i, j]
+            end
         end
     end
 
@@ -150,7 +157,7 @@ function NLPModels.hess_coord!(
         nlp.cache.f.hess(nlp.hess_buffer, x)
         nlp.hess_buffer .*= obj_weight
 
-        if !isnothing(nlp.cache.f.cons_h)
+        if !isnothing(nlp.cache.f.cons_h) && !isempty(y)
             # Add weighted constraint Hessians
             cons_hessians = [similar(nlp.hess_buffer) for _ in 1:length(y)]
             nlp.cache.f.cons_h(cons_hessians, x)
@@ -160,9 +167,11 @@ function NLPModels.hess_coord!(
         end
     end
 
-    # Extract lower triangle values
-    for (idx, (i, j)) in enumerate(zip(nlp.hess_rows, nlp.hess_cols))
-        H[idx] = nlp.hess_buffer[i, j]
+    if !isempty(H)
+        # Extract lower triangle values
+        for (idx, (i, j)) in enumerate(zip(nlp.hess_rows, nlp.hess_cols))
+            H[idx] = nlp.hess_buffer[i, j]
+        end
     end
 
     return H
@@ -194,7 +203,7 @@ end
     additional_options::Dict{Symbol, Any} = Dict{Symbol, Any}()
 end
 
-OptimizationBase.supports_opt_cache_interface(opt::MadNLPOptimizer) = true
+SciMLBase.supports_opt_cache_interface(opt::MadNLPOptimizer) = true
 
 function SciMLBase.requiresgradient(opt::MadNLPOptimizer)
     true
@@ -245,8 +254,20 @@ function map_madnlp_status(status::MadNLP.Status)
     end
 end
 
+function _get_nnzj(f)
+    jac_prototype = f.cons_jac_prototype
+
+    if isnothing(jac_prototype)
+        return 0
+    elseif jac_prototype isa SparseMatrixCSC
+        nnz(jac_prototype)
+    else
+        prod(size(jac_prototype))
+    end
+end
+
 function _get_nnzh(f)
-    hess_proto = something(f.lag_hess_prototype, f.hess_prototype, nothing)
+    hess_proto = f.lag_hess_prototype
 
     if isnothing(hess_proto)
         return 0  # Unknown, let NLPModels compute it
@@ -271,24 +292,30 @@ function __map_optimizer_args(cache,
         progress::Bool = false,
         callback = nothing)
     nvar = length(cache.u0)
-    ncon = length(cache.lcons)
+    ncon = !isnothing(cache.lcons) ? length(cache.lcons) : 0
 
     if !isnothing(progress) || !isnothing(callback)
         @warn("MadNLP doesn't currently support user defined callbacks.")
     end
     # TODO: add support for user callbacks in MadNLP
 
+    T = eltype(cache.u0)
+    lvar = something(cache.lb, fill(-Inf, nvar))
+    uvar = something(cache.ub, fill(Inf, nvar))
+    lcon = something(cache.lcons, T[])
+    ucon = something(cache.ucons, T[])
+
     meta = NLPModels.NLPModelMeta(
         nvar;
         ncon,
-        nnzj = nnz(cache.f.cons_jac_prototype),
+        nnzj = _get_nnzj(cache.f),
         nnzh = _get_nnzh(cache.f),
         x0 = cache.u0,
         y0 = zeros(eltype(cache.u0), ncon),
-        lvar = cache.lb,
-        uvar = cache.ub,
-        lcon = cache.lcons,
-        ucon = cache.ucons,
+        lvar,
+        uvar,
+        lcon,
+        ucon,
         minimize = cache.sense == MinSense
     )
 
