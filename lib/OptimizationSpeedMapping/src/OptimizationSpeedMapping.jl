@@ -18,7 +18,8 @@ end
 end
 SciMLBase.requiresgradient(opt::SpeedMappingOpt) = true
 
-function __map_optimizer_args(cache::OptimizationBase.OptimizationCache, opt::SpeedMappingOpt;
+function __map_optimizer_args(
+        cache::OptimizationBase.OptimizationCache, opt::SpeedMappingOpt;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -48,32 +49,7 @@ function __map_optimizer_args(cache::OptimizationBase.OptimizationCache, opt::Sp
     return mapped_args
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <:
-        SpeedMappingOpt,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SpeedMappingOpt}
     local x
 
     _loss = function (θ)

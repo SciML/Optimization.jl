@@ -43,7 +43,7 @@ function __map_optimizer_args(prob::OptimizationBase.OptimizationCache, opt::PyC
     end
 
     # Converting OptimizationBase.jl args to PyCMA opts
-    # OptimizationBase.jl kwargs will overwrite PyCMA kwargs supplied to solve() 
+    # OptimizationBase.jl kwargs will overwrite PyCMA kwargs supplied to solve()
 
     mapped_args = Dict{String, Any}()
 
@@ -95,32 +95,7 @@ function __map_pycma_retcode(stop_dict::Dict{String, Any})
     end
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <:
-        PyCMAOpt,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: PyCMAOpt}
     local x
 
     # wrapping the objective function
@@ -130,7 +105,8 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
     end
 
     _cb = function (es)
-        opt_state = OptimizationBase.OptimizationState(; iter = pyconvert(Int, es.countiter),
+        opt_state = OptimizationBase.OptimizationState(;
+            iter = pyconvert(Int, es.countiter),
             u = pyconvert(Vector{Float64}, es.best.x),
             p = cache.p,
             objective = pyconvert(Float64, es.best.f),
