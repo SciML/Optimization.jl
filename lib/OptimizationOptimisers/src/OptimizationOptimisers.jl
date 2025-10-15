@@ -138,7 +138,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
                     break
                 end
                 msg = @sprintf("loss: %.3g", first(x)[1])
-                cache.progress && ProgressLogging.@logprogress msg iterations/maxiters
+                #cache.progress && ProgressLogging.@logprogress msg iterations/maxiters
 
                 if cache.solver_args.save_best
                     if first(x)[1] < first(min_err)[1]  #found a better solution
