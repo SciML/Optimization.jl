@@ -345,12 +345,14 @@ function __map_optimizer_args(cache,
     else
         print_level = verbose
     end
-    # use MadNLP defaults
-    tol = isnothing(reltol) ? 1e-8 : reltol
+
+    !isnothing(reltol) && @warn "reltol not supported by MadNLP."
+    tol = isnothing(abstol) ? 1e-8 : abstol
     max_iter = isnothing(maxiters) ? 3000 : maxiters
     max_wall_time = isnothing(maxtime) ? 1e6 : maxtime
 
     MadNLP.MadNLPSolver(nlp;
+        opt.additional_options...,
         print_level, tol, max_iter, max_wall_time,
         opt.rethrow_error,
         opt.disable_garbage_collector,
@@ -363,7 +365,6 @@ function __map_optimizer_args(cache,
         opt.hessian_constant,
         opt.hessian_approximation,
         opt.mu_init,
-        opt.additional_options...
     )
 end
 
