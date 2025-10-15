@@ -293,11 +293,11 @@ function __map_optimizer_args(cache,
         reltol::Union{Number, Nothing} = nothing,
         verbose = false,
         progress::Bool = false,
-        callback = nothing)
+        callback = DEFAULT_CALLBACK)
     nvar = length(cache.u0)
     ncon = !isnothing(cache.lcons) ? length(cache.lcons) : 0
 
-    if !isnothing(progress) || !isnothing(callback)
+    if callback !== DEFAULT_CALLBACK || progress
         @warn("MadNLP doesn't currently support user defined callbacks.")
     end
     # TODO: add support for user callbacks in MadNLP
