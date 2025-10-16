@@ -208,7 +208,7 @@ function OptimizationBase.instantiate_function(
         lag_extras = prepare_hessian(
             lagrangian, soadtype, x, Constant(one(eltype(x))),
             Constant(ones(eltype(x), num_cons)), Constant(p), strict = Val(false))
-        lag_hess_prototype = zeros(Bool, num_cons, length(x))
+        lag_hess_prototype = zeros(Bool, length(x), length(x))
 
         function lag_h!(H::AbstractMatrix, θ, σ, λ)
             if σ == zero(eltype(θ))

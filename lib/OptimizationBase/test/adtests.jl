@@ -257,6 +257,17 @@ optprob.cons_h(H3, x0)
     optprob.lag_h(H4, x0, σ, μ)
     @test H4≈σ * H2 + μ[1] * H3[1] rtol=1e-6
 
+    # Test that the AD-generated lag_hess_prototype has correct dimensions
+    @test !isnothing(optprob.lag_hess_prototype)
+    @test size(optprob.lag_hess_prototype) == (length(x0), length(x0))  # Should be n×n, not num_cons×n
+
+    # Test that we can actually use it as a buffer (this would fail with the bug)
+    if !isnothing(optprob.lag_hess_prototype)
+        H_proto = similar(optprob.lag_hess_prototype, Float64)
+        optprob.lag_h(H_proto, x0, σ, μ)
+        @test H_proto ≈ σ * H2 + μ[1] * H3[1] rtol=1e-6
+    end
+
     G2 = Array{Float64}(undef, 2)
     H2 = Array{Float64}(undef, 2, 2)
 
@@ -489,6 +500,17 @@ end
     σ = rand()
     optprob.lag_h(H4, x0, σ, μ)
     @test H4≈σ * H1 + sum(μ .* H3) rtol=1e-6
+
+    # Test that the AD-generated lag_hess_prototype has correct dimensions
+    @test !isnothing(optprob.lag_hess_prototype)
+    @test size(optprob.lag_hess_prototype) == (length(x0), length(x0))  # Should be n×n, not num_cons×n
+
+    # Test that we can actually use it as a buffer (this would fail with the bug)
+    if !isnothing(optprob.lag_hess_prototype)
+        H_proto = similar(optprob.lag_hess_prototype, Float64)
+        optprob.lag_h(H_proto, x0, σ, μ)
+        @test H_proto ≈ σ * H1 + sum(μ .* H3) rtol=1e-6
+    end
 
     G2 = Array{Float64}(undef, 2)
     H2 = Array{Float64}(undef, 2, 2)
