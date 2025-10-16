@@ -193,6 +193,22 @@ function NLPModels.hess_coord!(
     return H
 end
 
+function NLPModels.jtprod!(nlp::NLPModelsAdaptor, x::AbstractVector, v::AbstractVector, Jtv::AbstractVector)
+    # Compute J^T * v using the AD-provided VJP (Vector-Jacobian Product)
+    if !isnothing(nlp.cache.f.cons_vjp) && !isempty(Jtv)
+        nlp.cache.f.cons_vjp(Jtv, x, v)
+    end
+    return Jtv
+end
+
+function NLPModels.jprod!(nlp::NLPModelsAdaptor, x::AbstractVector, v::AbstractVector, Jv::AbstractVector)
+    # Compute J * v using the AD-provided JVP (Jacobian-Vector Product)
+    if !isnothing(nlp.cache.f.cons_jvp) && !isempty(Jv)
+        nlp.cache.f.cons_jvp(Jv, x, v)
+    end
+    return Jv
+end
+
 @kwdef struct MadNLPOptimizer{T}
     # General options
     rethrow_error::Bool = true
@@ -215,6 +231,13 @@ end
     # Barrier
     mu_init::T = 1e-1
 
+    # Quasi-Newton options (used when hessian_approximation is CompactLBFGS, BFGS, or DampedBFGS)
+    max_history::Int = 6  # Number of past gradients to store for L-BFGS
+    init_strategy::MadNLP.BFGSInitStrategy = MadNLP.SCALAR1  # How to initialize Hessian
+    init_value::T = 1.0  # Initial scaling value
+    sigma_min::T = 1e-8  # Minimum allowed σ (safeguard)
+    sigma_max::T = 1e+8  # Maximum allowed σ (safeguard)
+
     # Additional MadNLP options
     additional_options::Dict{Symbol, Any} = Dict{Symbol, Any}()
 end
@@ -225,7 +248,7 @@ function SciMLBase.requiresgradient(opt::MadNLPOptimizer)
     true
 end
 function SciMLBase.requireshessian(opt::MadNLPOptimizer)
-    true
+    opt.hessian_approximation === MadNLP.ExactHessian
 end
 function SciMLBase.allowsbounds(opt::MadNLPOptimizer)
     true
@@ -237,6 +260,12 @@ function SciMLBase.requiresconsjac(opt::MadNLPOptimizer)
     true
 end
 function SciMLBase.requireslagh(opt::MadNLPOptimizer)
+    opt.hessian_approximation === MadNLP.ExactHessian
+end
+function SciMLBase.allowsconsvjp(opt::MadNLPOptimizer)
+    true
+end
+function SciMLBase.allowsconsjvp(opt::MadNLPOptimizer)
     true
 end
 
@@ -351,6 +380,15 @@ function __map_optimizer_args(cache,
     max_iter = isnothing(maxiters) ? 3000 : maxiters
     max_wall_time = isnothing(maxtime) ? 1e6 : maxtime
 
+    # Create QuasiNewtonOptions if using quasi-Newton methods
+    quasi_newton_options = MadNLP.QuasiNewtonOptions{T}(;
+        opt.init_strategy,
+        opt.max_history,
+        opt.init_value,
+        opt.sigma_min,
+        opt.sigma_max
+    )
+
     MadNLP.MadNLPSolver(nlp;
         opt.additional_options...,
         print_level, tol, max_iter, max_wall_time,
@@ -365,6 +403,7 @@ function __map_optimizer_args(cache,
         opt.hessian_constant,
         opt.hessian_approximation,
         opt.mu_init,
+        quasi_newton_options = quasi_newton_options,
     )
 end
 
