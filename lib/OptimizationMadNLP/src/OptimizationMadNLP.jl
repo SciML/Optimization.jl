@@ -87,7 +87,7 @@ function NLPModelsAdaptor(
         n = size(hess_proto, 1)
         hess_rows, hess_cols = _enumerate_lower_triangle(n)
         # For dense, store the full matrix but we'll extract values later
-        hess_buffer = similar(hess_proto)
+        hess_buffer = similar(hess_proto, T)
     else
         # No prototype - create dense structure
         n = meta.nvar
@@ -169,7 +169,7 @@ function NLPModels.hess_coord!(
 
         if !isnothing(nlp.cache.f.cons_h) && !isempty(y)
             # Add weighted constraint Hessians
-            cons_hessians = [similar(nlp.hess_buffer) for _ in 1:length(y)]
+            cons_hessians = [similar(nlp.hess_buffer, eltype(nlp.hess_buffer)) for _ in 1:length(y)]
             nlp.cache.f.cons_h(cons_hessians, x)
             for (λ, H_cons) in zip(y, cons_hessians)
                 nlp.hess_buffer .+= λ .* H_cons
