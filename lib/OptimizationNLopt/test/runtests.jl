@@ -174,4 +174,35 @@ using Test, Random
         @test sol.retcode == ReturnCode.MaxIters
         @test sol.objective < l1
     end
+
+    @testset "gradient-based algorithm without AD backend" begin
+        # Test that gradient-based algorithms throw a helpful error when no AD backend is specified
+        # This reproduces the issue from https://discourse.julialang.org/t/error-when-using-multistart-optimization/133174
+        rosenbrock_test(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+        x0_test = zeros(2)
+        p_test = [1.0, 100.0]
+
+        # Create OptimizationFunction WITHOUT specifying an AD backend
+        f_no_ad = OptimizationFunction(rosenbrock_test)
+        prob_no_ad = OptimizationProblem(
+            f_no_ad, x0_test, p_test, lb = [-1.0, -1.0], ub = [1.5, 1.5])
+
+        # Test with LD_LBFGS (gradient-based algorithm) - should throw IncompatibleOptimizerError
+        @test_throws OptimizationBase.IncompatibleOptimizerError solve(prob_no_ad, NLopt.LD_LBFGS())
+
+        # Test with NLopt.Opt interface - should also throw IncompatibleOptimizerError
+        @test_throws OptimizationBase.IncompatibleOptimizerError solve(prob_no_ad, NLopt.Opt(:LD_LBFGS, 2))
+
+        # Test that gradient-free algorithms still work without AD backend
+        sol = solve(prob_no_ad, NLopt.LN_NELDERMEAD())
+        @test sol.retcode == ReturnCode.Success
+
+        # Test that with AD backend, gradient-based algorithms work correctly
+        f_with_ad = OptimizationFunction(rosenbrock_test, OptimizationBase.AutoZygote())
+        prob_with_ad = OptimizationProblem(
+            f_with_ad, x0_test, p_test, lb = [-1.0, -1.0], ub = [1.5, 1.5])
+        sol = solve(prob_with_ad, NLopt.LD_LBFGS())
+        @test sol.retcode == ReturnCode.Success
+        @test sol.objective < 1.0
+    end
 end
