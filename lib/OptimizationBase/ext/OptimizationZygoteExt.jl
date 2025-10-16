@@ -289,6 +289,18 @@ function OptimizationBase.instantiate_function(
 end
 
 function OptimizationBase.instantiate_function(
+        f::OptimizationFunction{true}, cache::OptimizationBase.ReInitCache,
+        adtype::DifferentiationInterface.SecondOrder{
+            <:ADTypes.AbstractADType, <:ADTypes.AutoZygote},
+        num_cons = 0; kwargs...)
+    x = cache.u0
+    p = cache.p
+
+    return OptimizationBase.instantiate_function(
+        f, x, adtype, p, num_cons; kwargs...)
+end
+
+function OptimizationBase.instantiate_function(
         f::OptimizationFunction{true}, x,
         adtype::ADTypes.AutoSparse{<:Union{ADTypes.AutoZygote,
             DifferentiationInterface.SecondOrder{
@@ -569,6 +581,17 @@ end
 function OptimizationBase.instantiate_function(
         f::OptimizationFunction{true}, cache::OptimizationBase.ReInitCache,
         adtype::ADTypes.AutoSparse{<:AutoZygote}, num_cons = 0; kwargs...)
+    x = cache.u0
+    p = cache.p
+
+    return OptimizationBase.instantiate_function(f, x, adtype, p, num_cons; kwargs...)
+end
+
+function OptimizationBase.instantiate_function(
+        f::OptimizationFunction{true}, cache::OptimizationBase.ReInitCache,
+        adtype::ADTypes.AutoSparse{<:DifferentiationInterface.SecondOrder{
+            <:ADTypes.AbstractADType, <:ADTypes.AutoZygote}},
+        num_cons = 0; kwargs...)
     x = cache.u0
     p = cache.p
 
