@@ -208,7 +208,7 @@ function OptimizationBase.instantiate_function(
         lag_extras = prepare_hessian(
             lagrangian, soadtype, x, Constant(one(eltype(x))),
             Constant(ones(eltype(x), num_cons)), Constant(p), strict = Val(false))
-        lag_hess_prototype = zeros(Bool, num_cons, length(x))
+        lag_hess_prototype = zeros(Bool, length(x), length(x))
 
         function lag_h!(H::AbstractMatrix, θ, σ, λ)
             if σ == zero(eltype(θ))
@@ -281,6 +281,18 @@ end
 function OptimizationBase.instantiate_function(
         f::OptimizationFunction{true}, cache::OptimizationBase.ReInitCache,
         adtype::ADTypes.AutoZygote, num_cons = 0; kwargs...)
+    x = cache.u0
+    p = cache.p
+
+    return OptimizationBase.instantiate_function(
+        f, x, adtype, p, num_cons; kwargs...)
+end
+
+function OptimizationBase.instantiate_function(
+        f::OptimizationFunction{true}, cache::OptimizationBase.ReInitCache,
+        adtype::DifferentiationInterface.SecondOrder{
+            <:ADTypes.AbstractADType, <:ADTypes.AutoZygote},
+        num_cons = 0; kwargs...)
     x = cache.u0
     p = cache.p
 
@@ -569,6 +581,17 @@ end
 function OptimizationBase.instantiate_function(
         f::OptimizationFunction{true}, cache::OptimizationBase.ReInitCache,
         adtype::ADTypes.AutoSparse{<:AutoZygote}, num_cons = 0; kwargs...)
+    x = cache.u0
+    p = cache.p
+
+    return OptimizationBase.instantiate_function(f, x, adtype, p, num_cons; kwargs...)
+end
+
+function OptimizationBase.instantiate_function(
+        f::OptimizationFunction{true}, cache::OptimizationBase.ReInitCache,
+        adtype::ADTypes.AutoSparse{<:DifferentiationInterface.SecondOrder{
+            <:ADTypes.AbstractADType, <:ADTypes.AutoZygote}},
+        num_cons = 0; kwargs...)
     x = cache.u0
     p = cache.p
 

@@ -62,7 +62,7 @@ function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt;
         g = SciMLBase.requiresgradient(opt), h = SciMLBase.requireshessian(opt),
         hv = SciMLBase.requireshessian(opt), fg = SciMLBase.allowsfg(opt),
         fgh = SciMLBase.allowsfgh(opt), cons_j = SciMLBase.requiresconsjac(opt), cons_h = SciMLBase.requiresconshess(opt),
-        cons_vjp = SciMLBase.allowsconsjvp(opt), cons_jvp = SciMLBase.allowsconsjvp(opt), lag_h = SciMLBase.requireslagh(opt))
+        cons_vjp = SciMLBase.allowsconsvjp(opt), cons_jvp = SciMLBase.allowsconsjvp(opt), lag_h = SciMLBase.requireslagh(opt))
 
     if structural_analysis
         obj_res, cons_res = symify_cache(f, prob, num_cons, manifold)
