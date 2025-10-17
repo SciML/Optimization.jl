@@ -50,7 +50,7 @@ ModelingToolkit = "10.23"
 Mooncake = "0.4.138"
 Optim = ">= 1.4.1"
 Optimisers = ">= 0.2.5"
-OptimizationBase = "3"
+OptimizationBase = "3, 4"
 OptimizationLBFGSB = "1"
 OptimizationMOI = "0.5"
 OptimizationOptimJL = "0.4"
@@ -109,6 +109,6 @@ Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
 
 [targets]
 test = ["Aqua", "BenchmarkTools", "Boltz", "ComponentArrays", "DiffEqFlux", "Enzyme", "FiniteDiff", "Flux", "ForwardDiff",
-    "Ipopt", "IterTools", "Lux", "MLUtils", "ModelingToolkit", "Optim", "OptimizationLBFGSB", "OptimizationMOI", "OptimizationOptimJL", "OptimizationOptimisers", 
+    "Ipopt", "IterTools", "Lux", "MLUtils", "ModelingToolkit", "Optim", "OptimizationLBFGSB", "OptimizationMOI", "OptimizationOptimJL", "OptimizationOptimisers",
     "OrdinaryDiffEqTsit5", "Pkg", "Random", "ReverseDiff", "SafeTestsets", "SciMLSensitivity", "SparseArrays",
     "Symbolics",  "Test", "Tracker", "Zygote", "Mooncake"]

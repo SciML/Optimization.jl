@@ -16,7 +16,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 ForwardDiff = "1.0.1"
-OptimizationBase = "3"
+OptimizationBase = "4"
 MLUtils = "0.4.8"
 LinearAlgebra = "1.10"
 OptimizationOptimisers = "0.3.8"
