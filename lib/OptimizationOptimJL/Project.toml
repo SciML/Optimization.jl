@@ -21,7 +21,7 @@ ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 [compat]
 julia = "1.10"
 PrecompileTools = "1.2"
-OptimizationBase = "3"
+OptimizationBase = "4"
 SparseArrays = "1.6"
 Optim = "1"
 Reexport = "1.2"
