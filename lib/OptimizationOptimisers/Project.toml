@@ -22,7 +22,7 @@ Lux = "b2108857-7c20-44ae-9111-449ecde12c47"
 
 [compat]
 julia = "1.10"
-OptimizationBase = "3"
+OptimizationBase = "4"
 ProgressLogging = "0.1"
 SciMLBase = "2.58"
 Optimisers = "0.2, 0.3, 0.4"

@@ -26,7 +26,7 @@ Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 [compat]
 julia = "1.10"
 Manopt = "0.5"
-OptimizationBase = "3"
+OptimizationBase = "4"
 LinearAlgebra = "1.10"
 ManifoldsBase = "1"
 ManifoldDiff = "0.4"

@@ -269,11 +269,6 @@ function SciMLBase.allowsconsjvp(opt::MadNLPOptimizer)
     true
 end
 
-function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::MadNLPOptimizer;
-        kwargs...)
-    return OptimizationCache(prob, opt; kwargs...)
-end
-
 function map_madnlp_status(status::MadNLP.Status)
     if status in [
         MadNLP.SOLVE_SUCCEEDED,
@@ -407,31 +402,7 @@ function __map_optimizer_args(cache,
     )
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <: MadNLPOptimizer,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: MadNLPOptimizer}
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
