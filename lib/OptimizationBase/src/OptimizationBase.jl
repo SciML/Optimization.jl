@@ -42,7 +42,6 @@ include("cache.jl")
 include("OptimizationDIExt.jl")
 include("OptimizationDISparseExt.jl")
 include("function.jl")
-include("solve.jl")
 include("utils.jl")
 include("state.jl")
 
