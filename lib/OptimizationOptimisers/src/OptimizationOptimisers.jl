@@ -133,10 +133,11 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         elseif breakall
             break
         end
-        cache.progress &&
-            @logmsg(LogLevel(-1), "Optimization";
-                _id = progress_id, message = "Loss: $(round(first(first(x)); digits=3))",
-                progress = iterations / maxiters)
+        if cache.progress
+            message = "Loss: $(round(first(first(x)); digits = 3))"
+            @logmsg(LogLevel(-1), "Optimization"; _id = progress_id,
+                message = message, progress = iterations / maxiters)
+        end
         if cache.solver_args.save_best
             if first(x)[1] < first(min_err)[1]  #found a better solution
                 min_opt = opt
