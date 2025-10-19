@@ -2,12 +2,14 @@ name = "OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.3.12"
+
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [extras]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
@@ -26,6 +28,7 @@ OptimizationBase = "3"
 SciMLBase = "2.58"
 Optimisers = "0.2, 0.3, 0.4"
 Reexport = "1.2"
+Logging = "1.10"
 
 [targets]
 test = ["ComponentArrays", "ForwardDiff", "Lux", "MLDataDevices", "MLUtils", "Random", "Test", "Zygote", "Printf"]
