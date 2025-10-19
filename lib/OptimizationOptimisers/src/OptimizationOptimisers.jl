@@ -135,8 +135,8 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         end
         if cache.progress
             message = "Loss: $(round(first(first(x)); digits = 3))"
-            @logmsg(LogLevel(-1), "Optimization"; _id = progress_id,
-                message = message, progress = iterations / maxiters)
+            @logmsg(LogLevel(-1), "Optimization", _id=progress_id,
+                message=message, progress=iterations / maxiters)
         end
         if cache.solver_args.save_best
             if first(x)[1] < first(min_err)[1]  #found a better solution
@@ -161,8 +161,8 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         end
         state, θ = Optimisers.update(state, θ, G)
     end
-    cache.progress && @logmsg(LogLevel(-1), "Optimization";
-        _id = progress_id, message = "Done", progress = 1.0)
+    cache.progress && @logmsg(LogLevel(-1), "Optimization",
+        _id=progress_id, message="Done", progress=1.0)
     t1 = time()
     stats = OptimizationBase.OptimizationStats(; iterations,
         time = t1 - t0, fevals, gevals)
