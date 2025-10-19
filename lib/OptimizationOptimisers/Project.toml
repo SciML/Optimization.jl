@@ -4,7 +4,6 @@ authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.3.12"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
@@ -24,7 +23,6 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 [compat]
 julia = "1.10"
 OptimizationBase = "3"
-ProgressLogging = "0.1"
 SciMLBase = "2.58"
 Optimisers = "0.2, 0.3, 0.4"
 Reexport = "1.2"

@@ -1,6 +1,6 @@
 module OptimizationOptimisers
 
-using Reexport, ProgressLogging, UUIDs
+using Reexport, UUIDs
 @reexport using Optimisers, OptimizationBase
 using SciMLBase
 
@@ -134,9 +134,9 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
             break
         end
         cache.progress &&
-            @info ProgressLogging.Progress(progress_id, iterations / maxiters;
-                name = "loss: $(round(first(first(x)); digits=3))")
-
+            @logmsg(LogLevel(-1), "Optimization";
+                _id = progress_id, message = "Loss: $(round(first(first(x)); digits=3))",
+                progress = iterations / maxiters)
         if cache.solver_args.save_best
             if first(x)[1] < first(min_err)[1]  #found a better solution
                 min_opt = opt
@@ -160,8 +160,8 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         end
         state, θ = Optimisers.update(state, θ, G)
     end
-
-    cache.progress && @info ProgressLogging.Progress(progress_id; done = true)
+    cache.progress && @logmsg(LogLevel(-1), "Optimization";
+        _id = progress_id, message = "Done", progress = 1.0)
     t1 = time()
     stats = OptimizationBase.OptimizationStats(; iterations,
         time = t1 - t0, fevals, gevals)

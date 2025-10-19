@@ -11,7 +11,7 @@ if !isdefined(Base, :get_extension)
     using Requires
 end
 
-using Logging, ProgressLogging, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
+using Logging, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 
 import OptimizationBase: instantiate_function, OptimizationCache, ReInitCache
