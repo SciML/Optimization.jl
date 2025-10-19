@@ -12,7 +12,8 @@ SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
     SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 end
 @static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
+    OptimizationBase.supports_opt_cache_interface(opt::Union{
+        NLopt.Algorithm, NLopt.Opt}) = true
 end
 
 function SciMLBase.requiresgradient(opt::Union{NLopt.Algorithm, NLopt.Opt})
@@ -70,7 +71,8 @@ function __map_optimizer_args!(cache::OptimizationBase.OptimizationCache, opt::N
         kwargs...)
 
     # Check if AUGLAG algorithm requires local_method
-    if opt.algorithm ∈ (NLopt.LN_AUGLAG, NLopt.LD_AUGLAG, NLopt.AUGLAG) && local_method === nothing
+    if opt.algorithm ∈ (NLopt.LN_AUGLAG, NLopt.LD_AUGLAG, NLopt.AUGLAG) &&
+       local_method === nothing
         error("NLopt.$(opt.algorithm) requires a local optimization method. " *
               "Please specify a local_method, e.g., solve(prob, NLopt.$(opt.algorithm)(); " *
               "local_method = NLopt.LN_NELDERMEAD())")
@@ -166,6 +168,15 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         C
 }
     local x
+
+    # Check if algorithm requires gradients but none are provided
+    opt = cache.opt isa NLopt.Opt ? cache.opt.algorithm : cache.opt
+    if SciMLBase.requiresgradient(opt) && isnothing(cache.f.grad)
+        throw(OptimizationBase.IncompatibleOptimizerError(
+            "The NLopt algorithm $(opt) requires gradients, but no gradient function is available. " *
+            "Please use `OptimizationFunction` with an automatic differentiation backend, " *
+            "e.g., `OptimizationFunction(f, AutoForwardDiff())`, or provide gradients manually via the `grad` kwarg."))
+    end
 
     _loss = function (θ)
         x = cache.f(θ, cache.p)
