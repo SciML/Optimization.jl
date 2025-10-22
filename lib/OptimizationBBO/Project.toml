@@ -15,7 +15,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 julia = "1.10"
 BlackBoxOptim = "0.6"
 OptimizationBase = "4"
-SciMLBase = "2.58"
+SciMLBase = "2.122.1"
 Reexport = "1.2"
 
 [targets]

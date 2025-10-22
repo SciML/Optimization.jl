@@ -29,7 +29,7 @@ DAEMassMatrix() = DAEOptimizer(Rodas5P(autodiff = false))
 SciMLBase.requiresbounds(::ODEOptimizer) = false
 SciMLBase.allowsbounds(::ODEOptimizer) = false
 SciMLBase.allowscallback(::ODEOptimizer) = true
-SciMLBase.supports_opt_cache_interface(::ODEOptimizer) = true
+SciMLBase.has_init(::ODEOptimizer) = true
 SciMLBase.requiresgradient(::ODEOptimizer) = true
 SciMLBase.requireshessian(::ODEOptimizer) = false
 SciMLBase.requiresconsjac(::ODEOptimizer) = false
@@ -39,7 +39,7 @@ SciMLBase.requiresbounds(::DAEOptimizer) = false
 SciMLBase.allowsbounds(::DAEOptimizer) = false
 SciMLBase.allowsconstraints(::DAEOptimizer) = true
 SciMLBase.allowscallback(::DAEOptimizer) = true
-SciMLBase.supports_opt_cache_interface(::DAEOptimizer) = true
+SciMLBase.has_init(::DAEOptimizer) = true
 SciMLBase.requiresgradient(::DAEOptimizer) = true
 SciMLBase.requireshessian(::DAEOptimizer) = false
 SciMLBase.requiresconsjac(::DAEOptimizer) = true

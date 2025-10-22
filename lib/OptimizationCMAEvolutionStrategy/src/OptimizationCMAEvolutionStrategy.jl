@@ -10,12 +10,7 @@ export CMAEvolutionStrategyOpt
 struct CMAEvolutionStrategyOpt end
 
 SciMLBase.allowsbounds(::CMAEvolutionStrategyOpt) = true
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(opt::CMAEvolutionStrategyOpt) = true
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(opt::CMAEvolutionStrategyOpt) = true
-end
+SciMLBase.has_init(opt::CMAEvolutionStrategyOpt) = true
 SciMLBase.requiresgradient(::CMAEvolutionStrategyOpt) = false
 SciMLBase.requireshessian(::CMAEvolutionStrategyOpt) = false
 SciMLBase.requiresconsjac(::CMAEvolutionStrategyOpt) = false

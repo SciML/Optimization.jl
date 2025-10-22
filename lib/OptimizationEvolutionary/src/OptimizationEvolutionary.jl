@@ -6,14 +6,7 @@ using SciMLBase
 
 SciMLBase.allowsbounds(opt::Evolutionary.AbstractOptimizer) = true
 SciMLBase.allowsconstraints(opt::Evolutionary.AbstractOptimizer) = true
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(opt::Evolutionary.AbstractOptimizer) = true
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    function OptimizationBase.supports_opt_cache_interface(opt::Evolutionary.AbstractOptimizer)
-        true
-    end
-end
+SciMLBase.has_init(opt::Evolutionary.AbstractOptimizer) = true
 SciMLBase.requiresgradient(opt::Evolutionary.AbstractOptimizer) = false
 SciMLBase.requiresgradient(opt::Evolutionary.NSGA2) = false
 SciMLBase.requireshessian(opt::Evolutionary.AbstractOptimizer) = false

@@ -32,7 +32,7 @@ ManifoldsBase = "1"
 ManifoldDiff = "0.4"
 Manifolds = "0.10"
 Reexport = "1.2"
-SciMLBase = "2.58"
+SciMLBase = "2.122.1"
 
 [targets]
 test = ["Enzyme", "ForwardDiff", "FiniteDiff", "QuadraticModels", "Random", "ReverseDiff", "RipQP", "Test", "Zygote"]

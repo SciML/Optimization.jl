@@ -166,15 +166,8 @@ https://coin-or.github.io/Ipopt/OPTIONS.html
     additional_options::Dict{String, Any} = Dict{String, Any}()
 end
 
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    function SciMLBase.supports_opt_cache_interface(alg::IpoptOptimizer)
-        true
-    end
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    function OptimizationBase.supports_opt_cache_interface(alg::IpoptOptimizer)
-        true
-    end
+function SciMLBase.has_init(alg::IpoptOptimizer)
+    true
 end
 
 function SciMLBase.requiresgradient(opt::IpoptOptimizer)

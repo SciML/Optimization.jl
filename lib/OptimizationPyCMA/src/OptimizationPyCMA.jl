@@ -19,12 +19,7 @@ end
 
 # Defining the SciMLBase interface for PyCMAOpt
 SciMLBase.allowsbounds(::PyCMAOpt) = true
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(opt::PyCMAOpt) = true
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(opt::PyCMAOpt) = true
-end
+SciMLBase.has_init(opt::PyCMAOpt) = true
 SciMLBase.allowscallback(::PyCMAOpt) = true
 SciMLBase.requiresgradient(::PyCMAOpt) = false
 SciMLBase.requireshessian(::PyCMAOpt) = false

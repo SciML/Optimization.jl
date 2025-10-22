@@ -20,7 +20,7 @@ OptimizationBase = "4"
 OrdinaryDiffEq = "6.70"
 NonlinearSolve = "4"
 Reexport = "1"
-SciMLBase = "2"
+SciMLBase = "2.122.1"
 SteadyStateDiffEq = "2"
 julia = "1.10"
 

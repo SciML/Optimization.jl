@@ -242,7 +242,7 @@ end
     additional_options::Dict{Symbol, Any} = Dict{Symbol, Any}()
 end
 
-SciMLBase.supports_opt_cache_interface(opt::MadNLPOptimizer) = true
+SciMLBase.has_init(opt::MadNLPOptimizer) = true
 
 function SciMLBase.requiresgradient(opt::MadNLPOptimizer)
     true

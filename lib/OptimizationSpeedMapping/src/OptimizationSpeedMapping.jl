@@ -10,12 +10,7 @@ struct SpeedMappingOpt end
 
 SciMLBase.allowsbounds(::SpeedMappingOpt) = true
 SciMLBase.allowscallback(::SpeedMappingOpt) = false
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(opt::SpeedMappingOpt) = true
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(opt::SpeedMappingOpt) = true
-end
+SciMLBase.has_init(opt::SpeedMappingOpt) = true
 SciMLBase.requiresgradient(opt::SpeedMappingOpt) = true
 
 function __map_optimizer_args(
