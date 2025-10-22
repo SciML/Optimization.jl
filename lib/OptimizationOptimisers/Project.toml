@@ -2,13 +2,13 @@ name = "OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.3.13"
+
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
-Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [extras]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
@@ -19,14 +19,15 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 ComponentArrays = "b0b7db55-cfe3-40fc-9ded-d10e2dbeff66"
 Lux = "b2108857-7c20-44ae-9111-449ecde12c47"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
 julia = "1.10"
 OptimizationBase = "3"
-ProgressLogging = "0.1"
 SciMLBase = "2.58"
 Optimisers = "0.2, 0.3, 0.4"
 Reexport = "1.2"
+Logging = "1.10"
 
 [targets]
-test = ["ComponentArrays", "ForwardDiff", "Lux", "MLDataDevices", "MLUtils", "Random", "Test", "Zygote"]
+test = ["ComponentArrays", "ForwardDiff", "Lux", "MLDataDevices", "MLUtils", "Random", "Test", "Zygote", "Printf"]

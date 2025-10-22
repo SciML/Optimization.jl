@@ -1,6 +1,6 @@
 module OptimizationOptimisers
 
-using Reexport, Printf, ProgressLogging
+using Reexport, Logging
 @reexport using Optimisers, OptimizationBase
 using SciMLBase
 
@@ -95,77 +95,74 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
     gevals = 0
     t0 = time()
     breakall = false
-    begin
-        for epoch in 1:epochs
-            if breakall
-                break
+    progress_id = :OptimizationOptimizersJL
+    for epoch in 1:epochs, d in data
+        if cache.f.fg !== nothing && dataiterate
+            x = cache.f.fg(G, θ, d)
+            iterations += 1
+            fevals += 1
+            gevals += 1
+        elseif dataiterate
+            cache.f.grad(G, θ, d)
+            x = cache.f(θ, d)
+            iterations += 1
+            fevals += 2
+            gevals += 1
+        elseif cache.f.fg !== nothing
+            x = cache.f.fg(G, θ)
+            iterations += 1
+            fevals += 1
+            gevals += 1
+        else
+            cache.f.grad(G, θ)
+            x = cache.f(θ)
+            iterations += 1
+            fevals += 2
+            gevals += 1
+        end
+        opt_state = OptimizationBase.OptimizationState(
+            iter = iterations,
+            u = θ,
+            p = d,
+            objective = x[1],
+            grad = G,
+            original = state)
+        breakall = cache.callback(opt_state, x...)
+        if !(breakall isa Bool)
+            error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the `solve` documentation for information.")
+        elseif breakall
+            break
+        end
+        if cache.progress
+            message = "Loss: $(round(first(first(x)); digits = 3))"
+            @logmsg(LogLevel(-1), "Optimization", _id=progress_id,
+                message=message, progress=iterations / maxiters)
+        end
+        if cache.solver_args.save_best
+            if first(x)[1] < first(min_err)[1]  #found a better solution
+                min_opt = opt
+                min_err = x
+                min_θ = copy(θ)
             end
-            for (i, d) in enumerate(data)
-                if cache.f.fg !== nothing && dataiterate
-                    x = cache.f.fg(G, θ, d)
-                    iterations += 1
-                    fevals += 1
-                    gevals += 1
-                elseif dataiterate
-                    cache.f.grad(G, θ, d)
-                    x = cache.f(θ, d)
-                    iterations += 1
-                    fevals += 2
-                    gevals += 1
-                elseif cache.f.fg !== nothing
-                    x = cache.f.fg(G, θ)
-                    iterations += 1
-                    fevals += 1
-                    gevals += 1
-                else
-                    cache.f.grad(G, θ)
-                    x = cache.f(θ)
-                    iterations += 1
-                    fevals += 2
-                    gevals += 1
-                end
-                opt_state = OptimizationBase.OptimizationState(
-                    iter = i + (epoch - 1) * length(data),
+            if iterations == length(data) * epochs  #Last iter, revert to best.
+                opt = min_opt
+                x = min_err
+                θ = min_θ
+                cache.f.grad(G, θ, d)
+                opt_state = OptimizationBase.OptimizationState(iter = iterations,
                     u = θ,
                     p = d,
                     objective = x[1],
                     grad = G,
                     original = state)
                 breakall = cache.callback(opt_state, x...)
-                if !(breakall isa Bool)
-                    error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the `solve` documentation for information.")
-                elseif breakall
-                    break
-                end
-                msg = @sprintf("loss: %.3g", first(x)[1])
-                #cache.progress && ProgressLogging.@logprogress msg iterations/maxiters
-
-                if cache.solver_args.save_best
-                    if first(x)[1] < first(min_err)[1]  #found a better solution
-                        min_opt = opt
-                        min_err = x
-                        min_θ = copy(θ)
-                    end
-                    if iterations == length(data) * epochs  #Last iter, revert to best.
-                        opt = min_opt
-                        x = min_err
-                        θ = min_θ
-                        cache.f.grad(G, θ, d)
-                        opt_state = OptimizationBase.OptimizationState(iter = iterations,
-                            u = θ,
-                            p = d,
-                            objective = x[1],
-                            grad = G,
-                            original = state)
-                        breakall = cache.callback(opt_state, x...)
-                        break
-                    end
-                end
-                state, θ = Optimisers.update(state, θ, G)
+                break
             end
         end
+        state, θ = Optimisers.update(state, θ, G)
     end
-
+    cache.progress && @logmsg(LogLevel(-1), "Optimization",
+        _id=progress_id, message="Done", progress=1.0)
     t1 = time()
     stats = OptimizationBase.OptimizationStats(; iterations,
         time = t1 - t0, fevals, gevals)
