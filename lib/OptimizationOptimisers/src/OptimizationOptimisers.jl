@@ -95,7 +95,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
     gevals = 0
     t0 = time()
     breakall = false
-    progress_id = uuid4()
+    progress_id = :OptimizationOptimizersJL
     for epoch in 1:epochs, d in data
         if cache.f.fg !== nothing && dataiterate
             x = cache.f.fg(G, θ, d)
