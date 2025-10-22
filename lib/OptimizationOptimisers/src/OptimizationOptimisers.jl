@@ -1,6 +1,6 @@
 module OptimizationOptimisers
 
-using Reexport, UUIDs, Logging
+using Reexport, Logging
 @reexport using Optimisers, OptimizationBase
 using SciMLBase
 
