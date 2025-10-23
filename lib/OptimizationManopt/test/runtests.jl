@@ -185,6 +185,6 @@ R2 = Euclidean(2)
         optprob_cons = OptimizationFunction(rosenbrock; grad = rosenbrock_grad!, cons = cons)
         prob_cons = OptimizationProblem(optprob_cons, x0, p)
         #TODO: What is this?
-        @test_throws SciMLBase.IncompatibleOptimizerError OptimizationBase.solve(prob_cons, opt)
+        @test_throws OptimizationBase.IncompatibleOptimizerError OptimizationBase.solve(prob_cons, opt)
     end
 end
