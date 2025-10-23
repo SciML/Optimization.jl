@@ -150,7 +150,8 @@ end
         G[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]
         G[2] = 200.0 * (x[2] - x[1]^2)
     end
-    optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), OptimizationBase.AutoZygote(),
+    optprob = OptimizationFunction(
+        (x, p) -> -rosenbrock(x, p), OptimizationBase.AutoZygote(),
         grad = g!)
     prob = OptimizationProblem(optprob, x0, _p; sense = OptimizationBase.MaxSense)
     sol = solve(prob, BFGS())
@@ -171,7 +172,8 @@ end
     @test 10 * sol.objective < l1
 
     prob = OptimizationProblem(
-        optprob, x0, _p; sense = OptimizationBase.MaxSense, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+        optprob, x0, _p; sense = OptimizationBase.MaxSense, lb = [-1.0, -1.0], ub = [
+            0.8, 0.8])
     sol = solve(prob, BFGS())
     @test 10 * sol.objective < l1
 
@@ -198,6 +200,34 @@ end
     prob = OptimizationProblem(optprob, x0, _p; lb = [-1.0, -1.0], ub = [0.8, 0.8])
     @test_throws ArgumentError (sol = solve(prob, Optim.BFGS())) isa Any  # test exception is thrown
     @test 10 * sol.objective < l1
+
+    # Test for issue #1073: callbacks should receive scalar non-negative loss values
+    # when using (L)BFGS with bounds and automatic differentiation
+    @testset "Issue #1073: LBFGS/BFGS callback receives correct scalar loss with bounds" begin
+        # Create a non-negative loss function (sum of squares)
+        loss_vals = Float64[]
+        function test_callback(state, loss_val)
+            # Verify loss_val is a scalar Float64, not a Dual number
+            @test loss_val isa Float64
+            # For a sum-of-squares loss, values should be non-negative
+            push!(loss_vals, loss_val)
+            return false
+        end
+
+        # Test with LBFGS + bounds (triggers Fminbox wrapping)
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
+        prob = OptimizationProblem(optprob, x0, _p; lb = [-1.0, -1.0], ub = [0.8, 0.8])
+        empty!(loss_vals)
+        sol = solve(prob, Optim.LBFGS(); callback = test_callback, maxiters = 10)
+        @test all(>=(0), loss_vals)  # All loss values should be non-negative
+        @test length(loss_vals) > 0  # Callback should have been called
+
+        # Test with BFGS + bounds
+        empty!(loss_vals)
+        sol = solve(prob, Optim.BFGS(); callback = test_callback, maxiters = 10)
+        @test all(>=(0), loss_vals)  # All loss values should be non-negative
+        @test length(loss_vals) > 0  # Callback should have been called
+    end
 
     @testset "cache" begin
         objective(x, p) = (p[1] - x[1])^2
