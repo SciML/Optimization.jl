@@ -14,6 +14,9 @@ MLUtils = "f1d291b0-491e-4a28-83b9-f70985020b54"
 OptimizationOptimisers = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
+[sources]
+OptimizationOptimisers = {path = "../OptimizationOptimisers"}
+
 [compat]
 ForwardDiff = "1.0.1"
 OptimizationBase = "4"

@@ -98,6 +98,10 @@ jobs:
             elseif GROUP == "OptimizationBase"
               dev_subpkg("OptimizationLBFGSB")
               dev_subpkg("OptimizationManopt")
+            elseif GROUP == "OptimizationAuglag"
+              dev_subpkg("OptimizationOptimisers")
+            elseif GROUP == "OptimizationMultistartOptimization"
+              dev_subpkg("OptimizationNLopt")
             elseif GROUP == "GPU" || GROUP == "OptimizationPolyalgorithms"
               dev_subpkg("OptimizationOptimJL")
               dev_subpkg("OptimizationOptimisers")
