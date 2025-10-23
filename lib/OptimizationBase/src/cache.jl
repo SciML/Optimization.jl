@@ -92,6 +92,8 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt;
         kwargs...)
 end
 
+SciMLBase.isinplace(::OptimizationCache{o, iip}) where {o, iip} = iip
+
 # Wrapper for fields that may change in `reinit!(cache)` of a cache.
 mutable struct ReInitCache{uType, P}
     u0::uType
