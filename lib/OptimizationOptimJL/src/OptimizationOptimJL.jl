@@ -3,8 +3,18 @@ module OptimizationOptimJL
 using Reexport
 @reexport using Optim, OptimizationBase
 using SciMLBase, SparseArrays
+
+# Import ForwardDiff to handle Dual numbers in callbacks
+import ForwardDiff
+
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace::Optim.OptimizationState) = trace
+
+# Extract scalar value from potentially Dual-valued trace values
+# This is needed because Optim.jl may use ForwardDiff internally for gradient computation,
+# resulting in Dual numbers in the trace, but callbacks should receive scalar values
+_scalar_value(x) = x  # Default case for regular numbers
+_scalar_value(x::ForwardDiff.Dual) = ForwardDiff.value(x)  # Extract value from Dual
 
 SciMLBase.allowsconstraints(::IPNewton) = true
 SciMLBase.allowsbounds(opt::Optim.AbstractOptimizer) = true
@@ -149,14 +159,16 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         trace_state = decompose_trace(trace)
         metadata = trace_state.metadata
         θ = metadata[cache.opt isa Optim.NelderMead ? "centroid" : "x"]
+        # Extract scalar value from potentially Dual-valued trace (issue #1073)
+        loss_val = _scalar_value(trace_state.value)
         opt_state = OptimizationBase.OptimizationState(iter = trace_state.iteration,
             u = θ,
             p = cache.p,
-            objective = trace_state.value,
+            objective = loss_val,
             grad = get(metadata, "g(x)", nothing),
             hess = get(metadata, "h(x)", nothing),
             original = trace)
-        cb_call = cache.callback(opt_state, trace_state.value)
+        cb_call = cache.callback(opt_state, loss_val)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -270,14 +282,16 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         θ = !(cache.opt isa Optim.SAMIN) && cache.opt.method == Optim.NelderMead() ?
             metadata["centroid"] :
             metadata["x"]
+        # Extract scalar value from potentially Dual-valued trace (issue #1073)
+        loss_val = _scalar_value(trace_state.value)
         opt_state = OptimizationBase.OptimizationState(iter = trace_state.iteration,
             u = θ,
             p = cache.p,
-            objective = trace_state.value,
+            objective = loss_val,
             grad = get(metadata, "g(x)", nothing),
             hess = get(metadata, "h(x)", nothing),
             original = trace)
-        cb_call = cache.callback(opt_state, trace_state.value)
+        cb_call = cache.callback(opt_state, loss_val)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -357,14 +371,16 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
 
     function _cb(trace)
         metadata = decompose_trace(trace).metadata
+        # Extract scalar value from potentially Dual-valued trace (issue #1073)
+        loss_val = _scalar_value(trace.value)
         opt_state = OptimizationBase.OptimizationState(iter = trace.iteration,
             u = metadata["x"],
             p = cache.p,
             grad = get(metadata, "g(x)", nothing),
             hess = get(metadata, "h(x)", nothing),
-            objective = trace.value,
+            objective = loss_val,
             original = trace)
-        cb_call = cache.callback(opt_state, trace.value)
+        cb_call = cache.callback(opt_state, loss_val)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
