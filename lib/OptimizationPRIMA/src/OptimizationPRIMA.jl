@@ -11,6 +11,8 @@ struct BOBYQA <: PRIMASolvers end
 struct LINCOA <: PRIMASolvers end
 struct COBYLA <: PRIMASolvers end
 
+export UOBYQA, NEWUOA, BOBYQA, LINCOA, COBYLA
+
 SciMLBase.has_init(::PRIMASolvers) = true
 SciMLBase.allowsconstraints(::Union{LINCOA, COBYLA}) = true
 SciMLBase.allowsbounds(opt::Union{BOBYQA, LINCOA, COBYLA}) = true
@@ -44,12 +46,11 @@ function OptimizationBase.OptimizationCache(prob::SciMLBase.OptimizationProblem,
     end
 
     return OptimizationBase.OptimizationCache(
-        f, reinit_cache, prob.lb, prob.ub, prob.lcons,
+        opt, f, reinit_cache, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
-        opt, progress, callback, nothing,
+        progress, callback, nothing,
         OptimizationBase.OptimizationBase.AnalysisResults(nothing, nothing),
-        merge((; maxiters, maxtime, abstol, reltol),
-            NamedTuple(kwargs)))
+        merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs)))
 end
 
 function get_solve_func(opt::PRIMASolvers)
@@ -177,5 +178,4 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: PRIMASolvers
         stats = stats, original = inf)
 end
 
-export UOBYQA, NEWUOA, BOBYQA, LINCOA, COBYLA
 end
