@@ -106,8 +106,9 @@ jobs:
               # special case
               Pkg.develop([PackageSpec(path = "lib/OptimizationOptimJL"), PackageSpec(path = "lib/OptimizationOptimisers")])
             elseif GROUP == "OptimizationNLPModels"
-              dev_subpkg("OptimizationOptimJL")
               dev_subpkg("OptimizationMOI")
+              dev_subpkg("OptimizationOptimJL")
+              dev_subpkg("OptimizationLBFGSB")
             end
           end
 
