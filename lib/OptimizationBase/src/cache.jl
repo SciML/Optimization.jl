@@ -5,7 +5,9 @@ struct AnalysisResults{O, C}
     constraints::C
 end
 
-struct OptimizationCache{O, F, RC, LB, UB, LC, UC, S, P, C, M} <:
+struct OptimizationCache{
+    O, IIP, F <: SciMLBase.AbstractOptimizationFunction{IIP},
+    RC, LB, UB, LC, UC, S, P, C, M} <:
        SciMLBase.AbstractOptimizationCache
     opt::O
     f::F
@@ -74,8 +76,7 @@ function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt;
     return OptimizationCache(opt, f, reinit_cache_passedon, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
         progress, callback, manifold, AnalysisResults(obj_res, cons_res),
-        merge((; maxiters, maxtime, abstol, reltol),
-            NamedTuple(kwargs)))
+        merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs)))
 end
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt;
