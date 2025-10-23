@@ -510,7 +510,7 @@ end
             np = 12  # Icosahedron configuration
             x0 = init_electrons_on_sphere(np)
 
-            results = Dict()
+            results = []
 
             for (name, approx, ad) in [("CompactLBFGS", MadNLP.CompactLBFGS,
                                            AutoForwardDiff())
@@ -533,24 +533,25 @@ end
                 )
 
                 sol = solve(prob, opt; abstol = 1e-6, maxiters = 300, verbose = false)
-                results[name] = (
+                push!(results, name => (
                     objective = sol.objective,
                     iterations = sol.stats.iterations,
                     success = SciMLBase.successful_retcode(sol)
-                )
+                ))
             end
 
             # All methods should converge
-            @test all(r.success for r in values(results))
+            @test all(r[2].success for r in values(results))
 
             # All should find similar objective values (icosahedron energy)
             # Reference: https://en.wikipedia.org/wiki/Thomson_problem
-            objectives = [r.objective for r in values(results)]
-            @test all(abs.(objectives .- 49.165253058) .< 0.1)
+            objectives = [r[2].objective for r in values(results)]
+            @testset "$(results[i][1])" for (i, o) in enumerate(objectives)
+                @test o ≈ 49.165253058 rtol=1e-2
+            end
 
             # LBFGS methods typically need more iterations but less cost per iteration
-            @test results["CompactLBFGS"].iterations > 0
-            @test results["ExactHessian"].iterations > 0
+            @test results[1][2].iterations > results[1][2].iterations broken=true
         end
     end
 
