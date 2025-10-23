@@ -103,8 +103,8 @@ jobs:
             elseif GROUP == "OptimizationMultistartOptimization"
               dev_subpkg("OptimizationNLopt")
             elseif GROUP == "GPU" || GROUP == "OptimizationPolyalgorithms"
-              dev_subpkg("OptimizationOptimJL")
-              dev_subpkg("OptimizationOptimisers")
+              # special case
+              Pkg.develop([PackageSpec(path = "lib/OptimizationOptimJL"), PackageSpec(path = "lib/OptimizationOptimisers")])
             elseif GROUP == "OptimizationNLPModels"
               dev_subpkg("OptimizationOptimJL")
               dev_subpkg("OptimizationMOI")
