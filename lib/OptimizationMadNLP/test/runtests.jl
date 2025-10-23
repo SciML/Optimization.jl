@@ -238,7 +238,7 @@ end
             acceptable_tol = 1e-6,
             acceptable_iter = 10,
             blas_num_threads = 2,
-            barrier = MadNLP.MonotoneUpdate(mu_init = 0.01)
+            mu_init = 0.01
         )
         sol = solve(prob, opt)
         @test SciMLBase.successful_retcode(sol)

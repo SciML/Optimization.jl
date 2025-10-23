@@ -236,8 +236,7 @@ end
 
     kkt_system::Union{Nothing, Type} = nothing # e.g. DenseKKTSystem
 
-    # Barrier method (defaults to MonotoneUpdate)
-    barrier::Union{Nothing, MadNLP.AbstractBarrierUpdate} = nothing
+    mu_init::T = 0.1
 
     # Quasi-Newton options (used when hessian_approximation is CompactLBFGS, BFGS, or DampedBFGS)
     quasi_newton_options::Union{Nothing, MadNLP.QuasiNewtonOptions} = nothing
@@ -380,13 +379,7 @@ function __map_optimizer_args(cache,
     # Build final options dictionary
     options = Dict{Symbol, Any}(opt.additional_options)
 
-    # Add barrier if provided, otherwise create default
-    if !isnothing(opt.barrier)
-        options[:barrier] = opt.barrier
-    else
-        # Create default barrier (MonotoneUpdate with default mu_init)
-        options[:barrier] = MadNLP.MonotoneUpdate{T}()
-    end
+    options[:mu_init] = opt.mu_init
 
     # Add quasi_newton_options if provided, otherwise create default
     if !isnothing(opt.quasi_newton_options)
