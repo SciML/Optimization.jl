@@ -3,18 +3,8 @@ module OptimizationOptimJL
 using Reexport
 @reexport using Optim, OptimizationBase
 using SciMLBase, SparseArrays
-
-# Import ForwardDiff to handle Dual numbers in callbacks
-import ForwardDiff
-
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace::Optim.OptimizationState) = trace
-
-# Extract scalar value from potentially Dual-valued trace values
-# This is needed because Optim.jl may use ForwardDiff internally for gradient computation,
-# resulting in Dual numbers in the trace, but callbacks should receive scalar values
-_scalar_value(x) = x  # Default case for regular numbers
-_scalar_value(x::ForwardDiff.Dual) = ForwardDiff.value(x)  # Extract value from Dual
 
 SciMLBase.allowsconstraints(::IPNewton) = true
 SciMLBase.allowsbounds(opt::Optim.AbstractOptimizer) = true
@@ -28,7 +18,8 @@ SciMLBase.requiresbounds(opt::Optim.SAMIN) = true
 end
 @static if isdefined(OptimizationBase, :supports_opt_cache_interface)
     OptimizationBase.supports_opt_cache_interface(opt::Optim.AbstractOptimizer) = true
-    OptimizationBase.supports_opt_cache_interface(opt::Union{Optim.Fminbox, Optim.SAMIN}) = true
+    OptimizationBase.supports_opt_cache_interface(opt::Union{
+        Optim.Fminbox, Optim.SAMIN}) = true
     OptimizationBase.supports_opt_cache_interface(opt::Optim.ConstrainedOptimizer) = true
 end
 function SciMLBase.requiresgradient(opt::Optim.AbstractOptimizer)
@@ -160,7 +151,8 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         metadata = trace_state.metadata
         θ = metadata[cache.opt isa Optim.NelderMead ? "centroid" : "x"]
         # Extract scalar value from potentially Dual-valued trace (issue #1073)
-        loss_val = _scalar_value(trace_state.value)
+        # Using SciMLBase.value to handle ForwardDiff.Dual numbers from Fminbox
+        loss_val = SciMLBase.value(trace_state.value)
         opt_state = OptimizationBase.OptimizationState(iter = trace_state.iteration,
             u = θ,
             p = cache.p,
@@ -283,7 +275,8 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
             metadata["centroid"] :
             metadata["x"]
         # Extract scalar value from potentially Dual-valued trace (issue #1073)
-        loss_val = _scalar_value(trace_state.value)
+        # Using SciMLBase.value to handle ForwardDiff.Dual numbers from Fminbox
+        loss_val = SciMLBase.value(trace_state.value)
         opt_state = OptimizationBase.OptimizationState(iter = trace_state.iteration,
             u = θ,
             p = cache.p,
@@ -372,7 +365,8 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
     function _cb(trace)
         metadata = decompose_trace(trace).metadata
         # Extract scalar value from potentially Dual-valued trace (issue #1073)
-        loss_val = _scalar_value(trace.value)
+        # Using SciMLBase.value to handle ForwardDiff.Dual numbers from Fminbox
+        loss_val = SciMLBase.value(trace.value)
         opt_state = OptimizationBase.OptimizationState(iter = trace.iteration,
             u = metadata["x"],
             p = cache.p,
