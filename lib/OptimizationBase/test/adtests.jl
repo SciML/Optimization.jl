@@ -1,5 +1,5 @@
 using OptimizationBase, Test, DifferentiationInterface, SparseArrays, Symbolics
-using ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker
+using ADTypes, ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker
 using ModelingToolkit, Enzyme, Random
 
 x0 = zeros(2)
@@ -27,9 +27,9 @@ g!(G1, x0)
 h!(H1, x0)
 
 cons = (res, x, p) -> (res[1] = x[1]^2 + x[2]^2; return nothing)
-optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoModelingToolkit(), cons = cons)
+optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoSymbolics(), cons = cons)
 optprob = OptimizationBase.instantiate_function(optf, x0,
-    OptimizationBase.AutoModelingToolkit(),
+    OptimizationBase.AutoSymbolics(),
     nothing, 1, g = true, h = true, cons_j = true, cons_h = true)
 optprob.grad(G2, x0)
 @test G1 == G2
@@ -51,10 +51,10 @@ function con2_c(res, x, p)
     return nothing
 end
 optf = OptimizationFunction(rosenbrock,
-    OptimizationBase.AutoModelingToolkit(),
+    OptimizationBase.AutoSymbolics(),
     cons = con2_c)
 optprob = OptimizationBase.instantiate_function(optf, x0,
-    OptimizationBase.AutoModelingToolkit(),
+    OptimizationBase.AutoSymbolics(),
     nothing, 2, g = true, h = true, cons_j = true, cons_h = true)
 optprob.grad(G2, x0)
 @test G1 == G2
@@ -196,9 +196,9 @@ optprob.cons_h(H3, x0)
     H2 = Array{Float64}(undef, 2, 2)
 
     optf = OptimizationFunction(
-        rosenbrock, OptimizationBase.AutoReverseDiff(true), cons = cons)
+        rosenbrock, OptimizationBase.AutoReverseDiff(; compile = true), cons = cons)
     optprob = OptimizationBase.instantiate_function(
-        optf, x0, OptimizationBase.AutoReverseDiff(true),
+        optf, x0, OptimizationBase.AutoReverseDiff(; compile = true),
         nothing, 1, g = true, h = true, hv = true,
         cons_j = true, cons_h = true, cons_vjp = true,
         cons_jvp = true, lag_h = true)
@@ -402,9 +402,9 @@ end
     H2 = Array{Float64}(undef, 2, 2)
 
     optf = OptimizationFunction(
-        rosenbrock, OptimizationBase.AutoReverseDiff(true), cons = con2_c)
+        rosenbrock, OptimizationBase.AutoReverseDiff(; compile = true), cons = con2_c)
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoReverseDiff(true),
+        OptimizationBase.AutoReverseDiff(; compile = true),
         nothing, 2, g = true, h = true, hv = true,
         cons_j = true, cons_h = true, cons_vjp = true,
         cons_jvp = true, lag_h = true)
@@ -442,7 +442,7 @@ end
     optf = OptimizationFunction(
         rosenbrock, OptimizationBase.AutoForwardDiff(), cons = con2_c)
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoReverseDiff(compile = true),
+        OptimizationBase.AutoReverseDiff(; compile = true),
         nothing, 2, g = true, h = true, hv = true,
         cons_j = true, cons_h = true, cons_vjp = true,
         cons_jvp = true, lag_h = true)
@@ -582,12 +582,12 @@ end
     x0 = [0.5, 0.5, 0.5]
 
     # Create OptimizationFunction
-    optf = OptimizationFunction(sparse_objective, OptimizationBase.AutoSparseForwardDiff(),
+    optf = OptimizationFunction(sparse_objective, AutoSparse(OptimizationBase.AutoForwardDiff()),
         cons = sparse_constraints)
 
     # Instantiate the optimization problem
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoSparseForwardDiff(),
+        AutoSparse(OptimizationBase.AutoForwardDiff()),
         nothing, 2, g = true, h = true, cons_j = true, cons_h = true, lag_h = true)
     # Test gradient
     G = zeros(3)
@@ -631,12 +631,12 @@ end
     @test lag_H ≈ lag_H_expected
     @test nnz(lag_H) == 5
 
-    optf = OptimizationFunction(sparse_objective, OptimizationBase.AutoSparseReverseDiff(),
+    optf = OptimizationFunction(sparse_objective, AutoSparse(OptimizationBase.AutoReverseDiff()),
         cons = sparse_constraints)
 
     # Instantiate the optimization problem
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoSparseForwardDiff(),
+        AutoSparse(OptimizationBase.AutoForwardDiff()),
         nothing, 2, g = true, h = true, cons_j = true, cons_h = true, lag_h = true)
     # Test gradient
     G = zeros(3)
@@ -681,12 +681,12 @@ end
     @test nnz(lag_H) == 5
 
     optf = OptimizationFunction(
-        sparse_objective, OptimizationBase.AutoSparseReverseDiff(true),
+        sparse_objective, AutoSparse(OptimizationBase.AutoReverseDiff(; compile = true)),
         cons = sparse_constraints)
 
     # Instantiate the optimization problem
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoSparseForwardDiff(),
+        AutoSparse(OptimizationBase.AutoForwardDiff()),
         nothing, 2, g = true, h = true, cons_j = true, cons_h = true, lag_h = true)
     # Test gradient
     G = zeros(3)
@@ -730,12 +730,12 @@ end
     @test lag_H ≈ lag_H_expected
     @test nnz(lag_H) == 5
 
-    optf = OptimizationFunction(sparse_objective, OptimizationBase.AutoSparseFiniteDiff(),
+    optf = OptimizationFunction(sparse_objective, AutoSparse(OptimizationBase.AutoFiniteDiff()),
         cons = sparse_constraints)
 
     # Instantiate the optimization problem
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoSparseForwardDiff(),
+        AutoSparse(OptimizationBase.AutoForwardDiff()),
         nothing, 2, g = true, h = true, cons_j = true, cons_h = true, lag_h = true)
     # Test gradient
     G = zeros(3)
@@ -959,10 +959,10 @@ end
 
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(rosenbrock,
-        OptimizationBase.AutoReverseDiff(true),
+        OptimizationBase.AutoReverseDiff(; compile = true),
         cons = cons)
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoReverseDiff(true),
+        OptimizationBase.AutoReverseDiff(; compile = true),
         nothing, 1, g = true, h = true, cons_j = true, cons_h = true)
 
     @test optprob.grad(x0) == G1
@@ -976,10 +976,10 @@ end
 
     cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     optf = OptimizationFunction{false}(rosenbrock,
-        OptimizationBase.AutoReverseDiff(true),
+        OptimizationBase.AutoReverseDiff(; compile = true),
         cons = cons)
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoReverseDiff(true),
+        OptimizationBase.AutoReverseDiff(; compile = true),
         nothing, 2, g = true, h = true, cons_j = true, cons_h = true)
 
     @test optprob.grad(x0) == G1
@@ -990,10 +990,10 @@ end
 
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(rosenbrock,
-        OptimizationBase.AutoSparseForwardDiff(),
+        AutoSparse(OptimizationBase.AutoForwardDiff()),
         cons = cons)
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoSparseForwardDiff(),
+        AutoSparse(OptimizationBase.AutoForwardDiff()),
         nothing, 1, g = true, h = true, cons_j = true, cons_h = true)
 
     @test optprob.grad(x0) == G1
@@ -1007,10 +1007,10 @@ end
 
     cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     optf = OptimizationFunction{false}(rosenbrock,
-        OptimizationBase.AutoSparseForwardDiff(),
+        AutoSparse(OptimizationBase.AutoForwardDiff()),
         cons = cons)
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoSparseForwardDiff(),
+        AutoSparse(OptimizationBase.AutoForwardDiff()),
         nothing, 2, g = true, h = true, cons_j = true, cons_h = true)
 
     @test optprob.grad(x0) == G1
@@ -1021,10 +1021,10 @@ end
 
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(rosenbrock,
-        OptimizationBase.AutoSparseFiniteDiff(),
+        AutoSparse(OptimizationBase.AutoFiniteDiff()),
         cons = cons)
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoSparseFiniteDiff(),
+        AutoSparse(OptimizationBase.AutoFiniteDiff()),
         nothing, 1, g = true, h = true, cons_j = true, cons_h = true)
 
     @test optprob.grad(x0)≈G1 rtol=1e-4
@@ -1038,10 +1038,10 @@ end
 
     cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     optf = OptimizationFunction{false}(rosenbrock,
-        OptimizationBase.AutoSparseFiniteDiff(),
+        AutoSparse(OptimizationBase.AutoFiniteDiff()),
         cons = cons)
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoSparseForwardDiff(),
+        AutoSparse(OptimizationBase.AutoForwardDiff()),
         nothing, 2, g = true, h = true, cons_j = true, cons_h = true)
 
     @test optprob.grad(x0) == G1
@@ -1052,10 +1052,10 @@ end
 
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(rosenbrock,
-        OptimizationBase.AutoSparseReverseDiff(),
+        AutoSparse(OptimizationBase.AutoReverseDiff()),
         cons = cons)
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoSparseReverseDiff(),
+        AutoSparse(OptimizationBase.AutoReverseDiff()),
         nothing, 1, g = true, h = true, cons_j = true, cons_h = true)
 
     @test optprob.grad(x0) == G1
@@ -1069,10 +1069,10 @@ end
 
     cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     optf = OptimizationFunction{false}(rosenbrock,
-        OptimizationBase.AutoSparseReverseDiff(),
+        AutoSparse(OptimizationBase.AutoReverseDiff()),
         cons = cons)
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoSparseReverseDiff(),
+        AutoSparse(OptimizationBase.AutoReverseDiff()),
         nothing, 2, g = true, h = true, cons_j = true, cons_h = true)
 
     @test optprob.grad(x0) == G1
@@ -1083,10 +1083,10 @@ end
 
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(rosenbrock,
-        OptimizationBase.AutoSparseReverseDiff(true),
+        AutoSparse(OptimizationBase.AutoReverseDiff(; compile = true)),
         cons = cons)
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoSparseReverseDiff(true),
+        AutoSparse(OptimizationBase.AutoReverseDiff(; compile = true)),
         nothing, 1, g = true, h = true, cons_j = true, cons_h = true)
 
     @test optprob.grad(x0) == G1
@@ -1099,10 +1099,10 @@ end
 
     cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     optf = OptimizationFunction{false}(rosenbrock,
-        OptimizationBase.AutoSparseReverseDiff(true),
+        AutoSparse(OptimizationBase.AutoReverseDiff(; compile = true)),
         cons = cons)
     optprob = OptimizationBase.instantiate_function(optf, x0,
-        OptimizationBase.AutoSparseReverseDiff(true),
+        AutoSparse(OptimizationBase.AutoReverseDiff(; compile = true)),
         nothing, 2, g = true, h = true, cons_j = true, cons_h = true)
 
     @test optprob.grad(x0) == G1
