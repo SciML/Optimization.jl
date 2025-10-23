@@ -5,8 +5,11 @@ struct AnalysisResults{O, C}
     constraints::C
 end
 
-struct OptimizationCache{F, RC, LB, UB, LC, UC, S, O, P, C, M} <:
+struct OptimizationCache{
+    O, IIP, F <: SciMLBase.AbstractOptimizationFunction{IIP},
+    RC, LB, UB, LC, UC, S, P, C, M} <:
        SciMLBase.AbstractOptimizationCache
+    opt::O
     f::F
     reinit_cache::RC
     lb::LB
@@ -14,7 +17,6 @@ struct OptimizationCache{F, RC, LB, UB, LC, UC, S, O, P, C, M} <:
     lcons::LC
     ucons::UC
     sense::S
-    opt::O
     progress::P
     callback::C
     manifold::M
@@ -46,13 +48,13 @@ function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt;
          prob.f.adtype isa AutoZygote) &&
        (SciMLBase.requireshessian(opt) || SciMLBase.requiresconshess(opt) ||
         SciMLBase.requireslagh(opt))
-        @warn "The selected optimization algorithm requires second order derivatives, but `SecondOrder` ADtype was not provided. 
-        So a `SecondOrder` with $(prob.f.adtype) for both inner and outer will be created, this can be suboptimal and not work in some cases so 
+        @warn "The selected optimization algorithm requires second order derivatives, but `SecondOrder` ADtype was not provided.
+        So a `SecondOrder` with $(prob.f.adtype) for both inner and outer will be created, this can be suboptimal and not work in some cases so
         an explicit `SecondOrder` ADtype is recommended."
     elseif prob.f.adtype isa AutoZygote &&
            (SciMLBase.requiresconshess(opt) || SciMLBase.requireslagh(opt) ||
             SciMLBase.requireshessian(opt))
-        @warn "The selected optimization algorithm requires second order derivatives, but `AutoZygote` ADtype was provided. 
+        @warn "The selected optimization algorithm requires second order derivatives, but `AutoZygote` ADtype was provided.
         So a `SecondOrder` with `AutoZygote` for inner and `AutoForwardDiff` for outer will be created, for choosing another pair
         an explicit `SecondOrder` ADtype is recommended."
     end
@@ -71,11 +73,10 @@ function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt;
         cons_res = nothing
     end
 
-    return OptimizationCache(f, reinit_cache_passedon, prob.lb, prob.ub, prob.lcons,
+    return OptimizationCache(opt, f, reinit_cache_passedon, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
-        opt, progress, callback, manifold, AnalysisResults(obj_res, cons_res),
-        merge((; maxiters, maxtime, abstol, reltol),
-            NamedTuple(kwargs)))
+        progress, callback, manifold, AnalysisResults(obj_res, cons_res),
+        merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs)))
 end
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt;
@@ -90,6 +91,8 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt;
         reltol, progress,
         kwargs...)
 end
+
+SciMLBase.isinplace(::OptimizationCache{o, iip}) where {o, iip} = iip
 
 # Wrapper for fields that may change in `reinit!(cache)` of a cache.
 mutable struct ReInitCache{uType, P}

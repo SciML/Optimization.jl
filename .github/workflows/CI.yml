@@ -19,6 +19,7 @@ jobs:
       matrix:
         group:
           - Core
+          - OptimizationBase
           - OptimizationAuglag
           - OptimizationBBO
           - OptimizationCMAEvolutionStrategy
@@ -45,7 +46,7 @@ jobs:
           - OptimizationPolyalgorithms
           - OptimizationNLPModels
         version:
-          - '1'
+          - '1.11'
           - 'lts'
     steps:
       - uses: actions/checkout@v4
@@ -57,10 +58,10 @@ jobs:
           cache-name: cache-artifacts
         with:
           path: ~/.julia/artifacts
-          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          key: ${{ runner.os }}-test-${{ matrix.version }}-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
           restore-keys: |
-            ${{ runner.os }}-test-${{ env.cache-name }}-
-            ${{ runner.os }}-test-
+            ${{ runner.os }}-test-${{ matrix.version }}-${{ env.cache-name }}-
+            ${{ runner.os }}-test-${{ matrix.version }}-
             ${{ runner.os }}-
       - uses: julia-actions/julia-buildpkg@v1
       - if: ${{ matrix.group == 'OptimizationQuadDIRECT' }}
@@ -70,7 +71,7 @@ jobs:
           GROUP: ${{ matrix.group }}
       - uses: julia-actions/julia-processcoverage@v1
         with:
-          directories: src,lib/OptimizationBBO/src,lib/OptimizationCMAEvolutionStrategy/src,lib/OptimizationEvolutionary/src,lib/OptimizationGCMAES/src,lib/OptimizationIpopt/src,lib/OptimizationMadNLP/src,lib/OptimizationManopt/src,lib/OptimizationMOI/src,lib/OptimizationMetaheuristics/src,lib/OptimizationMultistartOptimization/src,lib/OptimizationNLopt/src,lib/OptimizationNOMAD/src,lib/OptimizationOptimJL/src,lib/OptimizationOptimisers/src,lib/OptimizationPolyalgorithms/src,lib/OptimizationQuadDIRECT/src,lib/OptimizationSpeedMapping/src
+          directories: src,lib/OptimizationBase/src,lib/OptimizationBBO/src,lib/OptimizationCMAEvolutionStrategy/src,lib/OptimizationEvolutionary/src,lib/OptimizationGCMAES/src,lib/OptimizationIpopt/src,lib/OptimizationMadNLP/src,lib/OptimizationManopt/src,lib/OptimizationMOI/src,lib/OptimizationMetaheuristics/src,lib/OptimizationMultistartOptimization/src,lib/OptimizationNLopt/src,lib/OptimizationNOMAD/src,lib/OptimizationOptimJL/src,lib/OptimizationOptimisers/src,lib/OptimizationPolyalgorithms/src,lib/OptimizationQuadDIRECT/src,lib/OptimizationSpeedMapping/src
       - uses: codecov/codecov-action@v5
         with:
-          file: lcov.info
+          files: lcov.info

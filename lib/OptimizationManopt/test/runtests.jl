@@ -166,7 +166,7 @@ R2 = Euclidean(2)
 
         opt = OptimizationManopt.TrustRegionsOptimizer()
 
-        #TODO: This autodiff currently provides a Hessian that seem to not procide a Hessian
+        #TODO: This autodiff currently provides a Hessian that seem to not provide a Hessian
         # TR Fails but also AD before that warns. So it passes _some_ hessian but a wrong one, even in format
         optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)

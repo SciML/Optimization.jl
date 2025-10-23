@@ -15,15 +15,10 @@ import SciMLBase: solve, init, solve!, __init, __solve,
                   requireshessian, requiresconsjac,
                   requiresconshess
 
-supports_opt_cache_interface(alg) = false
-@static if !hasmethod(SciMLBase.__solve, Tuple{OptimizationProblem, SciMLBase.AbstractOptimizationAlgorithm})
-    include("solve.jl")
-end
-
 export ObjSense, MaxSense, MinSense
 export allowsbounds, requiresbounds, allowsconstraints, requiresconstraints,
        allowscallback, requiresgradient, requireshessian,
-       requiresconsjac, requiresconshess, supports_opt_cache_interface
+       requiresconsjac, requiresconshess
 
 using FastClosures
 
@@ -36,6 +31,7 @@ const DEFAULT_DATA = Iterators.cycle((NullData(),))
 Base.iterate(::NullData, i = 1) = nothing
 Base.length(::NullData) = 0
 
+include("solve.jl")
 include("adtypes.jl")
 include("symify.jl")
 include("cache.jl")
