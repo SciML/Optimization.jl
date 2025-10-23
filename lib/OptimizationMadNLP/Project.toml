@@ -1,6 +1,6 @@
 name = "OptimizationMadNLP"
 uuid = "5d9c809f-c847-4062-9fba-1793bbfef577"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["Sebastian Micluța-Câmpeanu <sebastian.mc95@proton.me> and contributors"]
 
 [deps]
