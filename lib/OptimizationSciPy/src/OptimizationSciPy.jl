@@ -283,7 +283,7 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::ScipyOptimiz
     requires_bounds = opt isa Union{
         ScipyDifferentialEvolution, ScipyDirect, ScipyDualAnnealing, ScipyBrute}
     if requires_bounds && (isnothing(prob.lb) || isnothing(prob.ub))
-        throw(SciMLBase.IncompatibleOptimizerError("$(typeof(opt)) requires bounds"))
+        throw(OptimizationBase.IncompatibleOptimizerError("$(typeof(opt)) requires bounds"))
     end
     if opt isa ScipyMinimizeScalar && length(prob.u0) != 1
         throw(ArgumentError("ScipyMinimizeScalar requires exactly 1 variable, got $(length(prob.u0)). Use ScipyMinimize for multivariate problems."))
