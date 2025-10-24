@@ -6,7 +6,6 @@ version = "0.3.13"
 [deps]
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
-Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
