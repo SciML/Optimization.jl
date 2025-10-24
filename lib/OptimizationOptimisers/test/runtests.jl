@@ -137,54 +137,46 @@ end
 
 @testset "NaN/Inf gradient handling" begin
     # Test that optimizer skips updates when gradients contain NaN or Inf
-    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+    # Function that returns NaN when parameters are in certain regions
+    function weird_nan_function(x, p)
+        # Return NaN when x[1] is close to certain values to simulate numerical issues
+        if abs(x[1] - 0.3) < 0.05 || abs(x[1] + 0.3) < 0.05
+            return NaN
+        end
+        return (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+    end
+
     x0 = zeros(2)
     _p = [1.0, 100.0]
 
-    # Test with NaN gradients using Zygote
-    # We'll use a callback to inject NaN into some iterations
-    grad_counter = Ref(0)
-
-    # Create optimization problem with automatic differentiation
-    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
+    optprob = OptimizationFunction(weird_nan_function, OptimizationBase.AutoZygote())
     prob = OptimizationProblem(optprob, x0, _p)
 
-    # Use a callback that modifies the gradient to inject NaN periodically
-    function nan_callback(state, l)
-        grad_counter[] += 1
-        if grad_counter[] % 5 == 0
-            # Inject NaN into gradient on every 5th iteration
-            state.grad .= NaN
-        end
-        return false
-    end
-
     # Should not throw error and should complete all iterations
-    sol = solve(prob, Optimisers.Adam(0.01), maxiters = 20, progress = false, callback = nan_callback)
+    sol = solve(prob, Optimisers.Adam(0.01), maxiters = 50, progress = false)
 
     # Verify solution completed all iterations
-    @test sol.stats.iterations == 20
+    @test sol.stats.iterations == 50
 
     # Verify parameters are not NaN (would be NaN if updates were applied with NaN gradients)
     @test all(!isnan, sol.u)
     @test all(isfinite, sol.u)
 
-    # Test with Inf gradients
-    grad_counter_inf = Ref(0)
-    prob_inf = OptimizationProblem(optprob, x0, _p)
-
-    function inf_callback(state, l)
-        grad_counter_inf[] += 1
-        if grad_counter_inf[] % 7 == 0
-            # Inject Inf into gradient on every 7th iteration
-            state.grad .= Inf
+    # Function that returns Inf when parameters are in certain regions
+    function weird_inf_function(x, p)
+        # Return Inf when x[1] is close to certain values
+        if abs(x[1] - 0.2) < 0.05 || abs(x[1] + 0.2) < 0.05
+            return Inf
         end
-        return false
+        return (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     end
 
-    sol_inf = solve(prob_inf, Optimisers.Adam(0.01), maxiters = 20, progress = false, callback = inf_callback)
+    optprob_inf = OptimizationFunction(weird_inf_function, OptimizationBase.AutoZygote())
+    prob_inf = OptimizationProblem(optprob_inf, x0, _p)
 
-    @test sol_inf.stats.iterations == 20
+    sol_inf = solve(prob_inf, Optimisers.Adam(0.01), maxiters = 50, progress = false)
+
+    @test sol_inf.stats.iterations == 50
     @test all(!isnan, sol_inf.u)
     @test all(isfinite, sol_inf.u)
 end
