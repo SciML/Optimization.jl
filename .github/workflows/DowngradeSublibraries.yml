@@ -49,7 +49,7 @@ jobs:
       - uses: julia-actions/julia-downgrade-compat@v2
         with:
           project: ${{ matrix.project }}
-          skip: Pkg,TOML
+          skip: Pkg,TOML,LinearAlgebra,Logging,Printf,Random,SparseArrays,Test
       - uses: julia-actions/julia-buildpkg@v1
         with:
           project: ${{ matrix.project }}
