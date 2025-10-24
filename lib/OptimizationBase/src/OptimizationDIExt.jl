@@ -177,7 +177,8 @@ function instantiate_function(
 
     conshess_sparsity = f.cons_hess_prototype
     conshess_colors = f.cons_hess_colorvec
-    if f.cons !== nothing && f.cons_h === nothing && cons_h == true
+    # Generate cons_h! if explicitly requested OR if lag_h needs it
+    if f.cons !== nothing && f.cons_h === nothing && (cons_h == true || lag_h == true)
         prep_cons_hess = [prepare_hessian(cons_oop, soadtype, x, Constant(i))
                           for i in 1:num_cons]
 
@@ -186,7 +187,7 @@ function instantiate_function(
                 hessian!(cons_oop, H[i], prep_cons_hess[i], soadtype, θ, Constant(i))
             end
         end
-    elseif cons_h == true && f.cons !== nothing
+    elseif (cons_h == true || lag_h == true) && f.cons !== nothing
         cons_h! = (res, θ) -> f.cons_h(res, θ, p)
     else
         cons_h! = nothing
