@@ -3,10 +3,23 @@ module OptimizationOptimisers
 using Reexport, Logging
 @reexport using Optimisers, OptimizationBase
 using SciMLBase
+using Functors
 
 SciMLBase.has_init(opt::AbstractRule) = true
 SciMLBase.requiresgradient(opt::AbstractRule) = true
 SciMLBase.allowsfg(opt::AbstractRule) = true
+
+# Helper function to check if gradients contain NaN or Inf
+function has_nan_or_inf(x)
+    result = Ref(false)
+    Functors.fmap(x) do val
+        if val isa Number && (!isfinite(val))
+            result[] = true
+        end
+        return val
+    end
+    return result[]
+end
 
 function SciMLBase.__init(
         prob::SciMLBase.OptimizationProblem, opt::AbstractRule;
@@ -130,8 +143,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
             end
         end
         # Skip update if gradient contains NaN or Inf values
-        has_nan_or_inf = any(.!(isfinite.(G)))
-        if !has_nan_or_inf
+        if !has_nan_or_inf(G)
             state, θ = Optimisers.update(state, θ, G)
         else
             @warn "Skipping parameter update due to NaN or Inf in gradients at iteration $iterations" maxlog=10
