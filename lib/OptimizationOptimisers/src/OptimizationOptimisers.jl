@@ -130,7 +130,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
             end
         end
         # Skip update if gradient contains NaN or Inf values
-        has_nan_or_inf = any(isnan, G) || any(isinf, G)
+        has_nan_or_inf = any(.!(isfinite.(G)))
         if !has_nan_or_inf
             state, θ = Optimisers.update(state, θ, G)
         else
