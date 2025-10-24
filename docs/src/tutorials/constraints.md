@@ -81,7 +81,7 @@ x_1 * x_2 = 0.5
 ```
 
 ```@example constraints
-optprob = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit(), cons = cons)
+optprob = OptimizationFunction(rosenbrock, Optimization.AutoSymbolics(), cons = cons)
 prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, 0.5])
 ```
 

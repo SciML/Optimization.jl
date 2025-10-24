@@ -69,7 +69,7 @@ res1 = Optimization.solve(optprob, Optimisers.Adam(0.05),
 optfun = OptimizationFunction(
     (θ, p) -> loss_adjoint(θ, batch,
         time_batch),
-    Optimization.AutoModelingToolkit())
+    AutoSymbolics())
 optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
 @test_broken res1 = Optimization.solve(optprob, Optimisers.Adam(0.05),

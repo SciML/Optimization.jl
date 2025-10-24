@@ -91,7 +91,7 @@ objective = (u, p) -> (v = p[1:5]; dot(v, u))
 
 cons = (res, u, p) -> (w = p[6:10]; res .= [sum(w[i] * u[i]^2 for i in 1:5)])
 
-optf = OptimizationFunction(objective, Optimization.AutoModelingToolkit(), cons = cons)
+optf = OptimizationFunction(objective, Optimization.AutoSymbolics(), cons = cons)
 optprob = OptimizationProblem(optf,
     zeros(5),
     vcat(v, w);

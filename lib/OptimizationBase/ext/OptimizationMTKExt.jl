@@ -3,7 +3,7 @@ module OptimizationMTKExt
 import OptimizationBase, OptimizationBase.ArrayInterface
 import SciMLBase
 import SciMLBase: OptimizationFunction
-import OptimizationBase.ADTypes: AutoModelingToolkit, AutoSymbolics, AutoSparse
+import OptimizationBase.ADTypes: AutoSymbolics, AutoSparse
 using ModelingToolkit
 
 function OptimizationBase.instantiate_function(

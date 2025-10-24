@@ -7,7 +7,7 @@ optimization of code. Optimizers can better interface with the extra
 symbolic information provided by the system.
 
 There are two ways that the user interacts with ModelingToolkit.jl.
-One can use `OptimizationFunction` with `AutoModelingToolkit` for
+One can use `OptimizationFunction` with `AutoSymbolics` for
 automatically transforming numerical codes into symbolic codes. See
 the [OptimizationFunction documentation](@ref optfunction) for more
 details.

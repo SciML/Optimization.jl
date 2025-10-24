@@ -16,13 +16,13 @@ function cons1(res, coeffs, p = nothing)
     return nothing
 end
 
-optf = OptimizationFunction(loss, AutoSparseForwardDiff(), cons = cons1)
+optf = OptimizationFunction(loss, AutoSparse(AutoForwardDiff()), cons = cons1)
 callback = (st, l) -> (@show l; return false)
 
 initpars = rand(5)
 l0 = optf(initpars, (x0, y0))
 
-optf1 = OptimizationFunction(loss, AutoSparseForwardDiff())
+optf1 = OptimizationFunction(loss, AutoSparse(AutoForwardDiff()))
 prob1 = OptimizationProblem(optf1, rand(5), data)
 sol1 = solve(prob1, OptimizationOptimisers.Adam(), maxiters = 1000, callback = callback)
 @test sol1.objective < l0
