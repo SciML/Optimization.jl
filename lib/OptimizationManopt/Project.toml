@@ -13,6 +13,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 
 [extras]
+DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 RipQP = "1e40b3f8-35eb-4cd8-8edd-3e515bb9de08"
 QuadraticModels = "f468eda6-eac5-11e8-05a5-ff9e497bcd19"
@@ -25,6 +26,7 @@ Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 
 [compat]
 julia = "1.10"
+DifferentiationInterface = "0.7"
 Manopt = "0.5"
 OptimizationBase = "4"
 LinearAlgebra = "1.10"
@@ -35,4 +37,4 @@ Reexport = "1.2"
 SciMLBase = "2.122.1"
 
 [targets]
-test = ["Enzyme", "ForwardDiff", "FiniteDiff", "QuadraticModels", "Random", "ReverseDiff", "RipQP", "Test", "Zygote"]
+test = ["DifferentiationInterface", "Enzyme", "ForwardDiff", "FiniteDiff", "QuadraticModels", "Random", "ReverseDiff", "RipQP", "Test", "Zygote"]

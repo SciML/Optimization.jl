@@ -236,7 +236,7 @@ function SciMLBase.requiresgradient(opt::Union{
 end
 function SciMLBase.requireshessian(opt::Union{
         AdaptiveRegularizationCubicOptimizer, TrustRegionsOptimizer})
-    false
+    true
 end
 
 function build_loss(f::OptimizationFunction, prob, cb)

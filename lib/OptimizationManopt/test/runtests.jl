@@ -2,6 +2,7 @@ using OptimizationManopt
 using OptimizationBase
 using Manifolds
 using ForwardDiff, Zygote, Enzyme, FiniteDiff, ReverseDiff
+using DifferentiationInterface: SecondOrder
 using Manopt, RipQP, QuadraticModels
 using Test
 using SciMLBase
@@ -40,12 +41,12 @@ R2 = Euclidean(2)
         prob_forwarddiff = OptimizationProblem(
             optprob_forwarddiff, x0, p; manifold = R2, stepsize = stepsize)
         sol = OptimizationBase.solve(prob_forwarddiff, opt)
-        @test sol.minimum < 0.2
+        @test sol.objective < 0.2
 
         optprob_grad = OptimizationFunction(rosenbrock; grad = rosenbrock_grad!)
         prob_grad = OptimizationProblem(optprob_grad, x0, p; manifold = R2, stepsize = stepsize)
         sol = OptimizationBase.solve(prob_grad, opt)
-        @test sol.minimum < 0.2
+        @test sol.objective < 0.2
     end
 
     @testset "Nelder-Mead" begin
@@ -58,7 +59,7 @@ R2 = Euclidean(2)
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
         sol = OptimizationBase.solve(prob, opt)
-        @test sol.minimum < 0.7
+        @test sol.objective < 0.7
     end
 
     @testset "Conjugate gradient descent" begin
@@ -72,7 +73,7 @@ R2 = Euclidean(2)
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
         sol = OptimizationBase.solve(prob, opt, stepsize = stepsize)
-        @test sol.minimum < 0.5
+        @test sol.objective < 0.5
     end
 
     @testset "Quasi Newton" begin
@@ -89,7 +90,7 @@ R2 = Euclidean(2)
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
         sol = OptimizationBase.solve(prob, opt, callback = callback, maxiters = 30)
-        @test sol.minimum < 1e-14
+        @test sol.objective < 1e-14
     end
 
     @testset "Particle swarm" begin
@@ -102,7 +103,7 @@ R2 = Euclidean(2)
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
         sol = OptimizationBase.solve(prob, opt)
-        @test sol.minimum < 0.1
+        @test sol.objective < 0.1
     end
 
     @testset "CMA-ES" begin
@@ -115,7 +116,7 @@ R2 = Euclidean(2)
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
         sol = OptimizationBase.solve(prob, opt)
-        @test sol.minimum < 0.1
+        @test sol.objective < 0.1
     end
 
     @testset "ConvexBundle" begin
@@ -129,7 +130,7 @@ R2 = Euclidean(2)
 
         sol = OptimizationBase.solve(
             prob, opt, sub_problem = Manopt.convex_bundle_method_subsolver)
-        @test sol.minimum < 0.1
+        @test sol.objective < 0.1
     end
 
     # @testset "TruncatedConjugateGradientDescent" begin
@@ -142,7 +143,7 @@ R2 = Euclidean(2)
     #     prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
     #     sol = OptimizationBase.solve(prob, opt)
-    #     @test_broken sol.minimum < 0.1
+    #     @test_broken sol.objective < 0.1
     # end
 
     @testset "AdaptiveRegularizationCubic" begin
@@ -153,11 +154,12 @@ R2 = Euclidean(2)
 
         #TODO: This autodiff currently provides a Hessian that seem to not provide a Hessian
         # ARC Fails but also AD before that warns. So it passes _some_ hessian but a wrong one, even in format
-        optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
+        optprob = OptimizationFunction(rosenbrock, SecondOrder(AutoForwardDiff(), AutoForwardDiff()))
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
         sol = OptimizationBase.solve(prob, opt)
-        @test sol.minimum < 0.1
+        @test sol.objective < 0.1
+        @test SciMLBase.successful_retcode(sol) broken=true
     end
 
     @testset "TrustRegions" begin
@@ -168,11 +170,12 @@ R2 = Euclidean(2)
 
         #TODO: This autodiff currently provides a Hessian that seem to not provide a Hessian
         # TR Fails but also AD before that warns. So it passes _some_ hessian but a wrong one, even in format
-        optprob = OptimizationFunction(rosenbrock, AutoForwardDiff())
+        optprob = OptimizationFunction(rosenbrock, SecondOrder(AutoForwardDiff(), AutoForwardDiff()))
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
         sol = OptimizationBase.solve(prob, opt)
-        @test sol.minimum < 0.1
+        @test sol.objective < 0.1
+        @test SciMLBase.successful_retcode(sol) broken=true
     end
 
     @testset "Custom constraints" begin
