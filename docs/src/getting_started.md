@@ -14,7 +14,7 @@ The simplest copy-pasteable code using a quasi-Newton method (LBFGS) to solve th
 
 ```@example intro
 # Import the package and define the problem to optimize
-using Optimization, Zygote
+using OptimizationLBFGS, Zygote
 rosenbrock(u, p) = (p[1] - u[1])^2 + p[2] * (u[2] - u[1]^2)^2
 u0 = zeros(2)
 p = [1.0, 100.0]
@@ -22,7 +22,7 @@ p = [1.0, 100.0]
 optf = OptimizationFunction(rosenbrock, AutoZygote())
 prob = OptimizationProblem(optf, u0, p)
 
-sol = solve(prob, Optimization.LBFGS())
+sol = solve(prob, LBFGS())
 ```
 
 ```@example intro

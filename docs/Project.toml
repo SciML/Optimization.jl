@@ -19,12 +19,13 @@ NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
 NLPModelsTest = "7998695d-6960-4d3a-85c4-e1bceb8cd856"
 NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 OptimizationBBO = "3e6eede4-6085-4f62-9a71-46d9bc1eb92b"
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 OptimizationCMAEvolutionStrategy = "bd407f91-200f-4536-9381-e4ba712f53f8"
 OptimizationEvolutionary = "cb963754-43f6-435e-8d4b-99009ff27753"
 OptimizationGCMAES = "6f0a0517-dbc2-4a7a-8a20-99ae7f27e911"
 OptimizationIpopt = "43fad042-7963-4b32-ab19-e2a4f9a67124"
+OptimizationLBFGSB = "22f7324a-a79d-40f2-bebe-3af60c77bd15"
 OptimizationMOI = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
 OptimizationManopt = "e57b7fff-7ee7-4550-b4f0-90e9476e9fb6"
 OptimizationMetaheuristics = "3aafef2f-86ae-4776-b337-85a36adf0b55"
@@ -49,12 +50,13 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [sources]
 Optimization = {path = ".."}
-OptimizationBase = {path = "../lib/OptimizationBase"}
 OptimizationBBO = {path = "../lib/OptimizationBBO"}
+OptimizationBase = {path = "../lib/OptimizationBase"}
 OptimizationCMAEvolutionStrategy = {path = "../lib/OptimizationCMAEvolutionStrategy"}
 OptimizationEvolutionary = {path = "../lib/OptimizationEvolutionary"}
 OptimizationGCMAES = {path = "../lib/OptimizationGCMAES"}
 OptimizationIpopt = {path = "../lib/OptimizationIpopt"}
+OptimizationLBFGSB = {path = "../lib/OptimizationLBFGSB"}
 OptimizationMOI = {path = "../lib/OptimizationMOI"}
 OptimizationManopt = {path = "../lib/OptimizationManopt"}
 OptimizationMetaheuristics = {path = "../lib/OptimizationMetaheuristics"}
@@ -87,8 +89,8 @@ NLPModels = "0.21"
 NLPModelsTest = "0.10"
 NLopt = "0.6, 1"
 Optimization = "5"
-OptimizationBase = "4"
 OptimizationBBO = "0.4"
+OptimizationBase = "4"
 OptimizationCMAEvolutionStrategy = "0.3"
 OptimizationEvolutionary = "0.4"
 OptimizationGCMAES = "0.3"
