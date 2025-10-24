@@ -44,6 +44,8 @@ jobs:
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.julia-version }}
+      - if: ${{ matrix.project == 'lib/OptimizationQuadDIRECT' }}
+        run: julia --project -e 'using Pkg; Pkg.Registry.add(RegistrySpec(url  = "https://github.com/HolyLab/HolyLabRegistry.git")); Pkg.add("QuadDIRECT")'
       - uses: julia-actions/julia-downgrade-compat@v2
         with:
           project: ${{ matrix.project }}
