@@ -74,9 +74,9 @@ jobs:
           using Pkg
           const GROUP = get(ENV, "GROUP", "Core")
 
-          function dev_subpkg(subpkg)
-            subpkg_path = "lib/$subpkg"
-            Pkg.develop(PackageSpec(path = subpkg_path))
+          function dev_subpkg(subpkgs::Vector{String})
+            specs = [PackageSpec(path = "lib/$subpkg") for subpkg in subpkgs]
+            Pkg.develop(specs)
           end
 
           if GROUP == "Core"
@@ -90,25 +90,59 @@ jobs:
             @info "Preparing env"
             if GROUP == "Core"
               @info "Testing Core"
-              dev_subpkg("OptimizationBase")
-              dev_subpkg("OptimizationLBFGSB")
-              dev_subpkg("OptimizationMOI")
-              dev_subpkg("OptimizationOptimJL")
-              dev_subpkg("OptimizationOptimisers")
+              dev_subpkg(["OptimizationBase", "OptimizationLBFGSB", "OptimizationMOI", "OptimizationOptimJL", "OptimizationOptimisers"])
             elseif GROUP == "OptimizationBase"
-              dev_subpkg("OptimizationLBFGSB")
-              dev_subpkg("OptimizationManopt")
+              dev_subpkg(["OptimizationLBFGSB", "OptimizationManopt"])
             elseif GROUP == "OptimizationAuglag"
-              dev_subpkg("OptimizationOptimisers")
+              dev_subpkg(["OptimizationBase", "OptimizationOptimisers"])
+            elseif GROUP == "OptimizationBBO"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationCMAEvolutionStrategy"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationEvolutionary"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationGCMAES"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationLBFGSB"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationIpopt"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationMadNLP"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationManopt"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationMetaheuristics"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationMOI"
+              dev_subpkg(["OptimizationBase"])
             elseif GROUP == "OptimizationMultistartOptimization"
-              dev_subpkg("OptimizationNLopt")
+              dev_subpkg(["OptimizationBase", "OptimizationNLopt"])
+            elseif GROUP == "OptimizationNLopt"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationNOMAD"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationODE"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationOptimJL"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationOptimisers"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationPRIMA"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationPyCMA"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationQuadDIRECT"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationSciPy"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationSophia"
+              dev_subpkg(["OptimizationBase"])
+            elseif GROUP == "OptimizationSpeedMapping"
+              dev_subpkg(["OptimizationBase"])
             elseif GROUP == "GPU" || GROUP == "OptimizationPolyalgorithms"
-              # special case
-              Pkg.develop([PackageSpec(path = "lib/OptimizationOptimJL"), PackageSpec(path = "lib/OptimizationOptimisers")])
+              dev_subpkg(["OptimizationBase", "OptimizationOptimJL", "OptimizationOptimisers"])
             elseif GROUP == "OptimizationNLPModels"
-              dev_subpkg("OptimizationMOI")
-              dev_subpkg("OptimizationOptimJL")
-              dev_subpkg("OptimizationLBFGSB")
+              dev_subpkg(["OptimizationBase", "OptimizationMOI", "OptimizationOptimJL", "OptimizationLBFGSB"])
             end
           end
 

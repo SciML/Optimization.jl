@@ -27,5 +27,8 @@ Optim = "1"
 Reexport = "1.2"
 SciMLBase = "2.122.1"
 
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
+
 [targets]
 test = ["ForwardDiff", "ModelingToolkit", "Random", "ReverseDiff", "Test", "Zygote"]

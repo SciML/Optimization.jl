@@ -19,5 +19,8 @@ SpeedMapping = "0.3"
 SciMLBase = "2.122.1"
 Reexport = "1.2"
 
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
+
 [targets]
 test = ["ForwardDiff", "Test"]
