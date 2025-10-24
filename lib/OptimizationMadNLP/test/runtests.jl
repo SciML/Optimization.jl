@@ -4,7 +4,7 @@ using MadNLP
 using Test
 import Zygote, ForwardDiff, ReverseDiff
 using SparseArrays
-using DifferentiationInterface
+using DifferentiationInterface: SecondOrder
 using Random
 
 @testset "rosenbrock" begin
@@ -552,6 +552,35 @@ end
 
             # LBFGS methods typically need more iterations but less cost per iteration
             @test results[1][2].iterations > results[1][2].iterations broken=true
+        end
+
+        @testset "Exact Hessian and sparse KKT that hits σ == 0 in lag_h" begin
+            np = 12
+            # x0 = init_electrons_on_sphere(np)
+            x0 = [-0.10518691576929745, 0.051771801773795686, -0.9003045175547166, 0.23213937667116594, -0.02874270928423086, -0.652270178114126, -0.5918025628300999, 0.2511988210810674, -0.016535391659614228, 0.5949770074227214, -0.4492781383448046, -0.29581324890382626, -0.8989309486672202, 0.10678505987872657, -0.4351575519144031, -0.9589360279618278, 0.02680807390998832, 0.40670966862867725, 0.08594698464206306, -0.9646178134393677, -0.004187961953999249, -0.09107912492873807, -0.6973104772728601, 0.40182616259664583, 0.4252750430946946, -0.9929333469713824, 0.009469988512801456, 0.1629509253594941, -0.9992272933803594, -0.6396333795127627, -0.8014878928958706, 0.08007263129768477, -0.9998545103150432, 0.7985655600140281, -0.5584865734204564, -0.8666200187082093]
+
+            approx = MadNLP.ExactHessian
+            ad = SecondOrder(AutoForwardDiff(), AutoForwardDiff())
+
+            optfunc = OptimizationFunction(
+                coulomb_potential, ad,
+                cons = unit_sphere_constraints
+            )
+
+            prob = OptimizationProblem(optfunc, x0;
+                lcons = zeros(np),
+                ucons = zeros(np)
+            )
+
+            opt = MadNLPOptimizer(
+                hessian_approximation = approx,
+                kkt_system = MadNLP.SparseKKTSystem
+            )
+
+            sol = solve(prob, opt; abstol = 1e-6, maxiters = 300, verbose = false)
+
+            @test SciMLBase.successful_retcode(sol)
+            @test sol.objective ≈ 49.165253058 rtol=1e-2
         end
     end
 
