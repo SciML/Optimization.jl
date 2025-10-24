@@ -40,7 +40,7 @@ OptimizationSymbolicAnalysisExt = "SymbolicAnalysis"
 OptimizationZygoteExt = "Zygote"
 
 [compat]
-ADTypes = "1.9"
+ADTypes = "1.14"
 ArrayInterface = "7.6"
 DifferentiationInterface = "0.7"
 DocStringExtensions = "0.9"
