@@ -265,6 +265,9 @@ end
 function SciMLBase.requireslagh(opt::MadNLPOptimizer)
     opt.hessian_approximation === MadNLP.ExactHessian
 end
+function SciMLBase.requiresconshess(opt::MadNLPOptimizer)
+    opt.hessian_approximation === MadNLP.ExactHessian
+end
 function SciMLBase.allowsconsvjp(opt::MadNLPOptimizer)
     true
 end
