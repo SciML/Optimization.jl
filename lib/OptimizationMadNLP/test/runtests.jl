@@ -497,7 +497,7 @@ end
             @test min_dist > 0.5  # Electrons should be well-separated
         end
 
-        @testset "LBFGS vs Exact Hessian" begin
+        @testset verbose = true "LBFGS vs Exact Hessian" begin
             # Test with moderate size to show LBFGS efficiency
             np = 10  # Gyroelongated square dipyramid configuration
             x0 = init_electrons_on_sphere(np)
