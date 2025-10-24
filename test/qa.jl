@@ -7,7 +7,7 @@ using Optimization, Aqua
         treat_as_own = [OptimizationProblem,
             Optimization.SciMLBase.AbstractOptimizationCache])
     Aqua.test_project_extras(Optimization)
-    if VERSION > v"1.10"
+    if !(VERSION < v"1.11")
         # in CI we need to dev packages to run the tests
         # which adds stale deps
         # on later versions [sources] is used instead
