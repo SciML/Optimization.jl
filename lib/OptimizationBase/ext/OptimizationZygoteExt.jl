@@ -186,20 +186,54 @@ function OptimizationBase.instantiate_function(
 
     conshess_sparsity = f.cons_hess_prototype
     conshess_colors = f.cons_hess_colorvec
-    if cons !== nothing && cons_h == true && f.cons_h === nothing
+
+    # Prepare constraint Hessian preparations if needed by lag_h or cons_h
+    if cons !== nothing && f.cons_h === nothing && (cons_h == true || lag_h == true)
         prep_cons_hess = [prepare_hessian(
                               cons_oop, soadtype, x, Constant(i), strict = Val(false))
                           for i in 1:num_cons]
+    else
+        prep_cons_hess = nothing
+    end
 
-        function cons_h!(H, θ)
+    # Generate cons_h! functions
+    if cons !== nothing && f.cons_h === nothing && prep_cons_hess !== nothing
+        # Standard cons_h! that returns array of matrices
+        if cons_h == true
+            cons_h! = function (H, θ)
+                for i in 1:num_cons
+                    hessian!(cons_oop, H[i], prep_cons_hess[i], soadtype, θ, Constant(i))
+                end
+            end
+        else
+            cons_h! = nothing
+        end
+
+        # Weighted sum dispatch for cons_h! (always created if prep_cons_hess exists)
+        # This is used by lag_h! when σ=0
+        cons_h_weighted! = function (H::AbstractMatrix, θ, λ)
+            # Compute weighted sum: H = Σᵢ λᵢ∇²cᵢ
+            H .= zero(eltype(H))
+
+            # Create a single temporary matrix to reuse for all constraints
+            Hi = similar(H)
+
             for i in 1:num_cons
-                hessian!(cons_oop, H[i], prep_cons_hess[i], soadtype, θ, Constant(i))
+                if λ[i] != zero(eltype(λ))
+                    # Compute constraint's Hessian into temporary matrix
+                    hessian!(cons_oop, Hi, prep_cons_hess[i], soadtype, θ, Constant(i))
+                    # Add weighted Hessian to result using in-place operation
+                    # H += λ[i] * Hi
+                    @. H += λ[i] * Hi
+                end
             end
         end
     elseif cons !== nothing && cons_h == true
         cons_h! = (res, θ) -> f.cons_h(res, θ, p)
+        cons_h_weighted! = nothing
     else
         cons_h! = nothing
+        cons_h_weighted! = nothing
     end
 
     lag_hess_prototype = f.lag_hess_prototype
@@ -212,8 +246,8 @@ function OptimizationBase.instantiate_function(
 
         function lag_h!(H::AbstractMatrix, θ, σ, λ)
             if σ == zero(eltype(θ))
-                cons_h!(H, θ)
-                H *= λ
+                # When σ=0, use the weighted sum function
+                cons_h_weighted!(H, θ, λ)
             else
                 hessian!(lagrangian, H, lag_extras, soadtype, θ,
                     Constant(σ), Constant(λ), Constant(p))
@@ -512,8 +546,8 @@ function OptimizationBase.instantiate_function(
 
         function lag_h!(H::AbstractMatrix, θ, σ, λ)
             if σ == zero(eltype(θ))
-                cons_h!(H, θ)
-                H *= λ
+                # When σ=0, use the weighted sum function
+                cons_h_weighted!(H, θ, λ)
             else
                 hessian!(lagrangian, H, lag_extras, soadtype, θ,
                     Constant(σ), Constant(λ), Constant(p))
