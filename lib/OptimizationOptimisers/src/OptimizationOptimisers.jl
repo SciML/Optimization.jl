@@ -80,6 +80,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
     breakall = false
     progress_id = :OptimizationOptimizersJL
     for epoch in 1:epochs, d in data
+
         if cache.f.fg !== nothing && dataiterate
             x = cache.f.fg(G, θ, d)
             iterations += 1
@@ -119,7 +120,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
         if cache.progress
             message = "Loss: $(round(first(first(x)); digits = 3))"
             @logmsg(LogLevel(-1), "Optimization", _id=progress_id,
-                message=message, progress=iterations / maxiters)
+                message=message, progress=iterations/maxiters)
         end
         if cache.solver_args.save_best
             if first(x)[1] < first(min_err)[1]  #found a better solution
