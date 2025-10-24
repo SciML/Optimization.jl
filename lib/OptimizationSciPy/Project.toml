@@ -23,5 +23,8 @@ SciMLBase = "2.122.1"
 Reexport = "1.2"
 PythonCall = "0.9"
 
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
+
 [targets]
 test = ["ForwardDiff", "ModelingToolkit", "Random", "ReverseDiff", "Test", "Zygote"]

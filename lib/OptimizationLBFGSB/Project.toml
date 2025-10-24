@@ -14,6 +14,9 @@ MLUtils = "f1d291b0-491e-4a28-83b9-f70985020b54"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
+
 [compat]
 DocStringExtensions = "0.9.5"
 ForwardDiff = "1.0.1"

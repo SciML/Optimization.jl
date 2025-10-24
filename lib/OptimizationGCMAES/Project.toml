@@ -12,6 +12,9 @@ GCMAES = "4aa9d100-eb0f-11e8-15f1-25748831eb3b"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
+
 [compat]
 julia = "1.10"
 OptimizationBase = "4"

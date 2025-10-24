@@ -24,6 +24,9 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
+
 [compat]
 julia = "1.10"
 DifferentiationInterface = "0.7"

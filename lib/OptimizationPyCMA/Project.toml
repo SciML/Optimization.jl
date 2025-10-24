@@ -18,3 +18,6 @@ Test = "1.10"
 SciMLBase = "2.122.1"
 Reexport = "1.2"
 PythonCall = "0.9"
+
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}

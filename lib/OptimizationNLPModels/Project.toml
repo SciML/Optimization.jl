@@ -21,6 +21,7 @@ OptimizationOptimJL = "36348300-93cb-4f02-beb5-3c3902f8871e"
 OptimizationLBFGSB = "22f7324a-a79d-40f2-bebe-3af60c77bd15"
 
 [sources]
+OptimizationBase = {path = "../OptimizationBase"}
 OptimizationMOI = {path = "../OptimizationMOI"}
 OptimizationOptimJL = {path = "../OptimizationOptimJL"}
 OptimizationLBFGSB = {path = "../OptimizationLBFGSB"}

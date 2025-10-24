@@ -29,5 +29,8 @@ Optimisers = "0.2, 0.3, 0.4"
 Reexport = "1.2"
 Logging = "1.10"
 
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
+
 [targets]
 test = ["ComponentArrays", "ForwardDiff", "Lux", "MLDataDevices", "MLUtils", "Random", "Test", "Zygote", "Printf"]
