@@ -18,7 +18,7 @@ Optimization.Sophia
 
 ```@example L-BFGS
 
-using Optimization, Zygote
+using Optimization, OptimizationLBFGS, Zygote
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
@@ -26,7 +26,7 @@ p = [1.0, 100.0]
 
 optf = OptimizationFunction(rosenbrock, AutoZygote())
 prob = Optimization.OptimizationProblem(optf, x0, p)
-sol = solve(prob, Optimization.LBFGS())
+sol = solve(prob, LBFGS())
 ```
 
 ### With nonlinear and bounds constraints
@@ -41,7 +41,7 @@ optf = OptimizationFunction(rosenbrock, AutoZygote(), cons = con2_c)
 prob = OptimizationProblem(optf, x0, p, lcons = [1.0, -Inf],
     ucons = [1.0, 0.0], lb = [-1.0, -1.0],
     ub = [1.0, 1.0])
-res = solve(prob, Optimization.LBFGS(), maxiters = 100)
+res = solve(prob, LBFGS(), maxiters = 100)
 ```
 
 ### Train NN with Sophia

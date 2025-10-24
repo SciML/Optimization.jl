@@ -11,7 +11,7 @@ The SciML interface provides a `remake` function which allows you to recreate th
 Let's look at a 10 dimensional schwefel function in the hypercube $x_i \in [-500, 500]$.
 
 ```@example polyalg
-using Optimization, Random
+using OptimizationLBFGS, Random
 using OptimizationBBO, ReverseDiff
 
 Random.seed!(122333)
@@ -47,7 +47,7 @@ This is a good start can we converge to the global optimum?
 
 ```@example polyalg
 prob = remake(prob, u0 = res1.minimizer)
-res2 = solve(prob, Optimization.LBFGS(), maxiters = 100)
+res2 = solve(prob, LBFGS(), maxiters = 100)
 
 @show res2.objective
 ```
