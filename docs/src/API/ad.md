@@ -7,7 +7,7 @@ The choices for the auto-AD fill-ins with quick descriptions are:
   - `AutoTracker()`: Like ReverseDiff but GPU-compatible
   - `AutoZygote()`: The fastest choice for non-mutating array-based (BLAS) functions
   - `AutoFiniteDiff()`: Finite differencing, not optimal but always applicable
-  - `AutoModelingToolkit()`: The fastest choice for large scalar optimizations
+  - `AutoSymbolics()`: The fastest choice for large scalar optimizations
   - `AutoEnzyme()`: Highly performant AD choice for type stable and optimized code
   - `AutoMooncake()`: Like Zygote and ReverseDiff, but supports GPU and mutating code
 
@@ -21,7 +21,7 @@ OptimizationBase.AutoFiniteDiff
 OptimizationBase.AutoReverseDiff
 OptimizationBase.AutoZygote
 OptimizationBase.AutoTracker
-OptimizationBase.AutoModelingToolkit
+OptimizationBase.AutoSymbolics
 OptimizationBase.AutoEnzyme
 ADTypes.AutoMooncake
 ```

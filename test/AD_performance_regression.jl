@@ -1,4 +1,4 @@
-import Optimization
+import Optimization, ADTypes
 using ReverseDiff, Enzyme, BenchmarkTools, Test
 
 lookup_pg = Dict(5 => 11, 4 => 13, 2 => 15, 3 => 17, 1 => 19)
@@ -26,7 +26,7 @@ opf_objective = let lookup_pg = lookup_pg, ref_gen_idxs = ref_gen_idxs,
 end
 
 optprob = Optimization.OptimizationFunction(opf_objective,
-    Optimization.AutoReverseDiff(true))
+    ADTypes.AutoReverseDiff(; compile = true))
 
 test_u0 = [
     0.6292298794022337,
@@ -134,21 +134,21 @@ res = zero(test_u0)
 
 _f = Optimization.instantiate_function(optprob,
     test_u0,
-    Optimization.AutoReverseDiff(false),
+    ADTypes.AutoReverseDiff(; compile = false),
     nothing; g = true)
 _f.f(test_u0, nothing)
 @test @ballocated($(_f.grad)($res, $test_u0)) > 0
 
 _f2 = Optimization.instantiate_function(optprob,
     test_u0,
-    Optimization.AutoReverseDiff(true),
+    ADTypes.AutoReverseDiff(; compile = true),
     nothing; g = true)
 _f2.f(test_u0, nothing)
 @test @ballocated($(_f2.grad)($res, $test_u0)) > 0
 
 _f3 = Optimization.instantiate_function(optprob,
     test_u0,
-    Optimization.AutoEnzyme(),
+    ADTypes.AutoEnzyme(),
     nothing; g = true)
 _f3.f(test_u0, nothing)
 @test @ballocated($(_f3.grad)($res, $test_u0)) == 0

@@ -1,7 +1,7 @@
 name = "OptimizationBase"
 uuid = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "4.0.0"
+version = "4.0.1"
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
@@ -40,7 +40,7 @@ OptimizationSymbolicAnalysisExt = "SymbolicAnalysis"
 OptimizationZygoteExt = "Zygote"
 
 [compat]
-ADTypes = "1.9"
+ADTypes = "1.14"
 ArrayInterface = "7.6"
 DifferentiationInterface = "0.7"
 DocStringExtensions = "0.9"

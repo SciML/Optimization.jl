@@ -5,7 +5,7 @@ flexibility of Optimization.jl. This is a gauntlet of many solvers to get a feel
 for common workflows of the package and give copy-pastable starting points.
 
 !!! note
-    
+
     This example uses many different solvers of Optimization.jl. Each solver
     subpackage needs to be installed separate. For example, for the details on
     the installation and usage of OptimizationOptimJL.jl package, see the
@@ -14,12 +14,12 @@ for common workflows of the package and give copy-pastable starting points.
 The objective of this exercise is to determine the $(x, y)$ value pair that minimizes the result of a Rosenbrock function $f$ with some parameter values $a$ and $b$. The Rosenbrock function is useful for testing because it is known *a priori* to have a global minimum at $(a, a^2)$.
 ```math
 f(x,\,y;\,a,\,b) = \left(a - x\right)^2 + b \left(y - x^2\right)^2
-``` 
+```
 
 The Optimization.jl interface expects functions to be defined with a vector of optimization arguments $\bar{x}$ and a vector of parameters $\bar{p}$, i.e.:
 ```math
 f(\bar{x},\,\bar{p}) = \left(p_1 - x_1\right)^2 + p_2 \left(x_2 - x_1^2\right)^2
-``` 
+```
 
 Parameters $a$ and $b$ are captured in a vector $\bar{p}$ and assigned some arbitrary values to produce a particular Rosenbrock function to be minimized.
 ```math
@@ -164,7 +164,7 @@ sol = solve(prob, CMAEvolutionStrategyOpt())
 
 ```@example rosenbrock
 using OptimizationNLopt, ModelingToolkit
-optf = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit())
+optf = OptimizationFunction(rosenbrock, Optimization.AutoSymbolics())
 prob = OptimizationProblem(optf, x0, _p)
 
 sol = solve(prob, Opt(:LN_BOBYQA, 2))

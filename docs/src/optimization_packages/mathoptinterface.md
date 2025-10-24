@@ -20,7 +20,7 @@ the `maxtime` common keyword argument.
 `OptimizationMOI` supports an argument `mtkize` which takes a boolean (default to `false`)
 that allows automatic symbolic expression generation, this allows using any AD backend with
 solvers or interfaces such as AmplNLWriter that require the expression graph of the objective
-and constraints. This always happens automatically in the case of the `AutoModelingToolkit`
+and constraints. This always happens automatically in the case of the `AutoSymbolics`
 `adtype`.
 
 An optimizer which supports the `MathOptInterface` API can be called
@@ -94,7 +94,7 @@ The following shows how to use integer linear programming within `Optimization`.
     [Juniper documentation](https://github.com/lanl-ansi/Juniper.jl) for more
     detail.
   - The integer domain is inferred based on the bounds of the variable:
-    
+
       + Setting the lower bound to zero and the upper bound to one corresponds to `MOI.ZeroOne()` or a binary decision variable
       + Providing other or no bounds corresponds to `MOI.Integer()`
 

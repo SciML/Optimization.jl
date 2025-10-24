@@ -42,7 +42,7 @@ using Test
     function con2_c(res, x, p)
         res .= [x[2] * sin(x[1]) - x[1]]
     end
-    optprob = OptimizationFunction(rosenbrock, AutoModelingToolkit(), cons = con2_c)
+    optprob = OptimizationFunction(rosenbrock, AutoSymbolics(), cons = con2_c)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [10], ucons = [50])
     sol = OptimizationBase.solve(prob, COBYLA(), maxiters = 1000)
     @test 10 * sol.objective < l1

@@ -1,7 +1,7 @@
 name = "OptimizationAuglag"
 uuid = "2ea93f80-9333-43a1-a68d-1f53b957a421"
 authors = ["paramthakkar123 <paramthakkar864@gmail.com>"]
-version = "1.1.0"
+version = "1.2.0"
 
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"

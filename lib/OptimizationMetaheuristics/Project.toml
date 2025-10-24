@@ -1,7 +1,7 @@
 name = "OptimizationMetaheuristics"
 uuid = "3aafef2f-86ae-4776-b337-85a36adf0b55"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.3"
+version = "0.3.4"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 Metaheuristics = "bcdb8e00-2c21-11e9-3065-2b553b22f898"

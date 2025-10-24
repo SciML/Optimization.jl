@@ -340,7 +340,7 @@ using Optimization, OptimizationOptimJL, ModelingToolkit
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
-f = OptimizationFunction(rosenbrock, Optimization.AutoModelingToolkit())
+f = OptimizationFunction(rosenbrock, Optimization.AutoSymbolics())
 prob = Optimization.OptimizationProblem(f, x0, p)
 sol = solve(prob, Optim.Newton())
 ```

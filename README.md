@@ -35,16 +35,30 @@ installation of dependencies. Below is the list of packages that need to be
 installed explicitly if you intend to use the specific optimization algorithms
 offered by them:
 
+  - OptimizationAuglag for augmented Lagrangian methods
   - OptimizationBBO for [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl)
+  - OptimizationCMAEvolutionStrategy for [CMAEvolutionStrategy.jl](https://github.com/jbrea/CMAEvolutionStrategy.jl)
   - OptimizationEvolutionary for [Evolutionary.jl](https://github.com/wildart/Evolutionary.jl) (see also [this documentation](https://wildart.github.io/Evolutionary.jl/dev/))
   - OptimizationGCMAES for [GCMAES.jl](https://github.com/AStupidBear/GCMAES.jl)
-  - OptimizationMOI for [MathOptInterface.jl](https://github.com/jump-dev/MathOptInterface.jl) (usage of algorithm via MathOptInterface API; see also the API [documentation](https://jump.dev/MathOptInterface.jl/stable/))
+  - OptimizationIpopt for [Ipopt.jl](https://github.com/jump-dev/Ipopt.jl)
+  - OptimizationLBFGSB for [LBFGSB.jl](https://github.com/Gnimuc/LBFGSB.jl)
+  - OptimizationMadNLP for [MadNLP.jl](https://github.com/MadNLP/MadNLP.jl)
+  - OptimizationManopt for [Manopt.jl](https://github.com/JuliaManifolds/Manopt.jl) (optimization on manifolds)
   - OptimizationMetaheuristics for [Metaheuristics.jl](https://github.com/jmejia8/Metaheuristics.jl) (see also [this documentation](https://jmejia8.github.io/Metaheuristics.jl/stable/))
+  - OptimizationMOI for [MathOptInterface.jl](https://github.com/jump-dev/MathOptInterface.jl) (usage of algorithm via MathOptInterface API; see also the API [documentation](https://jump.dev/MathOptInterface.jl/stable/))
   - OptimizationMultistartOptimization for [MultistartOptimization.jl](https://github.com/tpapp/MultistartOptimization.jl) (see also [this documentation](https://juliahub.com/docs/MultistartOptimization/cVZvi/0.1.0/))
   - OptimizationNLopt for [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) (usage via the NLopt API; see also the available [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/))
+  - OptimizationNLPModels for [NLPModels.jl](https://github.com/JuliaSmoothOptimizers/NLPModels.jl)
   - OptimizationNOMAD for [NOMAD.jl](https://github.com/bbopt/NOMAD.jl) (see also [this documentation](https://bbopt.github.io/NOMAD.jl/stable/))
-  - OptimizationNonconvex for [Nonconvex.jl](https://github.com/JuliaNonconvex/Nonconvex.jl) (see also [this documentation](https://julianonconvex.github.io/Nonconvex.jl/stable/))
+  - OptimizationODE for optimization of steady-state and time-dependent ODE problems
+  - OptimizationOptimJL for [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl)
+  - OptimizationOptimisers for [Optimisers.jl](https://github.com/FluxML/Optimisers.jl) (machine learning optimizers)
+  - OptimizationPolyalgorithms for polyalgorithm optimization strategies
+  - OptimizationPRIMA for [PRIMA.jl](https://github.com/libprima/PRIMA.jl)
+  - OptimizationPyCMA for Python's CMA-ES implementation via [PythonCall.jl](https://github.com/JuliaPy/PythonCall.jl)
   - OptimizationQuadDIRECT for [QuadDIRECT.jl](https://github.com/timholy/QuadDIRECT.jl)
+  - OptimizationSciPy for [SciPy](https://scipy.org/) optimization algorithms via [PythonCall.jl](https://github.com/JuliaPy/PythonCall.jl)
+  - OptimizationSophia for Sophia optimizer (second-order stochastic optimizer)
   - OptimizationSpeedMapping for [SpeedMapping.jl](https://github.com/NicolasL-S/SpeedMapping.jl) (see also [this documentation](https://nicolasl-s.github.io/SpeedMapping.jl/stable/))
 
 ## Tutorials and Documentation
@@ -71,9 +85,6 @@ using OptimizationBBO
 prob = OptimizationProblem(rosenbrock, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
 ```
-
-Note that Optim.jl is a core dependency of Optimization.jl. However, BlackBoxOptim.jl
-is not and must already be installed (see the list above).
 
 *Warning:* The output of the second optimization task (`BBO_adaptive_de_rand_1_bin_radiuslimited()`) is
 currently misleading in the sense that it returns `Status: failure (reached maximum number of iterations)`. However, convergence is actually

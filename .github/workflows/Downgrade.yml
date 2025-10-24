@@ -25,7 +25,7 @@ jobs:
           version: ${{ matrix.julia-version }}
       - uses: julia-actions/julia-downgrade-compat@v2
         with:
-          skip: Pkg,TOML
+          skip: Pkg,TOML,LinearAlgebra,Logging,Printf,Random,SparseArrays,Test
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         with:

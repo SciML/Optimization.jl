@@ -7,7 +7,7 @@ This works with the `structural_analysis` keyword argument to `OptimizationProbl
 We'll use a simple example to illustrate the convexity structure certification process.
 
 ```@example symanalysis
-using SymbolicAnalysis, Zygote, LinearAlgebra, Optimization
+using SymbolicAnalysis, Zygote, LinearAlgebra, Optimization, OptimizationLBFGSB
 
 function f(x, p = nothing)
     return exp(x[1]) + x[1]^2
@@ -16,7 +16,7 @@ end
 optf = OptimizationFunction(f, Optimization.AutoForwardDiff())
 prob = OptimizationProblem(optf, [0.4], structural_analysis = true)
 
-sol = solve(prob, Optimization.LBFGS(), maxiters = 1000)
+sol = solve(prob, LBFGS(), maxiters = 1000)
 ```
 
 The result can be accessed as the `analysis_results` field of the solution.

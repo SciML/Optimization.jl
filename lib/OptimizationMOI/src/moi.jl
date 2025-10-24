@@ -16,14 +16,14 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
     f = prob.f
     reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p)
     if isnothing(f.sys)
-        if f.adtype isa OptimizationBase.AutoModelingToolkit
+        if f.adtype isa OptimizationBase.AutoSymbolics
             num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
             f = OptimizationBase.instantiate_function(prob.f,
                 reinit_cache,
                 prob.f.adtype,
                 num_cons)
         else
-            throw(ArgumentError("Expected an `OptimizationProblem` that was setup via an `OptimizationSystem`, or AutoModelingToolkit ad choice"))
+            throw(ArgumentError("Expected an `OptimizationProblem` that was setup via an `OptimizationSystem`, or AutoSymbolics ad choice"))
         end
     end
 
@@ -35,16 +35,16 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
     cons_expr = Vector{Expr}(undef, length(cons))
     Threads.@sync for i in eachindex(cons)
         Threads.@spawn if prob.lcons[i] == prob.ucons[i] == 0
-            cons_expr[i] = Expr(:call, :(==), 
+            cons_expr[i] = Expr(:call, :(==),
             repl_getindex!(convert_to_expr(f.cons_expr[i],
             expr_map;
-            expand_expr = false)), 0) 
+            expand_expr = false)), 0)
         else
             # MTK canonicalizes the expression form
-            cons_expr[i] = Expr(:call, :(<=), 
+            cons_expr[i] = Expr(:call, :(<=),
             repl_getindex!(convert_to_expr(f.cons_expr[i],
             expr_map;
-            expand_expr = false)), 0) 
+            expand_expr = false)), 0)
         end
     end
 

@@ -14,7 +14,7 @@ The simplest copy-pasteable code using a quasi-Newton method (LBFGS) to solve th
 
 ```@example intro
 # Import the package and define the problem to optimize
-using Optimization, Zygote
+using Optimization, OptimizationLBFGSB, Zygote
 rosenbrock(u, p) = (p[1] - u[1])^2 + p[2] * (u[2] - u[1]^2)^2
 u0 = zeros(2)
 p = [1.0, 100.0]
@@ -22,7 +22,7 @@ p = [1.0, 100.0]
 optf = OptimizationFunction(rosenbrock, AutoZygote())
 prob = OptimizationProblem(optf, u0, p)
 
-sol = solve(prob, Optimization.LBFGS())
+sol = solve(prob, OptimizationLBFGSB.LBFGS())
 ```
 
 ```@example intro
@@ -134,7 +134,7 @@ looks like:
 using ForwardDiff
 optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
 prob = OptimizationProblem(optf, u0, p)
-sol = solve(prob, BFGS())
+sol = solve(prob, OptimizationOptimJL.BFGS())
 ```
 
 We can inspect the `original` to see the statistics on the number of steps
@@ -157,7 +157,7 @@ We can demonstrate this via:
 using Zygote
 optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
 prob = OptimizationProblem(optf, u0, p)
-sol = solve(prob, BFGS())
+sol = solve(prob, OptimizationOptimJL.BFGS())
 ```
 
 ## Setting Box Constraints
@@ -170,7 +170,7 @@ optimization with box constraints by rebuilding the OptimizationProblem:
 
 ```@example intro
 prob = OptimizationProblem(optf, u0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
-sol = solve(prob, BFGS())
+sol = solve(prob, OptimizationOptimJL.BFGS())
 ```
 
 For more information on handling constraints, in particular equality and

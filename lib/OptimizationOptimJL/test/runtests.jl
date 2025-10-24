@@ -85,7 +85,7 @@ end
     @test sol.original.iterations > 2
 
     cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
-    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoModelingToolkit();
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoSymbolics();
         cons = cons)
 
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-5.0], ucons = [10.0])
@@ -157,7 +157,7 @@ end
     sol = solve(prob, BFGS())
     @test 10 * sol.objective < l1
 
-    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoModelingToolkit())
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoSymbolics())
     prob = OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, Optim.BFGS())
     @test 10 * sol.objective < l1
