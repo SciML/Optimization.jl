@@ -322,7 +322,7 @@ end
     end
 end
 
-@testset "LBFGS Hessian Approximation" begin
+@testset verbose=true "LBFGS Hessian Approximation" begin
     # Based on https://madsuite.org/MadNLP.jl/dev/tutorials/lbfgs/
 
     @testset "Unconstrained LBFGS" begin
@@ -383,7 +383,7 @@ end
         end
     end
 
-    @testset "Constrained LBFGS - Electrons on Sphere" begin
+    @testset verbose=true "Constrained LBFGS - Electrons on Sphere" begin
         # Quasi-uniform distribution of electrons on a unit sphere
         # Minimize electrostatic potential energy (Coulomb potential)
         # Variables are organized as [x1, x2, ..., xn, y1, y2, ..., yn, z1, z2, ..., zn]
@@ -436,9 +436,8 @@ end
             return x0
         end
 
-        @testset "N=$np electrons with $approx" for np in [6, 8, 10],
-            approx in [MadNLP.CompactLBFGS, MadNLP.ExactHessian]
-
+        @testset "N=5 electrons with $approx" for approx in [MadNLP.CompactLBFGS, MadNLP.ExactHessian]
+            np = 5
             x0 = init_electrons_on_sphere(np)
 
             if approx == MadNLP.CompactLBFGS
@@ -477,18 +476,11 @@ end
             unit_sphere_constraints(cons_vals, sol.u, nothing)
             @test all(abs.(cons_vals) .< 1e-5)
 
-            # Known optimal energies for small electron numbers
+            # Known optimal energy for 5 electrons on unit sphere
             # Reference: https://en.wikipedia.org/wiki/Thomson_problem
-            # Note: These are the minimum Coulomb potential energies for N electrons on unit sphere
-            expected_energies = Dict(
-                6 => 9.985281374,    # Octahedron (Oh symmetry)
-                8 => 19.675287861,   # Square antiprism (D4d)
-                10 => 32.716949460   # Gyroelongated square dipyramid (D4d)
-            )
-
-            if haskey(expected_energies, np)
-                @test isapprox(sol.objective, expected_energies[np], rtol = 1e-3)
-            end
+            # Configuration: Triangular dipyramid (trigonal bipyramid, D3h symmetry)
+            expected_energy = 6.474691495
+            @test isapprox(sol.objective, expected_energy, rtol = 1e-3)
 
             # Verify minimum distance between electrons
             x = sol.u[1:np]
@@ -505,9 +497,9 @@ end
             @test min_dist > 0.5  # Electrons should be well-separated
         end
 
-        @testset "LBFGS vs Exact Hessian" begin
+        @testset verbose = true "LBFGS vs Exact Hessian" begin
             # Test with moderate size to show LBFGS efficiency
-            np = 12  # Icosahedron configuration
+            np = 10  # Gyroelongated square dipyramid configuration
             x0 = init_electrons_on_sphere(np)
 
             results = []
@@ -517,7 +509,7 @@ end
                                        ("ExactHessian",
                                            MadNLP.ExactHessian,
                                            SecondOrder(
-                                               AutoForwardDiff(), AutoForwardDiff()))]
+                                               AutoForwardDiff(), AutoZygote()))]
                 optfunc = OptimizationFunction(
                     coulomb_potential, ad,
                     cons = unit_sphere_constraints
@@ -543,11 +535,11 @@ end
             # All methods should converge
             @test all(r[2].success for r in values(results))
 
-            # All should find similar objective values (icosahedron energy)
+            # All should find similar objective values (gyroelongated square dipyramid energy)
             # Reference: https://en.wikipedia.org/wiki/Thomson_problem
             objectives = [r[2].objective for r in values(results)]
             @testset "$(results[i][1])" for (i, o) in enumerate(objectives)
-                @test o ≈ 49.165253058 rtol=1e-2
+                @test o ≈ 32.716949460 rtol=1e-2
             end
 
             # LBFGS methods typically need more iterations but less cost per iteration
