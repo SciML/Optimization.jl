@@ -1,7 +1,7 @@
 name = "OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.13"
+version = "0.3.14"
 
 [deps]
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
