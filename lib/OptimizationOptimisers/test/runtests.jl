@@ -134,3 +134,47 @@ end
 
     @test res.objective < 1e-4
 end
+
+@testset "NaN/Inf gradient handling" begin
+    # Test that optimizer skips updates when gradients contain NaN or Inf
+    # Function that can produce NaN due to sqrt of negative number
+    function weird_nan_function(x, p)
+        val = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+        # sqrt of a value that can become negative produces NaN
+        val += sqrt(max(x[1], 0.0)) * 0.01
+        return val
+    end
+
+    x0 = [-0.5, 0.1]  # Start with negative x[1] to trigger sqrt of negative
+    _p = [1.0, 100.0]
+
+    optprob = OptimizationFunction(weird_nan_function, OptimizationBase.AutoZygote())
+    prob = OptimizationProblem(optprob, x0, _p)
+
+    # Should not throw error and should complete all iterations
+    sol = solve(prob, Optimisers.Adam(0.01), maxiters = 50, progress = false)
+
+    # Verify solution completed all iterations
+    @test sol.stats.iterations == 50
+
+    # Verify parameters are not NaN (would be NaN if updates were applied with NaN gradients)
+    @test all(!isnan, sol.u)
+    @test all(isfinite, sol.u)
+
+    # Function with 1/x that can produce Inf gradient when x is very small
+    function weird_inf_function(x, p)
+        val = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+        # 1/(x[1] + 0.01) can have very large gradient near x[1] = -0.01
+        val += 0.01 / (abs(x[1] - 0.1) + 1e-8)
+        return val
+    end
+
+    optprob_inf = OptimizationFunction(weird_inf_function, OptimizationBase.AutoZygote())
+    prob_inf = OptimizationProblem(optprob_inf, x0, _p)
+
+    sol_inf = solve(prob_inf, Optimisers.Adam(0.01), maxiters = 50, progress = false)
+
+    @test sol_inf.stats.iterations == 50
+    @test all(!isnan, sol_inf.u)
+    @test all(isfinite, sol_inf.u)
+end
