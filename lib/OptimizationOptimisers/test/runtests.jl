@@ -141,28 +141,26 @@ end
     x0 = zeros(2)
     _p = [1.0, 100.0]
 
-    # Counter to track gradient evaluations
+    # Test with NaN gradients using Zygote
+    # We'll use a callback to inject NaN into some iterations
     grad_counter = Ref(0)
 
-    # Custom gradient function that returns NaN on every 5th call
-    function custom_grad!(G, x, p)
-        grad_counter[] += 1
-        if grad_counter[] % 5 == 0
-            # Inject NaN into gradient
-            G .= NaN
-        else
-            # Normal gradient computation
-            G[1] = -2.0 * (p[1] - x[1]) - 4.0 * p[2] * x[1] * (x[2] - x[1]^2)
-            G[2] = 2.0 * p[2] * (x[2] - x[1]^2)
-        end
-        return nothing
-    end
-
-    optprob = OptimizationFunction(rosenbrock; grad = custom_grad!)
+    # Create optimization problem with automatic differentiation
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
     prob = OptimizationProblem(optprob, x0, _p)
 
+    # Use a callback that modifies the gradient to inject NaN periodically
+    function nan_callback(state, l)
+        grad_counter[] += 1
+        if grad_counter[] % 5 == 0
+            # Inject NaN into gradient on every 5th iteration
+            state.grad .= NaN
+        end
+        return false
+    end
+
     # Should not throw error and should complete all iterations
-    sol = solve(prob, Optimisers.Adam(0.01), maxiters = 20, progress = false)
+    sol = solve(prob, Optimisers.Adam(0.01), maxiters = 20, progress = false, callback = nan_callback)
 
     # Verify solution completed all iterations
     @test sol.stats.iterations == 20
@@ -173,23 +171,18 @@ end
 
     # Test with Inf gradients
     grad_counter_inf = Ref(0)
-    function custom_grad_inf!(G, x, p)
+    prob_inf = OptimizationProblem(optprob, x0, _p)
+
+    function inf_callback(state, l)
         grad_counter_inf[] += 1
         if grad_counter_inf[] % 7 == 0
-            # Inject Inf into gradient
-            G .= Inf
-        else
-            # Normal gradient computation
-            G[1] = -2.0 * (p[1] - x[1]) - 4.0 * p[2] * x[1] * (x[2] - x[1]^2)
-            G[2] = 2.0 * p[2] * (x[2] - x[1]^2)
+            # Inject Inf into gradient on every 7th iteration
+            state.grad .= Inf
         end
-        return nothing
+        return false
     end
 
-    optprob_inf = OptimizationFunction(rosenbrock; grad = custom_grad_inf!)
-    prob_inf = OptimizationProblem(optprob_inf, x0, _p)
-
-    sol_inf = solve(prob_inf, Optimisers.Adam(0.01), maxiters = 20, progress = false)
+    sol_inf = solve(prob_inf, Optimisers.Adam(0.01), maxiters = 20, progress = false, callback = inf_callback)
 
     @test sol_inf.stats.iterations == 20
     @test all(!isnan, sol_inf.u)
