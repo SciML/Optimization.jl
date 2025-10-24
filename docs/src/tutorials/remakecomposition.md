@@ -11,7 +11,7 @@ The SciML interface provides a `remake` function which allows you to recreate th
 Let's look at a 10 dimensional schwefel function in the hypercube $x_i \in [-500, 500]$.
 
 ```@example polyalg
-using OptimizationLBFGS, Random
+using OptimizationLBFGSB, Random
 using OptimizationBBO, ReverseDiff
 
 Random.seed!(122333)
