@@ -15,11 +15,14 @@ ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 OptimizationNLopt = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
 
+[sources]
+OptimizationNLopt = {path = "../OptimizationNLopt"}
+
 [compat]
 julia = "1.10"
-OptimizationBase = "3"
+OptimizationBase = "4"
 MultistartOptimization = "0.2, 0.3"
-SciMLBase = "2.58"
+SciMLBase = "2.122.1"
 Reexport = "1.2"
 
 [targets]

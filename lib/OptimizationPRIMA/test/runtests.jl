@@ -16,9 +16,8 @@ using Test
     @test 10 * sol.objective < l1
     sol = OptimizationBase.solve(prob, LINCOA(), maxiters = 1000)
     @test 10 * sol.objective < l1
-    @test_throws SciMLBase.IncompatibleOptimizerError OptimizationBase.solve(prob,
-        COBYLA(),
-        maxiters = 1000)
+    @test_throws OptimizationBase.IncompatibleOptimizerError OptimizationBase.solve(
+        prob, COBYLA(), maxiters = 1000)
 
     function con2_c(res, x, p)
         res .= [x[1] + x[2], x[2] * sin(x[1]) - x[1]]

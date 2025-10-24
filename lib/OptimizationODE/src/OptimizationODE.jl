@@ -26,46 +26,41 @@ end
 
 DAEMassMatrix() = DAEOptimizer(Rodas5P(autodiff = false))
 
-
 SciMLBase.requiresbounds(::ODEOptimizer) = false
 SciMLBase.allowsbounds(::ODEOptimizer) = false
 SciMLBase.allowscallback(::ODEOptimizer) = true
-SciMLBase.supports_opt_cache_interface(::ODEOptimizer) = true
+SciMLBase.has_init(::ODEOptimizer) = true
 SciMLBase.requiresgradient(::ODEOptimizer) = true
 SciMLBase.requireshessian(::ODEOptimizer) = false
 SciMLBase.requiresconsjac(::ODEOptimizer) = false
 SciMLBase.requiresconshess(::ODEOptimizer) = false
 
-
 SciMLBase.requiresbounds(::DAEOptimizer) = false
 SciMLBase.allowsbounds(::DAEOptimizer) = false
 SciMLBase.allowsconstraints(::DAEOptimizer) = true
 SciMLBase.allowscallback(::DAEOptimizer) = true
-SciMLBase.supports_opt_cache_interface(::DAEOptimizer) = true
+SciMLBase.has_init(::DAEOptimizer) = true
 SciMLBase.requiresgradient(::DAEOptimizer) = true
 SciMLBase.requireshessian(::DAEOptimizer) = false
 SciMLBase.requiresconsjac(::DAEOptimizer) = true
 SciMLBase.requiresconshess(::DAEOptimizer) = false
 
-
 function SciMLBase.__init(prob::OptimizationProblem, opt::ODEOptimizer;
-    callback=OptimizationBase.DEFAULT_CALLBACK, progress=false, dt=nothing,
-    maxiters=nothing, kwargs...)
-    return OptimizationCache(prob, opt; callback=callback, progress=progress, dt=dt,
-        maxiters=maxiters, kwargs...)
+        callback = OptimizationBase.DEFAULT_CALLBACK, progress = false, dt = nothing,
+        maxiters = nothing, kwargs...)
+    return OptimizationCache(prob, opt; callback = callback, progress = progress, dt = dt,
+        maxiters = maxiters, kwargs...)
 end
 
 function SciMLBase.__init(prob::OptimizationProblem, opt::DAEOptimizer;
-    callback=OptimizationBase.DEFAULT_CALLBACK, progress=false, dt=nothing,
-    maxiters=nothing, kwargs...)
-    return OptimizationCache(prob, opt; callback=callback, progress=progress, dt=dt,
-        maxiters=maxiters, kwargs...)
+        callback = OptimizationBase.DEFAULT_CALLBACK, progress = false, dt = nothing,
+        maxiters = nothing, kwargs...)
+    return OptimizationCache(prob, opt; callback = callback, progress = progress, dt = dt,
+        maxiters = maxiters, kwargs...)
 end
 
-function SciMLBase.__solve(
-    cache::OptimizationBase.OptimizationCache{F,RC,LB,UB,LC,UC,S,O,D,P,C}
-    ) where {F,RC,LB,UB,LC,UC,S,O<:Union{ODEOptimizer,DAEOptimizer},D,P,C}
-
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Union{
+        ODEOptimizer, DAEOptimizer}}
     dt = get(cache.solver_args, :dt, nothing)
     maxit = get(cache.solver_args, :maxiters, nothing)
     u0 = copy(cache.u0)
@@ -109,7 +104,7 @@ function solve_ode(cache, dt, maxit, u0, p)
     else
         solve_kwargs = Dict{Symbol, Any}()
     end
-    
+
     if !isnothing(maxit)
         solve_kwargs[:maxiters] = maxit
     end
@@ -124,7 +119,8 @@ function solve_ode(cache, dt, maxit, u0, p)
     has_t = hasproperty(sol, :t) && !isempty(sol.t)
 
     stats = OptimizationBase.OptimizationStats(
-        iterations = has_destats ? get(sol.destats, :iters, 10) : (has_t ? length(sol.t) - 1 : 10),
+        iterations = has_destats ? get(sol.destats, :iters, 10) :
+                     (has_t ? length(sol.t) - 1 : 10),
         time = has_t ? sol.t[end] : 0.0,
         fevals = has_destats ? get(sol.destats, :f_calls, 0) : 0,
         gevals = has_destats ? get(sol.destats, :iters, 0) : 0,
@@ -147,11 +143,11 @@ function solve_dae_mass_matrix(cache, dt, maxit, u0, p)
     if m > n
         error("DAEOptimizer with mass matrix method requires the number of constraints to be less than or equal to the number of variables.")
     end
-    M = Diagonal([ones(n-m); zeros(m)])
+    M = Diagonal([ones(n - m); zeros(m)])
     function f_mass!(du, u, p_, t)
         cache.f.grad(du, u, p)
         @. du = -du
-        consout = @view du[(n-m)+1:end]
+        consout = @view du[((n - m) + 1):end]
         cache.f.cons(consout, u)
         return nothing
     end
@@ -170,16 +166,20 @@ function solve_dae_mass_matrix(cache, dt, maxit, u0, p)
     else
         solve_kwargs = Dict{Symbol, Any}()
     end
-    
+
     solve_kwargs[:progress] = cache.progress
-    if maxit !== nothing; solve_kwargs[:maxiters] = maxit; end
-    if dt   !== nothing; solve_kwargs[:dt] = dt; end
+    if maxit !== nothing
+        solve_kwargs[:maxiters] = maxit
+    end
+    if dt !== nothing
+        solve_kwargs[:dt] = dt
+    end
 
     sol = solve(ss_prob, DynamicSS(cache.opt.solver); solve_kwargs...)
     # if sol.retcode ≠ ReturnCode.Success
     #     # you may still accept Default or warn
     # end
-    u_ext = sol.u  
+    u_ext = sol.u
     u_final = u_ext[1:n]
     return SciMLBase.build_solution(cache, cache.opt, u_final, cache.f(u_final, p);
         retcode = sol.retcode)
@@ -199,8 +199,8 @@ function solve_dae_implicit(cache, dt, maxit, u0, p)
 
     function dae_residual!(res, du, u, p_, t)
         cache.f.grad(res, u, p)
-        @. res = du-res
-        consout = @view res[(n-m)+1:end]
+        @. res = du - res
+        consout = @view res[((n - m) + 1):end]
         cache.f.cons(consout, u)
         return nothing
     end
@@ -221,11 +221,15 @@ function solve_dae_implicit(cache, dt, maxit, u0, p)
     else
         solve_kwargs = Dict{Symbol, Any}()
     end
-    
+
     solve_kwargs[:progress] = cache.progress
 
-    if maxit !== nothing; solve_kwargs[:maxiters] = maxit; end
-    if dt !== nothing; solve_kwargs[:dt] = dt; end
+    if maxit !== nothing
+        solve_kwargs[:maxiters] = maxit
+    end
+    if dt !== nothing
+        solve_kwargs[:dt] = dt
+    end
     solve_kwargs[:initializealg] = DiffEqBase.ShampineCollocationInit()
 
     sol = solve(prob, cache.opt.solver; solve_kwargs...)
@@ -236,5 +240,4 @@ function solve_dae_implicit(cache, dt, maxit, u0, p)
         retcode = sol.retcode)
 end
 
-
-end 
+end

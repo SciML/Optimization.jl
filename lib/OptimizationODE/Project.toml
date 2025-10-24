@@ -16,11 +16,11 @@ NonlinearSolve = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
 [compat]
 DiffEqBase = "6.190"
 ForwardDiff = "0.10, 1"
-OptimizationBase = "3"
+OptimizationBase = "4"
 OrdinaryDiffEq = "6.70"
 NonlinearSolve = "4"
 Reexport = "1"
-SciMLBase = "2"
+SciMLBase = "2.122.1"
 SteadyStateDiffEq = "2"
 julia = "1.10"
 

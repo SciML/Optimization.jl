@@ -1,4 +1,4 @@
-using OptimizationBase, OptimizationBase, ForwardDiff, SymbolicAnalysis, LinearAlgebra,
+using OptimizationBase, ForwardDiff, SymbolicAnalysis, LinearAlgebra,
       Manifolds, OptimizationManopt, OptimizationLBFGSB
 
 function f(x, p = nothing)
@@ -47,6 +47,6 @@ prob = OptimizationProblem(optf, data2[1]; manifold = M, structural_analysis = t
 
 opt = OptimizationManopt.GradientDescentOptimizer()
 @time sol = solve(prob, opt, maxiters = 100)
-@test sol.minimum < 1e-1
+@test sol.objective < 1e-1
 @test sol.cache.analysis_results.objective.curvature == SymbolicAnalysis.UnknownCurvature
 @test sol.cache.analysis_results.objective.gcurvature == SymbolicAnalysis.GConvex

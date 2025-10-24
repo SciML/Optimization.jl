@@ -11,12 +11,7 @@ struct GCMAESOpt end
 SciMLBase.requiresbounds(::GCMAESOpt) = true
 SciMLBase.allowsbounds(::GCMAESOpt) = true
 SciMLBase.allowscallback(::GCMAESOpt) = false
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(opt::GCMAESOpt) = true
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(opt::GCMAESOpt) = true
-end
+SciMLBase.has_init(opt::GCMAESOpt) = true
 SciMLBase.requiresgradient(::GCMAESOpt) = true
 SciMLBase.requireshessian(::GCMAESOpt) = false
 SciMLBase.requiresconsjac(::GCMAESOpt) = false
@@ -61,32 +56,7 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
         kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <:
-        GCMAESOpt,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: GCMAESOpt}
     local x
     local G = similar(cache.u0)
 

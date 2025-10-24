@@ -4,12 +4,7 @@ using Reexport, Logging
 @reexport using Optimisers, OptimizationBase
 using SciMLBase
 
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(opt::AbstractRule) = true
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(opt::AbstractRule) = true
-end
+SciMLBase.has_init(opt::AbstractRule) = true
 SciMLBase.requiresgradient(opt::AbstractRule) = true
 SciMLBase.allowsfg(opt::AbstractRule) = true
 
@@ -23,32 +18,7 @@ function SciMLBase.__init(
         save_best, progress, kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <:
-        AbstractRule,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule}
     if OptimizationBase.isa_dataiterator(cache.p)
         data = cache.p
         dataiterate = true

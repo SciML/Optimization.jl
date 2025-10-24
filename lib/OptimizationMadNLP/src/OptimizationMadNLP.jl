@@ -169,7 +169,8 @@ function NLPModels.hess_coord!(
 
         if !isnothing(nlp.cache.f.cons_h) && !isempty(y)
             # Add weighted constraint Hessians
-            cons_hessians = [similar(nlp.hess_buffer, eltype(nlp.hess_buffer)) for _ in 1:length(y)]
+            cons_hessians = [similar(nlp.hess_buffer, eltype(nlp.hess_buffer))
+                             for _ in 1:length(y)]
             nlp.cache.f.cons_h(cons_hessians, x)
             for (λ, H_cons) in zip(y, cons_hessians)
                 nlp.hess_buffer .+= λ .* H_cons
@@ -193,7 +194,8 @@ function NLPModels.hess_coord!(
     return H
 end
 
-function NLPModels.jtprod!(nlp::NLPModelsAdaptor, x::AbstractVector, v::AbstractVector, Jtv::AbstractVector)
+function NLPModels.jtprod!(
+        nlp::NLPModelsAdaptor, x::AbstractVector, v::AbstractVector, Jtv::AbstractVector)
     # Compute J^T * v using the AD-provided VJP (Vector-Jacobian Product)
     if !isnothing(nlp.cache.f.cons_vjp) && !isempty(Jtv)
         nlp.cache.f.cons_vjp(Jtv, x, v)
@@ -201,7 +203,8 @@ function NLPModels.jtprod!(nlp::NLPModelsAdaptor, x::AbstractVector, v::Abstract
     return Jtv
 end
 
-function NLPModels.jprod!(nlp::NLPModelsAdaptor, x::AbstractVector, v::AbstractVector, Jv::AbstractVector)
+function NLPModels.jprod!(
+        nlp::NLPModelsAdaptor, x::AbstractVector, v::AbstractVector, Jv::AbstractVector)
     # Compute J * v using the AD-provided JVP (Jacobian-Vector Product)
     if !isnothing(nlp.cache.f.cons_jvp) && !isempty(Jv)
         nlp.cache.f.cons_jvp(Jv, x, v)
@@ -228,21 +231,21 @@ end
     hessian_constant::Bool = false
     hessian_approximation::Type = MadNLP.ExactHessian
 
-    # Barrier
-    mu_init::T = 1e-1
+    # Linear solver configuration
+    linear_solver::Union{Nothing, Type} = nothing  # e.g., MumpsSolver, LapackCPUSolver, UmfpackSolver
+
+    kkt_system::Union{Nothing, Type} = nothing # e.g. DenseKKTSystem
+
+    mu_init::T = 0.1
 
     # Quasi-Newton options (used when hessian_approximation is CompactLBFGS, BFGS, or DampedBFGS)
-    max_history::Int = 6  # Number of past gradients to store for L-BFGS
-    init_strategy::MadNLP.BFGSInitStrategy = MadNLP.SCALAR1  # How to initialize Hessian
-    init_value::T = 1.0  # Initial scaling value
-    sigma_min::T = 1e-8  # Minimum allowed σ (safeguard)
-    sigma_max::T = 1e+8  # Maximum allowed σ (safeguard)
+    quasi_newton_options::Union{Nothing, MadNLP.QuasiNewtonOptions} = nothing
 
     # Additional MadNLP options
     additional_options::Dict{Symbol, Any} = Dict{Symbol, Any}()
 end
 
-SciMLBase.supports_opt_cache_interface(opt::MadNLPOptimizer) = true
+SciMLBase.has_init(opt::MadNLPOptimizer) = true
 
 function SciMLBase.requiresgradient(opt::MadNLPOptimizer)
     true
@@ -262,16 +265,14 @@ end
 function SciMLBase.requireslagh(opt::MadNLPOptimizer)
     opt.hessian_approximation === MadNLP.ExactHessian
 end
+function SciMLBase.requiresconshess(opt::MadNLPOptimizer)
+    opt.hessian_approximation === MadNLP.ExactHessian
+end
 function SciMLBase.allowsconsvjp(opt::MadNLPOptimizer)
     true
 end
 function SciMLBase.allowsconsjvp(opt::MadNLPOptimizer)
     true
-end
-
-function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::MadNLPOptimizer;
-        kwargs...)
-    return OptimizationCache(prob, opt; kwargs...)
 end
 
 function map_madnlp_status(status::MadNLP.Status)
@@ -367,8 +368,6 @@ function __map_optimizer_args(cache,
         minimize = cache.sense !== MaxSense  # Default to minimization when sense is nothing or MinSense
     )
 
-    nlp = NLPModelsAdaptor(cache, meta, NLPModels.Counters())
-
     if verbose isa Bool
         print_level = verbose ? MadNLP.INFO : MadNLP.WARN
     else
@@ -380,62 +379,51 @@ function __map_optimizer_args(cache,
     max_iter = isnothing(maxiters) ? 3000 : maxiters
     max_wall_time = isnothing(maxtime) ? 1e6 : maxtime
 
-    # Create QuasiNewtonOptions if using quasi-Newton methods
-    quasi_newton_options = MadNLP.QuasiNewtonOptions{T}(;
-        opt.init_strategy,
-        opt.max_history,
-        opt.init_value,
-        opt.sigma_min,
-        opt.sigma_max
-    )
+    # Build final options dictionary
+    options = Dict{Symbol, Any}(opt.additional_options)
 
-    MadNLP.MadNLPSolver(nlp;
-        opt.additional_options...,
-        print_level, tol, max_iter, max_wall_time,
-        opt.rethrow_error,
-        opt.disable_garbage_collector,
-        opt.blas_num_threads,
-        opt.output_file,
-        opt.file_print_level,
-        opt.acceptable_tol,
-        opt.acceptable_iter,
-        opt.jacobian_constant,
-        opt.hessian_constant,
-        opt.hessian_approximation,
-        opt.mu_init,
-        quasi_newton_options = quasi_newton_options,
-    )
+    options[:mu_init] = opt.mu_init
+
+    # Add quasi_newton_options if provided, otherwise create default
+    if !isnothing(opt.quasi_newton_options)
+        options[:quasi_newton_options] = opt.quasi_newton_options
+    else
+        # Create default quasi-Newton options
+        options[:quasi_newton_options] = MadNLP.QuasiNewtonOptions{T}()
+    end
+
+    # Add linear_solver if provided
+    if !isnothing(opt.linear_solver)
+        options[:linear_solver] = opt.linear_solver
+    end
+
+    if !isnothing(opt.kkt_system)
+        options[:kkt_system] = opt.kkt_system
+    end
+
+    options[:rethrow_error] = opt.rethrow_error
+    options[:disable_garbage_collector] = opt.disable_garbage_collector
+    options[:blas_num_threads] = opt.blas_num_threads
+    options[:output_file] = opt.output_file
+    options[:file_print_level] = opt.file_print_level
+    options[:acceptable_tol] = opt.acceptable_tol
+    options[:acceptable_iter] = opt.acceptable_iter
+    options[:jacobian_constant] = opt.jacobian_constant
+    options[:hessian_constant] = opt.hessian_constant
+    options[:hessian_approximation] = opt.hessian_approximation
+    options[:print_level] = print_level
+    options[:tol] = tol
+    options[:max_iter] = max_iter
+    options[:max_wall_time] = max_wall_time
+
+    meta, options
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <: MadNLPOptimizer,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: MadNLPOptimizer}
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
-    solver = __map_optimizer_args(cache,
+    meta, options = __map_optimizer_args(cache,
         cache.opt;
         abstol = cache.solver_args.abstol,
         reltol = cache.solver_args.reltol,
@@ -446,6 +434,8 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
         callback = cache.callback
     )
 
+    nlp = NLPModelsAdaptor(cache, meta, NLPModels.Counters())
+    solver = MadNLP.MadNLPSolver(nlp; options...)
     results = MadNLP.solve!(solver)
 
     stats = OptimizationBase.OptimizationStats(; time = results.counters.total_time,

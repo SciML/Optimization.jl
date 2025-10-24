@@ -1,6 +1,6 @@
-using SafeTestsets, Pkg
+using SafeTestsets, Test, Pkg
 
-const GROUP = get(ENV, "GROUP", "All")
+const GROUP = get(ENV, "GROUP", "Core")
 
 function dev_subpkg(subpkg)
     subpkg_path = joinpath(dirname(@__DIR__), "lib", subpkg)
@@ -14,41 +14,28 @@ function activate_subpkg_env(subpkg)
     Pkg.instantiate()
 end
 
-if VERSION < v"1.11"
-    if GROUP == "All" || GROUP == "Core"
-        dev_subpkg("OptimizationBase")
-        dev_subpkg("OptimizationOptimJL")
-        dev_subpkg("OptimizationOptimisers")
-        dev_subpkg("OptimizationMOI")
-    elseif GROUP == "GPU" || GROUP == "OptimizationPolyalgorithms"
-        dev_subpkg("OptimizationOptimJL")
-        dev_subpkg("OptimizationOptimisers")
-    elseif GROUP == "OptimizationNLPModels"
-        dev_subpkg("OptimizationOptimJL")
-        dev_subpkg("OptimizationMOI")
-    end
-end
-
 @time begin
-    if GROUP == "All" || GROUP == "Core"
-        @safetestset "Quality Assurance" include("qa.jl")
-        @safetestset "Utils Tests" begin
-            include("utils.jl")
-        end
-        @safetestset "AD Tests" begin
-            include("ADtests.jl")
-        end
-        @safetestset "AD Performance Regression Tests" begin
-            include("AD_performance_regression.jl")
-        end
-        @safetestset "Optimization" begin
-            include("native.jl")
-        end
-        @safetestset "Mini batching" begin
-            include("minibatch.jl")
-        end
-        @safetestset "DiffEqFlux" begin
-            include("diffeqfluxtests.jl")
+    if GROUP == "Core"
+        @testset verbose=true "Optimization.jl" begin
+            @safetestset "Quality Assurance" include("qa.jl")
+            @safetestset "Utils Tests" begin
+                include("utils.jl")
+            end
+            @safetestset "AD Tests" begin
+                include("ADtests.jl")
+            end
+            @safetestset "AD Performance Regression Tests" begin
+                include("AD_performance_regression.jl")
+            end
+            @safetestset "Optimization" begin
+                include("native.jl")
+            end
+            @safetestset "Mini batching" begin
+                include("minibatch.jl")
+            end
+            @safetestset "DiffEqFlux" begin
+                include("diffeqfluxtests.jl")
+            end
         end
     elseif GROUP == "GPU"
         activate_downstream_env()

@@ -199,12 +199,17 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
 
     if hv == true && f.hv === nothing
         function hv!(H, θ, v, p = p)
-            x = Duplicated(θ, v)
-            dx = Enzyme.make_zero(x)
-            H .= Enzyme.autodiff(
-                fmode, hv_f2_alloc, Const(rmode), Duplicated(x,dx),
-                Const(f.f), Const(p)
-            )[1].dval
+            dθ = zero(θ)
+            Enzyme.make_zero!(H)
+            Enzyme.autodiff(
+                fmode,
+                inner_grad,
+                Const(rmode),
+                Duplicated(θ, v),
+                Duplicated(dθ, H),
+                Const(f.f),
+                Const(p)
+            )
         end
     elseif hv == true
         hv! = (H, θ, v, p = p) -> f.hv(H, θ, v, p)
@@ -553,13 +558,20 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{false}, x
     end
 
     if hv == true && f.hv === nothing
+        H = zero(x)
         function hv!(θ, v, p = p)
-            x = Duplicated(θ, v)
-            dx = Enzyme.make_zero(x)
-            return Enzyme.autodiff(
-                fmode, hv_f2_alloc, DuplicatedNoNeed, Const(rmode), Duplicated(x, dx), 
-                Const(_f), Const(f.f), Const(p)
-            )[1].dval
+            dθ = zero(θ)
+            Enzyme.make_zero!(H)
+            Enzyme.autodiff(
+                fmode,
+                inner_grad,
+                Const(rmode),
+                Duplicated(θ, v),
+                Duplicated(dθ, H),
+                Const(f.f),
+                Const(p)
+            )
+            return H
         end
     elseif hv == true
         hv! = (θ, v, p = p) -> f.hv(θ, v, p)

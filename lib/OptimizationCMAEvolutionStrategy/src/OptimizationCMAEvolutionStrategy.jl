@@ -10,18 +10,14 @@ export CMAEvolutionStrategyOpt
 struct CMAEvolutionStrategyOpt end
 
 SciMLBase.allowsbounds(::CMAEvolutionStrategyOpt) = true
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(opt::CMAEvolutionStrategyOpt) = true
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(opt::CMAEvolutionStrategyOpt) = true
-end
+SciMLBase.has_init(opt::CMAEvolutionStrategyOpt) = true
 SciMLBase.requiresgradient(::CMAEvolutionStrategyOpt) = false
 SciMLBase.requireshessian(::CMAEvolutionStrategyOpt) = false
 SciMLBase.requiresconsjac(::CMAEvolutionStrategyOpt) = false
 SciMLBase.requiresconshess(::CMAEvolutionStrategyOpt) = false
 
-function __map_optimizer_args(prob::OptimizationBase.OptimizationCache, opt::CMAEvolutionStrategyOpt;
+function __map_optimizer_args(
+        prob::OptimizationBase.OptimizationCache, opt::CMAEvolutionStrategyOpt;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -53,32 +49,7 @@ function __map_optimizer_args(prob::OptimizationBase.OptimizationCache, opt::CMA
     return mapped_args
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <:
-        CMAEvolutionStrategyOpt,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: CMAEvolutionStrategyOpt}
     local x, cur, state
 
     function _cb(opt, y, fvals, perm)

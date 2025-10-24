@@ -7,7 +7,12 @@ using Optimization, Aqua
         treat_as_own = [OptimizationProblem,
             Optimization.SciMLBase.AbstractOptimizationCache])
     Aqua.test_project_extras(Optimization)
-    Aqua.test_stale_deps(Optimization)
+    if !(VERSION < v"1.11")
+        # in CI we need to dev packages to run the tests
+        # which adds stale deps
+        # on later versions [sources] is used instead
+        Aqua.test_stale_deps(Optimization)
+    end
     Aqua.test_unbound_args(Optimization)
     Aqua.test_undefined_exports(Optimization)
 end

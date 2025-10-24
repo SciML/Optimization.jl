@@ -8,13 +8,7 @@ using OptimizationBase: deduce_retcode
 (f::NLopt.Algorithm)() = f
 
 SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(opt::Union{
-        NLopt.Algorithm, NLopt.Opt}) = true
-end
+SciMLBase.has_init(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 
 function SciMLBase.requiresgradient(opt::Union{NLopt.Algorithm, NLopt.Opt})
     # https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
@@ -138,35 +132,8 @@ function __map_optimizer_args!(cache::OptimizationBase.OptimizationCache, opt::N
     return nothing
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <:
-        Union{
-            NLopt.Algorithm,
-            NLopt.Opt
-        },
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Union{
+        NLopt.Algorithm, NLopt.Opt}}
     local x
 
     # Check if algorithm requires gradients but none are provided

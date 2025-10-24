@@ -11,12 +11,9 @@ struct BOBYQA <: PRIMASolvers end
 struct LINCOA <: PRIMASolvers end
 struct COBYLA <: PRIMASolvers end
 
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(::PRIMASolvers) = true
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(::PRIMASolvers) = true
-end
+export UOBYQA, NEWUOA, BOBYQA, LINCOA, COBYLA
+
+SciMLBase.has_init(::PRIMASolvers) = true
 SciMLBase.allowsconstraints(::Union{LINCOA, COBYLA}) = true
 SciMLBase.allowsbounds(opt::Union{BOBYQA, LINCOA, COBYLA}) = true
 SciMLBase.requiresconstraints(opt::COBYLA) = true
@@ -35,7 +32,7 @@ function OptimizationBase.OptimizationCache(prob::SciMLBase.OptimizationProblem,
     reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p)
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     if prob.f.adtype isa SciMLBase.NoAD && opt isa COBYLA
-        throw("We evaluate the jacobian and hessian of the constraints once to automatically detect 
+        throw("We evaluate the jacobian and hessian of the constraints once to automatically detect
         linear and nonlinear constraints, please provide a valid AD backend for using COBYLA.")
     else
         if opt isa COBYLA
@@ -48,12 +45,12 @@ function OptimizationBase.OptimizationCache(prob::SciMLBase.OptimizationProblem,
         end
     end
 
-    return OptimizationBase.OptimizationCache(f, reinit_cache, prob.lb, prob.ub, prob.lcons,
+    return OptimizationBase.OptimizationCache(
+        opt, f, reinit_cache, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
-        opt, progress, callback, nothing,
+        progress, callback, nothing,
         OptimizationBase.OptimizationBase.AnalysisResults(nothing, nothing),
-        merge((; maxiters, maxtime, abstol, reltol),
-            NamedTuple(kwargs)))
+        merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs)))
 end
 
 function get_solve_func(opt::PRIMASolvers)
@@ -70,7 +67,8 @@ function get_solve_func(opt::PRIMASolvers)
     end
 end
 
-function __map_optimizer_args!(cache::OptimizationBase.OptimizationCache, opt::PRIMASolvers;
+function __map_optimizer_args!(
+        cache::OptimizationBase.OptimizationCache, opt::PRIMASolvers;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -109,36 +107,13 @@ function sciml_prima_retcode(rc::AbstractString)
     end
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <: PRIMASolvers,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: PRIMASolvers}
     iter = 0
     _loss = function (θ)
         x = cache.f(θ, cache.p)
         iter += 1
-        opt_state = OptimizationBase.OptimizationState(u = θ, p = cache.p, objective = x[1], iter = iter)
+        opt_state = OptimizationBase.OptimizationState(
+            u = θ, p = cache.p, objective = x[1], iter = iter)
         if cache.callback(opt_state, x...)
             error("Optimization halted by callback.")
         end
@@ -182,14 +157,14 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationBase.Optimization
         b₂ = cache.ucons[linineqsinds]
 
         (minx,
-            inf) = optfunc(_loss,
+        inf) = optfunc(_loss,
             cache.u0;
             linear_eq = (A₁, b₁),
             linear_ineq = (A₂, b₂),
             nonlinear_ineq = x -> (res = zeros(eltype(x), length(nonlininds));
-                nonlincons(
-                    res, x);
-                res),
+            nonlincons(
+                res, x);
+            res),
             kws...)
     else
         (minx, inf) = optfunc(_loss, cache.u0; kws...)
@@ -203,5 +178,4 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationBase.Optimization
         stats = stats, original = inf)
 end
 
-export UOBYQA, NEWUOA, BOBYQA, LINCOA, COBYLA
 end

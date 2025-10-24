@@ -7,12 +7,7 @@ using SciMLBase
 SciMLBase.requiresbounds(opt::MultistartOptimization.TikTak) = true
 SciMLBase.allowsbounds(opt::MultistartOptimization.TikTak) = true
 SciMLBase.allowscallback(opt::MultistartOptimization.TikTak) = false
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(opt::MultistartOptimization.TikTak) = true
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(opt::MultistartOptimization.TikTak) = true
-end
+SciMLBase.has_init(opt::MultistartOptimization.TikTak) = true
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
         opt::MultistartOptimization.TikTak,
@@ -24,32 +19,8 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
         kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <:
-        MultistartOptimization.TikTak,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <:
+                                                               MultistartOptimization.TikTak}
     local x, _loss
 
     _loss = function (θ)

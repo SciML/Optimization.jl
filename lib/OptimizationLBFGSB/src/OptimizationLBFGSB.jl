@@ -31,12 +31,7 @@ References
     ϵ = 1e-8
 end
 
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(::LBFGSB) = true
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(::LBFGSB) = true
-end
+SciMLBase.has_init(::LBFGSB) = true
 SciMLBase.allowsbounds(::LBFGSB) = true
 SciMLBase.requiresgradient(::LBFGSB) = true
 SciMLBase.allowsconstraints(::LBFGSB) = true
@@ -78,32 +73,7 @@ function __map_optimizer_args(cache::OptimizationBase.OptimizationCache, opt::LB
     return mapped_args
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <:
-        LBFGSB,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
 
     local x
@@ -142,7 +112,8 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
             end
-            return x[1] + sum(@. λ * cons_tmp[eq_inds] + ρ / 2 * (cons_tmp[eq_inds] .^ 2)) + 1 / (2 * ρ) * sum((max.(Ref(0.0), μ .+ (ρ .* cons_tmp[ineq_inds]))) .^ 2)
+            return x[1] + sum(@. λ * cons_tmp[eq_inds] + ρ / 2 * (cons_tmp[eq_inds] .^ 2)) +
+                   1 / (2 * ρ) * sum((max.(Ref(0.0), μ .+ (ρ .* cons_tmp[ineq_inds]))) .^ 2)
         end
 
         prev_eqcons = zero(λ)

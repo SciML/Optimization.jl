@@ -435,10 +435,10 @@ end
         @test sol.u ≈ [3.0] atol=1e-6
         optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optprob, x0, _p)
-        @test_throws SciMLBase.IncompatibleOptimizerError solve(prob, ScipyDifferentialEvolution())
-        @test_throws SciMLBase.IncompatibleOptimizerError solve(prob, ScipyDirect())
-        @test_throws SciMLBase.IncompatibleOptimizerError solve(prob, ScipyDualAnnealing())
-        @test_throws SciMLBase.IncompatibleOptimizerError solve(prob, ScipyBrute())
+        @test_throws OptimizationBase.IncompatibleOptimizerError solve(prob, ScipyDifferentialEvolution())
+        @test_throws OptimizationBase.IncompatibleOptimizerError solve(prob, ScipyDirect())
+        @test_throws OptimizationBase.IncompatibleOptimizerError solve(prob, ScipyDualAnnealing())
+        @test_throws OptimizationBase.IncompatibleOptimizerError solve(prob, ScipyBrute())
         @test_throws ArgumentError solve(prob, ScipyBrent())
         @test_throws ArgumentError solve(prob, ScipyRootScalar("brentq"))
     end

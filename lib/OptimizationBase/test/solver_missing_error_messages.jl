@@ -1,4 +1,5 @@
 using OptimizationBase, Test
+using SciMLBase: NoAD
 
 import OptimizationBase: allowscallback, requiresbounds, requiresconstraints
 

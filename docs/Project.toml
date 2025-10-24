@@ -19,8 +19,8 @@ NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
 NLPModelsTest = "7998695d-6960-4d3a-85c4-e1bceb8cd856"
 NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-OptimizationBBO = "3e6eede4-6085-4f62-9a71-46d9bc1eb92b"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
+OptimizationBBO = "3e6eede4-6085-4f62-9a71-46d9bc1eb92b"
 OptimizationCMAEvolutionStrategy = "bd407f91-200f-4536-9381-e4ba712f53f8"
 OptimizationEvolutionary = "cb963754-43f6-435e-8d4b-99009ff27753"
 OptimizationGCMAES = "6f0a0517-dbc2-4a7a-8a20-99ae7f27e911"
@@ -47,6 +47,26 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
+[sources]
+Optimization = {path = ".."}
+OptimizationBase = {path = "../lib/OptimizationBase"}
+OptimizationBBO = {path = "../lib/OptimizationBBO"}
+OptimizationCMAEvolutionStrategy = {path = "../lib/OptimizationCMAEvolutionStrategy"}
+OptimizationEvolutionary = {path = "../lib/OptimizationEvolutionary"}
+OptimizationGCMAES = {path = "../lib/OptimizationGCMAES"}
+OptimizationIpopt = {path = "../lib/OptimizationIpopt"}
+OptimizationMOI = {path = "../lib/OptimizationMOI"}
+OptimizationManopt = {path = "../lib/OptimizationManopt"}
+OptimizationMetaheuristics = {path = "../lib/OptimizationMetaheuristics"}
+OptimizationNLPModels = {path = "../lib/OptimizationNLPModels"}
+OptimizationNLopt = {path = "../lib/OptimizationNLopt"}
+OptimizationNOMAD = {path = "../lib/OptimizationNOMAD"}
+OptimizationOptimJL = {path = "../lib/OptimizationOptimJL"}
+OptimizationOptimisers = {path = "../lib/OptimizationOptimisers"}
+OptimizationPRIMA = {path = "../lib/OptimizationPRIMA"}
+OptimizationPolyalgorithms = {path = "../lib/OptimizationPolyalgorithms"}
+OptimizationSpeedMapping = {path = "../lib/OptimizationSpeedMapping"}
+
 [compat]
 ADTypes = "1"
 AmplNLWriter = "1"
@@ -66,9 +86,9 @@ ModelingToolkit = "10.23"
 NLPModels = "0.21"
 NLPModelsTest = "0.10"
 NLopt = "0.6, 1"
-Optimization = "4, 5"
+Optimization = "5"
+OptimizationBase = "4"
 OptimizationBBO = "0.4"
-OptimizationBase = "2, 3"
 OptimizationCMAEvolutionStrategy = "0.3"
 OptimizationEvolutionary = "0.4"
 OptimizationGCMAES = "0.3"
@@ -88,7 +108,7 @@ OrdinaryDiffEq = "6"
 Plots = "1"
 Random = "1"
 ReverseDiff = ">= 1.9.0"
-SciMLBase = "2.30.0"
+SciMLBase = "2.122.1"
 SciMLSensitivity = "7"
 SymbolicAnalysis = "0.3"
 Symbolics = "6"

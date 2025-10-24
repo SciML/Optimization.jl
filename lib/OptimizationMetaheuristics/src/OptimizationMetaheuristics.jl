@@ -7,12 +7,7 @@ using SciMLBase
 SciMLBase.requiresbounds(opt::Metaheuristics.AbstractAlgorithm) = true
 SciMLBase.allowsbounds(opt::Metaheuristics.AbstractAlgorithm) = true
 SciMLBase.allowscallback(opt::Metaheuristics.AbstractAlgorithm) = false
-@static if isdefined(SciMLBase, :supports_opt_cache_interface)
-    SciMLBase.supports_opt_cache_interface(opt::Metaheuristics.AbstractAlgorithm) = true
-end
-@static if isdefined(OptimizationBase, :supports_opt_cache_interface)
-    OptimizationBase.supports_opt_cache_interface(opt::Metaheuristics.AbstractAlgorithm) = true
-end
+SciMLBase.has_init(opt::Metaheuristics.AbstractAlgorithm) = true
 
 function initial_population!(opt, cache, bounds, f)
     opt_init = deepcopy(opt)
@@ -20,7 +15,8 @@ function initial_population!(opt, cache, bounds, f)
     Metaheuristics.optimize(f, bounds, opt_init)
 
     pop_size = opt_init.parameters.N
-    population_rand = [bounds[1, :] + rand(length(cache.u0)) .* (bounds[2, :] - bounds[1, :])
+    population_rand = [bounds[1, :] +
+                       rand(length(cache.u0)) .* (bounds[2, :] - bounds[1, :])
                        for i in 1:(pop_size - 1)]
     push!(population_rand, cache.u0)
     population_init = [Metaheuristics.create_child(x, f(x)) for x in population_rand]
@@ -79,32 +75,8 @@ function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
         kwargs...)
 end
 
-function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O,
-        D,
-        P,
-        C
-}) where {
-        F,
-        RC,
-        LB,
-        UB,
-        LC,
-        UC,
-        S,
-        O <:
-        Metaheuristics.AbstractAlgorithm,
-        D,
-        P,
-        C
-}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <:
+                                                    Metaheuristics.AbstractAlgorithm}
     local x
 
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)

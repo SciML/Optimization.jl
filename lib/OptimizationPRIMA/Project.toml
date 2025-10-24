@@ -16,9 +16,9 @@ ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 
 [compat]
 julia = "1.10"
-OptimizationBase = "3"
+OptimizationBase = "4"
 PRIMA = "0.2.0"
-SciMLBase = "2.58"
+SciMLBase = "2.122.1"
 Reexport = "1"
 
 [targets]

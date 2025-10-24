@@ -66,9 +66,54 @@ jobs:
       - uses: julia-actions/julia-buildpkg@v1
       - if: ${{ matrix.group == 'OptimizationQuadDIRECT' }}
         run: julia --project -e 'using Pkg; Pkg.Registry.add(RegistrySpec(url  = "https://github.com/HolyLab/HolyLabRegistry.git")); Pkg.add("QuadDIRECT")'
-      - uses: julia-actions/julia-runtest@v1
+      - name: ${{ matrix.group }}
         env:
-          GROUP: ${{ matrix.group }}
+            GROUP: ${{ matrix.group }}
+        shell: julia --color=yes --check-bounds=yes --depwarn=yes {0}
+        run: |
+          using Pkg
+          const GROUP = get(ENV, "GROUP", "Core")
+
+          function dev_subpkg(subpkg)
+            subpkg_path = "lib/$subpkg"
+            Pkg.develop(PackageSpec(path = subpkg_path))
+          end
+
+          if GROUP == "Core"
+            Pkg.activate(".")
+          else
+            subpkg_path = "lib/${{ matrix.group }}"
+            Pkg.activate(subpkg_path)
+          end
+
+          if VERSION < v"1.11"
+            @info "Preparing env"
+            if GROUP == "Core"
+              @info "Testing Core"
+              dev_subpkg("OptimizationBase")
+              dev_subpkg("OptimizationLBFGSB")
+              dev_subpkg("OptimizationMOI")
+              dev_subpkg("OptimizationOptimJL")
+              dev_subpkg("OptimizationOptimisers")
+            elseif GROUP == "OptimizationBase"
+              dev_subpkg("OptimizationLBFGSB")
+              dev_subpkg("OptimizationManopt")
+            elseif GROUP == "OptimizationAuglag"
+              dev_subpkg("OptimizationOptimisers")
+            elseif GROUP == "OptimizationMultistartOptimization"
+              dev_subpkg("OptimizationNLopt")
+            elseif GROUP == "GPU" || GROUP == "OptimizationPolyalgorithms"
+              # special case
+              Pkg.develop([PackageSpec(path = "lib/OptimizationOptimJL"), PackageSpec(path = "lib/OptimizationOptimisers")])
+            elseif GROUP == "OptimizationNLPModels"
+              dev_subpkg("OptimizationMOI")
+              dev_subpkg("OptimizationOptimJL")
+              dev_subpkg("OptimizationLBFGSB")
+            end
+          end
+
+          @info "Starting tests"
+          Pkg.test()
       - uses: julia-actions/julia-processcoverage@v1
         with:
           directories: src,lib/OptimizationBase/src,lib/OptimizationBBO/src,lib/OptimizationCMAEvolutionStrategy/src,lib/OptimizationEvolutionary/src,lib/OptimizationGCMAES/src,lib/OptimizationIpopt/src,lib/OptimizationMadNLP/src,lib/OptimizationManopt/src,lib/OptimizationMOI/src,lib/OptimizationMetaheuristics/src,lib/OptimizationMultistartOptimization/src,lib/OptimizationNLopt/src,lib/OptimizationNOMAD/src,lib/OptimizationOptimJL/src,lib/OptimizationOptimisers/src,lib/OptimizationPolyalgorithms/src,lib/OptimizationQuadDIRECT/src,lib/OptimizationSpeedMapping/src
