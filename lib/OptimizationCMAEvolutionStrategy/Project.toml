@@ -2,21 +2,22 @@ name = "OptimizationCMAEvolutionStrategy"
 uuid = "bd407f91-200f-4536-9381-e4ba712f53f8"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.3.3"
+
 [deps]
 CMAEvolutionStrategy = "8d3b24bd-414e-49e0-94fb-163cc3a3e411"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
-
-[extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 
 [compat]
 CMAEvolutionStrategy = "0.2"
-julia = "1.10"
-OptimizationBase = "3"
-SciMLBase = "2.58"
+OptimizationBase = "3, 4"
 Reexport = "1.2"
+SciMLBase = "2.58"
+julia = "1.10"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test"]
