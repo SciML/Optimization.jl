@@ -1,7 +1,7 @@
 name = "OptimizationMultistartOptimization"
 uuid = "e4316d97-8bbb-4fd3-a7d8-3851d2a72823"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.2"
+version = "0.3.3"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 MultistartOptimization = "3933049c-43be-478e-a8bb-6e0f7fd53575"
