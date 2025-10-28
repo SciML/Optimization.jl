@@ -15,9 +15,9 @@ OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
 Logging = "1.10"
-Optimisers = "0.2, 0.3, 0.4"
+Optimisers = "0.4.2"
 OptimizationBase = "4"
-Reexport = "1.2"
+Reexport = "1.2.2"
 SciMLBase = "2.122.1"
 julia = "1.10"
 

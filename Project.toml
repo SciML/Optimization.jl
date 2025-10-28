@@ -25,7 +25,7 @@ OptimizationOptimJL = {path = "lib/OptimizationOptimJL"}
 OptimizationOptimisers = {path = "lib/OptimizationOptimisers"}
 
 [compat]
-ADTypes = "1.14"
+ADTypes = "1.18"
 Aqua = "0.8"
 ArrayInterface = "7.10"
 BenchmarkTools = "1"
@@ -33,7 +33,7 @@ Boltz = "1"
 ComponentArrays = ">= 0.13.9"
 ConsoleProgressMonitor = "0.1.1"
 DiffEqFlux = "2, 3, 4"
-DocStringExtensions = "0.9"
+DocStringExtensions = "0.9.5"
 Enzyme = "0.13"
 FiniteDiff = "2"
 Flux = "0.13, 0.14, 0.15, 0.16"

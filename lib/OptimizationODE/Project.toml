@@ -14,14 +14,14 @@ SteadyStateDiffEq = "9672c7b4-1e72-59bd-8a11-6ac3964bc41f"
 NonlinearSolve = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
 
 [compat]
-DiffEqBase = "6.190"
+DiffEqBase = "6.190.2"
 ForwardDiff = "0.10, 1"
 OptimizationBase = "4"
-OrdinaryDiffEq = "6.70"
-NonlinearSolve = "4"
+OrdinaryDiffEq = "6.102"
+NonlinearSolve = "4.11"
 Reexport = "1"
 SciMLBase = "2.122.1"
-SteadyStateDiffEq = "2"
+SteadyStateDiffEq = "2.5"
 julia = "1.10"
 
 [sources]
