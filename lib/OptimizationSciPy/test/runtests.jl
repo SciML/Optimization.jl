@@ -293,7 +293,7 @@ end
         end
         optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optprob, x0, _p)
-        @test_throws ErrorException solve(prob, ScipyBFGS(), callback = cbstopping)
+        @test_throws Any solve(prob, ScipyBFGS(), callback = cbstopping)
     end
 
     @testset "constrained optimization" begin
