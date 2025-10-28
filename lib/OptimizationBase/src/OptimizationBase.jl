@@ -13,7 +13,10 @@ import SciMLBase: solve, init, solve!, __init, __solve,
     allowsconstraints, requiresconstraints,
     allowscallback, requiresgradient,
     requireshessian, requiresconsjac,
-    requiresconshess
+    requiresconshess, wrap_sol, has_kwargs,
+    get_root_indp, get_updated_symbolic_problem,
+    get_concrete_p, get_concrete_u0, promote_u0,
+    promote_p, KeywordArgError, checkkwargs
 
 export ObjSense, MaxSense, MinSense
 export allowsbounds, requiresbounds, allowsconstraints, requiresconstraints,
