@@ -274,7 +274,7 @@ function solve_call(_prob, alg, args...; merge_callbacks = true, kwargshandle = 
         if _prob.u0 !== nothing && !isconcretetype(eltype(_prob.u0))
             throw(SciMLBase.NonConcreteEltypeError(eltype(_prob.u0)))
         end
-        _check_opt_alg(prob, alg; kwargs...)
+        _check_opt_alg(_prob, alg; kwargs...)
         __solve(_prob, alg, args...; kwargs...)
     end
 end
