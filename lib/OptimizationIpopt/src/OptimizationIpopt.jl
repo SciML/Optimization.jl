@@ -170,6 +170,11 @@ function SciMLBase.has_init(alg::IpoptOptimizer)
     true
 end
 
+# Compatibility with OptimizationBase@v3
+function SciMLBase.supports_opt_cache_interface(alg::IpoptOptimizer)
+    true
+end
+
 function SciMLBase.requiresgradient(opt::IpoptOptimizer)
     true
 end

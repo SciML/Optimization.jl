@@ -288,6 +288,12 @@ function SciMLBase.has_init(alg::Union{MOI.AbstractOptimizer,
     true
 end
 
+# Compatibility with OptimizationBase@v3
+function SciMLBase.supports_opt_cache_interface(alg::Union{MOI.AbstractOptimizer,
+        MOI.OptimizerWithAttributes})
+    true
+end
+
 function SciMLBase.__init(prob::OptimizationProblem,
         opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
         maxiters::Union{Number, Nothing} = nothing,
