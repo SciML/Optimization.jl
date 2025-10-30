@@ -283,7 +283,7 @@ function get_concrete_problem(prob::OptimizationProblem; kwargs...)
     oldprob = prob
     prob = get_updated_symbolic_problem(get_root_indp(prob), prob; kwargs...)
     if prob !== oldprob
-        kwargs = (;kwargs..., u0 = SII.state_values(prob), p = SII.parameter_values(prob))
+        kwargs = (;kwargs..., u0 = SymbolicIndexingInterface.state_values(prob), p = SymbolicIndexingInterface.parameter_values(prob))
     end
     p = get_concrete_p(prob, kwargs)
     u0 = get_concrete_u0(prob, false, nothing, kwargs)

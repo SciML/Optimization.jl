@@ -18,6 +18,8 @@ import SciMLBase: solve, init, solve!, __init, __solve,
     get_concrete_p, get_concrete_u0, promote_u0,
     KeywordArgError, checkkwargs
 
+using SymbolicIndexingInterface: SymbolicIndexingInterface
+
 export ObjSense, MaxSense, MinSense
 export allowsbounds, requiresbounds, allowsconstraints, requiresconstraints,
     allowscallback, requiresgradient, requireshessian,

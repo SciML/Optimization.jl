@@ -18,6 +18,7 @@ SciMLLogging = "a6db7da4-7206-11f0-1eab-35f2a5dbe1d1"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SparseConnectivityTracer = "9f842d2f-2579-4b1d-911e-f412cf18a3f5"
 SparseMatrixColorings = "0a514795-09f3-496d-8182-132a7b665d35"
+SymbolicIndexingInterface = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
 
 [weakdeps]
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
@@ -60,6 +61,7 @@ SciMLLogging = "1.8.0"
 SparseConnectivityTracer = "0.6, 1"
 SparseMatrixColorings = "0.4"
 SymbolicAnalysis = "0.3"
+SymbolicIndexingInterface = "0.3.46"
 Zygote = "0.6.67, 0.7"
 julia = "1.10"
 
