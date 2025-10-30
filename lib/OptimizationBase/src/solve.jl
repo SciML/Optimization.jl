@@ -249,8 +249,8 @@ function solve_up(prob::SciMLBase.OptimizationProblem, sensealg, u0, p, args...;
     kwargs...)
     alg = extract_opt_alg(args, kwargs, has_kwargs(prob) ? prob.kwargs : kwargs)
     _prob = get_concrete_problem(prob; u0 = u0, p = p, kwargs...)
-    if length(args) < 1
-        solve_call(_prob, alg, Base.tails(args)..., kwargs...)
+    if length(args) > 1
+        solve_call(_prob, alg, Base.tail(args)..., kwargs...)
     else
         solve_call(_prob, alg; kwargs...)
     end
