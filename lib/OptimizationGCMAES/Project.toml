@@ -1,7 +1,7 @@
 name = "OptimizationGCMAES"
 uuid = "6f0a0517-dbc2-4a7a-8a20-99ae7f27e911"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.3"
+version = "0.3.4"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
@@ -17,7 +17,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
 julia = "1.10"
-OptimizationBase = "4"
+OptimizationBase = "4.0.2"
 SciMLBase = "2.122.1"
 Reexport = "1.2"
 GCMAES = "0.1.34"
