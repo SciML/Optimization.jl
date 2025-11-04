@@ -170,6 +170,8 @@ function SciMLBase.has_init(alg::IpoptOptimizer)
     true
 end
 
+SciMLBase.allowscallback(alg::IpoptOptimizer) = true
+
 # Compatibility with OptimizationBase@v3
 function SciMLBase.supports_opt_cache_interface(alg::IpoptOptimizer)
     true
@@ -254,7 +256,8 @@ function __map_optimizer_args(cache,
     )
 
     # Set up progress callback
-    progress_callback = IpoptProgressLogger(progress, callback, prob, cache.n, cache.num_cons, maxiters, cache.iterations)
+    progress_callback = IpoptProgressLogger(
+        progress, callback, prob, cache.n, cache.num_cons, maxiters, cache.iterations)
     intermediate = (args...) -> progress_callback(args...)
     Ipopt.SetIntermediateCallback(prob, intermediate)
 

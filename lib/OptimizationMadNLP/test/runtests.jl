@@ -2,6 +2,7 @@ using OptimizationMadNLP
 using OptimizationBase
 using MadNLP
 using Test
+using ADTypes
 import Zygote, ForwardDiff, ReverseDiff
 using SparseArrays
 using DifferentiationInterface: SecondOrder
@@ -497,7 +498,7 @@ end
             @test min_dist > 0.5  # Electrons should be well-separated
         end
 
-        @testset verbose = true "LBFGS vs Exact Hessian" begin
+        @testset verbose=true "LBFGS vs Exact Hessian" begin
             # Test with moderate size to show LBFGS efficiency
             np = 10  # Gyroelongated square dipyramid configuration
             x0 = init_electrons_on_sphere(np)
@@ -525,11 +526,12 @@ end
                 )
 
                 sol = solve(prob, opt; abstol = 1e-6, maxiters = 300, verbose = false)
-                push!(results, name => (
-                    objective = sol.objective,
-                    iterations = sol.stats.iterations,
-                    success = SciMLBase.successful_retcode(sol)
-                ))
+                push!(results,
+                    name => (
+                        objective = sol.objective,
+                        iterations = sol.stats.iterations,
+                        success = SciMLBase.successful_retcode(sol)
+                    ))
             end
 
             # All methods should converge

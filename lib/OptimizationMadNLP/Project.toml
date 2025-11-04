@@ -30,6 +30,7 @@ julia = "1.10"
 OptimizationBase = {path = "../OptimizationBase"}
 
 [extras]
+ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
@@ -41,4 +42,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Aqua", "DifferentiationInterface", "ForwardDiff", "ModelingToolkit", "Random", "ReverseDiff", "Test", "Symbolics", "Zygote"]
+test = ["ADTypes", "Aqua", "DifferentiationInterface", "ForwardDiff", "ModelingToolkit", "Random", "ReverseDiff", "Test", "Symbolics", "Zygote"]

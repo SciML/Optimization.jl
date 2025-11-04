@@ -14,6 +14,7 @@ struct COBYLA <: PRIMASolvers end
 export UOBYQA, NEWUOA, BOBYQA, LINCOA, COBYLA
 
 SciMLBase.has_init(::PRIMASolvers) = true
+SciMLBase.allowscallback(::PRIMASolvers) = true
 SciMLBase.allowsconstraints(::Union{LINCOA, COBYLA}) = true
 SciMLBase.allowsbounds(opt::Union{BOBYQA, LINCOA, COBYLA}) = true
 SciMLBase.requiresconstraints(opt::COBYLA) = true

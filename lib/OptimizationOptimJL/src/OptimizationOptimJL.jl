@@ -16,6 +16,10 @@ SciMLBase.has_init(opt::Optim.AbstractOptimizer) = true
 SciMLBase.has_init(opt::Union{Optim.Fminbox, Optim.SAMIN}) = true
 SciMLBase.has_init(opt::Optim.ConstrainedOptimizer) = true
 
+SciMLBase.allowscallback(opt::Optim.AbstractOptimizer) = true
+SciMLBase.allowscallback(opt::Union{Optim.Fminbox, Optim.SAMIN}) = true
+SciMLBase.allowscallback(opt::Optim.ConstrainedOptimizer) = true
+
 function SciMLBase.requiresgradient(opt::Optim.AbstractOptimizer)
     !(opt isa Optim.ZerothOrderOptimizer)
 end
@@ -39,8 +43,9 @@ function __map_optimizer_args(cache::OptimizationBase.OptimizationCache,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
+        verbose = false,
         kwargs...)
-    mapped_args = (; extended_trace = true, kwargs...)
+    mapped_args = (; extended_trace = true, show_trace = verbose, kwargs...)
 
     if !isnothing(abstol)
         mapped_args = (; mapped_args..., f_abstol = abstol)

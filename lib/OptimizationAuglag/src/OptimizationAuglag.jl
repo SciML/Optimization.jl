@@ -17,6 +17,7 @@ using LinearAlgebra: norm
 end
 
 SciMLBase.has_init(::AugLag) = true
+SciMLBase.allowscallback(::AugLag) = true
 SciMLBase.allowsbounds(::AugLag) = true
 SciMLBase.requiresgradient(::AugLag) = true
 SciMLBase.allowsconstraints(::AugLag) = true

@@ -231,6 +231,10 @@ end
     hessian_constant::Bool = false
     hessian_approximation::Type = MadNLP.ExactHessian
 
+    # Initialization Options
+    nlp_scaling::Bool = true
+    nlp_scaling_max_gradient::Float64 = 100.0
+
     # Linear solver configuration
     linear_solver::Union{Nothing, Type} = nothing  # e.g., MumpsSolver, LapackCPUSolver, UmfpackSolver
 
@@ -246,6 +250,8 @@ end
 end
 
 SciMLBase.has_init(opt::MadNLPOptimizer) = true
+
+SciMLBase.allowscallback(opt::MadNLPOptimizer) = false
 
 function SciMLBase.requiresgradient(opt::MadNLPOptimizer)
     true
@@ -343,7 +349,7 @@ function __map_optimizer_args(cache,
     nvar = length(cache.u0)
     ncon = !isnothing(cache.lcons) ? length(cache.lcons) : 0
 
-    if callback !== DEFAULT_CALLBACK || progress
+    if !(callback isa OptimizationBase.NullCallback) || progress
         @warn("MadNLP doesn't currently support user defined callbacks.")
     end
     # TODO: add support for user callbacks in MadNLP
@@ -374,7 +380,7 @@ function __map_optimizer_args(cache,
         print_level = verbose
     end
 
-    !isnothing(reltol) && @warn "reltol not supported by MadNLP."
+    !isnothing(reltol) && @warn "reltol not supported by MadNLP, use abstol instead."
     tol = isnothing(abstol) ? 1e-8 : abstol
     max_iter = isnothing(maxiters) ? 3000 : maxiters
     max_wall_time = isnothing(maxtime) ? 1e6 : maxtime
@@ -411,6 +417,8 @@ function __map_optimizer_args(cache,
     options[:jacobian_constant] = opt.jacobian_constant
     options[:hessian_constant] = opt.hessian_constant
     options[:hessian_approximation] = opt.hessian_approximation
+    options[:nlp_scaling] = opt.nlp_scaling
+    options[:nlp_scaling_max_gradient] = opt.nlp_scaling_max_gradient
     options[:print_level] = print_level
     options[:tol] = tol
     options[:max_iter] = max_iter
@@ -422,6 +430,7 @@ end
 function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: MadNLPOptimizer}
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
+    maxtime = maxtime isa Float32 ? convert(Float64, maxtime) : maxtime
 
     meta, options = __map_optimizer_args(cache,
         cache.opt;

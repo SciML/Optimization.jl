@@ -4,6 +4,7 @@ using Reexport
 @reexport using Evolutionary, OptimizationBase
 using SciMLBase
 
+SciMLBase.allowscallback(opt::Evolutionary.AbstractOptimizer) = true
 SciMLBase.allowsbounds(opt::Evolutionary.AbstractOptimizer) = true
 SciMLBase.allowsconstraints(opt::Evolutionary.AbstractOptimizer) = true
 SciMLBase.has_init(opt::Evolutionary.AbstractOptimizer) = true

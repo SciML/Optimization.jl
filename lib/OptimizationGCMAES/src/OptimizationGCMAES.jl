@@ -48,12 +48,8 @@ function __map_optimizer_args(cache::OptimizationBase.OptimizationCache, opt::GC
 end
 
 function SciMLBase.__init(prob::SciMLBase.OptimizationProblem,
-        opt::GCMAESOpt; σ0 = 0.2,
-        callback = (args...) -> (false),
-        progress = false, kwargs...)
-    return OptimizationCache(prob, opt; σ0 = σ0, callback = callback,
-        progress = progress,
-        kwargs...)
+        opt::GCMAESOpt; σ0 = 0.2, kwargs...)
+    return OptimizationCache(prob, opt; σ0 = σ0, kwargs...)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: GCMAESOpt}

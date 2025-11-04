@@ -31,6 +31,7 @@ References
     ϵ = 1e-8
 end
 
+SciMLBase.allowscallback(::LBFGSB) = true
 SciMLBase.has_init(::LBFGSB) = true
 SciMLBase.allowsbounds(::LBFGSB) = true
 SciMLBase.requiresgradient(::LBFGSB) = true
