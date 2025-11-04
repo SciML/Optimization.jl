@@ -231,6 +231,10 @@ end
     hessian_constant::Bool = false
     hessian_approximation::Type = MadNLP.ExactHessian
 
+    # Initialization Options
+    nlp_scaling::Bool = true
+    nlp_scaling_max_gradient::Float64 = 100.0
+
     # Linear solver configuration
     linear_solver::Union{Nothing, Type} = nothing  # e.g., MumpsSolver, LapackCPUSolver, UmfpackSolver
 
@@ -413,6 +417,8 @@ function __map_optimizer_args(cache,
     options[:jacobian_constant] = opt.jacobian_constant
     options[:hessian_constant] = opt.hessian_constant
     options[:hessian_approximation] = opt.hessian_approximation
+    options[:nlp_scaling] = opt.nlp_scaling
+    options[:nlp_scaling_max_gradient] = opt.nlp_scaling_max_gradient
     options[:print_level] = print_level
     options[:tol] = tol
     options[:max_iter] = max_iter
