@@ -247,6 +247,8 @@ end
 
 SciMLBase.has_init(opt::MadNLPOptimizer) = true
 
+SciMLBase.allowscallback(opt::MadNLPOptimizer) = false
+
 function SciMLBase.requiresgradient(opt::MadNLPOptimizer)
     true
 end

@@ -288,6 +288,11 @@ function SciMLBase.has_init(alg::Union{MOI.AbstractOptimizer,
     true
 end
 
+function SciMLBase.allowscallback(alg::Union{MOI.AbstractOptimizer,
+        MOI.OptimizerWithAttributes})
+    true
+end
+
 # Compatibility with OptimizationBase@v3
 function SciMLBase.supports_opt_cache_interface(alg::Union{MOI.AbstractOptimizer,
         MOI.OptimizerWithAttributes})

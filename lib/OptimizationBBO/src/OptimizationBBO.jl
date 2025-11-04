@@ -9,7 +9,7 @@ abstract type BBO end
 
 SciMLBase.requiresbounds(::BBO) = true
 SciMLBase.allowsbounds(::BBO) = true
-
+SciMLBase.allowscallback(opt::BBO) = true
 SciMLBase.has_init(opt::BBO) = true
 
 for j in string.(BlackBoxOptim.SingleObjectiveMethodNames)

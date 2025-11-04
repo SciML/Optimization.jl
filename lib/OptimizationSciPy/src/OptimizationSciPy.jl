@@ -216,6 +216,7 @@ for opt_type in [:ScipyMinimize, :ScipyDifferentialEvolution, :ScipyBasinhopping
     :ScipyLinprog, :ScipyMilp]
     @eval begin
         SciMLBase.allowsbounds(::$opt_type) = true
+        SciMLBase.allowscallback(::$opt_type) = true
         SciMLBase.has_init(::$opt_type) = true
     end
 end
@@ -223,10 +224,12 @@ end
 for opt_type in [:ScipyMinimizeScalar, :ScipyRootScalar, :ScipyLeastSquares]
     @eval begin
         SciMLBase.has_init(::$opt_type) = true
+        SciMLBase.allowscallback(::$opt_type) = true
     end
 end
 
 SciMLBase.has_init(::ScipyRoot) = true
+SciMLBase.allowscallback(::ScipyRoot) = true
 
 function SciMLBase.requiresgradient(opt::ScipyMinimize)
     gradient_free = ["Nelder-Mead", "Powell", "COBYLA", "COBYQA"]

@@ -9,6 +9,7 @@ export CMAEvolutionStrategyOpt
 
 struct CMAEvolutionStrategyOpt end
 
+SciMLBase.allowscallback(opt::CMAEvolutionStrategyOpt) = true
 SciMLBase.allowsbounds(::CMAEvolutionStrategyOpt) = true
 SciMLBase.has_init(opt::CMAEvolutionStrategyOpt) = true
 SciMLBase.requiresgradient(::CMAEvolutionStrategyOpt) = false

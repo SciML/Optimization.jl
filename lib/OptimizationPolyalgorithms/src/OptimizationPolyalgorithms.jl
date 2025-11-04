@@ -6,6 +6,7 @@ using SciMLBase, OptimizationOptimJL, OptimizationOptimisers
 
 struct PolyOpt end
 
+SciMLBase.allowscallback(::PolyOpt) = SciMLBase.allowscallback(Optimisers.Adam) && SciMLBase.allowscallback(OptimizationOptimJL.BFGS)
 SciMLBase.requiresgradient(opt::PolyOpt) = true
 
 function SciMLBase.__solve(prob::OptimizationProblem,

@@ -62,6 +62,7 @@ struct Sophia
 end
 
 SciMLBase.has_init(opt::Sophia) = true
+SciMLBase.allowscallback(opt::Sophia) = true
 SciMLBase.requiresgradient(opt::Sophia) = true
 SciMLBase.allowsfg(opt::Sophia) = true
 SciMLBase.requireshessian(opt::Sophia) = true
