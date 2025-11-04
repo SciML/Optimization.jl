@@ -2,6 +2,7 @@ using OptimizationMadNLP
 using OptimizationBase
 using MadNLP
 using Test
+using ADTypes
 import Zygote, ForwardDiff, ReverseDiff
 using SparseArrays
 using DifferentiationInterface: SecondOrder

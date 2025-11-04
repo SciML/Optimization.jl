@@ -256,7 +256,8 @@ function __map_optimizer_args(cache,
     )
 
     # Set up progress callback
-    progress_callback = IpoptProgressLogger(progress, callback, prob, cache.n, cache.num_cons, maxiters, cache.iterations)
+    progress_callback = IpoptProgressLogger(
+        progress, callback, prob, cache.n, cache.num_cons, maxiters, cache.iterations)
     intermediate = (args...) -> progress_callback(args...)
     Ipopt.SetIntermediateCallback(prob, intermediate)
 
