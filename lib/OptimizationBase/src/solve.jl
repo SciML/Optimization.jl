@@ -123,7 +123,7 @@ function _check_opt_alg(prob::SciMLBase.OptimizationProblem, alg; kwargs...)
         (isnothing(prob.lcons) || isnothing(prob.ucons)) &&
         throw(ArgumentError("Constrained optimization problem requires both `lcons` and `ucons` to be provided to OptimizationProblem. " *
                             "Example: OptimizationProblem(optf, u0, p; lcons=[-Inf], ucons=[0.0])"))
-    !allowscallback(alg) && haskey(kwargs, :callback) &&
+    !allowscallback(alg) && !(get(kwargs, :callback, DEFAULT_CALLBACK) isa NullCallback) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) does not support callbacks, remove the `callback` keyword argument from the `solve` call."))
     requiresgradient(alg) &&
         !(prob.f isa SciMLBase.AbstractOptimizationFunction) &&
