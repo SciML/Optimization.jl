@@ -1,7 +1,7 @@
 name = "OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.14"
+version = "0.3.15"
 
 [deps]
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
@@ -16,7 +16,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 [compat]
 Logging = "1.10"
 Optimisers = "0.4.2"
-OptimizationBase = "4"
+OptimizationBase = "4.0.2"
 Reexport = "1.2.2"
 SciMLBase = "2.122.1"
 julia = "1.10"

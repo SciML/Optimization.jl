@@ -1,7 +1,7 @@
 name = "OptimizationPRIMA"
 uuid = "72f8369c-a2ea-4298-9126-56167ce9cbc2"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.3"
+version = "0.3.4"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 PRIMA = "0a7d04aa-8ac2-47b3-b7a7-9dbd6ad661ed"
@@ -16,7 +16,7 @@ ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 
 [compat]
 julia = "1.10"
-OptimizationBase = "4"
+OptimizationBase = "4.0.2"
 PRIMA = "0.2.0"
 SciMLBase = "2.122.1"
 Reexport = "1"
