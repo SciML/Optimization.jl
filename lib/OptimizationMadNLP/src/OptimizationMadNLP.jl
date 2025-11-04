@@ -424,6 +424,7 @@ end
 function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: MadNLPOptimizer}
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
+    maxtime = maxtime isa Float32 ? convert(Float64, maxtime) : maxtime
 
     meta, options = __map_optimizer_args(cache,
         cache.opt;
