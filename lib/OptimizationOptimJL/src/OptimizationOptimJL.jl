@@ -43,8 +43,9 @@ function __map_optimizer_args(cache::OptimizationBase.OptimizationCache,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
+        verbose = false,
         kwargs...)
-    mapped_args = (; extended_trace = true, kwargs...)
+    mapped_args = (; extended_trace = true, show_trace = verbose, kwargs...)
 
     if !isnothing(abstol)
         mapped_args = (; mapped_args..., f_abstol = abstol)
