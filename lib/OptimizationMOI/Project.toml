@@ -32,7 +32,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 HiGHS = "1"
 OptimizationBase = "3.3.1, 4"
 Test = "1.6"
-Symbolics = "6"
+Symbolics = "6, 7"
 AmplNLWriter = "1"
 LinearAlgebra = "1"
 Ipopt_jll = "300.1400"
