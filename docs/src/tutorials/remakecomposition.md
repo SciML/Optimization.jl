@@ -47,7 +47,7 @@ This is a good start can we converge to the global optimum?
 
 ```@example polyalg
 prob = remake(prob, u0 = res1.minimizer)
-res2 = solve(prob, LBFGS(), maxiters = 100)
+res2 = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 100)
 
 @show res2.objective
 ```

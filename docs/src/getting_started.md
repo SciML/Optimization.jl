@@ -22,7 +22,7 @@ p = [1.0, 100.0]
 optf = OptimizationFunction(rosenbrock, AutoZygote())
 prob = OptimizationProblem(optf, u0, p)
 
-sol = solve(prob, OptimizationLBFGSB.LBFGS())
+sol = solve(prob, OptimizationLBFGSB.LBFGSB())
 ```
 
 ```@example intro

@@ -16,7 +16,7 @@ end
 optf = OptimizationFunction(f, Optimization.AutoForwardDiff())
 prob = OptimizationProblem(optf, [0.4], structural_analysis = true)
 
-sol = solve(prob, LBFGS(), maxiters = 1000)
+sol = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 1000)
 ```
 
 The result can be accessed as the `analysis_results` field of the solution.
