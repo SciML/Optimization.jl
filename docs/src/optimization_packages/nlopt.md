@@ -99,7 +99,7 @@ rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, NLopt.LN_NELDERMEAD())
 ```
 
@@ -126,12 +126,12 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
 The Rosenbrock function can be optimized using `NLopt.LD_LBFGS()` as follows:
 
 ```@example NLopt2
-using Optimization, OptimizationNLopt
+using Optimization, OptimizationNLopt, ADTypes, ForwardDiff
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
-f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
-prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
+prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, NLopt.LD_LBFGS())
 ```
 
@@ -169,7 +169,7 @@ rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, NLopt.GN_DIRECT(), maxtime = 10.0)
 ```
 
@@ -180,12 +180,12 @@ The Rosenbrock function can be optimized using `NLopt.G_MLSL_LDS()` with `NLopt.
 The local optimizer maximum iterations are set via `local_maxiters`:
 
 ```@example NLopt4
-using Optimization, OptimizationNLopt
+using Optimization, OptimizationNLopt, ADTypes, ForwardDiff
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
-f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
-prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
+prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, NLopt.G_MLSL_LDS(), local_method = NLopt.LD_LBFGS(), maxtime = 10.0,
     local_maxiters = 10)
 ```

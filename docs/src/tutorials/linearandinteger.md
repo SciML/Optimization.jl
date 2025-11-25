@@ -36,7 +36,7 @@ We need to consider the following constraints:
 The ultimate objective is to maximize the company's wealth in June, denoted by the variable `m`.
 
 ```@example linear
-using Optimization, OptimizationMOI, ModelingToolkit, HiGHS, LinearAlgebra
+using OptimizationBase, OptimizationMOI, ModelingToolkit, HiGHS, LinearAlgebra, SciMLBase
 
 @variables u[1:5] [bounds = (0.0, 100.0)]
 @variables v[1:3] [bounds = (0.0, Inf)]
@@ -56,7 +56,7 @@ optprob = OptimizationProblem(optsys,
     vcat(fill(0.0, 13), 300.0);
     grad = true,
     hess = true,
-    sense = Optimization.MaxSense)
+    sense = SciMLBase.MaxSense)
 sol = solve(optprob, HiGHS.Optimizer())
 ```
 
@@ -82,7 +82,7 @@ w &= [12,45,12,22,21] \\
 which implies a maximization problem of binary variables $u_i$ with the objective as the dot product of `v` and `u` subject to a quadratic constraint on `u`.
 
 ```@example linear
-using Juniper, Ipopt
+using Juniper, Ipopt, ADTypes, Symbolics
 
 v = [10, 20, 12, 23, 42]
 w = [12, 45, 12, 22, 21]
@@ -91,11 +91,11 @@ objective = (u, p) -> (v = p[1:5]; dot(v, u))
 
 cons = (res, u, p) -> (w = p[6:10]; res .= [sum(w[i] * u[i]^2 for i in 1:5)])
 
-optf = OptimizationFunction(objective, Optimization.AutoSymbolics(), cons = cons)
+optf = OptimizationFunction(objective, ADTypes.AutoSymbolics(), cons = cons)
 optprob = OptimizationProblem(optf,
     zeros(5),
     vcat(v, w);
-    sense = Optimization.MaxSense,
+    sense = SciMLBase.MaxSense,
     lb = zeros(5),
     ub = ones(5),
     lcons = [-Inf],

@@ -7,13 +7,13 @@ This works with the `structural_analysis` keyword argument to `OptimizationProbl
 We'll use a simple example to illustrate the convexity structure certification process.
 
 ```@example symanalysis
-using SymbolicAnalysis, Zygote, LinearAlgebra, Optimization, OptimizationLBFGSB
+using SymbolicAnalysis, LinearAlgebra, OptimizationBase, OptimizationLBFGSB, ADTypes
 
 function f(x, p = nothing)
     return exp(x[1]) + x[1]^2
 end
 
-optf = OptimizationFunction(f, Optimization.AutoForwardDiff())
+optf = OptimizationFunction(f, ADTypes.AutoForwardDiff())
 prob = OptimizationProblem(optf, [0.4], structural_analysis = true)
 
 sol = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 1000)
@@ -30,8 +30,8 @@ Relatedly you can enable structural analysis in Riemannian optimization problems
 We'll look at the Riemannian center of mass of SPD matrices which is known to be a Geodesically Convex problem on the SPD manifold.
 
 ```@example symanalysis
-using Optimization, OptimizationManopt, Symbolics, Manifolds, Random, LinearAlgebra,
-      SymbolicAnalysis
+using OptimizationBase, OptimizationManopt, Symbolics, Manifolds, Random, LinearAlgebra,
+      SymbolicAnalysis, ADTypes
 
 M = SymmetricPositiveDefinite(5)
 m = 100
@@ -41,7 +41,7 @@ q = Matrix{Float64}(LinearAlgebra.I(5)) .+ 2.0
 data2 = [exp(M, q, σ * rand(M; vector_at = q)) for i in 1:m];
 
 f(x, p = nothing) = sum(SymbolicAnalysis.distance(M, data2[i], x)^2 for i in 1:5)
-optf = OptimizationFunction(f, Optimization.AutoZygote())
+optf = OptimizationFunction(f, ADTypes.AutoZygote())
 prob = OptimizationProblem(optf, data2[1]; manifold = M, structural_analysis = true)
 
 opt = OptimizationManopt.GradientDescentOptimizer()

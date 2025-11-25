@@ -69,13 +69,13 @@ For a more extensive documentation of all the algorithms and options, please con
 The Rosenbrock function with constraints can be optimized using the `Optim.IPNewton()` as follows:
 
 ```@example Optim1
-using Optimization, OptimizationOptimJL
+using Optimization, OptimizationOptimJL, ADTypes, ForwardDiff
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
 x0 = zeros(2)
 p = [1.0, 100.0]
-prob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = cons)
-prob = Optimization.OptimizationProblem(prob, x0, p, lcons = [-5.0], ucons = [10.0])
+prob = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff(); cons = cons)
+prob = SciMLBase.OptimizationProblem(prob, x0, p, lcons = [-5.0], ucons = [10.0])
 sol = solve(prob, IPNewton())
 ```
 
@@ -83,7 +83,7 @@ See also in the `Optim.jl` documentation the [Nonlinear constrained optimization
 
 ### Derivative-Free
 
-Derivative-free optimizers are optimizers that can be used even in cases where no derivatives or automatic differentiation is specified. While they tend to be less efficient than derivative-based optimizers, they can be easily applied to cases where defining derivatives is difficult. Note that while these methods do not support general constraints, all support bounds constraints via `lb` and `ub` in the `Optimization.OptimizationProblem`.
+Derivative-free optimizers are optimizers that can be used even in cases where no derivatives or automatic differentiation is specified. While they tend to be less efficient than derivative-based optimizers, they can be easily applied to cases where defining derivatives is difficult. Note that while these methods do not support general constraints, all support bounds constraints via `lb` and `ub` in the `SciMLBase.OptimizationProblem`.
 
 `Optim.jl` implements the following derivative-free algorithms:
 
@@ -119,7 +119,7 @@ using Optimization, OptimizationOptimJL
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
-prob = Optimization.OptimizationProblem(rosenbrock, x0, p)
+prob = SciMLBase.OptimizationProblem(rosenbrock, x0, p)
 sol = solve(prob, Optim.NelderMead())
 ```
 
@@ -275,12 +275,12 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
 The Rosenbrock function can be optimized using the `Optim.LBFGS()` as follows:
 
 ```@example Optim3
-using Optimization, OptimizationOptimJL
+using Optimization, OptimizationOptimJL, ADTypes, ForwardDiff
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
-optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
-prob = Optimization.OptimizationProblem(optprob, x0, p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+optprob = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
+prob = SciMLBase.OptimizationProblem(optprob, x0, p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
 sol = solve(prob, Optim.LBFGS())
 ```
 
@@ -336,12 +336,12 @@ the Hessian in order to be appropriate.
 The Rosenbrock function can be optimized using the `Optim.Newton()` as follows:
 
 ```@example Optim4
-using Optimization, OptimizationOptimJL, ModelingToolkit
+using Optimization, OptimizationOptimJL, ADTypes, ModelingToolkit, Symbolics
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
-f = OptimizationFunction(rosenbrock, Optimization.AutoSymbolics())
-prob = Optimization.OptimizationProblem(f, x0, p)
+f = OptimizationFunction(rosenbrock, ADTypes.AutoSymbolics())
+prob = SciMLBase.OptimizationProblem(f, x0, p)
 sol = solve(prob, Optim.Newton())
 ```
 
@@ -374,12 +374,12 @@ special case when considering conditioning of the Hessian.
 The Rosenbrock function can be optimized using the `Optim.KrylovTrustRegion()` as follows:
 
 ```@example Optim5
-using Optimization, OptimizationOptimJL
+using Optimization, OptimizationOptimJL, ADTypes, ForwardDiff
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
-optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
-prob = Optimization.OptimizationProblem(optprob, x0, p)
+optprob = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
+prob = SciMLBase.OptimizationProblem(optprob, x0, p)
 sol = solve(prob, Optim.KrylovTrustRegion())
 ```
 
@@ -388,7 +388,7 @@ sol = solve(prob, Optim.KrylovTrustRegion())
 ### Without Constraint Equations
 
 The following method in [`Optim`](https://github.com/JuliaNLSolvers/Optim.jl) performs global optimization on problems with or without
-box constraints. It works both with and without lower and upper bounds set by `lb` and `ub` in the `Optimization.OptimizationProblem`.
+box constraints. It works both with and without lower and upper bounds set by `lb` and `ub` in the `SciMLBase.OptimizationProblem`.
 
   - [`Optim.ParticleSwarm()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/particle_swarm/): **Particle Swarm Optimization**
     
@@ -405,7 +405,7 @@ rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, Optim.ParticleSwarm(lower = prob.lb, upper = prob.ub, n_particles = 100))
 ```
 
@@ -432,11 +432,11 @@ box constraints.
 The Rosenbrock function can be optimized using the `Optim.SAMIN()` as follows:
 
 ```@example Optim7
-using Optimization, OptimizationOptimJL
+using Optimization, OptimizationOptimJL, ADTypes, ForwardDiff
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
-f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
-prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
+prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, Optim.SAMIN())
 ```

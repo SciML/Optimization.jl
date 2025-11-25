@@ -14,12 +14,12 @@ The simplest copy-pasteable code using a quasi-Newton method (LBFGS) to solve th
 
 ```@example intro
 # Import the package and define the problem to optimize
-using Optimization, OptimizationLBFGSB, Zygote
+using OptimizationBase, OptimizationLBFGSB, ADTypes, Zygote
 rosenbrock(u, p) = (p[1] - u[1])^2 + p[2] * (u[2] - u[1]^2)^2
 u0 = zeros(2)
 p = [1.0, 100.0]
 
-optf = OptimizationFunction(rosenbrock, AutoZygote())
+optf = OptimizationFunction(rosenbrock, ADTypes.AutoZygote())
 prob = OptimizationProblem(optf, u0, p)
 
 sol = solve(prob, OptimizationLBFGSB.LBFGSB())
@@ -131,8 +131,8 @@ automatically construct the derivative functions using ForwardDiff.jl. This
 looks like:
 
 ```@example intro
-using ForwardDiff
-optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+using ForwardDiff, ADTypes
+optf = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
 prob = OptimizationProblem(optf, u0, p)
 sol = solve(prob, OptimizationOptimJL.BFGS())
 ```
@@ -155,7 +155,7 @@ We can demonstrate this via:
 
 ```@example intro
 using Zygote
-optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+optf = OptimizationFunction(rosenbrock, ADTypes.AutoZygote())
 prob = OptimizationProblem(optf, u0, p)
 sol = solve(prob, OptimizationOptimJL.BFGS())
 ```

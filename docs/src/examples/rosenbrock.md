@@ -41,15 +41,16 @@ An optimization problem can now be defined and solved to estimate the values for
 
 ```@example rosenbrock
 # Define the problem to solve
-using Optimization, ForwardDiff, Zygote
+using SciMLBase, OptimizationBase
+using ADTypes, ForwardDiff, Zygote
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 _p = [1.0, 100.0]
 
-f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+f = SciMLBase.OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
 l1 = rosenbrock(x0, _p)
-prob = OptimizationProblem(f, x0, _p)
+prob = SciMLBase.OptimizationProblem(f, x0, _p)
 ```
 
 ## Optim.jl Solvers
@@ -59,19 +60,19 @@ prob = OptimizationProblem(f, x0, _p)
 ```@example rosenbrock
 using OptimizationOptimJL
 sol = solve(prob, SimulatedAnnealing())
-prob = OptimizationProblem(f, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+prob = SciMLBase.OptimizationProblem(f, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
 sol = solve(prob, SAMIN())
 
 l1 = rosenbrock(x0, _p)
-prob = OptimizationProblem(rosenbrock, x0, _p)
+prob = SciMLBase.OptimizationProblem(rosenbrock, x0, _p)
 sol = solve(prob, NelderMead())
 ```
 
 ### Now a gradient-based optimizer with forward-mode automatic differentiation
 
 ```@example rosenbrock
-optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
-prob = OptimizationProblem(optf, x0, _p)
+optf = SciMLBase.OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
+prob = SciMLBase.OptimizationProblem(optf, x0, _p)
 sol = solve(prob, BFGS())
 ```
 
@@ -91,19 +92,19 @@ sol = solve(prob, Optim.KrylovTrustRegion())
 
 ```@example rosenbrock
 cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
-optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = cons)
+optf = SciMLBase.OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff(); cons = cons)
 
-prob = OptimizationProblem(optf, x0, _p, lcons = [-Inf], ucons = [Inf])
+prob = SciMLBase.OptimizationProblem(optf, x0, _p, lcons = [-Inf], ucons = [Inf])
 sol = solve(prob, IPNewton()) # Note that -Inf < x[1]^2 + x[2]^2 < Inf is always true
 
-prob = OptimizationProblem(optf, x0, _p, lcons = [-5.0], ucons = [10.0])
+prob = SciMLBase.OptimizationProblem(optf, x0, _p, lcons = [-5.0], ucons = [10.0])
 sol = solve(prob, IPNewton()) # Again, -5.0 < x[1]^2 + x[2]^2 < 10.0
 
-prob = OptimizationProblem(optf, x0, _p, lcons = [-Inf], ucons = [Inf],
+prob = SciMLBase.OptimizationProblem(optf, x0, _p, lcons = [-Inf], ucons = [Inf],
     lb = [-500.0, -500.0], ub = [50.0, 50.0])
 sol = solve(prob, IPNewton())
 
-prob = OptimizationProblem(optf, x0, _p, lcons = [0.5], ucons = [0.5],
+prob = SciMLBase.OptimizationProblem(optf, x0, _p, lcons = [0.5], ucons = [0.5],
     lb = [-500.0, -500.0], ub = [50.0, 50.0])
 sol = solve(prob, IPNewton())
 
@@ -118,8 +119,8 @@ function con_c(res, x, p)
     res .= [x[1]^2 + x[2]^2]
 end
 
-optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = con_c)
-prob = OptimizationProblem(optf, x0, _p, lcons = [-Inf], ucons = [0.25^2])
+optf = SciMLBase.OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff(); cons = con_c)
+prob = SciMLBase.OptimizationProblem(optf, x0, _p, lcons = [-Inf], ucons = [0.25^2])
 sol = solve(prob, IPNewton()) # -Inf < cons_circ(sol.u, _p) = 0.25^2
 ```
 
@@ -139,8 +140,8 @@ function con2_c(res, x, p)
     res .= [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
 end
 
-optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote(); cons = con2_c)
-prob = OptimizationProblem(optf, x0, _p, lcons = [-Inf, -Inf], ucons = [100.0, 100.0])
+optf = SciMLBase.OptimizationFunction(rosenbrock, ADTypes.AutoZygote(); cons = con2_c)
+prob = SciMLBase.OptimizationProblem(optf, x0, _p, lcons = [-Inf, -Inf], ucons = [100.0, 100.0])
 sol = solve(prob, Ipopt.Optimizer())
 ```
 
@@ -148,8 +149,8 @@ sol = solve(prob, Ipopt.Optimizer())
 
 ```@example rosenbrock
 import OptimizationOptimisers
-optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
-prob = OptimizationProblem(optf, x0, _p)
+optf = SciMLBase.OptimizationFunction(rosenbrock, ADTypes.AutoZygote())
+prob = SciMLBase.OptimizationProblem(optf, x0, _p)
 sol = solve(prob, OptimizationOptimisers.Adam(0.05), maxiters = 1000, progress = false)
 ```
 
@@ -164,8 +165,8 @@ sol = solve(prob, CMAEvolutionStrategyOpt())
 
 ```@example rosenbrock
 using OptimizationNLopt, ModelingToolkit
-optf = OptimizationFunction(rosenbrock, Optimization.AutoSymbolics())
-prob = OptimizationProblem(optf, x0, _p)
+optf = SciMLBase.OptimizationFunction(rosenbrock, ADTypes.AutoSymbolics())
+prob = SciMLBase.OptimizationProblem(optf, x0, _p)
 
 sol = solve(prob, Opt(:LN_BOBYQA, 2))
 sol = solve(prob, Opt(:LD_LBFGS, 2))
@@ -174,7 +175,7 @@ sol = solve(prob, Opt(:LD_LBFGS, 2))
 ### Add some box constraints and solve with a few NLopt.jl methods
 
 ```@example rosenbrock
-prob = OptimizationProblem(optf, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+prob = SciMLBase.OptimizationProblem(optf, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
 sol = solve(prob, Opt(:LD_LBFGS, 2))
 sol = solve(prob, Opt(:G_MLSL_LDS, 2), local_method = Opt(:LD_LBFGS, 2), maxiters = 10000) #a global optimizer with random starts of local optimization
 ```
@@ -183,7 +184,7 @@ sol = solve(prob, Opt(:G_MLSL_LDS, 2), local_method = Opt(:LD_LBFGS, 2), maxiter
 
 ```@example rosenbrock
 using OptimizationBBO
-prob = Optimization.OptimizationProblem(rosenbrock, [0.0, 0.3], _p, lb = [-1.0, 0.2],
+prob = SciMLBase.OptimizationProblem(rosenbrock, [0.0, 0.3], _p, lb = [-1.0, 0.2],
     ub = [0.8, 0.43])
 sol = solve(prob, BBO_adaptive_de_rand_1_bin()) # -1.0 ≤ x[1] ≤ 0.8, 0.2 ≤ x[2] ≤ 0.43
 ```

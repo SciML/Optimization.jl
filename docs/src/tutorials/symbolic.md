@@ -15,7 +15,7 @@ how to use the `OptimizationSystem` to construct optimized `OptimizationProblem`
 First we need to start by defining our symbolic variables, this is done as follows:
 
 ```@example modelingtoolkit
-using ModelingToolkit, Optimization, OptimizationOptimJL
+using ModelingToolkit, OptimizationBase, OptimizationOptimJL
 
 @variables x y
 @parameters a b
