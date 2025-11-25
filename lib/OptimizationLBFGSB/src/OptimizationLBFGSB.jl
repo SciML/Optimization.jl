@@ -1,6 +1,7 @@
 module OptimizationLBFGSB
 
-using OptimizationBase
+using Reexport
+@reexport using OptimizationBase
 using DocStringExtensions
 import LBFGSB as LBFGSBJL
 using SciMLBase: OptimizationStats, OptimizationFunction

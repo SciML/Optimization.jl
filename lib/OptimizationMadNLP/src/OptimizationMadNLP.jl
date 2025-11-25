@@ -1,6 +1,7 @@
 module OptimizationMadNLP
 
-using OptimizationBase
+using Reexport
+@reexport using OptimizationBase
 using OptimizationBase: MinSense, MaxSense, DEFAULT_CALLBACK
 using MadNLP
 using NLPModels

@@ -1,6 +1,7 @@
 module OptimizationIpopt
 
-using OptimizationBase
+using Reexport
+@reexport using OptimizationBase
 using Ipopt
 using LinearAlgebra
 using SparseArrays

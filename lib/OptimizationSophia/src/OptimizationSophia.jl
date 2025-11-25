@@ -1,8 +1,9 @@
 module OptimizationSophia
 
+using Reexport
 using SciMLBase
 using OptimizationBase: OptimizationCache
-using OptimizationBase
+@reexport using OptimizationBase
 using Random
 
 """
