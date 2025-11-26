@@ -58,7 +58,7 @@ sol = solve(prob, Ipopt.Optimizer(); option_name = option_value, ...)
 #### KNITRO.jl (MathOptInterface)
 
   - [`KNITRO.Optimizer`](https://github.com/jump-dev/KNITRO.jl)
-  - The full list of optimizer options can be found in the [KNITRO Documentation](https://www.artelys.com/docs/knitro//3_referenceManual/callableLibraryAPI.html)
+  - The full list of optimizer options can be found in the [KNITRO Documentation](https://www.artelys.com/app/docs/knitro/3_referenceManual/callableLibraryAPI.html)
 
 #### Juniper.jl (MathOptInterface)
 

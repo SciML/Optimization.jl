@@ -1,6 +1,6 @@
 # NLopt.jl
 
-[`NLopt`](https://github.com/JuliaOpt/NLopt.jl) is Julia package interfacing to the free/open-source [`NLopt library`](http://ab-initio.mit.edu/nlopt) which implements many optimization methods both global and local [`NLopt Documentation`](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/).
+[`NLopt`](https://github.com/jump-dev/NLopt.jl) is Julia package interfacing to the free/open-source [`NLopt library`](http://ab-initio.mit.edu/nlopt/) which implements many optimization methods both global and local [`NLopt Documentation`](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/).
 
 ## Installation: OptimizationNLopt.jl
 
@@ -139,7 +139,7 @@ sol = solve(prob, NLopt.LD_LBFGS())
 
 ### Without Constraint Equations
 
-The following algorithms in [`NLopt`](https://github.com/JuliaOpt/NLopt.jl) are performing global optimization on problems without
+The following algorithms in [`NLopt`](https://github.com/jump-dev/NLopt.jl) are performing global optimization on problems without
 constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
 
 `NLopt` global optimizers which fall into this category are:
@@ -192,7 +192,7 @@ sol = solve(prob, NLopt.G_MLSL_LDS(), local_method = NLopt.LD_LBFGS(), maxtime =
 
 ### With Constraint Equations
 
-The following algorithms in [`NLopt`](https://github.com/JuliaOpt/NLopt.jl) are performing global optimization on problems with
+The following algorithms in [`NLopt`](https://github.com/jump-dev/NLopt.jl) are performing global optimization on problems with
 constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
 
 !!! note "Constraints with NLopt"

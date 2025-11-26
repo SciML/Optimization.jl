@@ -1,6 +1,6 @@
 # Using SymbolicAnalysis.jl for convexity certificates
 
-In this tutorial, we will show how to use automatic convexity certification of the optimization problem using [SymbolicAnalysis.jl](https://github.com/Vaibhavdixit02/SymbolicAnalysis.jl).
+In this tutorial, we will show how to use automatic convexity certification of the optimization problem using [SymbolicAnalysis.jl](https://github.com/SciML/SymbolicAnalysis.jl).
 
 This works with the `structural_analysis` keyword argument to `OptimizationProblem`. This tells the package to try to trace through the objective and constraints with symbolic variables (for more details on this look at the [Symbolics documentation](https://symbolics.juliasymbolics.org/stable/manual/functions/#function_registration)). This relies on the Disciplined Programming approach hence neccessitates the use of "atoms" from the SymbolicAnalysis.jl package.
 

@@ -4,7 +4,7 @@
 
 !!! note
     
-    `OptimizationSciPy.jl` relies on [`PythonCall`](https://github.com/cjdoris/PythonCall.jl).  A minimal Python distribution containing SciPy will be installed automatically on first use, so no manual Python set-up is required.
+    `OptimizationSciPy.jl` relies on [`PythonCall`](https://github.com/JuliaPy/PythonCall.jl).  A minimal Python distribution containing SciPy will be installed automatically on first use, so no manual Python set-up is required.
 
 ## Installation: OptimizationSciPy.jl
 
