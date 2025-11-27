@@ -8,16 +8,17 @@ This can be useful for complex, low dimensional problems. We demonstrate this, a
 We first execute a single local optimization with `OptimizationOptimJL.BFGS` and `maxiters=5`:
 
 ```@example ensemble
-using Optimization, OptimizationOptimJL, Random
+using OptimizationBase, OptimizationOptimJL, Random
+using SciMLBase, ADTypes, ForwardDiff
 
 Random.seed!(100)
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 
-optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+optf = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
 prob = OptimizationProblem(optf, x0, [1.0, 100.0])
-@time sol1 = Optimization.solve(prob, OptimizationOptimJL.BFGS(), maxiters = 5)
+@time sol1 = solve(prob, OptimizationOptimJL.BFGS(), maxiters = 5)
 
 @show sol1.objective
 ```
@@ -30,8 +31,8 @@ function prob_func(prob, i, repeat)
     remake(prob, u0 = x0s[i])
 end
 
-ensembleprob = Optimization.EnsembleProblem(prob; prob_func)
-@time sol = Optimization.solve(ensembleprob, OptimizationOptimJL.BFGS(),
+ensembleprob = EnsembleProblem(prob; prob_func)
+@time sol = solve(ensembleprob, OptimizationOptimJL.BFGS(),
     EnsembleThreads(), trajectories = 4, maxiters = 5)
 @show findmin(i -> sol[i].objective, 1:4)[1]
 ```

@@ -1,5 +1,5 @@
 # [OptimizationState](@id optstate)
 
 ```@docs
-Optimization.OptimizationState
+OptimizationBase.OptimizationState
 ```

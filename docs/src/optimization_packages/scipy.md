@@ -4,7 +4,7 @@
 
 !!! note
     
-    `OptimizationSciPy.jl` relies on [`PythonCall`](https://github.com/cjdoris/PythonCall.jl).  A minimal Python distribution containing SciPy will be installed automatically on first use, so no manual Python set-up is required.
+    `OptimizationSciPy.jl` relies on [`PythonCall`](https://github.com/JuliaPy/PythonCall.jl).  A minimal Python distribution containing SciPy will be installed automatically on first use, so no manual Python set-up is required.
 
 ## Installation: OptimizationSciPy.jl
 
@@ -62,13 +62,13 @@ Support for `ScipyRoot`, `ScipyRootScalar` and `ScipyLeastSquares` is available 
 ### Unconstrained minimisation
 
 ```@example SciPy1
-using Optimization, OptimizationSciPy
+using Optimization, OptimizationSciPy, ADTypes, Zygote
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 
-f = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+f = OptimizationFunction(rosenbrock, ADTypes.AutoZygote())
 prob = OptimizationProblem(f, x0, p)
 
 sol = solve(prob, ScipyBFGS())

@@ -16,8 +16,9 @@ x_1^2 + x_2^2 \leq 0.8 \\
 ```
 
 ```@example constraints
-using Optimization, OptimizationMOI, OptimizationOptimJL, Ipopt
+using OptimizationBase, OptimizationMOI, OptimizationOptimJL, Ipopt
 using ForwardDiff, ModelingToolkit
+using DifferentiationInterface, ADTypes
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
@@ -33,7 +34,7 @@ cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[2]])
 We'll use the `IPNewton` solver from Optim to solve the problem.
 
 ```@example constraints
-optprob = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(), cons = cons)
+optprob = OptimizationFunction(rosenbrock, DifferentiationInterface.SecondOrder(ADTypes.AutoForwardDiff(), ADTypes.AutoForwardDiff()), cons = cons)
 prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf, -1.0], ucons = [0.8, 2.0])
 sol = solve(prob, IPNewton())
 ```
@@ -81,7 +82,7 @@ x_1 * x_2 = 0.5
 ```
 
 ```@example constraints
-optprob = OptimizationFunction(rosenbrock, Optimization.AutoSymbolics(), cons = cons)
+optprob = OptimizationFunction(rosenbrock, ADTypes.AutoSymbolics(), cons = cons)
 prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, 0.5])
 ```
 

@@ -2,6 +2,7 @@
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
 AmplNLWriter = "7c4d4715-977e-5154-bfe0-e096adeac482"
 ComponentArrays = "b0b7db55-cfe3-40fc-9ded-d10e2dbeff66"
+DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
@@ -19,6 +20,7 @@ NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
 NLPModelsTest = "7998695d-6960-4d3a-85c4-e1bceb8cd856"
 NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+OptimizationAuglag = "2ea93f80-9333-43a1-a68d-1f53b957a421"
 OptimizationBBO = "3e6eede4-6085-4f62-9a71-46d9bc1eb92b"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 OptimizationCMAEvolutionStrategy = "bd407f91-200f-4536-9381-e4ba712f53f8"
@@ -27,18 +29,26 @@ OptimizationGCMAES = "6f0a0517-dbc2-4a7a-8a20-99ae7f27e911"
 OptimizationIpopt = "43fad042-7963-4b32-ab19-e2a4f9a67124"
 OptimizationLBFGSB = "22f7324a-a79d-40f2-bebe-3af60c77bd15"
 OptimizationMOI = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
+OptimizationMadNLP = "5d9c809f-c847-4062-9fba-1793bbfef577"
 OptimizationManopt = "e57b7fff-7ee7-4550-b4f0-90e9476e9fb6"
 OptimizationMetaheuristics = "3aafef2f-86ae-4776-b337-85a36adf0b55"
+OptimizationMultistartOptimization = "e4316d97-8bbb-4fd3-a7d8-3851d2a72823"
 OptimizationNLPModels = "064b21be-54cf-11ef-1646-cdfee32b588f"
 OptimizationNLopt = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
 OptimizationNOMAD = "2cab0595-8222-4775-b714-9828e6a9e01b"
+OptimizationODE = "dfa73e59-e644-4d8a-bf84-188d7ecb34e4"
 OptimizationOptimJL = "36348300-93cb-4f02-beb5-3c3902f8871e"
 OptimizationOptimisers = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 OptimizationPRIMA = "72f8369c-a2ea-4298-9126-56167ce9cbc2"
 OptimizationPolyalgorithms = "500b13db-7e66-49ce-bda4-eed966be6282"
+OptimizationPyCMA = "fb0822aa-1fe5-41d8-99a6-e7bf6c238d3b"
+OptimizationQuadDIRECT = "842ac81e-713d-465f-80f7-84eddaced298"
+OptimizationSciPy = "cce07bd8-c79b-4b00-aee8-8db9cce22837"
+OptimizationSophia = "892fee11-dca1-40d6-b698-84ba0d87399a"
 OptimizationSpeedMapping = "3d669222-0d7d-4eb9-8a9f-d8528b0d9b91"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+QuadDIRECT = "dae52e8d-d666-5120-a592-9e15c33b8d7a"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
@@ -50,6 +60,7 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [sources]
 Optimization = {path = ".."}
+OptimizationAuglag = {path = "../lib/OptimizationAuglag"}
 OptimizationBBO = {path = "../lib/OptimizationBBO"}
 OptimizationBase = {path = "../lib/OptimizationBase"}
 OptimizationCMAEvolutionStrategy = {path = "../lib/OptimizationCMAEvolutionStrategy"}
@@ -58,15 +69,22 @@ OptimizationGCMAES = {path = "../lib/OptimizationGCMAES"}
 OptimizationIpopt = {path = "../lib/OptimizationIpopt"}
 OptimizationLBFGSB = {path = "../lib/OptimizationLBFGSB"}
 OptimizationMOI = {path = "../lib/OptimizationMOI"}
+OptimizationMadNLP = {path = "../lib/OptimizationMadNLP"}
 OptimizationManopt = {path = "../lib/OptimizationManopt"}
 OptimizationMetaheuristics = {path = "../lib/OptimizationMetaheuristics"}
+OptimizationMultistartOptimization = {path = "../lib/OptimizationMultistartOptimization"}
 OptimizationNLPModels = {path = "../lib/OptimizationNLPModels"}
 OptimizationNLopt = {path = "../lib/OptimizationNLopt"}
 OptimizationNOMAD = {path = "../lib/OptimizationNOMAD"}
+OptimizationODE = {path = "../lib/OptimizationODE"}
 OptimizationOptimJL = {path = "../lib/OptimizationOptimJL"}
 OptimizationOptimisers = {path = "../lib/OptimizationOptimisers"}
 OptimizationPRIMA = {path = "../lib/OptimizationPRIMA"}
 OptimizationPolyalgorithms = {path = "../lib/OptimizationPolyalgorithms"}
+OptimizationPyCMA = {path = "../lib/OptimizationPyCMA"}
+OptimizationQuadDIRECT = {path = "../lib/OptimizationQuadDIRECT"}
+OptimizationSciPy = {path = "../lib/OptimizationSciPy"}
+OptimizationSophia = {path = "../lib/OptimizationSophia"}
 OptimizationSpeedMapping = {path = "../lib/OptimizationSpeedMapping"}
 
 [compat]
@@ -89,6 +107,7 @@ NLPModels = "0.21"
 NLPModelsTest = "0.10"
 NLopt = "0.6, 1"
 Optimization = "5"
+OptimizationAuglag = "1"
 OptimizationBBO = "0.4"
 OptimizationBase = "4"
 OptimizationCMAEvolutionStrategy = "0.3"
@@ -96,15 +115,21 @@ OptimizationEvolutionary = "0.4"
 OptimizationGCMAES = "0.3"
 OptimizationIpopt = "0.2"
 OptimizationMOI = "0.5"
+OptimizationMadNLP = "0.3"
 OptimizationManopt = "1"
 OptimizationMetaheuristics = "0.3"
+OptimizationMultistartOptimization = "0.3"
 OptimizationNLPModels = "0.0.2, 1"
 OptimizationNLopt = "0.3"
 OptimizationNOMAD = "0.3"
+OptimizationODE = "0.1"
 OptimizationOptimJL = "0.4"
 OptimizationOptimisers = "0.3"
 OptimizationPRIMA = "0.3"
 OptimizationPolyalgorithms = "0.3"
+OptimizationQuadDIRECT = "0.3"
+OptimizationSciPy = "0.4"
+OptimizationSophia = "1"
 OptimizationSpeedMapping = "0.2"
 OrdinaryDiffEq = "6"
 Plots = "1"

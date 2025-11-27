@@ -1,8 +1,9 @@
 module OptimizationSophia
 
+using Reexport
 using SciMLBase
 using OptimizationBase: OptimizationCache
-using OptimizationBase
+@reexport using OptimizationBase
 using Random
 
 """
@@ -28,7 +29,7 @@ first-order methods like Adam and SGD while avoiding the computational cost of f
 ## Example
 
 ```julia
-using OptimizationBase, OptimizationOptimisers
+using OptimizationBase, OptimizationSophia
 
 # Define optimization problem
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2

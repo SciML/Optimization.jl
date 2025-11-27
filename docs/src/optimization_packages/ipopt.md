@@ -45,7 +45,7 @@ The algorithm supports:
 ### Basic Usage
 
 ```julia
-using Optimization, OptimizationIpopt
+using OptimizationBase, OptimizationIpopt
 
 # Create optimizer with default settings
 opt = IpoptOptimizer()

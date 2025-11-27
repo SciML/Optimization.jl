@@ -1,6 +1,6 @@
 # NLopt.jl
 
-[`NLopt`](https://github.com/JuliaOpt/NLopt.jl) is Julia package interfacing to the free/open-source [`NLopt library`](http://ab-initio.mit.edu/nlopt) which implements many optimization methods both global and local [`NLopt Documentation`](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/).
+[`NLopt`](https://github.com/jump-dev/NLopt.jl) is Julia package interfacing to the free/open-source [`NLopt library`](http://ab-initio.mit.edu/nlopt/) which implements many optimization methods both global and local [`NLopt Documentation`](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/).
 
 ## Installation: OptimizationNLopt.jl
 
@@ -99,7 +99,7 @@ rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, NLopt.LN_NELDERMEAD())
 ```
 
@@ -126,12 +126,12 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
 The Rosenbrock function can be optimized using `NLopt.LD_LBFGS()` as follows:
 
 ```@example NLopt2
-using Optimization, OptimizationNLopt
+using Optimization, OptimizationNLopt, ADTypes, ForwardDiff
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
-f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
-prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
+prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, NLopt.LD_LBFGS())
 ```
 
@@ -139,7 +139,7 @@ sol = solve(prob, NLopt.LD_LBFGS())
 
 ### Without Constraint Equations
 
-The following algorithms in [`NLopt`](https://github.com/JuliaOpt/NLopt.jl) are performing global optimization on problems without
+The following algorithms in [`NLopt`](https://github.com/jump-dev/NLopt.jl) are performing global optimization on problems without
 constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
 
 `NLopt` global optimizers which fall into this category are:
@@ -169,7 +169,7 @@ rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, NLopt.GN_DIRECT(), maxtime = 10.0)
 ```
 
@@ -180,19 +180,19 @@ The Rosenbrock function can be optimized using `NLopt.G_MLSL_LDS()` with `NLopt.
 The local optimizer maximum iterations are set via `local_maxiters`:
 
 ```@example NLopt4
-using Optimization, OptimizationNLopt
+using Optimization, OptimizationNLopt, ADTypes, ForwardDiff
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
-f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
-prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
+prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, NLopt.G_MLSL_LDS(), local_method = NLopt.LD_LBFGS(), maxtime = 10.0,
     local_maxiters = 10)
 ```
 
 ### With Constraint Equations
 
-The following algorithms in [`NLopt`](https://github.com/JuliaOpt/NLopt.jl) are performing global optimization on problems with
+The following algorithms in [`NLopt`](https://github.com/jump-dev/NLopt.jl) are performing global optimization on problems with
 constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
 
 !!! note "Constraints with NLopt"

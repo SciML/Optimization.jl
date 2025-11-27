@@ -30,14 +30,15 @@ rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, GCMAESOpt())
 ```
 
 We can also utilize the gradient information of the optimization problem to aid the optimization as follows:
 
 ```@example GCMAES
-f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
-prob = Optimization.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+using ADTypes, ForwardDiff
+f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
+prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, GCMAESOpt())
 ```

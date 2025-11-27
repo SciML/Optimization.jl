@@ -4,8 +4,9 @@ authors = ["paramthakkar123 <paramthakkar864@gmail.com>"]
 version = "1.2.1"
 
 [deps]
-OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 
 [extras]
@@ -20,12 +21,13 @@ OptimizationOptimisers = {path = "../OptimizationOptimisers"}
 
 [compat]
 ForwardDiff = "1.0.1"
-OptimizationBase = "4.0.2"
-MLUtils = "0.4.8"
 LinearAlgebra = "1.10"
+MLUtils = "0.4.8"
+OptimizationBase = "4.0.2"
 OptimizationOptimisers = "0.3.8"
-Test = "1.10.0"
+Reexport = "1.2"
 SciMLBase = "2.122.1"
+Test = "1.10.0"
 julia = "1.10"
 
 [targets]

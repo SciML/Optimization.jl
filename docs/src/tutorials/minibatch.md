@@ -9,8 +9,8 @@ It is possible to solve an optimization problem with batches using a `MLUtils.Da
 
 ```@example minibatch
 
-using Lux, Optimization, OptimizationOptimisers, OrdinaryDiffEq, SciMLSensitivity, MLUtils,
-      Random, ComponentArrays
+using Lux, OptimizationBase, OptimizationOptimisers, OrdinaryDiffEq, SciMLSensitivity, MLUtils,
+      Random, ComponentArrays, ADTypes, Zygote
 
 function newtons_cooling(du, u, p, t)
     temp = u[1]
@@ -66,9 +66,9 @@ l1 = loss_adjoint(ps_ca, train_loader.data)[1]
 
 optfun = OptimizationFunction(
     loss_adjoint,
-    Optimization.AutoZygote())
+    ADTypes.AutoZygote())
 optprob = OptimizationProblem(optfun, ps_ca, train_loader)
 using IterTools: ncycle
-res1 = Optimization.solve(
+res1 = solve(
     optprob, Optimisers.ADAM(0.05); callback = callback, epochs = 1000)
 ```

@@ -1,7 +1,7 @@
 module OptimizationBBO
 
 using Reexport
-using OptimizationBase
+@reexport using OptimizationBase
 using SciMLBase
 using BlackBoxOptim: BlackBoxOptim
 

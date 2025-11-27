@@ -1,7 +1,8 @@
 module OptimizationAuglag
 
+using Reexport
 using SciMLBase
-using OptimizationBase
+@reexport using OptimizationBase
 using SciMLBase: OptimizationProblem, OptimizationFunction, OptimizationStats
 using LinearAlgebra: norm
 

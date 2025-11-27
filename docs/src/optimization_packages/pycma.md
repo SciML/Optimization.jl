@@ -2,7 +2,7 @@
 
 [`PyCMA`](https://github.com/CMA-ES/pycma) is a Python implementation of CMA-ES and a few related numerical optimization tools. `OptimizationPyCMA.jl` gives access to the CMA-ES optimizer through the unified `Optimization.jl` interface just like any native Julia optimizer.
 
-`OptimizationPyCMA.jl` relies on [`PythonCall`](https://github.com/cjdoris/PythonCall.jl). A minimal Python distribution containing PyCMA will be installed automatically on first use, so no manual Python set-up is required.
+`OptimizationPyCMA.jl` relies on [`PythonCall`](https://github.com/JuliaPy/PythonCall.jl). A minimal Python distribution containing PyCMA will be installed automatically on first use, so no manual Python set-up is required.
 
 ## Installation: OptimizationPyCMA.jl
 

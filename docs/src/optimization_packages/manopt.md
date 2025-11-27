@@ -39,7 +39,7 @@ function or `OptimizationProblem`.
 The Rosenbrock function on the Euclidean manifold can be optimized using the `GradientDescentOptimizer` as follows:
 
 ```@example Manopt
-using Optimization, OptimizationManopt, Manifolds, LinearAlgebra
+using Optimization, OptimizationManopt, Manifolds, LinearAlgebra, ADTypes, Zygote
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
@@ -49,7 +49,7 @@ R2 = Euclidean(2)
 stepsize = Manopt.ArmijoLinesearch(R2)
 opt = OptimizationManopt.GradientDescentOptimizer()
 
-optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+optf = OptimizationFunction(rosenbrock, ADTypes.AutoZygote())
 
 prob = OptimizationProblem(
     optf, x0, p; manifold = R2, stepsize = stepsize)
@@ -67,7 +67,7 @@ q = Matrix{Float64}(I, 5, 5) .+ 2.0
 data2 = [exp(M, q, σ * rand(M; vector_at = q)) for i in 1:m]
 
 f(x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
-optf = OptimizationFunction(f, Optimization.AutoZygote())
+optf = OptimizationFunction(f, ADTypes.AutoZygote())
 prob = OptimizationProblem(optf, data2[1]; manifold = M, maxiters = 1000)
 
 function closed_form_solution!(M::SymmetricPositiveDefinite, q, L, U, p, X)
@@ -89,7 +89,7 @@ N = m
 U = mean(data2)
 L = inv(sum(1 / N * inv(matrix) for matrix in data2))
 
-optf = OptimizationFunction(f, Optimization.AutoZygote())
+optf = OptimizationFunction(f, ADTypes.AutoZygote())
 prob = OptimizationProblem(optf, U; manifold = M, maxiters = 1000)
 
 sol = Optimization.solve(
