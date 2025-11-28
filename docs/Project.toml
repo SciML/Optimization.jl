@@ -58,34 +58,86 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
-[sources]
-Optimization = {path = ".."}
-OptimizationAuglag = {path = "../lib/OptimizationAuglag"}
-OptimizationBBO = {path = "../lib/OptimizationBBO"}
-OptimizationBase = {path = "../lib/OptimizationBase"}
-OptimizationCMAEvolutionStrategy = {path = "../lib/OptimizationCMAEvolutionStrategy"}
-OptimizationEvolutionary = {path = "../lib/OptimizationEvolutionary"}
-OptimizationGCMAES = {path = "../lib/OptimizationGCMAES"}
-OptimizationIpopt = {path = "../lib/OptimizationIpopt"}
-OptimizationLBFGSB = {path = "../lib/OptimizationLBFGSB"}
-OptimizationMOI = {path = "../lib/OptimizationMOI"}
-OptimizationMadNLP = {path = "../lib/OptimizationMadNLP"}
-OptimizationManopt = {path = "../lib/OptimizationManopt"}
-OptimizationMetaheuristics = {path = "../lib/OptimizationMetaheuristics"}
-OptimizationMultistartOptimization = {path = "../lib/OptimizationMultistartOptimization"}
-OptimizationNLPModels = {path = "../lib/OptimizationNLPModels"}
-OptimizationNLopt = {path = "../lib/OptimizationNLopt"}
-OptimizationNOMAD = {path = "../lib/OptimizationNOMAD"}
-OptimizationODE = {path = "../lib/OptimizationODE"}
-OptimizationOptimJL = {path = "../lib/OptimizationOptimJL"}
-OptimizationOptimisers = {path = "../lib/OptimizationOptimisers"}
-OptimizationPRIMA = {path = "../lib/OptimizationPRIMA"}
-OptimizationPolyalgorithms = {path = "../lib/OptimizationPolyalgorithms"}
-OptimizationPyCMA = {path = "../lib/OptimizationPyCMA"}
-OptimizationQuadDIRECT = {path = "../lib/OptimizationQuadDIRECT"}
-OptimizationSciPy = {path = "../lib/OptimizationSciPy"}
-OptimizationSophia = {path = "../lib/OptimizationSophia"}
-OptimizationSpeedMapping = {path = "../lib/OptimizationSpeedMapping"}
+[sources.Optimization]
+path = ".."
+
+[sources.OptimizationAuglag]
+path = "../lib/OptimizationAuglag"
+
+[sources.OptimizationBBO]
+path = "../lib/OptimizationBBO"
+
+[sources.OptimizationBase]
+path = "../lib/OptimizationBase"
+
+[sources.OptimizationCMAEvolutionStrategy]
+path = "../lib/OptimizationCMAEvolutionStrategy"
+
+[sources.OptimizationEvolutionary]
+path = "../lib/OptimizationEvolutionary"
+
+[sources.OptimizationGCMAES]
+path = "../lib/OptimizationGCMAES"
+
+[sources.OptimizationIpopt]
+path = "../lib/OptimizationIpopt"
+
+[sources.OptimizationLBFGSB]
+path = "../lib/OptimizationLBFGSB"
+
+[sources.OptimizationMOI]
+path = "../lib/OptimizationMOI"
+
+[sources.OptimizationMadNLP]
+path = "../lib/OptimizationMadNLP"
+
+[sources.OptimizationManopt]
+path = "../lib/OptimizationManopt"
+
+[sources.OptimizationMetaheuristics]
+path = "../lib/OptimizationMetaheuristics"
+
+[sources.OptimizationMultistartOptimization]
+path = "../lib/OptimizationMultistartOptimization"
+
+[sources.OptimizationNLPModels]
+path = "../lib/OptimizationNLPModels"
+
+[sources.OptimizationNLopt]
+path = "../lib/OptimizationNLopt"
+
+[sources.OptimizationNOMAD]
+path = "../lib/OptimizationNOMAD"
+
+[sources.OptimizationODE]
+path = "../lib/OptimizationODE"
+
+[sources.OptimizationOptimJL]
+path = "../lib/OptimizationOptimJL"
+
+[sources.OptimizationOptimisers]
+path = "../lib/OptimizationOptimisers"
+
+[sources.OptimizationPRIMA]
+path = "../lib/OptimizationPRIMA"
+
+[sources.OptimizationPolyalgorithms]
+path = "../lib/OptimizationPolyalgorithms"
+
+[sources.OptimizationPyCMA]
+path = "../lib/OptimizationPyCMA"
+
+[sources.OptimizationQuadDIRECT]
+path = "../lib/OptimizationQuadDIRECT"
+
+[sources.OptimizationSciPy]
+path = "../lib/OptimizationSciPy"
+
+[sources.OptimizationSophia]
+path = "../lib/OptimizationSophia"
+
+[sources.OptimizationSpeedMapping]
+path = "../lib/OptimizationSpeedMapping"
 
 [compat]
 ADTypes = "1"
@@ -127,6 +179,7 @@ OptimizationOptimJL = "0.4"
 OptimizationOptimisers = "0.3"
 OptimizationPRIMA = "0.3"
 OptimizationPolyalgorithms = "0.3"
+OptimizationPyCMA = "1"
 OptimizationQuadDIRECT = "0.3"
 OptimizationSciPy = "0.4"
 OptimizationSophia = "1"
