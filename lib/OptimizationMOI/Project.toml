@@ -2,17 +2,21 @@ name = "OptimizationMOI"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.5.11"
+
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
+ModelingToolkitBase = "7771a370-6774-4173-bd38-47e70ca0b839"
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SciMLStructures = "53ae85a6-f571-4167-b2af-e1d143709226"
 SymbolicIndexingInterface = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
+
+[weakdeps]
+ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 
 [extras]
 HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
@@ -41,7 +45,8 @@ Ipopt = "1.10.4"
 NLopt = "1"
 SciMLBase = "2.122.1"
 SparseArrays = "1.6"
-ModelingToolkit = "10.23"
+ModelingToolkit = "11"
+ModelingToolkitBase = "1"
 SymbolicIndexingInterface = "0.3"
 julia = "1.10"
 Zygote = "0.6, 0.7"
