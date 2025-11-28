@@ -7,9 +7,9 @@ using SciMLBase
 using SciMLStructures
 using SymbolicIndexingInterface
 using SparseArrays
-import ModelingToolkit: parameters, unknowns, varmap_to_vars, mergedefaults, toexpr
-import ModelingToolkit
-const MTK = ModelingToolkit
+import ModelingToolkitBase: parameters, unknowns, varmap_to_vars, mergedefaults, toexpr
+import ModelingToolkitBase
+const MTK = ModelingToolkitBase
 using Symbolics
 using LinearAlgebra
 
@@ -217,7 +217,7 @@ function convert_to_expr(eq, expr_map; expand_expr = false)
             Symbolics.expand(eq)
         end
     end
-    expr = ModelingToolkit.toexpr(eq)
+    expr = ModelingToolkitBase.toexpr(eq)
 
     expr = rep_pars_vals!(expr, expr_map)
     expr = symbolify!(expr)
@@ -225,12 +225,12 @@ function convert_to_expr(eq, expr_map; expand_expr = false)
 end
 
 function get_expr_map(sys)
-    dvs = ModelingToolkit.unknowns(sys)
-    ps = ModelingToolkit.parameters(sys)
+    dvs = ModelingToolkitBase.unknowns(sys)
+    ps = ModelingToolkitBase.parameters(sys)
     return vcat(
-        [ModelingToolkit.toexpr(_s) => Expr(:ref, :x, i)
+        [ModelingToolkitBase.toexpr(_s) => Expr(:ref, :x, i)
          for (i, _s) in enumerate(dvs)],
-        [ModelingToolkit.toexpr(_p) => Expr(:ref, :p, i)
+        [ModelingToolkitBase.toexpr(_p) => Expr(:ref, :p, i)
          for (i, _p) in enumerate(ps)])
 end
 
