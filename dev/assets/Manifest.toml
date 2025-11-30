@@ -2,7 +2,7 @@
 
 julia_version = "1.12.2"
 manifest_format = "2.0"
-project_hash = "e68f57997519e40de344922b5562e15a1b3c4123"
+project_hash = "154a2c0d9d62a66663c994ea79b8eb5f564caf78"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "8b2b045b22740e4be20654175cc38291d48539db"
@@ -1160,9 +1160,9 @@ version = "3.7.0+0"
 
 [[deps.Git_jll]]
 deps = ["Artifacts", "Expat_jll", "JLLWrappers", "LibCURL_jll", "Libdl", "Libiconv_jll", "OpenSSL_jll", "PCRE2_jll", "Zlib_jll"]
-git-tree-sha1 = "b6a684587ebe896d9f68ae777f648205940f0f70"
+git-tree-sha1 = "46bd50c245fe49ed87377c014a928a549b9ef7ed"
 uuid = "f8c6e375-362e-5223-8a59-34ff63f689eb"
-version = "2.51.3+0"
+version = "2.52.0+0"
 
 [[deps.Glib_jll]]
 deps = ["Artifacts", "GettextRuntime_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libiconv_jll", "Libmount_jll", "PCRE2_jll", "Zlib_jll"]
@@ -1563,9 +1563,9 @@ version = "1.3.0"
 
 [[deps.LazyArrays]]
 deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "MacroTools", "SparseArrays"]
-git-tree-sha1 = "5cd2e1e2f3ed5d785693382acc1c3bca3c543815"
+git-tree-sha1 = "70ebe3bcf87d6a1e7435ef5182c13a91161ba9b8"
 uuid = "5078a376-72f3-5289-bfd5-ec5146d43c02"
-version = "2.9.3"
+version = "2.9.4"
 
     [deps.LazyArrays.extensions]
     LazyArraysBandedMatricesExt = "BandedMatrices"
@@ -2521,7 +2521,7 @@ version = "0.4.6"
 deps = ["ADTypes", "ArrayInterface", "ConsoleProgressMonitor", "DocStringExtensions", "LinearAlgebra", "Logging", "LoggingExtras", "OptimizationBase", "Printf", "Reexport", "SciMLBase", "SparseArrays", "TerminalLoggers"]
 path = "/home/runner/work/Optimization.jl/Optimization.jl"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-version = "5.1.0"
+version = "5.2.0"
 
 [[deps.OptimizationAuglag]]
 deps = ["LinearAlgebra", "OptimizationBase", "Reexport", "SciMLBase"]

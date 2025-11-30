@@ -91,6 +91,7 @@ OptimizationSpeedMapping = {path = "../lib/OptimizationSpeedMapping"}
 ADTypes = "1"
 AmplNLWriter = "1"
 ComponentArrays = "0.15"
+DifferentiationInterface = "0.7"
 Documenter = "1"
 FiniteDiff = ">= 2.8.1"
 ForwardDiff = ">= 0.10.19"
