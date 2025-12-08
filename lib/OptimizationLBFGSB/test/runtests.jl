@@ -54,4 +54,40 @@ using Test
         lb = [-10.0, -10.0, -10.0, -10.0, -10.0], ub = [10.0, 10.0, 10.0, 10.0, 10.0])
     opt1 = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 1000, callback = callback)
     @test opt1.objective < l0
+
+    # Test for issue #1094: LBFGSB should return Failure when encountering Inf/NaN
+    # at bounds (e.g., due to function singularity)
+    @testset "Inf/NaN detection at bounds (issue #1094)" begin
+        # Function with singularity at α = -1 (log(0) = -Inf)
+        ne = [47.79, 54.64, 60.68, 65.85, 70.10]
+        nt = [49.01, 56.09, 62.38, 67.80, 72.29]
+
+        function chi2_singular(alpha, p)
+            n_th = (1 + alpha[1]) * nt
+            total = 0.0
+            for i in eachindex(ne)
+                if ne[i] == 0.0
+                    total += 2 * n_th[i]
+                else
+                    total += 2 * (n_th[i] - ne[i] + ne[i] * log(ne[i] / n_th[i]))
+                end
+            end
+            return total
+        end
+
+        # With bounds including singularity at -1, should fail
+        optf_singular = OptimizationFunction(chi2_singular, OptimizationBase.AutoForwardDiff())
+        prob_singular = OptimizationProblem(optf_singular, [0.0]; lb = [-1.0], ub = [1.0])
+        res_singular = solve(prob_singular, OptimizationLBFGSB.LBFGSB())
+        @test res_singular.retcode == ReturnCode.Failure
+
+        # With safe bounds (away from singularity), should succeed
+        # The optimizer should find a minimum with a negative value of alpha
+        prob_safe = OptimizationProblem(optf_singular, [0.0]; lb = [-0.9], ub = [1.0])
+        res_safe = solve(prob_safe, OptimizationLBFGSB.LBFGSB())
+        @test res_safe.retcode == ReturnCode.Success
+        # The minimum should be negative (somewhere between -0.1 and 0)
+        @test res_safe.u[1] < 0.0
+        @test res_safe.u[1] > -0.5
+    end
 end

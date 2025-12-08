@@ -197,15 +197,30 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
             stats = stats, retcode = opt_ret)
     else
         iter_count = Ref(0)
+        encountered_inf_nan = Ref(false)
+
         _loss = function (θ)
             x = cache.f(θ, cache.p)
             iter_count[] += 1
+            # Track if we encounter Inf/NaN values in the objective
+            if !isfinite(x[1])
+                encountered_inf_nan[] = true
+            end
             opt_state = OptimizationBase.OptimizationState(
                 u = θ, objective = x[1])
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
             end
             return x[1]
+        end
+
+        # Wrap gradient function to track Inf/NaN values
+        _grad! = function (G, θ)
+            cache.f.grad(G, θ)
+            # Track if we encounter Inf/NaN values in the gradient
+            if !all(isfinite, G)
+                encountered_inf_nan[] = true
+            end
         end
 
         n = length(cache.u0)
@@ -225,13 +240,23 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
         t0 = time()
 
         res = optimizer(
-            _loss, cache.f.grad, cache.u0, bounds; m = cache.opt.m, solver_kwargs...)
+            _loss, _grad!, cache.u0, bounds; m = cache.opt.m, solver_kwargs...)
 
         # Extract the task message from the result
         stop_reason = task_message_to_string(optimizer.task)
 
         # Deduce the return code from the stop reason
         opt_ret = deduce_retcode(stop_reason)
+
+        # Detect false convergence due to Inf/NaN values
+        # If we encountered Inf/NaN and the optimizer claims success but the solution
+        # is essentially unchanged from the starting point, this is a false convergence
+        if encountered_inf_nan[] && opt_ret == ReturnCode.Success
+            if isapprox(res[2], cache.u0; rtol = 1e-8, atol = 1e-12)
+                @warn "LBFGSB encountered Inf/NaN values during optimization (likely due to function singularity at bounds). The solution has not moved from the initial point. Consider using bounds that exclude singularities."
+                opt_ret = ReturnCode.Failure
+            end
+        end
 
         t1 = time()
 
