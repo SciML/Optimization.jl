@@ -182,7 +182,9 @@ Hessian is not defined via Zygote.
 AutoZygote
 
 function generate_adtype(adtype)
-    if !(adtype isa SciMLBase.NoAD || adtype isa DifferentiationInterface.SecondOrder ||
+    if adtype isa AutoSymbolics || adtype isa AutoSparse{<:AutoSymbolics}
+        soadtype = adtype
+    elseif !(adtype isa SciMLBase.NoAD || adtype isa DifferentiationInterface.SecondOrder ||
          adtype isa AutoZygote)
         soadtype = DifferentiationInterface.SecondOrder(adtype, adtype)
     elseif adtype isa AutoZygote
@@ -233,7 +235,9 @@ function filled_spad(adtype)
 end
 
 function generate_sparse_adtype(adtype)
-    if !(adtype.dense_ad isa DifferentiationInterface.SecondOrder)
+    if adtype isa AutoSparse{<:AutoSymbolics}
+        soadtype = adtype
+    elseif !(adtype.dense_ad isa DifferentiationInterface.SecondOrder)
         adtype = filled_spad(adtype)
         soadtype = spadtype_to_spsoadtype(adtype)
     else
