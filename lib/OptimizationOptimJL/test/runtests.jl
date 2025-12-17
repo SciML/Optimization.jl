@@ -163,7 +163,7 @@ end
     @test 10 * sol.objective < l1
 
     optprob = OptimizationFunction(rosenbrock,
-        OptimizationBase.AutoModelingToolkit(true, false))
+        OptimizationBase.AutoSparse(OptimizationBase.AutoSymbolics()))
     prob = OptimizationProblem(optprob, x0, _p)
     sol = solve(prob, Optim.Newton())
     @test 10 * sol.objective < l1
