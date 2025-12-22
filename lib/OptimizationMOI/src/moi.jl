@@ -18,7 +18,8 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
     if isnothing(f.sys)
         if f.adtype isa OptimizationBase.AutoSymbolics
             num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
-            f = OptimizationBase.instantiate_function(prob.f,
+            f = generate_exprs(prob)
+            f = OptimizationBase.instantiate_function(f,
                 reinit_cache,
                 prob.f.adtype,
                 num_cons)
@@ -28,34 +29,18 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
     end
 
     # TODO: check if the problem is at most bilinear, i.e. affine and or quadratic terms in two variables
-    expr_map = get_expr_map(prob.f.sys)
-    expr = convert_to_expr(f.expr, expr_map; expand_expr = false)
-    expr = repl_getindex!(expr)
-    cons = MTK.constraints(f.sys)
-    cons_expr = Vector{Expr}(undef, length(cons))
-    Threads.@sync for i in eachindex(cons)
-        Threads.@spawn if prob.lcons[i] == prob.ucons[i] == 0
-            cons_expr[i] = Expr(:call, :(==),
-            repl_getindex!(convert_to_expr(f.cons_expr[i],
-            expr_map;
-            expand_expr = false)), 0)
-        else
-            # MTK canonicalizes the expression form
-            cons_expr[i] = Expr(:call, :(<=),
-            repl_getindex!(convert_to_expr(f.cons_expr[i],
-            expr_map;
-            expand_expr = false)), 0)
-        end
+    if f.sys !== nothing
+        expr, cons_expr = process_system_exprs(prob, f)
+        f = remake(f; expr, cons_expr)
     end
-
     return MOIOptimizationCache(f,
         reinit_cache,
         prob.lb,
         prob.ub,
         prob.int,
         prob.sense,
-        expr,
-        cons_expr,
+        f.expr,
+        f.cons_expr,
         opt,
         NamedTuple(kwargs))
 end

@@ -1,4 +1,4 @@
-using OptimizationMOI, OptimizationBase, Ipopt, NLopt, Zygote, ModelingToolkit, ReverseDiff
+using OptimizationMOI, OptimizationBase, Ipopt, NLopt, Zygote, ModelingToolkitBase, ReverseDiff
 using AmplNLWriter, Ipopt_jll, Juniper, HiGHS, MathOptInterface
 using Test, SparseArrays
 
