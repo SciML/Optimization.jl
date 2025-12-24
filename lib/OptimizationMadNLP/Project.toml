@@ -1,6 +1,6 @@
 name = "OptimizationMadNLP"
 uuid = "5d9c809f-c847-4062-9fba-1793bbfef577"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Sebastian Micluța-Câmpeanu <sebastian.mc95@proton.me> and contributors"]
 
 [deps]
@@ -20,7 +20,7 @@ LinearAlgebra = "1.10.0"
 MadNLP = "0.8.12"
 ModelingToolkit = "11"
 NLPModels = "0.21.5"
-OptimizationBase = "4.0.2"
+OptimizationBase = "4.1"
 Reexport = "1.2"
 SciMLBase = "2.122.1"
 SparseArrays = "1.10.0"
