@@ -1,4 +1,4 @@
-using OptimizationMOI, OptimizationBase, Ipopt, NLopt, Zygote, ModelingToolkit, ReverseDiff
+using OptimizationMOI, OptimizationBase, Ipopt, NLopt, Zygote, ModelingToolkitBase, ReverseDiff
 using AmplNLWriter, Ipopt_jll, Juniper, HiGHS, MathOptInterface
 using Test, SparseArrays
 
@@ -226,7 +226,7 @@ end
 
 @testset "MOI" begin
     @parameters c = 0.0
-    @variables x[1:2]=[0.0, 0.0] [bounds = (c, Inf)]
+    @variables x[1:2]=[0.0, 0.0] [bounds = ([c, c], [Inf, Inf])]
     @parameters a = 3.0
     @parameters b = 4.0
     @parameters d = 2.0

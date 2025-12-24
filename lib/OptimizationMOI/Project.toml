@@ -1,53 +1,60 @@
 name = "OptimizationMOI"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
-authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.5.11"
-[deps]
-OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
-LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
-MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
-SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
-SciMLStructures = "53ae85a6-f571-4167-b2af-e1d143709226"
-SymbolicIndexingInterface = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
+authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 
-[extras]
-HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
-AmplNLWriter = "7c4d4715-977e-5154-bfe0-e096adeac482"
-ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-Ipopt_jll = "9cc047cb-c261-5740-88fc-0cf96f7bdcc7"
-Juniper = "2ddba703-00a4-53a7-87a5-e8b9971dde84"
-Ipopt = "b6b21f68-93f8-5de0-b562-5493be1d77c9"
-NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
-Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
+ModelingToolkitBase = "7771a370-6774-4173-bd38-47e70ca0b839"
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+SciMLStructures = "53ae85a6-f571-4167-b2af-e1d143709226"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+SymbolicIndexingInterface = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
+SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
+Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
+
+[weakdeps]
+ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 
 [sources]
 OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
-HiGHS = "1"
-OptimizationBase = "3.3.1, 4"
-Test = "1.6"
-Symbolics = "6"
 AmplNLWriter = "1"
-LinearAlgebra = "1"
+HiGHS = "1"
+Ipopt = "1.10.4"
 Ipopt_jll = "300.1400"
 Juniper = "0.9"
-Ipopt = "1.10.4"
-NLopt = "1"
-SciMLBase = "2.122.1"
-SparseArrays = "1.6"
-ModelingToolkit = "10.23"
-SymbolicIndexingInterface = "0.3"
-julia = "1.10"
-Zygote = "0.6, 0.7"
+LinearAlgebra = "1"
 MathOptInterface = "1.40.2"
+ModelingToolkit = "11"
+ModelingToolkitBase = "1"
+NLopt = "1"
+OptimizationBase = "3.3.1, 4"
 Reexport = "1.2"
+SciMLBase = "2.130"
 SciMLStructures = "1"
+SparseArrays = "1.6"
+SymbolicIndexingInterface = "0.3"
+SymbolicUtils = "4.9.2"
+Symbolics = "6, 7"
+Test = "1.6"
+Zygote = "0.6, 0.7"
+julia = "1.10"
+
+[extras]
+AmplNLWriter = "7c4d4715-977e-5154-bfe0-e096adeac482"
+HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
+Ipopt = "b6b21f68-93f8-5de0-b562-5493be1d77c9"
+Ipopt_jll = "9cc047cb-c261-5740-88fc-0cf96f7bdcc7"
+Juniper = "2ddba703-00a4-53a7-87a5-e8b9971dde84"
+NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
+ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
 test = ["AmplNLWriter", "HiGHS", "Ipopt", "Ipopt_jll", "Juniper", "NLopt", "ReverseDiff", "Test", "Zygote"]

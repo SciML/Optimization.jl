@@ -14,7 +14,7 @@ SymbolicIndexingInterface = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
 [compat]
 Ipopt = "1.10.3"
 LinearAlgebra = "1.10.0"
-ModelingToolkit = "10.23"
+ModelingToolkit = "11"
 OptimizationBase = "3, 4"
 Reexport = "1.2"
 SciMLBase = "2.122.1"

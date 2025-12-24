@@ -15,6 +15,19 @@ import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,
 using ADTypes, SciMLBase
 
 function instantiate_function(
+        f::OptimizationFunction{true}, x, ::ADTypes.AutoSparse{<:ADTypes.AutoSymbolics},
+        args...; kwargs...)
+    instantiate_function(f, x, ADTypes.AutoSymbolics(), args...; kwargs...)
+end
+function instantiate_function(
+        f::OptimizationFunction{true}, cache::OptimizationBase.ReInitCache,
+        ::ADTypes.AutoSparse{<:ADTypes.AutoSymbolics}, args...; kwargs...)
+    x = cache.u0
+    p = cache.p
+
+    return instantiate_function(f, x, ADTypes.AutoSymbolics(), p, args...; kwargs...)
+end
+function instantiate_function(
         f::OptimizationFunction{true}, x, adtype::ADTypes.AbstractADType,
         p = SciMLBase.NullParameters(), num_cons = 0;
         g = false, h = false, hv = false, fg = false, fgh = false,
@@ -180,8 +193,16 @@ function instantiate_function(
 
     # Prepare constraint Hessian preparations if needed by lag_h or cons_h
     if f.cons !== nothing && f.cons_h === nothing && (cons_h == true || lag_h == true)
-        prep_cons_hess = [prepare_hessian(cons_oop, soadtype, x, Constant(i))
-                          for i in 1:num_cons]
+        # This is necessary because DI will create a symbolic index for `Constant(i)`
+        # to trace into the function, since it assumes `Constant` can change between
+        # DI calls.
+        if adtype isa ADTypes.AutoSymbolics
+            prep_cons_hess = [prepare_hessian(Base.Fix2(cons_oop, i), soadtype, x)
+                              for i in 1:num_cons]
+        else
+            prep_cons_hess = [prepare_hessian(cons_oop, soadtype, x, Constant(i))
+                              for i in 1:num_cons]
+        end
     else
         prep_cons_hess = nothing
     end
@@ -190,9 +211,17 @@ function instantiate_function(
     if f.cons !== nothing && f.cons_h === nothing && prep_cons_hess !== nothing
         # Standard cons_h! that returns array of matrices
         if cons_h == true
-            cons_h! = function (H, θ)
-                for i in 1:num_cons
-                    hessian!(cons_oop, H[i], prep_cons_hess[i], soadtype, θ, Constant(i))
+            if adtype isa ADTypes.AutoSymbolics
+                cons_h! = function (H, θ)
+                    for i in 1:num_cons
+                        hessian!(Base.Fix2(cons_oop, i), H[i], prep_cons_hess[i], soadtype, θ)
+                    end
+                end
+            else
+                cons_h! = function (H, θ)
+                    for i in 1:num_cons
+                        hessian!(cons_oop, H[i], prep_cons_hess[i], soadtype, θ, Constant(i))
+                    end
                 end
             end
         else

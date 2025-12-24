@@ -7,10 +7,11 @@ using SciMLBase
 using SciMLStructures
 using SymbolicIndexingInterface
 using SparseArrays
-import ModelingToolkit: parameters, unknowns, varmap_to_vars, mergedefaults, toexpr
-import ModelingToolkit
-const MTK = ModelingToolkit
+import ModelingToolkitBase: parameters, unknowns, varmap_to_vars, mergedefaults, toexpr
+import ModelingToolkitBase
+const MTK = ModelingToolkitBase
 using Symbolics
+import SymbolicUtils as SU
 using LinearAlgebra
 
 const MOI = MathOptInterface
@@ -217,7 +218,7 @@ function convert_to_expr(eq, expr_map; expand_expr = false)
             Symbolics.expand(eq)
         end
     end
-    expr = ModelingToolkit.toexpr(eq)
+    expr = ModelingToolkitBase.toexpr(eq)
 
     expr = rep_pars_vals!(expr, expr_map)
     expr = symbolify!(expr)
@@ -225,12 +226,12 @@ function convert_to_expr(eq, expr_map; expand_expr = false)
 end
 
 function get_expr_map(sys)
-    dvs = ModelingToolkit.unknowns(sys)
-    ps = ModelingToolkit.parameters(sys)
+    dvs = ModelingToolkitBase.unknowns(sys)
+    ps = ModelingToolkitBase.parameters(sys)
     return vcat(
-        [ModelingToolkit.toexpr(_s) => Expr(:ref, :x, i)
+        [ModelingToolkitBase.toexpr(_s) => Expr(:ref, :x, i)
          for (i, _s) in enumerate(dvs)],
-        [ModelingToolkit.toexpr(_p) => Expr(:ref, :p, i)
+        [ModelingToolkitBase.toexpr(_p) => Expr(:ref, :p, i)
          for (i, _p) in enumerate(ps)])
 end
 
@@ -278,6 +279,73 @@ function repl_getindex!(expr::Expr)
         expr.args[i] = repl_getindex!(expr.args[i])
     end
     return expr
+end
+
+function generate_exprs(prob::OptimizationProblem)
+    f = prob.f
+    if f.expr !== nothing
+        return f
+    end
+    pobj = prob.p
+    if pobj isa SciMLBase.NullParameters
+        pobj = Float64[]
+    end
+    @assert pobj isa Vector{<:Number} """
+    Unsupported parameter object type $(typeof(pobj)) for expression construction.
+    """
+    @variables x[1:length(prob.u0)] p[1:length(pobj)]
+    obj = prob.f.f(collect(x), collect(p))
+    obj_expr = SU.Code.toexpr(SU.expand(SU.unwrap(obj)))
+    symbolify!(obj_expr)
+    if prob.lcons === nothing && prob.ucons === nothing
+        return SciMLBase.remake(f; expr = obj_expr)
+    end
+    if SciMLBase.isinplace(prob)
+        cons_expr = zeros(Num, length(prob.lcons))
+        prob.f.cons(cons_expr, collect(x), collect(p))
+    else
+        cons_expr = prob.f.cons(collect(x), collect(p))
+    end
+    cons_expr = SU.Code.toexpr.(SU.expand.(SU.unwrap.(cons_expr)))::Vector{Expr}
+    for i in eachindex(cons_expr)
+        cons_expr[i] = if prob.lcons[i] == prob.ucons[i]
+            Expr(:call, :(==), cons_expr[i], prob.lcons[i])
+        elseif isinf(prob.lcons[i])
+            Expr(:call, :(<=), cons_expr[i], prob.ucons[i])
+        elseif isinf(prob.ucons[i])
+            Expr(:call, :(>=), cons_expr[i], prob.lcons[i])
+        else
+            Expr(:comparison, prob.lcons[i], :(<=), cons_expr[i], :(<=), prob.ucons[i])
+        end
+    end
+    symbolify!(obj_expr)
+    symbolify!.(cons_expr)
+    newf = SciMLBase.remake(f; expr = obj_expr, cons_expr)
+    return newf
+end
+
+function process_system_exprs(prob::OptimizationProblem, f::OptimizationFunction)
+    @assert f.sys !== nothing
+    expr_map = get_expr_map(prob.f.sys)
+    expr = convert_to_expr(f.expr, expr_map; expand_expr = false)
+    expr = repl_getindex!(expr)
+    cons = MTK.constraints(f.sys)
+    cons_expr = Vector{Expr}(undef, length(cons))
+    Threads.@sync for i in eachindex(cons)
+        Threads.@spawn if prob.lcons[i] == prob.ucons[i] == 0
+            cons_expr[i] = Expr(:call, :(==),
+            repl_getindex!(convert_to_expr(f.cons_expr[i],
+            expr_map;
+            expand_expr = false)), 0)
+        else
+            # MTK canonicalizes the expression form
+            cons_expr[i] = Expr(:call, :(<=),
+            repl_getindex!(convert_to_expr(f.cons_expr[i],
+            expr_map;
+            expand_expr = false)), 0)
+        end
+    end
+    return expr, cons_expr
 end
 
 include("nlp.jl")

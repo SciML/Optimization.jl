@@ -113,8 +113,9 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     if prob.f.adtype isa ADTypes.AutoSymbolics || (prob.f.adtype isa ADTypes.AutoSparse &&
         prob.f.adtype.dense_ad isa ADTypes.AutoSymbolics)
+        f = generate_exprs(prob)
         f = OptimizationBase.instantiate_function(
-            prob.f, reinit_cache, prob.f.adtype, num_cons;
+            f, reinit_cache, prob.f.adtype, num_cons;
             g = true, h = true, cons_j = true, cons_h = true)
     else
         f = OptimizationBase.instantiate_function(
@@ -179,16 +180,7 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
         expr = obj_expr
         _cons_expr = cons_expr
     else
-        expr_map = get_expr_map(sys)
-        expr = convert_to_expr(obj_expr, expr_map; expand_expr = false)
-        expr = repl_getindex!(expr)
-        cons = MTK.constraints(sys)
-        _cons_expr = Vector{Expr}(undef, length(cons))
-        for i in eachindex(cons)
-            _cons_expr[i] = repl_getindex!(convert_to_expr(cons_expr[i],
-                expr_map;
-                expand_expr = false))
-        end
+        expr, _cons_expr = process_system_exprs(prob, f)
     end
 
     evaluator = MOIOptimizationNLPEvaluator(f,
@@ -461,8 +453,12 @@ function MOI.objective_expr(evaluator::MOIOptimizationNLPEvaluator)
 end
 
 function MOI.constraint_expr(evaluator::MOIOptimizationNLPEvaluator, i)
-    # expr has the form f(x,p) == 0 or f(x,p) <= 0
-    cons_expr = deepcopy(evaluator.cons_expr[i].args[2])
+    cons_expr = evaluator.cons_expr[i]
+    cons_expr = if Meta.isexpr(cons_expr, :comparison)
+        deepcopy(cons_expr.args[3])
+    else
+        deepcopy(cons_expr.args[2])
+    end
     repl_getindex!(cons_expr)
     _replace_parameter_indices!(cons_expr, evaluator.p)
     _replace_variable_indices!(cons_expr)
