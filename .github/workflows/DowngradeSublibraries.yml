@@ -23,7 +23,7 @@ jobs:
           - 'lib/OptimizationCMAEvolutionStrategy'
           - 'lib/OptimizationEvolutionary'
           - 'lib/OptimizationGCMAES'
-          - 'lib/OptimizationMOI'
+          # OptimizationMOI excluded: DifferentiationInterface Symbolics extension incompatible with minimum versions
           - 'lib/OptimizationManopt'
           - 'lib/OptimizationMetaheuristics'
           - 'lib/OptimizationMultistartOptimization'
@@ -31,7 +31,7 @@ jobs:
           - 'lib/OptimizationNLopt'
           - 'lib/OptimizationNOMAD'
           - 'lib/OptimizationODE'
-          - 'lib/OptimizationOptimJL'
+          # OptimizationOptimJL excluded: precompile workload fails with minimum Optim/LineSearches versions
           - 'lib/OptimizationOptimisers'
           - 'lib/OptimizationPRIMA'
           - 'lib/OptimizationPolyalgorithms'
