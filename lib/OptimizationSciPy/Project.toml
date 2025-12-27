@@ -21,7 +21,7 @@ julia = "1.10"
 OptimizationBase = "4.0.2"
 SciMLBase = "2.122.1"
 Reexport = "1.2"
-PythonCall = "0.9"
+PythonCall = "0.9.24"
 
 [sources]
 OptimizationBase = {path = "../OptimizationBase"}

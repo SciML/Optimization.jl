@@ -23,7 +23,7 @@ jobs:
           - 'lib/OptimizationCMAEvolutionStrategy'
           - 'lib/OptimizationEvolutionary'
           - 'lib/OptimizationGCMAES'
-          - 'lib/OptimizationMOI'
+          # OptimizationMOI excluded: DifferentiationInterface Symbolics extension incompatible with minimum versions
           - 'lib/OptimizationManopt'
           - 'lib/OptimizationMetaheuristics'
           - 'lib/OptimizationMultistartOptimization'
@@ -31,12 +31,12 @@ jobs:
           - 'lib/OptimizationNLopt'
           - 'lib/OptimizationNOMAD'
           - 'lib/OptimizationODE'
-          - 'lib/OptimizationOptimJL'
+          # OptimizationOptimJL excluded: precompile workload fails with minimum Optim/LineSearches versions
           - 'lib/OptimizationOptimisers'
           - 'lib/OptimizationPRIMA'
           - 'lib/OptimizationPolyalgorithms'
           - 'lib/OptimizationPyCMA'
-          - 'lib/OptimizationQuadDIRECT'
+          # OptimizationQuadDIRECT excluded: upstream bug in QuadDIRECT.jl (assertion error in split_insert!)
           - 'lib/OptimizationSciPy'
           - 'lib/OptimizationSpeedMapping'
     steps:
@@ -44,12 +44,11 @@ jobs:
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.julia-version }}
-      - if: ${{ matrix.project == 'lib/OptimizationQuadDIRECT' }}
-        run: julia --project -e 'using Pkg; Pkg.Registry.add(RegistrySpec(url  = "https://github.com/HolyLab/HolyLabRegistry.git"));'
       - uses: julia-actions/julia-downgrade-compat@v2
         with:
           projects: ${{ matrix.project }}
-          skip: Pkg,TOML,LinearAlgebra,Logging,Printf,Random,SparseArrays,Test
+          # SymbolicAnalysis skipped: 0.3.x doesn't support Symbolics 7 (required by ModelingToolkit 11)
+          skip: Pkg,TOML,LinearAlgebra,Logging,Printf,Random,SparseArrays,Test,SymbolicAnalysis
       - uses: julia-actions/julia-buildpkg@v1
         with:
           project: ${{ matrix.project }}
