@@ -23,7 +23,7 @@ jobs:
           - 'lib/OptimizationCMAEvolutionStrategy'
           - 'lib/OptimizationEvolutionary'
           - 'lib/OptimizationGCMAES'
-          # OptimizationMOI excluded: DifferentiationInterface Symbolics extension incompatible with minimum versions
+          - 'lib/OptimizationMOI'
           - 'lib/OptimizationManopt'
           - 'lib/OptimizationMetaheuristics'
           - 'lib/OptimizationMultistartOptimization'
@@ -31,12 +31,12 @@ jobs:
           - 'lib/OptimizationNLopt'
           - 'lib/OptimizationNOMAD'
           - 'lib/OptimizationODE'
-          # OptimizationOptimJL excluded: precompile workload fails with minimum Optim/LineSearches versions
+          - 'lib/OptimizationOptimJL'
           - 'lib/OptimizationOptimisers'
           - 'lib/OptimizationPRIMA'
           - 'lib/OptimizationPolyalgorithms'
           - 'lib/OptimizationPyCMA'
-          # OptimizationQuadDIRECT excluded: upstream bug in QuadDIRECT.jl (assertion error in split_insert!)
+          - 'lib/OptimizationQuadDIRECT'
           - 'lib/OptimizationSciPy'
           - 'lib/OptimizationSpeedMapping'
     steps:
