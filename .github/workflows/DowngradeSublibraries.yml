@@ -44,12 +44,11 @@ jobs:
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.julia-version }}
-      - if: ${{ matrix.project == 'lib/OptimizationQuadDIRECT' }}
-        run: julia --project -e 'using Pkg; Pkg.Registry.add(RegistrySpec(url  = "https://github.com/HolyLab/HolyLabRegistry.git"));'
       - uses: julia-actions/julia-downgrade-compat@v2
         with:
           projects: ${{ matrix.project }}
-          skip: Pkg,TOML,LinearAlgebra,Logging,Printf,Random,SparseArrays,Test
+          # SymbolicAnalysis skipped: 0.3.x doesn't support Symbolics 7 (required by ModelingToolkit 11)
+          skip: Pkg,TOML,LinearAlgebra,Logging,Printf,Random,SparseArrays,Test,SymbolicAnalysis
       - uses: julia-actions/julia-buildpkg@v1
         with:
           project: ${{ matrix.project }}
