@@ -44,4 +44,6 @@ include("state.jl")
 export solve, OptimizationCache, DEFAULT_CALLBACK, DEFAULT_DATA
 export IncompatibleOptimizerError, OptimizerMissingError
 
+include("precompilation.jl")
+
 end
