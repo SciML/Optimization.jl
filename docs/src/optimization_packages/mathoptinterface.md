@@ -1,4 +1,4 @@
-# MathOptInterface.jl
+# [MathOptInterface.jl](@id mathoptinterface)
 
 [MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl) is a Julia
 abstraction layer to interface with a variety of mathematical optimization solvers.

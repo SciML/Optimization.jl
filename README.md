@@ -86,13 +86,6 @@ prob = OptimizationProblem(rosenbrock, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0]
 sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
 ```
 
-*Warning:* The output of the second optimization task (`BBO_adaptive_de_rand_1_bin_radiuslimited()`) is
-currently misleading in the sense that it returns `Status: failure (reached maximum number of iterations)`. However, convergence is actually
-reached and the confusing message stems from the reliance on the Optim.jl output
-struct (where the situation of reaching the maximum number of iterations is
-rightly regarded as a failure). The improved output struct will soon be
-implemented.
-
 The output of the first optimization task (with the `NelderMead()` algorithm)
 is given below:
 
@@ -117,8 +110,8 @@ is given below:
 We can also explore other methods in a similar way:
 
 ```julia
-using ForwardDiff
-f = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+using ForwardDiff, ADTypes
+f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
 prob = OptimizationProblem(f, x0, p)
 sol = solve(prob, BFGS())
 ```
