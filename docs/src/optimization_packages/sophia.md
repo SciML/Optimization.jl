@@ -1,4 +1,4 @@
-# OptimizationSophia.jl
+# [OptimizationSophia.jl](@id sophia)
 
 [`OptimizationSophia.jl`](https://github.com/SciML/Optimization.jl/tree/master/lib/OptimizationSophia) is a package that provides the Sophia optimizer for neural network training.
 

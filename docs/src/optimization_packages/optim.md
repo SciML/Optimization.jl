@@ -151,7 +151,7 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
           * `Static`
       + `eta` determines the next step direction
       + `P` is an optional preconditioner (for more information, see [this source](https://julianlsolvers.github.io/Optim.jl/v0.9.3/algo/precondition/))
-      + `precondpred` is used to update `P` as the state variable `x` changes
+      + `precondprep` is used to update `P` as the state variable `x` changes
       + Defaults:
         
           * `alphaguess = LineSearches.InitialHagerZhang()`
@@ -181,7 +181,7 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
           * `StrongWolfe`
           * `Static`
       + `P` is an optional preconditioner (for more information, see [this source](https://julianlsolvers.github.io/Optim.jl/v0.9.3/algo/precondition/))
-      + `precondpred` is used to update `P` as the state variable `x` changes
+      + `precondprep` is used to update `P` as the state variable `x` changes
       + Defaults:
         
           * `alphaguess = LineSearches.InitialPrevious()`
@@ -248,7 +248,7 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
           * `StrongWolfe`
           * `Static`
       + `P` is an optional preconditioner (for more information, see [this source](https://julianlsolvers.github.io/Optim.jl/v0.9.3/algo/precondition/))
-      + `precondpred` is used to update `P` as the state variable `x` changes
+      + `precondprep` is used to update `P` as the state variable `x` changes
       + `manifold` specifies a (Riemannian) manifold on which the function is to be minimized (for more information, consult [this source](https://julianlsolvers.github.io/Optim.jl/stable/algo/manifolds/))
         
           * available manifolds:

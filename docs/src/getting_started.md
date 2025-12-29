@@ -67,7 +67,7 @@ The `sol.retcode` gives us more information about the solution process.
 sol.retcode
 ```
 
-Here it says `ReturnCode.Success` which means that the solutuion successfully solved. We can learn more about the different return codes at
+Here it says `ReturnCode.Success` which means that the solution successfully solved. We can learn more about the different return codes at
 [the ReturnCode part of the SciMLBase documentation](https://docs.sciml.ai/SciMLBase/stable/interfaces/Solutions/#retcodes).
 
 If we are interested about some of the statistics of the solving process, for example to help choose a better solver, we can investigate the `sol.stats`
@@ -89,7 +89,7 @@ using OptimizationOptimJL
 sol = solve(prob, Optim.NelderMead())
 ```
 
-BlackBoxOptim.jl offers derivative-free global optimization solvers that requrie the bounds to be set via `lb` and `ub` in the `OptimizationProblem`. Let's use the BBO_adaptive_de_rand_1_bin_radiuslimited() solver:
+BlackBoxOptim.jl offers derivative-free global optimization solvers that require the bounds to be set via `lb` and `ub` in the `OptimizationProblem`. Let's use the BBO_adaptive_de_rand_1_bin_radiuslimited() solver:
 
 ```@example intro
 using OptimizationBBO

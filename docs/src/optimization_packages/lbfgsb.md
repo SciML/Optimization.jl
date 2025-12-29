@@ -1,4 +1,4 @@
-# OptimizationLBFGSB.jl
+# [OptimizationLBFGSB.jl](@id lbfgsb)
 
 [`OptimizationLBFGSB.jl`](https://github.com/SciML/Optimization.jl/tree/master/lib/OptimizationLBFGSB) is a package that wraps the [L-BFGS-B](https://users.iems.northwestern.edu/%7Enocedal/lbfgsb.html) fortran routine via the [LBFGSB.jl](https://github.com/Gnimuc/LBFGSB.jl/) package.
 
