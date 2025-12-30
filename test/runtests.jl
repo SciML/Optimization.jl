@@ -36,6 +36,9 @@ end
             @safetestset "DiffEqFlux" begin
                 include("diffeqfluxtests.jl")
             end
+            @safetestset "Interface Compatibility" begin
+                include("interface_tests.jl")
+            end
         end
     elseif GROUP == "GPU"
         activate_downstream_env()

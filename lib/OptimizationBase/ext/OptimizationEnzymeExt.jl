@@ -66,7 +66,7 @@ function cons_f2_oop(mode, x, dx, fcons, p, i)
     return nothing
 end
 
-function lagrangian(x, _f::Function, cons::Function, p, λ, σ = one(eltype(x)))::Float64
+function lagrangian(x, _f::Function, cons::Function, p, λ, σ = one(eltype(x)))
     res = zeros(eltype(x), length(λ))
     cons(res, x, p)
     return σ * _f(x, p) + dot(λ, res)
