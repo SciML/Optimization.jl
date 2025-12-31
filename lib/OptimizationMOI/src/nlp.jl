@@ -108,16 +108,21 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
         mtkize = false,
         callback = nothing,
         kwargs...)
+    @info "NLPCACHE"
     reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     if prob.f.adtype isa ADTypes.AutoSymbolics || (prob.f.adtype isa ADTypes.AutoSparse &&
         prob.f.adtype.dense_ad isa ADTypes.AutoSymbolics)
+        @info "AutoSymbolics"
+        @info "generate_exprs"
         f = generate_exprs(prob)
+        @info "instantiate_function"
         f = OptimizationBase.instantiate_function(
             f, reinit_cache, prob.f.adtype, num_cons;
             g = true, h = true, cons_j = true, cons_h = true)
     else
+        @info "Non-symbolic instantiate_function"
         f = OptimizationBase.instantiate_function(
             prob.f, reinit_cache, prob.f.adtype, num_cons;
             g = true, h = true, cons_j = true, cons_vjp = true, lag_h = true)
@@ -149,19 +154,23 @@ function MOIOptimizationNLPCache(prob::OptimizationProblem,
     ucons = prob.ucons === nothing ? fill(T(Inf), num_cons) : prob.ucons
 
     if f.sys isa SymbolicIndexingInterface.SymbolCache{Nothing, Nothing, Nothing} && mtkize
+        @info "MTKIZE"
         try
+            @info "do mtkize"
             sys = MTK.modelingtoolkitize(prob)
         catch err
             throw(ArgumentError("Automatic symbolic expression generation with ModelingToolkit failed with error: $err.
             Try by setting `mtkize = false` instead if the solver doesn't require symbolic expressions."))
         end
         if !isnothing(prob.p) && !(prob.p isa SciMLBase.NullParameters)
+            @info "sysprob"
             unames = variable_symbols(sys)
             pnames = parameter_symbols(sys)
             us = [unames[i] => prob.u0[i] for i in 1:length(prob.u0)]
             ps = [pnames[i] => prob.p[i] for i in 1:length(prob.p)]
             sysprob = OptimizationProblem(sys, us, ps)
         else
+            @info "sysprob2"
             unames = variable_symbols(sys)
             us = [unames[i] => prob.u0[i] for i in 1:length(prob.u0)]
             sysprob = OptimizationProblem(sys, us)

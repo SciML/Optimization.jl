@@ -177,10 +177,12 @@ function rep_pars_vals!(expr::Expr, expr_map)
             isequal(f, expr) && return n
         end
     end
+    @info "rep_pars_vals - threaded `for`"
     Threads.@sync for i in eachindex(expr.args)
         i == 1 && expr.head == :call && continue # first arg is the operator
         Threads.@spawn expr.args[i] = rep_pars_vals!(expr.args[i], expr_map)
     end
+    @info "rep_pars_vals - threaded `for` end"
     return expr
 end
 
@@ -213,14 +215,19 @@ parameters with `x[i]` and `p[i]`.
 function convert_to_expr(eq, expr_map; expand_expr = false)
     if expand_expr
         eq = try
+            @info "cte - expand"
             Symbolics.expand(eq) # PolyForm sometimes errors
         catch e
+            @info "cte - expand again" e
             Symbolics.expand(eq)
         end
     end
+    @info "cte - toexpr"
     expr = ModelingToolkitBase.toexpr(eq)
 
+    @info "cte - rep_pars_vals"
     expr = rep_pars_vals!(expr, expr_map)
+    @info "cte - symbolify"
     expr = symbolify!(expr)
     return expr
 end
@@ -294,18 +301,23 @@ function generate_exprs(prob::OptimizationProblem)
     Unsupported parameter object type $(typeof(pobj)) for expression construction.
     """
     @variables x[1:length(prob.u0)] p[1:length(pobj)]
+    @info "gen_exprs - trace"
     obj = prob.f.f(collect(x), collect(p))
+    @info "gen_exprs - toexpr"
     obj_expr = SU.Code.toexpr(SU.expand(SU.unwrap(obj)))
+    @info "gen_exprs - symbolify!"
     symbolify!(obj_expr)
     if prob.lcons === nothing && prob.ucons === nothing
         return SciMLBase.remake(f; expr = obj_expr)
     end
+    @info "gen_exprs - trace cons"
     if SciMLBase.isinplace(prob)
         cons_expr = zeros(Num, length(prob.lcons))
         prob.f.cons(cons_expr, collect(x), collect(p))
     else
         cons_expr = prob.f.cons(collect(x), collect(p))
     end
+    @info "gen_exprs - toexpr cons"
     cons_expr = SU.Code.toexpr.(SU.expand.(SU.unwrap.(cons_expr)))::Vector{Expr}
     for i in eachindex(cons_expr)
         cons_expr[i] = if prob.lcons[i] == prob.ucons[i]
@@ -318,7 +330,7 @@ function generate_exprs(prob::OptimizationProblem)
             Expr(:comparison, prob.lcons[i], :(<=), cons_expr[i], :(<=), prob.ucons[i])
         end
     end
-    symbolify!(obj_expr)
+    @info "gen_exprs - symbolify! cons"
     symbolify!.(cons_expr)
     newf = SciMLBase.remake(f; expr = obj_expr, cons_expr)
     return newf
@@ -326,11 +338,15 @@ end
 
 function process_system_exprs(prob::OptimizationProblem, f::OptimizationFunction)
     @assert f.sys !== nothing
+    @info "pse - get_expr_map"
     expr_map = get_expr_map(prob.f.sys)
+    @info "pse - convert_to_expr"
     expr = convert_to_expr(f.expr, expr_map; expand_expr = false)
+    @info "pse - repl_getindex"
     expr = repl_getindex!(expr)
     cons = MTK.constraints(f.sys)
     cons_expr = Vector{Expr}(undef, length(cons))
+    @info "pse - threaded for"
     Threads.@sync for i in eachindex(cons)
         Threads.@spawn if prob.lcons[i] == prob.ucons[i] == 0
             cons_expr[i] = Expr(:call, :(==),
@@ -345,6 +361,7 @@ function process_system_exprs(prob::OptimizationProblem, f::OptimizationFunction
             expand_expr = false)), 0)
         end
     end
+    @info "pse - threaded for end"
     return expr, cons_expr
 end
 
@@ -376,6 +393,7 @@ function SciMLBase.__init(prob::OptimizationProblem,
         mtkize = false,
         kwargs...)
     cache = if MOI.supports(_create_new_optimizer(opt), MOI.NLPBlock())
+        @info "CACHE1"
         MOIOptimizationNLPCache(prob,
             opt;
             maxiters,
@@ -385,6 +403,7 @@ function SciMLBase.__init(prob::OptimizationProblem,
             mtkize,
             kwargs...)
     else
+        @info "CACHE2"
         MOIOptimizationCache(prob, opt; maxiters, maxtime, abstol, reltol, kwargs...)
     end
     return cache

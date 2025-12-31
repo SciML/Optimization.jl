@@ -17,8 +17,11 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
     reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p)
     if isnothing(f.sys)
         if f.adtype isa OptimizationBase.AutoSymbolics
+            @info "AutoSymbolics"
             num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
+            @info "generate_exprs"
             f = generate_exprs(prob)
+            @info "instantiate_fn"
             f = OptimizationBase.instantiate_function(f,
                 reinit_cache,
                 prob.f.adtype,
@@ -30,6 +33,7 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
 
     # TODO: check if the problem is at most bilinear, i.e. affine and or quadratic terms in two variables
     if f.sys !== nothing
+        @info "process_system_exprs"
         expr, cons_expr = process_system_exprs(prob, f)
         f = remake(f; expr, cons_expr)
     end
