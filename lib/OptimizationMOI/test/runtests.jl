@@ -36,10 +36,13 @@ end
     x0 = zeros(2)
     _p = [1.0, 100.0]
     cons_circ = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
+    @info "OPTFN"
     optprob = OptimizationFunction(
         rosenbrock, AutoZygote();
         cons = cons_circ)
+    @info "OPTPROB"
     prob = OptimizationProblem(optprob, x0, _p, ucons = [Inf], lcons = [0.0])
+    @info "INIT"
     evaluator = init(prob, Ipopt.Optimizer()).evaluator
 
     x = prob.u0
@@ -47,12 +50,14 @@ end
     @test (evaluator.f.cons_j !== nothing) || (evaluator.f.cons_jvp !== nothing)
     y = zeros(1)
     w = ones(2)
+    @info "EVAL CJAC PROD"
     @test MathOptInterface.eval_constraint_jacobian_product(evaluator, y, x, w) === nothing
 
     # constraint jacobian-vector product
     @test (evaluator.f.cons_j !== nothing) || (evaluator.f.cons_vjp !== nothing)
     y = zeros(2)
     w = ones(1)
+    @info "EVAL CJAC TRANSPOSE PROD"
     @test MathOptInterface.eval_constraint_jacobian_transpose_product(
         evaluator, y, x, w) === nothing
 end

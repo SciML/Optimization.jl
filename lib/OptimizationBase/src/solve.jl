@@ -110,33 +110,44 @@ function solve(
 end
 
 function _check_opt_alg(prob::SciMLBase.OptimizationProblem, alg; kwargs...)
+    @info "CHECK" 1
     !allowsbounds(alg) && (!isnothing(prob.lb) || !isnothing(prob.ub)) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) does not support box constraints. Either remove the `lb` or `ub` bounds passed to `OptimizationProblem` or use a different algorithm."))
+    @info "CHECK" 2
     requiresbounds(alg) && isnothing(prob.lb) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) requires box constraints. Either pass `lb` and `ub` bounds to `OptimizationProblem` or use a different algorithm."))
+    @info "CHECK" 3
     !allowsconstraints(alg) && !isnothing(prob.f.cons) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) does not support constraints. Either remove the `cons` function passed to `OptimizationFunction` or use a different algorithm."))
+    @info "CHECK" 4
     requiresconstraints(alg) && isnothing(prob.f.cons) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) requires constraints, pass them with the `cons` kwarg in `OptimizationFunction`."))
+    @info "CHECK" 5
     # Check that if constraints are present and the algorithm supports constraints, both lcons and ucons are provided
     allowsconstraints(alg) && !isnothing(prob.f.cons) &&
         (isnothing(prob.lcons) || isnothing(prob.ucons)) &&
         throw(ArgumentError("Constrained optimization problem requires both `lcons` and `ucons` to be provided to OptimizationProblem. " *
                             "Example: OptimizationProblem(optf, u0, p; lcons=[-Inf], ucons=[0.0])"))
+    @info "CHECK" 5
     !allowscallback(alg) && !(get(kwargs, :callback, DEFAULT_CALLBACK) isa NullCallback) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) does not support callbacks, remove the `callback` keyword argument from the `solve` call."))
+    @info "CHECK" 6
     requiresgradient(alg) &&
         !(prob.f isa SciMLBase.AbstractOptimizationFunction) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) requires gradients, hence use `OptimizationFunction` to generate them with an automatic differentiation backend e.g. `OptimizationFunction(f, AutoForwardDiff())` or pass it in with `grad` kwarg."))
+    @info "CHECK" 7
     requireshessian(alg) &&
         !(prob.f isa SciMLBase.AbstractOptimizationFunction) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) requires hessians, hence use `OptimizationFunction` to generate them with an automatic differentiation backend e.g. `OptimizationFunction(f, AutoFiniteDiff(); kwargs...)` or pass them in with `hess` kwarg."))
+    @info "CHECK" 8
     requiresconsjac(alg) &&
         !(prob.f isa SciMLBase.AbstractOptimizationFunction) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) requires constraint jacobians, hence use `OptimizationFunction` to generate them with an automatic differentiation backend e.g. `OptimizationFunction(f, AutoFiniteDiff(); kwargs...)` or pass them in with `cons` kwarg."))
+    @info "CHECK" 9
     requiresconshess(alg) &&
         !(prob.f isa SciMLBase.AbstractOptimizationFunction) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) requires constraint hessians, hence use `OptimizationFunction` to generate them with an automatic differentiation backend e.g. `OptimizationFunction(f, AutoFiniteDiff(), AutoFiniteDiff(hess=true); kwargs...)` or pass them in with `cons` kwarg."))
+    @info "CHECK" 10
     return
 end
 
@@ -184,10 +195,13 @@ See also [`solve(prob::OptimizationProblem, alg, args...; kwargs...)`](@ref)
 """
 function init(prob::SciMLBase.OptimizationProblem, alg, args...;
         kwargs...)::SciMLBase.AbstractOptimizationCache
+    @info "Base.init"
     if prob.u0 !== nothing && !isconcretetype(eltype(prob.u0))
         throw(SciMLBase.NonConcreteEltypeError(eltype(prob.u0)))
     end
+    @info "Base check alg" 
     _check_opt_alg(prob::SciMLBase.OptimizationProblem, alg; kwargs...)
+    @info "Base __init"
     cache = __init(prob, alg, args...; prob.kwargs..., kwargs...)
     return cache
 end
