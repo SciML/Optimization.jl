@@ -392,7 +392,12 @@ function SciMLBase.__init(prob::OptimizationProblem,
         reltol::Union{Number, Nothing} = nothing,
         mtkize = false,
         kwargs...)
-    cache = if MOI.supports(_create_new_optimizer(opt), MOI.NLPBlock())
+    @info "create new opt"
+    _opt = _create_new_optimizer(opt)
+    @info "blk"
+    blk = MOI.NLPBlock()
+    @info "supports"
+    cache = if MOI.supports(_opt, blk)
         @info "CACHE1"
         MOIOptimizationNLPCache(prob,
             opt;
