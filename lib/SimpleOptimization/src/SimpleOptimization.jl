@@ -9,11 +9,72 @@ using ADTypes
 
 abstract type SimpleOptimizationAlgorithm end
 
+"""
+    SimpleLBFGS(; threshold::Union{Val, Int} = Val(10))
+
+A lightweight, loop-unrolled Limited-memory BFGS (L-BFGS) optimization algorithm.
+This algorithm is designed for small-scale unconstrained optimization problems where
+low overhead is critical.
+
+## Arguments
+
+  - `threshold`: The number of past iterations to store for approximating the inverse
+    Hessian. Default is `Val(10)`. Can be specified as either a `Val` type for compile-time
+    optimization or an `Int`.
+
+## Description
+
+`SimpleLBFGS` uses a limited-memory approximation to the BFGS update, storing only the
+last `threshold` iterations of gradient information. This makes it memory-efficient
+for problems with many variables while still achieving superlinear convergence.
+
+Internally, it wraps `SimpleLimitedMemoryBroyden` from SimpleNonlinearSolve.jl to find
+the root of the gradient (i.e., the stationary point of the objective).
+
+## Example
+
+```julia
+using SimpleOptimization, Optimization, ForwardDiff
+
+rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+x0 = zeros(2)
+optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+prob = OptimizationProblem(optf, x0)
+sol = solve(prob, SimpleLBFGS())
+```
+"""
 struct SimpleLBFGS{Threshold} <: SimpleOptimizationAlgorithm end
 
 __get_threshold(::SimpleLBFGS{threshold}) where {threshold} = Val(threshold)
 SimpleLBFGS(; threshold::Union{Val, Int} = Val(10)) = SimpleLBFGS{_unwrap_val(threshold)}()
 
+"""
+    SimpleBFGS()
+
+A lightweight, loop-unrolled BFGS optimization algorithm. This algorithm is designed
+for small-scale unconstrained optimization problems where low overhead is critical.
+
+## Description
+
+`SimpleBFGS` implements the Broyden-Fletcher-Goldfarb-Shanno (BFGS) quasi-Newton method.
+It builds an approximation to the inverse Hessian matrix using gradient information,
+achieving superlinear convergence for smooth objective functions.
+
+Internally, it wraps `SimpleBroyden` from SimpleNonlinearSolve.jl to find the root of
+the gradient (i.e., the stationary point of the objective).
+
+## Example
+
+```julia
+using SimpleOptimization, Optimization, ForwardDiff
+
+rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+x0 = zeros(2)
+optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+prob = OptimizationProblem(optf, x0)
+sol = solve(prob, SimpleBFGS())
+```
+"""
 struct SimpleBFGS <: SimpleOptimizationAlgorithm end
 
 SciMLBase.has_init(::SimpleOptimizationAlgorithm) = true

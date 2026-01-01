@@ -50,5 +50,6 @@ pages = [
         "Sophia.jl" => "optimization_packages/sophia.md",
         "SpeedMapping.jl" => "optimization_packages/speedmapping.md",
         "SciPy.jl" => "optimization_packages/scipy.md",
+        "SimpleOptimization.jl" => "optimization_packages/simpleoptimization.md",
     ],
 ]
