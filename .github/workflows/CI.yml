@@ -45,6 +45,7 @@ jobs:
           - OptimizationSpeedMapping
           - OptimizationPolyalgorithms
           - OptimizationNLPModels
+          - SimpleOptimization
         version:
           - '1.11'
           - 'lts'
