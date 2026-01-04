@@ -3,9 +3,13 @@ using Optimization, Aqua
     Aqua.find_persistent_tasks_deps(Optimization)
     Aqua.test_ambiguities(Optimization, recursive = false)
     Aqua.test_deps_compat(Optimization)
-    Aqua.test_piracies(Optimization,
-        treat_as_own = [OptimizationProblem,
-            Optimization.SciMLBase.AbstractOptimizationCache])
+    Aqua.test_piracies(
+        Optimization,
+        treat_as_own = [
+            OptimizationProblem,
+            Optimization.SciMLBase.AbstractOptimizationCache,
+        ]
+    )
     Aqua.test_project_extras(Optimization)
     if !(VERSION < v"1.11")
         # in CI we need to dev packages to run the tests

@@ -1,5 +1,5 @@
 using OptimizationNLPModels, OptimizationBase, NLPModelsTest, Ipopt, OptimizationMOI, Zygote,
-      ReverseDiff, OptimizationLBFGSB, OptimizationOptimJL
+    ReverseDiff, OptimizationLBFGSB, OptimizationOptimJL
 using Test
 
 @testset "NLPModels" begin
@@ -12,7 +12,8 @@ using Test
     ub = [4.0; 3.0]
     u0 = [0.0; 0.0]
     oprob = OptimizationBase.OptimizationProblem(
-        f, u0, lb = lb, ub = ub, sense = OptimizationBase.MinSense)
+        f, u0, lb = lb, ub = ub, sense = OptimizationBase.MinSense
+    )
 
     nlpmo = NLPModelsTest.HS5()
     converted = OptimizationNLPModels.OptimizationProblem(nlpmo, OptimizationBase.AutoZygote())
@@ -51,13 +52,16 @@ using Test
     ucons = [Inf]
     u0 = [-10.0; 10.0]
     f = OptimizationBase.OptimizationFunction(
-        hs10, OptimizationBase.AutoForwardDiff(); cons = hs10_cons)
+        hs10, OptimizationBase.AutoForwardDiff(); cons = hs10_cons
+    )
     oprob = OptimizationBase.OptimizationProblem(
-        f, u0, lcons = lcons, ucons = ucons, sense = OptimizationBase.MinSense)
+        f, u0, lcons = lcons, ucons = ucons, sense = OptimizationBase.MinSense
+    )
 
     nlpmo = NLPModelsTest.HS10()
     converted = OptimizationNLPModels.OptimizationProblem(
-        nlpmo, OptimizationBase.AutoForwardDiff())
+        nlpmo, OptimizationBase.AutoForwardDiff()
+    )
 
     sol_native = solve(oprob, Ipopt.Optimizer())
     sol_converted = solve(converted, Ipopt.Optimizer())
@@ -76,13 +80,17 @@ using Test
     ub = [Inf; Inf]
     u0 = [-2.0; -2.0]
     f = OptimizationBase.OptimizationFunction(
-        hs13, OptimizationBase.AutoForwardDiff(); cons = hs13_cons)
-    oprob = OptimizationBase.OptimizationProblem(f, u0, lb = lb, ub = ub, lcons = lcons,
-        ucons = ucons, sense = OptimizationBase.MinSense)
+        hs13, OptimizationBase.AutoForwardDiff(); cons = hs13_cons
+    )
+    oprob = OptimizationBase.OptimizationProblem(
+        f, u0, lb = lb, ub = ub, lcons = lcons,
+        ucons = ucons, sense = OptimizationBase.MinSense
+    )
 
     nlpmo = NLPModelsTest.HS13()
     converted = OptimizationNLPModels.OptimizationProblem(
-        nlpmo, OptimizationBase.AutoForwardDiff())
+        nlpmo, OptimizationBase.AutoForwardDiff()
+    )
 
     sol_native = solve(oprob, Ipopt.Optimizer())
     sol_converted = solve(converted, Ipopt.Optimizer())
@@ -94,19 +102,26 @@ using Test
     # https://jso.dev/NLPModelsTest.jl/dev/reference/#NLPModelsTest.HS14
     # Problem with mixed equality & inequality constraints
     hs14(u, p) = (u[1] - 2.0)^2 + (u[2] - 1.0)^2
-    hs14_cons(res, u, p) = (res .= [u[1] - 2.0 * u[2];
-                                    -0.25 * u[1]^2 - u[2]^2 + 1.0])
+    hs14_cons(res, u, p) = (
+        res .= [
+            u[1] - 2.0 * u[2];
+            -0.25 * u[1]^2 - u[2]^2 + 1.0
+        ]
+    )
     lcons = [-1.0; 0.0]
     ucons = [-1.0; Inf]
     u0 = [2.0; 2.0]
     f = OptimizationBase.OptimizationFunction(
-        hs14, OptimizationBase.AutoForwardDiff(); cons = hs14_cons)
+        hs14, OptimizationBase.AutoForwardDiff(); cons = hs14_cons
+    )
     oprob = OptimizationBase.OptimizationProblem(
-        f, u0, lcons = lcons, ucons = ucons, sense = OptimizationBase.MinSense)
+        f, u0, lcons = lcons, ucons = ucons, sense = OptimizationBase.MinSense
+    )
 
     nlpmo = NLPModelsTest.HS14()
     converted = OptimizationNLPModels.OptimizationProblem(
-        nlpmo, OptimizationBase.AutoForwardDiff())
+        nlpmo, OptimizationBase.AutoForwardDiff()
+    )
 
     sol_native = solve(oprob, Ipopt.Optimizer())
     sol_converted = solve(converted, Ipopt.Optimizer())

@@ -17,7 +17,8 @@ using Random
     # MadNLP requires second-order derivatives
     ad = SecondOrder(ADTypes.AutoForwardDiff(), ADTypes.AutoZygote())
     optfunc = OptimizationFunction(
-        (x, p) -> -rosenbrock(x, p), ad)
+        (x, p) -> -rosenbrock(x, p), ad
+    )
     prob = OptimizationProblem(optfunc, x0, _p; sense = OptimizationBase.MaxSense)
 
     sol = solve(prob, MadNLPOptimizer(), verbose = true)
@@ -33,9 +34,13 @@ end
     cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[2]])
 
     function lagh(res, x, sigma, mu, p)
-        lH = sigma * [2 + 8(x[1]^2) * p[2]-4(x[2] - (x[1]^2)) * p[2] -4p[2]*x[1]
-              -4p[2]*x[1] 2p[2]] .+ [2mu[1] mu[2]
-              mu[2] 2mu[1]]
+        lH = sigma * [
+            2 + 8(x[1]^2) * p[2] - 4(x[2] - (x[1]^2)) * p[2] -4p[2] * x[1]
+            -4p[2] * x[1] 2p[2]
+        ] .+ [
+            2mu[1] mu[2]
+            mu[2] 2mu[1]
+        ]
         # MadNLP uses lower triangle. For symmetric sparse([1 1; 1 1]), lower triangle has [1,1], [2,1], and [2,2]
         res[1] = lH[1, 1]  # Position [1,1]
         res[2] = lH[2, 1]  # Position [2,1] (off-diagonal)
@@ -45,13 +50,15 @@ end
 
     # Use SecondOrder AD for MadNLP
     ad = SecondOrder(ADTypes.AutoForwardDiff(), ADTypes.AutoZygote())
-    optprob = OptimizationFunction(rosenbrock, ad;
-        cons = cons, lag_h = lagh, lag_hess_prototype)
+    optprob = OptimizationFunction(
+        rosenbrock, ad;
+        cons = cons, lag_h = lagh, lag_hess_prototype
+    )
     prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, 0.5])
 
     opts = [
         MadNLPOptimizer(),
-        MadNLPOptimizer(linear_solver = LapackCPUSolver)
+        MadNLPOptimizer(linear_solver = LapackCPUSolver),
     ]
 
     for opt in opts
@@ -59,7 +66,7 @@ end
         @test SciMLBase.successful_retcode(sol)
 
         # compare against Ipopt results
-        @test sol≈[0.7071678163428006, 0.7070457460302945] rtol=1e-4
+        @test sol ≈ [0.7071678163428006, 0.7070457460302945] rtol = 1.0e-4
     end
 end
 
@@ -70,21 +77,21 @@ end
 
     # Use SecondOrder AD for MadNLP
     @testset "$ad" for ad in [
-        SecondOrder(AutoZygote(), AutoZygote()),
-        SecondOrder(AutoForwardDiff(), AutoZygote()),
-        SecondOrder(AutoForwardDiff(), AutoReverseDiff())
-    ]
+            SecondOrder(AutoZygote(), AutoZygote()),
+            SecondOrder(AutoForwardDiff(), AutoZygote()),
+            SecondOrder(AutoForwardDiff(), AutoReverseDiff()),
+        ]
         optf = OptimizationFunction(objective, ad)
         prob = OptimizationProblem(optf, x0, p)
         cache = OptimizationBase.init(prob, MadNLPOptimizer())
         sol = OptimizationBase.solve!(cache)
         @test sol.retcode == ReturnCode.Success
-        @test sol.u≈[1.0] atol=1e-3
+        @test sol.u ≈ [1.0] atol = 1.0e-3
 
         cache = OptimizationBase.reinit!(cache; p = [2.0])
         sol = OptimizationBase.solve!(cache)
         # @test sol.retcode == ReturnCode.Success
-        @test sol.u≈[2.0] atol=1e-3
+        @test sol.u ≈ [2.0] atol = 1.0e-3
     end
 end
 
@@ -95,23 +102,25 @@ end
     function constraints(res, x, ::Any)
         res .= [
             x[1] * x[2] * x[3] * x[4],
-            x[1]^2 + x[2]^2 + x[3]^2 + x[4]^2
+            x[1]^2 + x[2]^2 + x[3]^2 + x[4]^2,
         ]
     end
 
     x0 = [1.0, 5.0, 5.0, 1.0]
 
     @testset "$ad" for ad in [
-        AutoSparse(SecondOrder(AutoForwardDiff(), AutoZygote())),
-        AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff())),
-        AutoSparse(SecondOrder(AutoForwardDiff(), AutoReverseDiff()))
-    ]
+            AutoSparse(SecondOrder(AutoForwardDiff(), AutoZygote())),
+            AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff())),
+            AutoSparse(SecondOrder(AutoForwardDiff(), AutoReverseDiff())),
+        ]
         optfunc = OptimizationFunction(objective, ad, cons = constraints)
-        prob = OptimizationProblem(optfunc, x0; sense = OptimizationBase.MinSense,
+        prob = OptimizationProblem(
+            optfunc, x0; sense = OptimizationBase.MinSense,
             lb = [1.0, 1.0, 1.0, 1.0],
             ub = [5.0, 5.0, 5.0, 5.0],
             lcons = [25.0, 40.0],
-            ucons = [Inf, 40.0])
+            ucons = [Inf, 40.0]
+        )
 
         cache = init(prob, MadNLPOptimizer())
 
@@ -119,39 +128,45 @@ end
 
         @test SciMLBase.successful_retcode(sol)
 
-        @test isapprox(sol.objective, 17.014017145179164; atol = 1e-6)
-        x = [1.0, 4.7429996418092970, 3.8211499817883077, 1.3794082897556983]
-        @test isapprox(sol.u, x; atol = 1e-6)
-        @test prod(sol.u) >= 25.0 - 1e-6
-        @test isapprox(sum(sol.u .^ 2), 40.0; atol = 1e-6)
+        @test isapprox(sol.objective, 17.014017145179164; atol = 1.0e-6)
+        x = [1.0, 4.742999641809297, 3.8211499817883077, 1.3794082897556983]
+        @test isapprox(sol.u, x; atol = 1.0e-6)
+        @test prod(sol.u) >= 25.0 - 1.0e-6
+        @test isapprox(sum(sol.u .^ 2), 40.0; atol = 1.0e-6)
     end
 
     # dense
     @testset "$ad" for ad in [
-        SecondOrder(AutoForwardDiff(), AutoZygote()),
-        SecondOrder(AutoForwardDiff(), AutoForwardDiff()),
-        SecondOrder(AutoForwardDiff(), AutoReverseDiff())
-    ]
+            SecondOrder(AutoForwardDiff(), AutoZygote()),
+            SecondOrder(AutoForwardDiff(), AutoForwardDiff()),
+            SecondOrder(AutoForwardDiff(), AutoReverseDiff()),
+        ]
         optfunc = OptimizationFunction(objective, ad, cons = constraints)
-        prob = OptimizationProblem(optfunc, x0; sense = OptimizationBase.MinSense,
+        prob = OptimizationProblem(
+            optfunc, x0; sense = OptimizationBase.MinSense,
             lb = [1.0, 1.0, 1.0, 1.0],
             ub = [5.0, 5.0, 5.0, 5.0],
             lcons = [25.0, 40.0],
-            ucons = [Inf, 40.0])
+            ucons = [Inf, 40.0]
+        )
 
-        cache = init(prob,
-            MadNLPOptimizer(kkt_system = MadNLP.DenseKKTSystem,
-                linear_solver = LapackCPUSolver))
+        cache = init(
+            prob,
+            MadNLPOptimizer(
+                kkt_system = MadNLP.DenseKKTSystem,
+                linear_solver = LapackCPUSolver
+            )
+        )
 
         sol = OptimizationBase.solve!(cache)
 
         @test SciMLBase.successful_retcode(sol)
 
-        @test isapprox(sol.objective, 17.014017145179164; atol = 1e-6)
-        x = [1.0, 4.7429996418092970, 3.8211499817883077, 1.3794082897556983]
-        @test isapprox(sol.u, x; atol = 1e-6)
-        @test prod(sol.u) >= 25.0 - 1e-6
-        @test isapprox(sum(sol.u .^ 2), 40.0; atol = 1e-6)
+        @test isapprox(sol.objective, 17.014017145179164; atol = 1.0e-6)
+        x = [1.0, 4.742999641809297, 3.8211499817883077, 1.3794082897556983]
+        @test isapprox(sol.u, x; atol = 1.0e-6)
+        @test prod(sol.u) >= 25.0 - 1.0e-6
+        @test isapprox(sum(sol.u .^ 2), 40.0; atol = 1.0e-6)
     end
 end
 
@@ -206,12 +221,16 @@ end
 
     # Use SecondOrder AD for MadNLP
     ad = SecondOrder(ADTypes.AutoForwardDiff(), ADTypes.AutoZygote())
-    optprob = OptimizationFunction(objective_sparse, ad;
-        cons = cons_sparse, lag_h = lag_hess_sparse, lag_hess_prototype = hess_proto_4x4)
+    optprob = OptimizationFunction(
+        objective_sparse, ad;
+        cons = cons_sparse, lag_h = lag_hess_sparse, lag_hess_prototype = hess_proto_4x4
+    )
 
-    prob = OptimizationProblem(optprob, x0, p,
+    prob = OptimizationProblem(
+        optprob, x0, p,
         lcons = [4.0, 1.0],     # x1+x2+x3+x4 = 4, x1*x3 >= 1
-        ucons = [4.0, Inf])      # x1+x2+x3+x4 = 4, x1*x3 <= Inf
+        ucons = [4.0, Inf]
+    )      # x1+x2+x3+x4 = 4, x1*x3 <= Inf
 
     sol = solve(prob, MadNLPOptimizer())
 
@@ -220,8 +239,8 @@ end
     # Check constraints
     cons_vals = zeros(2)
     cons_sparse(cons_vals, sol.u, p)
-    @test isapprox(cons_vals[1], 4.0, atol = 1e-6)  # Sum constraint
-    @test cons_vals[2] >= 1.0 - 1e-6              # Product constraint
+    @test isapprox(cons_vals[1], 4.0, atol = 1.0e-6)  # Sum constraint
+    @test cons_vals[2] >= 1.0 - 1.0e-6              # Product constraint
 end
 
 @testset "MadNLP Options and Common Interface" begin
@@ -236,7 +255,7 @@ end
 
         # Test with MadNLP-specific struct fields
         opt = MadNLPOptimizer(
-            acceptable_tol = 1e-6,
+            acceptable_tol = 1.0e-6,
             acceptable_iter = 10,
             blas_num_threads = 2,
             mu_init = 0.01
@@ -263,7 +282,7 @@ end
             linear_solver = MadNLP.UmfpackSolver,
             additional_options = Dict{Symbol, Any}(
                 :max_iter => 200,
-                :tol => 1e-7
+                :tol => 1.0e-7
             )
         )
         sol = solve(prob, opt)
@@ -272,9 +291,9 @@ end
         # Test with different options
         opt2 = MadNLPOptimizer(
             additional_options = Dict{Symbol, Any}(
-            :inertia_correction_method => MadNLP.InertiaFree,
-            :fixed_variable_treatment => MadNLP.RelaxBound
-        )
+                :inertia_correction_method => MadNLP.InertiaFree,
+                :fixed_variable_treatment => MadNLP.RelaxBound
+            )
         )
         sol2 = solve(prob, opt2)
         @test SciMLBase.successful_retcode(sol2)
@@ -285,9 +304,9 @@ end
         prob = OptimizationProblem(optfunc, x0, p)
 
         # Test that abstol overrides default tolerance
-        sol1 = solve(prob, MadNLPOptimizer(); abstol = 1e-12)
+        sol1 = solve(prob, MadNLPOptimizer(); abstol = 1.0e-12)
         @test SciMLBase.successful_retcode(sol1)
-        @test sol1.u≈[1.0, 1.0] atol=1e-10
+        @test sol1.u ≈ [1.0, 1.0] atol = 1.0e-10
 
         # Test that maxiters limits iterations
         sol2 = solve(prob, MadNLPOptimizer(); maxiters = 5)
@@ -307,23 +326,25 @@ end
 
         # Struct field is overridden by additional_options and solve arguments
         opt = MadNLPOptimizer(
-            acceptable_tol = 1e-4,  # Struct field
+            acceptable_tol = 1.0e-4,  # Struct field
             additional_options = Dict{Symbol, Any}(
                 :max_iter => 10,    # Will be overridden by maxiters
-                :tol => 1e-6        # Will be overridden by abstol
+                :tol => 1.0e-6        # Will be overridden by abstol
             )
         )
 
-        sol = solve(prob, opt;
+        sol = solve(
+            prob, opt;
             maxiters = 5,   # Should override additional_options[:max_iter]
-            abstol = 1e-10)  # Should override additional_options[:tol]
+            abstol = 1.0e-10
+        )  # Should override additional_options[:tol]
 
         @test sol.stats.iterations <= 5
         @test sol.retcode == SciMLBase.ReturnCode.MaxIters
     end
 end
 
-@testset verbose=true "LBFGS Hessian Approximation" begin
+@testset verbose = true "LBFGS Hessian Approximation" begin
     # Based on https://madsuite.org/MadNLP.jl/dev/tutorials/lbfgs/
 
     @testset "Unconstrained LBFGS" begin
@@ -340,9 +361,9 @@ end
 
         # Test different LBFGS configurations
         @testset "LBFGS variant: $variant" for variant in [
-            MadNLP.CompactLBFGS,
-            MadNLP.ExactHessian  # For comparison
-        ]
+                MadNLP.CompactLBFGS,
+                MadNLP.ExactHessian,  # For comparison
+            ]
             # Only provide gradients, no Hessian needed for LBFGS
             ad = AutoForwardDiff()  # First-order AD is sufficient
             optfunc = OptimizationFunction(extended_rosenbrock, ad)
@@ -362,8 +383,8 @@ end
             sol = solve(prob, opt; maxiters = 100, verbose = false)
 
             @test SciMLBase.successful_retcode(sol)
-            @test all(isapprox.(sol.u, 1.0, atol = 1e-6))  # Solution should be all ones
-            @test sol.objective < 1e-10  # Should be close to zero
+            @test all(isapprox.(sol.u, 1.0, atol = 1.0e-6))  # Solution should be all ones
+            @test sol.objective < 1.0e-10  # Should be close to zero
         end
 
         @testset "LBFGS memory size $memory_size" for memory_size in [5, 10, 20]
@@ -380,11 +401,11 @@ end
             sol = solve(prob, opt; maxiters = 100, verbose = false)
 
             @test SciMLBase.successful_retcode(sol)
-            @test all(isapprox.(sol.u, 1.0, atol = 1e-6))
+            @test all(isapprox.(sol.u, 1.0, atol = 1.0e-6))
         end
     end
 
-    @testset verbose=true "Constrained LBFGS - Electrons on Sphere" begin
+    @testset verbose = true "Constrained LBFGS - Electrons on Sphere" begin
         # Quasi-uniform distribution of electrons on a unit sphere
         # Minimize electrostatic potential energy (Coulomb potential)
         # Variables are organized as [x1, x2, ..., xn, y1, y2, ..., yn, z1, z2, ..., zn]
@@ -458,7 +479,8 @@ end
             lcons = zeros(np)
             ucons = zeros(np)
 
-            prob = OptimizationProblem(optfunc, x0;
+            prob = OptimizationProblem(
+                optfunc, x0;
                 lcons = lcons,
                 ucons = ucons
             )
@@ -468,20 +490,20 @@ end
                 hessian_approximation = approx
             )
 
-            sol = solve(prob, opt; abstol = 1e-7, maxiters = 200, verbose = false)
+            sol = solve(prob, opt; abstol = 1.0e-7, maxiters = 200, verbose = false)
 
             @test SciMLBase.successful_retcode(sol)
 
             # Check that all electrons are on the unit sphere
             cons_vals = zeros(np)
             unit_sphere_constraints(cons_vals, sol.u, nothing)
-            @test all(abs.(cons_vals) .< 1e-5)
+            @test all(abs.(cons_vals) .< 1.0e-5)
 
             # Known optimal energy for 5 electrons on unit sphere
             # Reference: https://en.wikipedia.org/wiki/Thomson_problem
             # Configuration: Triangular dipyramid (trigonal bipyramid, D3h symmetry)
             expected_energy = 6.474691495
-            @test isapprox(sol.objective, expected_energy, rtol = 1e-3)
+            @test isapprox(sol.objective, expected_energy, rtol = 1.0e-3)
 
             # Verify minimum distance between electrons
             x = sol.u[1:np]
@@ -498,25 +520,33 @@ end
             @test min_dist > 0.5  # Electrons should be well-separated
         end
 
-        @testset verbose=true "LBFGS vs Exact Hessian" begin
+        @testset verbose = true "LBFGS vs Exact Hessian" begin
             # Test with moderate size to show LBFGS efficiency
             np = 10  # Gyroelongated square dipyramid configuration
             x0 = init_electrons_on_sphere(np)
 
             results = []
 
-            for (name, approx, ad) in [("CompactLBFGS", MadNLP.CompactLBFGS,
-                                           AutoForwardDiff())
-                                       ("ExactHessian",
-                                           MadNLP.ExactHessian,
-                                           SecondOrder(
-                                               AutoForwardDiff(), AutoZygote()))]
+            for (name, approx, ad) in [
+                    (
+                        "CompactLBFGS", MadNLP.CompactLBFGS,
+                        AutoForwardDiff(),
+                    )
+                    (
+                        "ExactHessian",
+                        MadNLP.ExactHessian,
+                        SecondOrder(
+                            AutoForwardDiff(), AutoZygote()
+                        ),
+                    )
+                ]
                 optfunc = OptimizationFunction(
                     coulomb_potential, ad,
                     cons = unit_sphere_constraints
                 )
 
-                prob = OptimizationProblem(optfunc, x0;
+                prob = OptimizationProblem(
+                    optfunc, x0;
                     lcons = zeros(np),
                     ucons = zeros(np)
                 )
@@ -525,13 +555,15 @@ end
                     hessian_approximation = approx
                 )
 
-                sol = solve(prob, opt; abstol = 1e-6, maxiters = 300, verbose = false)
-                push!(results,
+                sol = solve(prob, opt; abstol = 1.0e-6, maxiters = 300, verbose = false)
+                push!(
+                    results,
                     name => (
                         objective = sol.objective,
                         iterations = sol.stats.iterations,
-                        success = SciMLBase.successful_retcode(sol)
-                    ))
+                        success = SciMLBase.successful_retcode(sol),
+                    )
+                )
             end
 
             # All methods should converge
@@ -541,11 +573,11 @@ end
             # Reference: https://en.wikipedia.org/wiki/Thomson_problem
             objectives = [r[2].objective for r in values(results)]
             @testset "$(results[i][1])" for (i, o) in enumerate(objectives)
-                @test o ≈ 32.716949460 rtol=1e-2
+                @test o ≈ 32.71694946 rtol = 1.0e-2
             end
 
             # LBFGS methods typically need more iterations but less cost per iteration
-            @test results[1][2].iterations > results[1][2].iterations broken=true
+            @test results[1][2].iterations > results[1][2].iterations broken = true
         end
 
         @testset "Exact Hessian and sparse KKT that hits σ == 0 in lag_h" begin
@@ -561,7 +593,8 @@ end
                 cons = unit_sphere_constraints
             )
 
-            prob = OptimizationProblem(optfunc, x0;
+            prob = OptimizationProblem(
+                optfunc, x0;
                 lcons = zeros(np),
                 ucons = zeros(np)
             )
@@ -571,10 +604,10 @@ end
                 kkt_system = MadNLP.SparseKKTSystem
             )
 
-            sol = solve(prob, opt; abstol = 1e-6, maxiters = 300, verbose = false)
+            sol = solve(prob, opt; abstol = 1.0e-6, maxiters = 300, verbose = false)
 
             @test SciMLBase.successful_retcode(sol)
-            @test sol.objective ≈ 49.165253058 rtol=1e-2
+            @test sol.objective ≈ 49.165253058 rtol = 1.0e-2
         end
     end
 
@@ -599,7 +632,7 @@ end
         sol = solve(prob, opt; maxiters = 50, verbose = false)
 
         @test SciMLBase.successful_retcode(sol)
-        @test all(abs.(sol.u) .< 1e-6)  # Solution should be at origin
-        @test sol.objective < 1e-10
+        @test all(abs.(sol.u) .< 1.0e-6)  # Solution should be at origin
+        @test sol.objective < 1.0e-10
     end
 end

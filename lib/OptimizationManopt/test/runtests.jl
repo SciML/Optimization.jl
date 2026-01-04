@@ -12,7 +12,7 @@ rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 
 function rosenbrock_grad!(storage, x, p)
     storage[1] = -2.0 * (p[1] - x[1]) - 4.0 * p[2] * (x[2] - x[1]^2) * x[1]
-    storage[2] = 2.0 * p[2] * (x[2] - x[1]^2)
+    return storage[2] = 2.0 * p[2] * (x[2] - x[1]^2)
 end
 
 R2 = Euclidean(2)
@@ -27,7 +27,8 @@ R2 = Euclidean(2)
         optprob_forwarddiff = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
         prob_forwarddiff = OptimizationProblem(optprob_forwarddiff, x0, p)
         @test_throws ArgumentError("Manifold not specified in the problem for e.g. `OptimizationProblem(f, x, p; manifold = SymmetricPositiveDefinite(5))`.") OptimizationBase.solve(
-            prob_forwarddiff, opt)
+            prob_forwarddiff, opt
+        )
     end
 
     @testset "Gradient descent" begin
@@ -39,7 +40,8 @@ R2 = Euclidean(2)
 
         optprob_forwarddiff = OptimizationFunction(rosenbrock, OptimizationBase.AutoEnzyme())
         prob_forwarddiff = OptimizationProblem(
-            optprob_forwarddiff, x0, p; manifold = R2, stepsize = stepsize)
+            optprob_forwarddiff, x0, p; manifold = R2, stepsize = stepsize
+        )
         sol = OptimizationBase.solve(prob_forwarddiff, opt)
         @test sol.objective < 0.2
 
@@ -90,7 +92,7 @@ R2 = Euclidean(2)
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
         sol = OptimizationBase.solve(prob, opt, callback = callback, maxiters = 30)
-        @test sol.objective < 1e-14
+        @test sol.objective < 1.0e-14
     end
 
     @testset "Particle swarm" begin
@@ -129,7 +131,8 @@ R2 = Euclidean(2)
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
         sol = OptimizationBase.solve(
-            prob, opt, sub_problem = Manopt.convex_bundle_method_subsolver)
+            prob, opt, sub_problem = Manopt.convex_bundle_method_subsolver
+        )
         @test sol.objective < 0.1
     end
 
@@ -159,7 +162,7 @@ R2 = Euclidean(2)
 
         sol = OptimizationBase.solve(prob, opt)
         @test sol.objective < 0.1
-        @test SciMLBase.successful_retcode(sol) broken=true
+        @test SciMLBase.successful_retcode(sol) broken = true
     end
 
     @testset "TrustRegions" begin
@@ -175,7 +178,7 @@ R2 = Euclidean(2)
 
         sol = OptimizationBase.solve(prob, opt)
         @test sol.objective < 0.1
-        @test SciMLBase.successful_retcode(sol) broken=true
+        @test SciMLBase.successful_retcode(sol) broken = true
     end
 
     @testset "Custom constraints" begin

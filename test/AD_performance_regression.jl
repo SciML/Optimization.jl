@@ -3,14 +3,16 @@ using ReverseDiff, Enzyme, BenchmarkTools, Test
 
 lookup_pg = Dict(5 => 11, 4 => 13, 2 => 15, 3 => 17, 1 => 19)
 ref_gen_idxs = [5, 4, 2, 3, 1]
-cost_arrs = Dict(5 => [0.0, 1000.0, 0.0],
+cost_arrs = Dict(
+    5 => [0.0, 1000.0, 0.0],
     4 => [0.0, 4000.0, 0.0],
     2 => [0.0, 1500.0, 0.0],
     3 => [0.0, 3000.0, 0.0],
-    1 => [0.0, 1400.0, 0.0])
+    1 => [0.0, 1400.0, 0.0]
+)
 
 opf_objective = let lookup_pg = lookup_pg, ref_gen_idxs = ref_gen_idxs,
-    cost_arrs = cost_arrs
+        cost_arrs = cost_arrs
 
     function (x, _)
         #start = time()
@@ -25,8 +27,10 @@ opf_objective = let lookup_pg = lookup_pg, ref_gen_idxs = ref_gen_idxs,
     end
 end
 
-optprob = Optimization.OptimizationFunction(opf_objective,
-    ADTypes.AutoReverseDiff(; compile = true))
+optprob = Optimization.OptimizationFunction(
+    opf_objective,
+    ADTypes.AutoReverseDiff(; compile = true)
+)
 
 test_u0 = [
     0.6292298794022337,
@@ -72,7 +76,7 @@ test_u0 = [
     0.865686920119479,
     0.38426996353892773,
     0.007412077949221274,
-    0.3889835001514599
+    0.3889835001514599,
 ]
 test_obj = 7079.190664351089
 test_cons = [
@@ -128,27 +132,33 @@ test_cons = [
     0.5950107614751935,
     1.0021074654956683,
     0.897077248544158,
-    0.15136310228960612
+    0.15136310228960612,
 ]
 res = zero(test_u0)
 
-_f = Optimization.instantiate_function(optprob,
+_f = Optimization.instantiate_function(
+    optprob,
     test_u0,
     ADTypes.AutoReverseDiff(; compile = false),
-    nothing; g = true)
+    nothing; g = true
+)
 _f.f(test_u0, nothing)
 @test @ballocated($(_f.grad)($res, $test_u0)) > 0
 
-_f2 = Optimization.instantiate_function(optprob,
+_f2 = Optimization.instantiate_function(
+    optprob,
     test_u0,
     ADTypes.AutoReverseDiff(; compile = true),
-    nothing; g = true)
+    nothing; g = true
+)
 _f2.f(test_u0, nothing)
 @test @ballocated($(_f2.grad)($res, $test_u0)) > 0
 
-_f3 = Optimization.instantiate_function(optprob,
+_f3 = Optimization.instantiate_function(
+    optprob,
     test_u0,
     ADTypes.AutoEnzyme(),
-    nothing; g = true)
+    nothing; g = true
+)
 _f3.f(test_u0, nothing)
 @test @ballocated($(_f3.grad)($res, $test_u0)) == 0

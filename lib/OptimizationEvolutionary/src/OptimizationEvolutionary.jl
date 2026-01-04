@@ -18,8 +18,10 @@ decompose_trace(trace::Evolutionary.OptimizationTrace) = last(trace)
 decompose_trace(trace::Evolutionary.OptimizationTraceRecord) = trace
 
 # Overload the trace! function to add the population to the trace prior to calling any user-defined trace! method
-function Evolutionary.trace!(tr, iteration, objfun, state, population,
-        method::Evolutionary.AbstractOptimizer, options, curr_time = time())
+function Evolutionary.trace!(
+        tr, iteration, objfun, state, population,
+        method::Evolutionary.AbstractOptimizer, options, curr_time = time()
+    )
     dt = Dict{String, Any}()
     dt["time"] = curr_time
 
@@ -28,7 +30,8 @@ function Evolutionary.trace!(tr, iteration, objfun, state, population,
 
     # set additional trace value
     Evolutionary.trace!(dt, objfun, state, population, method, options)
-    Evolutionary.update!(tr,
+    return Evolutionary.update!(
+        tr,
         state,
         iteration,
         Evolutionary.value(state),
@@ -36,17 +39,20 @@ function Evolutionary.trace!(tr, iteration, objfun, state, population,
         options.store_trace,
         options.show_trace,
         options.show_every,
-        options.callback)
+        options.callback
+    )
 end
 
-function __map_optimizer_args(cache::OptimizationBase.OptimizationCache,
+function __map_optimizer_args(
+        cache::OptimizationBase.OptimizationCache,
         opt::Evolutionary.AbstractOptimizer;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
-        kwargs...)
+        kwargs...
+    )
     mapped_args = (; kwargs...)
 
     if !isnothing(callback)
@@ -72,8 +78,10 @@ function __map_optimizer_args(cache::OptimizationBase.OptimizationCache,
     return Evolutionary.Options(; mapped_args...)
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <:
-                                                               Evolutionary.AbstractOptimizer}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {
+        O <:
+        Evolutionary.AbstractOptimizer,
+    }
     local x, cur, state
 
     function _cb(trace)
@@ -83,12 +91,13 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <:
             u = curr_u,
             p = cache.p,
             objective = x[1],
-            original = trace)
+            original = trace
+        )
         cb_call = cache.callback(opt_state, decompose_trace(trace).value...)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
-        cb_call
+        return cb_call
     end
 
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
@@ -106,26 +115,32 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <:
         end
     end
 
-    opt_args = __map_optimizer_args(cache, cache.opt; callback = _cb, cache.solver_args...,
+    opt_args = __map_optimizer_args(
+        cache, cache.opt; callback = _cb, cache.solver_args...,
         maxiters = maxiters,
-        maxtime = maxtime)
+        maxtime = maxtime
+    )
 
     t0 = time()
     if isnothing(cache.lb) || isnothing(cache.ub)
         if !isnothing(f.cons)
             c = x -> (res = zeros(length(cache.lcons)); f.cons(res, x); res)
-            cons = WorstFitnessConstraints(Float64[], Float64[], cache.lcons, cache.ucons,
-                c)
+            cons = WorstFitnessConstraints(
+                Float64[], Float64[], cache.lcons, cache.ucons,
+                c
+            )
             if isa(f, MultiObjectiveOptimizationFunction)
                 opt_res = Evolutionary.optimize(
-                    _loss, _loss(cache.u0), cons, cache.u0, cache.opt, opt_args)
+                    _loss, _loss(cache.u0), cons, cache.u0, cache.opt, opt_args
+                )
             else
                 opt_res = Evolutionary.optimize(_loss, cons, cache.u0, cache.opt, opt_args)
             end
         else
             if isa(f, MultiObjectiveOptimizationFunction)
                 opt_res = Evolutionary.optimize(
-                    _loss, _loss(cache.u0), cache.u0, cache.opt, opt_args)
+                    _loss, _loss(cache.u0), cache.u0, cache.opt, opt_args
+                )
             else
                 opt_res = Evolutionary.optimize(_loss, cache.u0, cache.opt, opt_args)
             end
@@ -139,28 +154,35 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <:
         end
         if isa(f, MultiObjectiveOptimizationFunction)
             opt_res = Evolutionary.optimize(
-                _loss, _loss(cache.u0), cons, cache.u0, cache.opt, opt_args)
+                _loss, _loss(cache.u0), cons, cache.u0, cache.opt, opt_args
+            )
         else
             opt_res = Evolutionary.optimize(_loss, cons, cache.u0, cache.opt, opt_args)
         end
     end
     t1 = time()
     opt_ret = Symbol(Evolutionary.converged(opt_res))
-    stats = OptimizationBase.OptimizationStats(; iterations = opt_res.iterations,
-        time = t1 - t0, fevals = opt_res.f_calls)
-    if !isa(f, MultiObjectiveOptimizationFunction)
-        SciMLBase.build_solution(cache, cache.opt,
+    stats = OptimizationBase.OptimizationStats(;
+        iterations = opt_res.iterations,
+        time = t1 - t0, fevals = opt_res.f_calls
+    )
+    return if !isa(f, MultiObjectiveOptimizationFunction)
+        SciMLBase.build_solution(
+            cache, cache.opt,
             Evolutionary.minimizer(opt_res),
             Evolutionary.minimum(opt_res); original = opt_res,
             retcode = opt_ret,
-            stats = stats)
+            stats = stats
+        )
     else
         ans = Evolutionary.minimizer(opt_res)
-        SciMLBase.build_solution(cache, cache.opt,
+        SciMLBase.build_solution(
+            cache, cache.opt,
             ans,
             _loss(ans[1]); original = opt_res,
             retcode = opt_ret,
-            stats = stats)
+            stats = stats
+        )
     end
 end
 

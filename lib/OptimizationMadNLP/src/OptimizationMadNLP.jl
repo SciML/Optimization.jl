@@ -52,7 +52,8 @@ function _enumerate_lower_triangle(n)
 end
 
 function NLPModelsAdaptor(
-        cache::C, meta::NLPModels.NLPModelMeta{T, Vector{T}}, counters) where {C, T}
+        cache::C, meta::NLPModels.NLPModelMeta{T, Vector{T}}, counters
+    ) where {C, T}
     # Extract Jacobian structure once
     jac_prototype = cache.f.cons_jac_prototype
 
@@ -96,13 +97,15 @@ function NLPModelsAdaptor(
         hess_buffer = zeros(T, n, n)
     end
 
-    return NLPModelsAdaptor{C, T, typeof(hess_buffer)}(cache, meta, counters,
+    return NLPModelsAdaptor{C, T, typeof(hess_buffer)}(
+        cache, meta, counters,
         jac_rows, jac_cols, jac_buffer,
-        hess_rows, hess_cols, hess_buffer)
+        hess_rows, hess_cols, hess_buffer
+    )
 end
 
 function NLPModels.obj(nlp::NLPModelsAdaptor, x::AbstractVector)
-    nlp.cache.f(x, nlp.cache.p)
+    return nlp.cache.f(x, nlp.cache.p)
 end
 
 function NLPModels.grad!(nlp::NLPModelsAdaptor, x::AbstractVector, g::AbstractVector)
@@ -118,14 +121,16 @@ function NLPModels.cons!(nlp::NLPModelsAdaptor, x::AbstractVector, c::AbstractVe
 end
 
 function NLPModels.jac_structure!(
-        nlp::NLPModelsAdaptor, I::AbstractVector{T}, J::AbstractVector{T}) where {T}
+        nlp::NLPModelsAdaptor, I::AbstractVector{T}, J::AbstractVector{T}
+    ) where {T}
     copyto!(I, nlp.jac_rows)
     copyto!(J, nlp.jac_cols)
     return I, J
 end
 
 function NLPModels.jac_coord!(
-        nlp::NLPModelsAdaptor, x::AbstractVector, vals::AbstractVector)
+        nlp::NLPModelsAdaptor, x::AbstractVector, vals::AbstractVector
+    )
     if !isempty(vals)
         # Evaluate Jacobian into preallocated buffer
         nlp.cache.f.cons_j(nlp.jac_buffer, x)
@@ -146,14 +151,16 @@ function NLPModels.jac_coord!(
 end
 
 function NLPModels.hess_structure!(
-        nlp::NLPModelsAdaptor, I::AbstractVector{T}, J::AbstractVector{T}) where {T}
+        nlp::NLPModelsAdaptor, I::AbstractVector{T}, J::AbstractVector{T}
+    ) where {T}
     copyto!(I, nlp.hess_rows)
     copyto!(J, nlp.hess_cols)
     return I, J
 end
 
 function NLPModels.hess_coord!(
-        nlp::NLPModelsAdaptor, x, y, H::AbstractVector; obj_weight = 1.0)
+        nlp::NLPModelsAdaptor, x, y, H::AbstractVector; obj_weight = 1.0
+    )
     if !isnothing(nlp.cache.f.lag_h)
         # Use Lagrangian Hessian directly
         if nlp.hess_buffer isa AbstractVector
@@ -170,8 +177,10 @@ function NLPModels.hess_coord!(
 
         if !isnothing(nlp.cache.f.cons_h) && !isempty(y)
             # Add weighted constraint Hessians
-            cons_hessians = [similar(nlp.hess_buffer, eltype(nlp.hess_buffer))
-                             for _ in 1:length(y)]
+            cons_hessians = [
+                similar(nlp.hess_buffer, eltype(nlp.hess_buffer))
+                    for _ in 1:length(y)
+            ]
             nlp.cache.f.cons_h(cons_hessians, x)
             for (λ, H_cons) in zip(y, cons_hessians)
                 nlp.hess_buffer .+= λ .* H_cons
@@ -196,7 +205,8 @@ function NLPModels.hess_coord!(
 end
 
 function NLPModels.jtprod!(
-        nlp::NLPModelsAdaptor, x::AbstractVector, v::AbstractVector, Jtv::AbstractVector)
+        nlp::NLPModelsAdaptor, x::AbstractVector, v::AbstractVector, Jtv::AbstractVector
+    )
     # Compute J^T * v using the AD-provided VJP (Vector-Jacobian Product)
     if !isnothing(nlp.cache.f.cons_vjp) && !isempty(Jtv)
         nlp.cache.f.cons_vjp(Jtv, x, v)
@@ -205,7 +215,8 @@ function NLPModels.jtprod!(
 end
 
 function NLPModels.jprod!(
-        nlp::NLPModelsAdaptor, x::AbstractVector, v::AbstractVector, Jv::AbstractVector)
+        nlp::NLPModelsAdaptor, x::AbstractVector, v::AbstractVector, Jv::AbstractVector
+    )
     # Compute J * v using the AD-provided JVP (Jacobian-Vector Product)
     if !isnothing(nlp.cache.f.cons_jvp) && !isempty(Jv)
         nlp.cache.f.cons_jvp(Jv, x, v)
@@ -224,7 +235,7 @@ end
     file_print_level::MadNLP.LogLevels = MadNLP.INFO
 
     # Termination options
-    acceptable_tol::T = 1e-6
+    acceptable_tol::T = 1.0e-6
     acceptable_iter::Int = 15
 
     # NLP options
@@ -255,47 +266,47 @@ SciMLBase.has_init(opt::MadNLPOptimizer) = true
 SciMLBase.allowscallback(opt::MadNLPOptimizer) = false
 
 function SciMLBase.requiresgradient(opt::MadNLPOptimizer)
-    true
+    return true
 end
 function SciMLBase.requireshessian(opt::MadNLPOptimizer)
-    opt.hessian_approximation === MadNLP.ExactHessian
+    return opt.hessian_approximation === MadNLP.ExactHessian
 end
 function SciMLBase.allowsbounds(opt::MadNLPOptimizer)
-    true
+    return true
 end
 function SciMLBase.allowsconstraints(opt::MadNLPOptimizer)
-    true
+    return true
 end
 function SciMLBase.requiresconsjac(opt::MadNLPOptimizer)
-    true
+    return true
 end
 function SciMLBase.requireslagh(opt::MadNLPOptimizer)
-    opt.hessian_approximation === MadNLP.ExactHessian
+    return opt.hessian_approximation === MadNLP.ExactHessian
 end
 function SciMLBase.requiresconshess(opt::MadNLPOptimizer)
-    opt.hessian_approximation === MadNLP.ExactHessian
+    return opt.hessian_approximation === MadNLP.ExactHessian
 end
 function SciMLBase.allowsconsvjp(opt::MadNLPOptimizer)
-    true
+    return true
 end
 function SciMLBase.allowsconsjvp(opt::MadNLPOptimizer)
-    true
+    return true
 end
 
 function map_madnlp_status(status::MadNLP.Status)
     if status in [
-        MadNLP.SOLVE_SUCCEEDED,
-        MadNLP.SOLVED_TO_ACCEPTABLE_LEVEL,
-        MadNLP.USER_REQUESTED_STOP
-    ]
+            MadNLP.SOLVE_SUCCEEDED,
+            MadNLP.SOLVED_TO_ACCEPTABLE_LEVEL,
+            MadNLP.USER_REQUESTED_STOP,
+        ]
         return SciMLBase.ReturnCode.Success
     elseif status in [
-        MadNLP.INFEASIBLE_PROBLEM_DETECTED,
-        MadNLP.SEARCH_DIRECTION_BECOMES_TOO_SMALL,
-        MadNLP.DIVERGING_ITERATES,
-        MadNLP.RESTORATION_FAILED,
-        MadNLP.NOT_ENOUGH_DEGREES_OF_FREEDOM
-    ]
+            MadNLP.INFEASIBLE_PROBLEM_DETECTED,
+            MadNLP.SEARCH_DIRECTION_BECOMES_TOO_SMALL,
+            MadNLP.DIVERGING_ITERATES,
+            MadNLP.RESTORATION_FAILED,
+            MadNLP.NOT_ENOUGH_DEGREES_OF_FREEDOM,
+        ]
         return SciMLBase.ReturnCode.Infeasible
     elseif status == MadNLP.MAXIMUM_ITERATIONS_EXCEEDED
         return SciMLBase.ReturnCode.MaxIters
@@ -338,7 +349,8 @@ function _get_nnzh(f, ncon, nvar)
     end
 end
 
-function __map_optimizer_args(cache,
+function __map_optimizer_args(
+        cache,
         opt::MadNLPOptimizer;
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -346,7 +358,8 @@ function __map_optimizer_args(cache,
         reltol::Union{Number, Nothing} = nothing,
         verbose = false,
         progress::Bool = false,
-        callback = DEFAULT_CALLBACK)
+        callback = DEFAULT_CALLBACK
+    )
     nvar = length(cache.u0)
     ncon = !isnothing(cache.lcons) ? length(cache.lcons) : 0
 
@@ -382,9 +395,9 @@ function __map_optimizer_args(cache,
     end
 
     !isnothing(reltol) && @warn "reltol not supported by MadNLP, use abstol instead."
-    tol = isnothing(abstol) ? 1e-8 : abstol
+    tol = isnothing(abstol) ? 1.0e-8 : abstol
     max_iter = isnothing(maxiters) ? 3000 : maxiters
-    max_wall_time = isnothing(maxtime) ? 1e6 : maxtime
+    max_wall_time = isnothing(maxtime) ? 1.0e6 : maxtime
 
     # Build final options dictionary
     options = Dict{Symbol, Any}(opt.additional_options)
@@ -425,7 +438,7 @@ function __map_optimizer_args(cache,
     options[:max_iter] = max_iter
     options[:max_wall_time] = max_wall_time
 
-    meta, options
+    return meta, options
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: MadNLPOptimizer}
@@ -433,7 +446,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: MadNLPOptimi
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
     maxtime = maxtime isa Float32 ? convert(Float64, maxtime) : maxtime
 
-    meta, options = __map_optimizer_args(cache,
+    meta, options = __map_optimizer_args(
+        cache,
         cache.opt;
         abstol = cache.solver_args.abstol,
         reltol = cache.solver_args.reltol,
@@ -448,20 +462,24 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: MadNLPOptimi
     solver = MadNLP.MadNLPSolver(nlp; options...)
     results = MadNLP.solve!(solver)
 
-    stats = OptimizationBase.OptimizationStats(; time = results.counters.total_time,
+    stats = OptimizationBase.OptimizationStats(;
+        time = results.counters.total_time,
         iterations = results.iter,
         fevals = results.counters.obj_cnt,
-        gevals = results.counters.obj_grad_cnt)
+        gevals = results.counters.obj_grad_cnt
+    )
 
     retcode = map_madnlp_status(results.status)
 
-    return SciMLBase.build_solution(cache,
+    return SciMLBase.build_solution(
+        cache,
         cache.opt,
         results.solution,
         results.objective;
         original = results,
         retcode,
-        stats)
+        stats
+    )
 end
 
 end

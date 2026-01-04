@@ -32,10 +32,10 @@ using Test
         prob = OptimizationProblem(objective, x0, p)
         cache = OptimizationBase.init(prob, SpeedMappingOpt())
         sol = OptimizationBase.solve!(cache)
-        @test sol.u≈[1.0] atol=1e-3
+        @test sol.u ≈ [1.0] atol = 1.0e-3
 
         cache = OptimizationBase.reinit!(cache; p = [2.0])
         sol = OptimizationBase.solve!(cache)
-        @test sol.u≈[2.0] atol=1e-3
+        @test sol.u ≈ [2.0] atol = 1.0e-3
     end
 end

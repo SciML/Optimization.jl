@@ -1,7 +1,7 @@
 function get_maxiters(data)
-    Iterators.IteratorSize(typeof(DEFAULT_DATA)) isa Iterators.IsInfinite ||
+    return Iterators.IteratorSize(typeof(DEFAULT_DATA)) isa Iterators.IsInfinite ||
         Iterators.IteratorSize(typeof(DEFAULT_DATA)) isa Iterators.SizeUnknown ?
-    typemax(Int) : length(data)
+        typemax(Int) : length(data)
 end
 
 decompose_trace(trace) = trace
@@ -69,16 +69,16 @@ function deduce_retcode(retcode::Symbol)
     if retcode == :Default || retcode == :DEFAULT
         return ReturnCode.Default
     elseif retcode == :Success || retcode == :EXACT_SOLUTION_LEFT ||
-           retcode == :FLOATING_POINT_LIMIT || retcode == :true || retcode == :OPTIMAL ||
-           retcode == :LOCALLY_SOLVED || retcode == :ROUNDOFF_LIMITED ||
-           retcode == :SUCCESS ||
-           retcode == :STOPVAL_REACHED || retcode == :FTOL_REACHED ||
-           retcode == :XTOL_REACHED
+            retcode == :FLOATING_POINT_LIMIT || retcode == :true || retcode == :OPTIMAL ||
+            retcode == :LOCALLY_SOLVED || retcode == :ROUNDOFF_LIMITED ||
+            retcode == :SUCCESS ||
+            retcode == :STOPVAL_REACHED || retcode == :FTOL_REACHED ||
+            retcode == :XTOL_REACHED
         return ReturnCode.Success
     elseif retcode == :Terminated
         return ReturnCode.Terminated
     elseif retcode == :MaxIters || retcode == :MAXITERS_EXCEED ||
-           retcode == :MAXEVAL_REACHED
+            retcode == :MAXEVAL_REACHED
         return ReturnCode.MaxIters
     elseif retcode == :MaxTime || retcode == :TIME_LIMIT || retcode == :MAXTIME_REACHED
         return ReturnCode.MaxTime
@@ -93,8 +93,8 @@ function deduce_retcode(retcode::Symbol)
     elseif retcode == :Failure || retcode == :false
         return ReturnCode.Failure
     elseif retcode == :Infeasible || retcode == :INFEASIBLE ||
-           retcode == :DUAL_INFEASIBLE || retcode == :LOCALLY_INFEASIBLE ||
-           retcode == :INFEASIBLE_OR_UNBOUNDED
+            retcode == :DUAL_INFEASIBLE || retcode == :LOCALLY_INFEASIBLE ||
+            retcode == :INFEASIBLE_OR_UNBOUNDED
         return ReturnCode.Infeasible
     else
         return ReturnCode.Failure

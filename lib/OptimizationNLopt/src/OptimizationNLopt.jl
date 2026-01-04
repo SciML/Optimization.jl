@@ -45,15 +45,20 @@ function SciMLBase.requiresconsjac(opt::NLopt.Algorithm)
     return occursin(r"AUGLAG|CCSA|MMA|COBYLA|ISRES|AGS|ORIG_DIRECT|SLSQP", str_opt)
 end
 
-function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt::NLopt.Algorithm,
-        ; cons_tol = 1e-6,
+function SciMLBase.__init(
+        prob::SciMLBase.OptimizationProblem, opt::NLopt.Algorithm,
+        ; cons_tol = 1.0e-6,
         callback = (args...) -> (false),
-        progress = false, kwargs...)
-    return OptimizationCache(prob, opt; cons_tol, callback, progress,
-        kwargs...)
+        progress = false, kwargs...
+    )
+    return OptimizationCache(
+        prob, opt; cons_tol, callback, progress,
+        kwargs...
+    )
 end
 
-function __map_optimizer_args!(cache::OptimizationBase.OptimizationCache, opt::NLopt.Opt;
+function __map_optimizer_args!(
+        cache::OptimizationBase.OptimizationCache, opt::NLopt.Opt;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -63,14 +68,17 @@ function __map_optimizer_args!(cache::OptimizationBase.OptimizationCache, opt::N
         local_maxiters::Union{Number, Nothing} = nothing,
         local_maxtime::Union{Number, Nothing} = nothing,
         local_options::Union{NamedTuple, Nothing} = nothing,
-        kwargs...)
+        kwargs...
+    )
 
     # Check if AUGLAG algorithm requires local_method
     if opt.algorithm ∈ (NLopt.LN_AUGLAG, NLopt.LD_AUGLAG, NLopt.AUGLAG) &&
-       local_method === nothing
-        error("NLopt.$(opt.algorithm) requires a local optimization method. " *
-              "Please specify a local_method, e.g., solve(prob, NLopt.$(opt.algorithm)(); " *
-              "local_method = NLopt.LN_NELDERMEAD())")
+            local_method === nothing
+        error(
+            "NLopt.$(opt.algorithm) requires a local optimization method. " *
+                "Please specify a local_method, e.g., solve(prob, NLopt.$(opt.algorithm)(); " *
+                "local_method = NLopt.LN_NELDERMEAD())"
+        )
     end
 
     if local_method !== nothing
@@ -133,17 +141,23 @@ function __map_optimizer_args!(cache::OptimizationBase.OptimizationCache, opt::N
     return nothing
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Union{
-        NLopt.Algorithm, NLopt.Opt}}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {
+        O <: Union{
+            NLopt.Algorithm, NLopt.Opt,
+        },
+    }
     local x
 
     # Check if algorithm requires gradients but none are provided
     opt = cache.opt isa NLopt.Opt ? cache.opt.algorithm : cache.opt
     if SciMLBase.requiresgradient(opt) && isnothing(cache.f.grad)
-        throw(OptimizationBase.IncompatibleOptimizerError(
-            "The NLopt algorithm $(opt) requires gradients, but no gradient function is available. " *
-            "Please use `OptimizationFunction` with an automatic differentiation backend, " *
-            "e.g., `OptimizationFunction(f, AutoForwardDiff())`, or provide gradients manually via the `grad` kwarg."))
+        throw(
+            OptimizationBase.IncompatibleOptimizerError(
+                "The NLopt algorithm $(opt) requires gradients, but no gradient function is available. " *
+                    "Please use `OptimizationFunction` with an automatic differentiation backend, " *
+                    "e.g., `OptimizationFunction(f, AutoForwardDiff())`, or provide gradients manually via the `grad` kwarg."
+            )
+        )
     end
 
     _loss = function (θ)
@@ -212,31 +226,35 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Union{
         if sum(ineqinds) > 0
             ineqcons = function (res, θ, J)
                 res .= copy(evalcons(θ, :ineq))
-                if length(J) > 0
+                return if length(J) > 0
                     J .= copy(evalconj(θ, :ineq))
                 end
             end
             NLopt.inequality_constraint!(
-                opt_setup, ineqcons, [cache.solver_args.cons_tol for i in 1:sum(ineqinds)])
+                opt_setup, ineqcons, [cache.solver_args.cons_tol for i in 1:sum(ineqinds)]
+            )
         end
         if sum(eqinds) > 0
             eqcons = function (res, θ, J)
                 res .= copy(evalcons(θ, :eq))
-                if length(J) > 0
+                return if length(J) > 0
                     J .= copy(evalconj(θ, :eq))
                 end
             end
             NLopt.equality_constraint!(
-                opt_setup, eqcons, [cache.solver_args.cons_tol for i in 1:sum(eqinds)])
+                opt_setup, eqcons, [cache.solver_args.cons_tol for i in 1:sum(eqinds)]
+            )
         end
     end
 
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
-    __map_optimizer_args!(cache, opt_setup; callback = cache.callback, maxiters = maxiters,
+    __map_optimizer_args!(
+        cache, opt_setup; callback = cache.callback, maxiters = maxiters,
         maxtime = maxtime,
-        cache.solver_args...)
+        cache.solver_args...
+    )
 
     t0 = time()
     (minf, minx, ret) = NLopt.optimize(opt_setup, cache.u0)
@@ -247,9 +265,11 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Union{
         @warn "NLopt failed to converge: $(ret)"
     end
     stats = OptimizationBase.OptimizationStats(; time = t1 - t0)
-    SciMLBase.build_solution(cache, cache.opt, minx,
+    return SciMLBase.build_solution(
+        cache, cache.opt, minx,
         minf; original = opt_setup, retcode = retcode,
-        stats = stats)
+        stats = stats
+    )
 end
 
 end

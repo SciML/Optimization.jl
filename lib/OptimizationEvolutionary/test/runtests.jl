@@ -10,12 +10,14 @@ Random.seed!(1234)
     l1 = rosenbrock(x0, _p)
     optprob = OptimizationFunction(rosenbrock)
     prob = OptimizationBase.OptimizationProblem(optprob, x0, _p)
-    sol = solve(prob, CMAES(μ = 40, λ = 100), abstol = 1e-15)
+    sol = solve(prob, CMAES(μ = 40, λ = 100), abstol = 1.0e-15)
     @test 10 * sol.objective < l1
 
     x0 = [-0.7, 0.3]
-    prob = OptimizationBase.OptimizationProblem(optprob, x0, _p, lb = [0.0, 0.0],
-        ub = [0.5, 0.5])
+    prob = OptimizationBase.OptimizationProblem(
+        optprob, x0, _p, lb = [0.0, 0.0],
+        ub = [0.5, 0.5]
+    )
     sol = solve(prob, CMAES(μ = 50, λ = 60))
     @test sol.u == zeros(2)
 
@@ -26,11 +28,13 @@ Random.seed!(1234)
     sol = solve(prob, CMAES(μ = 40, λ = 100))
     res = zeros(1)
     cons_circ(res, sol.u, nothing)
-    @test res[1]≈0.0625 atol=1e-5
+    @test res[1] ≈ 0.0625 atol = 1.0e-5
     @test sol.objective < l1
 
-    prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [5.0],
-        lb = [0.0, 1.0], ub = [Inf, Inf])
+    prob = OptimizationProblem(
+        optprob, x0, _p, lcons = [-Inf], ucons = [5.0],
+        lb = [0.0, 1.0], ub = [Inf, Inf]
+    )
     sol = solve(prob, CMAES(μ = 40, λ = 100))
     res = zeros(1)
     cons_circ(res, sol.u, nothing)
@@ -44,9 +48,10 @@ Random.seed!(1234)
     end
     solve(prob, CMAES(μ = 40, λ = 100), callback = cb, maxiters = 100)
 
-    # Test compatibility of user overload of trace! 
+    # Test compatibility of user overload of trace!
     function Evolutionary.trace!(
-            record::Dict{String, Any}, objfun, state, population, method::CMAES, options)
+            record::Dict{String, Any}, objfun, state, population, method::CMAES, options
+        )
         # record fittest individual
         record["TESTVAL"] = state.fittest
     end
@@ -56,7 +61,7 @@ Random.seed!(1234)
 
     # Make sure that both the user's trace record value, as well as `curr_u` are stored in the trace.
     @test haskey(sol.original.trace[end].metadata, "TESTVAL") &&
-          haskey(sol.original.trace[end].metadata, "curr_u")
+        haskey(sol.original.trace[end].metadata, "curr_u")
 
     # Test Suite for Different Multi-Objective Functions
     function test_multi_objective(func, initial_guess)
@@ -92,10 +97,10 @@ Random.seed!(1234)
             result = test_multi_objective(multi_objective_1, [0.0, 1.0])
             @test result ≠ nothing
             println("Solution for Sphere and Rastrigin: ", result)
-            @test result.u[1][1]≈7.88866e-5 atol=1e-3
-            @test result.u[1][2]≈4.96471e-5 atol=1e-3
-            @test result.objective[1]≈8.6879e-9 atol=1e-3
-            @test result.objective[2]≈1.48875349381683e-6 atol=1e-3
+            @test result.u[1][1] ≈ 7.88866e-5 atol = 1.0e-3
+            @test result.u[1][2] ≈ 4.96471e-5 atol = 1.0e-3
+            @test result.objective[1] ≈ 8.6879e-9 atol = 1.0e-3
+            @test result.objective[2] ≈ 1.48875349381683e-6 atol = 1.0e-3
         end
 
         # Test 2: Rosenbrock and Ackley Functions
@@ -103,16 +108,16 @@ Random.seed!(1234)
             function multi_objective_2(x, p = nothing)::Vector{Float64}
                 f1 = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2  # Rosenbrock function
                 f2 = -20.0 * exp(-0.2 * sqrt(0.5 * (x[1]^2 + x[2]^2))) -
-                     exp(0.5 * (cos(2π * x[1]) + cos(2π * x[2]))) + exp(1) + 20.0  # Ackley function
+                    exp(0.5 * (cos(2π * x[1]) + cos(2π * x[2]))) + exp(1) + 20.0  # Ackley function
                 return [f1, f2]
             end
             result = test_multi_objective(multi_objective_2, [0.1, 1.0])
             @test result ≠ nothing
             println("Solution for Rosenbrock and Ackley: ", result)
-            @test result.u[1][1]≈0.003993274873103834 atol=1e-3
-            @test result.u[1][2]≈0.001433311246712721 atol=1e-3
-            @test result.objective[1]≈0.9922302888530358 atol=1e-3
-            @test result.objective[2]≈0.012479470703588902 atol=1e-3
+            @test result.u[1][1] ≈ 0.003993274873103834 atol = 1.0e-3
+            @test result.u[1][2] ≈ 0.001433311246712721 atol = 1.0e-3
+            @test result.objective[1] ≈ 0.9922302888530358 atol = 1.0e-3
+            @test result.objective[2] ≈ 0.012479470703588902 atol = 1.0e-3
         end
 
         # Test 3: ZDT1 Function
@@ -127,9 +132,9 @@ Random.seed!(1234)
             result = test_multi_objective(multi_objective_3, [0.25, 1.5])
             @test result ≠ nothing
             println("Solution for ZDT1: ", result)
-            @test result.u[1][1]≈-0.365434 atol=1e-3
-            @test result.u[1][2]≈1.22128 atol=1e-3
-            @test result.objective[1]≈-0.365434 atol=1e-3
+            @test result.u[1][1] ≈ -0.365434 atol = 1.0e-3
+            @test result.u[1][2] ≈ 1.22128 atol = 1.0e-3
+            @test result.objective[1] ≈ -0.365434 atol = 1.0e-3
             @test isnan(result.objective[2])
         end
 
@@ -143,10 +148,10 @@ Random.seed!(1234)
             result = test_multi_objective(multi_objective_4, [0.25, 0.75])
             @test result ≠ nothing
             println("Solution for DTLZ2: ", result)
-            @test result.u[1][1]≈0.899183 atol=1e-3
-            @test result.u[2][1]≈0.713992 atol=1e-3
-            @test result.objective[1]≈0.1599915 atol=1e-3
-            @test result.objective[2]≈1.001824893932647 atol=1e-3
+            @test result.u[1][1] ≈ 0.899183 atol = 1.0e-3
+            @test result.u[2][1] ≈ 0.713992 atol = 1.0e-3
+            @test result.objective[1] ≈ 0.1599915 atol = 1.0e-3
+            @test result.objective[2] ≈ 1.001824893932647 atol = 1.0e-3
         end
 
         # Test 5: Schaffer Function N.2
@@ -159,10 +164,10 @@ Random.seed!(1234)
             result = test_multi_objective(multi_objective_5, [1.0])
             @test result ≠ nothing
             println("Solution for Schaffer N.2: ", result)
-            @test result.u[19][1]≈0.252635 atol=1e-3
-            @test result.u[9][1]≈1.0 atol=1e-3
-            @test result.objective[1]≈1.0 atol=1e-3
-            @test result.objective[2]≈1.0 atol=1e-3
+            @test result.u[19][1] ≈ 0.252635 atol = 1.0e-3
+            @test result.u[9][1] ≈ 1.0 atol = 1.0e-3
+            @test result.objective[1] ≈ 1.0 atol = 1.0e-3
+            @test result.objective[2] ≈ 1.0 atol = 1.0e-3
         end
     end
 end

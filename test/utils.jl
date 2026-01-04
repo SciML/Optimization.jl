@@ -1,9 +1,9 @@
 using Test
 using Optimization
 using OptimizationBase: get_maxiters,
-                    decompose_trace, _check_and_convert_maxiters,
-                    _check_and_convert_maxtime,
-                    deduce_retcode, STOP_REASON_MAP
+    decompose_trace, _check_and_convert_maxiters,
+    _check_and_convert_maxtime,
+    deduce_retcode, STOP_REASON_MAP
 using SciMLBase: ReturnCode
 
 @testset "Utils Tests" begin
@@ -64,13 +64,13 @@ using SciMLBase: ReturnCode
     @testset "deduce_retcode from String" begin
         # Test success patterns
         @test deduce_retcode("Delta fitness 1e-6 below tolerance 1e-5") ==
-              ReturnCode.Success
+            ReturnCode.Success
         @test deduce_retcode("Fitness 0.001 within tolerance 0.01 of optimum") ==
-              ReturnCode.Success
+            ReturnCode.Success
         @test deduce_retcode("CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL") ==
-              ReturnCode.Success
+            ReturnCode.Success
         @test deduce_retcode("CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH") ==
-              ReturnCode.Success
+            ReturnCode.Success
         @test deduce_retcode("Optimization completed") == ReturnCode.Success
         @test deduce_retcode("Convergence achieved") == ReturnCode.Success
         @test deduce_retcode("ROUNDOFF_LIMITED") == ReturnCode.Success
@@ -85,7 +85,7 @@ using SciMLBase: ReturnCode
         @test deduce_retcode("Max number of steps 1000 reached") == ReturnCode.MaxIters
         @test deduce_retcode("TOTAL NO. of ITERATIONS REACHED LIMIT") == ReturnCode.MaxIters
         @test deduce_retcode("TOTAL NO. of f AND g EVALUATIONS EXCEEDS LIMIT") ==
-              ReturnCode.MaxIters
+            ReturnCode.MaxIters
 
         # Test max time patterns
         @test deduce_retcode("MaxTime") == ReturnCode.MaxTime
@@ -171,13 +171,13 @@ using SciMLBase: ReturnCode
     @testset "STOP_REASON_MAP specific patterns" begin
         # Test specific patterns we know work
         @test deduce_retcode("Delta fitness 1e-6 below tolerance 1e-5") ==
-              ReturnCode.Success
+            ReturnCode.Success
         @test deduce_retcode("Fitness 0.001 within tolerance 0.01 of optimum") ==
-              ReturnCode.Success
+            ReturnCode.Success
         @test deduce_retcode("CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL") ==
-              ReturnCode.Success
+            ReturnCode.Success
         @test deduce_retcode("CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH") ==
-              ReturnCode.Success
+            ReturnCode.Success
         @test deduce_retcode("Terminated") == ReturnCode.Terminated
         @test deduce_retcode("MaxIters") == ReturnCode.MaxIters
         @test deduce_retcode("MAXITERS_EXCEED") == ReturnCode.MaxIters
@@ -186,7 +186,7 @@ using SciMLBase: ReturnCode
         @test deduce_retcode("TIME_LIMIT") == ReturnCode.MaxTime
         @test deduce_retcode("TOTAL NO. of ITERATIONS REACHED LIMIT") == ReturnCode.MaxIters
         @test deduce_retcode("TOTAL NO. of f AND g EVALUATIONS EXCEEDS LIMIT") ==
-              ReturnCode.MaxIters
+            ReturnCode.MaxIters
         @test deduce_retcode("ABNORMAL_TERMINATION_IN_LNSRCH") == ReturnCode.Unstable
         @test deduce_retcode("ERROR INPUT DATA") == ReturnCode.InitialFailure
         @test deduce_retcode("FTOL.TOO.SMALL") == ReturnCode.ConvergenceFailure

@@ -32,9 +32,9 @@ function _test_sparse_derivatives_hs071(backend, optimizer)
         return x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3]
     end
     function constraints(res, x, ::Any)
-        res .= [
+        return res .= [
             x[1] * x[2] * x[3] * x[4],
-            x[1]^2 + x[2]^2 + x[3]^2 + x[4]^2
+            x[1]^2 + x[2]^2 + x[3]^2 + x[4]^2,
         ]
     end
     prob = OptimizationProblem(
@@ -44,13 +44,14 @@ function _test_sparse_derivatives_hs071(backend, optimizer)
         lb = [1.0, 1.0, 1.0, 1.0],
         ub = [5.0, 5.0, 5.0, 5.0],
         lcons = [25.0, 40.0],
-        ucons = [Inf, 40.0])
+        ucons = [Inf, 40.0]
+    )
     sol = solve(prob, optimizer)
-    @test isapprox(sol.objective, 17.014017145179164; atol = 1e-6)
-    x = [1.0, 4.7429996418092970, 3.8211499817883077, 1.3794082897556983]
-    @test isapprox(sol.u, x; atol = 1e-6)
-    @test prod(sol.u) >= 25.0 - 1e-6
-    @test isapprox(sum(sol.u .^ 2), 40.0; atol = 1e-6)
+    @test isapprox(sol.objective, 17.014017145179164; atol = 1.0e-6)
+    x = [1.0, 4.742999641809297, 3.8211499817883077, 1.3794082897556983]
+    @test isapprox(sol.u, x; atol = 1.0e-6)
+    @test prod(sol.u) >= 25.0 - 1.0e-6
+    @test isapprox(sum(sol.u .^ 2), 40.0; atol = 1.0e-6)
     return
 end
 
@@ -58,7 +59,7 @@ end
     backends = (
         AutoForwardDiff(),
         AutoReverseDiff(),
-        AutoSparse(AutoForwardDiff())
+        AutoSparse(AutoForwardDiff()),
     )
     for backend in backends
         @testset "$backend" begin
@@ -84,15 +85,21 @@ include("problem_types.jl")
     cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[2]])
 
     function lagh(res, x, sigma, mu, p)
-        lH = sigma * [2 + 8(x[1]^2) * p[2]-4(x[2] - (x[1]^2)) * p[2] -4p[2]*x[1]
-              -4p[2]*x[1] 2p[2]] .+ [2mu[1] mu[2]
-              mu[2] 2mu[1]]
+        lH = sigma * [
+            2 + 8(x[1]^2) * p[2] - 4(x[2] - (x[1]^2)) * p[2] -4p[2] * x[1]
+            -4p[2] * x[1] 2p[2]
+        ] .+ [
+            2mu[1] mu[2]
+            mu[2] 2mu[1]
+        ]
         res .= lH[[1, 3, 4]]
     end
     lag_hess_prototype = sparse([1 1; 0 1])
 
-    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff();
-        cons = cons, lag_h = lagh, lag_hess_prototype)
+    optprob = OptimizationFunction(
+        rosenbrock, OptimizationBase.AutoForwardDiff();
+        cons = cons, lag_h = lagh, lag_hess_prototype
+    )
     prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, 0.5])
     sol = solve(prob, IpoptOptimizer())
 
@@ -102,7 +109,7 @@ end
 @testset "MTK cache" begin
     @variables x
     @parameters a = 1.0
-    @named sys = OptimizationSystem((x - a)^2, [x], [a];)
+    @named sys = OptimizationSystem((x - a)^2, [x], [a])
     sys = complete(sys)
     prob = OptimizationProblem(sys, [x => 0.0]; grad = true, hess = true)
     cache = init(prob, IpoptOptimizer(); verbose = false)
@@ -130,7 +137,7 @@ end
         opt = IpoptOptimizer(
             additional_options = Dict(
                 "derivative_test" => "first-order",  # String
-                "derivative_test_tol" => 1e-4,       # Float64
+                "derivative_test_tol" => 1.0e-4,       # Float64
                 "derivative_test_print_all" => "yes" # String
             )
         )
@@ -154,9 +161,9 @@ end
         prob = OptimizationProblem(optfunc, x0, p)
 
         # Test that reltol overrides default tolerance
-        sol1 = solve(prob, IpoptOptimizer(); reltol = 1e-12)
+        sol1 = solve(prob, IpoptOptimizer(); reltol = 1.0e-12)
         @test SciMLBase.successful_retcode(sol1)
-        @test sol1.u ≈ [1.0, 1.0] atol=1e-10
+        @test sol1.u ≈ [1.0, 1.0] atol = 1.0e-10
 
         # Test that maxiters limits iterations
         sol2 = solve(prob, IpoptOptimizer(); maxiters = 5)
@@ -180,15 +187,17 @@ end
 
         # Struct field is overridden by solve argument
         opt = IpoptOptimizer(
-            acceptable_tol = 1e-4,  # Struct field
+            acceptable_tol = 1.0e-4,  # Struct field
             additional_options = Dict(
                 "max_iter" => 100  # Will be overridden by maxiters
             )
         )
 
-        sol = solve(prob, opt;
-                   maxiters = 50,  # Should override additional_options
-                   reltol = 1e-10) # Should set tol
+        sol = solve(
+            prob, opt;
+            maxiters = 50,  # Should override additional_options
+            reltol = 1.0e-10
+        ) # Should set tol
 
         @test sol.stats.iterations <= 50
         @test SciMLBase.successful_retcode(sol)

@@ -12,12 +12,14 @@ SciMLBase.allowsbounds(::QuadDirect) = true
 SciMLBase.requiresbounds(::QuadDirect) = true
 SciMLBase.allowscallback(::QuadDirect) = false
 
-function __map_optimizer_args(prob::OptimizationProblem, opt::QuadDirect;
+function __map_optimizer_args(
+        prob::OptimizationProblem, opt::QuadDirect;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
-        reltol::Union{Number, Nothing} = nothing)
+        reltol::Union{Number, Nothing} = nothing
+    )
     if !isnothing(maxtime)
         @warn "common maxtime is currently not used by $(opt)"
     end
@@ -39,13 +41,15 @@ function __map_optimizer_args(prob::OptimizationProblem, opt::QuadDirect;
     return mapped_args
 end
 
-function SciMLBase.__solve(prob::OptimizationProblem, opt::QuadDirect;
+function SciMLBase.__solve(
+        prob::OptimizationProblem, opt::QuadDirect;
         splits = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
-        kwargs...)
+        kwargs...
+    )
     local x, _loss
 
     maxiters = OptimizationBase._check_and_convert_maxiters(maxiters)
@@ -59,17 +63,21 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::QuadDirect;
         return first(x)
     end
 
-    opt_arg = __map_optimizer_args(prob, opt; maxiters = maxiters, maxtime = maxtime,
-        abstol = abstol, reltol = reltol, kwargs...)
+    opt_arg = __map_optimizer_args(
+        prob, opt; maxiters = maxiters, maxtime = maxtime,
+        abstol = abstol, reltol = reltol, kwargs...
+    )
     t0 = time()
     # root, x0 = !(isnothing(maxiters)) ? QuadDIRECT.analyze(_loss, splits, prob.lb, prob.ub; maxevals = maxiters, kwargs...) : QuadDIRECT.analyze(_loss, splits, prob.lb, prob.ub; kwargs...)
     root, x0 = QuadDIRECT.analyze(_loss, splits, prob.lb, prob.ub; opt_arg...)
     box = minimum(root)
     t1 = time()
     stats = OptimizationBase.OptimizationStats(; time = t1 - t0)
-    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
+    return SciMLBase.build_solution(
+        SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
         QuadDIRECT.position(box, x0), QuadDIRECT.value(box);
-        original = root, stats = stats)
+        original = root, stats = stats
+    )
 end
 
 end

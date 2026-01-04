@@ -10,11 +10,11 @@ using LinearAlgebra: norm
     inner::Any
     τ = 0.5
     γ = 10.0
-    λmin = -1e20
-    λmax = 1e20
+    λmin = -1.0e20
+    λmax = 1.0e20
     μmin = 0.0
-    μmax = 1e20
-    ϵ = 1e-8
+    μmax = 1.0e20
+    ϵ = 1.0e-8
 end
 
 SciMLBase.has_init(::AugLag) = true
@@ -24,14 +24,16 @@ SciMLBase.requiresgradient(::AugLag) = true
 SciMLBase.allowsconstraints(::AugLag) = true
 SciMLBase.requiresconsjac(::AugLag) = true
 
-function __map_optimizer_args(cache::OptimizationBase.OptimizationCache, opt::AugLag;
+function __map_optimizer_args(
+        cache::OptimizationBase.OptimizationCache, opt::AugLag;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         verbose::Bool = false,
-        kwargs...)
+        kwargs...
+    )
     if !isnothing(abstol)
         @warn "common abstol is currently not used by $(opt)"
     end
@@ -80,8 +82,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
 
         cons_tmp = zeros(eltype(cache.u0), length(cache.lcons))
         cache.f.cons(cons_tmp, cache.u0)
-        ρ = max(1e-6,
-            min(10, 2 * (abs(cache.f(cache.u0, iterate(cache.p)[1]))) / norm(cons_tmp)))
+        ρ = max(
+            1.0e-6,
+            min(10, 2 * (abs(cache.f(cache.u0, iterate(cache.p)[1]))) / norm(cons_tmp))
+        )
 
         _loss = function (θ, p = cache.p)
             x = cache.f(θ, p)
@@ -94,7 +98,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
                 error("Optimization halted by callback.")
             end
             return x[1] + sum(@. λ * cons_tmp[eq_inds] + ρ / 2 * (cons_tmp[eq_inds] .^ 2)) +
-                   1 / (2 * ρ) * sum((max.(Ref(0.0), μ .+ (ρ .* cons_tmp[ineq_inds]))) .^ 2)
+                1 / (2 * ρ) * sum((max.(Ref(0.0), μ .+ (ρ .* cons_tmp[ineq_inds]))) .^ 2)
         end
 
         prev_eqcons = zero(λ)
@@ -119,19 +123,22 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
             __tmp[ineq_inds] .= __tmp[ineq_inds] .- cache.ucons[ineq_inds]
             G .+= sum(
                 λ[i] .* J[idx, :] + ρ * (__tmp[idx] .* J[idx, :])
-                for (i, idx) in enumerate(eqidxs);
-                init = zero(G)) #should be jvp
-            G .+= sum(
+                    for (i, idx) in enumerate(eqidxs);
+                init = zero(G)
+            ) #should be jvp
+            return G .+= sum(
                 1 / ρ * (max.(Ref(0.0), μ[i] .+ (ρ .* __tmp[idx])) .* J[idx, :])
-                for (i, idx) in enumerate(ineqidxs);
-                init = zero(G)) #should be jvp
+                    for (i, idx) in enumerate(ineqidxs);
+                init = zero(G)
+            ) #should be jvp
         end
 
         opt_ret = ReturnCode.MaxIters
         n = length(cache.u0)
 
         augprob = OptimizationProblem(
-            OptimizationFunction(_loss; grad = aug_grad), cache.u0, cache.p)
+            OptimizationFunction(_loss; grad = aug_grad), cache.u0, cache.p
+        )
 
         solver_kwargs = Base.structdiff(solver_kwargs, (; lb = nothing, ub = nothing))
 
@@ -146,21 +153,25 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
             β = max.(cons_tmp[ineq_inds], -1 .* μ ./ ρ)
             μ = min.(μmax, max.(μ .+ ρ * cons_tmp[ineq_inds], μmin))
             if max(norm(cons_tmp[eq_inds] .- cache.lcons[eq_inds], Inf), norm(β, Inf)) >
-               τ * max(norm(prev_eqcons, Inf), norm(prevβ, Inf))
+                    τ * max(norm(prev_eqcons, Inf), norm(prevβ, Inf))
                 ρ = γ * ρ
             end
             if norm(
-                (cons_tmp[eq_inds] .- cache.lcons[eq_inds]) ./ cons_tmp[eq_inds], Inf) <
-               ϵ && norm(β, Inf) < ϵ
+                    (cons_tmp[eq_inds] .- cache.lcons[eq_inds]) ./ cons_tmp[eq_inds], Inf
+                ) <
+                    ϵ && norm(β, Inf) < ϵ
                 opt_ret = ReturnCode.Success
                 break
             end
         end
-        stats = OptimizationStats(; iterations = maxiters,
-            time = 0.0, fevals = maxiters, gevals = maxiters)
+        stats = OptimizationStats(;
+            iterations = maxiters,
+            time = 0.0, fevals = maxiters, gevals = maxiters
+        )
         return SciMLBase.build_solution(
             cache, cache.opt, θ, x,
-            stats = stats, retcode = opt_ret)
+            stats = stats, retcode = opt_ret
+        )
     end
 end
 

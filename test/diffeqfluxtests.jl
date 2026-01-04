@@ -1,5 +1,5 @@
 using OrdinaryDiffEqTsit5, DiffEqFlux, Lux, Optimization, OptimizationOptimJL,
-      OptimizationOptimisers, ForwardDiff, ComponentArrays, Random
+    OptimizationOptimisers, ForwardDiff, ComponentArrays, Random
 rng = Random.default_rng()
 Random.seed!(123)
 
@@ -7,7 +7,7 @@ function lotka_volterra!(du, u, p, t)
     x, y = u
     α, β, δ, γ = p
     du[1] = dx = α * x - β * x * y
-    du[2] = dy = -δ * y + γ * x * y
+    return du[2] = dy = -δ * y + γ * x * y
 end
 
 # Initial condition
@@ -50,9 +50,11 @@ optprob = OptimizationFunction((x, p) -> loss_adjoint(x), Optimization.AutoForwa
 
 prob = Optimization.OptimizationProblem(optprob, p)
 
-result_ode = Optimization.solve(prob,
+result_ode = Optimization.solve(
+    prob,
     BFGS(initial_stepnorm = 0.0001),
-    callback = callback)
+    callback = callback
+)
 
 u0 = Float32[2.0; 0.0]
 datasize = 30
@@ -61,22 +63,25 @@ tsteps = range(tspan[1], tspan[2], length = datasize)
 
 function trueODEfunc(du, u, p, t)
     true_A = [-0.1 2.0; -2.0 -0.1]
-    du .= ((u .^ 3)'true_A)'
+    return du .= ((u .^ 3)'true_A)'
 end
 
 prob_trueode = ODEProblem(trueODEfunc, u0, tspan)
 ode_data = Array(solve(prob_trueode, Tsit5(), saveat = tsteps))
 
-dudt2 = Lux.Chain(x -> x .^ 3,
+dudt2 = Lux.Chain(
+    x -> x .^ 3,
     Lux.Dense(2, 50, tanh),
-    Lux.Dense(50, 2))
+    Lux.Dense(50, 2)
+)
 prob_neuralode = NeuralODE(
-    dudt2, tspan, Tsit5(), saveat = tsteps, abstol = 1e-8, reltol = 1e-8)
+    dudt2, tspan, Tsit5(), saveat = tsteps, abstol = 1.0e-8, reltol = 1.0e-8
+)
 pp, st = Lux.setup(rng, dudt2)
 pp = ComponentArray(pp)
 
 function predict_neuralode(p)
-    Array(prob_neuralode(u0, p, st)[1])
+    return Array(prob_neuralode(u0, p, st)[1])
 end
 
 function loss_neuralode(p)
@@ -98,15 +103,19 @@ optprob = OptimizationFunction((p, x) -> loss_neuralode(p), Optimization.AutoFor
 
 prob = Optimization.OptimizationProblem(optprob, pp)
 
-result_neuralode = Optimization.solve(prob,
+result_neuralode = Optimization.solve(
+    prob,
     OptimizationOptimisers.ADAM(), callback = callback,
-    maxiters = 1000)
-@test result_neuralode.objective≈loss_neuralode(result_neuralode.u)[1] rtol=1e-2
+    maxiters = 1000
+)
+@test result_neuralode.objective ≈ loss_neuralode(result_neuralode.u)[1] rtol = 1.0e-2
 
 prob2 = remake(prob, u0 = result_neuralode.u)
-result_neuralode2 = Optimization.solve(prob2,
+result_neuralode2 = Optimization.solve(
+    prob2,
     BFGS(initial_stepnorm = 0.0001),
     callback = callback,
-    maxiters = 300, allow_f_increases = true)
-@test result_neuralode2.objective≈loss_neuralode(result_neuralode2.u)[1] rtol=1e-2
+    maxiters = 300, allow_f_increases = true
+)
+@test result_neuralode2.objective ≈ loss_neuralode(result_neuralode2.u)[1] rtol = 1.0e-2
 @test result_neuralode2.objective < 10

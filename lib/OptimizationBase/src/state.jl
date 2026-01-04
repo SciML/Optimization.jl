@@ -24,7 +24,9 @@ struct OptimizationState{X, O, G, H, S, P}
     p::P
 end
 
-function OptimizationState(; iter = 0, u = nothing, objective = nothing,
-        grad = nothing, hess = nothing, original = nothing, p = nothing)
-    OptimizationState(iter, u, objective, grad, hess, original, p)
+function OptimizationState(;
+        iter = 0, u = nothing, objective = nothing,
+        grad = nothing, hess = nothing, original = nothing, p = nothing
+    )
+    return OptimizationState(iter, u, objective, grad, hess, original, p)
 end

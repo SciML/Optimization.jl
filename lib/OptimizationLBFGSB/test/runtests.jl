@@ -26,9 +26,11 @@ using Test
     end
 
     optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote(), cons = con2_c)
-    prob = OptimizationProblem(optf, x0, lcons = [1.0, -Inf],
+    prob = OptimizationProblem(
+        optf, x0, lcons = [1.0, -Inf],
         ucons = [1.0, 0.0], lb = [-1.0, -1.0],
-        ub = [1.0, 1.0])
+        ub = [1.0, 1.0]
+    )
     @time res = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 100)
     @test res.retcode == SciMLBase.ReturnCode.Success
 
@@ -50,8 +52,10 @@ using Test
 
     initpars = rand(5)
     l0 = optf(initpars, (x0, y0))
-    prob = OptimizationProblem(optf, initpars, (x0, y0), lcons = [-Inf], ucons = [0.5],
-        lb = [-10.0, -10.0, -10.0, -10.0, -10.0], ub = [10.0, 10.0, 10.0, 10.0, 10.0])
+    prob = OptimizationProblem(
+        optf, initpars, (x0, y0), lcons = [-Inf], ucons = [0.5],
+        lb = [-10.0, -10.0, -10.0, -10.0, -10.0], ub = [10.0, 10.0, 10.0, 10.0, 10.0]
+    )
     opt1 = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 1000, callback = callback)
     @test opt1.objective < l0
 
@@ -59,8 +63,8 @@ using Test
     # at bounds (e.g., due to function singularity)
     @testset "Inf/NaN detection at bounds (issue #1094)" begin
         # Function with singularity at α = -1 (log(0) = -Inf)
-        ne = [47.79, 54.64, 60.68, 65.85, 70.10]
-        nt = [49.01, 56.09, 62.38, 67.80, 72.29]
+        ne = [47.79, 54.64, 60.68, 65.85, 70.1]
+        nt = [49.01, 56.09, 62.38, 67.8, 72.29]
 
         function chi2_singular(alpha, p)
             n_th = (1 + alpha[1]) * nt

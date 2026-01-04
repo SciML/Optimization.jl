@@ -15,40 +15,51 @@ abstract type AbstractManoptOptimizer end
 SciMLBase.has_init(opt::AbstractManoptOptimizer) = true
 SciMLBase.allowscallback(opt::AbstractManoptOptimizer) = true
 
-function __map_optimizer_args!(cache::OptimizationBase.OptimizationCache,
+function __map_optimizer_args!(
+        cache::OptimizationBase.OptimizationCache,
         opt::AbstractManoptOptimizer;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
-        kwargs...)
+        kwargs...
+    )
     solver_kwargs = (; kwargs...)
 
     if !isnothing(maxiters)
         solver_kwargs = (;
-            solver_kwargs..., stopping_criterion = [Manopt.StopAfterIteration(maxiters)])
+            solver_kwargs..., stopping_criterion = [Manopt.StopAfterIteration(maxiters)],
+        )
     end
 
     if !isnothing(maxtime)
         if haskey(solver_kwargs, :stopping_criterion)
-            solver_kwargs = (; solver_kwargs...,
+            solver_kwargs = (;
+                solver_kwargs...,
                 stopping_criterion = push!(
-                    solver_kwargs.stopping_criterion, Manopt.StopAfterTime(maxtime)))
+                    solver_kwargs.stopping_criterion, Manopt.StopAfterTime(maxtime)
+                ),
+            )
         else
             solver_kwargs = (;
-                solver_kwargs..., stopping_criterion = [Manopt.StopAfter(maxtime)])
+                solver_kwargs..., stopping_criterion = [Manopt.StopAfter(maxtime)],
+            )
         end
     end
 
     if !isnothing(abstol)
         if haskey(solver_kwargs, :stopping_criterion)
-            solver_kwargs = (; solver_kwargs...,
+            solver_kwargs = (;
+                solver_kwargs...,
                 stopping_criterion = push!(
-                    solver_kwargs.stopping_criterion, Manopt.StopWhenChangeLess(abstol)))
+                    solver_kwargs.stopping_criterion, Manopt.StopWhenChangeLess(abstol)
+                ),
+            )
         else
             solver_kwargs = (;
-                solver_kwargs..., stopping_criterion = [Manopt.StopWhenChangeLess(abstol)])
+                solver_kwargs..., stopping_criterion = [Manopt.StopWhenChangeLess(abstol)],
+            )
         end
     end
 
@@ -67,8 +78,10 @@ function call_manopt_optimizer(
         gradF,
         x0;
         hessF = nothing, # ignore that keyword for this solver
-        kwargs...)
-    opts = Manopt.gradient_descent(M,
+        kwargs...
+    )
+    opts = Manopt.gradient_descent(
+        M,
         loss,
         gradF,
         x0;
@@ -82,12 +95,14 @@ end
 ## Nelder-Mead
 struct NelderMeadOptimizer <: AbstractManoptOptimizer end
 
-function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold, opt::NelderMeadOptimizer,
+function call_manopt_optimizer(
+        M::ManifoldsBase.AbstractManifold, opt::NelderMeadOptimizer,
         loss,
         gradF,
         x0;
         hessF = nothing, # ignore that keyword for this solver
-        kwargs...)
+        kwargs...
+    )
     opts = NelderMead(M, loss; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opts)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
@@ -96,14 +111,17 @@ end
 ## conjugate gradient descent
 struct ConjugateGradientDescentOptimizer <: AbstractManoptOptimizer end
 
-function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
+function call_manopt_optimizer(
+        M::ManifoldsBase.AbstractManifold,
         opt::ConjugateGradientDescentOptimizer,
         loss,
         gradF,
         x0;
         hessF = nothing, # ignore that keyword for this solver
-        kwargs...)
-    opts = Manopt.conjugate_gradient_descent(M,
+        kwargs...
+    )
+    opts = Manopt.conjugate_gradient_descent(
+        M,
         loss,
         gradF,
         x0;
@@ -117,14 +135,16 @@ end
 ## particle swarm
 struct ParticleSwarmOptimizer <: AbstractManoptOptimizer end
 
-function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
+function call_manopt_optimizer(
+        M::ManifoldsBase.AbstractManifold,
         opt::ParticleSwarmOptimizer,
         loss,
         gradF,
         x0;
         hessF = nothing, # ignore that keyword for this solver
         population_size::Int = 100,
-        kwargs...)
+        kwargs...
+    )
     swarm = [x0, [rand(M) for _ in 1:(population_size - 1)]...]
     opts = particle_swarm(M, loss, swarm; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opts)
@@ -135,14 +155,15 @@ end
 
 struct QuasiNewtonOptimizer <: AbstractManoptOptimizer end
 
-function call_manopt_optimizer(M::Manopt.AbstractManifold,
+function call_manopt_optimizer(
+        M::Manopt.AbstractManifold,
         opt::QuasiNewtonOptimizer,
         loss,
         gradF,
         x0;
         hessF = nothing, # ignore that keyword for this solver
         kwargs...
-)
+    )
     opts = quasi_Newton(M, loss, gradF, x0; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opts)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
@@ -150,13 +171,15 @@ end
 
 struct CMAESOptimizer <: AbstractManoptOptimizer end
 
-function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
+function call_manopt_optimizer(
+        M::ManifoldsBase.AbstractManifold,
         opt::CMAESOptimizer,
         loss,
         gradF,
         x0;
         hessF = nothing, # ignore that keyword for this solver
-        kwargs...)
+        kwargs...
+    )
     opt = cma_es(M, loss, x0; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opt)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
@@ -164,13 +187,15 @@ end
 
 struct ConvexBundleOptimizer <: AbstractManoptOptimizer end
 
-function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
+function call_manopt_optimizer(
+        M::ManifoldsBase.AbstractManifold,
         opt::ConvexBundleOptimizer,
         loss,
         gradF,
         x0;
         hessF = nothing, # ignore that keyword for this solver
-        kwargs...)
+        kwargs...
+    )
     opt = convex_bundle_method(M, loss, gradF, x0; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opt)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
@@ -178,19 +203,23 @@ end
 
 struct AdaptiveRegularizationCubicOptimizer <: AbstractManoptOptimizer end
 
-function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
+function call_manopt_optimizer(
+        M::ManifoldsBase.AbstractManifold,
         opt::AdaptiveRegularizationCubicOptimizer,
         loss,
         gradF,
         x0;
         hessF = nothing,
-        kwargs...)
+        kwargs...
+    )
     opt = if isnothing(hessF)
         adaptive_regularization_with_cubics(
-            M, loss, gradF, x0; return_state = true, kwargs...)
+            M, loss, gradF, x0; return_state = true, kwargs...
+        )
     else
         adaptive_regularization_with_cubics(
-            M, loss, gradF, hessF, x0; return_state = true, kwargs...)
+            M, loss, gradF, hessF, x0; return_state = true, kwargs...
+        )
     end
     minimizer = Manopt.get_solver_result(opt)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
@@ -198,13 +227,15 @@ end
 
 struct TrustRegionsOptimizer <: AbstractManoptOptimizer end
 
-function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
+function call_manopt_optimizer(
+        M::ManifoldsBase.AbstractManifold,
         opt::TrustRegionsOptimizer,
         loss,
         gradF,
         x0;
         hessF = nothing,
-        kwargs...)
+        kwargs...
+    )
     opt = if isnothing(hessF)
         trust_regions(M, loss, gradF, x0; return_state = true, kwargs...)
     else
@@ -216,28 +247,36 @@ end
 
 struct FrankWolfeOptimizer <: AbstractManoptOptimizer end
 
-function call_manopt_optimizer(M::ManifoldsBase.AbstractManifold,
+function call_manopt_optimizer(
+        M::ManifoldsBase.AbstractManifold,
         opt::FrankWolfeOptimizer,
         loss,
         gradF,
         x0;
         hessF = nothing, # ignore that keyword for this solver
-        kwargs...)
+        kwargs...
+    )
     opt = Frank_Wolfe_method(M, loss, gradF, x0; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opt)
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
 ## OptimizationBase.jl stuff
-function SciMLBase.requiresgradient(opt::Union{
-        GradientDescentOptimizer, ConjugateGradientDescentOptimizer,
-        QuasiNewtonOptimizer, ConvexBundleOptimizer, FrankWolfeOptimizer,
-        AdaptiveRegularizationCubicOptimizer, TrustRegionsOptimizer})
-    true
+function SciMLBase.requiresgradient(
+        opt::Union{
+            GradientDescentOptimizer, ConjugateGradientDescentOptimizer,
+            QuasiNewtonOptimizer, ConvexBundleOptimizer, FrankWolfeOptimizer,
+            AdaptiveRegularizationCubicOptimizer, TrustRegionsOptimizer,
+        }
+    )
+    return true
 end
-function SciMLBase.requireshessian(opt::Union{
-        AdaptiveRegularizationCubicOptimizer, TrustRegionsOptimizer})
-    true
+function SciMLBase.requireshessian(
+        opt::Union{
+            AdaptiveRegularizationCubicOptimizer, TrustRegionsOptimizer,
+        }
+    )
+    return true
 end
 
 function build_loss(f::OptimizationFunction, prob, cb)
@@ -255,7 +294,7 @@ end
 function build_gradF(f::OptimizationFunction{true})
     function g(M::AbstractManifold, G, θ)
         f.grad(G, θ)
-        G .= riemannian_gradient(M, θ, G)
+        return G .= riemannian_gradient(M, θ, G)
     end
     function g(M::AbstractManifold, θ)
         G = zero(θ)
@@ -271,7 +310,7 @@ function build_hessF(f::OptimizationFunction{true})
         f.hv(H, θ, X)
         G = zeros(eltype(θ), length(θ))
         f.grad(G, θ)
-        riemannian_Hessian!(M, H1, θ, G, H, X)
+        return riemannian_Hessian!(M, H1, θ, G, H, X)
     end
     function h(M::AbstractManifold, θ, X)
         H = zeros(eltype(θ), length(θ))
@@ -288,26 +327,29 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractMano
 
     manifold = cache.manifold
     gradF = haskey(cache.solver_args, :riemannian_grad) ?
-            cache.solver_args[:riemannian_grad] : nothing
+        cache.solver_args[:riemannian_grad] : nothing
     hessF = haskey(cache.solver_args, :riemannian_hess) ?
-            cache.solver_args[:riemannian_hess] : nothing
+        cache.solver_args[:riemannian_hess] : nothing
 
     if manifold === nothing
         throw(ArgumentError("Manifold not specified in the problem for e.g. `OptimizationProblem(f, x, p; manifold = SymmetricPositiveDefinite(5))`."))
     end
 
     function _cb(x, θ)
-        opt_state = OptimizationBase.OptimizationState(iter = 0,
+        opt_state = OptimizationBase.OptimizationState(
+            iter = 0,
             u = θ,
             p = cache.p,
-            objective = x[1])
+            objective = x[1]
+        )
         cb_call = cache.callback(opt_state, x...)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
-        cb_call
+        return cb_call
     end
-    solver_kwarg = __map_optimizer_args!(cache, cache.opt, callback = _cb,
+    solver_kwarg = __map_optimizer_args!(
+        cache, cache.opt, callback = _cb,
         maxiters = cache.solver_args.maxiters,
         maxtime = cache.solver_args.maxtime,
         abstol = cache.solver_args.abstol,
@@ -331,23 +373,27 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractMano
         stopping_criterion = Manopt.StopAfterIteration(500)
     end
 
-    opt_res = call_manopt_optimizer(manifold, cache.opt, _loss, gradF, cache.u0;
-        solver_kwarg..., stopping_criterion = stopping_criterion, hessF)
+    opt_res = call_manopt_optimizer(
+        manifold, cache.opt, _loss, gradF, cache.u0;
+        solver_kwarg..., stopping_criterion = stopping_criterion, hessF
+    )
 
     asc = get_stopping_criterion(opt_res.options)
     opt_ret = Manopt.has_converged(asc) ? ReturnCode.Success : ReturnCode.Failure
 
-    return SciMLBase.build_solution(cache,
+    return SciMLBase.build_solution(
+        cache,
         cache.opt,
         opt_res.minimizer,
         cache.sense === OptimizationBase.MaxSense ?
-        -opt_res.minimum : opt_res.minimum;
+            -opt_res.minimum : opt_res.minimum;
         original = opt_res.options,
-        retcode = opt_ret)
+        retcode = opt_ret
+    )
 end
 
 export GradientDescentOptimizer, NelderMeadOptimizer, ConjugateGradientDescentOptimizer,
-       ParticleSwarmOptimizer, QuasiNewtonOptimizer, CMAESOptimizer, ConvexBundleOptimizer,
-       FrankWolfeOptimizer
+    ParticleSwarmOptimizer, QuasiNewtonOptimizer, CMAESOptimizer, ConvexBundleOptimizer,
+    FrankWolfeOptimizer
 
 end # module OptimizationManopt

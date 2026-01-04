@@ -1,5 +1,5 @@
 using OptimizationBase, ForwardDiff, SymbolicAnalysis, LinearAlgebra,
-      Manifolds, OptimizationManopt, OptimizationLBFGSB
+    Manifolds, OptimizationManopt, OptimizationLBFGSB
 
 function f(x, p = nothing)
     return exp(x[1]) + x[1]^2
@@ -22,17 +22,19 @@ prob = OptimizationProblem(optf, x0, structural_analysis = true)
 @test res.cache.analysis_results.objective.curvature == SymbolicAnalysis.UnknownCurvature
 
 function con2_c(res, x, p)
-    res .= [x[1]^2 + x[2]^2, (x[2] * sin(x[1]) + x[1]) - 5]
+    return res .= [x[1]^2 + x[2]^2, (x[2] * sin(x[1]) + x[1]) - 5]
 end
 
 optf = OptimizationFunction(rosenbrock, AutoZygote(), cons = con2_c)
-prob = OptimizationProblem(optf, x0, lcons = [1.0, -Inf], ucons = [1.0, 0.0],
-    lb = [-1.0, -1.0], ub = [1.0, 1.0], structural_analysis = true)
+prob = OptimizationProblem(
+    optf, x0, lcons = [1.0, -Inf], ucons = [1.0, 0.0],
+    lb = [-1.0, -1.0], ub = [1.0, 1.0], structural_analysis = true
+)
 @time res = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 100)
 @test res.cache.analysis_results.objective.curvature == SymbolicAnalysis.UnknownCurvature
 @test res.cache.analysis_results.constraints[1].curvature == SymbolicAnalysis.Convex
 @test res.cache.analysis_results.constraints[2].curvature ==
-      SymbolicAnalysis.UnknownCurvature
+    SymbolicAnalysis.UnknownCurvature
 
 m = 100
 σ = 0.005
@@ -47,6 +49,6 @@ prob = OptimizationProblem(optf, data2[1]; manifold = M, structural_analysis = t
 
 opt = OptimizationManopt.GradientDescentOptimizer()
 @time sol = solve(prob, opt, maxiters = 100)
-@test sol.objective < 1e-1
+@test sol.objective < 1.0e-1
 @test sol.cache.analysis_results.objective.curvature == SymbolicAnalysis.UnknownCurvature
 @test sol.cache.analysis_results.objective.gcurvature == SymbolicAnalysis.GConvex

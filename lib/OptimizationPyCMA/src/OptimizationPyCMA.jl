@@ -27,12 +27,14 @@ SciMLBase.requiresconsjac(::PyCMAOpt) = false
 SciMLBase.requiresconshess(::PyCMAOpt) = false
 
 # wrapping OptimizationBase.jl args into a python dict as arguments to PyCMA opts
-function __map_optimizer_args(prob::OptimizationBase.OptimizationCache, opt::PyCMAOpt;
+function __map_optimizer_args(
+        prob::OptimizationBase.OptimizationCache, opt::PyCMAOpt;
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
-        PyCMAargs...)
+        PyCMAargs...
+    )
     if !isnothing(reltol)
         @warn "common reltol is currently not used by $(opt)"
     end
@@ -81,9 +83,13 @@ function __map_pycma_retcode(stop_dict::Dict{String, Any})
         return ReturnCode.MaxTime
     elseif "callback" ∈ keys(stop_dict)
         return ReturnCode.Terminated
-    elseif any(k in keys(stop_dict)
-    for k in ["tolupsigma", "tolconditioncov", "noeffectcoord", "noeffectaxis",
-        "tolxstagnation", "tolflatfitness", "tolfacupx", "tolstagnation"])
+    elseif any(
+            k in keys(stop_dict)
+                for k in [
+                    "tolupsigma", "tolconditioncov", "noeffectcoord", "noeffectaxis",
+                    "tolxstagnation", "tolflatfitness", "tolfacupx", "tolstagnation",
+                ]
+        )
         return ReturnCode.Failure
     else
         return ReturnCode.Default
@@ -105,13 +111,14 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: PyCMAOpt}
             u = pyconvert(Vector{Float64}, es.best.x),
             p = cache.p,
             objective = pyconvert(Float64, es.best.f),
-            original = es)
+            original = es
+        )
 
         cb_call = cache.callback(opt_state, x...)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
-        if cb_call
+        return if cb_call
             es.opts.set(Dict("termination_callback" => es -> true))
         end
     end
@@ -121,9 +128,11 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: PyCMAOpt}
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     # converting the OptimizationBase.jl Args to PyCMA format
-    opt_args = __map_optimizer_args(cache, cache.opt; cache.solver_args...,
+    opt_args = __map_optimizer_args(
+        cache, cache.opt; cache.solver_args...,
         maxiters = maxiters,
-        maxtime = maxtime)
+        maxtime = maxtime
+    )
 
     # init the CMAopt class
     es = get_cma().CMAEvolutionStrategy(cache.u0, 1, pydict(opt_args))
@@ -141,13 +150,16 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: PyCMAOpt}
     stats = OptimizationBase.OptimizationStats(;
         iterations = pyconvert(Int, es.countiter),
         time = t1 - t0,
-        fevals = pyconvert(Int, es.countevals))
+        fevals = pyconvert(Int, es.countevals)
+    )
 
-    SciMLBase.build_solution(cache, cache.opt,
+    return SciMLBase.build_solution(
+        cache, cache.opt,
         pyconvert(Vector{Float64}, opt_res.result.xbest),
         pyconvert(Float64, opt_res.result.fbest); original = opt_res,
         retcode = retcode,
-        stats = stats)
+        stats = stats
+    )
 end
 
 end # module OptimizationPyCMA

@@ -28,9 +28,12 @@ using Test
     initpars = rand(5)
     l0 = optf(initpars, (x0, y0))
 
-    prob = OptimizationProblem(optf, initpars, data, lcons = [-Inf], ucons = [1],
-        lb = [-10.0, -10.0, -10.0, -10.0, -10.0], ub = [10.0, 10.0, 10.0, 10.0, 10.0])
+    prob = OptimizationProblem(
+        optf, initpars, data, lcons = [-Inf], ucons = [1],
+        lb = [-10.0, -10.0, -10.0, -10.0, -10.0], ub = [10.0, 10.0, 10.0, 10.0, 10.0]
+    )
     opt = solve(
-        prob, OptimizationAuglag.AugLag(; inner = Adam()), maxiters = 10000, callback = callback)
+        prob, OptimizationAuglag.AugLag(; inner = Adam()), maxiters = 10000, callback = callback
+    )
     @test opt.objective < l0
 end

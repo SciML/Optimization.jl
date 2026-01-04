@@ -45,22 +45,33 @@ SciMLBase.requireshessian(::DAEOptimizer) = false
 SciMLBase.requiresconsjac(::DAEOptimizer) = true
 SciMLBase.requiresconshess(::DAEOptimizer) = false
 
-function SciMLBase.__init(prob::OptimizationProblem, opt::ODEOptimizer;
+function SciMLBase.__init(
+        prob::OptimizationProblem, opt::ODEOptimizer;
         callback = OptimizationBase.DEFAULT_CALLBACK, progress = false, dt = nothing,
-        maxiters = nothing, kwargs...)
-    return OptimizationCache(prob, opt; callback = callback, progress = progress, dt = dt,
-        maxiters = maxiters, kwargs...)
+        maxiters = nothing, kwargs...
+    )
+    return OptimizationCache(
+        prob, opt; callback = callback, progress = progress, dt = dt,
+        maxiters = maxiters, kwargs...
+    )
 end
 
-function SciMLBase.__init(prob::OptimizationProblem, opt::DAEOptimizer;
+function SciMLBase.__init(
+        prob::OptimizationProblem, opt::DAEOptimizer;
         callback = OptimizationBase.DEFAULT_CALLBACK, progress = false, dt = nothing,
-        maxiters = nothing, kwargs...)
-    return OptimizationCache(prob, opt; callback = callback, progress = progress, dt = dt,
-        maxiters = maxiters, kwargs...)
+        maxiters = nothing, kwargs...
+    )
+    return OptimizationCache(
+        prob, opt; callback = callback, progress = progress, dt = dt,
+        maxiters = maxiters, kwargs...
+    )
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Union{
-        ODEOptimizer, DAEOptimizer}}
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {
+        O <: Union{
+            ODEOptimizer, DAEOptimizer,
+        },
+    }
     dt = get(cache.solver_args, :dt, nothing)
     maxit = get(cache.solver_args, :maxiters, nothing)
     u0 = copy(cache.u0)
@@ -120,14 +131,15 @@ function solve_ode(cache, dt, maxit, u0, p)
 
     stats = OptimizationBase.OptimizationStats(
         iterations = has_destats ? get(sol.destats, :iters, 10) :
-                     (has_t ? length(sol.t) - 1 : 10),
+            (has_t ? length(sol.t) - 1 : 10),
         time = has_t ? sol.t[end] : 0.0,
         fevals = has_destats ? get(sol.destats, :f_calls, 0) : 0,
         gevals = has_destats ? get(sol.destats, :iters, 0) : 0,
         hevals = 0
     )
 
-    SciMLBase.build_solution(cache, cache.opt, sol.u, cache.f(sol.u, p);
+    return SciMLBase.build_solution(
+        cache, cache.opt, sol.u, cache.f(sol.u, p);
         retcode = ReturnCode.Success,
         stats = stats
     )
@@ -181,8 +193,10 @@ function solve_dae_mass_matrix(cache, dt, maxit, u0, p)
     # end
     u_ext = sol.u
     u_final = u_ext[1:n]
-    return SciMLBase.build_solution(cache, cache.opt, u_final, cache.f(u_final, p);
-        retcode = sol.retcode)
+    return SciMLBase.build_solution(
+        cache, cache.opt, u_final, cache.f(u_final, p);
+        retcode = sol.retcode
+    )
 end
 
 function solve_dae_implicit(cache, dt, maxit, u0, p)
@@ -236,8 +250,10 @@ function solve_dae_implicit(cache, dt, maxit, u0, p)
     u_ext = sol.u
     u_final = u_ext[end][1:n]
 
-    return SciMLBase.build_solution(cache, cache.opt, u_final, cache.f(u_final, p);
-        retcode = sol.retcode)
+    return SciMLBase.build_solution(
+        cache, cache.opt, u_final, cache.f(u_final, p);
+        retcode = sol.retcode
+    )
 end
 
 end

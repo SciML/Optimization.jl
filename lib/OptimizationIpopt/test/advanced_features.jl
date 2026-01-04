@@ -21,13 +21,16 @@ using SparseArrays
         prob = OptimizationProblem(optfunc, x0, p)
 
         # Test with tight tolerances
-        sol = solve(prob, IpoptOptimizer(
-                   acceptable_tol = 1e-8,
-                   acceptable_iter = 5);
-                   reltol = 1e-10)
+        sol = solve(
+            prob, IpoptOptimizer(
+                acceptable_tol = 1.0e-8,
+                acceptable_iter = 5
+            );
+            reltol = 1.0e-10
+        )
 
         @test SciMLBase.successful_retcode(sol)
-        @test sol.u ≈ [1.0, 1.0] atol=1e-8
+        @test sol.u ≈ [1.0, 1.0] atol = 1.0e-8
     end
 
     @testset "Constraint Violation Tolerance" begin
@@ -42,16 +45,21 @@ using SparseArrays
         end
 
         optfunc = OptimizationFunction(obj, OptimizationBase.AutoZygote(); cons = cons)
-        prob = OptimizationProblem(optfunc, [0.5, 0.5], nothing;
-                                 lcons = [0.0, 0.0],
-                                 ucons = [0.0, 0.0])
+        prob = OptimizationProblem(
+            optfunc, [0.5, 0.5], nothing;
+            lcons = [0.0, 0.0],
+            ucons = [0.0, 0.0]
+        )
 
-        sol = solve(prob, IpoptOptimizer(
-                   constr_viol_tol = 1e-8))
+        sol = solve(
+            prob, IpoptOptimizer(
+                constr_viol_tol = 1.0e-8
+            )
+        )
 
         @test SciMLBase.successful_retcode(sol)
-        @test sol.u[1] + sol.u[2] ≈ 2.0 atol=1e-7
-        @test sol.u[1]^2 + sol.u[2]^2 ≈ 2.0 atol=1e-7
+        @test sol.u[1] + sol.u[2] ≈ 2.0 atol = 1.0e-7
+        @test sol.u[1]^2 + sol.u[2]^2 ≈ 2.0 atol = 1.0e-7
     end
 
     @testset "Derivative Test" begin
@@ -64,11 +72,14 @@ using SparseArrays
         prob = OptimizationProblem(optfunc, [0.1, 0.1], nothing)
 
         # Run with derivative test level 1 (first derivatives only)
-        sol = solve(prob, IpoptOptimizer(
-                   additional_options = Dict(
-                       "derivative_test" => "first-order",
-                       "derivative_test_tol" => 1e-4
-                   )))
+        sol = solve(
+            prob, IpoptOptimizer(
+                additional_options = Dict(
+                    "derivative_test" => "first-order",
+                    "derivative_test_tol" => 1.0e-4
+                )
+            )
+        )
 
         @test SciMLBase.successful_retcode(sol)
     end
@@ -84,8 +95,8 @@ using SparseArrays
         function rosenbrock_n(x, p)
             n = length(x)
             sum = 0.0
-            for i in 1:2:n-1
-                sum += (p[1] - x[i])^2 + p[2] * (x[i+1] - x[i]^2)^2
+            for i in 1:2:(n - 1)
+                sum += (p[1] - x[i])^2 + p[2] * (x[i + 1] - x[i]^2)^2
             end
             return sum
         end
@@ -94,39 +105,49 @@ using SparseArrays
         prob = OptimizationProblem(optfunc, x0, p)
 
         # Test with different linear solver strategies
-        sol = solve(prob, IpoptOptimizer(
-                   linear_solver = "mumps"))  # or "ma27", "ma57", etc. if available
+        sol = solve(
+            prob, IpoptOptimizer(
+                linear_solver = "mumps"
+            )
+        )  # or "ma27", "ma57", etc. if available
 
         @test SciMLBase.successful_retcode(sol)
         # Check that odd indices are close to 1
-        @test all(isapprox(sol.u[i], 1.0, atol=1e-4) for i in 1:2:length(x0)-1)
+        @test all(isapprox(sol.u[i], 1.0, atol = 1.0e-4) for i in 1:2:(length(x0) - 1))
     end
 
     @testset "Scaling Options" begin
         # Test problem that benefits from scaling
         function scaled_obj(x, p)
-            return 1e6 * x[1]^2 + 1e-6 * x[2]^2
+            return 1.0e6 * x[1]^2 + 1.0e-6 * x[2]^2
         end
 
         function scaled_cons(res, x, p)
-            res[1] = 1e3 * x[1] + 1e-3 * x[2] - 1.0
+            res[1] = 1.0e3 * x[1] + 1.0e-3 * x[2] - 1.0
         end
 
-        optfunc = OptimizationFunction(scaled_obj, OptimizationBase.AutoZygote();
-                                      cons = scaled_cons)
-        prob = OptimizationProblem(optfunc, [1.0, 1.0], nothing;
-                                 lcons = [0.0],
-                                 ucons = [0.0])
+        optfunc = OptimizationFunction(
+            scaled_obj, OptimizationBase.AutoZygote();
+            cons = scaled_cons
+        )
+        prob = OptimizationProblem(
+            optfunc, [1.0, 1.0], nothing;
+            lcons = [0.0],
+            ucons = [0.0]
+        )
 
         # Solve with automatic scaling
-        sol = solve(prob, IpoptOptimizer(
-                   nlp_scaling_method = "gradient-based"))
+        sol = solve(
+            prob, IpoptOptimizer(
+                nlp_scaling_method = "gradient-based"
+            )
+        )
 
         @test SciMLBase.successful_retcode(sol)
         # Check constraint satisfaction
         res = zeros(1)
         scaled_cons(res, sol.u, nothing)
-        @test abs(res[1]) < 1e-6
+        @test abs(res[1]) < 1.0e-6
     end
 
     @testset "Restoration Phase Test" begin
@@ -140,23 +161,30 @@ using SparseArrays
             res[2] = x[1]^2 + x[2]^2 - 0.5
         end
 
-        optfunc = OptimizationFunction(difficult_obj, OptimizationBase.AutoZygote();
-                                      cons = difficult_cons)
+        optfunc = OptimizationFunction(
+            difficult_obj, OptimizationBase.AutoZygote();
+            cons = difficult_cons
+        )
         # Start from an infeasible point
-        prob = OptimizationProblem(optfunc, [2.0, 2.0], nothing;
-                                 lcons = [0.0, 0.0],
-                                 ucons = [0.0, 0.0])
+        prob = OptimizationProblem(
+            optfunc, [2.0, 2.0], nothing;
+            lcons = [0.0, 0.0],
+            ucons = [0.0, 0.0]
+        )
 
-        sol = solve(prob, IpoptOptimizer(
-                   additional_options = Dict(
-                       "required_infeasibility_reduction" => 0.9
-                   )))
+        sol = solve(
+            prob, IpoptOptimizer(
+                additional_options = Dict(
+                    "required_infeasibility_reduction" => 0.9
+                )
+            )
+        )
 
         if SciMLBase.successful_retcode(sol)
             # Check constraint satisfaction if successful
             res = zeros(2)
             difficult_cons(res, sol.u, nothing)
-            @test norm(res) < 1e-4
+            @test norm(res) < 1.0e-4
         end
     end
 
@@ -171,19 +199,25 @@ using SparseArrays
         prob = OptimizationProblem(optfunc, x0, p)
 
         # Test adaptive mu strategy
-        sol = solve(prob, IpoptOptimizer(
-                   mu_strategy = "adaptive",
-                   mu_init = 0.1))
+        sol = solve(
+            prob, IpoptOptimizer(
+                mu_strategy = "adaptive",
+                mu_init = 0.1
+            )
+        )
 
         @test SciMLBase.successful_retcode(sol)
-        @test sol.u ≈ [1.0, 1.0] atol=1e-4
+        @test sol.u ≈ [1.0, 1.0] atol = 1.0e-4
 
         # Test monotone mu strategy
-        sol2 = solve(prob, IpoptOptimizer(
-                    mu_strategy = "monotone"))
+        sol2 = solve(
+            prob, IpoptOptimizer(
+                mu_strategy = "monotone"
+            )
+        )
 
         @test SciMLBase.successful_retcode(sol2)
-        @test sol2.u ≈ [1.0, 1.0] atol=1e-4
+        @test sol2.u ≈ [1.0, 1.0] atol = 1.0e-4
     end
 
     @testset "Fixed Variable Handling" begin
@@ -194,35 +228,47 @@ using SparseArrays
 
         optfunc = OptimizationFunction(fixed_var_obj, OptimizationBase.AutoZygote())
         # Fix x[2] = 2.0 by setting equal bounds
-        prob = OptimizationProblem(optfunc, [0.0, 2.0, 0.0], nothing;
-                                 lb = [-Inf, 2.0, -Inf],
-                                 ub = [Inf, 2.0, Inf])
+        prob = OptimizationProblem(
+            optfunc, [0.0, 2.0, 0.0], nothing;
+            lb = [-Inf, 2.0, -Inf],
+            ub = [Inf, 2.0, Inf]
+        )
 
-        sol = solve(prob, IpoptOptimizer(
-                   additional_options = Dict(
-                       "fixed_variable_treatment" => "make_parameter"
-                   )))
+        sol = solve(
+            prob, IpoptOptimizer(
+                additional_options = Dict(
+                    "fixed_variable_treatment" => "make_parameter"
+                )
+            )
+        )
 
         @test SciMLBase.successful_retcode(sol)
-        @test sol.u ≈ [1.0, 2.0, 3.0] atol=1e-6
+        @test sol.u ≈ [1.0, 2.0, 3.0] atol = 1.0e-6
     end
 
     @testset "Acceptable Point Termination" begin
         # Test reaching an acceptable point rather than optimal
         function slow_converge_obj(x, p)
-            return sum(exp(-10 * (x[i] - i/10)^2) for i in 1:length(x))
+            return sum(exp(-10 * (x[i] - i / 10)^2) for i in 1:length(x))
         end
 
         n = 5
-        optfunc = OptimizationFunction(slow_converge_obj,
-                                      OptimizationBase.AutoZygote())
-        prob = OptimizationProblem(optfunc, zeros(n), nothing;
-                                 sense = OptimizationBase.MaxSense)
+        optfunc = OptimizationFunction(
+            slow_converge_obj,
+            OptimizationBase.AutoZygote()
+        )
+        prob = OptimizationProblem(
+            optfunc, zeros(n), nothing;
+            sense = OptimizationBase.MaxSense
+        )
 
-        sol = solve(prob, IpoptOptimizer(
-                   acceptable_tol = 1e-4,
-                   acceptable_iter = 10);
-                   maxiters = 50)
+        sol = solve(
+            prob, IpoptOptimizer(
+                acceptable_tol = 1.0e-4,
+                acceptable_iter = 10
+            );
+            maxiters = 50
+        )
 
         @test SciMLBase.successful_retcode(sol)
     end

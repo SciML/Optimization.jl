@@ -4,19 +4,19 @@ const GROUP = get(ENV, "GROUP", "Core")
 
 function dev_subpkg(subpkg)
     subpkg_path = joinpath(dirname(@__DIR__), "lib", subpkg)
-    Pkg.develop(PackageSpec(path = subpkg_path))
+    return Pkg.develop(PackageSpec(path = subpkg_path))
 end
 
 function activate_subpkg_env(subpkg)
     subpkg_path = joinpath(dirname(@__DIR__), "lib", subpkg)
     Pkg.activate(subpkg_path)
     Pkg.develop(PackageSpec(path = subpkg_path))
-    Pkg.instantiate()
+    return Pkg.instantiate()
 end
 
 @time begin
     if GROUP == "Core"
-        @testset verbose=true "Optimization.jl" begin
+        @testset verbose = true "Optimization.jl" begin
             @safetestset "Quality Assurance" include("qa.jl")
             @safetestset "Utils Tests" begin
                 include("utils.jl")

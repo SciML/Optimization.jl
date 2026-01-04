@@ -9,8 +9,10 @@ prob = OptimizationProblem((x, p) -> sum(x), zeros(2))
 struct OptAlg end
 
 allowscallback(::OptAlg) = false
-@test_throws OptimizationBase.IncompatibleOptimizerError solve(prob, OptAlg(),
-    callback = (args...) -> false)
+@test_throws OptimizationBase.IncompatibleOptimizerError solve(
+    prob, OptAlg(),
+    callback = (args...) -> false
+)
 
 requiresbounds(::OptAlg) = true
 @test_throws OptimizationBase.IncompatibleOptimizerError solve(prob, OptAlg())
