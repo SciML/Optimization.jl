@@ -6,19 +6,19 @@ using Reexport
 
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 import SciMLBase: solve, init, solve!, __init, __solve,
-                  OptimizationProblem,
-                  OptimizationFunction, ObjSense,
-                  MaxSense, MinSense, OptimizationStats,
-                  allowsbounds, requiresbounds,
-                  allowsconstraints, requiresconstraints,
-                  allowscallback, requiresgradient,
-                  requireshessian, requiresconsjac,
-                  requiresconshess
+    OptimizationProblem,
+    OptimizationFunction, ObjSense,
+    MaxSense, MinSense, OptimizationStats,
+    allowsbounds, requiresbounds,
+    allowsconstraints, requiresconstraints,
+    allowscallback, requiresgradient,
+    requireshessian, requiresconsjac,
+    requiresconshess
 
 export ObjSense, MaxSense, MinSense
 export allowsbounds, requiresbounds, allowsconstraints, requiresconstraints,
-       allowscallback, requiresgradient, requireshessian,
-       requiresconsjac, requiresconshess
+    allowscallback, requiresgradient, requireshessian,
+    requiresconsjac, requiresconshess
 
 using FastClosures
 

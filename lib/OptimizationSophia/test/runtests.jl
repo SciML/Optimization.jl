@@ -8,33 +8,33 @@ using Zygote
 using OrdinaryDiffEqTsit5
 
 function dudt_(u, p, t)
-    ann(u, p, st)[1] .* u
+    return ann(u, p, st)[1] .* u
 end
 
 function newtons_cooling(du, u, p, t)
     temp = u[1]
     k, temp_m = p
-    du[1] = dT = -k * (temp - temp_m)
+    return du[1] = dT = -k * (temp - temp_m)
 end
 
 function true_sol(du, u, p, t)
     true_p = [log(2) / 8.0, 100.0]
-    newtons_cooling(du, u, true_p, t)
+    return newtons_cooling(du, u, true_p, t)
 end
 
 function callback(state, l) #callback function to observe training
     display(l)
-    return l < 1e-2
+    return l < 1.0e-2
 end
 
 function predict_adjoint(fullp, time_batch)
-    Array(solve(prob, Tsit5(), p = fullp, saveat = time_batch))
+    return Array(solve(prob, Tsit5(), p = fullp, saveat = time_batch))
 end
 
 function loss_adjoint(fullp, p)
     (batch, time_batch) = p
     pred = predict_adjoint(fullp, time_batch)
-    sum(abs2, batch .- pred)
+    return sum(abs2, batch .- pred)
 end
 
 u0 = Float32[200.0]
@@ -57,13 +57,17 @@ train_loader = MLUtils.DataLoader((ode_data, t), batchsize = k)
 
 l1 = loss_adjoint(pp, (train_loader.data[1], train_loader.data[2]))[1]
 
-optfun = OptimizationFunction(loss_adjoint,
-    OptimizationBase.AutoZygote())
+optfun = OptimizationFunction(
+    loss_adjoint,
+    OptimizationBase.AutoZygote()
+)
 optprob = OptimizationProblem(optfun, pp, train_loader)
 
-res1 = solve(optprob,
+res1 = solve(
+    optprob,
     OptimizationSophia.Sophia(), callback = callback,
-    maxiters = 2000)
+    maxiters = 2000
+)
 @test 10res1.objective < l1
 
 # Test Sophia with ComponentArrays + Enzyme (shadow generation fix)
@@ -73,6 +77,6 @@ rosenbrock_comp(x, p = nothing) = (1 - x.a)^2 + 100 * (x.b - x.a^2)^2
 
 optf_sophia = OptimizationFunction(rosenbrock_comp, AutoEnzyme())
 prob_sophia = OptimizationProblem(optf_sophia, x0_comp)
-res_sophia = solve(prob_sophia, OptimizationSophia.Sophia(η=0.01, k=5), maxiters = 50)
+res_sophia = solve(prob_sophia, OptimizationSophia.Sophia(η = 0.01, k = 5), maxiters = 50)
 @test res_sophia.objective < rosenbrock_comp(x0_comp)  # Test optimization progress
 @test res_sophia.retcode == SciMLBase.ReturnCode.Success

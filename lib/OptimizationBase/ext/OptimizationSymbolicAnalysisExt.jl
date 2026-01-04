@@ -1,17 +1,21 @@
 module OptimizationSymbolicAnalysisExt
 
 using OptimizationBase, SciMLBase, SymbolicAnalysis, SymbolicAnalysis.Symbolics,
-      OptimizationBase.ArrayInterface
+    OptimizationBase.ArrayInterface
 using SymbolicAnalysis: AnalysisResult
 import SymbolicAnalysis.Symbolics: variable, Equation, Inequality, unwrap, @variables
 
 function OptimizationBase.symify_cache(
-        f::OptimizationFunction{iip, AD, F, G, FG, H, FGH, HV, C, CJ, CJV, CVJ, CH, HP,
-            CJP, CHP, O, EX, CEX, SYS, LH, LHP, HCV, CJCV, CHCV, LHCV},
+        f::OptimizationFunction{
+            iip, AD, F, G, FG, H, FGH, HV, C, CJ, CJV, CVJ, CH, HP,
+            CJP, CHP, O, EX, CEX, SYS, LH, LHP, HCV, CJCV, CHCV, LHCV,
+        },
         prob, num_cons,
-        manifold) where {
+        manifold
+    ) where {
         iip, AD, F, G, FG, H, FGH, HV, C, CJ, CJV, CVJ, CH, HP, CJP, CHP, O,
-        EX <: Nothing, CEX <: Nothing, SYS, LH, LHP, HCV, CJCV, CHCV, LHCV}
+        EX <: Nothing, CEX <: Nothing, SYS, LH, LHP, HCV, CJCV, CHCV, LHCV,
+    }
     obj_expr = f.expr
     cons_expr = f.cons_expr === nothing ? nothing : getfield.(f.cons_expr, Ref(:lhs))
 
@@ -21,7 +25,8 @@ function OptimizationBase.symify_cache(
                 @variables X[1:size(prob.u0, 1), 1:size(prob.u0, 2)]
             else
                 ArrayInterface.restructure(
-                    prob.u0, [variable(:x, i) for i in eachindex(prob.u0)])
+                    prob.u0, [variable(:x, i) for i in eachindex(prob.u0)]
+                )
             end
             params = if prob.p isa SciMLBase.NullParameters
                 []
@@ -64,7 +69,7 @@ function OptimizationBase.symify_cache(
                     end
                 end
                 if (isnothing(prob.lcons) || all(isinf, prob.lcons)) &&
-                   (isnothing(prob.ucons) || all(isinf, prob.ucons))
+                        (isnothing(prob.ucons) || all(isinf, prob.ucons))
                     throw(ArgumentError("Constraints passed have no proper bounds defined.
                     Ensure you pass equal bounds (the scalar that the constraint should evaluate to) for equality constraints
                     or pass the lower and upper bounds for inequality constraints."))

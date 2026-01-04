@@ -22,19 +22,23 @@ using LinearAlgebra
             res[1] = x[2] - x[1]^2
         end
 
-        optfunc = OptimizationFunction(simple_objective, OptimizationBase.AutoZygote();
-                                      cons = simple_constraint)
-        prob = OptimizationProblem(optfunc, [0.0, 0.0], nothing;
-                                 lb = [-1.0, -Inf],
-                                 ub = [1.0, Inf],
-                                 lcons = [0.0],
-                                 ucons = [0.0])
+        optfunc = OptimizationFunction(
+            simple_objective, OptimizationBase.AutoZygote();
+            cons = simple_constraint
+        )
+        prob = OptimizationProblem(
+            optfunc, [0.0, 0.0], nothing;
+            lb = [-1.0, -Inf],
+            ub = [1.0, Inf],
+            lcons = [0.0],
+            ucons = [0.0]
+        )
         sol = solve(prob, IpoptOptimizer())
 
         @test SciMLBase.successful_retcode(sol)
-        @test sol.u[1] ≈ 1.0 atol=1e-6
-        @test sol.u[2] ≈ 1.0 atol=1e-6
-        @test sol.objective ≈ -2.0 atol=1e-6
+        @test sol.u[1] ≈ 1.0 atol = 1.0e-6
+        @test sol.u[2] ≈ 1.0 atol = 1.0e-6
+        @test sol.objective ≈ -2.0 atol = 1.0e-6
     end
 
     @testset "Luksan-Vlcek Problem 1" begin
@@ -44,17 +48,17 @@ using LinearAlgebra
         function lv1_objective(x, p)
             n = length(x)
             obj = 0.0
-            for i in 1:(n-1)
-                obj += 100 * (x[i]^2 - x[i+1])^2 + (x[i] - 1)^2
+            for i in 1:(n - 1)
+                obj += 100 * (x[i]^2 - x[i + 1])^2 + (x[i] - 1)^2
             end
             return obj
         end
 
         function lv1_constraints(res, x, p)
             n = length(x)
-            for i in 1:(n-2)
-                res[i] = 3 * x[i+1]^3 + 2 * x[i+2] - 5 + sin(x[i+1] - x[i+2]) * sin(x[i+1] + x[i+2]) +
-                         4 * x[i+1] - x[i] * exp(x[i] - x[i+1]) - 3
+            for i in 1:(n - 2)
+                res[i] = 3 * x[i + 1]^3 + 2 * x[i + 2] - 5 + sin(x[i + 1] - x[i + 2]) * sin(x[i + 1] + x[i + 2]) +
+                    4 * x[i + 1] - x[i] * exp(x[i] - x[i + 1]) - 3
             end
         end
 
@@ -62,17 +66,21 @@ using LinearAlgebra
         n = 5
         x0 = fill(3.0, n)
 
-        optfunc = OptimizationFunction(lv1_objective, OptimizationBase.AutoZygote();
-                                      cons = lv1_constraints)
-        prob = OptimizationProblem(optfunc, x0, nothing;
-                                 lcons = fill(4.0, n-2),
-                                 ucons = fill(6.0, n-2))
-        sol = solve(prob, IpoptOptimizer(); maxiters = 1000, reltol=1e-6)
+        optfunc = OptimizationFunction(
+            lv1_objective, OptimizationBase.AutoZygote();
+            cons = lv1_constraints
+        )
+        prob = OptimizationProblem(
+            optfunc, x0, nothing;
+            lcons = fill(4.0, n - 2),
+            ucons = fill(6.0, n - 2)
+        )
+        sol = solve(prob, IpoptOptimizer(); maxiters = 1000, reltol = 1.0e-6)
 
         @test SciMLBase.successful_retcode(sol)
         @test length(sol.u) == n
         # Check constraints are satisfied
-        res = zeros(n-2)
+        res = zeros(n - 2)
         lv1_constraints(res, sol.u, nothing)
         @test all(4.0 .<= res .<= 6.0)
     end
@@ -85,14 +93,16 @@ using LinearAlgebra
         quadratic(x, p) = (x[1] - 2)^2 + (x[2] - 3)^2
 
         optfunc = OptimizationFunction(quadratic, OptimizationBase.AutoZygote())
-        prob = OptimizationProblem(optfunc, [0.5, 1.0], nothing;
-                                 lb = [0.0, 0.0],
-                                 ub = [1.0, 2.0])
+        prob = OptimizationProblem(
+            optfunc, [0.5, 1.0], nothing;
+            lb = [0.0, 0.0],
+            ub = [1.0, 2.0]
+        )
         sol = solve(prob, IpoptOptimizer())
 
         @test SciMLBase.successful_retcode(sol)
-        @test sol.u[1] ≈ 1.0 atol=1e-6
-        @test sol.u[2] ≈ 2.0 atol=1e-6
+        @test sol.u[1] ≈ 1.0 atol = 1.0e-6
+        @test sol.u[2] ≈ 2.0 atol = 1.0e-6
     end
 
     @testset "Nonlinear Least Squares" begin
@@ -133,18 +143,22 @@ using LinearAlgebra
             res[1] = x[1] + x[2]
         end
 
-        optfunc = OptimizationFunction(objective, OptimizationBase.AutoZygote();
-                                      cons = constraint)
-        prob = OptimizationProblem(optfunc, [2.0, 2.0], nothing;
-                                 lb = [0.0, 0.0],
-                                 ub = [5.0, 5.0],
-                                 lcons = [3.5],
-                                 ucons = [Inf])
+        optfunc = OptimizationFunction(
+            objective, OptimizationBase.AutoZygote();
+            cons = constraint
+        )
+        prob = OptimizationProblem(
+            optfunc, [2.0, 2.0], nothing;
+            lb = [0.0, 0.0],
+            ub = [5.0, 5.0],
+            lcons = [3.5],
+            ucons = [Inf]
+        )
         sol = solve(prob, IpoptOptimizer())
 
         @test SciMLBase.successful_retcode(sol)
-        @test sol.u[1] + sol.u[2] ≈ 3.5 atol=1e-6
-        @test sol.u[1] ≈ sol.u[2] atol=1e-6  # By symmetry
+        @test sol.u[1] + sol.u[2] ≈ 3.5 atol = 1.0e-6
+        @test sol.u[1] ≈ sol.u[2] atol = 1.0e-6  # By symmetry
     end
 
     @testset "Barrier Method Test" begin
@@ -164,19 +178,23 @@ using LinearAlgebra
             res[1] = x[1] + x[2]
         end
 
-        optfunc = OptimizationFunction(barrier_objective, OptimizationBase.AutoZygote();
-                                      cons = barrier_constraint)
-        prob = OptimizationProblem(optfunc, [0.5, 0.5], nothing;
-                                 lb = [1e-6, 1e-6],
-                                 ub = [Inf, Inf],
-                                 lcons = [-Inf],
-                                 ucons = [2.0])
+        optfunc = OptimizationFunction(
+            barrier_objective, OptimizationBase.AutoZygote();
+            cons = barrier_constraint
+        )
+        prob = OptimizationProblem(
+            optfunc, [0.5, 0.5], nothing;
+            lb = [1.0e-6, 1.0e-6],
+            ub = [Inf, Inf],
+            lcons = [-Inf],
+            ucons = [2.0]
+        )
         sol = solve(prob, IpoptOptimizer())
 
         @test SciMLBase.successful_retcode(sol)
-        @test sol.u[1] + sol.u[2] ≈ 2.0 atol=1e-4
-        @test sol.u[1] ≈ 1.0 atol=1e-4
-        @test sol.u[2] ≈ 1.0 atol=1e-4
+        @test sol.u[1] + sol.u[2] ≈ 2.0 atol = 1.0e-4
+        @test sol.u[1] ≈ 1.0 atol = 1.0e-4
+        @test sol.u[2] ≈ 1.0 atol = 1.0e-4
     end
 
     @testset "Large Scale Sparse Problem" begin
@@ -188,7 +206,7 @@ using LinearAlgebra
 
         function sparse_objective(x, p)
             obj = sum(x[i]^2 for i in 1:n)
-            obj += sum((x[i] - x[i+1])^2 for i in 1:(n-1))
+            obj += sum((x[i] - x[i + 1])^2 for i in 1:(n - 1))
             return obj
         end
 
@@ -196,16 +214,20 @@ using LinearAlgebra
             res[1] = x[1] + x[n]
         end
 
-        optfunc = OptimizationFunction(sparse_objective, OptimizationBase.AutoZygote();
-                                      cons = sparse_constraint)
+        optfunc = OptimizationFunction(
+            sparse_objective, OptimizationBase.AutoZygote();
+            cons = sparse_constraint
+        )
         x0 = fill(0.1, n)
-        prob = OptimizationProblem(optfunc, x0, nothing;
-                                 lcons = [1.0],
-                                 ucons = [Inf])
+        prob = OptimizationProblem(
+            optfunc, x0, nothing;
+            lcons = [1.0],
+            ucons = [Inf]
+        )
         sol = solve(prob, IpoptOptimizer())
 
         @test SciMLBase.successful_retcode(sol)
-        @test sol.u[1] + sol.u[n] >= 1.0 - 1e-6
+        @test sol.u[1] + sol.u[n] >= 1.0 - 1.0e-6
     end
 end
 
@@ -220,22 +242,28 @@ end
     @testset "BFGS approximation" begin
         optfunc = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, x0, p)
-        sol = solve(prob, IpoptOptimizer(
-                   hessian_approximation = "limited-memory"))
+        sol = solve(
+            prob, IpoptOptimizer(
+                hessian_approximation = "limited-memory"
+            )
+        )
 
         @test SciMLBase.successful_retcode(sol)
-        @test sol.u ≈ [1.0, 1.0] atol=1e-4
+        @test sol.u ≈ [1.0, 1.0] atol = 1.0e-4
     end
 
     @testset "SR1 approximation" begin
         optfunc = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, x0, p)
-        sol = solve(prob, IpoptOptimizer(
-                   hessian_approximation = "limited-memory",
-                   limited_memory_update_type = "sr1"))
+        sol = solve(
+            prob, IpoptOptimizer(
+                hessian_approximation = "limited-memory",
+                limited_memory_update_type = "sr1"
+            )
+        )
 
         @test SciMLBase.successful_retcode(sol)
-        @test sol.u ≈ [1.0, 1.0] atol=1e-4
+        @test sol.u ≈ [1.0, 1.0] atol = 1.0e-4
     end
 end
 
@@ -255,7 +283,7 @@ end
     sol1 = solve!(cache)
 
     @test SciMLBase.successful_retcode(sol1)
-    @test sol1.u ≈ [1.0, 1.0] atol=1e-4
+    @test sol1.u ≈ [1.0, 1.0] atol = 1.0e-4
 
     # Note: Full warm start testing would require modifying the problem
     # and resolving, which needs reinit!/remake functionality

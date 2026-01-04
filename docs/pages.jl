@@ -1,4 +1,5 @@
-pages = ["index.md",
+pages = [
+    "index.md",
     "getting_started.md",
     "Tutorials" => [
         "tutorials/certification.md",
@@ -8,10 +9,10 @@ pages = ["index.md",
         "tutorials/minibatch.md",
         "tutorials/remakecomposition.md",
         "tutorials/reusage_interface.md",
-        "tutorials/symbolic.md"
+        "tutorials/symbolic.md",
     ],
     "Examples" => [
-        "examples/rosenbrock.md"
+        "examples/rosenbrock.md",
     ],
     "Basics" => [
         "API/optimization_problem.md",
@@ -22,7 +23,7 @@ pages = ["index.md",
         "API/optimization_state.md",
         "API/optimization_stats.md",
         "API/modelingtoolkit.md",
-        "API/FAQ.md"
+        "API/FAQ.md",
     ],
     "Optimizer Packages" => [
         "BlackBoxOptim.jl" => "optimization_packages/blackboxoptim.md",
@@ -48,6 +49,6 @@ pages = ["index.md",
         "QuadDIRECT.jl" => "optimization_packages/quaddirect.md",
         "Sophia.jl" => "optimization_packages/sophia.md",
         "SpeedMapping.jl" => "optimization_packages/speedmapping.md",
-        "SciPy.jl" => "optimization_packages/scipy.md"
-    ]
+        "SciPy.jl" => "optimization_packages/scipy.md",
+    ],
 ]

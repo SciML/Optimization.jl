@@ -23,7 +23,7 @@ rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
             prob = OptimizationProblem(f, x0)
             sol = solve(prob, Optim.NelderMead(), maxiters = 500)
             @test eltype(sol.u) == BigFloat
-            @test sol.objective < 1e-6
+            @test sol.objective < 1.0e-6
         end
 
         @testset "BFGS with ForwardDiff" begin
@@ -32,7 +32,7 @@ rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
             prob = OptimizationProblem(f, x0)
             sol = solve(prob, Optim.BFGS(), maxiters = 500)
             @test eltype(sol.u) == BigFloat
-            @test sol.objective < 1e-20
+            @test sol.objective < 1.0e-20
         end
 
         @testset "Adam optimizer" begin
@@ -73,7 +73,7 @@ rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
         prob = OptimizationProblem(f, x0)
         sol = solve(prob, Optim.BFGS(), maxiters = 500)
         @test eltype(sol.u) == Float64
-        @test sol.objective < 1e-20
-        @test all(isapprox.(sol.u, [1.0, 1.0], atol = 1e-5))
+        @test sol.objective < 1.0e-20
+        @test all(isapprox.(sol.u, [1.0, 1.0], atol = 1.0e-5))
     end
 end

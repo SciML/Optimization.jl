@@ -4,24 +4,26 @@ import SciMLBase: OptimizationFunction
 import OptimizationBase.LinearAlgebra: I
 import DifferentiationInterface
 import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,
-                                 prepare_pullback, prepare_pushforward, pullback!,
-                                 pushforward!,
-                                 pullback, pushforward,
-                                 prepare_jacobian, value_and_gradient!, value_and_gradient,
-                                 value_derivative_and_second_derivative!,
-                                 value_derivative_and_second_derivative,
-                                 gradient!, hessian!, hvp!, jacobian!, gradient, hessian,
-                                 hvp, jacobian, Constant
+    prepare_pullback, prepare_pushforward, pullback!,
+    pushforward!,
+    pullback, pushforward,
+    prepare_jacobian, value_and_gradient!, value_and_gradient,
+    value_derivative_and_second_derivative!,
+    value_derivative_and_second_derivative,
+    gradient!, hessian!, hvp!, jacobian!, gradient, hessian,
+    hvp, jacobian, Constant
 using ADTypes, SciMLBase
 
 function instantiate_function(
         f::OptimizationFunction{true}, x, ::ADTypes.AutoSparse{<:ADTypes.AutoSymbolics},
-        args...; kwargs...)
-    instantiate_function(f, x, ADTypes.AutoSymbolics(), args...; kwargs...)
+        args...; kwargs...
+    )
+    return instantiate_function(f, x, ADTypes.AutoSymbolics(), args...; kwargs...)
 end
 function instantiate_function(
         f::OptimizationFunction{true}, cache::OptimizationBase.ReInitCache,
-        ::ADTypes.AutoSparse{<:ADTypes.AutoSymbolics}, args...; kwargs...)
+        ::ADTypes.AutoSparse{<:ADTypes.AutoSymbolics}, args...; kwargs...
+    )
     x = cache.u0
     p = cache.p
 
@@ -32,17 +34,18 @@ function instantiate_function(
         p = SciMLBase.NullParameters(), num_cons = 0;
         g = false, h = false, hv = false, fg = false, fgh = false,
         cons_j = false, cons_vjp = false, cons_jvp = false, cons_h = false,
-        lag_h = false)
+        lag_h = false
+    )
     adtype, soadtype = generate_adtype(adtype)
 
     if g == true && f.grad === nothing
         prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
         function grad(res, θ)
-            gradient!(f.f, res, prep_grad, adtype, θ, Constant(p))
+            return gradient!(f.f, res, prep_grad, adtype, θ, Constant(p))
         end
         if p !== SciMLBase.NullParameters() && p !== nothing
             function grad(res, θ, p)
-                gradient!(f.f, res, prep_grad, adtype, θ, Constant(p))
+                return gradient!(f.f, res, prep_grad, adtype, θ, Constant(p))
             end
         end
     elseif g == true
@@ -76,11 +79,11 @@ function instantiate_function(
     if h == true && f.hess === nothing
         prep_hess = prepare_hessian(f.f, soadtype, x, Constant(p))
         function hess(res, θ)
-            hessian!(f.f, res, prep_hess, soadtype, θ, Constant(p))
+            return hessian!(f.f, res, prep_hess, soadtype, θ, Constant(p))
         end
         if p !== SciMLBase.NullParameters() && p !== nothing
             function hess(res, θ, p)
-                hessian!(f.f, res, prep_hess, soadtype, θ, Constant(p))
+                return hessian!(f.f, res, prep_hess, soadtype, θ, Constant(p))
             end
         end
     elseif h == true
@@ -91,18 +94,24 @@ function instantiate_function(
 
     if fgh == true && f.fgh === nothing
         function fgh!(G, H, θ)
-            (y,
+            (
+                y,
                 _,
-                _) = value_derivative_and_second_derivative!(
-                f.f, G, H, prep_hess, soadtype, θ, Constant(p))
+                _,
+            ) = value_derivative_and_second_derivative!(
+                f.f, G, H, prep_hess, soadtype, θ, Constant(p)
+            )
             return y
         end
         if p !== SciMLBase.NullParameters() && p !== nothing
             function fgh!(G, H, θ, p)
-                (y,
+                (
+                    y,
                     _,
-                    _) = value_derivative_and_second_derivative!(
-                    f.f, G, H, prep_hess, soadtype, θ, Constant(p))
+                    _,
+                ) = value_derivative_and_second_derivative!(
+                    f.f, G, H, prep_hess, soadtype, θ, Constant(p)
+                )
                 return y
             end
         end
@@ -115,11 +124,11 @@ function instantiate_function(
     if hv == true && f.hv === nothing
         prep_hvp = prepare_hvp(f.f, soadtype, x, (zeros(eltype(x), size(x)),), Constant(p))
         function hv!(H, θ, v)
-            only(hvp!(f.f, (H,), prep_hvp, soadtype, θ, (v,), Constant(p)))
+            return only(hvp!(f.f, (H,), prep_hvp, soadtype, θ, (v,), Constant(p)))
         end
         if p !== SciMLBase.NullParameters() && p !== nothing
             function hv!(H, θ, v, p)
-                only(hvp!(f.f, (H,), soadtype, θ, (v,), Constant(p)))
+                return only(hvp!(f.f, (H,), soadtype, θ, (v,), Constant(p)))
             end
         end
     elseif hv == true
@@ -155,7 +164,7 @@ function instantiate_function(
         prep_jac = prepare_jacobian(cons_oop, adtype, x)
         function cons_j!(J, θ)
             jacobian!(cons_oop, J, prep_jac, adtype, θ)
-            if size(J, 1) == 1
+            return if size(J, 1) == 1
                 J = vec(J)
             end
         end
@@ -168,7 +177,7 @@ function instantiate_function(
     if f.cons_vjp === nothing && cons_vjp == true && f.cons !== nothing
         prep_pullback = prepare_pullback(cons_oop, adtype, x, (ones(eltype(x), num_cons),))
         function cons_vjp!(J, θ, v)
-            only(pullback!(cons_oop, (J,), prep_pullback, adtype, θ, (v,)))
+            return only(pullback!(cons_oop, (J,), prep_pullback, adtype, θ, (v,)))
         end
     elseif cons_vjp == true && f.cons !== nothing
         cons_vjp! = (J, θ, v) -> f.cons_vjp(J, θ, v, p)
@@ -178,9 +187,10 @@ function instantiate_function(
 
     if f.cons_jvp === nothing && cons_jvp == true && f.cons !== nothing
         prep_pushforward = prepare_pushforward(
-            cons_oop, adtype, x, (ones(eltype(x), length(x)),))
+            cons_oop, adtype, x, (ones(eltype(x), length(x)),)
+        )
         function cons_jvp!(J, θ, v)
-            only(pushforward!(cons_oop, (J,), prep_pushforward, adtype, θ, (v,)))
+            return only(pushforward!(cons_oop, (J,), prep_pushforward, adtype, θ, (v,)))
         end
     elseif cons_jvp == true && f.cons !== nothing
         cons_jvp! = (J, θ, v) -> f.cons_jvp(J, θ, v, p)
@@ -197,11 +207,15 @@ function instantiate_function(
         # to trace into the function, since it assumes `Constant` can change between
         # DI calls.
         if adtype isa ADTypes.AutoSymbolics
-            prep_cons_hess = [prepare_hessian(Base.Fix2(cons_oop, i), soadtype, x)
-                              for i in 1:num_cons]
+            prep_cons_hess = [
+                prepare_hessian(Base.Fix2(cons_oop, i), soadtype, x)
+                    for i in 1:num_cons
+            ]
         else
-            prep_cons_hess = [prepare_hessian(cons_oop, soadtype, x, Constant(i))
-                              for i in 1:num_cons]
+            prep_cons_hess = [
+                prepare_hessian(cons_oop, soadtype, x, Constant(i))
+                    for i in 1:num_cons
+            ]
         end
     else
         prep_cons_hess = nothing
@@ -216,12 +230,14 @@ function instantiate_function(
                     for i in 1:num_cons
                         hessian!(Base.Fix2(cons_oop, i), H[i], prep_cons_hess[i], soadtype, θ)
                     end
+                    return
                 end
             else
                 cons_h! = function (H, θ)
                     for i in 1:num_cons
                         hessian!(cons_oop, H[i], prep_cons_hess[i], soadtype, θ, Constant(i))
                     end
+                    return
                 end
             end
         else
@@ -246,6 +262,7 @@ function instantiate_function(
                     @. H += λ[i] * Hi
                 end
             end
+            return
         end
     elseif cons_h == true && f.cons !== nothing
         cons_h! = (res, θ) -> f.cons_h(res, θ, p)
@@ -260,22 +277,26 @@ function instantiate_function(
     if f.cons !== nothing && lag_h == true && f.lag_h === nothing
         lag_prep = prepare_hessian(
             lagrangian, soadtype, x, Constant(one(eltype(x))),
-            Constant(ones(eltype(x), num_cons)), Constant(p))
+            Constant(ones(eltype(x), num_cons)), Constant(p)
+        )
         lag_hess_prototype = zeros(Bool, length(x), length(x))
 
         function lag_h!(H::AbstractMatrix, θ, σ, λ)
-            if σ == zero(eltype(θ))
+            return if σ == zero(eltype(θ))
                 # When σ=0, use the weighted sum function
                 cons_h_weighted!(H, θ, λ)
             else
-                hessian!(lagrangian, H, lag_prep, soadtype, θ,
-                    Constant(σ), Constant(λ), Constant(p))
+                hessian!(
+                    lagrangian, H, lag_prep, soadtype, θ,
+                    Constant(σ), Constant(λ), Constant(p)
+                )
             end
         end
 
         function lag_h!(h::AbstractVector, θ, σ, λ)
             H = hessian(
-                lagrangian, lag_prep, soadtype, θ, Constant(σ), Constant(λ), Constant(p))
+                lagrangian, lag_prep, soadtype, θ, Constant(σ), Constant(λ), Constant(p)
+            )
             k = 0
             for i in 1:length(θ)
                 for j in 1:i
@@ -283,22 +304,27 @@ function instantiate_function(
                     h[k] = H[i, j]
                 end
             end
+            return
         end
 
         if p !== SciMLBase.NullParameters() && p !== nothing
             function lag_h!(H::AbstractMatrix, θ, σ, λ, p)
-                if σ == zero(eltype(θ))
+                return if σ == zero(eltype(θ))
                     cons_h!(H, θ)
                     H *= λ
                 else
-                    hessian!(lagrangian, H, lag_prep, soadtype, θ,
-                        Constant(σ), Constant(λ), Constant(p))
+                    hessian!(
+                        lagrangian, H, lag_prep, soadtype, θ,
+                        Constant(σ), Constant(λ), Constant(p)
+                    )
                 end
             end
 
             function lag_h!(h::AbstractVector, θ, σ, λ, p)
-                H = hessian(lagrangian, lag_prep, soadtype, θ,
-                    Constant(σ), Constant(λ), Constant(p))
+                H = hessian(
+                    lagrangian, lag_prep, soadtype, θ,
+                    Constant(σ), Constant(λ), Constant(p)
+                )
                 k = 0
                 for i in 1:length(θ)
                     for j in 1:i
@@ -306,6 +332,7 @@ function instantiate_function(
                         h[k] = H[i, j]
                     end
                 end
+                return
             end
         end
     elseif lag_h == true && f.cons !== nothing
@@ -314,7 +341,8 @@ function instantiate_function(
         lag_h! = nothing
     end
 
-    return OptimizationFunction{true}(f.f, adtype;
+    return OptimizationFunction{true}(
+        f.f, adtype;
         grad = grad, fg = fg!, hess = hess, hv = hv!, fgh = fgh!,
         cons = cons, cons_j = cons_j!, cons_h = cons_h!,
         cons_vjp = cons_vjp!, cons_jvp = cons_jvp!,
@@ -328,13 +356,15 @@ function instantiate_function(
         lag_hess_prototype = lag_hess_prototype,
         sys = f.sys,
         expr = f.expr,
-        cons_expr = f.cons_expr)
+        cons_expr = f.cons_expr
+    )
 end
 
 function instantiate_function(
         f::OptimizationFunction{true}, cache::OptimizationBase.ReInitCache,
         adtype::ADTypes.AbstractADType, num_cons = 0;
-        kwargs...)
+        kwargs...
+    )
     x = cache.u0
     p = cache.p
 
@@ -346,17 +376,18 @@ function instantiate_function(
         p = SciMLBase.NullParameters(), num_cons = 0;
         g = false, h = false, hv = false, fg = false, fgh = false,
         cons_j = false, cons_vjp = false, cons_jvp = false, cons_h = false,
-        lag_h = false)
+        lag_h = false
+    )
     adtype, soadtype = generate_adtype(adtype)
 
     if g == true && f.grad === nothing
         prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
         function grad(θ)
-            gradient(f.f, prep_grad, adtype, θ, Constant(p))
+            return gradient(f.f, prep_grad, adtype, θ, Constant(p))
         end
         if p !== SciMLBase.NullParameters() && p !== nothing
             function grad(θ, p)
-                gradient(f.f, prep_grad, adtype, θ, Constant(p))
+                return gradient(f.f, prep_grad, adtype, θ, Constant(p))
             end
         end
     elseif g == true
@@ -390,11 +421,11 @@ function instantiate_function(
     if h == true && f.hess === nothing
         prep_hess = prepare_hessian(f.f, soadtype, x, Constant(p))
         function hess(θ)
-            hessian(f.f, prep_hess, soadtype, θ, Constant(p))
+            return hessian(f.f, prep_hess, soadtype, θ, Constant(p))
         end
         if p !== SciMLBase.NullParameters() && p !== nothing
             function hess(θ, p)
-                hessian(f.f, prep_hess, soadtype, θ, Constant(p))
+                return hessian(f.f, prep_hess, soadtype, θ, Constant(p))
             end
         end
     elseif h == true
@@ -405,18 +436,24 @@ function instantiate_function(
 
     if fgh == true && f.fgh === nothing
         function fgh!(θ)
-            (y,
+            (
+                y,
                 G,
-                H) = value_derivative_and_second_derivative(
-                f.f, prep_hess, adtype, θ, Constant(p))
+                H,
+            ) = value_derivative_and_second_derivative(
+                f.f, prep_hess, adtype, θ, Constant(p)
+            )
             return y, G, H
         end
         if p !== SciMLBase.NullParameters() && p !== nothing
             function fgh!(θ, p)
-                (y,
+                (
+                    y,
                     G,
-                    H) = value_derivative_and_second_derivative(
-                    f.f, prep_hess, adtype, θ, Constant(p))
+                    H,
+                ) = value_derivative_and_second_derivative(
+                    f.f, prep_hess, adtype, θ, Constant(p)
+                )
                 return y, G, H
             end
         end
@@ -429,11 +466,11 @@ function instantiate_function(
     if hv == true && f.hv === nothing
         prep_hvp = prepare_hvp(f.f, soadtype, x, (zeros(eltype(x), size(x)),), Constant(p))
         function hv!(θ, v)
-            only(hvp(f.f, prep_hvp, soadtype, θ, (v,), Constant(p)))
+            return only(hvp(f.f, prep_hvp, soadtype, θ, (v,), Constant(p)))
         end
         if p !== SciMLBase.NullParameters() && p !== nothing
             function hv!(θ, v, p)
-                only(hvp(f.f, prep_hvp, soadtype, θ, (v,), Constant(p)))
+                return only(hvp(f.f, prep_hvp, soadtype, θ, (v,), Constant(p)))
             end
         end
     elseif hv == true
@@ -471,7 +508,8 @@ function instantiate_function(
 
     if f.cons_vjp === nothing && cons_vjp == true && f.cons !== nothing
         prep_pullback = prepare_pullback(
-            f.cons, adtype, x, (ones(eltype(x), num_cons),), Constant(p))
+            f.cons, adtype, x, (ones(eltype(x), num_cons),), Constant(p)
+        )
         function cons_vjp!(θ, v)
             return only(pullback(f.cons, prep_pullback, adtype, θ, (v,), Constant(p)))
         end
@@ -483,7 +521,8 @@ function instantiate_function(
 
     if f.cons_jvp === nothing && cons_jvp == true && f.cons !== nothing
         prep_pushforward = prepare_pushforward(
-            f.cons, adtype, x, (ones(eltype(x), length(x)),), Constant(p))
+            f.cons, adtype, x, (ones(eltype(x), length(x)),), Constant(p)
+        )
         function cons_jvp!(θ, v)
             return only(pushforward(f.cons, prep_pushforward, adtype, θ, (v,), Constant(p)))
         end
@@ -499,8 +538,10 @@ function instantiate_function(
         function cons_i(x, i)
             return f.cons(x, p)[i]
         end
-        prep_cons_hess = [prepare_hessian(cons_i, soadtype, x, Constant(i))
-                          for i in 1:num_cons]
+        prep_cons_hess = [
+            prepare_hessian(cons_i, soadtype, x, Constant(i))
+                for i in 1:num_cons
+        ]
 
         function cons_h!(θ)
             H = map(1:num_cons) do i
@@ -519,15 +560,18 @@ function instantiate_function(
     if f.cons !== nothing && lag_h == true && f.lag_h === nothing
         lag_prep = prepare_hessian(
             lagrangian, soadtype, x, Constant(one(eltype(x))),
-            Constant(ones(eltype(x), num_cons)), Constant(p))
+            Constant(ones(eltype(x), num_cons)), Constant(p)
+        )
         lag_hess_prototype = zeros(Bool, length(x), length(x))
 
         function lag_h!(θ, σ, λ)
             if σ == zero(eltype(θ))
                 return λ .* cons_h(θ)
             else
-                return hessian(lagrangian, lag_prep, soadtype, θ,
-                    Constant(σ), Constant(λ), Constant(p))
+                return hessian(
+                    lagrangian, lag_prep, soadtype, θ,
+                    Constant(σ), Constant(λ), Constant(p)
+                )
             end
         end
 
@@ -536,8 +580,10 @@ function instantiate_function(
                 if σ == zero(eltype(θ))
                     return λ .* cons_h(θ)
                 else
-                    return hessian(lagrangian, lag_prep, soadtype, θ,
-                        Constant(σ), Constant(λ), Constant(p))
+                    return hessian(
+                        lagrangian, lag_prep, soadtype, θ,
+                        Constant(σ), Constant(λ), Constant(p)
+                    )
                 end
             end
         end
@@ -547,7 +593,8 @@ function instantiate_function(
         lag_h! = nothing
     end
 
-    return OptimizationFunction{false}(f.f, adtype;
+    return OptimizationFunction{false}(
+        f.f, adtype;
         grad = grad, fg = fg!, hess = hess, hv = hv!, fgh = fgh!,
         cons = cons, cons_j = cons_j!, cons_h = cons_h!,
         cons_vjp = cons_vjp!, cons_jvp = cons_jvp!,
@@ -561,12 +608,14 @@ function instantiate_function(
         lag_hess_prototype = lag_hess_prototype,
         sys = f.sys,
         expr = f.expr,
-        cons_expr = f.cons_expr)
+        cons_expr = f.cons_expr
+    )
 end
 
 function instantiate_function(
         f::OptimizationFunction{false}, cache::OptimizationBase.ReInitCache,
-        adtype::ADTypes.AbstractADType, num_cons = 0; kwargs...)
+        adtype::ADTypes.AbstractADType, num_cons = 0; kwargs...
+    )
     x = cache.u0
     p = cache.p
 

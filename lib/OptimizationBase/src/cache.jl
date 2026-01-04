@@ -6,9 +6,10 @@ struct AnalysisResults{O, C}
 end
 
 struct OptimizationCache{
-    O, IIP, F <: SciMLBase.AbstractOptimizationFunction{IIP},
-    RC, LB, UB, LC, UC, S, P, C, M} <:
-       SciMLBase.AbstractOptimizationCache
+        O, IIP, F <: SciMLBase.AbstractOptimizationFunction{IIP},
+        RC, LB, UB, LC, UC, S, P, C, M,
+    } <:
+    SciMLBase.AbstractOptimizationCache
     opt::O
     f::F
     reinit_cache::RC
@@ -24,7 +25,8 @@ struct OptimizationCache{
     solver_args::NamedTuple
 end
 
-function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt;
+function OptimizationCache(
+        prob::SciMLBase.OptimizationProblem, opt;
         callback = DEFAULT_CALLBACK,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -33,7 +35,8 @@ function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt;
         progress = false,
         structural_analysis = false,
         manifold = nothing,
-        kwargs...)
+        kwargs...
+    )
     if isa_dataiterator(prob.p)
         reinit_cache = OptimizationBase.ReInitCache(prob.u0, iterate(prob.p)[1])
         reinit_cache_passedon = OptimizationBase.ReInitCache(prob.u0, prob.p)
@@ -44,16 +47,22 @@ function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt;
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
 
-    if !(prob.f.adtype isa DifferentiationInterface.SecondOrder ||
-         prob.f.adtype isa AutoZygote) &&
-       (SciMLBase.requireshessian(opt) || SciMLBase.requiresconshess(opt) ||
-        SciMLBase.requireslagh(opt))
+    if !(
+            prob.f.adtype isa DifferentiationInterface.SecondOrder ||
+                prob.f.adtype isa AutoZygote
+        ) &&
+            (
+            SciMLBase.requireshessian(opt) || SciMLBase.requiresconshess(opt) ||
+                SciMLBase.requireslagh(opt)
+        )
         @warn "The selected optimization algorithm requires second order derivatives, but `SecondOrder` ADtype was not provided.
         So a `SecondOrder` with $(prob.f.adtype) for both inner and outer will be created, this can be suboptimal and not work in some cases so
         an explicit `SecondOrder` ADtype is recommended."
     elseif prob.f.adtype isa AutoZygote &&
-           (SciMLBase.requiresconshess(opt) || SciMLBase.requireslagh(opt) ||
-            SciMLBase.requireshessian(opt))
+            (
+            SciMLBase.requiresconshess(opt) || SciMLBase.requireslagh(opt) ||
+                SciMLBase.requireshessian(opt)
+        )
         @warn "The selected optimization algorithm requires second order derivatives, but `AutoZygote` ADtype was provided.
         So a `SecondOrder` with `AutoZygote` for inner and `AutoForwardDiff` for outer will be created, for choosing another pair
         an explicit `SecondOrder` ADtype is recommended."
@@ -64,7 +73,8 @@ function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt;
         g = SciMLBase.requiresgradient(opt), h = SciMLBase.requireshessian(opt),
         hv = SciMLBase.requireshessian(opt), fg = SciMLBase.allowsfg(opt),
         fgh = SciMLBase.allowsfgh(opt), cons_j = SciMLBase.requiresconsjac(opt), cons_h = SciMLBase.requiresconshess(opt),
-        cons_vjp = SciMLBase.allowsconsvjp(opt), cons_jvp = SciMLBase.allowsconsjvp(opt), lag_h = SciMLBase.requireslagh(opt))
+        cons_vjp = SciMLBase.allowsconsvjp(opt), cons_jvp = SciMLBase.allowsconsjvp(opt), lag_h = SciMLBase.requireslagh(opt)
+    )
 
     if structural_analysis
         obj_res, cons_res = symify_cache(f, prob, num_cons, manifold)
@@ -73,23 +83,29 @@ function OptimizationCache(prob::SciMLBase.OptimizationProblem, opt;
         cons_res = nothing
     end
 
-    return OptimizationCache(opt, f, reinit_cache_passedon, prob.lb, prob.ub, prob.lcons,
+    return OptimizationCache(
+        opt, f, reinit_cache_passedon, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
         progress, callback, manifold, AnalysisResults(obj_res, cons_res),
-        merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs)))
+        merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs))
+    )
 end
 
-function SciMLBase.__init(prob::SciMLBase.OptimizationProblem, opt;
+function SciMLBase.__init(
+        prob::SciMLBase.OptimizationProblem, opt;
         callback = DEFAULT_CALLBACK,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         progress = false,
-        kwargs...)
-    return OptimizationCache(prob, opt; maxiters, maxtime, abstol, callback,
+        kwargs...
+    )
+    return OptimizationCache(
+        prob, opt; maxiters, maxtime, abstol, callback,
         reltol, progress,
-        kwargs...)
+        kwargs...
+    )
 end
 
 SciMLBase.isinplace(::OptimizationCache{o, iip}) where {o, iip} = iip

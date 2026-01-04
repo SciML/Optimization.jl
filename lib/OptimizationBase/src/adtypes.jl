@@ -184,8 +184,10 @@ AutoZygote
 function generate_adtype(adtype)
     if adtype isa AutoSymbolics || adtype isa AutoSparse{<:AutoSymbolics}
         soadtype = adtype
-    elseif !(adtype isa SciMLBase.NoAD || adtype isa DifferentiationInterface.SecondOrder ||
-         adtype isa AutoZygote)
+    elseif !(
+            adtype isa SciMLBase.NoAD || adtype isa DifferentiationInterface.SecondOrder ||
+                adtype isa AutoZygote
+        )
         soadtype = DifferentiationInterface.SecondOrder(adtype, adtype)
     elseif adtype isa AutoZygote
         soadtype = DifferentiationInterface.SecondOrder(AutoForwardDiff(), adtype)
@@ -200,18 +202,22 @@ function generate_adtype(adtype)
 end
 
 function spadtype_to_spsoadtype(adtype)
-    if !(adtype.dense_ad isa SciMLBase.NoAD ||
-         adtype.dense_ad isa DifferentiationInterface.SecondOrder ||
-         adtype.dense_ad isa AutoZygote)
+    if !(
+            adtype.dense_ad isa SciMLBase.NoAD ||
+                adtype.dense_ad isa DifferentiationInterface.SecondOrder ||
+                adtype.dense_ad isa AutoZygote
+        )
         soadtype = AutoSparse(
             DifferentiationInterface.SecondOrder(adtype.dense_ad, adtype.dense_ad),
             sparsity_detector = adtype.sparsity_detector,
-            coloring_algorithm = adtype.coloring_algorithm)
+            coloring_algorithm = adtype.coloring_algorithm
+        )
     elseif adtype.dense_ad isa AutoZygote
         soadtype = AutoSparse(
             DifferentiationInterface.SecondOrder(AutoForwardDiff(), adtype.dense_ad),
             sparsity_detector = adtype.sparsity_detector,
-            coloring_algorithm = adtype.coloring_algorithm)
+            coloring_algorithm = adtype.coloring_algorithm
+        )
     else
         soadtype = adtype
     end
@@ -219,18 +225,24 @@ function spadtype_to_spsoadtype(adtype)
 end
 
 function filled_spad(adtype)
-    if adtype.sparsity_detector isa ADTypes.NoSparsityDetector &&
-       adtype.coloring_algorithm isa ADTypes.NoColoringAlgorithm
-        adtype = AutoSparse(adtype.dense_ad; sparsity_detector = TracerSparsityDetector(),
-            coloring_algorithm = GreedyColoringAlgorithm())
+    return if adtype.sparsity_detector isa ADTypes.NoSparsityDetector &&
+            adtype.coloring_algorithm isa ADTypes.NoColoringAlgorithm
+        adtype = AutoSparse(
+            adtype.dense_ad; sparsity_detector = TracerSparsityDetector(),
+            coloring_algorithm = GreedyColoringAlgorithm()
+        )
     elseif adtype.sparsity_detector isa ADTypes.NoSparsityDetector &&
-           !(adtype.coloring_algorithm isa ADTypes.NoColoringAlgorithm)
-        adtype = AutoSparse(adtype.dense_ad; sparsity_detector = TracerSparsityDetector(),
-            coloring_algorithm = adtype.coloring_algorithm)
+            !(adtype.coloring_algorithm isa ADTypes.NoColoringAlgorithm)
+        adtype = AutoSparse(
+            adtype.dense_ad; sparsity_detector = TracerSparsityDetector(),
+            coloring_algorithm = adtype.coloring_algorithm
+        )
     elseif !(adtype.sparsity_detector isa ADTypes.NoSparsityDetector) &&
-           adtype.coloring_algorithm isa ADTypes.NoColoringAlgorithm
-        adtype = AutoSparse(adtype.dense_ad; sparsity_detector = adtype.sparsity_detector,
-            coloring_algorithm = GreedyColoringAlgorithm())
+            adtype.coloring_algorithm isa ADTypes.NoColoringAlgorithm
+        adtype = AutoSparse(
+            adtype.dense_ad; sparsity_detector = adtype.sparsity_detector,
+            coloring_algorithm = GreedyColoringAlgorithm()
+        )
     end
 end
 
@@ -245,7 +257,8 @@ function generate_sparse_adtype(adtype)
         adtype = AutoSparse(
             adtype.dense_ad.inner,
             sparsity_detector = soadtype.sparsity_detector,
-            coloring_algorithm = soadtype.coloring_algorithm)
+            coloring_algorithm = soadtype.coloring_algorithm
+        )
         adtype = filled_spad(adtype)
         soadtype = filled_spad(soadtype)
     end

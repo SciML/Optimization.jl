@@ -1,6 +1,8 @@
-mutable struct IpoptCache{T, F <: OptimizationFunction, RC, LB, UB, I, S,
-    JT <: AbstractMatrix{T}, HT <: AbstractMatrix{T},
-    CHT <: AbstractMatrix{T}, CB, O} <: SciMLBase.AbstractOptimizationCache
+mutable struct IpoptCache{
+        T, F <: OptimizationFunction, RC, LB, UB, I, S,
+        JT <: AbstractMatrix{T}, HT <: AbstractMatrix{T},
+        CHT <: AbstractMatrix{T}, CB, O,
+    } <: SciMLBase.AbstractOptimizationCache
     const f::F
     const n::Int
     const num_cons::Int
@@ -38,55 +40,69 @@ function Base.setproperty!(cache::IpoptCache, name::Symbol, x)
     return setfield!(cache, name, x)
 end
 
-function SciMLBase.get_p(sol::SciMLBase.OptimizationSolution{
-        T,
-        N,
-        uType,
-        C
-}) where {T, N, uType, C <: IpoptCache}
-    sol.cache.p
+function SciMLBase.get_p(
+        sol::SciMLBase.OptimizationSolution{
+            T,
+            N,
+            uType,
+            C,
+        }
+    ) where {T, N, uType, C <: IpoptCache}
+    return sol.cache.p
 end
-function SciMLBase.get_observed(sol::SciMLBase.OptimizationSolution{
-        T,
-        N,
-        uType,
-        C
-}) where {T, N, uType, C <: IpoptCache}
-    sol.cache.f.observed
+function SciMLBase.get_observed(
+        sol::SciMLBase.OptimizationSolution{
+            T,
+            N,
+            uType,
+            C,
+        }
+    ) where {T, N, uType, C <: IpoptCache}
+    return sol.cache.f.observed
 end
-function SciMLBase.get_syms(sol::SciMLBase.OptimizationSolution{
-        T,
-        N,
-        uType,
-        C
-}) where {T, N, uType, C <: IpoptCache}
-    variable_symbols(sol.cache.f)
+function SciMLBase.get_syms(
+        sol::SciMLBase.OptimizationSolution{
+            T,
+            N,
+            uType,
+            C,
+        }
+    ) where {T, N, uType, C <: IpoptCache}
+    return variable_symbols(sol.cache.f)
 end
-function SciMLBase.get_paramsyms(sol::SciMLBase.OptimizationSolution{
-        T,
-        N,
-        uType,
-        C
-}) where {T, N, uType, C <: IpoptCache}
-    parameter_symbols(sol.cache.f)
+function SciMLBase.get_paramsyms(
+        sol::SciMLBase.OptimizationSolution{
+            T,
+            N,
+            uType,
+            C,
+        }
+    ) where {T, N, uType, C <: IpoptCache}
+    return parameter_symbols(sol.cache.f)
 end
 
-function IpoptCache(prob, opt;
+function IpoptCache(
+        prob, opt;
         callback = nothing,
         progress = false,
-        kwargs...)
+        kwargs...
+    )
     reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
-    if prob.f.adtype isa ADTypes.AutoSymbolics || (prob.f.adtype isa ADTypes.AutoSparse &&
-        prob.f.adtype.dense_ad isa ADTypes.AutoSymbolics)
+    if prob.f.adtype isa ADTypes.AutoSymbolics || (
+            prob.f.adtype isa ADTypes.AutoSparse &&
+                prob.f.adtype.dense_ad isa ADTypes.AutoSymbolics
+        )
         f = OptimizationBase.instantiate_function(
             prob.f, reinit_cache, prob.f.adtype, num_cons;
-            g = true, h = true, cons_j = true, cons_h = true)
+            g = true, h = true, cons_j = true, cons_h = true
+        )
     else
         f = OptimizationBase.instantiate_function(
             prob.f, reinit_cache, prob.f.adtype, num_cons;
-            g = true, h = true, cons_j = true, cons_vjp = true, lag_h = true)
+            g = true, h = true, cons_j = true, cons_vjp = true, lag_h = true
+        )
     end
     T = eltype(prob.u0)
     n = length(prob.u0)
@@ -115,7 +131,7 @@ function IpoptCache(prob, opt;
     ucons = prob.ucons === nothing ? fill(T(Inf), num_cons) : prob.ucons
 
     sys = f.sys isa SymbolicIndexingInterface.SymbolCache{Nothing, Nothing, Nothing} ?
-            nothing : f.sys
+        nothing : f.sys
     obj_expr = f.expr
     cons_expr = f.cons_expr
 
@@ -160,9 +176,11 @@ end
 
 function eval_objective_gradient(cache::IpoptCache, G, x)
     if cache.f.grad === nothing
-        error("Use OptimizationFunction to pass the objective gradient or " *
-              "automatically generate it with one of the autodiff backends." *
-              "If you are using the ModelingToolkit symbolic interface, pass the `grad` kwarg set to `true` in `OptimizationProblem`.")
+        error(
+            "Use OptimizationFunction to pass the objective gradient or " *
+                "automatically generate it with one of the autodiff backends." *
+                "If you are using the ModelingToolkit symbolic interface, pass the `grad` kwarg set to `true` in `OptimizationProblem`."
+        )
     end
     cache.f.grad(G, x)
     cache.f_grad_calls += 1
@@ -189,9 +207,11 @@ function eval_constraint_jacobian(cache::IpoptCache, j, x)
     if isempty(j)
         return
     elseif cache.f.cons_j === nothing
-        error("Use OptimizationFunction to pass the constraints' jacobian or " *
-              "automatically generate i with one of the autodiff backends." *
-              "If you are using the ModelingToolkit symbolic interface, pass the `cons_j` kwarg set to `true` in `OptimizationProblem`.")
+        error(
+            "Use OptimizationFunction to pass the constraints' jacobian or " *
+                "automatically generate i with one of the autodiff backends." *
+                "If you are using the ModelingToolkit symbolic interface, pass the `cons_j` kwarg set to `true` in `OptimizationProblem`."
+        )
     end
     # Get and cache the Jacobian object here once. `evaluator.J` calls
     # `getproperty`, which is expensive because it calls `fieldnames`.
@@ -248,11 +268,13 @@ function hessian_lagrangian_structure(cache::IpoptCache)
     return inds
 end
 
-function eval_hessian_lagrangian(cache::IpoptCache{T},
+function eval_hessian_lagrangian(
+        cache::IpoptCache{T},
         h,
         x,
         σ,
-        μ) where {T}
+        μ
+    ) where {T}
     if cache.f.lag_h !== nothing
         cache.f.lag_h(h, x, σ, Vector(μ))
 
@@ -263,9 +285,11 @@ function eval_hessian_lagrangian(cache::IpoptCache{T},
         return
     end
     if cache.f.hess === nothing
-        error("Use OptimizationFunction to pass the objective hessian or " *
-              "automatically generate it with one of the autodiff backends." *
-              "If you are using the ModelingToolkit symbolic interface, pass the `hess` kwarg set to `true` in `OptimizationProblem`.")
+        error(
+            "Use OptimizationFunction to pass the objective hessian or " *
+                "automatically generate it with one of the autodiff backends." *
+                "If you are using the ModelingToolkit symbolic interface, pass the `hess` kwarg set to `true` in `OptimizationProblem`."
+        )
     end
     # Get and cache the Hessian object here once. `evaluator.H` calls
     # `getproperty`, which is expensive because it calls `fieldnames`.
@@ -293,9 +317,11 @@ function eval_hessian_lagrangian(cache::IpoptCache{T},
     nnz_objective = k
     if !isempty(μ) && !all(iszero, μ)
         if cache.f.cons_h === nothing
-            error("Use OptimizationFunction to pass the constraints' hessian or " *
-                  "automatically generate it with one of the autodiff backends." *
-                  "If you are using the ModelingToolkit symbolic interface, pass the `cons_h` kwarg set to `true` in `OptimizationProblem`.")
+            error(
+                "Use OptimizationFunction to pass the constraints' hessian or " *
+                    "automatically generate it with one of the autodiff backends." *
+                    "If you are using the ModelingToolkit symbolic interface, pass the `cons_h` kwarg set to `true` in `OptimizationProblem`."
+            )
         end
         cache.f.cons_h(cache.cons_H, x)
         for (μi, Hi) in zip(μ, cache.cons_H)

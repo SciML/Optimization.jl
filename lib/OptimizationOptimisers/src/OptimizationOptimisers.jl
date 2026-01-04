@@ -14,9 +14,12 @@ function SciMLBase.__init(
         callback = (args...) -> (false),
         epochs::Union{Number, Nothing} = nothing,
         maxiters::Union{Number, Nothing} = nothing,
-        save_best::Bool = true, progress::Bool = false, kwargs...)
-    return OptimizationCache(prob, opt; callback, epochs, maxiters,
-        save_best, progress, kwargs...)
+        save_best::Bool = true, progress::Bool = false, kwargs...
+    )
+    return OptimizationCache(
+        prob, opt; callback, epochs, maxiters,
+        save_best, progress, kwargs...
+    )
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule}
@@ -29,11 +32,11 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
     end
 
     epochs,
-    maxiters = if isnothing(cache.solver_args.maxiters) &&
-                  isnothing(cache.solver_args.epochs)
+        maxiters = if isnothing(cache.solver_args.maxiters) &&
+            isnothing(cache.solver_args.epochs)
         throw(ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data)."))
     elseif !isnothing(cache.solver_args.maxiters) &&
-           !isnothing(cache.solver_args.epochs)
+            !isnothing(cache.solver_args.epochs)
         if cache.solver_args.maxiters == cache.solver_args.epochs * length(data)
             cache.solver_args.epochs, cache.solver_args.maxiters
         else
@@ -48,8 +51,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
     maxiters = OptimizationBase._check_and_convert_maxiters(maxiters)
 
     # At this point, both of them should be fine; but, let's assert it.
-    @assert (!isnothing(epochs)&&!isnothing(maxiters) &&
-             (maxiters == epochs * length(data))) "The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data)."
+    @assert (
+        !isnothing(epochs)&&!isnothing(maxiters) &&
+            (maxiters == epochs * length(data))
+    ) "The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data)."
 
     opt = cache.opt
     θ = copy(cache.u0)
@@ -97,7 +102,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
             p = d,
             objective = x[1],
             grad = G,
-            original = state)
+            original = state
+        )
         breakall = cache.callback(opt_state, x...)
         if !(breakall isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the `solve` documentation for information.")
@@ -106,8 +112,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
         end
         if cache.progress
             message = "Loss: $(round(first(first(x)); digits = 3))"
-            @logmsg(LogLevel(-1), "Optimization", _id=progress_id,
-                message=message, progress=iterations / maxiters)
+            @logmsg(
+                LogLevel(-1), "Optimization", _id = progress_id,
+                message = message, progress = iterations / maxiters
+            )
         end
         if cache.solver_args.save_best
             if first(x)[1] < first(min_err)[1]  #found a better solution
@@ -120,12 +128,14 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
                 x = min_err
                 θ = min_θ
                 cache.f.grad(G, θ, d)
-                opt_state = OptimizationBase.OptimizationState(iter = iterations,
+                opt_state = OptimizationBase.OptimizationState(
+                    iter = iterations,
                     u = θ,
                     p = d,
                     objective = x[1],
                     grad = G,
-                    original = state)
+                    original = state
+                )
                 breakall = cache.callback(opt_state, x...)
                 break
             end
@@ -134,15 +144,19 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
         if all(isfinite, G)
             state, θ = Optimisers.update(state, θ, G)
         elseif cache.progress
-            @warn "Skipping parameter update due to NaN or Inf in gradients at iteration $iterations" maxlog=10
+            @warn "Skipping parameter update due to NaN or Inf in gradients at iteration $iterations" maxlog = 10
         end
     end
-    cache.progress && @logmsg(LogLevel(-1), "Optimization",
-        _id=progress_id, message="Done", progress=1.0)
+    cache.progress && @logmsg(
+        LogLevel(-1), "Optimization",
+        _id = progress_id, message = "Done", progress = 1.0
+    )
     t1 = time()
-    stats = OptimizationBase.OptimizationStats(; iterations,
-        time = t1 - t0, fevals, gevals)
-    SciMLBase.build_solution(cache, cache.opt, θ, first(x)[1], stats = stats)
+    stats = OptimizationBase.OptimizationStats(;
+        iterations,
+        time = t1 - t0, fevals, gevals
+    )
+    return SciMLBase.build_solution(cache, cache.opt, θ, first(x)[1], stats = stats)
 end
 
 end

@@ -10,7 +10,7 @@ using Core: Vararg
 
 @inline function firstapply(f::F, θ, p) where {F}
     res = f(θ, p)
-    if isa(res, AbstractFloat)
+    return if isa(res, AbstractFloat)
         res
     else
         first(res)
@@ -18,7 +18,8 @@ using Core: Vararg
 end
 
 function inner_grad(mode::Mode, θ, bθ, f, p) where {Mode}
-    Enzyme.autodiff(mode,
+    Enzyme.autodiff(
+        mode,
         Const(firstapply),
         Active,
         Const(f),
@@ -29,7 +30,8 @@ function inner_grad(mode::Mode, θ, bθ, f, p) where {Mode}
 end
 
 function hv_f2_alloc(mode::Mode, xdup, f, p) where {Mode}
-    Enzyme.autodiff(mode,
+    Enzyme.autodiff(
+        mode,
         Const(firstapply),
         Active,
         Const(f),
@@ -39,8 +41,10 @@ function hv_f2_alloc(mode::Mode, xdup, f, p) where {Mode}
     return xdup
 end
 
-function inner_cons(x, fcons::Function, p::Union{SciMLBase.NullParameters, Nothing},
-        num_cons::Int, i::Int)
+function inner_cons(
+        x, fcons::Function, p::Union{SciMLBase.NullParameters, Nothing},
+        num_cons::Int, i::Int
+    )
     res = zeros(eltype(x), num_cons)
     fcons(res, x, p)
     return res[i]
@@ -49,20 +53,23 @@ end
 function cons_f2(mode, x, dx, fcons, p, num_cons, i)
     Enzyme.autodiff_deferred(
         mode, Const(inner_cons), Active, Enzyme.Duplicated(x, dx),
-        Const(fcons), Const(p), Const(num_cons), Const(i))
+        Const(fcons), Const(p), Const(num_cons), Const(i)
+    )
     return nothing
 end
 
 function inner_cons_oop(
         x::Vector{T}, fcons::Function, p::Union{SciMLBase.NullParameters, Nothing},
-        i::Int) where {T}
+        i::Int
+    ) where {T}
     return fcons(x, p)[i]
 end
 
 function cons_f2_oop(mode, x, dx, fcons, p, i)
     Enzyme.autodiff_deferred(
         mode, Const(inner_cons_oop), Active, Enzyme.Duplicated(x, dx),
-        Const(fcons), Const(p), Const(i))
+        Const(fcons), Const(p), Const(i)
+    )
     return nothing
 end
 
@@ -75,21 +82,25 @@ end
 function lag_grad(mode, x, dx, lagrangian::Function, _f::Function, cons::Function, p, σ, λ)
     Enzyme.autodiff_deferred(
         mode, Const(lagrangian), Active, Enzyme.Duplicated(x, dx),
-        Const(_f), Const(cons), Const(p), Const(λ), Const(σ))
+        Const(_f), Const(cons), Const(p), Const(λ), Const(σ)
+    )
     return nothing
 end
 
 function set_runtime_activity2(
-        a::Mode1, ::Enzyme.Mode{ABI, Err, RTA}) where {Mode1, ABI, Err, RTA}
-    Enzyme.set_runtime_activity(a, RTA)
+        a::Mode1, ::Enzyme.Mode{ABI, Err, RTA}
+    ) where {Mode1, ABI, Err, RTA}
+    return Enzyme.set_runtime_activity(a, RTA)
 end
 function_annotation(::Nothing) = Nothing
 function_annotation(::AutoEnzyme{<:Any, A}) where {A} = A
-function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
+function OptimizationBase.instantiate_function(
+        f::OptimizationFunction{true}, x,
         adtype::AutoEnzyme, p, num_cons = 0;
         g = false, h = false, hv = false, fg = false, fgh = false,
         cons_j = false, cons_vjp = false, cons_jvp = false, cons_h = false,
-        lag_h = false)
+        lag_h = false
+    )
     rmode = if adtype.mode isa Nothing
         Enzyme.Reverse
     else
@@ -107,7 +118,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
     if g == true && f.grad === nothing
         function grad(res, θ, p = p)
             Enzyme.make_zero!(res)
-            Enzyme.autodiff(rmode,
+            return Enzyme.autodiff(
+                rmode,
                 Const(firstapply),
                 Active,
                 Const(f.f),
@@ -124,7 +136,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
     if fg == true && f.fg === nothing
         function fg!(res, θ, p = p)
             Enzyme.make_zero!(res)
-            y = Enzyme.autodiff(WithPrimal(rmode),
+            y = Enzyme.autodiff(
+                WithPrimal(rmode),
                 Const(firstapply),
                 Active,
                 Const(f.f),
@@ -154,7 +167,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
             Enzyme.make_zero!(bθ)
             Enzyme.make_zero!.(vdbθ)
 
-            Enzyme.autodiff(fmode,
+            Enzyme.autodiff(
+                fmode,
                 inner_grad,
                 Const(rmode),
                 Enzyme.BatchDuplicated(θ, vdθ),
@@ -166,6 +180,7 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
             for i in eachindex(θ)
                 res[i, :] .= vdbθ[i]
             end
+            return
         end
     elseif h == true
         hess = (H, θ, p = p) -> f.hess(H, θ, p)
@@ -178,7 +193,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
             vdθ = Tuple((Array(r) for r in eachrow(I(length(θ)) * one(eltype(θ)))))
             vdbθ = Tuple(zeros(eltype(θ), length(θ)) for i in eachindex(θ))
 
-            Enzyme.autodiff(fmode,
+            Enzyme.autodiff(
+                fmode,
                 inner_grad,
                 Const(rmode),
                 Enzyme.BatchDuplicated(θ, vdθ),
@@ -190,6 +206,7 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
             for i in eachindex(θ)
                 H[i, :] .= vdbθ[i]
             end
+            return
         end
     elseif fgh == true
         fgh! = (G, H, θ, p = p) -> f.fgh(G, H, θ, p)
@@ -201,7 +218,7 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
         function hv!(H, θ, v, p = p)
             dθ = zero(θ)
             Enzyme.make_zero!(H)
-            Enzyme.autodiff(
+            return Enzyme.autodiff(
                 fmode,
                 inner_grad,
                 Const(rmode),
@@ -231,12 +248,20 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
         if func_annot <: Enzyme.Const
             basefunc = Enzyme.Const(basefunc)
         elseif func_annot <: Enzyme.Duplicated || func_annot <: Enzyme.BatchDuplicated
-            basefunc = Enzyme.BatchDuplicated(basefunc, Tuple(make_zero(basefunc)
-            for i in 1:length(x)))
+            basefunc = Enzyme.BatchDuplicated(
+                basefunc, Tuple(
+                    make_zero(basefunc)
+                        for i in 1:length(x)
+                )
+            )
         elseif func_annot <: Enzyme.DuplicatedNoNeed ||
-               func_annot <: Enzyme.BatchDuplicatedNoNeed
-            basefunc = Enzyme.BatchDuplicatedNoNeed(basefunc, Tuple(make_zero(basefunc)
-            for i in 1:length(x)))
+                func_annot <: Enzyme.BatchDuplicatedNoNeed
+            basefunc = Enzyme.BatchDuplicatedNoNeed(
+                basefunc, Tuple(
+                    make_zero(basefunc)
+                        for i in 1:length(x)
+                )
+            )
         end
         # else
         #     seeds = Enzyme.onehot(zeros(eltype(x), num_cons))
@@ -251,14 +276,16 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
             end
             Enzyme.make_zero!(y)
             if func_annot <: Enzyme.Duplicated || func_annot <: Enzyme.BatchDuplicated ||
-               func_annot <: Enzyme.DuplicatedNoNeed ||
-               func_annot <: Enzyme.BatchDuplicatedNoNeed
+                    func_annot <: Enzyme.DuplicatedNoNeed ||
+                    func_annot <: Enzyme.BatchDuplicatedNoNeed
                 for bf in basefunc.dval
                     Enzyme.make_zero!(bf)
                 end
             end
-            Enzyme.autodiff(fmode, basefunc, BatchDuplicated(y, Jaccache),
-                BatchDuplicated(θ, seeds), Const(p))
+            Enzyme.autodiff(
+                fmode, basefunc, BatchDuplicated(y, Jaccache),
+                BatchDuplicated(θ, seeds), Const(p)
+            )
             for i in eachindex(θ)
                 if J isa Vector
                     J[i] = Jaccache[i][1]
@@ -277,6 +304,7 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
             #         end
             #     end
             # end
+            return
         end
     elseif cons_j == true && cons !== nothing
         cons_j! = (J, θ) -> f.cons_j(J, θ, p)
@@ -290,7 +318,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
             Enzyme.make_zero!(res)
             Enzyme.make_zero!(cons_res)
 
-            Enzyme.autodiff(rmode,
+            return Enzyme.autodiff(
+                rmode,
                 f.cons,
                 Const,
                 Duplicated(cons_res, v),
@@ -311,7 +340,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
             Enzyme.make_zero!(res)
             Enzyme.make_zero!(cons_res)
 
-            Enzyme.autodiff(fmode,
+            return Enzyme.autodiff(
+                fmode,
                 f.cons,
                 Duplicated(cons_res, res),
                 Duplicated(θ, v),
@@ -333,7 +363,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
             for i in 1:num_cons
                 Enzyme.make_zero!(cons_bθ)
                 Enzyme.make_zero!.(cons_vdbθ)
-                Enzyme.autodiff(fmode,
+                Enzyme.autodiff(
+                    fmode,
                     cons_f2,
                     Const(rmode),
                     Enzyme.BatchDuplicated(θ, cons_vdθ),
@@ -341,12 +372,14 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
                     Const(f.cons),
                     Const(p),
                     Const(num_cons),
-                    Const(i))
+                    Const(i)
+                )
 
                 for j in eachindex(θ)
                     res[i][j, :] .= cons_vdbθ[j]
                 end
             end
+            return
         end
     elseif cons !== nothing && cons_h == true
         cons_h! = (res, θ) -> f.cons_h(res, θ, p)
@@ -369,7 +402,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
             Enzyme.make_zero!(lag_bθ)
             Enzyme.make_zero!.(lag_vdbθ)
 
-            Enzyme.autodiff(fmode,
+            Enzyme.autodiff(
+                fmode,
                 lag_grad,
                 Const(rmode),
                 Enzyme.BatchDuplicated(θ, lag_vdθ),
@@ -388,6 +422,7 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
                 h[(k + 1):(k + i)] .= @view(vec_lagv[1:i])
                 k += i
             end
+            return
         end
 
         function lag_h!(H::AbstractMatrix, θ, σ, μ, p = p)
@@ -395,7 +430,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
             Enzyme.make_zero!(lag_bθ)
             Enzyme.make_zero!.(lag_vdbθ)
 
-            Enzyme.autodiff(fmode,
+            Enzyme.autodiff(
+                fmode,
                 lag_grad,
                 Const(rmode),
                 Enzyme.BatchDuplicated(θ, lag_vdθ),
@@ -411,6 +447,7 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
             for i in eachindex(θ)
                 H[i, :] .= lag_vdbθ[i]
             end
+            return
         end
     elseif lag_h == true && cons !== nothing
         lag_h! = (θ, σ, μ, p = p) -> f.lag_h(θ, σ, μ, p)
@@ -418,7 +455,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
         lag_h! = nothing
     end
 
-    return OptimizationFunction{true}(f.f, adtype;
+    return OptimizationFunction{true}(
+        f.f, adtype;
         grad = grad, fg = fg!, fgh = fgh!,
         hess = hess, hv = hv!,
         cons = cons, cons_j = cons_j!,
@@ -431,24 +469,29 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{true}, x,
         lag_hess_prototype = f.lag_hess_prototype,
         sys = f.sys,
         expr = f.expr,
-        cons_expr = f.cons_expr)
+        cons_expr = f.cons_expr
+    )
 end
 
-function OptimizationBase.instantiate_function(f::OptimizationFunction{true},
+function OptimizationBase.instantiate_function(
+        f::OptimizationFunction{true},
         cache::OptimizationBase.ReInitCache,
         adtype::AutoEnzyme,
-        num_cons = 0; kwargs...)
+        num_cons = 0; kwargs...
+    )
     p = cache.p
     x = cache.u0
 
     return OptimizationBase.instantiate_function(f, x, adtype, p, num_cons; kwargs...)
 end
 
-function OptimizationBase.instantiate_function(f::OptimizationFunction{false}, x,
+function OptimizationBase.instantiate_function(
+        f::OptimizationFunction{false}, x,
         adtype::AutoEnzyme, p, num_cons = 0;
         g = false, h = false, hv = false, fg = false, fgh = false,
         cons_j = false, cons_vjp = false, cons_jvp = false, cons_h = false,
-        lag_h = false)
+        lag_h = false
+    )
     rmode = if adtype.mode isa Nothing
         Enzyme.Reverse
     else
@@ -465,7 +508,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{false}, x
         res = zeros(eltype(x), size(x))
         function grad(θ, p = p)
             Enzyme.make_zero!(res)
-            Enzyme.autodiff(rmode,
+            Enzyme.autodiff(
+                rmode,
                 Const(firstapply),
                 Active,
                 Const(f.f),
@@ -484,7 +528,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{false}, x
         res_fg = zeros(eltype(x), size(x))
         function fg!(θ, p = p)
             Enzyme.make_zero!(res_fg)
-            y = Enzyme.autodiff(WithPrimal(rmode),
+            y = Enzyme.autodiff(
+                WithPrimal(rmode),
                 Const(firstapply),
                 Active,
                 Const(f.f),
@@ -508,7 +553,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{false}, x
             Enzyme.make_zero!(bθ)
             Enzyme.make_zero!.(vdbθ)
 
-            Enzyme.autodiff(fmode,
+            Enzyme.autodiff(
+                fmode,
                 inner_grad,
                 Const(rmode),
                 Enzyme.BatchDuplicated(θ, vdθ),
@@ -518,7 +564,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{false}, x
             )
 
             return reduce(
-                vcat, [reshape(vdbθ[i], (1, length(vdbθ[i]))) for i in eachindex(θ)])
+                vcat, [reshape(vdbθ[i], (1, length(vdbθ[i]))) for i in eachindex(θ)]
+            )
         end
     elseif h == true
         hess = (θ, p = p) -> f.hess(θ, p)
@@ -537,7 +584,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{false}, x
             Enzyme.make_zero!(H_fgh)
             Enzyme.make_zero!.(vdbθ_fgh)
 
-            Enzyme.autodiff(fmode,
+            Enzyme.autodiff(
+                fmode,
                 inner_grad,
                 Const(rmode),
                 Enzyme.BatchDuplicated(θ, vdθ_fgh),
@@ -596,8 +644,10 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{false}, x
                 Enzyme.make_zero!(Jaccache[i])
             end
             Jaccache,
-            y = Enzyme.autodiff(WithPrimal(fmode), f.cons, Duplicated,
-                BatchDuplicated(θ, seeds), Const(p))
+                y = Enzyme.autodiff(
+                WithPrimal(fmode), f.cons, Duplicated,
+                BatchDuplicated(θ, seeds), Const(p)
+            )
             if size(y, 1) == 1
                 return reduce(vcat, Jaccache)
             else
@@ -618,7 +668,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{false}, x
             Enzyme.make_zero!(res_vjp)
             Enzyme.make_zero!(cons_vjp_res)
 
-            Enzyme.autodiff(WithPrimal(rmode),
+            Enzyme.autodiff(
+                WithPrimal(rmode),
                 f.cons,
                 Const,
                 Duplicated(cons_vjp_res, v),
@@ -641,7 +692,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{false}, x
             Enzyme.make_zero!(res_jvp)
             Enzyme.make_zero!(cons_jvp_res)
 
-            Enzyme.autodiff(fmode,
+            Enzyme.autodiff(
+                fmode,
                 f.cons,
                 Duplicated(cons_jvp_res, res_jvp),
                 Duplicated(θ, v),
@@ -664,14 +716,16 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{false}, x
             return map(1:num_cons) do i
                 Enzyme.make_zero!(cons_bθ)
                 Enzyme.make_zero!.(cons_vdbθ)
-                Enzyme.autodiff(fmode,
+                Enzyme.autodiff(
+                    fmode,
                     cons_f2_oop,
                     Const(rmode),
                     Enzyme.BatchDuplicated(θ, cons_vdθ),
                     Enzyme.BatchDuplicated(cons_bθ, cons_vdbθ),
                     Const(f.cons),
                     Const(p),
-                    Const(i))
+                    Const(i)
+                )
 
                 return reduce(hcat, cons_vdbθ)
             end
@@ -695,7 +749,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{false}, x
             Enzyme.make_zero!(lag_bθ)
             Enzyme.make_zero!.(lag_vdbθ)
 
-            Enzyme.autodiff(fmode,
+            Enzyme.autodiff(
+                fmode,
                 lag_grad,
                 Const(rmode),
                 Enzyme.BatchDuplicated(θ, lag_vdθ),
@@ -723,7 +778,8 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{false}, x
         lag_h! = nothing
     end
 
-    return OptimizationFunction{false}(f.f, adtype; grad = grad,
+    return OptimizationFunction{false}(
+        f.f, adtype; grad = grad,
         fg = fg!, fgh = fgh!,
         hess = hess, hv = hv!,
         cons = cons, cons_j = cons_j!,
@@ -736,13 +792,16 @@ function OptimizationBase.instantiate_function(f::OptimizationFunction{false}, x
         lag_hess_prototype = f.lag_hess_prototype,
         sys = f.sys,
         expr = f.expr,
-        cons_expr = f.cons_expr)
+        cons_expr = f.cons_expr
+    )
 end
 
-function OptimizationBase.instantiate_function(f::OptimizationFunction{false},
+function OptimizationBase.instantiate_function(
+        f::OptimizationFunction{false},
         cache::OptimizationBase.ReInitCache,
         adtype::AutoEnzyme,
-        num_cons = 0; kwargs...)
+        num_cons = 0; kwargs...
+    )
     p = cache.p
     x = cache.u0
 

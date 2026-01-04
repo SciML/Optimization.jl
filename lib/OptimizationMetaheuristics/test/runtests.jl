@@ -8,8 +8,10 @@ Random.seed!(42)
     _p = [1.0, 100.0]
     l1 = rosenbrock(x0, _p)
     optprob = OptimizationFunction(rosenbrock)
-    prob = OptimizationBase.OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0],
-        ub = [1.0, 1.0])
+    prob = OptimizationBase.OptimizationProblem(
+        optprob, x0, _p, lb = [-1.0, -1.0],
+        ub = [1.0, 1.0]
+    )
     sol = solve(prob, ECA())
     @test 10 * sol.objective < l1
 
@@ -79,9 +81,9 @@ Random.seed!(42)
 
     function ackley(x)
         f1 = -20 * exp(-0.2 * sqrt(sum(x .^ 2) / length(x))) -
-             exp(sum(cos.(2 * π .* x)) / length(x)) + 20 + ℯ
+            exp(sum(cos.(2 * π .* x)) / length(x)) + 20 + ℯ
         f2 = -20 * exp(-0.2 * sqrt(sum((x .- 2.0) .^ 2) / length(x))) -
-             exp(sum(cos.(2 * π .* (x .- 2.0))) / length(x)) + 20 + ℯ
+            exp(sum(cos.(2 * π .* (x .- 2.0))) / length(x)) + 20 + ℯ
         gx = [0.0]
         hx = [0.0]
         return [f1, f2], gx, hx
@@ -112,7 +114,7 @@ Random.seed!(42)
             (rosenbrock, [0.0, 0.0, 0.0], [1.0, 1.0, 1.0]),
             (ackley, [0.0, 0.0, 0.0], [1.0, 1.0, 1.0]),
             (dtlz2, [0.0, 0.0, 0.0], [1.0, 1.0, 1.0]),
-            (schaffer_n2, [0.0, 0.0, 0.0], [2.0, 0.0, 0.0])
+            (schaffer_n2, [0.0, 0.0, 0.0], [2.0, 0.0, 0.0]),
         ]
 
         nobjectives = 2
@@ -124,9 +126,11 @@ Random.seed!(42)
             NSGA3(),
             SPEA2(),
             CCMO(NSGA2(N = 100, p_m = 0.001)),
-            MOEAD_DE(gen_ref_dirs(nobjectives, npartitions),
-                options = Options(debug = false, iterations = 10000)),
-            SMS_EMOA()
+            MOEAD_DE(
+                gen_ref_dirs(nobjectives, npartitions),
+                options = Options(debug = false, iterations = 10000)
+            ),
+            SMS_EMOA(),
         ]
         Random.seed!(42)
         # Run tests for each problem and algorithm
@@ -135,8 +139,11 @@ Random.seed!(42)
             for alg in algs
                 alg_name = string(typeof(alg))
                 @testset "$alg_name on $prob_name" begin
-                    multi_obj_fun = MultiObjectiveOptimizationFunction((
-                        x, p) -> prob_func(x))
+                    multi_obj_fun = MultiObjectiveOptimizationFunction(
+                        (
+                            x, p,
+                        ) -> prob_func(x)
+                    )
                     prob = OptimizationProblem(multi_obj_fun, lb; lb = lb, ub = ub)
                     if (alg_name == "Metaheuristics.Algorithm{CCMO{NSGA2}}")
                         sol = solve(prob, alg)

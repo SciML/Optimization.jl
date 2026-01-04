@@ -16,30 +16,50 @@ using LinearAlgebra
 
 const MOI = MathOptInterface
 
-function SciMLBase.requiresgradient(opt::Union{
-        MOI.AbstractOptimizer, MOI.OptimizerWithAttributes})
-    true
+function SciMLBase.requiresgradient(
+        opt::Union{
+            MOI.AbstractOptimizer, MOI.OptimizerWithAttributes,
+        }
+    )
+    return true
 end
-function SciMLBase.requireshessian(opt::Union{
-        MOI.AbstractOptimizer, MOI.OptimizerWithAttributes})
-    true
+function SciMLBase.requireshessian(
+        opt::Union{
+            MOI.AbstractOptimizer, MOI.OptimizerWithAttributes,
+        }
+    )
+    return true
 end
-function SciMLBase.requiresconsjac(opt::Union{
-        MOI.AbstractOptimizer, MOI.OptimizerWithAttributes})
-    true
+function SciMLBase.requiresconsjac(
+        opt::Union{
+            MOI.AbstractOptimizer, MOI.OptimizerWithAttributes,
+        }
+    )
+    return true
 end
-function SciMLBase.requiresconshess(opt::Union{
-        MOI.AbstractOptimizer, MOI.OptimizerWithAttributes})
-    true
+function SciMLBase.requiresconshess(
+        opt::Union{
+            MOI.AbstractOptimizer, MOI.OptimizerWithAttributes,
+        }
+    )
+    return true
 end
 
-function SciMLBase.allowsbounds(opt::Union{MOI.AbstractOptimizer,
-        MOI.OptimizerWithAttributes})
-    true
+function SciMLBase.allowsbounds(
+        opt::Union{
+            MOI.AbstractOptimizer,
+            MOI.OptimizerWithAttributes,
+        }
+    )
+    return true
 end
-function SciMLBase.allowsconstraints(opt::Union{MOI.AbstractOptimizer,
-        MOI.OptimizerWithAttributes})
-    true
+function SciMLBase.allowsconstraints(
+        opt::Union{
+            MOI.AbstractOptimizer,
+            MOI.OptimizerWithAttributes,
+        }
+    )
+    return true
 end
 
 function _create_new_optimizer(opt::MOI.OptimizerWithAttributes)
@@ -54,21 +74,27 @@ function _create_new_optimizer(opt::MOI.AbstractOptimizer)
         return opt
     end
     opt_setup = MOI.Utilities.CachingOptimizer(
-        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{
-            Float64,
-        }()),
-        opt)
+        MOI.Utilities.UniversalFallback(
+            MOI.Utilities.Model{
+                Float64,
+            }()
+        ),
+        opt
+    )
     return opt_setup
 end
 
-function __map_optimizer_args(cache,
-        opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes
+function __map_optimizer_args(
+        cache,
+        opt::Union{
+            MOI.AbstractOptimizer, MOI.OptimizerWithAttributes,
         };
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
-        kwargs...)
+        kwargs...
+    )
     optimizer = _create_new_optimizer(opt)
     for (key, value) in kwargs
         MOI.set(optimizer, MOI.RawOptimizerAttribute("$(key)"), value)
@@ -90,42 +116,42 @@ end
 
 function __moi_status_to_ReturnCode(status::MOI.TerminationStatusCode)
     if status in [
-        MOI.OPTIMAL,
-        MOI.LOCALLY_SOLVED,
-        MOI.ALMOST_OPTIMAL,
-        MOI.ALMOST_LOCALLY_SOLVED
-    ]
+            MOI.OPTIMAL,
+            MOI.LOCALLY_SOLVED,
+            MOI.ALMOST_OPTIMAL,
+            MOI.ALMOST_LOCALLY_SOLVED,
+        ]
         return ReturnCode.Success
     elseif status in [
-        MOI.INFEASIBLE,
-        MOI.DUAL_INFEASIBLE,
-        MOI.LOCALLY_INFEASIBLE,
-        MOI.INFEASIBLE_OR_UNBOUNDED,
-        MOI.ALMOST_INFEASIBLE,
-        MOI.ALMOST_DUAL_INFEASIBLE
-    ]
+            MOI.INFEASIBLE,
+            MOI.DUAL_INFEASIBLE,
+            MOI.LOCALLY_INFEASIBLE,
+            MOI.INFEASIBLE_OR_UNBOUNDED,
+            MOI.ALMOST_INFEASIBLE,
+            MOI.ALMOST_DUAL_INFEASIBLE,
+        ]
         return ReturnCode.Infeasible
     elseif status in [
-        MOI.ITERATION_LIMIT,
-        MOI.NODE_LIMIT,
-        MOI.SLOW_PROGRESS
-    ]
+            MOI.ITERATION_LIMIT,
+            MOI.NODE_LIMIT,
+            MOI.SLOW_PROGRESS,
+        ]
         return ReturnCode.MaxIters
     elseif status == MOI.TIME_LIMIT
         return ReturnCode.MaxTime
     elseif status in [
-        MOI.OPTIMIZE_NOT_CALLED,
-        MOI.NUMERICAL_ERROR,
-        MOI.INVALID_MODEL,
-        MOI.INVALID_OPTION,
-        MOI.INTERRUPTED,
-        MOI.OTHER_ERROR,
-        MOI.SOLUTION_LIMIT,
-        MOI.MEMORY_LIMIT,
-        MOI.OBJECTIVE_LIMIT,
-        MOI.NORM_LIMIT,
-        MOI.OTHER_LIMIT
-    ]
+            MOI.OPTIMIZE_NOT_CALLED,
+            MOI.NUMERICAL_ERROR,
+            MOI.INVALID_MODEL,
+            MOI.INVALID_OPTION,
+            MOI.INTERRUPTED,
+            MOI.OTHER_ERROR,
+            MOI.SOLUTION_LIMIT,
+            MOI.MEMORY_LIMIT,
+            MOI.OBJECTIVE_LIMIT,
+            MOI.NORM_LIMIT,
+            MOI.OTHER_LIMIT,
+        ]
         return ReturnCode.Failure
     else
         return ReturnCode.Default
@@ -146,12 +172,12 @@ end
 
 function is_eq(expr::Expr)
     expr.head == :call || throw(MalformedExprException("$expr"))
-    expr.args[1] in [:(==), :(=)]
+    return expr.args[1] in [:(==), :(=)]
 end
 
 function is_leq(expr::Expr)
     expr.head == :call || throw(MalformedExprException("$expr"))
-    expr.args[1] == :(<=)
+    return expr.args[1] == :(<=)
 end
 
 """
@@ -229,10 +255,15 @@ function get_expr_map(sys)
     dvs = ModelingToolkitBase.unknowns(sys)
     ps = ModelingToolkitBase.parameters(sys)
     return vcat(
-        [ModelingToolkitBase.toexpr(_s) => Expr(:ref, :x, i)
-         for (i, _s) in enumerate(dvs)],
-        [ModelingToolkitBase.toexpr(_p) => Expr(:ref, :p, i)
-         for (i, _p) in enumerate(ps)])
+        [
+            ModelingToolkitBase.toexpr(_s) => Expr(:ref, :x, i)
+                for (i, _s) in enumerate(dvs)
+        ],
+        [
+            ModelingToolkitBase.toexpr(_p) => Expr(:ref, :p, i)
+                for (i, _p) in enumerate(ps)
+        ]
+    )
 end
 
 """
@@ -333,16 +364,28 @@ function process_system_exprs(prob::OptimizationProblem, f::OptimizationFunction
     cons_expr = Vector{Expr}(undef, length(cons))
     Threads.@sync for i in eachindex(cons)
         Threads.@spawn if prob.lcons[i] == prob.ucons[i] == 0
-            cons_expr[i] = Expr(:call, :(==),
-            repl_getindex!(convert_to_expr(f.cons_expr[i],
-            expr_map;
-            expand_expr = false)), 0)
+            cons_expr[i] = Expr(
+                :call, :(==),
+                repl_getindex!(
+                    convert_to_expr(
+                        f.cons_expr[i],
+                        expr_map;
+                        expand_expr = false
+                    )
+                ), 0
+            )
         else
             # MTK canonicalizes the expression form
-            cons_expr[i] = Expr(:call, :(<=),
-            repl_getindex!(convert_to_expr(f.cons_expr[i],
-            expr_map;
-            expand_expr = false)), 0)
+            cons_expr[i] = Expr(
+                :call, :(<=),
+                repl_getindex!(
+                    convert_to_expr(
+                        f.cons_expr[i],
+                        expr_map;
+                        expand_expr = false
+                    )
+                ), 0
+            )
         end
     end
     return expr, cons_expr
@@ -351,39 +394,55 @@ end
 include("nlp.jl")
 include("moi.jl")
 
-function SciMLBase.has_init(alg::Union{MOI.AbstractOptimizer,
-        MOI.OptimizerWithAttributes})
-    true
+function SciMLBase.has_init(
+        alg::Union{
+            MOI.AbstractOptimizer,
+            MOI.OptimizerWithAttributes,
+        }
+    )
+    return true
 end
 
-function SciMLBase.allowscallback(alg::Union{MOI.AbstractOptimizer,
-        MOI.OptimizerWithAttributes})
-    true
+function SciMLBase.allowscallback(
+        alg::Union{
+            MOI.AbstractOptimizer,
+            MOI.OptimizerWithAttributes,
+        }
+    )
+    return true
 end
 
 # Compatibility with OptimizationBase@v3
-function SciMLBase.supports_opt_cache_interface(alg::Union{MOI.AbstractOptimizer,
-        MOI.OptimizerWithAttributes})
-    true
+function SciMLBase.supports_opt_cache_interface(
+        alg::Union{
+            MOI.AbstractOptimizer,
+            MOI.OptimizerWithAttributes,
+        }
+    )
+    return true
 end
 
-function SciMLBase.__init(prob::OptimizationProblem,
+function SciMLBase.__init(
+        prob::OptimizationProblem,
         opt::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes};
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         mtkize = false,
-        kwargs...)
+        kwargs...
+    )
     cache = if MOI.supports(_create_new_optimizer(opt), MOI.NLPBlock())
-        MOIOptimizationNLPCache(prob,
+        MOIOptimizationNLPCache(
+            prob,
             opt;
             maxiters,
             maxtime,
             abstol,
             reltol,
             mtkize,
-            kwargs...)
+            kwargs...
+        )
     else
         MOIOptimizationCache(prob, opt; maxiters, maxtime, abstol, reltol, kwargs...)
     end

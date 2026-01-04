@@ -100,7 +100,7 @@ using ADTypes, ForwardDiff, ReverseDiff, Zygote
         H_c2[2, 2] = 0.0
 
         expected = λ[1] * [2.0 0.0; 0.0 2.0] + λ[2] * H_c2
-        @test H_lag ≈ expected rtol=1e-6
+        @test H_lag ≈ expected rtol = 1.0e-6
     end
 
     @testset "Different AD backends with σ = 0" begin

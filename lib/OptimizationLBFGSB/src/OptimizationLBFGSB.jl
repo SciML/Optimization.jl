@@ -25,11 +25,11 @@ References
     m::Int = 10
     τ = 0.5
     γ = 10.0
-    λmin = -1e20
-    λmax = 1e20
+    λmin = -1.0e20
+    λmax = 1.0e20
     μmin = 0.0
-    μmax = 1e20
-    ϵ = 1e-8
+    μmax = 1.0e20
+    ϵ = 1.0e-8
 end
 
 SciMLBase.allowscallback(::LBFGSB) = true
@@ -43,14 +43,16 @@ function task_message_to_string(task::Vector{UInt8})
     return String(task)
 end
 
-function __map_optimizer_args(cache::OptimizationBase.OptimizationCache, opt::LBFGSB;
+function __map_optimizer_args(
+        cache::OptimizationBase.OptimizationCache, opt::LBFGSB;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         verbose::Bool = false,
-        kwargs...)
+        kwargs...
+    )
     if !isnothing(abstol)
         @warn "common abstol is currently not used by $(opt)"
     end
@@ -99,7 +101,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
 
         cons_tmp = zeros(eltype(cache.u0), length(cache.lcons))
         cache.f.cons(cons_tmp, cache.u0)
-        ρ = max(1e-6, min(10, 2 * (abs(cache.f(cache.u0, cache.p))) / norm(cons_tmp)))
+        ρ = max(1.0e-6, min(10, 2 * (abs(cache.f(cache.u0, cache.p))) / norm(cons_tmp)))
 
         iter_count = Ref(0)
         _loss = function (θ)
@@ -110,12 +112,13 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
             cons_tmp[eq_inds] .= cons_tmp[eq_inds] - cache.lcons[eq_inds]
             cons_tmp[ineq_inds] .= cons_tmp[ineq_inds] .- cache.ucons[ineq_inds]
             opt_state = OptimizationBase.OptimizationState(
-                u = θ, objective = x[1])
+                u = θ, objective = x[1]
+            )
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
             end
             return x[1] + sum(@. λ * cons_tmp[eq_inds] + ρ / 2 * (cons_tmp[eq_inds] .^ 2)) +
-                   1 / (2 * ρ) * sum((max.(Ref(0.0), μ .+ (ρ .* cons_tmp[ineq_inds]))) .^ 2)
+                1 / (2 * ρ) * sum((max.(Ref(0.0), μ .+ (ρ .* cons_tmp[ineq_inds]))) .^ 2)
         end
 
         prev_eqcons = zero(λ)
@@ -140,12 +143,14 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
             __tmp[ineq_inds] .= __tmp[ineq_inds] .- cache.ucons[ineq_inds]
             G .+= sum(
                 λ[i] .* J[idx, :] + ρ * (__tmp[idx] .* J[idx, :])
-                for (i, idx) in enumerate(eqidxs);
-                init = zero(G)) #should be jvp
-            G .+= sum(
+                    for (i, idx) in enumerate(eqidxs);
+                init = zero(G)
+            ) #should be jvp
+            return G .+= sum(
                 1 / ρ * (max.(Ref(0.0), μ[i] .+ (ρ .* __tmp[idx])) .* J[idx, :])
-                for (i, idx) in enumerate(ineqidxs);
-                init = zero(G)) #should be jvp
+                    for (i, idx) in enumerate(ineqidxs);
+                init = zero(G)
+            ) #should be jvp
         end
 
         opt_ret = ReturnCode.MaxIters
@@ -153,12 +158,14 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
 
         if cache.lb === nothing
             optimizer,
-            bounds = LBFGSBJL._opt_bounds(
-                n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n])
+                bounds = LBFGSBJL._opt_bounds(
+                n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n]
+            )
         else
             optimizer,
-            bounds = LBFGSBJL._opt_bounds(
-                n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
+                bounds = LBFGSBJL._opt_bounds(
+                n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub
+            )
         end
 
         solver_kwargs = Base.structdiff(solver_kwargs, (; lb = nothing, ub = nothing))
@@ -167,8 +174,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
             prev_eqcons .= cons_tmp[eq_inds] .- cache.lcons[eq_inds]
             prevβ .= copy(β)
 
-            res = optimizer(_loss, aug_grad, θ, bounds; solver_kwargs...,
-                m = cache.opt.m, pgtol = sqrt(ϵ), maxiter = maxiters / 100)
+            res = optimizer(
+                _loss, aug_grad, θ, bounds; solver_kwargs...,
+                m = cache.opt.m, pgtol = sqrt(ϵ), maxiter = maxiters / 100
+            )
 
             θ = res[2]
             cons_tmp .= 0.0
@@ -179,22 +188,26 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
             μ = min.(μmax, max.(μ .+ ρ * cons_tmp[ineq_inds], μmin))
 
             if max(norm(cons_tmp[eq_inds] .- cache.lcons[eq_inds], Inf), norm(β, Inf)) >
-               τ * max(norm(prev_eqcons, Inf), norm(prevβ, Inf))
+                    τ * max(norm(prev_eqcons, Inf), norm(prevβ, Inf))
                 ρ = γ * ρ
             end
             if norm(
-                (cons_tmp[eq_inds] .- cache.lcons[eq_inds]) ./ cons_tmp[eq_inds], Inf) <
-               ϵ && norm(β, Inf) < ϵ
+                    (cons_tmp[eq_inds] .- cache.lcons[eq_inds]) ./ cons_tmp[eq_inds], Inf
+                ) <
+                    ϵ && norm(β, Inf) < ϵ
                 opt_ret = ReturnCode.Success
                 break
             end
         end
 
-        stats = OptimizationStats(; iterations = maxiters,
-            time = 0.0, fevals = maxiters, gevals = maxiters)
+        stats = OptimizationStats(;
+            iterations = maxiters,
+            time = 0.0, fevals = maxiters, gevals = maxiters
+        )
         return SciMLBase.build_solution(
             cache, cache.opt, res[2], cache.f(res[2], cache.p)[1],
-            stats = stats, retcode = opt_ret)
+            stats = stats, retcode = opt_ret
+        )
     else
         iter_count = Ref(0)
         encountered_inf_nan = Ref(false)
@@ -207,7 +220,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
                 encountered_inf_nan[] = true
             end
             opt_state = OptimizationBase.OptimizationState(
-                u = θ, objective = x[1])
+                u = θ, objective = x[1]
+            )
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback.")
             end
@@ -218,7 +232,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
         _grad! = function (G, θ)
             cache.f.grad(G, θ)
             # Track if we encounter Inf/NaN values in the gradient
-            if !all(isfinite, G)
+            return if !all(isfinite, G)
                 encountered_inf_nan[] = true
             end
         end
@@ -227,12 +241,14 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
 
         if cache.lb === nothing
             optimizer,
-            bounds = LBFGSBJL._opt_bounds(
-                n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n])
+                bounds = LBFGSBJL._opt_bounds(
+                n, cache.opt.m, [-Inf for i in 1:n], [Inf for i in 1:n]
+            )
         else
             optimizer,
-            bounds = LBFGSBJL._opt_bounds(
-                n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub)
+                bounds = LBFGSBJL._opt_bounds(
+                n, cache.opt.m, solver_kwargs.lb, solver_kwargs.ub
+            )
         end
 
         solver_kwargs = Base.structdiff(solver_kwargs, (; lb = nothing, ub = nothing))
@@ -240,7 +256,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
         t0 = time()
 
         res = optimizer(
-            _loss, _grad!, cache.u0, bounds; m = cache.opt.m, solver_kwargs...)
+            _loss, _grad!, cache.u0, bounds; m = cache.opt.m, solver_kwargs...
+        )
 
         # Extract the task message from the result
         stop_reason = task_message_to_string(optimizer.task)
@@ -252,7 +269,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
         # If we encountered Inf/NaN and the optimizer claims success but the solution
         # is essentially unchanged from the starting point, this is a false convergence
         if encountered_inf_nan[] && opt_ret == ReturnCode.Success
-            if isapprox(res[2], cache.u0; rtol = 1e-8, atol = 1e-12)
+            if isapprox(res[2], cache.u0; rtol = 1.0e-8, atol = 1.0e-12)
                 @warn "LBFGSB encountered Inf/NaN values during optimization (likely due to function singularity at bounds). The solution has not moved from the initial point. Consider using bounds that exclude singularities."
                 opt_ret = ReturnCode.Failure
             end
@@ -260,11 +277,15 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
 
         t1 = time()
 
-        stats = OptimizationBase.OptimizationStats(; iterations = optimizer.isave[30],
-            time = t1 - t0, fevals = optimizer.isave[34], gevals = optimizer.isave[34])
+        stats = OptimizationBase.OptimizationStats(;
+            iterations = optimizer.isave[30],
+            time = t1 - t0, fevals = optimizer.isave[34], gevals = optimizer.isave[34]
+        )
 
-        return SciMLBase.build_solution(cache, cache.opt, res[2], res[1], stats = stats,
-            retcode = opt_ret, original = optimizer)
+        return SciMLBase.build_solution(
+            cache, cache.opt, res[2], res[1], stats = stats,
+            retcode = opt_ret, original = optimizer
+        )
     end
 end
 

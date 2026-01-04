@@ -119,11 +119,11 @@ https://coin-or.github.io/Ipopt/OPTIONS.html
     # Most common Ipopt-specific options (excluding common interface options)
 
     # Termination
-    acceptable_tol::Float64 = 1e-6
+    acceptable_tol::Float64 = 1.0e-6
     acceptable_iter::Int = 15
     dual_inf_tol::Float64 = 1.0
-    constr_viol_tol::Float64 = 1e-4
-    compl_inf_tol::Float64 = 1e-4
+    constr_viol_tol::Float64 = 1.0e-4
+    compl_inf_tol::Float64 = 1.0e-4
 
     # Output options
     print_timing_statistics::String = "no"
@@ -168,40 +168,41 @@ https://coin-or.github.io/Ipopt/OPTIONS.html
 end
 
 function SciMLBase.has_init(alg::IpoptOptimizer)
-    true
+    return true
 end
 
 SciMLBase.allowscallback(alg::IpoptOptimizer) = true
 
 # Compatibility with OptimizationBase@v3
 function SciMLBase.supports_opt_cache_interface(alg::IpoptOptimizer)
-    true
+    return true
 end
 
 function SciMLBase.requiresgradient(opt::IpoptOptimizer)
-    true
+    return true
 end
 function SciMLBase.requireshessian(opt::IpoptOptimizer)
-    true
+    return true
 end
 function SciMLBase.requiresconsjac(opt::IpoptOptimizer)
-    true
+    return true
 end
 function SciMLBase.requiresconshess(opt::IpoptOptimizer)
-    true
+    return true
 end
 
 function SciMLBase.allowsbounds(opt::IpoptOptimizer)
-    true
+    return true
 end
 function SciMLBase.allowsconstraints(opt::IpoptOptimizer)
-    true
+    return true
 end
 
 include("cache.jl")
 include("callback.jl")
 
-function __map_optimizer_args(cache,
+function __map_optimizer_args(
+        cache,
         opt::IpoptOptimizer;
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -209,7 +210,8 @@ function __map_optimizer_args(cache,
         reltol::Union{Number, Nothing} = nothing,
         verbose = false,
         progress::Bool = false,
-        callback = nothing)
+        callback = nothing
+    )
     jacobian_sparsity = jacobian_structure(cache)
     hessian_sparsity = hessian_lagrangian_structure(cache)
 
@@ -258,7 +260,8 @@ function __map_optimizer_args(cache,
 
     # Set up progress callback
     progress_callback = IpoptProgressLogger(
-        progress, callback, prob, cache.n, cache.num_cons, maxiters, cache.iterations)
+        progress, callback, prob, cache.n, cache.num_cons, maxiters, cache.iterations
+    )
     intermediate = (args...) -> progress_callback(args...)
     Ipopt.SetIntermediateCallback(prob, intermediate)
 
@@ -310,22 +313,24 @@ end
 function map_retcode(solvestat)
     status = Ipopt.ApplicationReturnStatus(solvestat)
     if status in [
-        Ipopt.Solve_Succeeded,
-        Ipopt.Solved_To_Acceptable_Level,
-        Ipopt.User_Requested_Stop,
-        Ipopt.Feasible_Point_Found
-    ]
+            Ipopt.Solve_Succeeded,
+            Ipopt.Solved_To_Acceptable_Level,
+            Ipopt.User_Requested_Stop,
+            Ipopt.Feasible_Point_Found,
+        ]
         return ReturnCode.Success
     elseif status in [
-        Ipopt.Infeasible_Problem_Detected,
-        Ipopt.Search_Direction_Becomes_Too_Small,
-        Ipopt.Diverging_Iterates
-    ]
+            Ipopt.Infeasible_Problem_Detected,
+            Ipopt.Search_Direction_Becomes_Too_Small,
+            Ipopt.Diverging_Iterates,
+        ]
         return ReturnCode.Infeasible
     elseif status == Ipopt.Maximum_Iterations_Exceeded
         return ReturnCode.MaxIters
-    elseif status in [Ipopt.Maximum_CpuTime_Exceeded
-                      Ipopt.Maximum_WallTime_Exceeded]
+    elseif status in [
+            Ipopt.Maximum_CpuTime_Exceeded
+            Ipopt.Maximum_WallTime_Exceeded
+        ]
         return ReturnCode.MaxTime
     else
         return ReturnCode.Failure
@@ -336,7 +341,8 @@ function SciMLBase.__solve(cache::IpoptCache)
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
-    opt_setup = __map_optimizer_args(cache,
+    opt_setup = __map_optimizer_args(
+        cache,
         cache.opt;
         abstol = cache.solver_args.abstol,
         reltol = cache.solver_args.reltol,
@@ -344,7 +350,8 @@ function SciMLBase.__solve(cache::IpoptCache)
         maxtime = maxtime,
         verbose = get(cache.solver_args, :verbose, false),
         progress = cache.progress,
-        callback = cache.callback)
+        callback = cache.callback
+    )
 
     opt_setup.x .= cache.reinit_cache.u0
 
@@ -355,35 +362,42 @@ function SciMLBase.__solve(cache::IpoptCache)
 
     if cache.progress
         # Set progressbar to 1 to finish it
-        Base.@logmsg(Base.LogLevel(-1), "", progress=1, _id=:OptimizationIpopt)
+        Base.@logmsg(Base.LogLevel(-1), "", progress = 1, _id = :OptimizationIpopt)
     end
 
     minimum = opt_setup.obj_val
     minimizer = opt_setup.x
 
-    stats = OptimizationBase.OptimizationStats(; time = time() - start_time,
-        iterations = cache.iterations[], fevals = cache.f_calls, gevals = cache.f_grad_calls)
+    stats = OptimizationBase.OptimizationStats(;
+        time = time() - start_time,
+        iterations = cache.iterations[], fevals = cache.f_calls, gevals = cache.f_grad_calls
+    )
 
     finalize(opt_setup)
 
-    return SciMLBase.build_solution(cache,
+    return SciMLBase.build_solution(
+        cache,
         cache.opt,
         minimizer,
         minimum;
         original = opt_setup,
         retcode = opt_ret,
-        stats = stats)
+        stats = stats
+    )
 end
 
-function SciMLBase.__init(prob::OptimizationProblem,
+function SciMLBase.__init(
+        prob::OptimizationProblem,
         opt::IpoptOptimizer;
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         progress::Bool = false,
-        kwargs...)
-    cache = IpoptCache(prob, opt;
+        kwargs...
+    )
+    cache = IpoptCache(
+        prob, opt;
         maxiters,
         maxtime,
         abstol,

@@ -3,7 +3,7 @@ struct IncompatibleOptimizerError <: Exception
 end
 
 function Base.showerror(io::IO, e::IncompatibleOptimizerError)
-    print(io, e.err)
+    return print(io, e.err)
 end
 
 """
@@ -90,9 +90,11 @@ from NLopt for an example. The common local optimizer arguments are:
   - `local_reltol`: relative tolerance  in changes of the objective value
   - `local_options`: `NamedTuple` of keyword arguments for local optimizer
 """
-function solve(prob::SciMLBase.OptimizationProblem, alg, args...;
-        kwargs...)::SciMLBase.AbstractOptimizationSolution
-    if SciMLBase.has_init(alg)
+function solve(
+        prob::SciMLBase.OptimizationProblem, alg, args...;
+        kwargs...
+    )::SciMLBase.AbstractOptimizationSolution
+    return if SciMLBase.has_init(alg)
         solve!(init(prob, alg, args...; kwargs...))
     else
         if prob.u0 !== nothing && !isconcretetype(eltype(prob.u0))
@@ -104,8 +106,11 @@ function solve(prob::SciMLBase.OptimizationProblem, alg, args...;
 end
 
 function solve(
-        prob::SciMLBase.EnsembleProblem{T}, args...; kwargs...) where {T <:
-                                                                       SciMLBase.OptimizationProblem}
+        prob::SciMLBase.EnsembleProblem{T}, args...; kwargs...
+    ) where {
+        T <:
+        SciMLBase.OptimizationProblem,
+    }
     return __solve(prob, args...; kwargs...)
 end
 
@@ -121,8 +126,12 @@ function _check_opt_alg(prob::SciMLBase.OptimizationProblem, alg; kwargs...)
     # Check that if constraints are present and the algorithm supports constraints, both lcons and ucons are provided
     allowsconstraints(alg) && !isnothing(prob.f.cons) &&
         (isnothing(prob.lcons) || isnothing(prob.ucons)) &&
-        throw(ArgumentError("Constrained optimization problem requires both `lcons` and `ucons` to be provided to OptimizationProblem. " *
-                            "Example: OptimizationProblem(optf, u0, p; lcons=[-Inf], ucons=[0.0])"))
+        throw(
+        ArgumentError(
+            "Constrained optimization problem requires both `lcons` and `ucons` to be provided to OptimizationProblem. " *
+                "Example: OptimizationProblem(optf, u0, p; lcons=[-Inf], ucons=[0.0])"
+        )
+    )
     !allowscallback(alg) && !(get(kwargs, :callback, DEFAULT_CALLBACK) isa NullCallback) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) does not support callbacks, remove the `callback` keyword argument from the `solve` call."))
     requiresgradient(alg) &&
@@ -141,14 +150,14 @@ function _check_opt_alg(prob::SciMLBase.OptimizationProblem, alg; kwargs...)
 end
 
 const OPTIMIZER_MISSING_ERROR_MESSAGE = """
-                                        Optimization algorithm not found. Either the chosen algorithm is not a valid solver
-                                        choice for the `OptimizationProblem`, or the Optimization solver library is not loaded.
-                                        Make sure that you have loaded an appropriate Optimization.jl solver library, for example,
-                                        `solve(prob,Optim.BFGS())` requires `using OptimizationOptimJL` and
-                                        `solve(prob,Adam())` requires `using OptimizationOptimisers`.
+Optimization algorithm not found. Either the chosen algorithm is not a valid solver
+choice for the `OptimizationProblem`, or the Optimization solver library is not loaded.
+Make sure that you have loaded an appropriate Optimization.jl solver library, for example,
+`solve(prob,Optim.BFGS())` requires `using OptimizationOptimJL` and
+`solve(prob,Adam())` requires `using OptimizationOptimisers`.
 
-                                        For more information, see the Optimization.jl documentation: <https://docs.sciml.ai/Optimization/stable/>.
-                                        """
+For more information, see the Optimization.jl documentation: <https://docs.sciml.ai/Optimization/stable/>.
+"""
 
 struct OptimizerMissingError <: Exception
     alg::Any
@@ -157,7 +166,7 @@ end
 function Base.showerror(io::IO, e::OptimizerMissingError)
     println(io, OPTIMIZER_MISSING_ERROR_MESSAGE)
     print(io, "Chosen Optimizer: ")
-    print(e.alg)
+    return print(e.alg)
 end
 
 """
@@ -182,8 +191,10 @@ These arguments can be passed as `kwargs...` to `init`.
 
 See also [`solve(prob::OptimizationProblem, alg, args...; kwargs...)`](@ref)
 """
-function init(prob::SciMLBase.OptimizationProblem, alg, args...;
-        kwargs...)::SciMLBase.AbstractOptimizationCache
+function init(
+        prob::SciMLBase.OptimizationProblem, alg, args...;
+        kwargs...
+    )::SciMLBase.AbstractOptimizationCache
     if prob.u0 !== nothing && !isconcretetype(eltype(prob.u0))
         throw(SciMLBase.NonConcreteEltypeError(eltype(prob.u0)))
     end
@@ -202,13 +213,15 @@ Solves the given optimization cache.
 See also [`init(prob::OptimizationProblem, alg, args...; kwargs...)`](@ref)
 """
 function solve!(cache::SciMLBase.AbstractOptimizationCache)::SciMLBase.AbstractOptimizationSolution
-    __solve(cache)
+    return __solve(cache)
 end
 
 # needs to be defined for each cache
 function __solve(cache::SciMLBase.AbstractOptimizationCache)::SciMLBase.AbstractOptimizationSolution end
-function __init(prob::SciMLBase.OptimizationProblem, alg, args...;
-        kwargs...)::SciMLBase.AbstractOptimizationCache
+function __init(
+        prob::SciMLBase.OptimizationProblem, alg, args...;
+        kwargs...
+    )::SciMLBase.AbstractOptimizationCache
     throw(OptimizerMissingError(alg))
 end
 

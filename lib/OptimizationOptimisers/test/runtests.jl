@@ -34,13 +34,17 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
 
     @testset "epochs & maxiters" begin
         optprob = SciMLBase.OptimizationFunction(
-            (u, data) -> sum(u) + sum(data), OptimizationBase.AutoZygote())
+            (u, data) -> sum(u) + sum(data), OptimizationBase.AutoZygote()
+        )
         prob = SciMLBase.OptimizationProblem(
-            optprob, ones(2), MLUtils.DataLoader(ones(2, 2)))
+            optprob, ones(2), MLUtils.DataLoader(ones(2, 2))
+        )
         @test_throws ArgumentError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data).") solve(
-            prob, Optimisers.Adam())
+            prob, Optimisers.Adam()
+        )
         @test_throws ArgumentError("Both maxiters and epochs were passed but maxiters != epochs * length(data).") solve(
-            prob, Optimisers.Adam(), epochs = 2, maxiters = 2)
+            prob, Optimisers.Adam(), epochs = 2, maxiters = 2
+        )
         sol = solve(prob, Optimisers.Adam(), epochs = 2)
         @test sol.stats.iterations == 4
         sol = solve(prob, Optimisers.Adam(), maxiters = 2)
@@ -48,7 +52,8 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
         sol = solve(prob, Optimisers.Adam(), epochs = 2, maxiters = 4)
         @test sol.stats.iterations == 4
         @test_throws AssertionError("The number of iterations must be specified with either the epochs or maxiters kwarg. Where maxiters = epochs * length(data).") solve(
-            prob, Optimisers.Adam(), maxiters = 3)
+            prob, Optimisers.Adam(), maxiters = 3
+        )
     end
 
     @testset "cache" begin
@@ -57,16 +62,19 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
         p = [1.0]
 
         prob = OptimizationProblem(
-            OptimizationFunction(objective,
-                OptimizationBase.AutoForwardDiff()), x0,
-            p)
+            OptimizationFunction(
+                objective,
+                OptimizationBase.AutoForwardDiff()
+            ), x0,
+            p
+        )
         cache = OptimizationBase.init(prob, Optimisers.Adam(0.1), maxiters = 1000)
         sol = OptimizationBase.solve!(cache)
-        @test sol.u≈[1.0] atol=1e-3
+        @test sol.u ≈ [1.0] atol = 1.0e-3
 
         cache = OptimizationBase.reinit!(cache; p = [2.0])
         sol = OptimizationBase.solve!(cache)
-        @test_broken sol.u≈[2.0] atol=1e-3
+        @test_broken sol.u ≈ [2.0] atol = 1.0e-3
     end
 
     @testset "callback" begin
@@ -82,14 +90,16 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
             Optimisers.adjust!(state.original, 0.1 / state.iter)
             return false
         end
-        sol = solve(prob,
+        sol = solve(
+            prob,
             Optimisers.Adam(0.1),
             maxiters = 1000,
             progress = false,
-            callback = callback)
+            callback = callback
+        )
     end
 
-    @test_throws ArgumentError sol=solve(prob, Optimisers.Adam())
+    @test_throws ArgumentError sol = solve(prob, Optimisers.Adam())
 end
 
 @testset "Minibatching" begin
@@ -105,7 +115,7 @@ end
 
     function callback(state, l)
         state.iter % 25 == 1 && Printf.@printf "Iteration: %5d, Loss: %.6e\n" state.iter l
-        return l < 1e-4
+        return l < 1.0e-4
     end
 
     function loss(ps, data)
@@ -124,7 +134,7 @@ end
 
     res = OptimizationBase.solve(prob, Optimisers.Adam(), callback = callback, epochs = 100)
 
-    @test res.objective < 1e-3
+    @test res.objective < 1.0e-3
 
     data = CPUDevice()(data)
     optf = OptimizationFunction(loss, AutoZygote())
@@ -132,7 +142,7 @@ end
 
     res = OptimizationBase.solve(prob, Optimisers.Adam(), callback = callback, epochs = 10000)
 
-    @test res.objective < 1e-4
+    @test res.objective < 1.0e-4
 end
 
 @testset "NaN/Inf gradient handling" begin
@@ -165,7 +175,7 @@ end
     function weird_inf_function(x, p)
         val = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
         # 1/(x[1] + 0.01) can have very large gradient near x[1] = -0.01
-        val += 0.01 / (abs(x[1] - 0.1) + 1e-8)
+        val += 0.01 / (abs(x[1] - 0.1) + 1.0e-8)
         return val
     end
 

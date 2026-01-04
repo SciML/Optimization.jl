@@ -10,8 +10,10 @@ Returns an `OptimizationFunction` from the `NLPModel` defined in `nlpmodel` wher
 available derivatives are re-used from the model, and the rest are populated with the
 Automatic Differentiation backend specified by `adtype`.
 """
-function SciMLBase.OptimizationFunction(nlpmodel::AbstractNLPModel,
-        adtype::ADTypes.AbstractADType = SciMLBase.NoAD(); kwargs...)
+function SciMLBase.OptimizationFunction(
+        nlpmodel::AbstractNLPModel,
+        adtype::ADTypes.AbstractADType = SciMLBase.NoAD(); kwargs...
+    )
     f(x, p) = NLPModels.obj(nlpmodel, x)
     grad(G, u, p) = NLPModels.grad!(nlpmodel, u, G)
     hess(H, u, p) = (H .= NLPModels.hess(nlpmodel, u))
@@ -23,7 +25,8 @@ function SciMLBase.OptimizationFunction(nlpmodel::AbstractNLPModel,
         cons_jvp(Jv, v, x, p) = NLPModels.jprod!(nlpmodel, x, v, Jv)
 
         return OptimizationFunction(
-            f, adtype; grad, hess, hv, cons, cons_j, cons_jvp, kwargs...)
+            f, adtype; grad, hess, hv, cons, cons_j, cons_jvp, kwargs...
+        )
     end
 
     return OptimizationFunction(f, adtype; grad, hess, hv, kwargs...)
@@ -36,8 +39,10 @@ Returns an `OptimizationProblem` with the bounds and constraints defined in `nlp
 The optimization function and its derivatives are re-used from `nlpmodel` when available
 or populated wit the Automatic Differentiation backend specified by `adtype`.
 """
-function SciMLBase.OptimizationProblem(nlpmodel::AbstractNLPModel,
-        adtype::ADTypes.AbstractADType = SciMLBase.NoAD(); kwargs...)
+function SciMLBase.OptimizationProblem(
+        nlpmodel::AbstractNLPModel,
+        adtype::ADTypes.AbstractADType = SciMLBase.NoAD(); kwargs...
+    )
     f = OptimizationFunction(nlpmodel, adtype; kwargs...)
     u0 = nlpmodel.meta.x0
     lb, ub = if has_bounds(nlpmodel)
@@ -57,7 +62,8 @@ function SciMLBase.OptimizationProblem(nlpmodel::AbstractNLPModel,
     # nlpmodel was created.
 
     return OptimizationBase.OptimizationProblem(
-        f, u0; lb = lb, ub = ub, lcons = lcons, ucons = ucons, sense = sense, kwargs...)
+        f, u0; lb = lb, ub = ub, lcons = lcons, ucons = ucons, sense = sense, kwargs...
+    )
 end
 
 end

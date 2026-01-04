@@ -68,18 +68,24 @@ SciMLBase.requiresgradient(opt::Sophia) = true
 SciMLBase.allowsfg(opt::Sophia) = true
 SciMLBase.requireshessian(opt::Sophia) = true
 
-function Sophia(; η = 1e-3, βs = (0.9, 0.999), ϵ = 1e-8, λ = 1e-1, k = 10,
-        ρ = 0.04)
-    Sophia(η, βs, ϵ, λ, k, ρ)
+function Sophia(;
+        η = 1.0e-3, βs = (0.9, 0.999), ϵ = 1.0e-8, λ = 1.0e-1, k = 10,
+        ρ = 0.04
+    )
+    return Sophia(η, βs, ϵ, λ, k, ρ)
 end
 
 clip(z, ρ) = max(min(z, ρ), -ρ)
 
-function SciMLBase.__init(prob::OptimizationProblem, opt::Sophia;
+function SciMLBase.__init(
+        prob::OptimizationProblem, opt::Sophia;
         maxiters::Number = 1000, callback = (args...) -> (false),
-        progress = false, save_best = true, kwargs...)
-    return OptimizationCache(prob, opt; maxiters, callback, progress,
-        save_best, kwargs...)
+        progress = false, save_best = true, kwargs...
+    )
+    return OptimizationCache(
+        prob, opt; maxiters, callback, progress,
+        save_best, kwargs...
+    )
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Sophia}
@@ -125,7 +131,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Sophia}
                 objective = first(x),
                 grad = gₜ,
                 original = nothing,
-                p = d)
+                p = d
+            )
             cb_call = cache.callback(opt_state, x...)
             if !(cb_call isa Bool)
                 error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
@@ -147,9 +154,11 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Sophia}
         end
     end
 
-    return SciMLBase.build_solution(cache, cache.opt,
+    return SciMLBase.build_solution(
+        cache, cache.opt,
         θ,
-        x, retcode = ReturnCode.Success)
+        x, retcode = ReturnCode.Success
+    )
 end
 
 end

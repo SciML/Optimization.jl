@@ -19,7 +19,8 @@ function __map_optimizer_args(
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
-        reltol::Union{Number, Nothing} = nothing)
+        reltol::Union{Number, Nothing} = nothing
+    )
 
     # add optimiser options from kwargs
     mapped_args = (;)
@@ -58,21 +59,27 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SpeedMapping
 
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
-    opt_args = __map_optimizer_args(cache, cache.opt, maxiters = maxiters,
+    opt_args = __map_optimizer_args(
+        cache, cache.opt, maxiters = maxiters,
         maxtime = maxtime,
         abstol = cache.solver_args.abstol,
-        reltol = cache.solver_args.reltol; cache.solver_args...)
+        reltol = cache.solver_args.reltol; cache.solver_args...
+    )
 
     t0 = time()
-    opt_res = SpeedMapping.speedmapping(cache.u0; f = _loss, (g!) = cache.f.grad,
+    opt_res = SpeedMapping.speedmapping(
+        cache.u0; f = _loss, (g!) = cache.f.grad,
         lower = cache.lb,
-        upper = cache.ub, opt_args...)
+        upper = cache.ub, opt_args...
+    )
     t1 = time()
     opt_ret = Symbol(opt_res.converged)
     stats = OptimizationBase.OptimizationStats(; time = t1 - t0)
-    SciMLBase.build_solution(cache, cache.opt,
+    return SciMLBase.build_solution(
+        cache, cache.opt,
         opt_res.minimizer, _loss(opt_res.minimizer);
-        original = opt_res, retcode = opt_ret, stats = stats)
+        original = opt_res, retcode = opt_ret, stats = stats
+    )
 end
 
 end

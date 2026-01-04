@@ -13,13 +13,15 @@ SciMLBase.allowsbounds(::NOMADOpt) = true
 SciMLBase.allowscallback(::NOMADOpt) = false
 SciMLBase.allowsconstraints(::NOMADOpt) = true
 
-function __map_optimizer_args!(prob::OptimizationProblem, opt::NOMAD.NomadProblem;
+function __map_optimizer_args!(
+        prob::OptimizationProblem, opt::NOMAD.NomadProblem;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
-        kwargs...)
+        kwargs...
+    )
     for j in kwargs
         setproperty!(opt.options, j.first, j.second)
     end
@@ -45,13 +47,15 @@ end
 
 @inline strcnsmethod(m::ConstraintBarrierType) = m === ExtremeBarrierMethod ? "EB" : "PB"
 
-function SciMLBase.__solve(prob::OptimizationProblem, opt::NOMADOpt;
+function SciMLBase.__solve(
+        prob::OptimizationProblem, opt::NOMADOpt;
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         cons_method = ExtremeBarrierMethod,
-        kwargs...)
+        kwargs...
+    )
     local x
 
     maxiters = OptimizationBase._check_and_convert_maxiters(maxiters)
@@ -97,21 +101,27 @@ function SciMLBase.__solve(prob::OptimizationProblem, opt::NOMADOpt;
     if prob.f.cons === nothing
         opt_setup = NOMAD.NomadProblem(length(prob.u0), 1, ["OBJ"], bb; bounds...)
     else
-        opt_setup = NOMAD.NomadProblem(length(prob.u0), 1 + length(prob.ucons),
+        opt_setup = NOMAD.NomadProblem(
+            length(prob.u0), 1 + length(prob.ucons),
             vcat("OBJ", fill(strcnsmethod(cons_method), length(prob.ucons))),
-            bbcons; bounds...)
+            bbcons; bounds...
+        )
     end
 
-    __map_optimizer_args!(prob, opt_setup, maxiters = maxiters, maxtime = maxtime,
-        abstol = abstol, reltol = reltol; kwargs...)
+    __map_optimizer_args!(
+        prob, opt_setup, maxiters = maxiters, maxtime = maxtime,
+        abstol = abstol, reltol = reltol; kwargs...
+    )
 
     t0 = time()
     opt_res = NOMAD.solve(opt_setup, prob.u0)
     t1 = time()
     stats = OptimizationBase.OptimizationStats(; time = t1 - t0)
-    SciMLBase.build_solution(SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
+    return SciMLBase.build_solution(
+        SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
         opt_res.x_best_feas, first(opt_res.bbo_best_feas);
-        original = opt_res, stats = stats)
+        original = opt_res, stats = stats
+    )
 end
 
 end

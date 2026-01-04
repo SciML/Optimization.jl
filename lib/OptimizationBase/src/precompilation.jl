@@ -14,8 +14,10 @@ using PrecompileTools
         prob = SciMLBase.OptimizationProblem(optf_noad, x0, p)
 
         # Create problem with bounds
-        prob_bounded = SciMLBase.OptimizationProblem(optf_noad, x0, p;
-            lb = [-1.0, -1.0], ub = [1.0, 1.0])
+        prob_bounded = SciMLBase.OptimizationProblem(
+            optf_noad, x0, p;
+            lb = [-1.0, -1.0], ub = [1.0, 1.0]
+        )
 
         # Test ReInitCache creation
         cache = ReInitCache(x0, p)
