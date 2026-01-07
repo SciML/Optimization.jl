@@ -1,4 +1,4 @@
-using Optimization, Aqua
+using Optimization, Aqua, JET
 @testset "Aqua" begin
     Aqua.find_persistent_tasks_deps(Optimization)
     Aqua.test_ambiguities(Optimization, recursive = false)
@@ -19,4 +19,9 @@ using Optimization, Aqua
     end
     Aqua.test_unbound_args(Optimization)
     Aqua.test_undefined_exports(Optimization)
+end
+
+@testset "JET static analysis" begin
+    rep = JET.report_package(Optimization; target_modules = (Optimization,))
+    @test length(JET.get_reports(rep)) == 0
 end

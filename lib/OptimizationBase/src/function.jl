@@ -249,8 +249,15 @@ function instantiate_function(
     strtind = isnothing(_strtind) ? 5 : _strtind + 5
     open_nrmlbrkt_ind = findfirst('(', adtypestr)
     open_squigllybrkt_ind = findfirst('{', adtypestr)
-    open_brkt_ind = isnothing(open_squigllybrkt_ind) ? open_nrmlbrkt_ind :
+    open_brkt_ind = if isnothing(open_nrmlbrkt_ind) && isnothing(open_squigllybrkt_ind)
+        length(adtypestr) + 1
+    elseif isnothing(open_squigllybrkt_ind)
+        open_nrmlbrkt_ind
+    elseif isnothing(open_nrmlbrkt_ind)
+        open_squigllybrkt_ind
+    else
         min(open_nrmlbrkt_ind, open_squigllybrkt_ind)
+    end
     adpkg = adtypestr[strtind:(open_brkt_ind - 1)]
     throw(ArgumentError("The passed automatic differentiation backend choice is not available. Please load the corresponding AD package $adpkg."))
 end
