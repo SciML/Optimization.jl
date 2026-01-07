@@ -217,7 +217,9 @@ function solve!(cache::SciMLBase.AbstractOptimizationCache)::SciMLBase.AbstractO
 end
 
 # needs to be defined for each cache
-function __solve(cache::SciMLBase.AbstractOptimizationCache)::SciMLBase.AbstractOptimizationSolution end
+function __solve(cache::SciMLBase.AbstractOptimizationCache)
+    throw(ArgumentError("__solve not implemented for cache type $(typeof(cache))"))
+end
 function __init(
         prob::SciMLBase.OptimizationProblem, alg, args...;
         kwargs...
