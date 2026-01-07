@@ -8,8 +8,7 @@ import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,
     pushforward!,
     pullback, pushforward,
     prepare_jacobian, value_and_gradient!, value_and_gradient,
-    value_derivative_and_second_derivative!,
-    value_derivative_and_second_derivative,
+    value_gradient_and_hessian!, value_gradient_and_hessian,
     gradient!, hessian!, hvp!, jacobian!, gradient, hessian,
     hvp, jacobian, Constant
 using ADTypes, SciMLBase
@@ -40,12 +39,12 @@ function instantiate_function(
 
     if g == true && f.grad === nothing
         prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
-        function grad(res, θ)
-            return gradient!(f.f, res, prep_grad, adtype, θ, Constant(p))
-        end
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function grad(res, θ, p)
-                return gradient!(f.f, res, prep_grad, adtype, θ, Constant(p))
+        # Use let block to capture prep_grad with concrete type and avoid Core.Box
+        grad = let _prep_grad = prep_grad, _f = f.f, _adtype = adtype, _p = p
+            if _p !== SciMLBase.NullParameters() && _p !== nothing
+                (res, θ, p = _p) -> gradient!(_f, res, _prep_grad, _adtype, θ, Constant(p))
+            else
+                (res, θ) -> gradient!(_f, res, _prep_grad, _adtype, θ, Constant(_p))
             end
         end
     elseif g == true
@@ -58,14 +57,18 @@ function instantiate_function(
         if g == false
             prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
         end
-        function fg!(res, θ)
-            (y, _) = value_and_gradient!(f.f, res, prep_grad, adtype, θ, Constant(p))
-            return y
-        end
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function fg!(res, θ, p)
-                (y, _) = value_and_gradient!(f.f, res, prep_grad, adtype, θ, Constant(p))
-                return y
+        # Use let block to capture prep_grad with concrete type and avoid Core.Box
+        fg! = let _prep_grad = prep_grad, _f = f.f, _adtype = adtype, _p = p
+            if _p !== SciMLBase.NullParameters() && _p !== nothing
+                function (res, θ, p = _p)
+                    (y, _) = value_and_gradient!(_f, res, _prep_grad, _adtype, θ, Constant(p))
+                    return y
+                end
+            else
+                function (res, θ)
+                    (y, _) = value_and_gradient!(_f, res, _prep_grad, _adtype, θ, Constant(_p))
+                    return y
+                end
             end
         end
     elseif fg == true
@@ -78,12 +81,12 @@ function instantiate_function(
     hess_colors = f.hess_colorvec
     if h == true && f.hess === nothing
         prep_hess = prepare_hessian(f.f, soadtype, x, Constant(p))
-        function hess(res, θ)
-            return hessian!(f.f, res, prep_hess, soadtype, θ, Constant(p))
-        end
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function hess(res, θ, p)
-                return hessian!(f.f, res, prep_hess, soadtype, θ, Constant(p))
+        # Use let block to capture prep_hess with concrete type and avoid Core.Box
+        hess = let _prep_hess = prep_hess, _f = f.f, _soadtype = soadtype, _p = p
+            if _p !== SciMLBase.NullParameters() && _p !== nothing
+                (res, θ, p = _p) -> hessian!(_f, res, _prep_hess, _soadtype, θ, Constant(p))
+            else
+                (res, θ) -> hessian!(_f, res, _prep_hess, _soadtype, θ, Constant(_p))
             end
         end
     elseif h == true
@@ -93,26 +96,22 @@ function instantiate_function(
     end
 
     if fgh == true && f.fgh === nothing
-        function fgh!(G, H, θ)
-            (
-                y,
-                _,
-                _,
-            ) = value_derivative_and_second_derivative!(
-                f.f, G, H, prep_hess, soadtype, θ, Constant(p)
-            )
-            return y
-        end
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function fgh!(G, H, θ, p)
-                (
-                    y,
-                    _,
-                    _,
-                ) = value_derivative_and_second_derivative!(
-                    f.f, G, H, prep_hess, soadtype, θ, Constant(p)
-                )
-                return y
+        # Use let block to capture prep_hess with concrete type and avoid Core.Box
+        fgh! = let _prep_hess = prep_hess, _f = f.f, _soadtype = soadtype, _p = p
+            if _p !== SciMLBase.NullParameters() && _p !== nothing
+                function (G, H, θ, p = _p)
+                    (y, _, _) = value_gradient_and_hessian!(
+                        _f, G, H, _prep_hess, _soadtype, θ, Constant(p)
+                    )
+                    return y
+                end
+            else
+                function (G, H, θ)
+                    (y, _, _) = value_gradient_and_hessian!(
+                        _f, G, H, _prep_hess, _soadtype, θ, Constant(_p)
+                    )
+                    return y
+                end
             end
         end
     elseif fgh == true
@@ -123,12 +122,16 @@ function instantiate_function(
 
     if hv == true && f.hv === nothing
         prep_hvp = prepare_hvp(f.f, soadtype, x, (zeros(eltype(x), size(x)),), Constant(p))
-        function hv!(H, θ, v)
-            return only(hvp!(f.f, (H,), prep_hvp, soadtype, θ, (v,), Constant(p)))
-        end
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function hv!(H, θ, v, p)
-                return only(hvp!(f.f, (H,), soadtype, θ, (v,), Constant(p)))
+        # Use let block to capture prep_hvp with concrete type and avoid Core.Box
+        hv! = let _prep_hvp = prep_hvp, _f = f.f, _soadtype = soadtype, _p = p
+            if _p !== SciMLBase.NullParameters() && _p !== nothing
+                function (H, θ, v, p = _p)
+                    return only(hvp!(_f, (H,), _prep_hvp, _soadtype, θ, (v,), Constant(p)))
+                end
+            else
+                function (H, θ, v)
+                    return only(hvp!(_f, (H,), _prep_hvp, _soadtype, θ, (v,), Constant(_p)))
+                end
             end
         end
     elseif hv == true
@@ -162,10 +165,13 @@ function instantiate_function(
     cons_jac_colorvec = f.cons_jac_colorvec
     if f.cons !== nothing && cons_j == true && f.cons_j === nothing
         prep_jac = prepare_jacobian(cons_oop, adtype, x)
-        function cons_j!(J, θ)
-            jacobian!(cons_oop, J, prep_jac, adtype, θ)
-            return if size(J, 1) == 1
-                J = vec(J)
+        # Use let block to capture prep_jac with concrete type and avoid Core.Box
+        cons_j! = let _prep_jac = prep_jac, _cons_oop = cons_oop, _adtype = adtype
+            function (J, θ)
+                jacobian!(_cons_oop, J, _prep_jac, _adtype, θ)
+                return if size(J, 1) == 1
+                    J = vec(J)
+                end
             end
         end
     elseif cons_j == true && f.cons !== nothing
@@ -176,8 +182,9 @@ function instantiate_function(
 
     if f.cons_vjp === nothing && cons_vjp == true && f.cons !== nothing
         prep_pullback = prepare_pullback(cons_oop, adtype, x, (ones(eltype(x), num_cons),))
-        function cons_vjp!(J, θ, v)
-            return only(pullback!(cons_oop, (J,), prep_pullback, adtype, θ, (v,)))
+        # Use let block to capture prep_pullback with concrete type and avoid Core.Box
+        cons_vjp! = let _prep_pullback = prep_pullback, _cons_oop = cons_oop, _adtype = adtype
+            (J, θ, v) -> only(pullback!(_cons_oop, (J,), _prep_pullback, _adtype, θ, (v,)))
         end
     elseif cons_vjp == true && f.cons !== nothing
         cons_vjp! = (J, θ, v) -> f.cons_vjp(J, θ, v, p)
@@ -189,8 +196,9 @@ function instantiate_function(
         prep_pushforward = prepare_pushforward(
             cons_oop, adtype, x, (ones(eltype(x), length(x)),)
         )
-        function cons_jvp!(J, θ, v)
-            return only(pushforward!(cons_oop, (J,), prep_pushforward, adtype, θ, (v,)))
+        # Use let block to capture prep_pushforward with concrete type and avoid Core.Box
+        cons_jvp! = let _prep_pushforward = prep_pushforward, _cons_oop = cons_oop, _adtype = adtype
+            (J, θ, v) -> only(pushforward!(_cons_oop, (J,), _prep_pushforward, _adtype, θ, (v,)))
         end
     elseif cons_jvp == true && f.cons !== nothing
         cons_jvp! = (J, θ, v) -> f.cons_jvp(J, θ, v, p)
@@ -225,19 +233,24 @@ function instantiate_function(
     if f.cons !== nothing && f.cons_h === nothing && prep_cons_hess !== nothing
         # Standard cons_h! that returns array of matrices
         if cons_h == true
+            # Use let block to capture prep_cons_hess with concrete type and avoid Core.Box
             if adtype isa ADTypes.AutoSymbolics
-                cons_h! = function (H, θ)
-                    for i in 1:num_cons
-                        hessian!(Base.Fix2(cons_oop, i), H[i], prep_cons_hess[i], soadtype, θ)
+                cons_h! = let _prep_cons_hess = prep_cons_hess, _cons_oop = cons_oop, _soadtype = soadtype, _num_cons = num_cons
+                    function (H, θ)
+                        for i in 1:_num_cons
+                            hessian!(Base.Fix2(_cons_oop, i), H[i], _prep_cons_hess[i], _soadtype, θ)
+                        end
+                        return
                     end
-                    return
                 end
             else
-                cons_h! = function (H, θ)
-                    for i in 1:num_cons
-                        hessian!(cons_oop, H[i], prep_cons_hess[i], soadtype, θ, Constant(i))
+                cons_h! = let _prep_cons_hess = prep_cons_hess, _cons_oop = cons_oop, _soadtype = soadtype, _num_cons = num_cons
+                    function (H, θ)
+                        for i in 1:_num_cons
+                            hessian!(_cons_oop, H[i], _prep_cons_hess[i], _soadtype, θ, Constant(i))
+                        end
+                        return
                     end
-                    return
                 end
             end
         else
@@ -246,23 +259,26 @@ function instantiate_function(
 
         # Weighted sum dispatch for cons_h! (always created if prep_cons_hess exists)
         # This is used by lag_h! when σ=0
-        cons_h_weighted! = function (H::AbstractMatrix, θ, λ)
-            # Compute weighted sum: H = Σᵢ λᵢ∇²cᵢ
-            H .= zero(eltype(H))
+        # Use let block to capture prep_cons_hess with concrete type and avoid Core.Box
+        cons_h_weighted! = let _prep_cons_hess = prep_cons_hess, _cons_oop = cons_oop, _soadtype = soadtype, _num_cons = num_cons
+            function (H::AbstractMatrix, θ, λ)
+                # Compute weighted sum: H = Σᵢ λᵢ∇²cᵢ
+                H .= zero(eltype(H))
 
-            # Create a single temporary matrix to reuse for all constraints
-            Hi = similar(H)
+                # Create a single temporary matrix to reuse for all constraints
+                Hi = similar(H)
 
-            for i in 1:num_cons
-                if λ[i] != zero(eltype(λ))
-                    # Compute constraint's Hessian into temporary matrix
-                    hessian!(cons_oop, Hi, prep_cons_hess[i], soadtype, θ, Constant(i))
-                    # Add weighted Hessian to result using in-place operation
-                    # H += λ[i] * Hi
-                    @. H += λ[i] * Hi
+                for i in 1:_num_cons
+                    if λ[i] != zero(eltype(λ))
+                        # Compute constraint's Hessian into temporary matrix
+                        hessian!(_cons_oop, Hi, _prep_cons_hess[i], _soadtype, θ, Constant(i))
+                        # Add weighted Hessian to result using in-place operation
+                        # H += λ[i] * Hi
+                        @. H += λ[i] * Hi
+                    end
                 end
+                return
             end
-            return
         end
     elseif cons_h == true && f.cons !== nothing
         cons_h! = (res, θ) -> f.cons_h(res, θ, p)
@@ -281,58 +297,62 @@ function instantiate_function(
         )
         lag_hess_prototype = zeros(Bool, length(x), length(x))
 
-        function lag_h!(H::AbstractMatrix, θ, σ, λ)
-            return if σ == zero(eltype(θ))
-                # When σ=0, use the weighted sum function
-                cons_h_weighted!(H, θ, λ)
-            else
-                hessian!(
-                    lagrangian, H, lag_prep, soadtype, θ,
-                    Constant(σ), Constant(λ), Constant(p)
-                )
-            end
-        end
-
-        function lag_h!(h::AbstractVector, θ, σ, λ)
-            H = hessian(
-                lagrangian, lag_prep, soadtype, θ, Constant(σ), Constant(λ), Constant(p)
-            )
-            k = 0
-            for i in 1:length(θ)
-                for j in 1:i
-                    k += 1
-                    h[k] = H[i, j]
-                end
-            end
-            return
-        end
-
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function lag_h!(H::AbstractMatrix, θ, σ, λ, p)
-                return if σ == zero(eltype(θ))
-                    cons_h!(H, θ)
-                    H *= λ
-                else
-                    hessian!(
-                        lagrangian, H, lag_prep, soadtype, θ,
-                        Constant(σ), Constant(λ), Constant(p)
-                    )
-                end
-            end
-
-            function lag_h!(h::AbstractVector, θ, σ, λ, p)
-                H = hessian(
-                    lagrangian, lag_prep, soadtype, θ,
-                    Constant(σ), Constant(λ), Constant(p)
-                )
-                k = 0
-                for i in 1:length(θ)
-                    for j in 1:i
-                        k += 1
-                        h[k] = H[i, j]
+        # Use let block to capture lag_prep and cons_h_weighted! with concrete types
+        lag_h! = let _lag_prep = lag_prep, _lagrangian = lagrangian, _soadtype = soadtype, _p = p, _cons_h_weighted = cons_h_weighted!, _cons_h = cons_h!
+            if _p !== SciMLBase.NullParameters() && _p !== nothing
+                # Version with parameter p
+                function (H_or_h, θ, σ, λ, p = _p)
+                    if H_or_h isa AbstractMatrix
+                        return if σ == zero(eltype(θ))
+                            _cons_h_weighted(H_or_h, θ, λ)
+                        else
+                            hessian!(
+                                _lagrangian, H_or_h, _lag_prep, _soadtype, θ,
+                                Constant(σ), Constant(λ), Constant(p)
+                            )
+                        end
+                    else
+                        H = hessian(
+                            _lagrangian, _lag_prep, _soadtype, θ,
+                            Constant(σ), Constant(λ), Constant(p)
+                        )
+                        k = 0
+                        for i in 1:length(θ)
+                            for j in 1:i
+                                k += 1
+                                H_or_h[k] = H[i, j]
+                            end
+                        end
+                        return
                     end
                 end
-                return
+            else
+                # Version without parameter p
+                function (H_or_h, θ, σ, λ)
+                    if H_or_h isa AbstractMatrix
+                        return if σ == zero(eltype(θ))
+                            _cons_h_weighted(H_or_h, θ, λ)
+                        else
+                            hessian!(
+                                _lagrangian, H_or_h, _lag_prep, _soadtype, θ,
+                                Constant(σ), Constant(λ), Constant(_p)
+                            )
+                        end
+                    else
+                        H = hessian(
+                            _lagrangian, _lag_prep, _soadtype, θ,
+                            Constant(σ), Constant(λ), Constant(_p)
+                        )
+                        k = 0
+                        for i in 1:length(θ)
+                            for j in 1:i
+                                k += 1
+                                H_or_h[k] = H[i, j]
+                            end
+                        end
+                        return
+                    end
+                end
             end
         end
     elseif lag_h == true && f.cons !== nothing
@@ -382,12 +402,12 @@ function instantiate_function(
 
     if g == true && f.grad === nothing
         prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
-        function grad(θ)
-            return gradient(f.f, prep_grad, adtype, θ, Constant(p))
-        end
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function grad(θ, p)
-                return gradient(f.f, prep_grad, adtype, θ, Constant(p))
+        # Use let block to capture prep_grad with concrete type and avoid Core.Box
+        grad = let _prep_grad = prep_grad, _f = f.f, _adtype = adtype, _p = p
+            if _p !== SciMLBase.NullParameters() && _p !== nothing
+                (θ, p = _p) -> gradient(_f, _prep_grad, _adtype, θ, Constant(p))
+            else
+                (θ) -> gradient(_f, _prep_grad, _adtype, θ, Constant(_p))
             end
         end
     elseif g == true
@@ -400,14 +420,18 @@ function instantiate_function(
         if g == false
             prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
         end
-        function fg!(θ)
-            (y, res) = value_and_gradient(f.f, prep_grad, adtype, θ, Constant(p))
-            return y, res
-        end
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function fg!(θ, p)
-                (y, res) = value_and_gradient(f.f, prep_grad, adtype, θ, Constant(p))
-                return y, res
+        # Use let block to capture prep_grad with concrete type and avoid Core.Box
+        fg! = let _prep_grad = prep_grad, _f = f.f, _adtype = adtype, _p = p
+            if _p !== SciMLBase.NullParameters() && _p !== nothing
+                function (θ, p = _p)
+                    (y, res) = value_and_gradient(_f, _prep_grad, _adtype, θ, Constant(p))
+                    return y, res
+                end
+            else
+                function (θ)
+                    (y, res) = value_and_gradient(_f, _prep_grad, _adtype, θ, Constant(_p))
+                    return y, res
+                end
             end
         end
     elseif fg == true
@@ -420,12 +444,12 @@ function instantiate_function(
     hess_colors = f.hess_colorvec
     if h == true && f.hess === nothing
         prep_hess = prepare_hessian(f.f, soadtype, x, Constant(p))
-        function hess(θ)
-            return hessian(f.f, prep_hess, soadtype, θ, Constant(p))
-        end
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function hess(θ, p)
-                return hessian(f.f, prep_hess, soadtype, θ, Constant(p))
+        # Use let block to capture prep_hess with concrete type and avoid Core.Box
+        hess = let _prep_hess = prep_hess, _f = f.f, _soadtype = soadtype, _p = p
+            if _p !== SciMLBase.NullParameters() && _p !== nothing
+                (θ, p = _p) -> hessian(_f, _prep_hess, _soadtype, θ, Constant(p))
+            else
+                (θ) -> hessian(_f, _prep_hess, _soadtype, θ, Constant(_p))
             end
         end
     elseif h == true
@@ -435,26 +459,22 @@ function instantiate_function(
     end
 
     if fgh == true && f.fgh === nothing
-        function fgh!(θ)
-            (
-                y,
-                G,
-                H,
-            ) = value_derivative_and_second_derivative(
-                f.f, prep_hess, adtype, θ, Constant(p)
-            )
-            return y, G, H
-        end
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function fgh!(θ, p)
-                (
-                    y,
-                    G,
-                    H,
-                ) = value_derivative_and_second_derivative(
-                    f.f, prep_hess, adtype, θ, Constant(p)
-                )
-                return y, G, H
+        # Use let block to capture prep_hess with concrete type and avoid Core.Box
+        fgh! = let _prep_hess = prep_hess, _f = f.f, _soadtype = soadtype, _p = p
+            if _p !== SciMLBase.NullParameters() && _p !== nothing
+                function (θ, p = _p)
+                    (y, G, H) = value_gradient_and_hessian(
+                        _f, _prep_hess, _soadtype, θ, Constant(p)
+                    )
+                    return y, G, H
+                end
+            else
+                function (θ)
+                    (y, G, H) = value_gradient_and_hessian(
+                        _f, _prep_hess, _soadtype, θ, Constant(_p)
+                    )
+                    return y, G, H
+                end
             end
         end
     elseif fgh == true
@@ -465,12 +485,12 @@ function instantiate_function(
 
     if hv == true && f.hv === nothing
         prep_hvp = prepare_hvp(f.f, soadtype, x, (zeros(eltype(x), size(x)),), Constant(p))
-        function hv!(θ, v)
-            return only(hvp(f.f, prep_hvp, soadtype, θ, (v,), Constant(p)))
-        end
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function hv!(θ, v, p)
-                return only(hvp(f.f, prep_hvp, soadtype, θ, (v,), Constant(p)))
+        # Use let block to capture prep_hvp with concrete type and avoid Core.Box
+        hv! = let _prep_hvp = prep_hvp, _f = f.f, _soadtype = soadtype, _p = p
+            if _p !== SciMLBase.NullParameters() && _p !== nothing
+                (θ, v, p = _p) -> only(hvp(_f, _prep_hvp, _soadtype, θ, (v,), Constant(p)))
+            else
+                (θ, v) -> only(hvp(_f, _prep_hvp, _soadtype, θ, (v,), Constant(_p)))
             end
         end
     elseif hv == true
@@ -493,12 +513,15 @@ function instantiate_function(
     cons_jac_colorvec = f.cons_jac_colorvec
     if f.cons !== nothing && cons_j == true && f.cons_j === nothing
         prep_jac = prepare_jacobian(f.cons, adtype, x, Constant(p))
-        function cons_j!(θ)
-            J = jacobian(f.cons, prep_jac, adtype, θ, Constant(p))
-            if size(J, 1) == 1
-                J = vec(J)
+        # Use let block to capture prep_jac with concrete type and avoid Core.Box
+        cons_j! = let _prep_jac = prep_jac, _cons = f.cons, _adtype = adtype, _p = p
+            function (θ)
+                J = jacobian(_cons, _prep_jac, _adtype, θ, Constant(_p))
+                if size(J, 1) == 1
+                    J = vec(J)
+                end
+                return J
             end
-            return J
         end
     elseif cons_j == true && f.cons !== nothing
         cons_j! = (θ) -> f.cons_j(θ, p)
@@ -510,8 +533,9 @@ function instantiate_function(
         prep_pullback = prepare_pullback(
             f.cons, adtype, x, (ones(eltype(x), num_cons),), Constant(p)
         )
-        function cons_vjp!(θ, v)
-            return only(pullback(f.cons, prep_pullback, adtype, θ, (v,), Constant(p)))
+        # Use let block to capture prep_pullback with concrete type and avoid Core.Box
+        cons_vjp! = let _prep_pullback = prep_pullback, _cons = f.cons, _adtype = adtype, _p = p
+            (θ, v) -> only(pullback(_cons, _prep_pullback, _adtype, θ, (v,), Constant(_p)))
         end
     elseif cons_vjp == true && f.cons !== nothing
         cons_vjp! = (θ, v) -> f.cons_vjp(θ, v, p)
@@ -523,8 +547,9 @@ function instantiate_function(
         prep_pushforward = prepare_pushforward(
             f.cons, adtype, x, (ones(eltype(x), length(x)),), Constant(p)
         )
-        function cons_jvp!(θ, v)
-            return only(pushforward(f.cons, prep_pushforward, adtype, θ, (v,), Constant(p)))
+        # Use let block to capture prep_pushforward with concrete type and avoid Core.Box
+        cons_jvp! = let _prep_pushforward = prep_pushforward, _cons = f.cons, _adtype = adtype, _p = p
+            (θ, v) -> only(pushforward(_cons, _prep_pushforward, _adtype, θ, (v,), Constant(_p)))
         end
     elseif cons_jvp == true && f.cons !== nothing
         cons_jvp! = (θ, v) -> f.cons_jvp(θ, v, p)
@@ -543,11 +568,14 @@ function instantiate_function(
                 for i in 1:num_cons
         ]
 
-        function cons_h!(θ)
-            H = map(1:num_cons) do i
-                hessian(cons_i, prep_cons_hess[i], soadtype, θ, Constant(i))
+        # Use let block to capture prep_cons_hess with concrete type and avoid Core.Box
+        cons_h! = let _prep_cons_hess = prep_cons_hess, _cons_i = cons_i, _soadtype = soadtype, _num_cons = num_cons
+            function (θ)
+                H = map(1:_num_cons) do i
+                    hessian(_cons_i, _prep_cons_hess[i], _soadtype, θ, Constant(i))
+                end
+                return H
             end
-            return H
         end
     elseif cons_h == true && f.cons !== nothing
         cons_h! = (θ) -> f.cons_h(θ, p)
@@ -564,26 +592,29 @@ function instantiate_function(
         )
         lag_hess_prototype = zeros(Bool, length(x), length(x))
 
-        function lag_h!(θ, σ, λ)
-            if σ == zero(eltype(θ))
-                return λ .* cons_h(θ)
+        # Use let block to capture lag_prep with concrete type and avoid Core.Box
+        lag_h! = let _lag_prep = lag_prep, _lagrangian = lagrangian, _soadtype = soadtype, _p = p, _cons_h = cons_h!
+            if _p !== SciMLBase.NullParameters() && _p !== nothing
+                function (θ, σ, λ, p = _p)
+                    if σ == zero(eltype(θ))
+                        return λ .* _cons_h(θ)
+                    else
+                        return hessian(
+                            _lagrangian, _lag_prep, _soadtype, θ,
+                            Constant(σ), Constant(λ), Constant(p)
+                        )
+                    end
+                end
             else
-                return hessian(
-                    lagrangian, lag_prep, soadtype, θ,
-                    Constant(σ), Constant(λ), Constant(p)
-                )
-            end
-        end
-
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function lag_h!(θ, σ, λ, p)
-                if σ == zero(eltype(θ))
-                    return λ .* cons_h(θ)
-                else
-                    return hessian(
-                        lagrangian, lag_prep, soadtype, θ,
-                        Constant(σ), Constant(λ), Constant(p)
-                    )
+                function (θ, σ, λ)
+                    if σ == zero(eltype(θ))
+                        return λ .* _cons_h(θ)
+                    else
+                        return hessian(
+                            _lagrangian, _lag_prep, _soadtype, θ,
+                            Constant(σ), Constant(λ), Constant(_p)
+                        )
+                    end
                 end
             end
         end
