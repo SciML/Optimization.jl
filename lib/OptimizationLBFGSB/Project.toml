@@ -1,7 +1,7 @@
 name = "OptimizationLBFGSB"
 uuid = "22f7324a-a79d-40f2-bebe-3af60c77bd15"
 authors = ["paramthakkar123 <paramthakkar864@gmail.com>"]
-version = "1.2.1"
+version = "1.3.0"
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 LBFGSB = "5be7bae1-8223-5378-bac3-9e7378a2f6e6"
