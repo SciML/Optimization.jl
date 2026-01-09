@@ -227,22 +227,24 @@ end
 function filled_spad(adtype)
     return if adtype.sparsity_detector isa ADTypes.NoSparsityDetector &&
             adtype.coloring_algorithm isa ADTypes.NoColoringAlgorithm
-        adtype = AutoSparse(
+        AutoSparse(
             adtype.dense_ad; sparsity_detector = TracerSparsityDetector(),
             coloring_algorithm = GreedyColoringAlgorithm()
         )
     elseif adtype.sparsity_detector isa ADTypes.NoSparsityDetector &&
             !(adtype.coloring_algorithm isa ADTypes.NoColoringAlgorithm)
-        adtype = AutoSparse(
+        AutoSparse(
             adtype.dense_ad; sparsity_detector = TracerSparsityDetector(),
             coloring_algorithm = adtype.coloring_algorithm
         )
     elseif !(adtype.sparsity_detector isa ADTypes.NoSparsityDetector) &&
             adtype.coloring_algorithm isa ADTypes.NoColoringAlgorithm
-        adtype = AutoSparse(
+        AutoSparse(
             adtype.dense_ad; sparsity_detector = adtype.sparsity_detector,
             coloring_algorithm = GreedyColoringAlgorithm()
         )
+    else
+        adtype
     end
 end
 
