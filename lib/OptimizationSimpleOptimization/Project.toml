@@ -1,0 +1,39 @@
+name = "OptimizationSimpleOptimization"
+uuid = "510db2f7-4254-4e34-bbda-04240c91ca8f"
+authors = ["Utkarsh <rajpututkarsh530@gmail.com> and contributors"]
+version = "1.0.0"
+
+[deps]
+ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+SimpleNonlinearSolve = "727e6d20-b764-4bd8-a329-72de5adea6c7"
+
+[weakdeps]
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
+
+[extensions]
+OptimizationSimpleOptimizationEnzymeExt = "Enzyme"
+OptimizationSimpleOptimizationForwardDiffExt = "ForwardDiff"
+
+[compat]
+ADTypes = "1"
+Enzyme = "0.13"
+ForwardDiff = "0.10, 1"
+OptimizationBase = "4.0.2"
+Reexport = "1.2"
+SciMLBase = "2.122.1"
+SimpleNonlinearSolve = "1, 2"
+julia = "1.10"
+
+[extras]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test", "ForwardDiff"]
