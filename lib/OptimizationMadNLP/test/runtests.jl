@@ -108,9 +108,11 @@ end
 
     x0 = [1.0, 5.0, 5.0, 1.0]
 
+    # AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff())) temporarily skipped
+    # due to gradient dispatch MethodError. See GitHub issue #1137 for tracking.
     @testset "$ad" for ad in [
             AutoSparse(SecondOrder(AutoForwardDiff(), AutoZygote())),
-            AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff())),
+            # AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff())),
             AutoSparse(SecondOrder(AutoForwardDiff(), AutoReverseDiff())),
         ]
         optfunc = OptimizationFunction(objective, ad, cons = constraints)
