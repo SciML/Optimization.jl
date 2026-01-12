@@ -108,11 +108,8 @@ end
 
     x0 = [1.0, 5.0, 5.0, 1.0]
 
-    # AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff())) temporarily skipped
-    # due to gradient dispatch MethodError. See GitHub issue #1137 for tracking.
     @testset "$ad" for ad in [
             AutoSparse(SecondOrder(AutoForwardDiff(), AutoZygote())),
-            # AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff())),
             AutoSparse(SecondOrder(AutoForwardDiff(), AutoReverseDiff())),
         ]
         optfunc = OptimizationFunction(objective, ad, cons = constraints)
@@ -137,40 +134,59 @@ end
         @test isapprox(sum(sol.u .^ 2), 40.0; atol = 1.0e-6)
     end
 
-    # Dense tests temporarily skipped due to gradient dispatch MethodError with
-    # SecondOrder AD combinations. See GitHub issue #1137 for tracking.
-    # @testset "$ad" for ad in [
-    #         SecondOrder(AutoForwardDiff(), AutoZygote()),
-    #         SecondOrder(AutoForwardDiff(), AutoForwardDiff()),
-    #         SecondOrder(AutoForwardDiff(), AutoReverseDiff()),
-    #     ]
-    #     optfunc = OptimizationFunction(objective, ad, cons = constraints)
-    #     prob = OptimizationProblem(
-    #         optfunc, x0; sense = OptimizationBase.MinSense,
-    #         lb = [1.0, 1.0, 1.0, 1.0],
-    #         ub = [5.0, 5.0, 5.0, 5.0],
-    #         lcons = [25.0, 40.0],
-    #         ucons = [Inf, 40.0]
-    #     )
-    #
-    #     cache = init(
-    #         prob,
-    #         MadNLPOptimizer(
-    #             kkt_system = MadNLP.DenseKKTSystem,
-    #             linear_solver = LapackCPUSolver
-    #         )
-    #     )
-    #
-    #     sol = OptimizationBase.solve!(cache)
-    #
-    #     @test SciMLBase.successful_retcode(sol)
-    #
-    #     @test isapprox(sol.objective, 17.014017145179164; atol = 1.0e-6)
-    #     x = [1.0, 4.742999641809297, 3.8211499817883077, 1.3794082897556983]
-    #     @test isapprox(sol.u, x; atol = 1.0e-6)
-    #     @test prod(sol.u) >= 25.0 - 1.0e-6
-    #     @test isapprox(sum(sol.u .^ 2), 40.0; atol = 1.0e-6)
-    # end
+    # AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff())) fails due to
+    # gradient dispatch MethodError. See GitHub issues #1137 and #1140 for tracking.
+    @testset "AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff())) - broken" begin
+        ad = AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff()))
+        optfunc = OptimizationFunction(objective, ad, cons = constraints)
+        prob = OptimizationProblem(
+            optfunc, x0; sense = OptimizationBase.MinSense,
+            lb = [1.0, 1.0, 1.0, 1.0],
+            ub = [5.0, 5.0, 5.0, 5.0],
+            lcons = [25.0, 40.0],
+            ucons = [Inf, 40.0]
+        )
+
+        try
+            cache = init(prob, MadNLPOptimizer())
+            sol = OptimizationBase.solve!(cache)
+            @test SciMLBase.successful_retcode(sol) broken = true
+        catch e
+            @test e isa MethodError broken = true
+        end
+    end
+
+    # Dense tests with SecondOrder AD combinations. See GitHub issues #1137 and #1140 for tracking.
+    @testset "Dense KKT with $ad - broken" for ad in [
+            SecondOrder(AutoForwardDiff(), AutoZygote()),
+            SecondOrder(AutoForwardDiff(), AutoForwardDiff()),
+            SecondOrder(AutoForwardDiff(), AutoReverseDiff()),
+        ]
+        optfunc = OptimizationFunction(objective, ad, cons = constraints)
+        prob = OptimizationProblem(
+            optfunc, x0; sense = OptimizationBase.MinSense,
+            lb = [1.0, 1.0, 1.0, 1.0],
+            ub = [5.0, 5.0, 5.0, 5.0],
+            lcons = [25.0, 40.0],
+            ucons = [Inf, 40.0]
+        )
+
+        try
+            cache = init(
+                prob,
+                MadNLPOptimizer(
+                    kkt_system = MadNLP.DenseKKTSystem,
+                    linear_solver = LapackCPUSolver
+                )
+            )
+
+            sol = OptimizationBase.solve!(cache)
+            @test SciMLBase.successful_retcode(sol) broken = true
+            @test isapprox(sol.objective, 17.014017145179164; atol = 1.0e-6) broken = true
+        catch e
+            @test e isa Exception broken = true
+        end
+    end
 end
 
 @testset "Larger sparse Hessian" begin
@@ -246,18 +262,9 @@ end
     @test cons_vals[2] >= 1.0 - 1.0e-6              # Product constraint
 end
 
-# "MadNLP Options and Common Interface" tests temporarily skipped due to
-# SecondOrder AD compatibility issues. See GitHub issue #1137 for tracking.
-@testset "MadNLP Options and Common Interface" begin
-    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
-    x0 = zeros(2)
-    p = [1.0, 100.0]
-    # Skip these tests - see comment above
-    @test_skip "SecondOrder AD tests skipped - see issue #1137"
-end
-
-#= Original tests commented out due to SecondOrder AD issues:
-@testset "MadNLP Options and Common Interface - SKIPPED" begin
+# "MadNLP Options and Common Interface" tests have SecondOrder AD compatibility issues.
+# See GitHub issues #1137 and #1140 for tracking.
+@testset "MadNLP Options and Common Interface - broken" begin
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = zeros(2)
     p = [1.0, 100.0]
@@ -267,70 +274,97 @@ end
         optfunc = OptimizationFunction(rosenbrock, ad)
         prob = OptimizationProblem(optfunc, x0, p)
 
-        # Test with MadNLP-specific struct fields
-        opt = MadNLPOptimizer(
-            acceptable_tol = 1.0e-6,
-            acceptable_iter = 10,
-            blas_num_threads = 2,
-            mu_init = 0.01
-        )
-        sol = solve(prob, opt)
-        @test SciMLBase.successful_retcode(sol)
+        try
+            # Test with MadNLP-specific struct fields
+            opt = MadNLPOptimizer(
+                acceptable_tol = 1.0e-6,
+                acceptable_iter = 10,
+                blas_num_threads = 2,
+                mu_init = 0.01
+            )
+            sol = solve(prob, opt)
+            @test SciMLBase.successful_retcode(sol) broken = true
+        catch e
+            @test e isa Exception broken = true
+        end
 
-        # Test with hessian approximation
-        opt2 = MadNLPOptimizer(
-            hessian_approximation = MadNLP.CompactLBFGS,
-            jacobian_constant = false,
-            hessian_constant = false
-        )
-        sol2 = solve(prob, opt2)
-        @test SciMLBase.successful_retcode(sol2)
+        try
+            # Test with hessian approximation
+            opt2 = MadNLPOptimizer(
+                hessian_approximation = MadNLP.CompactLBFGS,
+                jacobian_constant = false,
+                hessian_constant = false
+            )
+            sol2 = solve(prob, opt2)
+            @test SciMLBase.successful_retcode(sol2) broken = true
+        catch e
+            @test e isa Exception broken = true
+        end
     end
 
     @testset "additional_options dictionary" begin
         optfunc = OptimizationFunction(rosenbrock, ad)
         prob = OptimizationProblem(optfunc, x0, p)
 
-        # Test passing MadNLP options via additional_options
-        opt = MadNLPOptimizer(
-            linear_solver = MadNLP.UmfpackSolver,
-            additional_options = Dict{Symbol, Any}(
-                :max_iter => 200,
-                :tol => 1.0e-7
+        try
+            # Test passing MadNLP options via additional_options
+            opt = MadNLPOptimizer(
+                linear_solver = MadNLP.UmfpackSolver,
+                additional_options = Dict{Symbol, Any}(
+                    :max_iter => 200,
+                    :tol => 1.0e-7
+                )
             )
-        )
-        sol = solve(prob, opt)
-        @test SciMLBase.successful_retcode(sol)
+            sol = solve(prob, opt)
+            @test SciMLBase.successful_retcode(sol) broken = true
+        catch e
+            @test e isa Exception broken = true
+        end
 
-        # Test with different options
-        opt2 = MadNLPOptimizer(
-            additional_options = Dict{Symbol, Any}(
-                :inertia_correction_method => MadNLP.InertiaFree,
-                :fixed_variable_treatment => MadNLP.RelaxBound
+        try
+            # Test with different options
+            opt2 = MadNLPOptimizer(
+                additional_options = Dict{Symbol, Any}(
+                    :inertia_correction_method => MadNLP.InertiaFree,
+                    :fixed_variable_treatment => MadNLP.RelaxBound
+                )
             )
-        )
-        sol2 = solve(prob, opt2)
-        @test SciMLBase.successful_retcode(sol2)
+            sol2 = solve(prob, opt2)
+            @test SciMLBase.successful_retcode(sol2) broken = true
+        catch e
+            @test e isa Exception broken = true
+        end
     end
 
     @testset "Common interface arguments" begin
         optfunc = OptimizationFunction(rosenbrock, ad)
         prob = OptimizationProblem(optfunc, x0, p)
 
-        # Test that abstol overrides default tolerance
-        sol1 = solve(prob, MadNLPOptimizer(); abstol = 1.0e-12)
-        @test SciMLBase.successful_retcode(sol1)
-        @test sol1.u ≈ [1.0, 1.0] atol = 1.0e-10
+        try
+            # Test that abstol overrides default tolerance
+            sol1 = solve(prob, MadNLPOptimizer(); abstol = 1.0e-12)
+            @test SciMLBase.successful_retcode(sol1) broken = true
+            @test (sol1.u ≈ [1.0, 1.0]) broken = true
+        catch e
+            @test e isa Exception broken = true
+        end
 
-        # Test that maxiters limits iterations
-        sol2 = solve(prob, MadNLPOptimizer(); maxiters = 5)
-        # May not converge with only 5 iterations
-        @test sol2.stats.iterations <= 5
+        try
+            # Test that maxiters limits iterations
+            sol2 = solve(prob, MadNLPOptimizer(); maxiters = 5)
+            @test (sol2.stats.iterations <= 5) broken = true
+        catch e
+            @test e isa Exception broken = true
+        end
 
-        # Test verbose options (MadNLP supports bool and LogLevels)
-        for verbose in [false, true, MadNLP.ERROR, MadNLP.WARN, MadNLP.INFO]
-            sol = solve(prob, MadNLPOptimizer(); verbose = verbose, maxiters = 20)
-            @test sol isa SciMLBase.OptimizationSolution
+        try
+            # Test verbose options (MadNLP supports bool and LogLevels)
+            for verbose in [false, true, MadNLP.ERROR, MadNLP.WARN, MadNLP.INFO]
+                sol = solve(prob, MadNLPOptimizer(); verbose = verbose, maxiters = 20)
+                @test (sol isa SciMLBase.OptimizationSolution) broken = true
+            end
+        catch e
+            @test e isa Exception broken = true
         end
     end
 
@@ -338,26 +372,29 @@ end
         optfunc = OptimizationFunction(rosenbrock, ad)
         prob = OptimizationProblem(optfunc, x0, p)
 
-        # Struct field is overridden by additional_options and solve arguments
-        opt = MadNLPOptimizer(
-            acceptable_tol = 1.0e-4,  # Struct field
-            additional_options = Dict{Symbol, Any}(
-                :max_iter => 10,    # Will be overridden by maxiters
-                :tol => 1.0e-6        # Will be overridden by abstol
+        try
+            # Struct field is overridden by additional_options and solve arguments
+            opt = MadNLPOptimizer(
+                acceptable_tol = 1.0e-4,  # Struct field
+                additional_options = Dict{Symbol, Any}(
+                    :max_iter => 10,    # Will be overridden by maxiters
+                    :tol => 1.0e-6        # Will be overridden by abstol
+                )
             )
-        )
 
-        sol = solve(
-            prob, opt;
-            maxiters = 5,   # Should override additional_options[:max_iter]
-            abstol = 1.0e-10
-        )  # Should override additional_options[:tol]
+            sol = solve(
+                prob, opt;
+                maxiters = 5,   # Should override additional_options[:max_iter]
+                abstol = 1.0e-10
+            )  # Should override additional_options[:tol]
 
-        @test sol.stats.iterations <= 5
-        @test sol.retcode == SciMLBase.ReturnCode.MaxIters
+            @test (sol.stats.iterations <= 5) broken = true
+            @test (sol.retcode == SciMLBase.ReturnCode.MaxIters) broken = true
+        catch e
+            @test e isa Exception broken = true
+        end
     end
 end
-=#
 
 @testset verbose = true "LBFGS Hessian Approximation" begin
     # Based on https://madsuite.org/MadNLP.jl/dev/tutorials/lbfgs/
@@ -374,27 +411,41 @@ end
         x0[1:2:end] .= -1.2  # Starting point from tutorial
         x0[2:2:end] .= 1.0
 
-        # Test different LBFGS configurations
-        # Note: ExactHessian variant is temporarily skipped due to SecondOrder AD issues.
-        # See GitHub issue #1137 for tracking.
-        @testset "LBFGS variant: $variant" for variant in [
-                MadNLP.CompactLBFGS,
-                # MadNLP.ExactHessian,  # Temporarily skipped - see issue #1137
-            ]
-            # Only provide gradients, no Hessian needed for LBFGS
-            ad = AutoForwardDiff()  # First-order AD is sufficient
+        # Test CompactLBFGS (working)
+        @testset "LBFGS variant: CompactLBFGS" begin
+            ad = AutoForwardDiff()
             optfunc = OptimizationFunction(extended_rosenbrock, ad)
             prob = OptimizationProblem(optfunc, x0, nothing)
 
             opt = MadNLPOptimizer(
-                hessian_approximation = variant
+                hessian_approximation = MadNLP.CompactLBFGS
             )
 
             sol = solve(prob, opt; maxiters = 100, verbose = false)
 
             @test SciMLBase.successful_retcode(sol)
-            @test all(isapprox.(sol.u, 1.0, atol = 1.0e-6))  # Solution should be all ones
-            @test sol.objective < 1.0e-10  # Should be close to zero
+            @test all(isapprox.(sol.u, 1.0, atol = 1.0e-6))
+            @test sol.objective < 1.0e-10
+        end
+
+        # Test ExactHessian (broken due to SecondOrder AD issues, see #1137 and #1140)
+        @testset "LBFGS variant: ExactHessian - broken" begin
+            ad = SecondOrder(AutoForwardDiff(), AutoZygote())
+            optfunc = OptimizationFunction(extended_rosenbrock, ad)
+            prob = OptimizationProblem(optfunc, x0, nothing)
+
+            try
+                opt = MadNLPOptimizer(
+                    hessian_approximation = MadNLP.ExactHessian
+                )
+
+                sol = solve(prob, opt; maxiters = 100, verbose = false)
+                @test SciMLBase.successful_retcode(sol) broken = true
+                @test all(isapprox.(sol.u, 1.0, atol = 1.0e-6)) broken = true
+                @test (sol.objective < 1.0e-10) broken = true
+            catch e
+                @test e isa Exception broken = true
+            end
         end
 
         @testset "LBFGS memory size $memory_size" for memory_size in [5, 10, 20]
@@ -468,13 +519,11 @@ end
             return x0
         end
 
-        # Note: ExactHessian variant is temporarily skipped due to SecondOrder AD issues.
-        # See GitHub issue #1137 for tracking.
-        @testset "N=5 electrons with $approx" for approx in [MadNLP.CompactLBFGS]  # MadNLP.ExactHessian skipped
+        # Test CompactLBFGS (working)
+        @testset "N=5 electrons with CompactLBFGS" begin
             np = 5
             x0 = init_electrons_on_sphere(np)
 
-            # For LBFGS variants, only first-order derivatives needed
             ad = AutoForwardDiff()
 
             optfunc = OptimizationFunction(
@@ -482,7 +531,6 @@ end
                 cons = unit_sphere_constraints
             )
 
-            # Equality constraints: each electron on unit sphere
             lcons = zeros(np)
             ucons = zeros(np)
 
@@ -494,25 +542,20 @@ end
 
             opt = MadNLPOptimizer(
                 linear_solver = LapackCPUSolver,
-                hessian_approximation = approx
+                hessian_approximation = MadNLP.CompactLBFGS
             )
 
             sol = solve(prob, opt; abstol = 1.0e-7, maxiters = 200, verbose = false)
 
             @test SciMLBase.successful_retcode(sol)
 
-            # Check that all electrons are on the unit sphere
             cons_vals = zeros(np)
             unit_sphere_constraints(cons_vals, sol.u, nothing)
             @test all(abs.(cons_vals) .< 1.0e-5)
 
-            # Known optimal energy for 5 electrons on unit sphere
-            # Reference: https://en.wikipedia.org/wiki/Thomson_problem
-            # Configuration: Triangular dipyramid (trigonal bipyramid, D3h symmetry)
             expected_energy = 6.474691495
             @test isapprox(sol.objective, expected_energy, rtol = 1.0e-3)
 
-            # Verify minimum distance between electrons
             x = sol.u[1:np]
             y = sol.u[(np + 1):(2 * np)]
             z = sol.u[(2 * np + 1):(3 * np)]
@@ -524,34 +567,55 @@ end
                     min_dist = min(min_dist, dist)
                 end
             end
-            @test min_dist > 0.5  # Electrons should be well-separated
+            @test min_dist > 0.5
         end
 
-        # "LBFGS vs Exact Hessian" test temporarily skipped due to SecondOrder AD issues.
-        # See GitHub issue #1137 for tracking.
-        #=
-        @testset verbose = true "LBFGS vs Exact Hessian" begin
-            # Test with moderate size to show LBFGS efficiency
-            np = 10  # Gyroelongated square dipyramid configuration
+        # Test ExactHessian (broken due to SecondOrder AD issues, see #1137 and #1140)
+        @testset "N=5 electrons with ExactHessian - broken" begin
+            np = 5
             x0 = init_electrons_on_sphere(np)
 
-            results = []
+            ad = SecondOrder(AutoForwardDiff(), AutoZygote())
 
-            for (name, approx, ad) in [
-                    (
-                        "CompactLBFGS", MadNLP.CompactLBFGS,
-                        AutoForwardDiff(),
-                    )
-                    (
-                        "ExactHessian",
-                        MadNLP.ExactHessian,
-                        SecondOrder(
-                            AutoForwardDiff(), AutoZygote()
-                        ),
-                    )
-                ]
+            optfunc = OptimizationFunction(
+                coulomb_potential, ad,
+                cons = unit_sphere_constraints
+            )
+
+            lcons = zeros(np)
+            ucons = zeros(np)
+
+            prob = OptimizationProblem(
+                optfunc, x0;
+                lcons = lcons,
+                ucons = ucons
+            )
+
+            try
+                opt = MadNLPOptimizer(
+                    linear_solver = LapackCPUSolver,
+                    hessian_approximation = MadNLP.ExactHessian
+                )
+
+                sol = solve(prob, opt; abstol = 1.0e-7, maxiters = 200, verbose = false)
+                @test SciMLBase.successful_retcode(sol) broken = true
+            catch e
+                @test e isa Exception broken = true
+            end
+        end
+
+        # "LBFGS vs Exact Hessian" test - broken due to SecondOrder AD issues.
+        # See GitHub issues #1137 and #1140 for tracking.
+        @testset verbose = true "LBFGS vs Exact Hessian - broken" begin
+            np = 10
+            x0 = init_electrons_on_sphere(np)
+
+            results = Dict{String, NamedTuple}()
+
+            # CompactLBFGS should work
+            try
                 optfunc = OptimizationFunction(
-                    coulomb_potential, ad,
+                    coulomb_potential, AutoForwardDiff(),
                     cons = unit_sphere_constraints
                 )
 
@@ -562,45 +626,69 @@ end
                 )
 
                 opt = MadNLPOptimizer(
-                    hessian_approximation = approx
+                    hessian_approximation = MadNLP.CompactLBFGS
                 )
 
                 sol = solve(prob, opt; abstol = 1.0e-6, maxiters = 300, verbose = false)
-                push!(
-                    results,
-                    name => (
-                        objective = sol.objective,
-                        iterations = sol.stats.iterations,
-                        success = SciMLBase.successful_retcode(sol),
-                    )
+                results["CompactLBFGS"] = (
+                    objective = sol.objective,
+                    iterations = sol.stats.iterations,
+                    success = SciMLBase.successful_retcode(sol),
                 )
+                @test results["CompactLBFGS"].success
+            catch e
+                @test false  # CompactLBFGS should work
             end
 
-            # All methods should converge
-            @test all(r[2].success for r in values(results))
+            # ExactHessian is expected to fail
+            try
+                optfunc = OptimizationFunction(
+                    coulomb_potential, SecondOrder(AutoForwardDiff(), AutoZygote()),
+                    cons = unit_sphere_constraints
+                )
 
-            # All should find similar objective values (gyroelongated square dipyramid energy)
-            # Reference: https://en.wikipedia.org/wiki/Thomson_problem
-            objectives = [r[2].objective for r in values(results)]
-            @testset "$(results[i][1])" for (i, o) in enumerate(objectives)
-                @test o ≈ 32.71694946 rtol = 1.0e-2
+                prob = OptimizationProblem(
+                    optfunc, x0;
+                    lcons = zeros(np),
+                    ucons = zeros(np)
+                )
+
+                opt = MadNLPOptimizer(
+                    hessian_approximation = MadNLP.ExactHessian
+                )
+
+                sol = solve(prob, opt; abstol = 1.0e-6, maxiters = 300, verbose = false)
+                results["ExactHessian"] = (
+                    objective = sol.objective,
+                    iterations = sol.stats.iterations,
+                    success = SciMLBase.successful_retcode(sol),
+                )
+                @test results["ExactHessian"].success broken = true
+            catch e
+                @test e isa Exception broken = true
             end
-
-            # LBFGS methods typically need more iterations but less cost per iteration
-            @test results[1][2].iterations > results[1][2].iterations broken = true
         end
-        =#
 
-        # "Exact Hessian and sparse KKT" test temporarily skipped due to SecondOrder AD issues.
-        # See GitHub issue #1137 for tracking.
-        #= @testset "Exact Hessian and sparse KKT that hits σ == 0 in lag_h" begin
+        # "Exact Hessian and sparse KKT" test - broken due to SecondOrder AD issues.
+        # See GitHub issues #1137 and #1140 for tracking.
+        @testset "Exact Hessian and sparse KKT that hits σ == 0 in lag_h - broken" begin
             np = 12
-            # x0 = init_electrons_on_sphere(np)
-            x0 = [-0.10518691576929745, 0.051771801773795686, -0.9003045175547166, 0.23213937667116594, -0.02874270928423086, -0.652270178114126, -0.5918025628300999, 0.2511988210810674, -0.016535391659614228, 0.5949770074227214, -0.4492781383448046, -0.29581324890382626, -0.8989309486672202, 0.10678505987872657, -0.4351575519144031, -0.9589360279618278, 0.02680807390998832, 0.40670966862867725, 0.08594698464206306, -0.9646178134393677, -0.004187961953999249, -0.09107912492873807, -0.6973104772728601, 0.40182616259664583, 0.4252750430946946, -0.9929333469713824, 0.009469988512801456, 0.1629509253594941, -0.9992272933803594, -0.6396333795127627, -0.8014878928958706, 0.08007263129768477, -0.9998545103150432, 0.7985655600140281, -0.5584865734204564, -0.8666200187082093]
+            x0 = [
+                -0.10518691576929745, 0.051771801773795686, -0.9003045175547166,
+                0.23213937667116594, -0.02874270928423086, -0.652270178114126,
+                -0.5918025628300999, 0.2511988210810674, -0.016535391659614228,
+                0.5949770074227214, -0.4492781383448046, -0.29581324890382626,
+                -0.8989309486672202, 0.10678505987872657, -0.4351575519144031,
+                -0.9589360279618278, 0.02680807390998832, 0.40670966862867725,
+                0.08594698464206306, -0.9646178134393677, -0.004187961953999249,
+                -0.09107912492873807, -0.6973104772728601, 0.40182616259664583,
+                0.4252750430946946, -0.9929333469713824, 0.009469988512801456,
+                0.1629509253594941, -0.9992272933803594, -0.6396333795127627,
+                -0.8014878928958706, 0.08007263129768477, -0.9998545103150432,
+                0.7985655600140281, -0.5584865734204564, -0.8666200187082093,
+            ]
 
             approx = MadNLP.ExactHessian
-            # Use AutoZygote() due to gradient dispatch MethodError with AutoForwardDiff().
-            # See GitHub issue #1137 for tracking.
             ad = SecondOrder(AutoForwardDiff(), AutoZygote())
 
             optfunc = OptimizationFunction(
@@ -614,17 +702,20 @@ end
                 ucons = zeros(np)
             )
 
-            opt = MadNLPOptimizer(
-                hessian_approximation = approx,
-                kkt_system = MadNLP.SparseKKTSystem
-            )
+            try
+                opt = MadNLPOptimizer(
+                    hessian_approximation = approx,
+                    kkt_system = MadNLP.SparseKKTSystem
+                )
 
-            sol = solve(prob, opt; abstol = 1.0e-6, maxiters = 300, verbose = false)
+                sol = solve(prob, opt; abstol = 1.0e-6, maxiters = 300, verbose = false)
 
-            @test SciMLBase.successful_retcode(sol)
-            @test sol.objective ≈ 49.165253058 rtol = 1.0e-2
+                @test SciMLBase.successful_retcode(sol) broken = true
+                @test (sol.objective ≈ 49.165253058) broken = true
+            catch e
+                @test e isa Exception broken = true
+            end
         end
-        =#
     end
 
     @testset "LBFGS with damped update" begin
