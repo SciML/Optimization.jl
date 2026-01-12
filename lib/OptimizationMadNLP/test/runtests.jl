@@ -134,9 +134,8 @@ end
         @test isapprox(sum(sol.u .^ 2), 40.0; atol = 1.0e-6)
     end
 
-    # AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff())) fails due to
-    # gradient dispatch MethodError. See GitHub issues #1137 and #1140 for tracking.
-    @testset "AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff())) - broken" begin
+    # AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff())) - previously broken, now fixed
+    @testset "AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff()))" begin
         ad = AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff()))
         optfunc = OptimizationFunction(objective, ad, cons = constraints)
         prob = OptimizationProblem(
@@ -147,17 +146,19 @@ end
             ucons = [Inf, 40.0]
         )
 
-        try
-            cache = init(prob, MadNLPOptimizer())
-            sol = OptimizationBase.solve!(cache)
-            @test SciMLBase.successful_retcode(sol) broken = true
-        catch e
-            @test e isa MethodError broken = true
-        end
+        cache = init(prob, MadNLPOptimizer())
+        sol = OptimizationBase.solve!(cache)
+        @test SciMLBase.successful_retcode(sol)
+
+        @test isapprox(sol.objective, 17.014017145179164; atol = 1.0e-6)
+        x = [1.0, 4.742999641809297, 3.8211499817883077, 1.3794082897556983]
+        @test isapprox(sol.u, x; atol = 1.0e-6)
+        @test prod(sol.u) >= 25.0 - 1.0e-6
+        @test isapprox(sum(sol.u .^ 2), 40.0; atol = 1.0e-6)
     end
 
-    # Dense tests with SecondOrder AD combinations. See GitHub issues #1137 and #1140 for tracking.
-    @testset "Dense KKT with $ad - broken" for ad in [
+    # Dense tests with SecondOrder AD combinations - previously broken, now fixed
+    @testset "Dense KKT with $ad" for ad in [
             SecondOrder(AutoForwardDiff(), AutoZygote()),
             SecondOrder(AutoForwardDiff(), AutoForwardDiff()),
             SecondOrder(AutoForwardDiff(), AutoReverseDiff()),
@@ -171,21 +172,23 @@ end
             ucons = [Inf, 40.0]
         )
 
-        try
-            cache = init(
-                prob,
-                MadNLPOptimizer(
-                    kkt_system = MadNLP.DenseKKTSystem,
-                    linear_solver = LapackCPUSolver
-                )
+        cache = init(
+            prob,
+            MadNLPOptimizer(
+                kkt_system = MadNLP.DenseKKTSystem,
+                linear_solver = LapackCPUSolver
             )
+        )
 
-            sol = OptimizationBase.solve!(cache)
-            @test SciMLBase.successful_retcode(sol) broken = true
-            @test isapprox(sol.objective, 17.014017145179164; atol = 1.0e-6) broken = true
-        catch e
-            @test e isa Exception broken = true
-        end
+        sol = OptimizationBase.solve!(cache)
+
+        @test SciMLBase.successful_retcode(sol)
+
+        @test isapprox(sol.objective, 17.014017145179164; atol = 1.0e-6)
+        x = [1.0, 4.742999641809297, 3.8211499817883077, 1.3794082897556983]
+        @test isapprox(sol.u, x; atol = 1.0e-6)
+        @test prod(sol.u) >= 25.0 - 1.0e-6
+        @test isapprox(sum(sol.u .^ 2), 40.0; atol = 1.0e-6)
     end
 end
 
