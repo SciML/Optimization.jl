@@ -2,7 +2,7 @@ pages = [
     "index.md",
     "getting_started.md",
     "Tutorials" => [
-        "tutorials/certification.md",
+        # "tutorials/certification.md",  # Temporarily disabled - SymbolicAnalysis.jl doesn't support Symbolics 7 yet
         "tutorials/constraints.md",
         "tutorials/ensemble.md",
         "tutorials/linearandinteger.md",
