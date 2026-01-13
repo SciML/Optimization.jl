@@ -48,7 +48,7 @@ function instantiate_function(
             end
         else
             let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p
-                (res, θ) -> gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
+                (res, θ, p = p) -> gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
             end
         end
     elseif g == true
@@ -74,7 +74,7 @@ function instantiate_function(
             end
         else
             let _prep_grad_fg = _prep_grad_fg, f = f, adtype = adtype, p = p
-                function (res, θ)
+                function (res, θ, p = p)
                     (y, _) = value_and_gradient!(f.f, res, _prep_grad_fg, adtype, θ, Constant(p))
                     return y
                 end
@@ -103,7 +103,7 @@ function instantiate_function(
             end
         else
             let _prep_hess = _prep_hess, f = f, soadtype = soadtype, p = p
-                (res, θ) -> hessian!(f.f, res, _prep_hess, soadtype, θ, Constant(p))
+                (res, θ, p = p) -> hessian!(f.f, res, _prep_hess, soadtype, θ, Constant(p))
             end
         end
     elseif h == true
@@ -124,7 +124,7 @@ function instantiate_function(
             end
         else
             let _prep_hess = _prep_hess, f = f, soadtype = soadtype, p = p
-                function (G, H, θ)
+                function (G, H, θ, p = p)
                     (y, _, _) = value_derivative_and_second_derivative!(
                         f.f, G, H, _prep_hess, soadtype, θ, Constant(p)
                     )
@@ -146,7 +146,7 @@ function instantiate_function(
             end
         else
             let _prep_hvp = _prep_hvp, f = f, soadtype = soadtype, p = p
-                (H, θ, v) -> only(hvp!(f.f, (H,), _prep_hvp, soadtype, θ, (v,), Constant(p)))
+                (H, θ, v, p = p) -> only(hvp!(f.f, (H,), _prep_hvp, soadtype, θ, (v,), Constant(p)))
             end
         end
     elseif hv == true
@@ -354,7 +354,7 @@ function instantiate_function(
             end
         else
             let lagrangian = lagrangian, _lag_prep = _lag_prep, soadtype = soadtype, cons_h_weighted! = cons_h_weighted!, p = p
-                function _lag_h!(H::AbstractMatrix, θ, σ, λ)
+                function _lag_h!(H::AbstractMatrix, θ, σ, λ, p = p)
                     return if σ == zero(eltype(θ))
                         # When σ=0, use the weighted sum function
                         cons_h_weighted!(H, θ, λ)
@@ -365,7 +365,7 @@ function instantiate_function(
                         )
                     end
                 end
-                function _lag_h!(h::AbstractVector, θ, σ, λ)
+                function _lag_h!(h::AbstractVector, θ, σ, λ, p = p)
                     H = hessian(
                         lagrangian, _lag_prep, soadtype, θ, Constant(σ), Constant(λ), Constant(p)
                     )
@@ -437,7 +437,7 @@ function instantiate_function(
             end
         else
             let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p
-                (θ) -> gradient(f.f, _prep_grad, adtype, θ, Constant(p))
+                (θ, p = p) -> gradient(f.f, _prep_grad, adtype, θ, Constant(p))
             end
         end
     elseif g == true
@@ -458,7 +458,7 @@ function instantiate_function(
             end
         else
             let _prep_grad_fg = _prep_grad_fg, f = f, adtype = adtype, p = p
-                function (θ)
+                function (θ, p = p)
                     (y, res) = value_and_gradient(f.f, _prep_grad_fg, adtype, θ, Constant(p))
                     return y, res
                 end
@@ -487,7 +487,7 @@ function instantiate_function(
             end
         else
             let _prep_hess = _prep_hess, f = f, soadtype = soadtype, p = p
-                (θ) -> hessian(f.f, _prep_hess, soadtype, θ, Constant(p))
+                (θ, p = p) -> hessian(f.f, _prep_hess, soadtype, θ, Constant(p))
             end
         end
     elseif h == true
@@ -508,7 +508,7 @@ function instantiate_function(
             end
         else
             let _prep_hess = _prep_hess, f = f, adtype = adtype, p = p
-                function (θ)
+                function (θ, p = p)
                     (y, G, H) = value_derivative_and_second_derivative(
                         f.f, _prep_hess, adtype, θ, Constant(p)
                     )
@@ -530,7 +530,7 @@ function instantiate_function(
             end
         else
             let _prep_hvp = _prep_hvp, f = f, soadtype = soadtype, p = p
-                (θ, v) -> only(hvp(f.f, _prep_hvp, soadtype, θ, (v,), Constant(p)))
+                (θ, v, p = p) -> only(hvp(f.f, _prep_hvp, soadtype, θ, (v,), Constant(p)))
             end
         end
     elseif hv == true
@@ -658,7 +658,7 @@ function instantiate_function(
             end
         else
             let lagrangian = lagrangian, _lag_prep = _lag_prep, soadtype = soadtype, cons_h! = cons_h!, p = p
-                function _lag_h!(θ, σ, λ)
+                function _lag_h!(θ, σ, λ, p = p)
                     if σ == zero(eltype(θ))
                         return λ .* cons_h!(θ)
                     else
