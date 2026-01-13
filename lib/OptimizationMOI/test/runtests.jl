@@ -352,7 +352,7 @@ end
     x0 = zeros(2)
     _p = [1.0, 100.0]
     
-    optprob = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+    optprob = OptimizationFunction(rosenbrock, AutoZygote())
     prob = OptimizationProblem(optprob, x0, _p)
     
     # Test with Ipopt using maxiters parameter
