@@ -28,7 +28,7 @@ function instantiate_gradient(f, adtype::ADTypes.AbstractADType)
     open_nrmlbrkt_ind = findfirst('(', adtypestr)
     open_squigllybrkt_ind = findfirst('{', adtypestr)
     open_brkt_ind = isnothing(open_squigllybrkt_ind) ? open_nrmlbrkt_ind :
-                    min(open_nrmlbrkt_ind, open_squigllybrkt_ind)
+        min(open_nrmlbrkt_ind, open_squigllybrkt_ind)
     adpkg = adtypestr[strtind:(open_brkt_ind - 1)]
     throw(ArgumentError("The passed automatic differentiation backend choice is not available. Please load the corresponding AD package $adpkg."))
 end
@@ -49,25 +49,31 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleLBFGS}
     ∇f = (u, _) -> ∇f_inner(u)
 
     nlprob = NonlinearProblem(∇f, cache.u0)
-    nlsol = solve(nlprob,
+    nlsol = solve(
+        nlprob,
         SimpleLimitedMemoryBroyden(;
             threshold = __get_threshold(cache.opt),
-            linesearch = Val(false));
+            linesearch = Val(false)
+        );
         maxiters = maxiters,
         abstol = abstol,
-        reltol = reltol)
+        reltol = reltol
+    )
     θ = nlsol.u
 
     stats = OptimizationBase.OptimizationStats(;
         iterations = maxiters,
         time = 0.0,
-        fevals = 0)
-    SciMLBase.build_solution(cache, cache.opt,
+        fevals = 0
+    )
+    return SciMLBase.build_solution(
+        cache, cache.opt,
         θ,
         cache.f(θ, cache.p);
         original = nlsol,
         retcode = nlsol.retcode,
-        stats = stats)
+        stats = stats
+    )
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleBFGS}
@@ -86,23 +92,28 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleBFGS}
     ∇f = (u, _) -> ∇f_inner(u)
 
     nlprob = NonlinearProblem(∇f, cache.u0)
-    nlsol = solve(nlprob,
+    nlsol = solve(
+        nlprob,
         SimpleBroyden(; linesearch = Val(false));
         maxiters = maxiters,
         abstol = abstol,
-        reltol = reltol)
+        reltol = reltol
+    )
     θ = nlsol.u
 
     stats = OptimizationBase.OptimizationStats(;
         iterations = maxiters,
         time = 0.0,
-        fevals = 0)
-    SciMLBase.build_solution(cache, cache.opt,
+        fevals = 0
+    )
+    return SciMLBase.build_solution(
+        cache, cache.opt,
         θ,
         cache.f(θ, cache.p);
         original = nlsol,
         retcode = nlsol.retcode,
-        stats = stats)
+        stats = stats
+    )
 end
 
 end
