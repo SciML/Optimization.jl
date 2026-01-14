@@ -1,3 +1,7 @@
+```@meta
+Draft = true
+```
+
 # Using SymbolicAnalysis.jl for convexity certificates
 
 In this tutorial, we will show how to use automatic convexity certification of the optimization problem using [SymbolicAnalysis.jl](https://github.com/SciML/SymbolicAnalysis.jl).
