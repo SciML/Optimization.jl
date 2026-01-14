@@ -45,6 +45,7 @@ jobs:
           - OptimizationSpeedMapping
           - OptimizationPolyalgorithms
           - OptimizationNLPModels
+          - OptimizationSimpleOptimization
         version:
           - '1.11'
           - 'lts'
@@ -143,6 +144,8 @@ jobs:
               dev_subpkg(["OptimizationBase", "OptimizationOptimJL", "OptimizationOptimisers"])
             elseif GROUP == "OptimizationNLPModels"
               dev_subpkg(["OptimizationBase", "OptimizationMOI", "OptimizationOptimJL", "OptimizationLBFGSB"])
+            elseif GROUP == "OptimizationSimpleOptimization"
+              dev_subpkg(["OptimizationBase"])
             end
           end
 
