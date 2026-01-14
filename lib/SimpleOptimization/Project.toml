@@ -1,4 +1,4 @@
-name = "OptimizationSimpleOptimization"
+name = "SimpleOptimization"
 uuid = "510db2f7-4254-4e34-bbda-04240c91ca8f"
 authors = ["Utkarsh <rajpututkarsh530@gmail.com> and contributors"]
 version = "1.0.0"
@@ -18,8 +18,8 @@ ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 OptimizationBase = {path = "../OptimizationBase"}
 
 [extensions]
-OptimizationSimpleOptimizationEnzymeExt = "Enzyme"
-OptimizationSimpleOptimizationForwardDiffExt = "ForwardDiff"
+SimpleOptimizationEnzymeExt = "Enzyme"
+SimpleOptimizationForwardDiffExt = "ForwardDiff"
 
 [compat]
 ADTypes = "1"

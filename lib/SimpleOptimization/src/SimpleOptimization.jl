@@ -1,4 +1,4 @@
-module OptimizationSimpleOptimization
+module SimpleOptimization
 
 using Reexport
 @reexport using OptimizationBase
