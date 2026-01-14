@@ -1,5 +1,5 @@
 using Documenter, Optimization
-using OptimizationLBFGSB, OptimizationSophia
+using OptimizationLBFGSB, OptimizationSophia, SimpleOptimization
 
 cp(joinpath(@__DIR__, "Manifest.toml"), joinpath(@__DIR__, "src/assets/Manifest.toml"), force = true)
 cp(joinpath(@__DIR__, "Project.toml"), joinpath(@__DIR__, "src/assets/Project.toml"), force = true)
@@ -11,7 +11,7 @@ makedocs(
     authors = "Chris Rackauckas, Vaibhav Kumar Dixit et al.",
     modules = [
         Optimization, Optimization.SciMLBase, Optimization.OptimizationBase, Optimization.ADTypes,
-        OptimizationLBFGSB, OptimizationSophia,
+        OptimizationLBFGSB, OptimizationSophia, SimpleOptimization,
     ],
     clean = true, doctest = false, linkcheck = true,
     warnonly = [:missing_docs, :cross_references],

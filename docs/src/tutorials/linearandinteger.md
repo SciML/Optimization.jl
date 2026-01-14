@@ -38,22 +38,37 @@ The ultimate objective is to maximize the company's wealth in June, denoted by t
 ```@example linear
 using OptimizationBase, OptimizationMOI, ModelingToolkit, HiGHS, LinearAlgebra, SciMLBase
 
-@variables u[1:5] [bounds = (0.0, 100.0)]
-@variables v[1:3] [bounds = (0.0, Inf)]
-@variables w[1:5] [bounds = (0.0, Inf)]
-@variables m [bounds = (0.0, Inf)]
+# Define variables with bounds
+# u: line of credit (up to 100k), v: commercial paper, w: surplus, m: final wealth
+@variables begin
+    u1 = 0.0, [bounds = (0.0, 100.0)]
+    u2 = 0.0, [bounds = (0.0, 100.0)]
+    u3 = 0.0, [bounds = (0.0, 100.0)]
+    u4 = 0.0, [bounds = (0.0, 100.0)]
+    u5 = 0.0, [bounds = (0.0, 100.0)]
+    v1 = 0.0, [bounds = (0.0, Inf)]
+    v2 = 0.0, [bounds = (0.0, Inf)]
+    v3 = 0.0, [bounds = (0.0, Inf)]
+    w1 = 0.0, [bounds = (0.0, Inf)]
+    w2 = 0.0, [bounds = (0.0, Inf)]
+    w3 = 0.0, [bounds = (0.0, Inf)]
+    w4 = 0.0, [bounds = (0.0, Inf)]
+    w5 = 0.0, [bounds = (0.0, Inf)]
+    m = 300.0, [bounds = (0.0, Inf)]
+end
 
-cons = [u[1] + v[1] - w[1] ~ 150 # January
-        u[2] + v[2] - w[2] - 1.01u[1] + 1.003w[1] ~ 100 # February
-        u[3] + v[3] - w[3] - 1.01u[2] + 1.003w[2] ~ -200 # March
-        u[4] - w[4] - 1.02v[1] - 1.01u[3] + 1.003w[3] ~ 200 # April
-        u[5] - w[5] - 1.02v[2] - 1.01u[4] + 1.003w[4] ~ -50 # May
-        -m - 1.02v[3] - 1.01u[5] + 1.003w[5] ~ -300]
+cons = [u1 + v1 - w1 ~ 150 # January
+        u2 + v2 - w2 - 1.01u1 + 1.003w1 ~ 100 # February
+        u3 + v3 - w3 - 1.01u2 + 1.003w2 ~ -200 # March
+        u4 - w4 - 1.02v1 - 1.01u3 + 1.003w3 ~ 200 # April
+        u5 - w5 - 1.02v2 - 1.01u4 + 1.003w4 ~ -50 # May
+        -m - 1.02v3 - 1.01u5 + 1.003w5 ~ -300]
 
-@named optsys = OptimizationSystem(m, [u..., v..., w..., m], [], constraints = cons)
+@named optsys = OptimizationSystem(
+    m, [u1, u2, u3, u4, u5, v1, v2, v3, w1, w2, w3, w4, w5, m], [], constraints = cons)
 optsys = complete(optsys)
-optprob = OptimizationProblem(optsys,
-    vcat(fill(0.0, 13), 300.0);
+
+optprob = OptimizationProblem(optsys, [];
     grad = true,
     hess = true,
     sense = SciMLBase.MaxSense)
