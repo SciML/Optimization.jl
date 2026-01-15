@@ -24,7 +24,7 @@ prob = OptimizationProblem(
     x0, nothing, lcons = [-1e-6], ucons = [1e-6])  # Small tolerance instead of exact equality
 
 sol = solve(prob, ScipyCOBYLA())
-@show sol.u, sol.objective</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">([0.9999995099640485, 1.1653740143777096e-5], 1.2462829129061485e-10)</code></pre><h3 id="Differential-evolution-(global)-with-custom-options"><a class="docs-heading-anchor" href="#Differential-evolution-(global)-with-custom-options">Differential evolution (global) with custom options</a><a id="Differential-evolution-(global)-with-custom-options-1"></a><a class="docs-heading-anchor-permalink" href="#Differential-evolution-(global)-with-custom-options" title="Permalink"></a></h3><pre><code class="language-julia hljs">using Optimization, OptimizationSciPy, Random, Statistics
+@show sol.u, sol.objective</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">([0.9999995099640485, 1.1653740143742524e-5], 1.2462829129061485e-10)</code></pre><h3 id="Differential-evolution-(global)-with-custom-options"><a class="docs-heading-anchor" href="#Differential-evolution-(global)-with-custom-options">Differential evolution (global) with custom options</a><a id="Differential-evolution-(global)-with-custom-options-1"></a><a class="docs-heading-anchor-permalink" href="#Differential-evolution-(global)-with-custom-options" title="Permalink"></a></h3><pre><code class="language-julia hljs">using Optimization, OptimizationSciPy, Random, Statistics
 Random.seed!(123)
 
 ackley(x, p) = -20exp(-0.2*sqrt(mean(x .^ 2))) - exp(mean(cos.(2π .* x))) + 20 + ℯ
