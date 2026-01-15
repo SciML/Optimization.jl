@@ -2492,9 +2492,9 @@ version = "0.4.7"
 
 [[deps.Optimization]]
 deps = ["ADTypes", "ArrayInterface", "ConsoleProgressMonitor", "DocStringExtensions", "LinearAlgebra", "Logging", "LoggingExtras", "OptimizationBase", "Printf", "Reexport", "SciMLBase", "SparseArrays", "TerminalLoggers"]
-path = "/home/chrisrackauckas/github-runners/deepsea3-5/_work/Optimization.jl/Optimization.jl"
+path = "/home/runner/work/Optimization.jl/Optimization.jl"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-version = "5.4.0"
+version = "5.3.0"
 
 [[deps.OptimizationAuglag]]
 deps = ["LinearAlgebra", "OptimizationBase", "Reexport", "SciMLBase"]
