@@ -59,7 +59,7 @@ Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [sources]
-Optimization = {path = "/home/runner/work/Optimization.jl/Optimization.jl"}
+Optimization = {path = "/home/chrisrackauckas/github-runners/demeter4-9/_work/Optimization.jl/Optimization.jl"}
 OptimizationAuglag = {path = "../lib/OptimizationAuglag"}
 OptimizationBBO = {path = "../lib/OptimizationBBO"}
 OptimizationBase = {path = "../lib/OptimizationBase"}
