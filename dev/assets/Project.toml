@@ -53,13 +53,13 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 SciMLSensitivity = "1ed8b502-d754-442c-8d5d-10ac956f44a1"
-SymbolicAnalysis = "4297ee4d-0239-47d8-ba5d-195ecdf594fe"
+SimpleOptimization = "510db2f7-4254-4e34-bbda-04240c91ca8f"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [sources]
-Optimization = {path = "/home/runner/work/Optimization.jl/Optimization.jl"}
+Optimization = {path = "/home/chrisrackauckas/github-runners/deepsea3-5/_work/Optimization.jl/Optimization.jl"}
 OptimizationAuglag = {path = "../lib/OptimizationAuglag"}
 OptimizationBBO = {path = "../lib/OptimizationBBO"}
 OptimizationBase = {path = "../lib/OptimizationBase"}
@@ -86,6 +86,7 @@ OptimizationQuadDIRECT = {path = "../lib/OptimizationQuadDIRECT"}
 OptimizationSciPy = {path = "../lib/OptimizationSciPy"}
 OptimizationSophia = {path = "../lib/OptimizationSophia"}
 OptimizationSpeedMapping = {path = "../lib/OptimizationSpeedMapping"}
+SimpleOptimization = {path = "../lib/SimpleOptimization"}
 
 [compat]
 ADTypes = "1"
@@ -103,8 +104,8 @@ Lux = "1"
 MLUtils = "0.4.4"
 Manifolds = "0.10"
 Manopt = "0.5"
-ModelingToolkit = "10.23"
-NLPModels = "0.21"
+ModelingToolkit = "10.23, 11"
+NLPModels = "0.21, 0.22"
 NLPModelsTest = "0.10"
 NLopt = "0.6, 1"
 Optimization = "5"
@@ -114,9 +115,10 @@ OptimizationBase = "4"
 OptimizationCMAEvolutionStrategy = "0.3"
 OptimizationEvolutionary = "0.4"
 OptimizationGCMAES = "0.3"
-OptimizationIpopt = "0.2"
-OptimizationMOI = "0.5"
-OptimizationMadNLP = "0.3"
+OptimizationIpopt = "0.2, 1"
+OptimizationLBFGSB = "1"
+OptimizationMOI = "0.5, 1"
+OptimizationMadNLP = "0.3, 1"
 OptimizationManopt = "1"
 OptimizationMetaheuristics = "0.3"
 OptimizationMultistartOptimization = "0.3"
@@ -139,7 +141,7 @@ Random = "1"
 ReverseDiff = ">= 1.9.0"
 SciMLBase = "2.122.1"
 SciMLSensitivity = "7"
-SymbolicAnalysis = "0.3"
-Symbolics = "6"
+SimpleOptimization = "1"
+Symbolics = "7"
 Tracker = ">= 0.2"
 Zygote = ">= 0.5"
