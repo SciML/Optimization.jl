@@ -42,7 +42,6 @@ pages = [
         "ODE.jl" => "optimization_packages/ode.md",
         "Optim.jl" => "optimization_packages/optim.md",
         "Optimisers.jl" => "optimization_packages/optimisers.md",
-        "Optimization.jl" => "optimization_packages/optimization.md",
         "Polyalgorithms.jl" => "optimization_packages/polyopt.md",
         "PRIMA.jl" => "optimization_packages/prima.md",
         "PyCMA.jl" => "optimization_packages/pycma.md",
