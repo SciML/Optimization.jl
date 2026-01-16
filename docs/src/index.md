@@ -19,19 +19,22 @@ features are added regularly.
 
 ## Installation
 
-Assuming that you already have Julia correctly installed, it suffices to import
-Optimization.jl in the standard way:
+In most instances you'll want to use some solver directly. For example, to use
+the Optim set of solvers, you'd do:
 
 ```julia
-import Pkg
-Pkg.add("Optimization")
+Pkg.add("OptimizationOptimJL")
 ```
 
-The packages relevant to the core functionality of Optimization.jl will be imported
-accordingly and, in most cases, you do not have to worry about the manual
-installation of dependencies. [Optimization.jl](@ref) natively offers a LBFGS solver
-but for more solver choices (discussed below in Optimization Packages), you will need
-to add the specific wrapper packages.
+See the solver lists for more details. In many scenarios it's recommended to
+have some automatic differentiaton (AD) package installed, most tutorials will 
+use some form AD and thus require installing the associated AD package.
+AD choices are made with ADTypes, and thus it's recommended you also add the
+`ADTypes.jl` package for most use cases.
+
+Optimization.jl is simply a bundle/interface over many of these dependencies.
+It may add some optional higher level behavoir in the future but at this time
+the top level package does not add any extra behavior.
 
 ## Contributing
 
