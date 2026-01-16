@@ -296,14 +296,15 @@ function __map_optimizer_args(
     end
 
     # Override with common interface arguments if provided
-    !isnothing(reltol) && Ipopt.AddIpoptNumOption(prob, "tol", reltol)
-    !isnothing(maxiters) && Ipopt.AddIpoptIntOption(prob, "max_iter", maxiters)
-    !isnothing(maxtime) && Ipopt.AddIpoptNumOption(prob, "max_wall_time", Float64(maxtime))
+    optkeys = keys(opt.additional_options)
+    !isnothing(reltol) && !in("tol", optkeys) && Ipopt.AddIpoptNumOption(prob, "tol", reltol)
+    !isnothing(maxiters) && !in("max_iter", optkeys) && Ipopt.AddIpoptIntOption(prob, "max_iter", maxiters)
+    !isnothing(maxtime) && !in("max_wall_time", optkeys) && Ipopt.AddIpoptNumOption(prob, "max_wall_time", Float64(maxtime))
 
     # Handle verbose override
-    if verbose isa Bool
+    if verbose isa Bool && !in("print_level", optkeys)
         Ipopt.AddIpoptIntOption(prob, "print_level", verbose * 5)
-    elseif verbose isa Int
+    elseif verbose isa Int && !in("print_level", optkeys)
         Ipopt.AddIpoptIntOption(prob, "print_level", verbose)
     end
 
