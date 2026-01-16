@@ -1,6 +1,6 @@
 name = "OptimizationMOI"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 
 [deps]
