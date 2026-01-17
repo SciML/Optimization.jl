@@ -44,6 +44,9 @@ function SciMLBase.requiresconshess(
     )
     return true
 end
+OptimizationBase.supports_sense(
+    ::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes}
+) = true
 
 function SciMLBase.allowsbounds(
         opt::Union{

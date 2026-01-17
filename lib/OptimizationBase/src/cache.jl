@@ -68,8 +68,14 @@ function OptimizationCache(
         an explicit `SecondOrder` ADtype is recommended."
     end
 
+    f_base = if prob.sense === SciMLBase.MaxSense && !supports_sense(opt)
+        apply_sense(prob.f, prob.sense)
+    else
+        prob.f
+    end
+
     f = OptimizationBase.instantiate_function(
-        prob.f, reinit_cache, prob.f.adtype, num_cons;
+        f_base, reinit_cache, f_base.adtype, num_cons;
         g = SciMLBase.requiresgradient(opt), h = SciMLBase.requireshessian(opt),
         hv = SciMLBase.requireshessian(opt), fg = SciMLBase.allowsfg(opt),
         fgh = SciMLBase.allowsfgh(opt), cons_j = SciMLBase.requiresconsjac(opt), cons_h = SciMLBase.requiresconshess(opt),
