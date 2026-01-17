@@ -4,6 +4,115 @@ function get_maxiters(data)
         typemax(Int) : length(data)
 end
 
+# Sense handling
+supports_sense(::Any) = false
+
+function apply_sense(f::OptimizationFunction{IIP}, sense) where {IIP}
+    if sense !== SciMLBase.MaxSense
+        return f
+    end
+
+    objf = (args...) -> -f.f(args...)
+
+    grad = if f.grad === nothing
+        nothing
+    elseif IIP
+        function (G, args...)
+            f.grad(G, args...)
+            G .*= -one(eltype(G))
+            return G
+        end
+    else
+        (args...) -> -f.grad(args...)
+    end
+
+    fg = if f.fg === nothing
+        nothing
+    elseif IIP
+        function (G, args...)
+            y = f.fg(G, args...)
+            G .*= -one(eltype(G))
+            return -y
+        end
+    else
+        function (args...)
+            y, g = f.fg(args...)
+            return -y, -g
+        end
+    end
+
+    hess = if f.hess === nothing
+        nothing
+    elseif IIP
+        function (H, args...)
+            f.hess(H, args...)
+            H .*= -one(eltype(H))
+            return H
+        end
+    else
+        (args...) -> -f.hess(args...)
+    end
+
+    fgh = if f.fgh === nothing
+        nothing
+    elseif IIP
+        function (G, H, args...)
+            y = f.fgh(G, H, args...)
+            G .*= -one(eltype(G))
+            H .*= -one(eltype(H))
+            return -y
+        end
+    else
+        function (args...)
+            y, g, h = f.fgh(args...)
+            return -y, -g, -h
+        end
+    end
+
+    hv = if f.hv === nothing
+        nothing
+    elseif IIP
+        function (H, args...)
+            f.hv(H, args...)
+            H .*= -one(eltype(H))
+            return H
+        end
+    else
+        (args...) -> -f.hv(args...)
+    end
+
+    lag_h = if f.lag_h === nothing
+        nothing
+    elseif IIP
+        (H, x, σ, μ, args...) -> f.lag_h(H, x, -σ, μ, args...)
+    else
+        (x, σ, μ, args...) -> f.lag_h(x, -σ, μ, args...)
+    end
+
+    return OptimizationFunction{IIP}(
+        objf, f.adtype;
+        grad = grad, fg = fg, hess = hess, hv = hv, fgh = fgh,
+        cons = f.cons, cons_j = f.cons_j, cons_jvp = f.cons_jvp,
+        cons_vjp = f.cons_vjp, cons_h = f.cons_h,
+        hess_prototype = f.hess_prototype,
+        cons_jac_prototype = f.cons_jac_prototype,
+        cons_hess_prototype = f.cons_hess_prototype,
+        observed = f.observed,
+        expr = f.expr,
+        cons_expr = f.cons_expr,
+        sys = f.sys,
+        lag_h = lag_h,
+        lag_hess_prototype = f.lag_hess_prototype,
+        hess_colorvec = f.hess_colorvec,
+        cons_jac_colorvec = f.cons_jac_colorvec,
+        cons_hess_colorvec = f.cons_hess_colorvec,
+        lag_hess_colorvec = f.lag_hess_colorvec,
+        initialization_data = f.initialization_data
+    )
+end
+
+apply_sense(f::MultiObjectiveOptimizationFunction, sense) = f
+
 decompose_trace(trace) = trace
 
 function _check_and_convert_maxiters(maxiters)
@@ -99,4 +208,15 @@ function deduce_retcode(retcode::Symbol)
     else
         return ReturnCode.Failure
     end
+end
+
+function SciMLBase.build_solution(cache::OptimizationCache, alg, u, objective; kwargs...)
+    if cache.sense === MaxSense && !supports_sense(cache.opt)
+        objective = -objective
+    end
+    return invoke(
+        SciMLBase.build_solution,
+        Tuple{SciMLBase.AbstractOptimizationCache, typeof(alg), typeof(u), typeof(objective)},
+        cache, alg, u, objective; kwargs...
+    )
 end

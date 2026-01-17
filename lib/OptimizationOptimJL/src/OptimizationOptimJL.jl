@@ -19,6 +19,9 @@ SciMLBase.has_init(opt::Optim.ConstrainedOptimizer) = true
 SciMLBase.allowscallback(opt::Optim.AbstractOptimizer) = true
 SciMLBase.allowscallback(opt::Union{Optim.Fminbox, Optim.SAMIN}) = true
 SciMLBase.allowscallback(opt::Optim.ConstrainedOptimizer) = true
+OptimizationBase.supports_sense(
+    ::Union{Optim.AbstractOptimizer, Optim.Fminbox, Optim.SAMIN, Optim.ConstrainedOptimizer}
+) = true
 
 function SciMLBase.requiresgradient(opt::Optim.AbstractOptimizer)
     return !(opt isa Optim.ZerothOrderOptimizer)

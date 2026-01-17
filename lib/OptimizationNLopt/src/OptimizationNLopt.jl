@@ -10,6 +10,7 @@ using OptimizationBase: deduce_retcode
 SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 SciMLBase.has_init(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 SciMLBase.allowscallback(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
+OptimizationBase.supports_sense(::Union{NLopt.Algorithm, NLopt.Opt}) = true
 
 function SciMLBase.requiresgradient(opt::Union{NLopt.Algorithm, NLopt.Opt})
     # https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16

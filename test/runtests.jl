@@ -41,6 +41,9 @@ end
             @safetestset "Interface Compatibility" begin
                 include("interface_tests.jl")
             end
+            @safetestset "Sense Handling" begin
+                include("sense_tests.jl")
+            end
         end
     elseif GROUP == "GPU"
         activate_downstream_env()
