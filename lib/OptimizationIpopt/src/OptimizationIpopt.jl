@@ -172,6 +172,7 @@ function SciMLBase.has_init(alg::IpoptOptimizer)
 end
 
 SciMLBase.allowscallback(alg::IpoptOptimizer) = true
+OptimizationBase.supports_sense(::IpoptOptimizer) = true
 
 # Compatibility with OptimizationBase@v3
 function SciMLBase.supports_opt_cache_interface(alg::IpoptOptimizer)
