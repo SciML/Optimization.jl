@@ -13,13 +13,18 @@ Random.seed!(1234)
     sol = solve(prob, CMAES(μ = 40, λ = 100), abstol = 1.0e-15)
     @test 10 * sol.objective < l1
 
+    # Test with bounds - initial point is outside bounds, but algorithm should
+    # generate a random initial population within the bounds and find a good solution
     x0 = [-0.7, 0.3]
     prob = OptimizationBase.OptimizationProblem(
         optprob, x0, _p, lb = [0.0, 0.0],
         ub = [0.5, 0.5]
     )
     sol = solve(prob, CMAES(μ = 50, λ = 60))
-    @test sol.u == zeros(2)
+    # Within bounds [0,0.5]x[0,0.5], the minimum of Rosenbrock is at approximately
+    # [0.5, 0.25] with f ≈ 0.25, which is much better than f([0,0]) = 1.0
+    @test sol.objective < 1.0
+    @test all(sol.u .>= 0.0) && all(sol.u .<= 0.5)
 
     x0 = zeros(2)
     cons_circ = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
