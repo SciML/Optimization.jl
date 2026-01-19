@@ -291,6 +291,13 @@ end
         end
     end
 
+    @testset "Print levels" begin
+        for print_level in [false, 0, 3, 5]
+            sol = solve(prob, IpoptOptimizer(additional_options=Dict("print_level" => 3)))
+            @test SciMLBase.successful_retcode(sol)
+        end
+    end
+
     @testset "Timing statistics" begin
         sol = solve(prob, IpoptOptimizer(print_timing_statistics = "yes"))
         @test SciMLBase.successful_retcode(sol)
