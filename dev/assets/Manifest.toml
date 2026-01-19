@@ -800,9 +800,9 @@ version = "1.0.5"
 
 [[deps.Enzyme]]
 deps = ["CEnum", "EnzymeCore", "Enzyme_jll", "GPUCompiler", "InteractiveUtils", "LLVM", "Libdl", "LinearAlgebra", "ObjectFile", "PrecompileTools", "Preferences", "Printf", "Random", "SparseArrays"]
-git-tree-sha1 = "e629aa6564164aac3ab6a97e53b1faa57de96401"
+git-tree-sha1 = "31462b724c721405fca377db6a1d2ac8a0f01586"
 uuid = "7da242da-08ed-463a-9acd-ee780be4f1d9"
-version = "0.13.116"
+version = "0.13.117"
 
     [deps.Enzyme.extensions]
     EnzymeBFloat16sExt = "BFloat16s"
@@ -1078,9 +1078,9 @@ version = "0.2.0"
 
 [[deps.GPUCompiler]]
 deps = ["ExprTools", "InteractiveUtils", "LLVM", "Libdl", "Logging", "PrecompileTools", "Preferences", "Scratch", "Serialization", "TOML", "Tracy", "UUIDs"]
-git-tree-sha1 = "6e5a25bc455da8e8d88b6b7377e341e9af1929f0"
+git-tree-sha1 = "9c83131d543f8275059baecbf98f8af43bd44783"
 uuid = "61eb1bfa-7361-4325-ad38-22787b887f55"
-version = "1.7.5"
+version = "1.7.6"
 
 [[deps.GR]]
 deps = ["Artifacts", "Base64", "DelimitedFiles", "Downloads", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Preferences", "Printf", "Qt6Wayland_jll", "Random", "Serialization", "Sockets", "TOML", "Tar", "Test", "p7zip_jll"]
