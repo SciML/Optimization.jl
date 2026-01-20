@@ -266,8 +266,6 @@ function solve_call(_prob, alg, args...; merge_callbacks = true, kwargshandle = 
         kwargs = isempty(_prob.kwargs) ? kwargs : merge(values(_prob.kwargs), kwargs)
     end
 
-    checkkwargs(kwargshandle; kwargs...)
-
     if SciMLBase.has_init(alg)
         solve!(init(_prob, alg, args...; kwargs...))
     else
