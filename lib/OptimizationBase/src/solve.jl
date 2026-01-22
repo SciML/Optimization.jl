@@ -98,7 +98,6 @@ function solve(prob::SciMLBase.OptimizationProblem, args...; sensealg = nothing,
 
     u0 = u0 !== nothing ? u0 : prob.u0
     p = p !== nothing ? p : prob.p
-
     if wrap isa Val{true}
         wrap_sol(solve_up(prob,
             sensealg,
@@ -113,7 +112,7 @@ function solve(prob::SciMLBase.OptimizationProblem, args...; sensealg = nothing,
             u0,
             p,
             args...;
-            originator = SciMLBase.ChainRulesOrginator(),
+            originator = SciMLBase.ChainRulesOriginator(),
             kwargs...)
     end
 end 
@@ -325,9 +324,9 @@ end
 
 function _solve_adjoint(_prob, sensealg, u0, p, originator, args...; merge_callbacks = true, 
     kwargs...)
-    alg = extract_alg(args, kwargs, prob.kwargs)
+    alg = extract_opt_alg(args, kwargs, _prob.kwargs)
     
-    _prob = get_concrete_problem(prob; u0 = u0, p = p, kwargs...)
+    _prob = get_concrete_problem(_prob; u0 = u0, p = p, kwargs...)
 
     if has_kwargs(_prob)
         kwargs = isempty(_prob.kwargs) ? kwargs : merge(values(_prob.kwargs), kwargs)
