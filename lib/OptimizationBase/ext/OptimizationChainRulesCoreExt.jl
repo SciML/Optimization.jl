@@ -1,8 +1,8 @@
-module OptimizationBaseChainRulesCoreExt
+module OptimizationChainRulesCoreExt
 
 using OptimizationBase
 using SciMLBase
-using SciMLBase: AbstractSensitivityAlgorithm
+using SciMLBase: AbstractSensitivityAlgorithm, AbstractOptimizationProblem
 
 import ChainRulesCore
 import ChainRulesCore: NoTangent, Tangent
