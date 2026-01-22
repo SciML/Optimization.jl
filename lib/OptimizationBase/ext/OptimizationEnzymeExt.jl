@@ -830,7 +830,6 @@ Enzyme.EnzymeRules.inactive_kwarg(::typeof(OptimizationBase.solve_up), prob, sen
 
 Enzyme.EnzymeRules.has_easy_rule(::typeof(OptimizationBase.solve_up), prob, sensalg::Union{Nothing,SciMLBase.AbstractSensitivityAlgorithm}, u0, p, args...; kwargs...) = nothing
 
-
 function Enzyme.EnzymeRules.augmented_primal(
     config::Enzyme.EnzymeRules.RevConfigWidth{1},
     func::Const{typeof(OptimizationBase.solve_up)}, RTA::Type{Duplicated{RT}}, prob,
@@ -868,7 +867,7 @@ end
 
 function Enzyme.EnzymeRules.reverse(
     config::Enzyme.EnzymeRules.RevConfigWidth{1},
-    func::Const{typeof(OptimizationBase.solve_up)}, ::Type{Duplicated{RT}}, tape, prob, 
+    func::Const{typeof(OptimizationBase.solve_up)}, ::Type{<:Enzyme.Annotation{RT}}, tape, prob, 
     sensealg::Union{
         Const{Nothing}, Const{<:SciMLBase.AbstractSensitivityAlgorithm},
     },
