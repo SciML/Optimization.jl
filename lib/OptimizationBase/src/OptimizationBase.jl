@@ -16,7 +16,8 @@ import SciMLBase: solve, init, solve!, __init, __solve,
     requiresconshess, wrap_sol, has_kwargs,
     get_root_indp, get_updated_symbolic_problem,
     get_concrete_p, get_concrete_u0, promote_u0,
-    KeywordArgError
+    KeywordArgError, extract_alg, 
+    _concrete_solve_adjoint, _concrete_solve_forward
 
 using SymbolicIndexingInterface: SymbolicIndexingInterface
 
