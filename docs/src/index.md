@@ -27,13 +27,13 @@ Pkg.add("OptimizationOptimJL")
 ```
 
 See the solver lists for more details. In many scenarios it's recommended to
-have some automatic differentiaton (AD) package installed, most tutorials will 
+have some automatic differentiation (AD) package installed, most tutorials will 
 use some form AD and thus require installing the associated AD package.
 AD choices are made with ADTypes, and thus it's recommended you also add the
 `ADTypes.jl` package for most use cases.
 
 Optimization.jl is simply a bundle/interface over many of these dependencies.
-It may add some optional higher level behavoir in the future but at this time
+It may add some optional higher level behavior in the future but at this time
 the top level package does not add any extra behavior.
 
 ## Contributing
