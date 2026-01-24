@@ -1,7 +1,7 @@
 name = "OptimizationOptimJL"
 uuid = "36348300-93cb-4f02-beb5-3c3902f8871e"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.4.9"
+version = "0.5.0"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
@@ -21,7 +21,7 @@ ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 julia = "1.10"
 OptimizationBase = "4.0.2"
 SparseArrays = "1.6"
-Optim = "1.12, 2"
+Optim = "2"
 Reexport = "1.2"
 SciMLBase = "2.122.1"
 

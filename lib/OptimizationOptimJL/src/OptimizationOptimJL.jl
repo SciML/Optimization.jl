@@ -3,80 +3,33 @@ module OptimizationOptimJL
 using Reexport
 @reexport using Optim, OptimizationBase
 using SciMLBase, SparseArrays
-decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
-decompose_trace(trace::Optim.OptimizationState) = trace
 
-# Helper to extract callback information from both Optim v1 (trace-based) and v2 (state-based) callbacks.
-# In Optim v1, callbacks receive an OptimizationTrace or OptimizationState (trace entry) with a metadata dict.
-# In Optim v2, callbacks receive the optimizer state directly (e.g., BFGSState, NelderMeadState).
-function _extract_callback_state(state_or_trace, opt, iter_counter)
-    if state_or_trace isa Optim.OptimizationTrace || state_or_trace isa Optim.OptimizationState
-        # Optim v1 path
-        trace_state = decompose_trace(state_or_trace)
-        metadata = trace_state.metadata
-        if opt isa Optim.NelderMead
-            θ = metadata["centroid"]
-        else
-            θ = metadata["x"]
-        end
-        loss_val = SciMLBase.value(trace_state.value)
-        iter = trace_state.iteration
-        g = get(metadata, "g(x)", nothing)
-        h = get(metadata, "h(x)", nothing)
-    else
-        # Optim v2 path - state is an AbstractOptimizerState subtype
-        if opt isa Optim.NelderMead && hasproperty(state_or_trace, :x_centroid)
-            θ = state_or_trace.x_centroid
-        else
-            θ = state_or_trace.x
-        end
-        loss_val = SciMLBase.value(state_or_trace.f_x)
-        iter = iter_counter[]
-        g = hasproperty(state_or_trace, :g_x) ? state_or_trace.g_x : nothing
-        h = hasproperty(state_or_trace, :H_x) ? state_or_trace.H_x : nothing
-    end
-    return (; θ, loss_val, iter, g, h, original = state_or_trace)
-end
-
-# Helper to construct an objective with Hessian-vector product support.
-# In Optim v1, TwiceDifferentiableHV was a separate type.
-# In Optim v2, TwiceDifferentiable gained an `hv` field directly.
+# Construct a TwiceDifferentiable with Hessian-vector product support for KrylovTrustRegion.
 function _make_hv_objective(f, fg!, hv!, x0)
-    if isdefined(Optim, :TwiceDifferentiableHV)
-        # Optim v1 path
-        return Optim.TwiceDifferentiableHV(f, fg!, hv!, x0)
-    else
-        # Optim v2 path - construct TwiceDifferentiable with hv field
-        NLB = Optim.NLSolversBase
-        u0_type = eltype(x0)
-        F = real(zero(u0_type))
-        G = NLB.alloc_DF(x0, F)
-        H = NLB.alloc_H(x0, F)
-        g! = let fg! = fg!
-            function (_g, _x)
-                fg!(_g, _x)
-                return nothing
-            end
+    NLB = Optim.NLSolversBase
+    u0_type = eltype(x0)
+    F = real(zero(u0_type))
+    G = NLB.alloc_DF(x0, F)
+    H = NLB.alloc_H(x0, F)
+    g! = let fg! = fg!
+        function (_g, _x)
+            fg!(_g, _x)
+            return nothing
         end
-        h! = nothing
-        dfh! = nothing
-        fdfh! = nothing
-        x_f = fill!(similar(x0, u0_type), NaN)
-        x_df = fill!(similar(x0, u0_type), NaN)
-        x_jvp = fill!(similar(x0, u0_type), NaN)
-        v_jvp = fill!(similar(x0, u0_type), NaN)
-        x_h = fill!(similar(x0, u0_type), NaN)
-        x_hvp = fill!(similar(x0, u0_type), NaN)
-        v_hvp = fill!(similar(x0, u0_type), NaN)
-        HVP = copy(G)
-        JVP = F
-        return NLB.TwiceDifferentiable(
-            f, g!, fg!, nothing, nothing, dfh!, fdfh!, h!, hv!,
-            F, copy(G), JVP, copy(H), HVP,
-            x_f, x_df, x_jvp, v_jvp, x_h, x_hvp, v_hvp,
-            0, 0, 0, 0, 0
-        )
     end
+    x_f = fill!(similar(x0, u0_type), NaN)
+    x_df = fill!(similar(x0, u0_type), NaN)
+    x_jvp = fill!(similar(x0, u0_type), NaN)
+    v_jvp = fill!(similar(x0, u0_type), NaN)
+    x_h = fill!(similar(x0, u0_type), NaN)
+    x_hvp = fill!(similar(x0, u0_type), NaN)
+    v_hvp = fill!(similar(x0, u0_type), NaN)
+    return NLB.TwiceDifferentiable(
+        f, g!, fg!, nothing, nothing, nothing, nothing, nothing, hv!,
+        F, copy(G), F, copy(H), copy(G),
+        x_f, x_df, x_jvp, v_jvp, x_h, x_hvp, v_hvp,
+        0, 0, 0, 0, 0
+    )
 end
 
 SciMLBase.allowsconstraints(::IPNewton) = true
@@ -213,19 +166,20 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
         error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
     iter_counter = Ref(0)
-    function _cb(state_or_trace)
+    function _cb(optim_state)
         iter_counter[] += 1
-        cb_state = _extract_callback_state(state_or_trace, cache.opt, iter_counter)
+        θ = cache.opt isa Optim.NelderMead ? optim_state.x_centroid : optim_state.x
+        loss_val = SciMLBase.value(optim_state.f_x)
         opt_state = OptimizationBase.OptimizationState(
-            iter = cb_state.iter,
-            u = cb_state.θ,
+            iter = iter_counter[],
+            u = θ,
             p = cache.p,
-            objective = cb_state.loss_val,
-            grad = cb_state.g,
-            hess = cb_state.h,
-            original = cb_state.original
+            objective = loss_val,
+            grad = hasproperty(optim_state, :g_x) ? optim_state.g_x : nothing,
+            hess = hasproperty(optim_state, :H_x) ? optim_state.H_x : nothing,
+            original = optim_state
         )
-        cb_call = cache.callback(opt_state, cb_state.loss_val)
+        cb_call = cache.callback(opt_state, loss_val)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -326,21 +280,21 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     local x, cur, state
 
     iter_counter = Ref(0)
-    # For Fminbox, the inner method determines NelderMead behavior
     inner_opt = cache.opt isa Optim.SAMIN ? cache.opt : cache.opt.method
-    function _cb(state_or_trace)
+    function _cb(optim_state)
         iter_counter[] += 1
-        cb_state = _extract_callback_state(state_or_trace, inner_opt, iter_counter)
+        θ = inner_opt isa Optim.NelderMead ? optim_state.x_centroid : optim_state.x
+        loss_val = SciMLBase.value(optim_state.f_x)
         opt_state = OptimizationBase.OptimizationState(
-            iter = cb_state.iter,
-            u = cb_state.θ,
+            iter = iter_counter[],
+            u = θ,
             p = cache.p,
-            objective = cb_state.loss_val,
-            grad = cb_state.g,
-            hess = cb_state.h,
-            original = cb_state.original
+            objective = loss_val,
+            grad = hasproperty(optim_state, :g_x) ? optim_state.g_x : nothing,
+            hess = hasproperty(optim_state, :H_x) ? optim_state.H_x : nothing,
+            original = optim_state
         )
-        cb_call = cache.callback(opt_state, cb_state.loss_val)
+        cb_call = cache.callback(opt_state, loss_val)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -407,19 +361,19 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     local x, cur, state
 
     iter_counter = Ref(0)
-    function _cb(state_or_trace)
+    function _cb(optim_state)
         iter_counter[] += 1
-        cb_state = _extract_callback_state(state_or_trace, cache.opt, iter_counter)
+        loss_val = SciMLBase.value(optim_state.f_x)
         opt_state = OptimizationBase.OptimizationState(
-            iter = cb_state.iter,
-            u = cb_state.θ,
+            iter = iter_counter[],
+            u = optim_state.x,
             p = cache.p,
-            objective = cb_state.loss_val,
-            grad = cb_state.g,
-            hess = cb_state.h,
-            original = cb_state.original
+            objective = loss_val,
+            grad = hasproperty(optim_state, :g_x) ? optim_state.g_x : nothing,
+            hess = hasproperty(optim_state, :H_x) ? optim_state.H_x : nothing,
+            original = optim_state
         )
-        cb_call = cache.callback(opt_state, cb_state.loss_val)
+        cb_call = cache.callback(opt_state, loss_val)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
