@@ -6,6 +6,38 @@ using SciMLBase, SparseArrays
 decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
 decompose_trace(trace::Optim.OptimizationState) = trace
 
+# Helper to extract callback information from both Optim v1 (trace-based) and v2 (state-based) callbacks.
+# In Optim v1, callbacks receive an OptimizationTrace or OptimizationState (trace entry) with a metadata dict.
+# In Optim v2, callbacks receive the optimizer state directly (e.g., BFGSState, NelderMeadState).
+function _extract_callback_state(state_or_trace, opt, iter_counter)
+    if state_or_trace isa Optim.OptimizationTrace || state_or_trace isa Optim.OptimizationState
+        # Optim v1 path
+        trace_state = decompose_trace(state_or_trace)
+        metadata = trace_state.metadata
+        if opt isa Optim.NelderMead
+            θ = metadata["centroid"]
+        else
+            θ = metadata["x"]
+        end
+        loss_val = SciMLBase.value(trace_state.value)
+        iter = trace_state.iteration
+        g = get(metadata, "g(x)", nothing)
+        h = get(metadata, "h(x)", nothing)
+    else
+        # Optim v2 path - state is an AbstractOptimizerState subtype
+        if opt isa Optim.NelderMead && hasproperty(state_or_trace, :x_centroid)
+            θ = state_or_trace.x_centroid
+        else
+            θ = state_or_trace.x
+        end
+        loss_val = SciMLBase.value(state_or_trace.f_x)
+        iter = iter_counter[]
+        g = hasproperty(state_or_trace, :g_x) ? state_or_trace.g_x : nothing
+        h = hasproperty(state_or_trace, :H_x) ? state_or_trace.H_x : nothing
+    end
+    return (; θ, loss_val, iter, g, h, original = state_or_trace)
+end
+
 SciMLBase.allowsconstraints(::IPNewton) = true
 SciMLBase.allowsbounds(opt::Optim.AbstractOptimizer) = true
 SciMLBase.allowsbounds(opt::Optim.SimulatedAnnealing) = false
@@ -139,23 +171,20 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
     !(cache.opt isa Optim.ZerothOrderOptimizer) && cache.f.grad === nothing &&
         error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
-    function _cb(trace)
-        trace_state = decompose_trace(trace)
-        metadata = trace_state.metadata
-        θ = metadata[cache.opt isa Optim.NelderMead ? "centroid" : "x"]
-        # Extract scalar value from potentially Dual-valued trace (issue #1073)
-        # Using SciMLBase.value to handle ForwardDiff.Dual numbers from Fminbox
-        loss_val = SciMLBase.value(trace_state.value)
+    iter_counter = Ref(0)
+    function _cb(state_or_trace)
+        iter_counter[] += 1
+        cb_state = _extract_callback_state(state_or_trace, cache.opt, iter_counter)
         opt_state = OptimizationBase.OptimizationState(
-            iter = trace_state.iteration,
-            u = θ,
+            iter = cb_state.iter,
+            u = cb_state.θ,
             p = cache.p,
-            objective = loss_val,
-            grad = get(metadata, "g(x)", nothing),
-            hess = get(metadata, "h(x)", nothing),
-            original = trace
+            objective = cb_state.loss_val,
+            grad = cb_state.g,
+            hess = cb_state.h,
+            original = cb_state.original
         )
-        cb_call = cache.callback(opt_state, loss_val)
+        cb_call = cache.callback(opt_state, cb_state.loss_val)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -255,25 +284,22 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     }
     local x, cur, state
 
-    function _cb(trace)
-        trace_state = decompose_trace(trace)
-        metadata = trace_state.metadata
-        θ = !(cache.opt isa Optim.SAMIN) && cache.opt.method == Optim.NelderMead() ?
-            metadata["centroid"] :
-            metadata["x"]
-        # Extract scalar value from potentially Dual-valued trace (issue #1073)
-        # Using SciMLBase.value to handle ForwardDiff.Dual numbers from Fminbox
-        loss_val = SciMLBase.value(trace_state.value)
+    iter_counter = Ref(0)
+    # For Fminbox, the inner method determines NelderMead behavior
+    inner_opt = cache.opt isa Optim.SAMIN ? cache.opt : cache.opt.method
+    function _cb(state_or_trace)
+        iter_counter[] += 1
+        cb_state = _extract_callback_state(state_or_trace, inner_opt, iter_counter)
         opt_state = OptimizationBase.OptimizationState(
-            iter = trace_state.iteration,
-            u = θ,
+            iter = cb_state.iter,
+            u = cb_state.θ,
             p = cache.p,
-            objective = loss_val,
-            grad = get(metadata, "g(x)", nothing),
-            hess = get(metadata, "h(x)", nothing),
-            original = trace
+            objective = cb_state.loss_val,
+            grad = cb_state.g,
+            hess = cb_state.h,
+            original = cb_state.original
         )
-        cb_call = cache.callback(opt_state, loss_val)
+        cb_call = cache.callback(opt_state, cb_state.loss_val)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -339,21 +365,20 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     }
     local x, cur, state
 
-    function _cb(trace)
-        metadata = decompose_trace(trace).metadata
-        # Extract scalar value from potentially Dual-valued trace (issue #1073)
-        # Using SciMLBase.value to handle ForwardDiff.Dual numbers from Fminbox
-        loss_val = SciMLBase.value(trace.value)
+    iter_counter = Ref(0)
+    function _cb(state_or_trace)
+        iter_counter[] += 1
+        cb_state = _extract_callback_state(state_or_trace, cache.opt, iter_counter)
         opt_state = OptimizationBase.OptimizationState(
-            iter = trace.iteration,
-            u = metadata["x"],
+            iter = cb_state.iter,
+            u = cb_state.θ,
             p = cache.p,
-            grad = get(metadata, "g(x)", nothing),
-            hess = get(metadata, "h(x)", nothing),
-            objective = loss_val,
-            original = trace
+            objective = cb_state.loss_val,
+            grad = cb_state.g,
+            hess = cb_state.h,
+            original = cb_state.original
         )
-        cb_call = cache.callback(opt_state, loss_val)
+        cb_call = cache.callback(opt_state, cb_state.loss_val)
         if !(cb_call isa Bool)
             error("The callback should return a boolean `halt` for whether to stop the optimization process.")
         end
@@ -484,41 +509,6 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         original = opt_res, retcode = opt_ret,
         stats = stats
     )
-end
-
-using PrecompileTools
-PrecompileTools.@compile_workload begin
-    function obj_f(x, p)
-        A = p[1]
-        b = p[2]
-        return sum((A * x .- b) .^ 2)
-    end
-
-    function solve_nonnegative_least_squares(A, b, solver)
-        optf = OptimizationBase.OptimizationFunction(
-            obj_f, OptimizationBase.AutoForwardDiff()
-        )
-        prob = OptimizationBase.OptimizationProblem(
-            optf, ones(size(A, 2)), (A, b),
-            lb = zeros(size(A, 2)), ub = Inf * ones(size(A, 2))
-        )
-        x = OptimizationOptimJL.solve(prob, solver, maxiters = 5000, maxtime = 100)
-
-        return x
-    end
-
-    solver_list = [
-        OptimizationOptimJL.LBFGS(),
-        OptimizationOptimJL.ConjugateGradient(),
-        OptimizationOptimJL.GradientDescent(),
-        OptimizationOptimJL.BFGS(),
-    ]
-
-    for solver in solver_list
-        x = solve_nonnegative_least_squares(rand(4, 4), rand(4), solver)
-        x = solve_nonnegative_least_squares(rand(35, 35), rand(35), solver)
-        x = solve_nonnegative_least_squares(rand(35, 10), rand(35), solver)
-    end
 end
 
 end
