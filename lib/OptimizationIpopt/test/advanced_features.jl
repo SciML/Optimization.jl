@@ -293,7 +293,7 @@ end
 
     @testset "Print levels" begin
         for print_level in [false, 0, 3, 5]
-            sol = solve(prob, IpoptOptimizer(additional_options=Dict("print_level" => 3)))
+            sol = solve(prob, IpoptOptimizer(additional_options = Dict("print_level" => 3)))
             @test SciMLBase.successful_retcode(sol)
         end
     end
