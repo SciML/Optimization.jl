@@ -3,8 +3,34 @@ module OptimizationOptimJL
 using Reexport
 @reexport using Optim, OptimizationBase
 using SciMLBase, SparseArrays
-decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
-decompose_trace(trace::Optim.OptimizationState) = trace
+
+# Construct a TwiceDifferentiable with Hessian-vector product support for KrylovTrustRegion.
+function _make_hv_objective(f, fg!, hv!, x0)
+    NLB = Optim.NLSolversBase
+    u0_type = eltype(x0)
+    F = real(zero(u0_type))
+    G = NLB.alloc_DF(x0, F)
+    H = NLB.alloc_H(x0, F)
+    g! = let fg! = fg!
+        function (_g, _x)
+            fg!(_g, _x)
+            return nothing
+        end
+    end
+    x_f = fill!(similar(x0, u0_type), NaN)
+    x_df = fill!(similar(x0, u0_type), NaN)
+    x_jvp = fill!(similar(x0, u0_type), NaN)
+    v_jvp = fill!(similar(x0, u0_type), NaN)
+    x_h = fill!(similar(x0, u0_type), NaN)
+    x_hvp = fill!(similar(x0, u0_type), NaN)
+    v_hvp = fill!(similar(x0, u0_type), NaN)
+    return NLB.TwiceDifferentiable(
+        f, g!, fg!, nothing, nothing, nothing, nothing, nothing, hv!,
+        F, copy(G), F, copy(H), copy(G),
+        x_f, x_df, x_jvp, v_jvp, x_h, x_hvp, v_hvp,
+        0, 0, 0, 0, 0
+    )
+end
 
 SciMLBase.allowsconstraints(::IPNewton) = true
 SciMLBase.allowsbounds(opt::Optim.AbstractOptimizer) = true
@@ -139,21 +165,19 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
     !(cache.opt isa Optim.ZerothOrderOptimizer) && cache.f.grad === nothing &&
         error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
-    function _cb(trace)
-        trace_state = decompose_trace(trace)
-        metadata = trace_state.metadata
-        θ = metadata[cache.opt isa Optim.NelderMead ? "centroid" : "x"]
-        # Extract scalar value from potentially Dual-valued trace (issue #1073)
-        # Using SciMLBase.value to handle ForwardDiff.Dual numbers from Fminbox
-        loss_val = SciMLBase.value(trace_state.value)
+    iter_counter = Ref(0)
+    function _cb(optim_state)
+        iter_counter[] += 1
+        θ = cache.opt isa Optim.NelderMead ? optim_state.x_centroid : optim_state.x
+        loss_val = SciMLBase.value(optim_state.f_x)
         opt_state = OptimizationBase.OptimizationState(
-            iter = trace_state.iteration,
+            iter = iter_counter[],
             u = θ,
             p = cache.p,
             objective = loss_val,
-            grad = get(metadata, "g(x)", nothing),
-            hess = get(metadata, "h(x)", nothing),
-            original = trace
+            grad = hasproperty(optim_state, :g_x) ? optim_state.g_x : nothing,
+            hess = hasproperty(optim_state, :H_x) ? optim_state.H_x : nothing,
+            original = optim_state
         )
         cb_call = cache.callback(opt_state, loss_val)
         if !(cb_call isa Bool)
@@ -189,7 +213,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
                 H .*= -one(eltype(H))
             end
         end
-        optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, hv, cache.u0)
+        optim_f = _make_hv_objective(_loss, fg!, hv, cache.u0)
     else
         gg = function (G, θ)
             cache.f.grad(G, θ)
@@ -255,23 +279,20 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     }
     local x, cur, state
 
-    function _cb(trace)
-        trace_state = decompose_trace(trace)
-        metadata = trace_state.metadata
-        θ = !(cache.opt isa Optim.SAMIN) && cache.opt.method == Optim.NelderMead() ?
-            metadata["centroid"] :
-            metadata["x"]
-        # Extract scalar value from potentially Dual-valued trace (issue #1073)
-        # Using SciMLBase.value to handle ForwardDiff.Dual numbers from Fminbox
-        loss_val = SciMLBase.value(trace_state.value)
+    iter_counter = Ref(0)
+    inner_opt = cache.opt isa Optim.SAMIN ? cache.opt : cache.opt.method
+    function _cb(optim_state)
+        iter_counter[] += 1
+        θ = inner_opt isa Optim.NelderMead ? optim_state.x_centroid : optim_state.x
+        loss_val = SciMLBase.value(optim_state.f_x)
         opt_state = OptimizationBase.OptimizationState(
-            iter = trace_state.iteration,
+            iter = iter_counter[],
             u = θ,
             p = cache.p,
             objective = loss_val,
-            grad = get(metadata, "g(x)", nothing),
-            hess = get(metadata, "h(x)", nothing),
-            original = trace
+            grad = hasproperty(optim_state, :g_x) ? optim_state.g_x : nothing,
+            hess = hasproperty(optim_state, :H_x) ? optim_state.H_x : nothing,
+            original = optim_state
         )
         cb_call = cache.callback(opt_state, loss_val)
         if !(cb_call isa Bool)
@@ -339,19 +360,18 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     }
     local x, cur, state
 
-    function _cb(trace)
-        metadata = decompose_trace(trace).metadata
-        # Extract scalar value from potentially Dual-valued trace (issue #1073)
-        # Using SciMLBase.value to handle ForwardDiff.Dual numbers from Fminbox
-        loss_val = SciMLBase.value(trace.value)
+    iter_counter = Ref(0)
+    function _cb(optim_state)
+        iter_counter[] += 1
+        loss_val = SciMLBase.value(optim_state.f_x)
         opt_state = OptimizationBase.OptimizationState(
-            iter = trace.iteration,
-            u = metadata["x"],
+            iter = iter_counter[],
+            u = optim_state.x,
             p = cache.p,
-            grad = get(metadata, "g(x)", nothing),
-            hess = get(metadata, "h(x)", nothing),
             objective = loss_val,
-            original = trace
+            grad = hasproperty(optim_state, :g_x) ? optim_state.g_x : nothing,
+            hess = hasproperty(optim_state, :H_x) ? optim_state.H_x : nothing,
+            original = optim_state
         )
         cb_call = cache.callback(opt_state, loss_val)
         if !(cb_call isa Bool)
@@ -484,41 +504,6 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         original = opt_res, retcode = opt_ret,
         stats = stats
     )
-end
-
-using PrecompileTools
-PrecompileTools.@compile_workload begin
-    function obj_f(x, p)
-        A = p[1]
-        b = p[2]
-        return sum((A * x .- b) .^ 2)
-    end
-
-    function solve_nonnegative_least_squares(A, b, solver)
-        optf = OptimizationBase.OptimizationFunction(
-            obj_f, OptimizationBase.AutoForwardDiff()
-        )
-        prob = OptimizationBase.OptimizationProblem(
-            optf, ones(size(A, 2)), (A, b),
-            lb = zeros(size(A, 2)), ub = Inf * ones(size(A, 2))
-        )
-        x = OptimizationOptimJL.solve(prob, solver, maxiters = 5000, maxtime = 100)
-
-        return x
-    end
-
-    solver_list = [
-        OptimizationOptimJL.LBFGS(),
-        OptimizationOptimJL.ConjugateGradient(),
-        OptimizationOptimJL.GradientDescent(),
-        OptimizationOptimJL.BFGS(),
-    ]
-
-    for solver in solver_list
-        x = solve_nonnegative_least_squares(rand(4, 4), rand(4), solver)
-        x = solve_nonnegative_least_squares(rand(35, 35), rand(35), solver)
-        x = solve_nonnegative_least_squares(rand(35, 10), rand(35), solver)
-    end
 end
 
 end

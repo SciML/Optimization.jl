@@ -12,11 +12,8 @@ on:
       - 'docs/**'
 jobs:
   test:
-    # Temporarily disabled due to multiple upstream compatibility issues:
-    # - OptimizationSciPy: PythonCall initialization error with Julia 1.10
-    # - OptimizationOptimJL: LineSearches compatibility issue
-    # - OptimizationQuadDIRECT: QuadDIRECT algorithm assertion error
-    # See GitHub issue for tracking re-enablement.
+    # Temporarily disabled due to multiple upstream compatibility issues.
+    # See https://github.com/SciML/Optimization.jl/issues/1156 for tracking re-enablement.
     if: false
     runs-on: ubuntu-latest
     strategy:
