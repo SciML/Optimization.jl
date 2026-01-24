@@ -38,6 +38,47 @@ function _extract_callback_state(state_or_trace, opt, iter_counter)
     return (; θ, loss_val, iter, g, h, original = state_or_trace)
 end
 
+# Helper to construct an objective with Hessian-vector product support.
+# In Optim v1, TwiceDifferentiableHV was a separate type.
+# In Optim v2, TwiceDifferentiable gained an `hv` field directly.
+function _make_hv_objective(f, fg!, hv!, x0)
+    if isdefined(Optim, :TwiceDifferentiableHV)
+        # Optim v1 path
+        return Optim.TwiceDifferentiableHV(f, fg!, hv!, x0)
+    else
+        # Optim v2 path - construct TwiceDifferentiable with hv field
+        NLB = Optim.NLSolversBase
+        u0_type = eltype(x0)
+        F = real(zero(u0_type))
+        G = NLB.alloc_DF(x0, F)
+        H = NLB.alloc_H(x0, F)
+        g! = let fg! = fg!
+            function (_g, _x)
+                fg!(_g, _x)
+                return nothing
+            end
+        end
+        h! = nothing
+        dfh! = nothing
+        fdfh! = nothing
+        x_f = fill!(similar(x0, u0_type), NaN)
+        x_df = fill!(similar(x0, u0_type), NaN)
+        x_jvp = fill!(similar(x0, u0_type), NaN)
+        v_jvp = fill!(similar(x0, u0_type), NaN)
+        x_h = fill!(similar(x0, u0_type), NaN)
+        x_hvp = fill!(similar(x0, u0_type), NaN)
+        v_hvp = fill!(similar(x0, u0_type), NaN)
+        HVP = copy(G)
+        JVP = F
+        return NLB.TwiceDifferentiable(
+            f, g!, fg!, nothing, nothing, dfh!, fdfh!, h!, hv!,
+            F, copy(G), JVP, copy(H), HVP,
+            x_f, x_df, x_jvp, v_jvp, x_h, x_hvp, v_hvp,
+            0, 0, 0, 0, 0
+        )
+    end
+end
+
 SciMLBase.allowsconstraints(::IPNewton) = true
 SciMLBase.allowsbounds(opt::Optim.AbstractOptimizer) = true
 SciMLBase.allowsbounds(opt::Optim.SimulatedAnnealing) = false
@@ -218,7 +259,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
                 H .*= -one(eltype(H))
             end
         end
-        optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, hv, cache.u0)
+        optim_f = _make_hv_objective(_loss, fg!, hv, cache.u0)
     else
         gg = function (G, θ)
             cache.f.grad(G, θ)
