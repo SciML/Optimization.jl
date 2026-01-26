@@ -18,10 +18,12 @@ function __map_optimizer_args(
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
-        reltol::Union{Number, Nothing} = nothing
+        reltol::Union{Number, Nothing} = nothing,
+        verbose = OptimizationBase.OptimizationVerbosity()
     )
     if !isnothing(maxtime)
-        @warn "common maxtime is currently not used by $(opt)"
+        @SciMLMessage(lazy"common maxtime is currently not used by $(opt)",
+            verbose, :unsupported_kwargs)
     end
 
     mapped_args = (;)
@@ -48,6 +50,7 @@ function SciMLBase.__solve(
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
+        verbose = OptimizationBase.OptimizationVerbosity(),
         kwargs...
     )
     local x, _loss
@@ -65,7 +68,7 @@ function SciMLBase.__solve(
 
     opt_arg = __map_optimizer_args(
         prob, opt; maxiters = maxiters, maxtime = maxtime,
-        abstol = abstol, reltol = reltol, kwargs...
+        abstol = abstol, reltol = reltol, verbose = verbose, kwargs...
     )
     t0 = time()
     # root, x0 = !(isnothing(maxiters)) ? QuadDIRECT.analyze(_loss, splits, prob.lb, prob.ub; maxevals = maxiters, kwargs...) : QuadDIRECT.analyze(_loss, splits, prob.lb, prob.ub; kwargs...)

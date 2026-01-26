@@ -58,7 +58,8 @@ function __map_optimizer_args(
         kwargs...
     )
     if !isnothing(reltol)
-        @warn "common reltol is currently not used by $(opt)"
+        @SciMLMessage(lazy"common reltol is currently not used by $(opt)",
+            prob.verbose, :unsupported_kwargs)
     end
     mapped_args = (; kwargs...)
     mapped_args = (;
@@ -159,7 +160,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: BBO}
     end
 
     # Use the improved convert function
-    opt_ret = OptimizationBase.deduce_retcode(opt_res.stop_reason)
+    opt_ret = OptimizationBase.deduce_retcode(opt_res.stop_reason, cache.verbose)
     stats = OptimizationBase.OptimizationStats(;
         iterations = opt_res.iterations,
         time = opt_res.elapsed_time,

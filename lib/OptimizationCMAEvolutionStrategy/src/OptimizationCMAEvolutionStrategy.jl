@@ -27,7 +27,8 @@ function __map_optimizer_args(
         verbose::Bool = false
     )
     if !isnothing(reltol)
-        @warn "common reltol is currently not used by $(opt)"
+        @SciMLMessage(lazy"common reltol is currently not used by $(opt)",
+            prob.verbose, :unsupported_kwargs)
     end
 
     mapped_args = (;

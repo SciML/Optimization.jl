@@ -20,6 +20,7 @@ function __map_optimizer_args!(
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
+        verbose = OptimizationBase.OptimizationVerbosity(),
         kwargs...
     )
     for j in kwargs
@@ -35,11 +36,13 @@ function __map_optimizer_args!(
     end
 
     if !isnothing(reltol)
-        @warn "common reltol is currently not used by $(opt)"
+        @SciMLMessage(lazy"common reltol is currently not used by $(opt)",
+            verbose, :unsupported_kwargs)
     end
 
     if !isnothing(abstol)
-        @warn "common abstol is currently not used by $(opt)"
+        @SciMLMessage(lazy"common abstol is currently not used by $(opt)",
+            verbose, :unsupported_kwargs)
     end
 
     return nothing
@@ -54,6 +57,7 @@ function SciMLBase.__solve(
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         cons_method = ExtremeBarrierMethod,
+        verbose = OptimizationBase.OptimizationVerbosity(),
         kwargs...
     )
     local x
@@ -110,7 +114,7 @@ function SciMLBase.__solve(
 
     __map_optimizer_args!(
         prob, opt_setup, maxiters = maxiters, maxtime = maxtime,
-        abstol = abstol, reltol = reltol; kwargs...
+        abstol = abstol, reltol = reltol, verbose = verbose; kwargs...
     )
 
     t0 = time()

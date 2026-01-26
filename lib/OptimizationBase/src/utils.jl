@@ -54,13 +54,16 @@ const STOP_REASON_MAP = Dict(
 )
 
 # Function to deduce ReturnCode from a stop_reason string using the dictionary
-function deduce_retcode(stop_reason::String)
+function deduce_retcode(stop_reason::String, verbose = OptimizationVerbosity())
     for (pattern, retcode) in STOP_REASON_MAP
         if occursin(pattern, stop_reason)
             return retcode
         end
     end
-    @warn "Unrecognized stop reason: $stop_reason. Defaulting to ReturnCode.Default."
+    
+    @SciMLMessage(lazy"Unrecognized stop reason: $stop_reason. Defaulting to ReturnCode.Default.",
+            verbose, :unrecognized_stop_reason)
+   
     return ReturnCode.Default
 end
 
