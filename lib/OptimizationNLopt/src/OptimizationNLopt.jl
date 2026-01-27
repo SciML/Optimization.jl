@@ -259,7 +259,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     t0 = time()
     (minf, minx, ret) = NLopt.optimize(opt_setup, cache.u0)
     t1 = time()
-    retcode = deduce_retcode(ret, cache.verbose)
+    retcode = deduce_retcode(ret)
 
     if retcode == ReturnCode.Failure
         @SciMLMessage(lazy"NLopt failed to converge: $(ret)", cache.verbose, :convergence_failure)

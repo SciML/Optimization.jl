@@ -49,7 +49,16 @@ function OptimizationCache(
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
 
-    processed_verbose = _process_verbose_param(verbose)
+    # Check if verbose is a solver-specific type (not OptimizationVerbosity-related)
+    # If so, pass it through to solver_args and use default OptimizationVerbosity
+    if !(verbose isa Bool || verbose isa OptimizationVerbosity ||
+            verbose isa SciMLLogging.AbstractVerbosityPreset)
+        # Solver-specific verbosity type (e.g., MadNLP.LogLevels)
+        kwargs = merge(kwargs, (; verbose = verbose))
+        processed_verbose = OptimizationVerbosity()
+    else
+        processed_verbose = _process_verbose_param(verbose)
+    end
 
     if !(
             prob.f.adtype isa DifferentiationInterface.SecondOrder ||
