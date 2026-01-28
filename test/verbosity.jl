@@ -1,7 +1,7 @@
 using OptimizationBase
 using OptimizationBase: OptimizationVerbosity
 using Test
-import SciMLLogging
+using SciMLLogging
 
 @testset "OptimizationVerbosity Tests" begin
     @testset "Default constructor" begin
