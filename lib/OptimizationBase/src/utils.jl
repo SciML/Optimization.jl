@@ -60,10 +60,12 @@ function deduce_retcode(stop_reason::String, verbose = OptimizationVerbosity())
             return retcode
         end
     end
-    
-    @SciMLMessage(lazy"Unrecognized stop reason: $stop_reason. Defaulting to ReturnCode.Default.",
-            verbose, :unrecognized_stop_reason)
-   
+
+    @SciMLMessage(
+        lazy"Unrecognized stop reason: $stop_reason. Defaulting to ReturnCode.Default.",
+        verbose, :unrecognized_stop_reason
+    )
+
     return ReturnCode.Default
 end
 

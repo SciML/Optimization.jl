@@ -35,13 +35,17 @@ function __map_optimizer_args(
     end
 
     if !isnothing(abstol)
-        @SciMLMessage(lazy"common abstol is currently not used by $(opt)",
-            cache.verbose, :unsupported_kwargs)
+        @SciMLMessage(
+            lazy"common abstol is currently not used by $(opt)",
+            cache.verbose, :unsupported_kwargs
+        )
     end
 
     if !isnothing(reltol)
-        @SciMLMessage(lazy"common reltol is currently not used by $(opt)",
-            cache.verbose, :unsupported_kwargs)
+        @SciMLMessage(
+            lazy"common reltol is currently not used by $(opt)",
+            cache.verbose, :unsupported_kwargs
+        )
     end
 
     return mapped_args

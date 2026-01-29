@@ -51,8 +51,10 @@ function OptimizationCache(
 
     # Check if verbose is a solver-specific type (not OptimizationVerbosity-related)
     # If so, pass it through to solver_args and use default OptimizationVerbosity
-    if !(verbose isa Bool || verbose isa OptimizationVerbosity ||
-            verbose isa SciMLLogging.AbstractVerbosityPreset)
+    if !(
+            verbose isa Bool || verbose isa OptimizationVerbosity ||
+                verbose isa SciMLLogging.AbstractVerbosityPreset
+        )
         # Solver-specific verbosity type (e.g., MadNLP.LogLevels)
         kwargs = merge(NamedTuple(kwargs), (; verbose = verbose))
         processed_verbose = OptimizationVerbosity()
@@ -68,15 +70,19 @@ function OptimizationCache(
             SciMLBase.requireshessian(opt) || SciMLBase.requiresconshess(opt) ||
                 SciMLBase.requireslagh(opt)
         )
-        @SciMLMessage(lazy"The selected optimization algorithm requires second order derivatives, but `SecondOrder` ADtype was not provided. So a `SecondOrder` with $(prob.f.adtype) for both inner and outer will be created, this can be suboptimal and not work in some cases so an explicit `SecondOrder` ADtype is recommended.",
-            processed_verbose, :missing_second_order_ad)
+        @SciMLMessage(
+            lazy"The selected optimization algorithm requires second order derivatives, but `SecondOrder` ADtype was not provided. So a `SecondOrder` with $(prob.f.adtype) for both inner and outer will be created, this can be suboptimal and not work in some cases so an explicit `SecondOrder` ADtype is recommended.",
+            processed_verbose, :missing_second_order_ad
+        )
     elseif prob.f.adtype isa AutoZygote &&
             (
             SciMLBase.requiresconshess(opt) || SciMLBase.requireslagh(opt) ||
                 SciMLBase.requireshessian(opt)
         )
-        @SciMLMessage(lazy"The selected optimization algorithm requires second order derivatives, but `AutoZygote` ADtype was provided. So a `SecondOrder` with `AutoZygote` for inner and `AutoForwardDiff` for outer will be created, for choosing another pair an explicit `SecondOrder` ADtype is recommended.",
-            processed_verbose, :incompatible_ad_backend)
+        @SciMLMessage(
+            lazy"The selected optimization algorithm requires second order derivatives, but `AutoZygote` ADtype was provided. So a `SecondOrder` with `AutoZygote` for inner and `AutoForwardDiff` for outer will be created, for choosing another pair an explicit `SecondOrder` ADtype is recommended.",
+            processed_verbose, :incompatible_ad_backend
+        )
     end
 
     f = OptimizationBase.instantiate_function(

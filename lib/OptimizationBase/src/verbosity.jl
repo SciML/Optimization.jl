@@ -28,7 +28,7 @@
             inequality_constraints_ignored = Silent(),
             missing_second_order_ad = Silent(),
             incompatible_ad_backend = Silent(),
-            unsupported_callbacks = Silent()
+            unsupported_callbacks = Silent(),
         ),
         Minimal = (
             unsupported_kwargs = Silent(),
@@ -41,7 +41,7 @@
             inequality_constraints_ignored = Silent(),
             missing_second_order_ad = WarnLevel(),
             incompatible_ad_backend = WarnLevel(),
-            unsupported_callbacks = Silent()
+            unsupported_callbacks = Silent(),
         ),
         Standard = (
             unsupported_kwargs = InfoLevel(),
@@ -54,7 +54,7 @@
             inequality_constraints_ignored = WarnLevel(),
             missing_second_order_ad = WarnLevel(),
             incompatible_ad_backend = WarnLevel(),
-            unsupported_callbacks = WarnLevel()
+            unsupported_callbacks = WarnLevel(),
         ),
         Detailed = (
             unsupported_kwargs = InfoLevel(),
@@ -67,7 +67,7 @@
             inequality_constraints_ignored = WarnLevel(),
             missing_second_order_ad = WarnLevel(),
             incompatible_ad_backend = WarnLevel(),
-            unsupported_callbacks = WarnLevel()
+            unsupported_callbacks = WarnLevel(),
         ),
         All = (
             unsupported_kwargs = InfoLevel(),
@@ -80,7 +80,7 @@
             inequality_constraints_ignored = WarnLevel(),
             missing_second_order_ad = WarnLevel(),
             incompatible_ad_backend = WarnLevel(),
-            unsupported_callbacks = WarnLevel()
+            unsupported_callbacks = WarnLevel(),
         ),
     )
 

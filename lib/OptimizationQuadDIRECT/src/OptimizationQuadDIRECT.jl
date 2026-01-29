@@ -22,8 +22,10 @@ function __map_optimizer_args(
         verbose = OptimizationBase.OptimizationVerbosity()
     )
     if !isnothing(maxtime)
-        @SciMLMessage(lazy"common maxtime is currently not used by $(opt)",
-            verbose, :unsupported_kwargs)
+        @SciMLMessage(
+            lazy"common maxtime is currently not used by $(opt)",
+            verbose, :unsupported_kwargs
+        )
     end
 
     mapped_args = (;)

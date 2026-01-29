@@ -103,16 +103,22 @@ function __map_optimizer_args(
         MOI.set(optimizer, MOI.TimeLimitSec(), maxtime)
     end
     if !isnothing(reltol)
-        @SciMLMessage(lazy"common reltol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword arguments.",
-            cache.verbose, :unsupported_kwargs)
+        @SciMLMessage(
+            lazy"common reltol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword arguments.",
+            cache.verbose, :unsupported_kwargs
+        )
     end
     if !isnothing(abstol)
-        @SciMLMessage(lazy"common abstol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword arguments.",
-            cache.verbose, :unsupported_kwargs)
+        @SciMLMessage(
+            lazy"common abstol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword arguments.",
+            cache.verbose, :unsupported_kwargs
+        )
     end
     if !isnothing(maxiters)
-        @SciMLMessage(lazy"common maxiters argument is currently not used by $(optimizer). Set number of iterations via optimizer specific keyword arguments.",
-            cache.verbose, :unsupported_kwargs)
+        @SciMLMessage(
+            lazy"common maxiters argument is currently not used by $(optimizer). Set number of iterations via optimizer specific keyword arguments.",
+            cache.verbose, :unsupported_kwargs
+        )
     end
     return optimizer
 end

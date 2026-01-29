@@ -58,8 +58,10 @@ function __map_optimizer_args(
         kwargs...
     )
     if !isnothing(reltol)
-        @SciMLMessage(lazy"common reltol is currently not used by $(opt)",
-            prob.verbose, :unsupported_kwargs)
+        @SciMLMessage(
+            lazy"common reltol is currently not used by $(opt)",
+            prob.verbose, :unsupported_kwargs
+        )
     end
     mapped_args = (; kwargs...)
     mapped_args = (;

@@ -35,12 +35,16 @@ function __map_optimizer_args(
         kwargs...
     )
     if !isnothing(abstol)
-        @SciMLMessage(lazy"common abstol is currently not used by $(opt)",
-            cache.verbose, :unsupported_kwargs)
+        @SciMLMessage(
+            lazy"common abstol is currently not used by $(opt)",
+            cache.verbose, :unsupported_kwargs
+        )
     end
     if !isnothing(maxtime)
-        @SciMLMessage(lazy"common maxtime is currently not used by $(opt)",
-            cache.verbose, :unsupported_kwargs)
+        @SciMLMessage(
+            lazy"common maxtime is currently not used by $(opt)",
+            cache.verbose, :unsupported_kwargs
+        )
     end
 
     mapped_args = (;)
