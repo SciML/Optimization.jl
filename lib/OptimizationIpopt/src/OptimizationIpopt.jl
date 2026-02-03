@@ -301,11 +301,18 @@ function __map_optimizer_args(
     !isnothing(maxiters) && !in("max_iter", optkeys) && Ipopt.AddIpoptIntOption(prob, "max_iter", maxiters)
     !isnothing(maxtime) && !in("max_wall_time", optkeys) && Ipopt.AddIpoptNumOption(prob, "max_wall_time", Float64(maxtime))
 
-    # Handle verbose override
-    if verbose isa Bool && !in("print_level", optkeys)
-        Ipopt.AddIpoptIntOption(prob, "print_level", verbose * 5)
-    elseif verbose isa Int && !in("print_level", optkeys)
-        Ipopt.AddIpoptIntOption(prob, "print_level", verbose)
+    # Set Ipopt print_level
+    if !in("print_level", optkeys)
+        # Priority: verbose kwarg (backward compatibility) > ipopt_verbosity toggle
+        if verbose isa Bool
+            Ipopt.AddIpoptIntOption(prob, "print_level", verbose * 5)
+        elseif verbose isa Int
+            Ipopt.AddIpoptIntOption(prob, "print_level", verbose)
+        else
+            # Use ipopt_verbosity toggle from cache.verbose
+            print_level = SciMLLogging.verbosity_to_int(cache.verbose.ipopt_verbosity)
+            Ipopt.AddIpoptIntOption(prob, "print_level", print_level)
+        end
     end
 
     return prob

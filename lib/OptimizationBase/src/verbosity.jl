@@ -14,6 +14,9 @@
 
         # Feature support
         :unsupported_callbacks,
+
+        # Solver-specific verbosity
+        :ipopt_verbosity,
     )
 
     presets = (
@@ -29,6 +32,7 @@
             missing_second_order_ad = Silent(),
             incompatible_ad_backend = Silent(),
             unsupported_callbacks = Silent(),
+            ipopt_verbosity = CustomLevel(0),
         ),
         Minimal = (
             unsupported_kwargs = Silent(),
@@ -42,6 +46,7 @@
             missing_second_order_ad = WarnLevel(),
             incompatible_ad_backend = WarnLevel(),
             unsupported_callbacks = Silent(),
+            ipopt_verbosity = CustomLevel(0),
         ),
         Standard = (
             unsupported_kwargs = InfoLevel(),
@@ -55,6 +60,7 @@
             missing_second_order_ad = WarnLevel(),
             incompatible_ad_backend = WarnLevel(),
             unsupported_callbacks = WarnLevel(),
+            ipopt_verbosity = CustomLevel(5),
         ),
         Detailed = (
             unsupported_kwargs = InfoLevel(),
@@ -68,6 +74,7 @@
             missing_second_order_ad = WarnLevel(),
             incompatible_ad_backend = WarnLevel(),
             unsupported_callbacks = WarnLevel(),
+            ipopt_verbosity = CustomLevel(7),
         ),
         All = (
             unsupported_kwargs = InfoLevel(),
@@ -81,6 +88,7 @@
             missing_second_order_ad = WarnLevel(),
             incompatible_ad_backend = WarnLevel(),
             unsupported_callbacks = WarnLevel(),
+            ipopt_verbosity = CustomLevel(12),
         ),
     )
 
@@ -96,6 +104,9 @@
         ),
         feature_support = (
             :unsupported_callbacks, :unsupported_kwargs,
+        ),
+        solver_verbosity = (
+            :ipopt_verbosity,
         ),
     )
 end
@@ -128,6 +139,9 @@ diagnostic messages and warnings during optimization.
 - `unsupported_callbacks`: Messages when callbacks are not supported by the algorithm
 - `unsupported_kwargs`: Messages when common optimization parameters (abstol, reltol, maxtime, maxiters) are not supported by the algorithm
 
+## Solver Verbosity Group
+- `ipopt_verbosity`: Controls Ipopt solver output verbosity (0=silent, 5=default, 12=maximum). Use a SciMLLogging.CustomLevel to specify an integer verbosity level. 
+
 # Constructors
 
     OptimizationVerbosity(preset::AbstractVerbosityPreset)
@@ -141,7 +155,7 @@ Create an `OptimizationVerbosity` using a preset configuration:
 
     OptimizationVerbosity(; preset=nothing, convergence_numerical=nothing, constraints_bounds=nothing, automatic_differentiation=nothing, feature_support=nothing, kwargs...)
 
-Create an `OptimizationVerbosity` with group-level or individual field control.
+Create an `OptimizationVerbosity` with group level or individual toggle level control.
 
 # Examples
 
