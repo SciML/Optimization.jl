@@ -84,6 +84,56 @@ function _create_new_optimizer(opt::MOI.AbstractOptimizer)
     return opt_setup
 end
 
+"""
+    _set_maxiters!(optimizer, maxiters)
+
+Sets the maximum number of iterations for the optimizer using solver-specific parameter names.
+Supports common MOI solvers including Ipopt, Gurobi, CPLEX, and SCIP.
+"""
+function _set_maxiters!(optimizer, maxiters::Number)
+    optimizer_name = string(typeof(optimizer))
+
+    # Try to set maxiters based on common solver patterns
+    try
+        if contains(optimizer_name, "Ipopt")
+            MOI.set(optimizer, MOI.RawOptimizerAttribute("max_iter"), Int(maxiters))
+        elseif contains(optimizer_name, "Gurobi")
+            MOI.set(optimizer, MOI.RawOptimizerAttribute("IterationLimit"), Int(maxiters))
+        elseif contains(optimizer_name, "CPLEX") || contains(optimizer_name, "Cplex")
+            MOI.set(optimizer, MOI.RawOptimizerAttribute("CPX_PARAM_ITLIM"), Int(maxiters))
+        elseif contains(optimizer_name, "SCIP") || contains(optimizer_name, "Scip")
+            MOI.set(optimizer, MOI.RawOptimizerAttribute("limits/iterations"), Int(maxiters))
+        elseif contains(optimizer_name, "Mosek") || contains(optimizer_name, "MOSEK")
+            MOI.set(optimizer, MOI.RawOptimizerAttribute("MSK_IPAR_INTPNT_MAX_ITERATIONS"), Int(maxiters))
+        elseif contains(optimizer_name, "OSQP")
+            MOI.set(optimizer, MOI.RawOptimizerAttribute("max_iter"), Int(maxiters))
+        elseif contains(optimizer_name, "ECOS")
+            MOI.set(optimizer, MOI.RawOptimizerAttribute("maxit"), Int(maxiters))
+        elseif contains(optimizer_name, "SCS")
+            MOI.set(optimizer, MOI.RawOptimizerAttribute("max_iters"), Int(maxiters))
+        elseif contains(optimizer_name, "COSMO")
+            MOI.set(optimizer, MOI.RawOptimizerAttribute("max_iter"), Int(maxiters))
+        else
+            # Generic fallback - try common parameter names
+            for param_name in ["max_iter", "maxiter", "IterationLimit", "max_iterations"]
+                try
+                    MOI.set(optimizer, MOI.RawOptimizerAttribute(param_name), Int(maxiters))
+                    return # Success, exit early
+                catch
+                    continue # Try next parameter name
+                end
+            end
+            # If all attempts fail, show warning with guidance
+            @warn "common maxiters argument could not be mapped for $(typeof(optimizer)). " *
+                  "Set number of iterations via optimizer specific keyword arguments."
+        end
+    catch e
+        # Catch any errors during parameter setting and show informative warning
+        @warn "Failed to set maxiters parameter for $(typeof(optimizer)): $(e). " *
+              "Set number of iterations via optimizer specific keyword arguments."
+    end
+end
+
 function __map_optimizer_args(
         cache,
         opt::Union{
@@ -109,7 +159,7 @@ function __map_optimizer_args(
         @warn "common abstol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword arguments."
     end
     if !isnothing(maxiters)
-        @warn "common maxiters argument is currently not used by $(optimizer). Set number of iterations via optimizer specific keyword arguments."
+        _set_maxiters!(optimizer, maxiters)
     end
     return optimizer
 end
