@@ -267,6 +267,9 @@ end
 
     @testset "store_trace=true" begin
         # Test that store_trace=true works without throwing errors (issue #990)
+        x0 = zeros(2)
+        _p = [1.0, 100.0]
+
         # Test with NelderMead
         prob = OptimizationProblem(rosenbrock, x0, _p)
         sol = solve(prob, NelderMead(), store_trace = true)

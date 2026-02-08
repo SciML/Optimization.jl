@@ -78,6 +78,9 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
     end
 
     @testset "callback" begin
+        x0 = zeros(2)
+        _p = [1.0, 100.0]
+
         optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
 
         prob = OptimizationProblem(optprob, x0, _p)
