@@ -242,7 +242,7 @@ end
     @parameters a = 1.0
     @named sys = OptimizationSystem((x - a)^2, [x], [a])
     sys = complete(sys)
-    prob = OptimizationProblem(sys, [x => 0.0], []; grad = true, hess = true)
+    prob = OptimizationProblem(sys, [x => 0.0]; grad = true, hess = true)
     cache = init(prob, Ipopt.Optimizer(); print_level = 0)
     @test cache isa OptimizationMOI.MOIOptimizationNLPCache
     sol = solve!(cache)
@@ -254,7 +254,7 @@ end
         @test sol.u ≈ [2.0]  # ≈ [2]
     end
 
-    prob = OptimizationProblem(sys, [x => 0.0], []; grad = false, hess = false)
+    prob = OptimizationProblem(sys, [x => 0.0]; grad = false, hess = false)
     cache = init(prob, HiGHS.Optimizer())
     @test cache isa OptimizationMOI.MOIOptimizationCache
     sol = solve!(cache)
@@ -281,7 +281,7 @@ end
     )
     sys = complete(sys)
     prob = OptimizationProblem(
-        sys, [x[1] => 2.0, x[2] => 0.0], []; grad = true,
+        sys, [x[1] => 2.0, x[2] => 0.0]; grad = true,
         hess = true
     )
     sol = solve(prob, HiGHS.Optimizer())
@@ -297,7 +297,7 @@ end
     )
     sys = complete(sys)
     prob = OptimizationProblem(
-        sys, [x[1] => 2.0, x[2] => 0.0], []; grad = true,
+        sys, [x[1] => 2.0, x[2] => 0.0]; grad = true,
         hess = true
     )
     sol = solve(prob, HiGHS.Optimizer())

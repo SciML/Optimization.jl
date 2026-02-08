@@ -24,15 +24,15 @@ function SciMLBase.__solve(
     end
 
     return if isempty(args) && deterministic && prob.lb === nothing && prob.ub === nothing
-        # If deterministic then ADAM -> finish with BFGS
+        # If deterministic then Adam -> finish with BFGS
         if maxiters === nothing
             res1 = OptimizationBase.solve(
-                prob, Optimisers.ADAM(0.01), args...; maxiters = 300,
+                prob, Optimisers.Adam(0.01), args...; maxiters = 300,
                 kwargs...
             )
         else
             res1 = OptimizationBase.solve(
-                prob, Optimisers.ADAM(0.01), args...; maxiters,
+                prob, Optimisers.Adam(0.01), args...; maxiters,
                 kwargs...
             )
         end
@@ -48,7 +48,7 @@ function SciMLBase.__solve(
             kwargs...
         )
     else
-        res1 = OptimizationBase.solve(prob, Optimisers.ADAM(0.1), args...; maxiters, kwargs...)
+        res1 = OptimizationBase.solve(prob, Optimisers.Adam(0.1), args...; maxiters, kwargs...)
     end
 end
 
