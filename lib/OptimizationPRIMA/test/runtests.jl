@@ -20,18 +20,18 @@ using Test
         prob, COBYLA(), maxiters = 1000
     )
 
-    function con2_c(res, x, p)
+    function prima_con_2c(res, x, p)
         res .= [x[1] + x[2], x[2] * sin(x[1]) - x[1]]
     end
-    optprob = OptimizationFunction(rosenbrock, AutoForwardDiff(), cons = con2_c)
+    optprob = OptimizationFunction(rosenbrock, AutoForwardDiff(), cons = prima_con_2c)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [1, -100], ucons = [1, 100])
     sol = OptimizationBase.solve(prob, COBYLA(), maxiters = 1000)
     @test sol.objective < l1
 
-    function con2_c(res, x, p)
+    function prima_con_1c(res, x, p)
         res .= [x[1] + x[2]]
     end
-    optprob = OptimizationFunction(rosenbrock, AutoForwardDiff(), cons = con2_c)
+    optprob = OptimizationFunction(rosenbrock, AutoForwardDiff(), cons = prima_con_1c)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [1], ucons = [1])
     sol = OptimizationBase.solve(prob, COBYLA(), maxiters = 1000)
     @test sol.objective < l1
@@ -40,10 +40,10 @@ using Test
     sol = OptimizationBase.solve(prob, COBYLA(), maxiters = 1000)
     @test sol.objective < l1
 
-    function con2_c(res, x, p)
+    function prima_con_nl(res, x, p)
         res .= [x[2] * sin(x[1]) - x[1]]
     end
-    optprob = OptimizationFunction(rosenbrock, AutoSymbolics(), cons = con2_c)
+    optprob = OptimizationFunction(rosenbrock, AutoSymbolics(), cons = prima_con_nl)
     prob = OptimizationProblem(optprob, x0, _p, lcons = [10], ucons = [50])
     sol = OptimizationBase.solve(prob, COBYLA(), maxiters = 1000)
     @test 10 * sol.objective < l1

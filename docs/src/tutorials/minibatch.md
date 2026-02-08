@@ -70,5 +70,5 @@ optfun = OptimizationFunction(
 optprob = OptimizationProblem(optfun, ps_ca, train_loader)
 using IterTools: ncycle
 res1 = solve(
-    optprob, Optimisers.ADAM(0.05); callback = callback, epochs = 1000)
+    optprob, Optimisers.Adam(0.05); callback = callback, epochs = 1000)
 ```

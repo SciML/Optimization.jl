@@ -81,11 +81,11 @@ optfun = OptimizationFunction(
 )
 optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
-@test_broken res1 = Optimization.solve(
+@test_broken Optimization.solve(
     optprob, Optimisers.Adam(0.05),
     ncycle(train_loader, numEpochs),
     callback = callback, maxiters = numEpochs
-)
+) !== nothing
 # @test 10res1.objective < l1
 
 function loss_grad(res, fullp, p)
