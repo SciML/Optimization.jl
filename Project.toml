@@ -1,6 +1,6 @@
 name = "Optimization"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-version = "5.4.0"
+version = "5.5.0"
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
@@ -61,8 +61,8 @@ Optimisers = ">= 0.2.5"
 OptimizationBase = "5"
 OptimizationLBFGSB = "1.2"
 OptimizationMOI = "1"
-OptimizationOptimJL = "0.4.7"
-OptimizationOptimisers = "0.3.14"
+OptimizationOptimJL = "0.4.10"
+OptimizationOptimisers = "0.3.16"
 OrdinaryDiffEqTsit5 = "1"
 Pkg = "1"
 Printf = "1.10"

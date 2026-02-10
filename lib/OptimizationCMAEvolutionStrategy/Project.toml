@@ -1,7 +1,7 @@
 name = "OptimizationCMAEvolutionStrategy"
 uuid = "bd407f91-200f-4536-9381-e4ba712f53f8"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.5"
+version = "0.3.6"
 [deps]
 CMAEvolutionStrategy = "8d3b24bd-414e-49e0-94fb-163cc3a3e411"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
