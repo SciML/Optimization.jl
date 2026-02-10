@@ -1,6 +1,6 @@
 name = "OptimizationBase"
 uuid = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-version = "4.2.0"
+version = "5.0.0"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 
 [deps]

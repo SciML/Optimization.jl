@@ -30,7 +30,7 @@ OptimizationLBFGSB = {path = "../OptimizationLBFGSB"}
 julia = "1.10"
 NLPModels = "0.21"
 ADTypes = "1.18"
-OptimizationBase = "3.3.1, 4"
+OptimizationBase = "5"
 SciMLBase = "2.122.1"
 Reexport = "1.2"
 

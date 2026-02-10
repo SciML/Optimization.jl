@@ -14,7 +14,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 julia = "1.10"
-OptimizationBase = "4"
+OptimizationBase = "5"
 SpeedMapping = "0.3"
 SciMLBase = "2.122.1"
 Reexport = "1.2"

@@ -19,7 +19,7 @@ ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 
 [compat]
 julia = "1.10"
-OptimizationBase = "4.0.2"
+OptimizationBase = "5"
 SparseArrays = "1.6"
 Optim = "2"
 Reexport = "1.2"

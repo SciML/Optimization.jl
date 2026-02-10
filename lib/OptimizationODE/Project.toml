@@ -16,7 +16,7 @@ NonlinearSolve = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
 [compat]
 DiffEqBase = "6.190.2"
 ForwardDiff = "0.10, 1"
-OptimizationBase = "4"
+OptimizationBase = "5"
 OrdinaryDiffEq = "6.102"
 NonlinearSolve = "4.11"
 Reexport = "1"

@@ -20,7 +20,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
 julia = "1.10"
-OptimizationBase = "4"
+OptimizationBase = "5"
 NLopt = "1.1"
 SciMLBase = "2.122.1"
 Reexport = "1.2"
