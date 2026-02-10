@@ -1,7 +1,7 @@
 name = "OptimizationQuadDIRECT"
 uuid = "842ac81e-713d-465f-80f7-84eddaced298"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.3"
+version = "0.3.4"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 QuadDIRECT = "dae52e8d-d666-5120-a592-9e15c33b8d7a"
