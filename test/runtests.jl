@@ -21,6 +21,9 @@ end
             @safetestset "Utils Tests" begin
                 include("utils.jl")
             end
+            @safetestset "Verbosity Tests" begin
+                include("verbosity.jl")
+            end
             @safetestset "AD Tests" begin
                 include("ADtests.jl")
             end

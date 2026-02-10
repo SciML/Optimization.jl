@@ -17,7 +17,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 [compat]
 CMAEvolutionStrategy = "0.2"
 julia = "1.10"
-OptimizationBase = "4.0.2"
+OptimizationBase = "5"
 SciMLBase = "2.122.1"
 Reexport = "1.2"
 

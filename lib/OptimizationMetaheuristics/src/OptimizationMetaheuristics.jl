@@ -66,7 +66,10 @@ function __map_optimizer_args!(
     end
 
     if !isnothing(reltol)
-        @warn "common reltol is currently not used by $(typeof(opt).super)"
+        @SciMLMessage(
+            lazy"common reltol is currently not used by $(typeof(opt).super)",
+            cache.verbose, :unsupported_kwargs
+        )
     end
     return nothing
 end
@@ -109,15 +112,24 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     end
 
     if !isnothing(cache.f.cons)
-        @warn "Equality constraints are current not passed on by Optimization"
+        @SciMLMessage(
+            "Equality constraints are current not passed on by Optimization",
+            cache.verbose, :equality_constraints_ignored
+        )
     end
 
     if !isnothing(cache.lcons)
-        @warn "Inequality constraints are current not passed on by Optimization"
+        @SciMLMessage(
+            "Inequality constraints are current not passed on by Optimization",
+            cache.verbose, :inequality_constraints_ignored
+        )
     end
 
     if !isnothing(cache.ucons)
-        @warn "Inequality constraints are current not passed on by Optimization"
+        @SciMLMessage(
+            "Inequality constraints are current not passed on by Optimization",
+            cache.verbose, :inequality_constraints_ignored
+        )
     end
 
     __map_optimizer_args!(

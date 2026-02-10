@@ -12,7 +12,7 @@ PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
 
 [compat]
 julia = "1.10"
-OptimizationBase = "4"
+OptimizationBase = "5"
 CondaPkg = "0.2"
 Test = "1.10"
 SciMLBase = "2.122.1"

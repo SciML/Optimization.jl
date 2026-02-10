@@ -2,7 +2,7 @@ module OptimizationBase
 
 using DocStringExtensions
 using Reexport
-@reexport using SciMLBase, ADTypes
+@reexport using SciMLBase, ADTypes, SciMLLogging
 
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 import SciMLBase: solve, init, solve!, __init, __solve,
@@ -31,6 +31,7 @@ const DEFAULT_DATA = Iterators.cycle((NullData(),))
 Base.iterate(::NullData, i = 1) = nothing
 Base.length(::NullData) = 0
 
+include("verbosity.jl")
 include("solve.jl")
 include("adtypes.jl")
 include("symify.jl")
@@ -43,6 +44,7 @@ include("state.jl")
 
 export solve, OptimizationCache, DEFAULT_CALLBACK, DEFAULT_DATA
 export IncompatibleOptimizerError, OptimizerMissingError
+export OptimizationVerbosity
 
 include("precompilation.jl")
 

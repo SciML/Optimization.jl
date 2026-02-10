@@ -23,7 +23,7 @@ OptimizationOptimisers = {path = "../OptimizationOptimisers"}
 ForwardDiff = "1.0.1"
 LinearAlgebra = "1.10"
 MLUtils = "0.4.8"
-OptimizationBase = "4.0.2"
+OptimizationBase = "5"
 OptimizationOptimisers = "0.3.8"
 Reexport = "1.2"
 SciMLBase = "2.122.1"

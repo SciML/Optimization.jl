@@ -31,14 +31,20 @@ function __map_optimizer_args(
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
-        verbose::Bool = false,
+        verbose::OptimizationVerbosity = OptimizationVerbosity(),
         kwargs...
     )
     if !isnothing(abstol)
-        @warn "common abstol is currently not used by $(opt)"
+        @SciMLMessage(
+            lazy"common abstol is currently not used by $(opt)",
+            cache.verbose, :unsupported_kwargs
+        )
     end
     if !isnothing(maxtime)
-        @warn "common abstol is currently not used by $(opt)"
+        @SciMLMessage(
+            lazy"common maxtime is currently not used by $(opt)",
+            cache.verbose, :unsupported_kwargs
+        )
     end
 
     mapped_args = (;)

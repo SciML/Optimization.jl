@@ -30,6 +30,7 @@ function OptimizationBase.OptimizationCache(
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         progress = false,
+        verbose = OptimizationBase.OptimizationVerbosity(),
         kwargs...
     )
     reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p)
@@ -50,12 +51,15 @@ function OptimizationBase.OptimizationCache(
         end
     end
 
+    processed_verbose = OptimizationBase._process_verbose_param(verbose)
+
     return OptimizationBase.OptimizationCache(
         opt, f, reinit_cache, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
         progress, callback, nothing,
         OptimizationBase.OptimizationBase.AnalysisResults(nothing, nothing),
-        merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs))
+        merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs)),
+        processed_verbose
     )
 end
 
