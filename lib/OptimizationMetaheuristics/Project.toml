@@ -1,7 +1,7 @@
 name = "OptimizationMetaheuristics"
 uuid = "3aafef2f-86ae-4776-b337-85a36adf0b55"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.4"
+version = "0.3.5"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 Metaheuristics = "bcdb8e00-2c21-11e9-3065-2b553b22f898"
@@ -17,7 +17,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
 julia = "1.10"
-OptimizationBase = "4"
+OptimizationBase = "5"
 Metaheuristics = "3.3"
 SciMLBase = "2.122.1"
 Reexport = "1.2"

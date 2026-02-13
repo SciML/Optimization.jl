@@ -617,7 +617,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyLeastSq
     if !isnothing(cache.lb) && !isnothing(cache.ub) && cache.opt.method in ["trf", "dogbox"]
         kwargs[:bounds] = (cache.lb, cache.ub)
     elseif cache.opt.method == "lm" && (!isnothing(cache.lb) || !isnothing(cache.ub))
-        @warn "Method 'lm' does not support bounds. Ignoring bounds."
+        @SciMLMessage(
+            "Method 'lm' does not support bounds. Ignoring bounds.",
+            cache.verbose, :unsupported_bounds
+        )
     end
     kwargs[:jac] = "2-point"
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)

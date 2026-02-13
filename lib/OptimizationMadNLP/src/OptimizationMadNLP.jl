@@ -365,7 +365,10 @@ function __map_optimizer_args(
     ncon = !isnothing(cache.lcons) ? length(cache.lcons) : 0
 
     if !(callback isa OptimizationBase.NullCallback) || progress
-        @warn("MadNLP doesn't currently support user defined callbacks.")
+        @SciMLMessage(
+            "MadNLP doesn't currently support user defined callbacks.",
+            cache.verbose, :unsupported_callbacks
+        )
     end
     # TODO: add support for user callbacks in MadNLP
 
@@ -395,7 +398,10 @@ function __map_optimizer_args(
         print_level = verbose
     end
 
-    !isnothing(reltol) && @warn "reltol not supported by MadNLP, use abstol instead."
+    !isnothing(reltol) && @SciMLMessage(
+        "reltol not supported by MadNLP, use abstol instead.",
+        cache.verbose, :unsupported_kwargs
+    )
     tol = isnothing(abstol) ? 1.0e-8 : abstol
     max_iter = isnothing(maxiters) ? 3000 : maxiters
     max_wall_time = isnothing(maxtime) ? 1.0e6 : maxtime

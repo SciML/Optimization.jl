@@ -1,7 +1,7 @@
 name = "OptimizationManopt"
 uuid = "e57b7fff-7ee7-4550-b4f0-90e9476e9fb6"
 authors = ["Mateusz Baran <mateuszbaran89@gmail.com>", "Ronny Bergmann <manopt@ronnybergmann.net>"]
-version = "1.1.1"
+version = "1.2.0"
 [deps]
 Manopt = "0fc0a36d-df90-57f3-8f93-d78a9fc72bb5"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
@@ -31,7 +31,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 julia = "1.10"
 DifferentiationInterface = "0.7"
 Manopt = "0.5.25"
-OptimizationBase = "4"
+OptimizationBase = "5"
 LinearAlgebra = "1.10"
 ManifoldsBase = "1"
 ManifoldDiff = "0.4"

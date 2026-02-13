@@ -1,7 +1,7 @@
 name = "OptimizationPyCMA"
 uuid = "fb0822aa-1fe5-41d8-99a6-e7bf6c238d3b"
 authors = ["Maximilian Pochapski <67759684+mxpoch@users.noreply.github.com>"]
-version = "1.2.0"
+version = "1.3.0"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
@@ -12,7 +12,7 @@ PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
 
 [compat]
 julia = "1.10"
-OptimizationBase = "4"
+OptimizationBase = "5"
 CondaPkg = "0.2"
 Test = "1.10"
 SciMLBase = "2.122.1"

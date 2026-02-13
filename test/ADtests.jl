@@ -102,8 +102,8 @@ end
 @testset "Two constraints" begin
     @testset "$adtype" for adtype in [
             AutoForwardDiff(), AutoZygote(), AutoReverseDiff(),
-            AutoFiniteDiff(), AutoSymbolics(), AutoSparseForwardDiff(),
-            AutoSparseReverseDiff(), AutoSparse(AutoZygote()), AutoSparse(AutoSymbolics()), AutoMooncake(),
+            AutoFiniteDiff(), AutoSymbolics(), AutoSparse(AutoForwardDiff()),
+            AutoSparse(AutoReverseDiff()), AutoSparse(AutoZygote()), AutoSparse(AutoSymbolics()), AutoMooncake(),
         ]
         function con2_c(res, x, p)
             res[1] = x[1]^2 + x[2]^2

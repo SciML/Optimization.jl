@@ -65,7 +65,10 @@ function __map_optimizer_args!(
     end
 
     if !isnothing(reltol)
-        @warn "common reltol is currently not used by $(typeof(opt).super)"
+        @SciMLMessage(
+            lazy"common reltol is currently not used by $(typeof(opt).super)",
+            cache.verbose, :unsupported_kwargs
+        )
     end
     return solver_kwargs
 end

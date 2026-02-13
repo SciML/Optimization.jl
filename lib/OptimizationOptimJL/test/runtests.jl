@@ -307,7 +307,6 @@ end
 
     @testset "store_trace=true" begin
         # Test that store_trace=true works without throwing errors (issue #990)
-        rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
         x0 = zeros(2)
         _p = [1.0, 100.0]
 

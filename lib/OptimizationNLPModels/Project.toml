@@ -1,7 +1,7 @@
 name = "OptimizationNLPModels"
 uuid = "064b21be-54cf-11ef-1646-cdfee32b588f"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "1.1.0"
+version = "1.2.0"
 
 [deps]
 NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
@@ -30,7 +30,7 @@ OptimizationLBFGSB = {path = "../OptimizationLBFGSB"}
 julia = "1.10"
 NLPModels = "0.21"
 ADTypes = "1.18"
-OptimizationBase = "3.3.1, 4"
+OptimizationBase = "5"
 SciMLBase = "2.122.1"
 Reexport = "1.2"
 

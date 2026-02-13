@@ -36,7 +36,10 @@ function __map_optimizer_args(
         PyCMAargs...
     )
     if !isnothing(reltol)
-        @warn "common reltol is currently not used by $(opt)"
+        @SciMLMessage(
+            lazy"common reltol is currently not used by $(opt)",
+            prob.verbose, :unsupported_kwargs
+        )
     end
 
     # Converting OptimizationBase.jl args to PyCMA opts

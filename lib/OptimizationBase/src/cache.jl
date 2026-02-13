@@ -7,7 +7,7 @@ end
 
 struct OptimizationCache{
         O, IIP, F <: SciMLBase.AbstractOptimizationFunction{IIP},
-        RC, LB, UB, LC, UC, S, P, C, M,
+        RC, LB, UB, LC, UC, S, P, C, M, V,
     } <:
     SciMLBase.AbstractOptimizationCache
     opt::O
@@ -23,6 +23,7 @@ struct OptimizationCache{
     manifold::M
     analysis_results::AnalysisResults
     solver_args::NamedTuple
+    verbose::V
 end
 
 function OptimizationCache(
@@ -35,6 +36,7 @@ function OptimizationCache(
         progress = false,
         structural_analysis = false,
         manifold = nothing,
+        verbose = OptimizationVerbosity(),
         kwargs...
     )
     if isa_dataiterator(prob.p)
@@ -47,6 +49,19 @@ function OptimizationCache(
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
 
+    # Check if verbose is a solver-specific type (not OptimizationVerbosity-related)
+    # If so, pass it through to solver_args and use default OptimizationVerbosity
+    if !(
+            verbose isa Bool || verbose isa OptimizationVerbosity ||
+                verbose isa SciMLLogging.AbstractVerbosityPreset
+        )
+        # Solver-specific verbosity type (e.g., MadNLP.LogLevels)
+        kwargs = merge(NamedTuple(kwargs), (; verbose = verbose))
+        processed_verbose = OptimizationVerbosity()
+    else
+        processed_verbose = _process_verbose_param(verbose)
+    end
+
     if !(
             prob.f.adtype isa DifferentiationInterface.SecondOrder ||
                 prob.f.adtype isa AutoZygote
@@ -55,17 +70,19 @@ function OptimizationCache(
             SciMLBase.requireshessian(opt) || SciMLBase.requiresconshess(opt) ||
                 SciMLBase.requireslagh(opt)
         )
-        @warn "The selected optimization algorithm requires second order derivatives, but `SecondOrder` ADtype was not provided.
-        So a `SecondOrder` with $(prob.f.adtype) for both inner and outer will be created, this can be suboptimal and not work in some cases so
-        an explicit `SecondOrder` ADtype is recommended."
+        @SciMLMessage(
+            lazy"The selected optimization algorithm requires second order derivatives, but `SecondOrder` ADtype was not provided. So a `SecondOrder` with $(prob.f.adtype) for both inner and outer will be created, this can be suboptimal and not work in some cases so an explicit `SecondOrder` ADtype is recommended.",
+            processed_verbose, :missing_second_order_ad
+        )
     elseif prob.f.adtype isa AutoZygote &&
             (
             SciMLBase.requiresconshess(opt) || SciMLBase.requireslagh(opt) ||
                 SciMLBase.requireshessian(opt)
         )
-        @warn "The selected optimization algorithm requires second order derivatives, but `AutoZygote` ADtype was provided.
-        So a `SecondOrder` with `AutoZygote` for inner and `AutoForwardDiff` for outer will be created, for choosing another pair
-        an explicit `SecondOrder` ADtype is recommended."
+        @SciMLMessage(
+            lazy"The selected optimization algorithm requires second order derivatives, but `AutoZygote` ADtype was provided. So a `SecondOrder` with `AutoZygote` for inner and `AutoForwardDiff` for outer will be created, for choosing another pair an explicit `SecondOrder` ADtype is recommended.",
+            processed_verbose, :incompatible_ad_backend
+        )
     end
 
     f_base = if prob.sense === SciMLBase.MaxSense && !supports_sense(opt)
@@ -93,7 +110,8 @@ function OptimizationCache(
         opt, f, reinit_cache_passedon, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
         progress, callback, manifold, AnalysisResults(obj_res, cons_res),
-        merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs))
+        merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs)),
+        processed_verbose
     )
 end
 
@@ -105,11 +123,12 @@ function SciMLBase.__init(
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         progress = false,
+        verbose = OptimizationVerbosity(),
         kwargs...
     )
     return OptimizationCache(
         prob, opt; maxiters, maxtime, abstol, callback,
-        reltol, progress,
+        reltol, progress, verbose,
         kwargs...
     )
 end

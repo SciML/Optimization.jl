@@ -1,7 +1,7 @@
 name = "SimpleOptimization"
 uuid = "510db2f7-4254-4e34-bbda-04240c91ca8f"
 authors = ["Utkarsh <rajpututkarsh530@gmail.com> and contributors"]
-version = "1.0.0"
+version = "1.1.0"
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
@@ -25,7 +25,7 @@ SimpleOptimizationForwardDiffExt = "ForwardDiff"
 ADTypes = "1"
 Enzyme = "0.13"
 ForwardDiff = "0.10, 1"
-OptimizationBase = "4.0.2"
+OptimizationBase = "5"
 Reexport = "1.2"
 SciMLBase = "2.122.1"
 SimpleNonlinearSolve = "1, 2"

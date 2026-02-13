@@ -47,7 +47,7 @@ using Test
         return nothing
     end
 
-    optf = OptimizationFunction(loss, AutoSparseForwardDiff(), cons = cons1)
+    optf = OptimizationFunction(loss, AutoSparse(AutoForwardDiff()), cons = cons1)
     callback = (st, l) -> (@show l; return false)
 
     initpars = rand(5)

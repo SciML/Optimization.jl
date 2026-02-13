@@ -7,10 +7,6 @@ using DocStringExtensions
 using Reexport
 @reexport using SciMLBase, ADTypes, OptimizationBase
 
-if !isdefined(Base, :get_extension)
-    using Requires
-end
-
 using Logging, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 
