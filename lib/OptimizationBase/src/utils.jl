@@ -7,89 +7,86 @@ end
 # Sense handling
 supports_sense(::Any) = false
 
-function apply_sense(f::OptimizationFunction{IIP}, sense) where {IIP}
-    if sense !== SciMLBase.MaxSense
+function apply_sense(f::OptimizationFunction{iip}, sense) where {iip}
+    if sense == SciMLBase.MinSense
         return f
     end
 
-    objf = (args...) -> -f.f(args...)
+    objf = (u, p) -> -f.f(u, p)
 
     grad = if f.grad === nothing
         nothing
-    elseif IIP
-        function (G, args...)
-            f.grad(G, args...)
+    elseif iip
+        function (G, u, p)
+            f.grad(G, u, p)
             G .*= -one(eltype(G))
-            return G
         end
     else
-        (args...) -> -f.grad(args...)
+        (u, p) -> -f.grad(u, p)
     end
 
     fg = if f.fg === nothing
         nothing
-    elseif IIP
-        function (G, args...)
-            y = f.fg(G, args...)
+    elseif iip
+        function (G, u, p)
+            y = f.fg(G, u, p)
             G .*= -one(eltype(G))
             return -y
         end
     else
-        function (args...)
-            y, g = f.fg(args...)
+        function (u, p)
+            y, g = f.fg(u, p)
             return -y, -g
         end
     end
 
     hess = if f.hess === nothing
         nothing
-    elseif IIP
-        function (H, args...)
-            f.hess(H, args...)
+    elseif iip
+        function (H, u, p)
+            f.hess(H, u, p)
             H .*= -one(eltype(H))
-            return H
         end
     else
-        (args...) -> -f.hess(args...)
+        (u, p) -> -f.hess(u, p)
     end
 
     fgh = if f.fgh === nothing
         nothing
-    elseif IIP
-        function (G, H, args...)
-            y = f.fgh(G, H, args...)
+    elseif iip
+        function (G, H, u, p)
+            y = f.fgh(G, H, u, p)
             G .*= -one(eltype(G))
             H .*= -one(eltype(H))
             return -y
         end
     else
-        function (args...)
-            y, g, h = f.fgh(args...)
+        function (u, p)
+            y, g, h = f.fgh(u, p)
             return -y, -g, -h
         end
     end
 
     hv = if f.hv === nothing
         nothing
-    elseif IIP
-        function (H, args...)
-            f.hv(H, args...)
-            H .*= -one(eltype(H))
-            return H
+    elseif iip
+        function (Hv, u, v, p)
+            f.hv(Hv, u, v, p)
+            Hv .*= -one(eltype(Hv))
         end
     else
-        (args...) -> -f.hv(args...)
+        (u, v, p) -> -f.hv(u, v, p)
     end
 
     lag_h = if f.lag_h === nothing
         nothing
-    elseif IIP
-        (H, x, σ, μ, args...) -> f.lag_h(H, x, -σ, μ, args...)
+    elseif iip
+        (H, u, σ, μ, p) -> f.lag_h(H, u, -σ, μ, p)
     else
-        (x, σ, μ, args...) -> f.lag_h(x, -σ, μ, args...)
+        (u, σ, μ, p) -> f.lag_h(u, -σ, μ, p)
     end
 
-    return OptimizationFunction{IIP}(
+    return OptimizationFunction{iip}(
         objf, f.adtype;
         grad = grad, fg = fg, hess = hess, hv = hv, fgh = fgh,
         cons = f.cons, cons_j = f.cons_j, cons_jvp = f.cons_jvp,

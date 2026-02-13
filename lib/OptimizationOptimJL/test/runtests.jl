@@ -30,6 +30,46 @@ function (cb::CallbackTester)(state, loss_val)
 end
 
 @testset "OptimizationOptimJL.jl" begin
+    @testset "Issue #976 MaxSense with bounds" begin
+        obj(x, p) = x[1] + x[2]
+        lb = [0.0, 0.0]
+        ub = [10.0, 10.0]
+        x0 = [5.0, 5.0]
+        optf = OptimizationFunction(obj, OptimizationBase.AutoForwardDiff())
+
+        prob_min = OptimizationProblem(optf, x0, nothing; lb = lb, ub = ub)
+        sol_min = solve(prob_min, LBFGS(); x_tol = 0.1)
+        @test all(sol_min.u .< 1.0)
+        @test sol_min.objective < 1.0
+
+        prob_max = OptimizationProblem(
+            optf, x0, nothing; lb = lb, ub = ub, sense = OptimizationBase.MaxSense
+        )
+        sol_max = solve(prob_max, LBFGS(); x_tol = 0.1)
+        @test all(sol_max.u .> 9.0)
+        @test abs(sol_max.objective) > 18.0
+    end
+
+    @testset "Sense wrapping" begin
+        x0 = [5.0, 5.0]
+        linear_obj(x, p) = x[1] + x[2]
+        function linear_grad!(G, x, p)
+            G[1] = 1.0
+            G[2] = 1.0
+            return G
+        end
+        optf = OptimizationFunction(
+            linear_obj, OptimizationBase.AutoZygote(); grad = linear_grad!
+        )
+        prob_max = OptimizationProblem(optf, x0, nothing; sense = OptimizationBase.MaxSense)
+        cache = OptimizationBase.OptimizationCache(prob_max, Optim.BFGS())
+        G = zeros(2)
+        @test isapprox(cache.f.f(x0, nothing), 10.0; atol = 1e-12)
+        cache.f.grad(G, x0, nothing)
+        @test isapprox(G[1], 1.0; atol = 1e-12)
+        @test isapprox(G[2], 1.0; atol = 1e-12)
+    end
+
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = zeros(2)
     _p = [1.0, 100.0]
