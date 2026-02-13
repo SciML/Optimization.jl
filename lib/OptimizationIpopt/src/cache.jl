@@ -85,9 +85,23 @@ function IpoptCache(
         prob, opt;
         callback = nothing,
         progress = false,
+        verbose = OptimizationBase.DEFAULT_VERBOSE,
         kwargs...
     )
     reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
+
+    # Check if verbose is a solver-specific type (not OptimizationVerbosity-related)
+    # If so, pass it through to solver_args and use default OptimizationVerbosity
+    if !(
+            verbose isa Bool || verbose isa OptimizationBase.OptimizationVerbosity ||
+                verbose isa SciMLLogging.AbstractVerbosityPreset
+        )
+        # Solver-specific verbosity type (e.g., Int for Ipopt print_level)
+        kwargs = merge(NamedTuple(kwargs), (; verbose = verbose))
+        processed_verbose = OptimizationBase.OptimizationVerbosity()
+    else
+        processed_verbose = OptimizationBase._process_verbose_param(verbose)
+    end
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     if prob.f.adtype isa ADTypes.AutoSymbolics || (
@@ -135,7 +149,7 @@ function IpoptCache(
     obj_expr = f.expr
     cons_expr = f.cons_expr
 
-    solver_args = NamedTuple(kwargs)
+    solver_args = merge(NamedTuple(kwargs), (; processed_verbose = processed_verbose))
 
     return IpoptCache(
         f,
