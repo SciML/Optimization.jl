@@ -356,7 +356,7 @@ function SciMLBase.__solve(cache::IpoptCache)
         reltol = cache.solver_args.reltol,
         maxiters = maxiters,
         maxtime = maxtime,
-        verbose = get(cache.solver_args, :verbose, cache.solver_args.processed_verbose),
+        verbose = cache.solver_args.verbose,
         progress = cache.progress,
         callback = cache.callback
     )

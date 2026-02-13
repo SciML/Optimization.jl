@@ -90,17 +90,13 @@ function IpoptCache(
     )
     reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
 
-    # Check if verbose is a solver-specific type (not OptimizationVerbosity-related)
-    # If so, pass it through to solver_args and use default OptimizationVerbosity
-    if !(
-            verbose isa Bool || verbose isa OptimizationBase.OptimizationVerbosity ||
-                verbose isa SciMLLogging.AbstractVerbosityPreset
-        )
-        # Solver-specific verbosity type (e.g., Int for Ipopt print_level)
-        kwargs = merge(NamedTuple(kwargs), (; verbose = verbose))
-        processed_verbose = OptimizationBase.OptimizationVerbosity()
+    # Process verbose parameter: if it's a standard type (Bool/OptimizationVerbosity/Preset),
+    # convert it to OptimizationVerbosity. Otherwise pass it through as-is (e.g., Int for Ipopt)
+    final_verbose = if verbose isa Bool || verbose isa OptimizationBase.OptimizationVerbosity ||
+            verbose isa SciMLLogging.AbstractVerbosityPreset
+        OptimizationBase._process_verbose_param(verbose)
     else
-        processed_verbose = OptimizationBase._process_verbose_param(verbose)
+        verbose  # Solver-specific type (e.g., Int), use directly
     end
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
@@ -149,7 +145,7 @@ function IpoptCache(
     obj_expr = f.expr
     cons_expr = f.cons_expr
 
-    solver_args = merge(NamedTuple(kwargs), (; processed_verbose = processed_verbose))
+    solver_args = merge(NamedTuple(kwargs), (; verbose = final_verbose))
 
     return IpoptCache(
         f,
