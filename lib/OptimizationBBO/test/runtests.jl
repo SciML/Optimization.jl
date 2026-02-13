@@ -4,6 +4,17 @@ using Test
 using Random
 
 @testset "OptimizationBBO.jl" begin
+    @testset "Issue #976 MaxSense regression" begin
+        Random.seed!(1234)
+        J(x, p) = x[1]
+        F = OptimizationFunction(J)
+        prob = OptimizationBase.OptimizationProblem(
+            F, [0.0], nothing; lb = [-10.0], ub = [10.0], sense = OptimizationBase.MaxSense
+        )
+        sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(); maxiters = 200)
+        @test sol.objective > 5.0
+    end
+
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = zeros(2)
     _p = [1.0, 100.0]
