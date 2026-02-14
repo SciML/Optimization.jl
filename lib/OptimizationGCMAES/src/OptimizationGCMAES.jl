@@ -16,6 +16,7 @@ SciMLBase.requiresgradient(::GCMAESOpt) = true
 SciMLBase.requireshessian(::GCMAESOpt) = false
 SciMLBase.requiresconsjac(::GCMAESOpt) = false
 SciMLBase.requiresconshess(::GCMAESOpt) = false
+OptimizationBase.supports_sense(::GCMAESOpt) = true
 
 function __map_optimizer_args(
         cache::OptimizationBase.OptimizationCache, opt::GCMAESOpt;

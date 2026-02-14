@@ -14,6 +14,7 @@ abstract type AbstractManoptOptimizer end
 
 SciMLBase.has_init(opt::AbstractManoptOptimizer) = true
 SciMLBase.allowscallback(opt::AbstractManoptOptimizer) = true
+OptimizationBase.supports_sense(::AbstractManoptOptimizer) = true
 
 function __map_optimizer_args!(
         cache::OptimizationBase.OptimizationCache,

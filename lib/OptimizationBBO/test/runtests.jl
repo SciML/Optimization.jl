@@ -1,8 +1,20 @@
 using OptimizationBBO, OptimizationBase, BlackBoxOptim
 using SciMLBase: MultiObjectiveOptimizationFunction
 using Test
+using Random
 
 @testset "OptimizationBBO.jl" begin
+    @testset "Issue #976 MaxSense regression" begin
+        Random.seed!(1234)
+        J(x, p) = x[1]
+        F = OptimizationFunction(J)
+        prob = OptimizationBase.OptimizationProblem(
+            F, [0.0], nothing; lb = [-10.0], ub = [10.0], sense = OptimizationBase.MaxSense
+        )
+        sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(); maxiters = 200)
+        @test sol.objective > 5.0
+    end
+
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = zeros(2)
     _p = [1.0, 100.0]
@@ -17,6 +29,30 @@ using Test
     @test 10 * sol.objective < l1
 
     @test (@allocated solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())) < 1.0e7
+
+    @testset "Sense handling (single-objective)" begin
+        Random.seed!(1234)
+        obj(x, p) = x[1]
+        x0_sense = [0.0]
+        lb_sense = [-10.0]
+        ub_sense = [10.0]
+
+        optf_sense = OptimizationFunction(obj)
+
+        prob_min = OptimizationBase.OptimizationProblem(
+            optf_sense, x0_sense, nothing; lb = lb_sense, ub = ub_sense,
+            sense = OptimizationBase.MinSense
+        )
+        sol_min = solve(prob_min, BBO_adaptive_de_rand_1_bin_radiuslimited(); maxiters = 200)
+        @test sol_min.objective < -5.0
+
+        prob_max = OptimizationBase.OptimizationProblem(
+            optf_sense, x0_sense, nothing; lb = lb_sense, ub = ub_sense,
+            sense = OptimizationBase.MaxSense
+        )
+        sol_max = solve(prob_max, BBO_adaptive_de_rand_1_bin_radiuslimited(); maxiters = 200)
+        @test sol_max.objective > 5.0
+    end
 
     prob = OptimizationBase.OptimizationProblem(
         optprob, nothing, _p, lb = [-1.0, -1.0],

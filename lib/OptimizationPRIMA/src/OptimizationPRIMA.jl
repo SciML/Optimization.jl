@@ -35,18 +35,24 @@ function OptimizationBase.OptimizationCache(
     )
     reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p)
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
-    if prob.f.adtype isa SciMLBase.NoAD && opt isa COBYLA
+    f_base = if prob.sense === OptimizationBase.MaxSense && !OptimizationBase.supports_sense(opt)
+        OptimizationBase.apply_sense(prob.f, prob.sense)
+    else
+        prob.f
+    end
+
+    if f_base.adtype isa SciMLBase.NoAD && opt isa COBYLA
         throw("We evaluate the jacobian and hessian of the constraints once to automatically detect
         linear and nonlinear constraints, please provide a valid AD backend for using COBYLA.")
     else
         if opt isa COBYLA
             f = OptimizationBase.instantiate_function(
-                prob.f, reinit_cache.u0, prob.f.adtype, reinit_cache.p, num_cons,
+                f_base, reinit_cache.u0, f_base.adtype, reinit_cache.p, num_cons,
                 cons_j = true, cons_h = true
             )
         else
             f = OptimizationBase.instantiate_function(
-                prob.f, reinit_cache.u0, prob.f.adtype, reinit_cache.p, num_cons
+                f_base, reinit_cache.u0, f_base.adtype, reinit_cache.p, num_cons
             )
         end
     end

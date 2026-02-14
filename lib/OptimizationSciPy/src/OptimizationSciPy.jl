@@ -99,6 +99,7 @@ end
 
 # Tiny structs that tag which SciPy algorithm the user picked.
 abstract type ScipyOptimizer end
+OptimizationBase.supports_sense(::ScipyOptimizer) = true
 
 struct ScipyMinimize <: ScipyOptimizer
     method::String
