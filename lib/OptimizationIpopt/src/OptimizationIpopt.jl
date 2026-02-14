@@ -309,8 +309,8 @@ function __map_optimizer_args(
         elseif verbose isa Int
             Ipopt.AddIpoptIntOption(prob, "print_level", verbose)
         else
-            # Use ipopt_verbosity toggle from cache.verbose
-            print_level = SciMLLogging.verbosity_to_int(cache.verbose.ipopt_verbosity)
+            # verbose is an OptimizationVerbosity object
+            print_level = SciMLLogging.verbosity_to_int(verbose.ipopt_verbosity)
             Ipopt.AddIpoptIntOption(prob, "print_level", print_level)
         end
     end
@@ -356,7 +356,7 @@ function SciMLBase.__solve(cache::IpoptCache)
         reltol = cache.solver_args.reltol,
         maxiters = maxiters,
         maxtime = maxtime,
-        verbose = get(cache.solver_args, :verbose, false),
+        verbose = cache.solver_args.verbose,
         progress = cache.progress,
         callback = cache.callback
     )
