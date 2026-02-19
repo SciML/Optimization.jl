@@ -819,25 +819,25 @@ end
 
 @inline function arg_copy(data, i)
     config, args = data
-    copy_or_reuse(config, args[i].val, i + 5)
+    return copy_or_reuse(config, args[i].val, i + 5)
 end
 
 # Note these following functions are generally not considered user facing from within Enzyme.
 # They enable additional performance/usability here (e.g. inactive kwargs).
 # Contact wsmoses@ before modifying (and beware their semantics may change without semver).
 
-Enzyme.EnzymeRules.inactive_kwarg(::typeof(OptimizationBase.solve_up), prob, sensalg::Union{Nothing,SciMLBase.AbstractSensitivityAlgorithm}, u0, p, args...; kwargs...) = nothing
+Enzyme.EnzymeRules.inactive_kwarg(::typeof(OptimizationBase.solve_up), prob, sensalg::Union{Nothing, SciMLBase.AbstractSensitivityAlgorithm}, u0, p, args...; kwargs...) = nothing
 
-Enzyme.EnzymeRules.has_easy_rule(::typeof(OptimizationBase.solve_up), prob, sensalg::Union{Nothing,SciMLBase.AbstractSensitivityAlgorithm}, u0, p, args...; kwargs...) = nothing
+Enzyme.EnzymeRules.has_easy_rule(::typeof(OptimizationBase.solve_up), prob, sensalg::Union{Nothing, SciMLBase.AbstractSensitivityAlgorithm}, u0, p, args...; kwargs...) = nothing
 
 function Enzyme.EnzymeRules.augmented_primal(
-    config::Enzyme.EnzymeRules.RevConfigWidth{1},
-    func::Const{typeof(OptimizationBase.solve_up)}, RTA::Type{Duplicated{RT}}, prob,
-    sensealg::Union{
-        Const{Nothing}, Const{<:SciMLBase.AbstractSensitivityAlgorithm}
-    },
-    u0, p, args...; kwargs...
-) where {RT}
+        config::Enzyme.EnzymeRules.RevConfigWidth{1},
+        func::Const{typeof(OptimizationBase.solve_up)}, RTA::Type{Duplicated{RT}}, prob,
+        sensealg::Union{
+            Const{Nothing}, Const{<:SciMLBase.AbstractSensitivityAlgorithm},
+        },
+        u0, p, args...; kwargs...
+    ) where {RT}
 
     res = OptimizationBase._solve_adjoint(
         copy_or_reuse(config, prob.val, 2), copy_or_reuse(config, sensealg.val, 3),
@@ -866,12 +866,12 @@ function Enzyme.EnzymeRules.augmented_primal(
 end
 
 function Enzyme.EnzymeRules.reverse(
-    config::Enzyme.EnzymeRules.RevConfigWidth{1},
-    func::Const{typeof(OptimizationBase.solve_up)}, ::Type{<:Enzyme.Annotation{RT}}, tape, prob, 
-    sensealg::Union{
-        Const{Nothing}, Const{<:SciMLBase.AbstractSensitivityAlgorithm},
-    },
-    u0, p, args...; kwargs...
+        config::Enzyme.EnzymeRules.RevConfigWidth{1},
+        func::Const{typeof(OptimizationBase.solve_up)}, ::Type{<:Enzyme.Annotation{RT}}, tape, prob,
+        sensealg::Union{
+            Const{Nothing}, Const{<:SciMLBase.AbstractSensitivityAlgorithm},
+        },
+        u0, p, args...; kwargs...
     ) where {RT}
     if Enzyme.EnzymeRules.needs_shadow(config)
         dres, clos = tape

@@ -90,32 +90,40 @@ from NLopt for an example. The common local optimizer arguments are:
   - `local_reltol`: relative tolerance  in changes of the objective value
   - `local_options`: `NamedTuple` of keyword arguments for local optimizer
 """
-function solve(prob::SciMLBase.OptimizationProblem, args...; sensealg = nothing,
-        u0 = nothing, p = nothing, wrap = Val(true), kwargs...)::SciMLBase.AbstractOptimizationSolution
+function solve(
+        prob::SciMLBase.OptimizationProblem, args...; sensealg = nothing,
+        u0 = nothing, p = nothing, wrap = Val(true), kwargs...
+    )::SciMLBase.AbstractOptimizationSolution
     if sensealg === nothing && haskey(prob.kwargs, :sensealg)
         sensealg = prob.kwargs[:sensealg]
     end
 
     u0 = u0 !== nothing ? u0 : prob.u0
     p = p !== nothing ? p : prob.p
-    if wrap isa Val{true}
-        wrap_sol(solve_up(prob,
-            sensealg,
-            u0,
-            p,
-            args...;
-            originator = SciMLBase.ChainRulesOriginator(),
-            kwargs...))
+    return if wrap isa Val{true}
+        wrap_sol(
+            solve_up(
+                prob,
+                sensealg,
+                u0,
+                p,
+                args...;
+                originator = SciMLBase.ChainRulesOriginator(),
+                kwargs...
+            )
+        )
     else
-        solve_up(prob,
+        solve_up(
+            prob,
             sensealg,
             u0,
             p,
             args...;
             originator = SciMLBase.ChainRulesOriginator(),
-            kwargs...)
+            kwargs...
+        )
     end
-end 
+end
 
 function solve(
         prob::SciMLBase.EnsembleProblem{T}, args...; kwargs...
@@ -244,28 +252,32 @@ function __solve(prob::SciMLBase.OptimizationProblem, alg, args...; kwargs...)
     throw(OptimizerMissingError(alg))
 end
 
-function solve_up(prob::SciMLBase.OptimizationProblem, sensealg, u0, p, args...; originator = SciMLBase.ChainRulesOriginator(),
-    kwargs...)
+function solve_up(
+        prob::SciMLBase.OptimizationProblem, sensealg, u0, p, args...; originator = SciMLBase.ChainRulesOriginator(),
+        kwargs...
+    )
     alg = extract_opt_alg(args, kwargs, has_kwargs(prob) ? prob.kwargs : kwargs)
     _prob = get_concrete_problem(prob; u0 = u0, p = p, kwargs...)
-    if length(args) > 1
+    return if length(args) > 1
         solve_call(_prob, alg, Base.tail(args)..., kwargs...)
     else
         solve_call(_prob, alg; kwargs...)
     end
 end
 
-function solve_call(_prob, alg, args...; merge_callbacks = true, kwargshandle = nothing,
-    kwargs...)
+function solve_call(
+        _prob, alg, args...; merge_callbacks = true, kwargshandle = nothing,
+        kwargs...
+    )
     kwargshandle = kwargshandle === nothing ? KeywordArgError : kwargshandle
     kwargshandle = has_kwargs(_prob) && haskey(_prob.kwargs, :kwargshandle) ?
-                   _prob.kwargs[:kwargshandle] : kwargshandle
+        _prob.kwargs[:kwargshandle] : kwargshandle
 
     if has_kwargs(_prob)
         kwargs = isempty(_prob.kwargs) ? kwargs : merge(values(_prob.kwargs), kwargs)
     end
 
-    if SciMLBase.has_init(alg)
+    return if SciMLBase.has_init(alg)
         solve!(init(_prob, alg, args...; kwargs...))
     else
         if _prob.u0 !== nothing && !isconcretetype(eltype(_prob.u0))
@@ -280,18 +292,18 @@ function get_concrete_problem(prob::OptimizationProblem; kwargs...)
     oldprob = prob
     prob = get_updated_symbolic_problem(get_root_indp(prob), prob; kwargs...)
     if prob !== oldprob
-        kwargs = (;kwargs..., u0 = SymbolicIndexingInterface.state_values(prob), p = SymbolicIndexingInterface.parameter_values(prob))
+        kwargs = (; kwargs..., u0 = SymbolicIndexingInterface.state_values(prob), p = SymbolicIndexingInterface.parameter_values(prob))
     end
     p = get_concrete_p(prob, kwargs)
     u0 = get_concrete_u0(prob, false, nothing, kwargs)
     u0 = promote_u0(u0, p, nothing)
-    remake(prob; u0 = u0, p = p)
+    return remake(prob; u0 = u0, p = p)
 
 end
 
 
 @inline function extract_opt_alg(solve_args, solve_kwargs, prob_kwargs)
-    if isempty(solve_args) || isnothing(first(solve_args))
+    return if isempty(solve_args) || isnothing(first(solve_args))
         if haskey(solve_kwargs, :alg)
             solve_kwargs[:alg]
         elseif haskey(prob_kwargs, :alg)
@@ -305,8 +317,10 @@ end
 end
 
 
-function _solve_forward(prob, sensealg, u0, p, originator, args...; merge_callbacks = true,
-    kwargs...)
+function _solve_forward(
+        prob, sensealg, u0, p, originator, args...; merge_callbacks = true,
+        kwargs...
+    )
     alg = extract_opt_alg(args, kwargs, prob.kwargs)
     _prob = get_concrete_problem(prob; u0 = u0, p = p, kwargs...)
 
@@ -314,27 +328,33 @@ function _solve_forward(prob, sensealg, u0, p, originator, args...; merge_callba
         kwargs = isempty(_porb.kwargs) ? kwargs : merge(values(_prob.kwargs), kwargs)
     end
 
-    if length(args) > 1
-        _concrete_solve_forward(_prob, alg, sensealg, u0, p, originator,
-            Base.tail(args)...; kwargs...)
+    return if length(args) > 1
+        _concrete_solve_forward(
+            _prob, alg, sensealg, u0, p, originator,
+            Base.tail(args)...; kwargs...
+        )
     else
         _concrete_solve_forward(_prob, alg, sensealg, u0, p, originator; kwargs...)
     end
 end
 
-function _solve_adjoint(_prob, sensealg, u0, p, originator, args...; merge_callbacks = true, 
-    kwargs...)
+function _solve_adjoint(
+        _prob, sensealg, u0, p, originator, args...; merge_callbacks = true,
+        kwargs...
+    )
     alg = extract_opt_alg(args, kwargs, _prob.kwargs)
-    
+
     _prob = get_concrete_problem(_prob; u0 = u0, p = p, kwargs...)
 
     if has_kwargs(_prob)
         kwargs = isempty(_prob.kwargs) ? kwargs : merge(values(_prob.kwargs), kwargs)
     end
-    
-    if length(args) > 1
-        _concrete_solve_adjoint(_prob, alg, sensealg, u0, p, originator,
-            Base.tail(args)...; kwargs...)
+
+    return if length(args) > 1
+        _concrete_solve_adjoint(
+            _prob, alg, sensealg, u0, p, originator,
+            Base.tail(args)...; kwargs...
+        )
     else
         _concrete_solve_adjoint(_prob, alg, sensealg, u0, p, originator; kwargs...)
     end
