@@ -325,7 +325,7 @@ function _solve_forward(
     _prob = get_concrete_problem(prob; u0 = u0, p = p, kwargs...)
 
     if has_kwargs(_prob)
-        kwargs = isempty(_porb.kwargs) ? kwargs : merge(values(_prob.kwargs), kwargs)
+        kwargs = isempty(_prob.kwargs) ? kwargs : merge(values(_prob.kwargs), kwargs)
     end
 
     return if length(args) > 1

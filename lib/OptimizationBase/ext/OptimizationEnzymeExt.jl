@@ -826,9 +826,9 @@ end
 # They enable additional performance/usability here (e.g. inactive kwargs).
 # Contact wsmoses@ before modifying (and beware their semantics may change without semver).
 
-Enzyme.EnzymeRules.inactive_kwarg(::typeof(OptimizationBase.solve_up), prob, sensalg::Union{Nothing, SciMLBase.AbstractSensitivityAlgorithm}, u0, p, args...; kwargs...) = nothing
+Enzyme.EnzymeRules.inactive_kwarg(::typeof(OptimizationBase.solve_up), prob, sensealg::Union{Nothing, SciMLBase.AbstractSensitivityAlgorithm}, u0, p, args...; kwargs...) = nothing
 
-Enzyme.EnzymeRules.has_easy_rule(::typeof(OptimizationBase.solve_up), prob, sensalg::Union{Nothing, SciMLBase.AbstractSensitivityAlgorithm}, u0, p, args...; kwargs...) = nothing
+Enzyme.EnzymeRules.has_easy_rule(::typeof(OptimizationBase.solve_up), prob, sensealg::Union{Nothing, SciMLBase.AbstractSensitivityAlgorithm}, u0, p, args...; kwargs...) = nothing
 
 function Enzyme.EnzymeRules.augmented_primal(
         config::Enzyme.EnzymeRules.RevConfigWidth{1},
