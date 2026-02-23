@@ -252,6 +252,7 @@ function __solve(prob::SciMLBase.OptimizationProblem, alg, args...; kwargs...)
     throw(OptimizerMissingError(alg))
 end
 
+# Used for hooking up to AD rules / SciMLSensitivity
 function solve_up(
         prob::SciMLBase.OptimizationProblem, sensealg, u0, p, args...; originator = SciMLBase.ChainRulesOriginator(),
         kwargs...
