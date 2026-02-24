@@ -260,7 +260,7 @@ function solve_up(
     alg = extract_opt_alg(args, kwargs, has_kwargs(prob) ? prob.kwargs : kwargs)
     _prob = get_concrete_problem(prob; u0 = u0, p = p, kwargs...)
     return if length(args) > 1
-        solve_call(_prob, alg, Base.tail(args)..., kwargs...)
+        solve_call(_prob, alg, Base.tail(args)...; kwargs...)
     else
         solve_call(_prob, alg; kwargs...)
     end
