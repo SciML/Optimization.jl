@@ -18,6 +18,7 @@ SciMLLogging = "a6db7da4-7206-11f0-1eab-35f2a5dbe1d1"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SparseConnectivityTracer = "9f842d2f-2579-4b1d-911e-f412cf18a3f5"
 SparseMatrixColorings = "0a514795-09f3-496d-8182-132a7b665d35"
+SymbolicIndexingInterface = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
 
 [weakdeps]
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
@@ -25,12 +26,14 @@ FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 MLDataDevices = "7e8f7934-dd98-4c1a-8fe8-92b47a384d40"
 MLUtils = "f1d291b0-491e-4a28-83b9-f70985020b54"
+Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 SymbolicAnalysis = "4297ee4d-0239-47d8-ba5d-195ecdf594fe"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extensions]
-OptimizationEnzymeExt = "Enzyme"
+OptimizationEnzymeExt = ["ChainRulesCore", "Enzyme"]
 OptimizationFiniteDiffExt = "FiniteDiff"
 OptimizationForwardDiffExt = "ForwardDiff"
 OptimizationMLDataDevicesExt = "MLDataDevices"
@@ -38,6 +41,8 @@ OptimizationMLUtilsExt = "MLUtils"
 OptimizationReverseDiffExt = "ReverseDiff"
 OptimizationSymbolicAnalysisExt = "SymbolicAnalysis"
 OptimizationZygoteExt = "Zygote"
+OptimizationChainRulesCoreExt = "ChainRulesCore"
+OptimizationMooncakeExt = "Mooncake"
 
 [compat]
 ADTypes = "1.14"
@@ -60,6 +65,7 @@ SciMLLogging = "1.8.0"
 SparseConnectivityTracer = "0.6, 1"
 SparseMatrixColorings = "0.4"
 SymbolicAnalysis = "0.3"
+SymbolicIndexingInterface = "0.3.46"
 Zygote = "0.6.67, 0.7"
 julia = "1.10"
 

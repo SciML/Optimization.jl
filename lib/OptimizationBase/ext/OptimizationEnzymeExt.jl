@@ -7,6 +7,7 @@ import OptimizationBase.LinearAlgebra: I, dot
 import OptimizationBase.ADTypes: AutoEnzyme
 using Enzyme
 using Core: Vararg
+using ChainRulesCore
 
 @inline function firstapply(f::F, θ, p) where {F}
     res = f(θ, p)
@@ -806,6 +807,89 @@ function OptimizationBase.instantiate_function(
     x = cache.u0
 
     return OptimizationBase.instantiate_function(f, x, adtype, p, num_cons; kwargs...)
+end
+
+@inline function copy_or_reuse(config, val, idx)
+    if Enzyme.EnzymeRules.overwritten(config)[idx] && ismutable(val)
+        return deepcopy(val)
+    else
+        return val
+    end
+end
+
+@inline function arg_copy(data, i)
+    config, args = data
+    return copy_or_reuse(config, args[i].val, i + 5)
+end
+
+# Note these following functions are generally not considered user facing from within Enzyme.
+# They enable additional performance/usability here (e.g. inactive kwargs).
+# Contact wsmoses@ before modifying (and beware their semantics may change without semver).
+
+Enzyme.EnzymeRules.inactive_kwarg(::typeof(OptimizationBase.solve_up), prob, sensealg::Union{Nothing, SciMLBase.AbstractSensitivityAlgorithm}, u0, p, args...; kwargs...) = nothing
+
+Enzyme.EnzymeRules.has_easy_rule(::typeof(OptimizationBase.solve_up), prob, sensealg::Union{Nothing, SciMLBase.AbstractSensitivityAlgorithm}, u0, p, args...; kwargs...) = nothing
+
+function Enzyme.EnzymeRules.augmented_primal(
+        config::Enzyme.EnzymeRules.RevConfigWidth{1},
+        func::Const{typeof(OptimizationBase.solve_up)}, RTA::Type{Duplicated{RT}}, prob,
+        sensealg::Union{
+            Const{Nothing}, Const{<:SciMLBase.AbstractSensitivityAlgorithm},
+        },
+        u0, p, args...; kwargs...
+    ) where {RT}
+
+    res = OptimizationBase._solve_adjoint(
+        copy_or_reuse(config, prob.val, 2), copy_or_reuse(config, sensealg.val, 3),
+        copy_or_reuse(config, u0.val, 4), copy_or_reuse(config, p.val, 5),
+        SciMLBase.EnzymeOriginator(), ntuple(Base.Fix1(arg_copy, (config, args)), Val(length(args)))...;
+        kwargs...
+    )
+
+    primal = if Enzyme.EnzymeRules.needs_primal(config)
+        res[1]
+    else
+        nothing
+    end
+
+    shadow = if Enzyme.EnzymeRules.needs_shadow(config)
+        Enzyme.make_zero(res[1])::RT
+    else
+        nothing
+    end
+    tup = if Enzyme.EnzymeRules.needs_shadow(config)
+        (shadow, res[2])
+    else
+        nothing
+    end
+    return Enzyme.EnzymeRules.augmented_rule_return_type(config, RTA)(primal, shadow, tup)
+end
+
+function Enzyme.EnzymeRules.reverse(
+        config::Enzyme.EnzymeRules.RevConfigWidth{1},
+        func::Const{typeof(OptimizationBase.solve_up)}, ::Type{<:Enzyme.Annotation{RT}}, tape, prob,
+        sensealg::Union{
+            Const{Nothing}, Const{<:SciMLBase.AbstractSensitivityAlgorithm},
+        },
+        u0, p, args...; kwargs...
+    ) where {RT}
+    if Enzyme.EnzymeRules.needs_shadow(config)
+        dres, clos = tape
+        dres = dres::RT
+        dargs = clos(dres)
+        for (darg, ptr) in zip(dargs, (func, prob, sensealg, u0, p, args...))
+            if ptr isa Enzyme.Const
+                continue
+            end
+            if darg == ChainRulesCore.NoTangent()
+                continue
+            end
+            ptr.dval .+= darg
+        end
+        Enzyme.make_zero!(dres.u)
+    end
+
+    return ntuple(Returns(nothing), Val(length(args) + 4))
 end
 
 end
