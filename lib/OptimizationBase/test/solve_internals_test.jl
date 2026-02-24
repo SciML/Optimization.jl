@@ -16,7 +16,7 @@ const _mock_u0 = Ref{Vector{Float64}}(Float64[])
 
 function OptimizationBase.__solve(
         prob::SciMLBase.OptimizationProblem, ::MockSolver, args...; kwargs...
-)
+    )
     _mock_ncalls[] += 1
     _mock_kwargs[] = NamedTuple(kwargs)
     _mock_u0[] = copy(prob.u0)
@@ -32,7 +32,7 @@ end
 function reset_mock!()
     _mock_ncalls[] = 0
     _mock_kwargs[] = (;)
-    _mock_u0[] = Float64[]
+    return _mock_u0[] = Float64[]
 end
 
 # Helper: build a simple unconstrained problem
@@ -177,7 +177,7 @@ SciMLBase.has_init(::MockSolverWithInit) = true
 # Use the default SciMLBase.__init to build an OptimizationCache; only __solve is needed.
 function OptimizationBase.__solve(
         cache::OptimizationBase.OptimizationCache{MockSolverWithInit}
-)
+    )
     stats = SciMLBase.OptimizationStats(; iterations = 1, time = 0.0, fevals = 1)
     u = cache.reinit_cache.u0
     return SciMLBase.build_solution(
@@ -193,7 +193,7 @@ OptimizationBase.allowsconstraints(::MockAlgWithCons) = true
 
 function OptimizationBase.__solve(
         prob::SciMLBase.OptimizationProblem, ::MockAlgWithCons, args...; kwargs...
-)
+    )
     cache = SciMLBase.DefaultOptimizationCache(prob.f, prob.p)
     stats = SciMLBase.OptimizationStats(; iterations = 1, time = 0.0, fevals = 1)
     return SciMLBase.build_solution(
