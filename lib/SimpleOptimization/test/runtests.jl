@@ -17,5 +17,11 @@ using Test
 
         sol = solve(prob, SimpleBFGS())
         @test sol.objective < l1
+
+        sol = solve(prob, SimpleGradientDescent(; eta = 0.001), maxiters = 10000)
+        @test sol.objective < l1
+
+        sol = solve(prob, SimpleNewton())
+        @test sol.objective < l1
     end
 end

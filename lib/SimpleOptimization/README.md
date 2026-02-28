@@ -14,8 +14,10 @@ While Optimization.jl captures all cases with extensive features and solver opti
 
 ## Algorithms
 
+- `SimpleGradientDescent(; eta=0.01)` - Lightweight gradient descent optimizer
 - `SimpleBFGS()` - Lightweight BFGS quasi-Newton optimizer
 - `SimpleLBFGS(; threshold=Val(10))` - Lightweight Limited-memory BFGS optimizer
+- `SimpleNewton()` - Lightweight Newton optimizer (uses Hessian via nested AD)
 
 ## Documentation
 
