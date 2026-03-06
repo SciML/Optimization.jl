@@ -4,6 +4,26 @@ using Zygote
 using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
 
 @testset "OptimizationOptimisers.jl" begin
+    @testset "Sense wrapping" begin
+        x0 = [5.0, 5.0]
+        linear_obj(x, p) = x[1] + x[2]
+        function linear_grad!(G, x, p)
+            G[1] = 1.0
+            G[2] = 1.0
+            return G
+        end
+        optf = OptimizationFunction(
+            linear_obj, OptimizationBase.AutoZygote(); grad = linear_grad!
+        )
+        prob_max = OptimizationProblem(optf, x0, nothing; sense = OptimizationBase.MaxSense)
+        cache = OptimizationBase.OptimizationCache(prob_max, Optimisers.Adam())
+        G = zeros(2)
+        @test isapprox(cache.f.f(x0, nothing), -10.0; atol = 1e-12)
+        cache.f.grad(G, x0, nothing)
+        @test isapprox(G[1], -1.0; atol = 1e-12)
+        @test isapprox(G[2], -1.0; atol = 1e-12)
+    end
+
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = zeros(2)
     _p = [1.0, 100.0]
