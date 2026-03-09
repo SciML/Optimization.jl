@@ -10,6 +10,8 @@ using SparseArrays
 
 export MadNLPOptimizer
 
+include("callback.jl")
+
 @kwdef struct MadNLPOptimizer{T}
     # General options
     rethrow_error::Bool = true
@@ -38,7 +40,9 @@ export MadNLPOptimizer
 
     kkt_system::Union{Nothing, Type} = nothing # e.g. DenseKKTSystem
 
-    mu_init::T = 0.1
+    # Barrier update strategy (e.g., MonotoneUpdate, QualityFunctionUpdate, LOQOUpdate)
+    # Each barrier struct has its own mu_init field.
+    barrier::Union{Nothing, MadNLP.AbstractBarrierUpdate} = nothing
 
     # Quasi-Newton options (used when hessian_approximation is CompactLBFGS, BFGS, or DampedBFGS)
     quasi_newton_options::Union{Nothing, MadNLP.QuasiNewtonOptions} = nothing
@@ -49,7 +53,7 @@ end
 
 SciMLBase.has_init(opt::MadNLPOptimizer) = true
 
-SciMLBase.allowscallback(opt::MadNLPOptimizer) = false
+SciMLBase.allowscallback(opt::MadNLPOptimizer) = true
 
 function SciMLBase.requiresgradient(opt::MadNLPOptimizer)
     return true
@@ -115,14 +119,7 @@ function __map_optimizer_args(
         progress::Bool = false,
         callback = DEFAULT_CALLBACK
     )
-
-    if !(callback isa OptimizationBase.NullCallback) || progress
-        @SciMLMessage(
-            "MadNLP doesn't currently support user defined callbacks.",
-            cache.verbose, :unsupported_callbacks
-        )
-    end
-    # TODO: add support for user callbacks in MadNLP
+    cb = MadNLPProgressLogger(callback, progress, maxiters, cache.p)
 
     T = eltype(cache.u0)
 
@@ -145,7 +142,9 @@ function __map_optimizer_args(
     # Build final options dictionary
     options = Dict{Symbol, Any}(opt.additional_options)
 
-    options[:mu_init] = opt.mu_init
+    if !isnothing(opt.barrier)
+        options[:barrier] = opt.barrier
+    end
 
     # Add quasi_newton_options if provided, otherwise create default
     if !isnothing(opt.quasi_newton_options)
@@ -180,6 +179,7 @@ function __map_optimizer_args(
     options[:tol] = tol
     options[:max_iter] = max_iter
     options[:max_wall_time] = max_wall_time
+    options[:intermediate_callback] = cb
 
     return meta, options
 end
@@ -204,6 +204,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: MadNLPOptimi
     nlp = NLPModelsAdaptor(cache, meta, NLPModels.Counters())
     solver = MadNLP.MadNLPSolver(nlp; options...)
     results = MadNLP.solve!(solver)
+
+    if cache.progress
+        Base.@logmsg Base.LogLevel(-1) progress="done" _id = :OptimizationMadNLP
+    end
 
     stats = OptimizationBase.OptimizationStats(;
         time = results.counters.total_time,
