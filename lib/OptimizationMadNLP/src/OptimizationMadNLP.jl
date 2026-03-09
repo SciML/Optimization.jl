@@ -2,11 +2,10 @@ module OptimizationMadNLP
 
 using Reexport
 @reexport using OptimizationBase
-using OptimizationBase: MinSense, MaxSense, DEFAULT_CALLBACK
+using OptimizationBase: DEFAULT_CALLBACK
 using OptimizationNLPModels: NLPModelsAdaptor, build_nlpmodel_meta
 using MadNLP
 using NLPModels
-using SparseArrays
 
 export MadNLPOptimizer
 
@@ -33,7 +32,7 @@ include("callback.jl")
 
     # Initialization Options
     nlp_scaling::Bool = true
-    nlp_scaling_max_gradient::Float64 = 100.0
+    nlp_scaling_max_gradient::T = 100.0
 
     # Linear solver configuration
     linear_solver::Union{Nothing, Type} = nothing  # e.g., MumpsSolver, LapackCPUSolver, UmfpackSolver
@@ -42,7 +41,7 @@ include("callback.jl")
 
     # Barrier update strategy (e.g., MonotoneUpdate, QualityFunctionUpdate, LOQOUpdate)
     # Each barrier struct has its own mu_init field.
-    barrier::Union{Nothing, MadNLP.AbstractBarrierUpdate} = nothing
+    barrier::Union{Nothing, MadNLP.AbstractBarrierUpdate{T}} = nothing
 
     # Quasi-Newton options (used when hessian_approximation is CompactLBFGS, BFGS, or DampedBFGS)
     quasi_newton_options::Union{Nothing, MadNLP.QuasiNewtonOptions} = nothing

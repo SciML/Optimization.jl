@@ -4,6 +4,8 @@ using Reexport
 @reexport using NLPModels, OptimizationBase, ADTypes
 using SparseArrays
 
+export build_nlpmodel_meta, NLPModelsAdaptor
+
 """
     OptimizationFunction(nlpmodel::AbstractNLPModel, adtype::AbstractADType = NoAD())
 
