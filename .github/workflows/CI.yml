@@ -4,12 +4,12 @@ on:
     branches:
       - master
     paths-ignore:
-      - 'docs/**'
+      - "docs/**"
   push:
     branches:
       - master
     paths-ignore:
-      - 'docs/**'
+      - "docs/**"
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -47,8 +47,8 @@ jobs:
           - OptimizationNLPModels
           - SimpleOptimization
         version:
-          - '1.11'
-          - 'lts'
+          - "1.11"
+          - "lts"
     steps:
       - uses: actions/checkout@v6
       - uses: julia-actions/setup-julia@v2
@@ -69,7 +69,7 @@ jobs:
         run: julia --project -e 'using Pkg; Pkg.Registry.add(RegistrySpec(url  = "https://github.com/HolyLab/HolyLabRegistry.git")); Pkg.add("QuadDIRECT")'
       - name: ${{ matrix.group }}
         env:
-            GROUP: ${{ matrix.group }}
+          GROUP: ${{ matrix.group }}
         shell: julia --color=yes --check-bounds=yes --depwarn=yes {0}
         run: |
           using Pkg
@@ -109,7 +109,7 @@ jobs:
             elseif GROUP == "OptimizationIpopt"
               dev_subpkg(["OptimizationBase"])
             elseif GROUP == "OptimizationMadNLP"
-              dev_subpkg(["OptimizationBase"])
+              dev_subpkg(["OptimizationBase", "OptimizationNLPModels"])
             elseif GROUP == "OptimizationManopt"
               dev_subpkg(["OptimizationBase"])
             elseif GROUP == "OptimizationMetaheuristics"

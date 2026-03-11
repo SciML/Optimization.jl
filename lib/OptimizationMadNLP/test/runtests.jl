@@ -258,7 +258,7 @@ end
             acceptable_tol = 1.0e-6,
             acceptable_iter = 10,
             blas_num_threads = 2,
-            mu_init = 0.01
+            barrier = MadNLP.MonotoneUpdate{Float64}(mu_init = 0.01)
         )
         sol = solve(prob, opt)
         @test SciMLBase.successful_retcode(sol)
@@ -635,4 +635,33 @@ end
         @test all(abs.(sol.u) .< 1.0e-6)  # Solution should be at origin
         @test sol.objective < 1.0e-10
     end
+end
+
+@testset "Callbacks & progress" begin
+    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+    x0 = zeros(2)
+    _p = [1.0, 100.0]
+    l1 = rosenbrock(x0, _p)
+
+    # MadNLP requires second-order derivatives
+    ad = SecondOrder(ADTypes.AutoForwardDiff(), ADTypes.AutoZygote())
+    optfunc = OptimizationFunction(rosenbrock, ad)
+    cb(opt_state, loss) = (@info "obj=$loss"; opt_state.original.cnt.k >= 3)
+    prob = OptimizationProblem(optfunc, x0, _p)
+
+    sol = @test_logs (:info, "obj=1.0") match_mode=:any solve(prob, MadNLPOptimizer(); callback = cb)
+    @test sol.stats.iterations == 3
+
+    logs, _ = Test.collect_test_logs(min_level = Base.LogLevel(-1)) do
+        solve(prob, MadNLPOptimizer(), progress = true, maxiters=10)
+    end
+    @test !isempty(logs)
+    m = first(logs)
+    @test m.level == Base.LogLevel(-1)
+    @test m.message == "objective: 1.0"
+    @test m.id == :OptimizationMadNLP
+
+    m_end = last(logs)
+    @test m_end.level == Base.LogLevel(-1)
+    @test m_end.message == "done"
 end
