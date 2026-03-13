@@ -52,7 +52,7 @@ end
 
 SciMLBase.has_init(opt::MadNLPOptimizer) = true
 
-SciMLBase.allowscallback(opt::MadNLPOptimizer) = false
+SciMLBase.allowscallback(opt::MadNLPOptimizer) = true
 OptimizationBase.supports_sense(::MadNLPOptimizer) = true
 
 function SciMLBase.requiresgradient(opt::MadNLPOptimizer)
