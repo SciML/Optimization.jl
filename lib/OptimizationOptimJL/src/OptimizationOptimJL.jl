@@ -352,7 +352,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     )
     return SciMLBase.build_solution(
         cache, cache.opt,
-        opt_res.minimizer, opt_res.minimum;
+        opt_res.minimizer,
+        cache.sense === OptimizationBase.MaxSense ? -opt_res.minimum :
+            opt_res.minimum;
         original = opt_res, retcode = opt_ret, stats = stats
     )
 end
@@ -503,7 +505,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     )
     return SciMLBase.build_solution(
         cache, cache.opt,
-        opt_res.minimizer, opt_res.minimum;
+        opt_res.minimizer,
+        cache.sense === OptimizationBase.MaxSense ? -opt_res.minimum :
+            opt_res.minimum;
         original = opt_res, retcode = opt_ret,
         stats = stats
     )
