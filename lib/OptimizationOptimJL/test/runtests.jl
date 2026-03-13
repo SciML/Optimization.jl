@@ -30,6 +30,41 @@ function (cb::CallbackTester)(state, loss_val)
 end
 
 @testset "OptimizationOptimJL.jl" begin
+    @testset "Issue #976 MaxSense with bounds" begin
+        obj(x, p) = x[1] + x[2]
+        lb = [0.0, 0.0]
+        ub = [10.0, 10.0]
+        x0 = [5.0, 5.0]
+        optf = OptimizationFunction(obj, OptimizationBase.AutoForwardDiff())
+
+        prob_min = OptimizationProblem(optf, x0, nothing; lb = lb, ub = ub)
+        sol_min = solve(prob_min, LBFGS(); x_abstol = 0.1)
+        @test isapprox(sol_min.u, [0.0, 0.0]; atol = 1e-2)
+        @test isapprox(sol_min.objective, 0.0; atol = 1e-2)
+
+        prob_max = OptimizationProblem(
+            optf, x0, nothing; lb = lb, ub = ub, sense = OptimizationBase.MaxSense
+        )
+        sol_max = solve(prob_max, LBFGS(); x_abstol = 0.1)
+        @test isapprox(sol_max.u, [10.0, 10.0]; atol = 1e-2)
+        @test isapprox(sol_max.objective, 20.0; atol = 1e-2)
+    end
+
+    @testset "MaxSense with IPNewton" begin
+        obj(x, p) = x[1] + x[2]
+        lb = [0.0, 0.0]
+        ub = [10.0, 10.0]
+        x0 = [5.0, 5.0]
+        optf = OptimizationFunction(obj, OptimizationBase.AutoForwardDiff())
+
+        prob_max = OptimizationProblem(
+            optf, x0, nothing; lb = lb, ub = ub, sense = OptimizationBase.MaxSense
+        )
+        sol_max = solve(prob_max, Optim.IPNewton(); x_abstol = 0.1)
+        @test isapprox(sol_max.u, [10.0, 10.0]; atol = 1e-2)
+        @test isapprox(sol_max.objective, 20.0; atol = 1e-2)
+    end
+
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = zeros(2)
     _p = [1.0, 100.0]
@@ -196,7 +231,7 @@ end
         ]
     )
     sol = solve(prob, BFGS())
-    @test 10 * sol.objective < l1
+    @test sol.objective > l1
 
     function rosenbrock_grad!(dx, x, p)
         dx[1] = -2 * (p[1] - x[1]) - 4 * p[2] * (x[2] - x[1]^2) * x[1]

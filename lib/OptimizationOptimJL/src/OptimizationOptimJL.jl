@@ -45,6 +45,9 @@ SciMLBase.has_init(opt::Optim.ConstrainedOptimizer) = true
 SciMLBase.allowscallback(opt::Optim.AbstractOptimizer) = true
 SciMLBase.allowscallback(opt::Union{Optim.Fminbox, Optim.SAMIN}) = true
 SciMLBase.allowscallback(opt::Optim.ConstrainedOptimizer) = true
+OptimizationBase.supports_sense(
+    ::Union{Optim.AbstractOptimizer, Optim.Fminbox, Optim.SAMIN, Optim.ConstrainedOptimizer}
+) = true
 
 function SciMLBase.requiresgradient(opt::Optim.AbstractOptimizer)
     return !(opt isa Optim.ZerothOrderOptimizer)
@@ -349,7 +352,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     )
     return SciMLBase.build_solution(
         cache, cache.opt,
-        opt_res.minimizer, opt_res.minimum;
+        opt_res.minimizer,
+        cache.sense === OptimizationBase.MaxSense ? -opt_res.minimum :
+            opt_res.minimum;
         original = opt_res, retcode = opt_ret, stats = stats
     )
 end
@@ -500,7 +505,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     )
     return SciMLBase.build_solution(
         cache, cache.opt,
-        opt_res.minimizer, opt_res.minimum;
+        opt_res.minimizer,
+        cache.sense === OptimizationBase.MaxSense ? -opt_res.minimum :
+            opt_res.minimum;
         original = opt_res, retcode = opt_ret,
         stats = stats
     )
