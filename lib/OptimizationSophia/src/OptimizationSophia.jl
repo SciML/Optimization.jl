@@ -6,6 +6,8 @@ using OptimizationBase: OptimizationCache
 @reexport using OptimizationBase
 using Random
 
+export Sophia
+
 """
     Sophia(; η = 1e-3, βs = (0.9, 0.999), ϵ = 1e-8, λ = 1e-1, k = 10, ρ = 0.04)
 
