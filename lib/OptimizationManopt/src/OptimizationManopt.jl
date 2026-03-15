@@ -18,7 +18,8 @@ OptimizationBase.supports_sense(::AbstractManoptOptimizer) = true
 
 function __map_optimizer_args!(
         cache::OptimizationBase.OptimizationCache,
-        opt::AbstractManoptOptimizer;
+        opt::AbstractManoptOptimizer,
+        manifold;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -26,49 +27,29 @@ function __map_optimizer_args!(
         reltol::Union{Number, Nothing} = nothing,
         kwargs...
     )
-    solver_kwargs = (; kwargs...)
+    criteria = Manopt.StoppingCriterion[]
 
     if !isnothing(maxiters)
-        solver_kwargs = (;
-            solver_kwargs..., stopping_criterion = [Manopt.StopAfterIteration(maxiters)],
-        )
+        push!(criteria, Manopt.StopAfterIteration(maxiters))
     end
 
     if !isnothing(maxtime)
-        if haskey(solver_kwargs, :stopping_criterion)
-            solver_kwargs = (;
-                solver_kwargs...,
-                stopping_criterion = push!(
-                    solver_kwargs.stopping_criterion, Manopt.StopAfterTime(maxtime)
-                ),
-            )
-        else
-            solver_kwargs = (;
-                solver_kwargs..., stopping_criterion = [Manopt.StopAfter(maxtime)],
-            )
-        end
+        push!(criteria, Manopt.StopAfterTime(maxtime))
     end
 
-    if !isnothing(abstol)
-        if haskey(solver_kwargs, :stopping_criterion)
-            solver_kwargs = (;
-                solver_kwargs...,
-                stopping_criterion = push!(
-                    solver_kwargs.stopping_criterion, Manopt.StopWhenChangeLess(abstol)
-                ),
-            )
-        else
-            solver_kwargs = (;
-                solver_kwargs..., stopping_criterion = [Manopt.StopWhenChangeLess(abstol)],
-            )
-        end
-    end
+    tol = isnothing(abstol) ? 1e-8 : abstol
+    push!(criteria, _default_convergence_criterion(opt, manifold, tol))
 
     if !isnothing(reltol)
         @SciMLMessage(
             lazy"common reltol is currently not used by $(typeof(opt).super)",
             cache.verbose, :unsupported_kwargs
         )
+    end
+
+    solver_kwargs = (; kwargs...)
+    if !isempty(criteria)
+        solver_kwargs = (; solver_kwargs..., stopping_criterion = criteria)
     end
     return solver_kwargs
 end
@@ -283,6 +264,20 @@ function SciMLBase.requireshessian(
     return true
 end
 
+const GradientBasedManoptOptimizer = Union{
+    GradientDescentOptimizer, ConjugateGradientDescentOptimizer,
+    QuasiNewtonOptimizer, ConvexBundleOptimizer, FrankWolfeOptimizer,
+    AdaptiveRegularizationCubicOptimizer, TrustRegionsOptimizer,
+}
+
+function _default_convergence_criterion(::GradientBasedManoptOptimizer, M, abstol)
+    return Manopt.StopWhenGradientNormLess(abstol)
+end
+
+function _default_convergence_criterion(::AbstractManoptOptimizer, M, abstol)
+    return Manopt.StopWhenChangeLess(M, abstol)
+end
+
 function build_loss(f::OptimizationFunction, prob, cb)
     # TODO: I do not understand this. Why is the manifold not used?
     # Either this is an Euclidean cost, then we should probably still call `embed`,
@@ -353,11 +348,11 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractMano
         return cb_call
     end
     solver_kwarg = __map_optimizer_args!(
-        cache, cache.opt, callback = _cb,
+        cache, cache.opt, manifold; callback = _cb,
         maxiters = cache.solver_args.maxiters,
         maxtime = cache.solver_args.maxtime,
         abstol = cache.solver_args.abstol,
-        reltol = cache.solver_args.reltol;
+        reltol = cache.solver_args.reltol,
         cache.solver_args...
     )
 
@@ -383,7 +378,13 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractMano
     )
 
     asc = get_stopping_criterion(opt_res.options)
-    opt_ret = Manopt.has_converged(asc) ? ReturnCode.Success : ReturnCode.Failure
+    opt_ret = if Manopt.has_converged(asc)
+        ReturnCode.Success
+    elseif any(c -> c isa Manopt.StopAfterIteration, Manopt.get_active_stopping_criteria(asc))
+        ReturnCode.MaxIters
+    else
+        ReturnCode.Failure
+    end
 
     return SciMLBase.build_solution(
         cache,
