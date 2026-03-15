@@ -649,11 +649,11 @@ end
     cb(opt_state, loss) = (@info "obj=$loss"; opt_state.original.cnt.k >= 3)
     prob = OptimizationProblem(optfunc, x0, _p)
 
-    sol = @test_logs (:info, "obj=1.0") match_mode=:any solve(prob, MadNLPOptimizer(); callback = cb)
+    sol = @test_logs (:info, "obj=1.0") match_mode = :any solve(prob, MadNLPOptimizer(); callback = cb)
     @test sol.stats.iterations == 3
 
     logs, _ = Test.collect_test_logs(min_level = Base.LogLevel(-1)) do
-        solve(prob, MadNLPOptimizer(), progress = true, maxiters=10)
+        solve(prob, MadNLPOptimizer(), progress = true, maxiters = 10)
     end
     @test !isempty(logs)
     m = first(logs)

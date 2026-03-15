@@ -252,7 +252,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleGradie
 
     abstol = cache.solver_args.abstol
     if abstol === nothing
-        abstol = 1e-8
+        abstol = 1.0e-8
     end
 
     f = Base.Fix2(cache.f.f, cache.p)

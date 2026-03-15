@@ -60,7 +60,8 @@ const P0 = nothing
         H[2, 2] = 0.0
     end
 
-    optf = OptimizationFunction(obj;
+    optf = OptimizationFunction(
+        obj;
         grad = grad!, fg = fg!, hess = hess!,
         fgh = fgh!, hv = hv!, lag_h = lag_h!
     )

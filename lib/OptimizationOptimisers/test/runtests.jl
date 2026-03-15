@@ -18,10 +18,10 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
         prob_max = OptimizationProblem(optf, x0, nothing; sense = OptimizationBase.MaxSense)
         cache = OptimizationBase.OptimizationCache(prob_max, Optimisers.Adam())
         G = zeros(2)
-        @test isapprox(cache.f.f(x0, nothing), -10.0; atol = 1e-12)
+        @test isapprox(cache.f.f(x0, nothing), -10.0; atol = 1.0e-12)
         cache.f.grad(G, x0, nothing)
-        @test isapprox(G[1], -1.0; atol = 1e-12)
-        @test isapprox(G[2], -1.0; atol = 1e-12)
+        @test isapprox(G[1], -1.0; atol = 1.0e-12)
+        @test isapprox(G[2], -1.0; atol = 1.0e-12)
     end
 
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
