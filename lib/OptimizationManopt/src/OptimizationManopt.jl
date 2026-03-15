@@ -37,8 +37,9 @@ function __map_optimizer_args!(
         push!(criteria, Manopt.StopAfter(maxtime))
     end
 
-    tol = isnothing(abstol) ? 1e-8 : abstol
-    push!(criteria, _default_convergence_criterion(opt, manifold, tol))
+    if !isnothing(abstol)
+        push!(criteria, _default_convergence_criterion(opt, manifold, abstol))
+    end
 
     if !isnothing(reltol)
         @SciMLMessage(
@@ -366,15 +367,15 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractMano
         hessF = build_hessF(cache.f)
     end
 
-    if haskey(solver_kwarg, :stopping_criterion)
-        stopping_criterion = Manopt.StopWhenAny(solver_kwarg.stopping_criterion...)
+    stopping_kwarg = if haskey(solver_kwarg, :stopping_criterion)
+        (; stopping_criterion = Manopt.StopWhenAny(solver_kwarg.stopping_criterion...))
     else
-        stopping_criterion = Manopt.StopAfterIteration(500)
+        (;)
     end
 
     opt_res = call_manopt_optimizer(
         manifold, cache.opt, _loss, gradF, cache.u0;
-        solver_kwarg..., stopping_criterion = stopping_criterion, hessF
+        solver_kwarg..., stopping_kwarg..., hessF
     )
 
     asc = get_stopping_criterion(opt_res.options)
