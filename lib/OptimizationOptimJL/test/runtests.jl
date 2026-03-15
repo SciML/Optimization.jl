@@ -39,15 +39,15 @@ end
 
         prob_min = OptimizationProblem(optf, x0, nothing; lb = lb, ub = ub)
         sol_min = solve(prob_min, LBFGS(); x_abstol = 0.1)
-        @test isapprox(sol_min.u, [0.0, 0.0]; atol = 1e-2)
-        @test isapprox(sol_min.objective, 0.0; atol = 1e-2)
+        @test isapprox(sol_min.u, [0.0, 0.0]; atol = 1.0e-2)
+        @test isapprox(sol_min.objective, 0.0; atol = 1.0e-2)
 
         prob_max = OptimizationProblem(
             optf, x0, nothing; lb = lb, ub = ub, sense = OptimizationBase.MaxSense
         )
         sol_max = solve(prob_max, LBFGS(); x_abstol = 0.1)
-        @test isapprox(sol_max.u, [10.0, 10.0]; atol = 1e-2)
-        @test isapprox(sol_max.objective, 20.0; atol = 1e-2)
+        @test isapprox(sol_max.u, [10.0, 10.0]; atol = 1.0e-2)
+        @test isapprox(sol_max.objective, 20.0; atol = 1.0e-2)
     end
 
     @testset "MaxSense with IPNewton" begin
@@ -61,8 +61,8 @@ end
             optf, x0, nothing; lb = lb, ub = ub, sense = OptimizationBase.MaxSense
         )
         sol_max = solve(prob_max, Optim.IPNewton(); x_abstol = 0.1)
-        @test isapprox(sol_max.u, [10.0, 10.0]; atol = 1e-2)
-        @test isapprox(sol_max.objective, 20.0; atol = 1e-2)
+        @test isapprox(sol_max.u, [10.0, 10.0]; atol = 1.0e-2)
+        @test isapprox(sol_max.objective, 20.0; atol = 1.0e-2)
     end
 
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2

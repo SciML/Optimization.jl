@@ -206,7 +206,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: MadNLPOptimi
     results = MadNLP.solve!(solver)
 
     if cache.progress
-        Base.@logmsg Base.LogLevel(-1) progress="done" _id = :OptimizationMadNLP
+        Base.@logmsg Base.LogLevel(-1) progress = "done" _id = :OptimizationMadNLP
     end
 
     stats = OptimizationBase.OptimizationStats(;

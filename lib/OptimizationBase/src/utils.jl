@@ -19,7 +19,7 @@ function apply_sense(f::OptimizationFunction{iip}, sense) where {iip}
     elseif iip
         function (G, u, p)
             f.grad(G, u, p)
-            G .*= -one(eltype(G))
+            return G .*= -one(eltype(G))
         end
     else
         (u, p) -> -f.grad(u, p)
@@ -45,7 +45,7 @@ function apply_sense(f::OptimizationFunction{iip}, sense) where {iip}
     elseif iip
         function (H, u, p)
             f.hess(H, u, p)
-            H .*= -one(eltype(H))
+            return H .*= -one(eltype(H))
         end
     else
         (u, p) -> -f.hess(u, p)
@@ -72,7 +72,7 @@ function apply_sense(f::OptimizationFunction{iip}, sense) where {iip}
     elseif iip
         function (Hv, u, v, p)
             f.hv(Hv, u, v, p)
-            Hv .*= -one(eltype(Hv))
+            return Hv .*= -one(eltype(Hv))
         end
     else
         (u, v, p) -> -f.hv(u, v, p)
