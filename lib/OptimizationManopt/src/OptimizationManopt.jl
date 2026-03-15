@@ -34,7 +34,7 @@ function __map_optimizer_args!(
     end
 
     if !isnothing(maxtime)
-        push!(criteria, Manopt.StopAfterTime(maxtime))
+        push!(criteria, Manopt.StopAfter(maxtime))
     end
 
     tol = isnothing(abstol) ? 1e-8 : abstol
@@ -378,10 +378,17 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractMano
     )
 
     asc = get_stopping_criterion(opt_res.options)
+    active = Manopt.get_active_stopping_criteria(asc)
     opt_ret = if Manopt.has_converged(asc)
         ReturnCode.Success
-    elseif any(c -> c isa Manopt.StopAfterIteration, Manopt.get_active_stopping_criteria(asc))
+    elseif any(c -> c isa Manopt.StopAfterIteration, active)
         ReturnCode.MaxIters
+    elseif any(c -> c isa Manopt.StopAfter, active)
+        ReturnCode.MaxTime
+    elseif any(c -> c isa Union{Manopt.StopWhenCostNaN, Manopt.StopWhenIterateNaN}, active)
+        ReturnCode.Unstable
+    elseif any(c -> c isa Manopt.StopWhenStepsizeLess, active)
+        ReturnCode.Stalled
     else
         ReturnCode.Failure
     end
