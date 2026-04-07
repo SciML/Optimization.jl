@@ -51,10 +51,11 @@ struct SOAP <: Optimisers.AbstractRule
 end
 
 function SOAP(;
-        eta = 3e-3, beta = (0.95, 0.95), shampoo_beta = -1.0,
-        epsilon = 1e-8, freq = 10, max_dim = 10000,
-        weight_decay = 0.01, correct_bias = true)
-    SOAP(eta, beta, shampoo_beta, epsilon, freq, max_dim, weight_decay, correct_bias)
+        eta = 3.0e-3, beta = (0.95, 0.95), shampoo_beta = -1.0,
+        epsilon = 1.0e-8, freq = 10, max_dim = 10000,
+        weight_decay = 0.01, correct_bias = true
+    )
+    return SOAP(eta, beta, shampoo_beta, epsilon, freq, max_dim, weight_decay, correct_bias)
 end
 
 _soap_sβ(o::SOAP) = o.shampoo_beta >= 0 ? Float32(o.shampoo_beta) : Float32(o.beta[2])
@@ -72,9 +73,9 @@ _soap_f32(x::AbstractArray) = Float32.(x)
 
 function _soap_eigh(P)
     Pc = Float64.(Array(P))
-    S = Symmetric((Pc .+ Pc') ./ 2 + 1e-30 * I)
+    S = Symmetric((Pc .+ Pc') ./ 2 + 1.0e-30 * I)
     E = eigen(S)
-    Float32.(E.vectors[:, end:-1:1])
+    return Float32.(E.vectors[:, end:-1:1])
 end
 
 function _soap_power_qr(P, Q_old)
@@ -83,47 +84,57 @@ function _soap_power_qr(P, Q_old)
     est = diag(Qf' * Pf * Qf)
     perm = sortperm(est; rev = true)
     F = qr(Pf * Qf[:, perm])
-    Matrix(F.Q), perm
+    return Matrix(F.Q), perm
 end
 
 function _soap_reorder!(eas::AbstractMatrix, perm::Vector{Int}, dim::Int)
     idx = similar(eas, Int, length(perm))
     copyto!(idx, perm)
     tmp = dim == 1 ? eas[idx, :] : eas[:, idx]
-    copyto!(eas, tmp)
+    return copyto!(eas, tmp)
 end
 
-_soap_proj(X, QL, QR, uL, uR) = begin Y = X; uL && (Y = QL' * Y); uR && (Y = Y * QR); Y end
-_soap_back(X, QL, QR, uL, uR) = begin Y = X; uL && (Y = QL * Y); uR && (Y = Y * QR'); Y end
+_soap_proj(X, QL, QR, uL, uR) = begin
+    Y = X; uL && (Y = QL' * Y); uR && (Y = Y * QR); Y
+end
+_soap_back(X, QL, QR, uL, uR) = begin
+    Y = X; uL && (Y = QL * Y); uR && (Y = Y * QR'); Y
+end
 
 function _soap_accum!(state, G::AbstractMatrix, sβ, uL, uR)
     a = Float32(1 - sβ); b = Float32(sβ)
     uL && mul!(state.L, G, G', a, b)
-    uR && mul!(state.R, G', G, a, b)
+    return uR && mul!(state.R, G', G, a, b)
 end
 
 function Optimisers.init(o::SOAP, x::AbstractMatrix)
     m, n = size(x)
     uL = m <= o.max_dim; uR = n <= o.max_dim
-    (exp_avg    = _soap_zeros(x, m, n),
-     exp_avg_sq = _soap_zeros(x, m, n),
-     L  = uL ? _soap_zeros(x, m, m) : nothing,
-     R  = uR ? _soap_zeros(x, n, n) : nothing,
-     QL = uL ? _soap_eye(x, m) : nothing,
-     QR = uR ? _soap_eye(x, n) : nothing,
-     step = Int[0], q_ready = Bool[false])
+    return (
+        exp_avg = _soap_zeros(x, m, n),
+        exp_avg_sq = _soap_zeros(x, m, n),
+        L = uL ? _soap_zeros(x, m, m) : nothing,
+        R = uR ? _soap_zeros(x, n, n) : nothing,
+        QL = uL ? _soap_eye(x, m) : nothing,
+        QR = uR ? _soap_eye(x, n) : nothing,
+        step = Int[0], q_ready = Bool[false],
+    )
 end
 
 function Optimisers.init(o::SOAP, x::AbstractVector)
-    (exp_avg = _soap_zeros(x, length(x)),
-     exp_avg_sq = _soap_zeros(x, length(x)),
-     step = Int[0])
+    return (
+        exp_avg = _soap_zeros(x, length(x)),
+        exp_avg_sq = _soap_zeros(x, length(x)),
+        step = Int[0],
+    )
 end
 
 function Optimisers.init(o::SOAP, x::AbstractArray)
-    (exp_avg = fill!(similar(x, Float32), 0),
-     exp_avg_sq = fill!(similar(x, Float32), 0),
-     step = Int[0])
+    return (
+        exp_avg = fill!(similar(x, Float32), 0),
+        exp_avg_sq = fill!(similar(x, Float32), 0),
+        step = Int[0],
+    )
 end
 
 function Optimisers.apply!(o::SOAP, state, x::AbstractMatrix{T}, dx) where {T}
@@ -145,7 +156,7 @@ function Optimisers.apply!(o::SOAP, state, x::AbstractMatrix{T}, dx) where {T}
     ea = state.exp_avg; eas = state.exp_avg_sq
 
     G_rot = _soap_proj(G, state.QL, state.QR, uL, uR)
-    @. ea  = β1 * ea  + (1 - β1) * G_rot
+    @. ea = β1 * ea + (1 - β1) * G_rot
     @. eas = β2 * eas + (1 - β2) * (G_rot * G_rot)
 
     denom = @. sqrt(eas) + ε
@@ -179,7 +190,7 @@ end
 function Optimisers.apply!(o::SOAP, state, x::AbstractVector{T}, dx) where {T}
     β1, β2 = Float32.(o.beta); ε = Float32(o.epsilon); G = _soap_f32(dx)
     state.step[1] += 1; t = state.step[1]
-    @. state.exp_avg    = β1 * state.exp_avg    + (1 - β1) * G
+    @. state.exp_avg = β1 * state.exp_avg + (1 - β1) * G
     @. state.exp_avg_sq = β2 * state.exp_avg_sq + (1 - β2) * G^2
     denom = @. sqrt(state.exp_avg_sq) + ε
     s = T(o.eta)
@@ -191,7 +202,7 @@ end
 function Optimisers.apply!(o::SOAP, state, x::AbstractArray{T}, dx) where {T}
     β1, β2 = Float32.(o.beta); ε = Float32(o.epsilon); G = _soap_f32(dx)
     state.step[1] += 1; t = state.step[1]
-    @. state.exp_avg    = β1 * state.exp_avg    + (1 - β1) * G
+    @. state.exp_avg = β1 * state.exp_avg + (1 - β1) * G
     @. state.exp_avg_sq = β2 * state.exp_avg_sq + (1 - β2) * G^2
     denom = @. sqrt(state.exp_avg_sq) + ε
     s = T(o.eta)
@@ -205,13 +216,17 @@ SciMLBase.requiresgradient(::SOAP) = true
 SciMLBase.allowsfg(::SOAP) = true
 SciMLBase.allowscallback(::SOAP) = true
 
-function SciMLBase.__init(prob::OptimizationProblem, opt::SOAP;
+function SciMLBase.__init(
+        prob::OptimizationProblem, opt::SOAP;
         callback = (args...) -> (false),
         epochs::Union{Number, Nothing} = nothing,
         maxiters::Union{Number, Nothing} = nothing,
-        save_best::Bool = true, progress::Bool = false, kwargs...)
-    return OptimizationCache(prob, opt; callback, epochs, maxiters,
-        save_best, progress, kwargs...)
+        save_best::Bool = true, progress::Bool = false, kwargs...
+    )
+    return OptimizationCache(
+        prob, opt; callback, epochs, maxiters,
+        save_best, progress, kwargs...
+    )
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{SOAP})

@@ -49,8 +49,10 @@ using ForwardDiff
     end
 
     @testset "early stopping" begin
-        sol = solve(prob, SOAP(eta = 0.003), maxiters = 1000,
-            callback = (state, l) -> state.iter >= 50)
+        sol = solve(
+            prob, SOAP(eta = 0.003), maxiters = 1000,
+            callback = (state, l) -> state.iter >= 50
+        )
         @test sol.stats.iterations == 50
     end
 
