@@ -511,7 +511,8 @@ function _soap_accum!(L, R, G, sβ, uL, uR)
     a = 1 - sβ
     b = sβ
     uL && mul!(L, G, G', a, b)
-    return uR && mul!(R, G', G, a, b)
+    uR && mul!(R, G', G, a, b)
+    return nothing
 end
 
 # Full eigendecomposition, descending eigenvalue order
@@ -529,17 +530,18 @@ function _soap_pqr(P, Q_old)
     return Matrix(F.Q), perm
 end
 
-_soap_fwd(X, QL, QR, uL, uR) = begin
+function _soap_fwd(X, QL, QR, uL, uR)
     Y = X
     uL && (Y = QL' * Y)
     uR && (Y = Y * QR)
-    Y
+    return Y
 end
-_soap_bwd(X, QL, QR, uL, uR) = begin
+
+function _soap_bwd(X, QL, QR, uL, uR)
     Y = X
     uL && (Y = QL * Y)
     uR && (Y = Y * QR')
-    Y
+    return Y
 end
 
 end
