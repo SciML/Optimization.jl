@@ -36,10 +36,10 @@ using Test
             optf_mat = OptimizationFunction(matrix_obj, OptimizationBase.AutoForwardDiff())
             prob_mat = OptimizationProblem(optf_mat, X0, P_target)
 
-            sol_mat = solve(prob_mat, SimpleSOAP(; eta=0.1), maxiters=500)
-            
+            sol_mat = solve(prob_mat, SimpleSOAP(; eta = 0.1), maxiters = 500)
+
             @test sol_mat.objective < l1_mat
-            @test sol_mat.objective < 1e-2
+            @test sol_mat.objective < 1.0e-2
         end
     end
 end
