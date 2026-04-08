@@ -376,7 +376,9 @@ function SimpleSOAP(;
         epsilon = 1.0e-8, freq = 10, max_dim = 10000, weight_decay = 0.01
     )
     T = promote_type(typeof(eta), typeof(epsilon), typeof(weight_decay))
-    return SimpleSOAP(T(eta), T.(beta), T(shampoo_beta), T(epsilon), freq, max_dim, T(weight_decay))
+    return SimpleSOAP(
+        T(eta), T.(beta), T(shampoo_beta), T(epsilon), freq, max_dim, T(weight_decay)
+    )
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleSOAP}
@@ -432,7 +434,7 @@ function _soap_solve_vector!(θ, ∇f, opt, maxiters)
         s = η * sqrt(1 - β2^t) / (1 - β1^t)
         @. θ = θ - s * ea / denom - η * wd * θ
     end
-    return
+    return nothing
 end
 
 function _soap_solve_matrix!(θ, ∇f, opt, maxiters)
@@ -450,10 +452,10 @@ function _soap_solve_matrix!(θ, ∇f, opt, maxiters)
     uL = m <= opt.max_dim
     uR = n <= opt.max_dim
 
-    L = uL ? zeros(T, m, m) : nothing
-    R = uR ? zeros(T, n, n) : nothing
-    QL = uL ? Matrix{T}(I, m, m) : nothing
-    QR = uR ? Matrix{T}(I, n, n) : nothing
+    L = uL ? fill!(similar(θ, T, m, m), zero(T)) : nothing
+    R = uR ? fill!(similar(θ, T, n, n), zero(T)) : nothing
+    QL = uL ? _soap_eye(θ, T, m) : nothing
+    QR = uR ? _soap_eye(θ, T, n) : nothing
 
     q_ready = false
 
@@ -503,7 +505,14 @@ function _soap_solve_matrix!(θ, ∇f, opt, maxiters)
         # Re-project momentum into (possibly updated) eigenbasis
         ea .= _soap_fwd(ea_orig, QL, QR, uL, uR)
     end
-    return
+    return nothing
+end
+
+# Identity matrix matching the array type of ref
+function _soap_eye(ref, ::Type{T}, n) where {T}
+    A = fill!(similar(ref, T, n, n), zero(T))
+    A[diagind(A)] .= one(T)
+    return A
 end
 
 # GG accumulation: L = sβ*L + (1-sβ)*G*G', R = sβ*R + (1-sβ)*G'*G
@@ -517,7 +526,8 @@ end
 
 # Full eigendecomposition, descending eigenvalue order
 function _soap_eigh(P)
-    S = Symmetric((P .+ P') ./ 2 + 1.0e-30 * I)
+    T = eltype(P)
+    S = Symmetric((P .+ P') ./ 2 + T(1.0e-30) * I)
     E = eigen(S)
     return E.vectors[:, end:-1:1]
 end
@@ -526,8 +536,10 @@ end
 function _soap_pqr(P, Q_old)
     est = diag(Q_old' * P * Q_old)
     perm = sortperm(est; rev = true)
-    F = qr(P * Q_old[:, perm])
-    return Matrix(F.Q), perm
+    Qs = Q_old[:, perm]
+    F = qr(P * Qs)
+    eye = _soap_eye(Q_old, eltype(Q_old), size(Q_old, 1))
+    return F.Q * eye, perm
 end
 
 function _soap_fwd(X, QL, QR, uL, uR)
