@@ -298,6 +298,12 @@ function __map_optimizer_args(
 
     # Override with common interface arguments if provided
     optkeys = keys(opt.additional_options)
+    if !isnothing(abstol)
+        @SciMLMessage(
+            lazy"common abstol is currently not used by $(opt)",
+            verbose, :unsupported_kwargs
+        )
+    end
     !isnothing(reltol) && !in("tol", optkeys) && Ipopt.AddIpoptNumOption(prob, "tol", reltol)
     !isnothing(maxiters) && !in("max_iter", optkeys) && Ipopt.AddIpoptIntOption(prob, "max_iter", maxiters)
     !isnothing(maxtime) && !in("max_wall_time", optkeys) && Ipopt.AddIpoptNumOption(prob, "max_wall_time", Float64(maxtime))
