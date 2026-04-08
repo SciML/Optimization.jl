@@ -425,14 +425,14 @@ function _soap_solve_vector!(θ, ∇f, opt, maxiters)
 
     ea = zero(θ)
     eas = zero(θ)
+    g = similar(θ)
 
     for t in 1:maxiters
-        g = ∇f(θ)
+        g .= ∇f(θ)
         @. ea = β1 * ea + (1 - β1) * g
         @. eas = β2 * eas + (1 - β2) * g^2
-        denom = @. sqrt(eas) + ε
         s = η * sqrt(1 - β2^t) / (1 - β1^t)
-        @. θ = θ - s * ea / denom - η * wd * θ
+        @. θ = θ - s * ea / (sqrt(eas) + ε) - η * wd * θ
     end
     return nothing
 end
@@ -446,21 +446,32 @@ function _soap_solve_matrix!(θ, ∇f, opt, maxiters)
     η = T(opt.eta)
     wd = T(opt.weight_decay)
 
-    ea = zero(θ)
-    eas = zero(θ)
+    ea = zero(θ)                                       # first moment (rotated)
+    eas = zero(θ)                                      # second moment (rotated)
+    g = similar(θ)                                     # gradient
+    buf = similar(θ)                                   # projection scratch
+    tmp = similar(θ)                                   # mul! intermediate
+    ea_buf = similar(θ)                                # adam step / permutation swap
+    ea_orig = similar(θ)                               # momentum in original space
 
     uL = m <= opt.max_dim
     uR = n <= opt.max_dim
 
-    L = uL ? fill!(similar(θ, T, m, m), zero(T)) : nothing
-    R = uR ? fill!(similar(θ, T, n, n), zero(T)) : nothing
-    QL = uL ? _soap_eye(θ, T, m) : nothing
-    QR = uR ? _soap_eye(θ, T, n) : nothing
+    L = uL ? fill!(similar(θ, T, m, m), zero(T)) : nothing  # left preconditioner G*G'
+    R = uR ? fill!(similar(θ, T, n, n), zero(T)) : nothing  # right preconditioner G'*G
+    QL = uL ? _soap_eye(θ, T, m) : nothing                  # left eigenbasis
+    QR = uR ? _soap_eye(θ, T, n) : nothing                  # right eigenbasis
+    s1L = uL ? similar(θ, T, m, m) : nothing                # left QR scratch
+    s2L = uL ? similar(θ, T, m, m) : nothing                # left QR scratch
+    eyeL = uL ? _soap_eye(θ, T, m) : nothing               # left identity (QR materialization)
+    s1R = uR ? similar(θ, T, n, n) : nothing                # right QR scratch
+    s2R = uR ? similar(θ, T, n, n) : nothing                # right QR scratch
+    eyeR = uR ? _soap_eye(θ, T, n) : nothing               # right identity (QR materialization)
 
     q_ready = false
 
     for t in 0:maxiters
-        g = ∇f(θ)
+        g .= ∇f(θ)
 
         # First call: seed preconditioners, compute eigenbasis, skip update.
         if !q_ready
@@ -472,88 +483,98 @@ function _soap_solve_matrix!(θ, ∇f, opt, maxiters)
         end
 
         # Project gradient into eigenbasis
-        g_rot = _soap_fwd(g, QL, QR, uL, uR)
+        _soap_fwd!(buf, g, QL, QR, uL, uR, tmp)
 
         # Update moments in rotated space
-        @. ea = β1 * ea + (1 - β1) * g_rot
-        @. eas = β2 * eas + (1 - β2) * (g_rot * g_rot)
+        @. ea = β1 * ea + (1 - β1) * buf
+        @. eas = β2 * eas + (1 - β2) * buf^2
 
         # Adam update in rotated space, project back, apply
-        denom = @. sqrt(eas) + ε
+        @. ea_buf = ea / (sqrt(eas) + ε)
+        _soap_bwd!(buf, ea_buf, QL, QR, uL, uR, tmp)
         s = η * sqrt(1 - β2^t) / (1 - β1^t)
-        norm_grad = _soap_bwd(ea ./ denom, QL, QR, uL, uR)
-        @. θ = θ - s * norm_grad - η * wd * θ
+        @. θ = θ - s * buf - η * wd * θ
 
         # Un-project momentum, accumulate preconditioners
-        ea_orig = _soap_bwd(ea, QL, QR, uL, uR)
+        _soap_bwd!(ea_orig, ea, QL, QR, uL, uR, tmp)
         _soap_accum!(L, R, g, sβ, uL, uR)
 
         # Periodically update eigenbasis via power iteration + QR
         if t > 0 && t % opt.freq == 0
-            if uL
-                Q_new, perm = _soap_pqr(L, QL)
-                eas .= eas[perm, :]
-                QL .= Q_new
-            end
-            if uR
-                Q_new, perm = _soap_pqr(R, QR)
-                eas .= eas[:, perm]
-                QR .= Q_new
-            end
+            uL && _soap_pqr!(QL, L, s1L, s2L, eyeL, eas, ea_buf, Val(:row))
+            uR && _soap_pqr!(QR, R, s1R, s2R, eyeR, eas, ea_buf, Val(:col))
         end
 
         # Re-project momentum into (possibly updated) eigenbasis
-        ea .= _soap_fwd(ea_orig, QL, QR, uL, uR)
+        _soap_fwd!(ea, ea_orig, QL, QR, uL, uR, tmp)
     end
     return nothing
 end
 
-# Identity matrix matching the array type of ref
 function _soap_eye(ref, ::Type{T}, n) where {T}
     A = fill!(similar(ref, T, n, n), zero(T))
     A[diagind(A)] .= one(T)
     return A
 end
 
-# GG accumulation: L = sβ*L + (1-sβ)*G*G', R = sβ*R + (1-sβ)*G'*G
 function _soap_accum!(L, R, G, sβ, uL, uR)
     a = 1 - sβ
     b = sβ
-    uL && mul!(L, G, G', a, b)
-    uR && mul!(R, G', G, a, b)
+    uL && mul!(L, G, G', a, b)                 # L = sβ*L + (1-sβ)*G*G'
+    uR && mul!(R, G', G, a, b)                 # R = sβ*R + (1-sβ)*G'*G
     return nothing
 end
 
-# Full eigendecomposition, descending eigenvalue order
 function _soap_eigh(P)
     T = eltype(P)
     S = Symmetric((P .+ P') ./ 2 + T(1.0e-30) * I)
     E = eigen(S)
-    return E.vectors[:, end:-1:1]
+    return E.vectors[:, end:-1:1]              # descending eigenvalue order
 end
 
-# Power iteration + QR with eigenvalue sorting (Algorithm 4)
-function _soap_pqr(P, Q_old)
-    est = diag(Q_old' * P * Q_old)
-    perm = sortperm(est; rev = true)
-    Qs = Q_old[:, perm]
-    F = qr(P * Qs)
-    eye = _soap_eye(Q_old, eltype(Q_old), size(Q_old, 1))
-    return F.Q * eye, perm
+function _soap_pqr!(Q, GG, s1, s2, eye, eas, eas_buf, ::Val{dim}) where {dim}
+    mul!(s1, GG, Q)                             # power iteration: GG * Q
+    mul!(s2, Q', s1)                            # eigenvalue estimates: Q' * GG * Q
+    perm = sortperm(diag(s2); rev = true)       # sort by descending eigenvalue
+    s2 .= @view Q[:, perm]                      # reorder eigenvectors
+    mul!(s1, GG, s2)                            # power iteration on sorted Q
+    F = qr!(s1)                                 # orthogonalize
+    mul!(Q, F.Q, eye)                           # materialize Q factor
+    eas_buf .= eas                              # permute v to match new eigenvector order
+    if dim === :row
+        eas .= @view eas_buf[perm, :]
+    else
+        eas .= @view eas_buf[:, perm]
+    end
+    return nothing
 end
 
-function _soap_fwd(X, QL, QR, uL, uR)
-    Y = X
-    uL && (Y = QL' * Y)
-    uR && (Y = Y * QR)
-    return Y
+function _soap_fwd!(out, X, QL, QR, uL, uR, tmp)   # out = QL' * X * QR
+    if uL && uR
+        mul!(tmp, QL', X)
+        mul!(out, tmp, QR)
+    elseif uL
+        mul!(out, QL', X)
+    elseif uR
+        mul!(out, X, QR)
+    else
+        out .= X
+    end
+    return nothing
 end
 
-function _soap_bwd(X, QL, QR, uL, uR)
-    Y = X
-    uL && (Y = QL * Y)
-    uR && (Y = Y * QR')
-    return Y
+function _soap_bwd!(out, X, QL, QR, uL, uR, tmp)   # out = QL * X * QR'
+    if uL && uR
+        mul!(tmp, QL, X)
+        mul!(out, tmp, QR')
+    elseif uL
+        mul!(out, QL, X)
+    elseif uR
+        mul!(out, X, QR')
+    else
+        out .= X
+    end
+    return nothing
 end
 
 end
