@@ -1,6 +1,6 @@
 name = "OptimizationMOI"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
-version = "1.3.0"
+version = "1.4.0"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 
 [deps]
@@ -35,7 +35,7 @@ ModelingToolkitBase = "1"
 NLopt = "1"
 OptimizationBase = "5.1"
 Reexport = "1.2"
-SciMLBase = "2.130"
+SciMLBase = "2.130, 3"
 SciMLStructures = "1"
 SparseArrays = "1.6"
 SymbolicIndexingInterface = "0.3"
