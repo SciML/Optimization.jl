@@ -149,8 +149,45 @@ jobs:
             end
           end
 
+          # Pkg.test() with one retry on transient PythonCall precompile
+          # init failures (UndefRefError inside PythonCall.JlWrap.__init__
+          # during deserialization). This has been observed intermittently
+          # on the OptimizationSciPy and OptimizationPyCMA jobs and is not
+          # caused by a code change in this repository — see PythonCall
+          # issue tracker for the upstream root cause. Other failure modes
+          # are rethrown immediately.
+          function _pythoncall_init_failure(e)
+            msg = sprint(showerror, e)
+            return occursin("PythonCall", msg) &&
+                   (occursin("JlWrap", msg) || occursin("UndefRefError", msg))
+          end
+
+          function run_tests_with_retry()
+            try
+              Pkg.test()
+            catch e
+              if _pythoncall_init_failure(e)
+                @warn "Transient PythonCall init failure detected; clearing compile cache and retrying once" exception=(e, catch_backtrace())
+                # Drop the stale precompile cache that triggered the failed
+                # __init__ so the retry rebuilds it from scratch.
+                for depot in DEPOT_PATH
+                  compiled = joinpath(depot, "compiled")
+                  isdir(compiled) || continue
+                  for entry in ("PythonCall", "OptimizationSciPy", "OptimizationPyCMA",
+                                "SciMLBasePythonCallExt")
+                    path = joinpath(compiled, "v$(VERSION.major).$(VERSION.minor)", entry)
+                    isdir(path) && rm(path; recursive = true, force = true)
+                  end
+                end
+                Pkg.test()
+              else
+                rethrow()
+              end
+            end
+          end
+
           @info "Starting tests"
-          Pkg.test()
+          run_tests_with_retry()
       - uses: julia-actions/julia-processcoverage@v1
         with:
           directories: src,lib/OptimizationBase/src,lib/OptimizationBBO/src,lib/OptimizationCMAEvolutionStrategy/src,lib/OptimizationEvolutionary/src,lib/OptimizationGCMAES/src,lib/OptimizationIpopt/src,lib/OptimizationMadNLP/src,lib/OptimizationManopt/src,lib/OptimizationMOI/src,lib/OptimizationMetaheuristics/src,lib/OptimizationMultistartOptimization/src,lib/OptimizationNLopt/src,lib/OptimizationNOMAD/src,lib/OptimizationOptimJL/src,lib/OptimizationOptimisers/src,lib/OptimizationPolyalgorithms/src,lib/OptimizationQuadDIRECT/src,lib/OptimizationSpeedMapping/src
