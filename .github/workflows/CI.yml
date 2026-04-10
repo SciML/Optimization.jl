@@ -64,6 +64,14 @@ jobs:
             ${{ runner.os }}-test-${{ matrix.version }}-${{ env.cache-name }}-
             ${{ runner.os }}-test-${{ matrix.version }}-
             ${{ runner.os }}-
+      # Serialize precompile workers for the python-using groups. PythonCall's
+      # `JlWrap.__init__` has been observed to fail intermittently with
+      # `UndefRefError: access to undefined reference` when multiple precompile
+      # workers spin up the wrapper-type registration concurrently. Setting
+      # `JULIA_NUM_PRECOMPILE_TASKS=1` removes that race; the cost on these
+      # small subpackages is negligible.
+      - if: ${{ matrix.group == 'OptimizationSciPy' || matrix.group == 'OptimizationPyCMA' }}
+        run: echo "JULIA_NUM_PRECOMPILE_TASKS=1" >> $GITHUB_ENV
       - uses: julia-actions/julia-buildpkg@v1
       - if: ${{ matrix.group == 'OptimizationQuadDIRECT' }}
         run: julia --project -e 'using Pkg; Pkg.Registry.add(RegistrySpec(url  = "https://github.com/HolyLab/HolyLabRegistry.git")); Pkg.add("QuadDIRECT")'
