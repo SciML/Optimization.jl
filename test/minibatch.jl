@@ -24,9 +24,9 @@ function callback(state, l) #callback function to observe training
     return l < 1.0e-2
 end
 
-u0 = Float32[200.0]
+u0 = [200.0]
 datasize = 30
-tspan = (0.0f0, 1.5f0)
+tspan = (0.0, 1.5)
 
 t = range(tspan[1], tspan[2], length = datasize)
 true_prob = ODEProblem(true_sol, u0, tspan)
@@ -34,7 +34,7 @@ ode_data = Array(solve(true_prob, Tsit5(), saveat = t))
 
 ann = Lux.Chain(Lux.Dense(1, 8, tanh), Lux.Dense(8, 1, tanh))
 pp, st = Lux.setup(rng, ann)
-pp = ComponentArray(pp)
+pp = ComponentArray{Float64}(pp)
 
 prob = ODEProblem{false}(dudt_, u0, tspan, pp)
 
