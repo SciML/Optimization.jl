@@ -162,7 +162,7 @@ R2 = Euclidean(2)
 
         sol = OptimizationBase.solve(prob, opt)
         @test sol.objective < 0.1
-        @test SciMLBase.successful_retcode(sol) broken = true
+        @test SciMLBase.successful_retcode(sol)
     end
 
     @testset "TrustRegions" begin
@@ -178,7 +178,7 @@ R2 = Euclidean(2)
 
         sol = OptimizationBase.solve(prob, opt)
         @test sol.objective < 0.1
-        @test SciMLBase.successful_retcode(sol) broken = true
+        @test SciMLBase.successful_retcode(sol)
     end
 
     @testset "Custom constraints" begin
