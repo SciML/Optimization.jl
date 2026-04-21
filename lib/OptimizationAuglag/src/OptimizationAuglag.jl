@@ -153,6 +153,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
             inner_cache = augprob
         end
 
+        t0 = time()
+        total_iters = 0
+        total_fevals = 0
+        total_gevals = 0
         for i in 1:(maxiters ÷ 10)
             prev_eqcons .= cons_tmp[eq_inds] .- cache.lcons[eq_inds]
             prevβ .= copy(β)
@@ -165,6 +169,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
                 new_prob = remake(inner_cache, u0 = θ)
                 res = solve(new_prob, cache.opt.inner, maxiters = maxiters ÷ 10)
             end
+            total_iters += res.stats.iterations
+            total_fevals += res.stats.fevals
+            total_gevals += res.stats.gevals
 
             θ = res.u
             cons_tmp .= 0.0
@@ -185,8 +192,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
             end
         end
         stats = OptimizationStats(;
-            iterations = maxiters,
-            time = 0.0, fevals = maxiters, gevals = maxiters
+            iterations = total_iters,
+            time = time() - t0,
+            fevals = total_fevals,
+            gevals = total_gevals
         )
         return SciMLBase.build_solution(
             cache, cache.opt, θ, x,
