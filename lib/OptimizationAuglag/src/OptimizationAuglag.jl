@@ -108,7 +108,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
         end
 
         prev_eqcons = zero(λ)
-        θ = cache.u0
+        θ = copy(cache.u0)
         β = max.(cons_tmp[ineq_inds], Ref(0.0))
         prevβ = zero(β)
         eqidxs = [eq_inds[i] > 0 ? i : nothing for i in eachindex(ineq_inds)]
@@ -147,11 +147,25 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
         )
 
         solver_kwargs = Base.structdiff(solver_kwargs, (; lb = nothing, ub = nothing))
+        if SciMLBase.has_init(cache.opt.inner)
+            inner_cache = init(augprob, cache.opt.inner, maxiters = maxiters ÷ 10)
+        else
+            inner_cache = augprob
+        end
 
-        for i in 1:(maxiters / 10)
+        for i in 1:(maxiters ÷ 10)
             prev_eqcons .= cons_tmp[eq_inds] .- cache.lcons[eq_inds]
             prevβ .= copy(β)
-            res = solve(augprob, cache.opt.inner, maxiters = maxiters / 10)
+
+            # continue the optimization from the previous θ; could be extended to reuse some internals
+            if SciMLBase.has_init(cache.opt.inner)
+                SciMLBase.reinit!(inner_cache; u0 = θ)
+                res = solve!(inner_cache)
+            else
+                new_prob = remake(inner_cache, u0 = θ)
+                res = solve(new_prob, cache.opt.inner, maxiters = maxiters ÷ 10)
+            end
+
             θ = res.u
             cons_tmp .= 0.0
             cache.f.cons(cons_tmp, θ)
