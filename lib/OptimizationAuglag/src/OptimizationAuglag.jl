@@ -6,15 +6,22 @@ using SciMLBase
 using SciMLBase: OptimizationProblem, OptimizationFunction, OptimizationStats
 using LinearAlgebra: norm
 
-@kwdef struct AugLag
-    inner::Any
-    τ = 0.5
-    γ = 10.0
-    λmin = -1.0e20
-    λmax = 1.0e20
-    μmin = 0.0
-    μmax = 1.0e20
-    ϵ = 1.0e-8
+struct AugLag{I, T}
+    inner::I
+    τ::T
+    γ::T
+    λmin::T
+    λmax::T
+    μmin::T
+    μmax::T
+    ϵ_primal::T
+    ϵ_dual::T
+    ρmax::T
+    progress_window::Int
+end
+
+function AugLag(; inner, τ = 0.5, γ = 10.0, λmin = -1.0e20, λmax = 1.0e20, μmin = 0.0, μmax = 1.0e20, ϵ =1.0e-8, ϵ_primal = ϵ, ϵ_dual = ϵ, ρmax = 1.0e12, progress_window = 5)
+    AugLag(inner, τ, γ, λmin, λmax, μmin, μmax, ϵ_primal, ϵ_dual, ρmax, progress_window)
 end
 
 SciMLBase.has_init(::AugLag) = true
@@ -81,7 +88,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
         λmax = cache.opt.λmax
         μmin = cache.opt.μmin
         μmax = cache.opt.μmax
-        ϵ = cache.opt.ϵ
+        ϵ_primal = cache.opt.ϵ_primal
+        ϵ_dual = cache.opt.ϵ_dual
 
         λ = zeros(eltype(cache.u0), sum(eq_inds))
         μ = zeros(eltype(cache.u0), sum(ineq_inds))
@@ -107,10 +115,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
                 1 / (2 * ρ) * sum((max.(Ref(0.0), μ .+ (ρ .* cons_tmp[ineq_inds]))) .^ 2)
         end
 
-        prev_eqcons = zero(λ)
         θ = copy(cache.u0)
-        β = max.(cons_tmp[ineq_inds], Ref(0.0))
-        prevβ = zero(β)
         eqidxs = [eq_inds[i] > 0 ? i : nothing for i in eachindex(ineq_inds)]
         ineqidxs = [ineq_inds[i] > 0 ? i : nothing for i in eachindex(ineq_inds)]
         eqidxs = eqidxs[eqidxs .!= nothing]
@@ -140,27 +145,34 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
         end
 
         opt_ret = ReturnCode.MaxIters
-        n = length(cache.u0)
 
         augprob = OptimizationProblem(
             OptimizationFunction(_loss; grad = aug_grad), cache.u0, cache.p
         )
 
         solver_kwargs = Base.structdiff(solver_kwargs, (; lb = nothing, ub = nothing))
+
+        t0 = time()
         if SciMLBase.has_init(cache.opt.inner)
             inner_cache = init(augprob, cache.opt.inner, maxiters = maxiters ÷ 10)
         else
             inner_cache = augprob
         end
 
-        t0 = time()
         total_iters = 0
         total_fevals = 0
         total_gevals = 0
-        for i in 1:(maxiters ÷ 10)
-            prev_eqcons .= cons_tmp[eq_inds] .- cache.lcons[eq_inds]
-            prevβ .= copy(β)
+        r_primal = Inf
+        r_dual = Inf
+        r_compl = Inf
 
+        best_in_window = Inf
+        best_prev_window = Inf
+        iters_in_window = 0
+        W = cache.opt.progress_window
+        ρmax = cache.opt.ρmax
+
+        for _ in 1:(maxiters ÷ 10)
             # continue the optimization from the previous θ; could be extended to reuse some internals
             if SciMLBase.has_init(cache.opt.inner)
                 SciMLBase.reinit!(inner_cache; u0 = θ)
@@ -176,21 +188,51 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
             θ = res.u
             cons_tmp .= 0.0
             cache.f.cons(cons_tmp, θ)
+
             λ = max.(min.(λmax, λ .+ ρ * (cons_tmp[eq_inds] .- cache.lcons[eq_inds])), λmin)
             β = max.(cons_tmp[ineq_inds], -1 .* μ ./ ρ)
             μ = min.(μmax, max.(μ .+ ρ * cons_tmp[ineq_inds], μmin))
-            if max(norm(cons_tmp[eq_inds] .- cache.lcons[eq_inds], Inf), norm(β, Inf)) >
-                    τ * max(norm(prev_eqcons, Inf), norm(prevβ, Inf))
-                ρ = γ * ρ
-            end
-            if norm(
-                    (cons_tmp[eq_inds] .- cache.lcons[eq_inds]) ./ cons_tmp[eq_inds], Inf
-                ) <
-                    ϵ && norm(β, Inf) < ϵ
+
+            r_primal = norm(cons_tmp[eq_inds] .- cache.lcons[eq_inds], Inf)
+            r_dual = ρ * r_primal
+            r_compl = norm(β, Inf)
+
+            # effective dual tolerance scales with ρ since at high ρ values
+            # ||Δλ|| = ρ * ||c|| cannot go below `ϵ_primal * ρ` once primal
+            # feasibility is achieved to the primal tolerance.
+            ϵ_dual_eff = max(ϵ_dual, ϵ_primal * ρ)
+
+            # convergence check
+            if r_primal < ϵ_primal && r_dual < ϵ_dual_eff && r_compl < ϵ_primal
                 opt_ret = ReturnCode.Success
                 break
             end
+
+            # instability detection
+            if !isfinite(r_primal) || !isfinite(r_dual)
+                opt_ret = ReturnCode.Unstable
+                break
+            end
+
+            # window based progress check compatible with stochastic optimizers
+            worst = max(r_primal, r_compl)
+            best_in_window = min(best_in_window, worst)
+            iters_in_window += 1
+
+            if iters_in_window ≥ W
+                if best_in_window > τ * best_prev_window && best_in_window > ϵ_primal && ρ < ρmax
+                    ρ = min(ρmax, γ * ρ)
+                end
+                best_prev_window = best_in_window
+                best_in_window = Inf
+                iters_in_window = 0
+            end
         end
+
+        if opt_ret === ReturnCode.MaxIters && (r_primal ≥ ϵ_primal || r_compl ≥ ϵ_primal)
+            opt_ret = ReturnCode.ConvergenceFailure
+        end
+
         stats = OptimizationStats(;
             iterations = total_iters,
             time = time() - t0,
