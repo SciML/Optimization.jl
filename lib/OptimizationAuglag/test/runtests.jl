@@ -70,13 +70,17 @@ end
         prob = OptimizationProblem(optf, initpars, data;
             lcons = [-Inf], ucons = [1],
             lb = fill(-10.0, 5), ub = fill(10.0, 5))
-        result = solve(prob, AugLag(; inner = Adam()); maxiters = 10000)
+        result = solve(prob,
+            AugLag(; inner = Adam(), inner_maxiters = 100);
+            maxiters = 100)
         @test result.objective < l0
     end
 
     @testset "equality constraints — Success with KKT agreement" begin
         fx = eqls_fixture()
-        result = solve(fx.prob, AugLag(; inner = Adam(0.02)); maxiters = 2000)
+        result = solve(fx.prob,
+            AugLag(; inner = Adam(0.02), inner_maxiters = 200);
+            maxiters = 200)
 
         @test result.retcode === ReturnCode.Success
         @test norm(fx.A * result.u - fx.b, Inf) < 1e-3
@@ -84,17 +88,48 @@ end
     end
 
     @testset "ConvergenceFailure when primal unreachable in budget" begin
-        # Tight primal tolerance + tiny budget → primal can't be met.
+        # Tight primal tolerance + small budget → primal can't be met.
         fx = eqls_fixture()
         result = solve(fx.prob,
-            AugLag(; inner = Adam(0.02), ϵ_primal = 1e-12);
-            maxiters = 50)
+            AugLag(; inner = Adam(0.02), inner_maxiters = 100, ϵ_primal = 1e-12);
+            maxiters = 20)
         @test result.retcode === ReturnCode.ConvergenceFailure
+    end
+
+    @testset "Terminated when callback returns true" begin
+        fx = eqls_fixture()
+        fired_at = Ref(0)
+        cb = (state, obj) -> begin
+            fired_at[] = state.iter
+            return state.iter ≥ 3   # stop after 3 outer iters
+        end
+        result = solve(fx.prob,
+            AugLag(; inner = Adam(0.02), inner_maxiters = 50);
+            maxiters = 100, callback = cb)
+        @test result.retcode === ReturnCode.Terminated
+        @test fired_at[] == 3
+    end
+
+    @testset "MaxTime enforced at outer loop" begin
+        fx = eqls_fixture()
+        result = solve(fx.prob,
+            AugLag(; inner = Adam(0.02), inner_maxiters = 100);
+            maxiters = 10_000, maxtime = 0.01)
+        @test result.retcode === ReturnCode.MaxTime
+    end
+
+    @testset "no-constraints problem throws" begin
+        optf = OptimizationFunction((θ, _p) -> sum(abs2, θ), AutoForwardDiff())
+        prob = OptimizationProblem(optf, [1.0, 2.0])
+        @test_throws ArgumentError solve(prob,
+            AugLag(; inner = Adam(), inner_maxiters = 10); maxiters = 10)
     end
 
     @testset "stats are populated honestly" begin
         fx = eqls_fixture()
-        result = solve(fx.prob, AugLag(; inner = Adam(0.02)); maxiters = 500)
+        result = solve(fx.prob,
+            AugLag(; inner = Adam(0.02), inner_maxiters = 100);
+            maxiters = 50)
         @test result.stats.iterations > 0
         @test result.stats.fevals > 0
         @test result.stats.gevals > 0
@@ -113,10 +148,13 @@ end
         @test alg.ϵ_dual == 1e-2
     end
 
-    @testset "ρmax and progress_window have sensible defaults" begin
+    @testset "defaults for ρmax, progress_window, inner_* kwargs" begin
         alg = AugLag(; inner = Adam())
         @test alg.ρmax == 1.0e12
         @test alg.progress_window == 5
+        @test alg.inner_maxiters === nothing
+        @test alg.inner_maxtime === nothing
+        @test alg.inner_callback === nothing
         @test AugLag(; inner = Adam(), ρmax = 1e6).ρmax == 1e6
         @test AugLag(; inner = Adam(), progress_window = 10).progress_window == 10
     end
