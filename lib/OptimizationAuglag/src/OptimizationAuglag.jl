@@ -73,9 +73,6 @@ end
 
 function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
-
-    local x
-
     solver_kwargs = __map_optimizer_args(cache, cache.opt; maxiters, cache.solver_args...)
 
     if !isnothing(cache.f.cons)
@@ -239,8 +236,21 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
             fevals = total_fevals,
             gevals = total_gevals
         )
+
+        obj = if OptimizationBase.isa_dataiterator(cache.p)
+            total = 0.0
+            n = 0
+            for batch in cache.p
+                total += cache.f(θ, batch)
+                n += 1
+            end
+            total / n
+        else
+            cache.f(θ, cache.p)
+        end
+
         return SciMLBase.build_solution(
-            cache, cache.opt, θ, x,
+            cache, cache.opt, θ, obj,
             stats = stats, retcode = opt_ret
         )
     end
