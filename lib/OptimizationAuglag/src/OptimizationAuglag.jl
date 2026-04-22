@@ -8,7 +8,7 @@ using LinearAlgebra: norm
 
 export AugLag
 
-struct AugLag{I, T, C}
+struct AugLag{I, T, C, R}
     inner::I
     τ::T
     γ::T
@@ -19,6 +19,7 @@ struct AugLag{I, T, C}
     ϵ_primal::T
     ϵ_dual::T
     ρmax::T
+    ρ_init::R
     progress_window::Int
     inner_maxiters::Union{Int, Nothing}
     inner_maxtime::Union{Float64, Nothing}
@@ -30,14 +31,14 @@ function AugLag(;
         λmin = -1.0e20, λmax = 1.0e20,
         μmin = 0.0, μmax = 1.0e20,
         ϵ = 1.0e-8, ϵ_primal = ϵ, ϵ_dual = ϵ,
-        ρmax = 1.0e12, progress_window = 5,
+        ρmax = 1.0e12, ρ_init = nothing, progress_window = 5,
         inner_maxiters = nothing,
         inner_maxtime = nothing,
         inner_callback = nothing
     )
     AugLag(
         inner, τ, γ, λmin, λmax, μmin, μmax,
-        ϵ_primal, ϵ_dual, ρmax, progress_window,
+        ϵ_primal, ϵ_dual, ρmax, ρ_init, progress_window,
         inner_maxiters, inner_maxtime, inner_callback
     )
 end
@@ -89,10 +90,16 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
 
     cons_tmp = zeros(eltype(cache.u0), length(cache.lcons))
     cache.f.cons(cons_tmp, cache.u0)
-    ρ = max(
-        1.0e-6,
-        min(10, 2 * abs(cache.f(cache.u0, iterate(cache.p)[1])) / norm(cons_tmp))
-    )
+    ρ = if isnothing(cache.opt.ρ_init)
+        f_u0 = if OptimizationBase.isa_dataiterator(cache.p)
+            cache.f(cache.u0, iterate(cache.p)[1])
+        else
+            cache.f(cache.u0, cache.p)
+        end
+        max(1.0e-6, min(10, 2 * abs(f_u0) / norm(cons_tmp)))
+    else
+        cache.opt.ρ_init
+    end
 
     _loss = function (θ, p = cache.p)
         x = cache.f(θ, p)

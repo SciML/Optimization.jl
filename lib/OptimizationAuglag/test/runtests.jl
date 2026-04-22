@@ -18,7 +18,7 @@ using Test
 # gives the exact (θ_ref, μ_ref) to compare AugLag's result against.
 # -----------------------------------------------------------------------------
 function eqls_fixture(; N = 400, d = 8, M = 2, seed = 0x5CA11e,
-        batchsize = N, shuffle = false)
+        batchsize = N, shuffle = false, data_iterator = true)
     rng = Xoshiro(seed)
     θ_true = randn(rng, d)
     X = randn(rng, d, N)
@@ -40,9 +40,13 @@ function eqls_fixture(; N = 400, d = 8, M = 2, seed = 0x5CA11e,
         return nothing
     end
 
-    data = MLUtils.DataLoader((X, y); batchsize = batchsize, shuffle = shuffle)
+    p = if data_iterator
+        MLUtils.DataLoader((X, y); batchsize = batchsize, shuffle = shuffle)
+    else
+        (X, y)
+    end
     optf = OptimizationFunction(loss, AutoForwardDiff(); cons = cons!)
-    prob = OptimizationProblem(optf, zeros(d), data;
+    prob = OptimizationProblem(optf, zeros(d), p;
         lcons = zeros(M), ucons = zeros(M))
 
     return (; prob, θ_ref, A, b)
@@ -157,5 +161,62 @@ end
         @test alg.inner_callback === nothing
         @test AugLag(; inner = Adam(), ρmax = 1e6).ρmax == 1e6
         @test AugLag(; inner = Adam(), progress_window = 10).progress_window == 10
+    end
+
+    @testset "plain-vector cache.p (non-DataIterator)" begin
+        # Same problem as the DataLoader fixture but with `p = (X, y)` passed
+        # as a plain tuple. Exercises the non-isa_dataiterator branch of the
+        # initial-ρ heuristic and the inner-solve path.
+        fx = eqls_fixture(; data_iterator = false)
+        result = solve(fx.prob,
+            AugLag(; inner = Adam(0.02), inner_maxiters = 200);
+            maxiters = 200)
+
+        @test result.retcode === ReturnCode.Success
+        @test norm(fx.A * result.u - fx.b, Inf) < 1e-3
+        @test norm(result.u - fx.θ_ref) < 0.05
+    end
+
+    @testset "ρ_init default is nothing, can be overridden" begin
+        @test AugLag(; inner = Adam()).ρ_init === nothing
+        @test AugLag(; inner = Adam(), ρ_init = 5.0).ρ_init == 5.0
+    end
+
+    @testset "ρ_init override is respected at solve start" begin
+        # With γ = 1 the penalty never grows, so the ρ reported in the first
+        # outer-iteration callback equals the ρ_init we passed in.
+        fx = eqls_fixture(; data_iterator = false)
+        seen_ρ = Ref(NaN)
+        cb = (state, _obj) -> begin
+            if state.iter == 1
+                seen_ρ[] = state.original.ρ
+            end
+            return state.iter ≥ 1   # stop after one outer iter
+        end
+        ρ_init = 42.0
+        solve(fx.prob,
+            AugLag(; inner = Adam(0.02), inner_maxiters = 10,
+                γ = 1.0, ρ_init = ρ_init);
+            maxiters = 5, callback = cb)
+        @test seen_ρ[] == ρ_init
+    end
+
+    @testset "degenerate pure-penalty (γ=1, λ=μ=0)" begin
+        # Pure quadratic penalty: γ = 1 freezes ρ at ρ_init, and clamping the
+        # multiplier bounds to zero forces λ ≡ 0, μ ≡ 0. Only the penalty term
+        # drives feasibility, so we need ρ_init large enough to meet ϵ_primal.
+        fx = eqls_fixture(; data_iterator = false)
+        ρ_init = 1.0e4
+        ϵ_primal = 1.0e-2
+        result = solve(fx.prob,
+            AugLag(; inner = Adam(0.05), inner_maxiters = 500,
+                γ = 1.0, ρ_init = ρ_init,
+                λmin = 0.0, λmax = 0.0,
+                μmin = 0.0, μmax = 0.0,
+                ϵ_primal = ϵ_primal, ϵ_dual = ϵ_primal * ρ_init);
+            maxiters = 50)
+
+        @test result.retcode === ReturnCode.Success
+        @test norm(fx.A * result.u - fx.b, Inf) < ϵ_primal
     end
 end
