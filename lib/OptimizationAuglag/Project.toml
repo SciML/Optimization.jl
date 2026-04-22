@@ -13,6 +13,7 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 MLUtils = "f1d291b0-491e-4a28-83b9-f70985020b54"
 OptimizationOptimisers = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [sources]
@@ -31,4 +32,4 @@ Test = "1.10.0"
 julia = "1.10"
 
 [targets]
-test = ["Test", "ForwardDiff", "MLUtils", "OptimizationOptimisers"]
+test = ["Test", "ForwardDiff", "MLUtils", "OptimizationOptimisers", "Random"]
