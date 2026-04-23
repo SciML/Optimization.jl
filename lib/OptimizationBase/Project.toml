@@ -1,6 +1,6 @@
 name = "OptimizationBase"
 uuid = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-version = "5.2.0"
+version = "5.1.0"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 
 [deps]
@@ -60,7 +60,7 @@ PDMats = "0.11"
 PrecompileTools = "1"
 Reexport = "1.2"
 ReverseDiff = "1.14"
-SciMLBase = "2.122.1, 3"
+SciMLBase = "2.122.1"
 SciMLLogging = "1.8.0"
 SparseConnectivityTracer = "0.6, 1"
 SparseMatrixColorings = "0.4"

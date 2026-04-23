@@ -1,6 +1,6 @@
 name = "OptimizationNLPModels"
 uuid = "064b21be-54cf-11ef-1646-cdfee32b588f"
-version = "1.4.0"
+version = "1.3.0"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 
 [deps]
@@ -22,7 +22,7 @@ ADTypes = "1.18"
 NLPModels = "0.21"
 OptimizationBase = "5"
 Reexport = "1.2"
-SciMLBase = "2.122.1, 3"
+SciMLBase = "2.122.1"
 SparseArrays = "1.10.0"
 julia = "1.10"
 
