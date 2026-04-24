@@ -109,21 +109,25 @@ function __map_optimizer_args!(
     return kws
 end
 
-function sciml_prima_retcode(rc::AbstractString)
-    if rc in [
-            "SMALL_TR_RADIUS", "TRSUBP_FAILED", "NAN_INF_X", "NAN_INF_F", "NAN_INF_MODEL",
-            "DAMAGING_ROUNDING", "ZERO_LINEAR_CONSTRAINT", "INVALID_INPUT", "ASSERTION_FAILS",
-            "VALIDATION_FAILS", "MEMORY_ALLOCATION_FAILS",
-        ]
-        return ReturnCode.Failure
-    else
-        rc in [
-            "FTARGET_ACHIEVED"
-            "MAXFUN_REACHED"
-            "MAXTR_REACHED"
-            "NO_SPACE_BETWEEN_BOUNDS"
-        ]
+function sciml_prima_retcode(status::PRIMA.Status)
+    # PRIMA's own success predicate (PRIMA/src/PRIMA.jl):
+    #     issuccess(status) = status == SMALL_TR_RADIUS || status == FTARGET_ACHIEVED
+    if status == PRIMA.FTARGET_ACHIEVED || status == PRIMA.SMALL_TR_RADIUS
         return ReturnCode.Success
+    elseif status == PRIMA.MAXFUN_REACHED || status == PRIMA.MAXTR_REACHED
+        return ReturnCode.MaxIters
+    elseif status == PRIMA.NO_SPACE_BETWEEN_BOUNDS ||
+            status == PRIMA.ZERO_LINEAR_CONSTRAINT ||
+            status == PRIMA.INVALID_INPUT
+        return ReturnCode.InitialFailure
+    elseif status == PRIMA.NAN_INF_X || status == PRIMA.NAN_INF_F ||
+            status == PRIMA.NAN_INF_MODEL
+        return ReturnCode.Unstable
+    elseif status == PRIMA.DAMAGING_ROUNDING
+        return ReturnCode.ConvergenceFailure
+    else
+        # TRSUBP_FAILED, ASSERTION_FAILS, VALIDATION_FAILS, MEMORY_ALLOCATION_FAILS
+        return ReturnCode.Failure
     end
 end
 
@@ -201,7 +205,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: PRIMASolvers
     end
     t1 = time()
 
-    retcode = sciml_prima_retcode(PRIMA.reason(inf))
+    retcode = sciml_prima_retcode(inf.status)
     stats = OptimizationBase.OptimizationStats(; time = t1 - t0, fevals = inf.nf)
     return SciMLBase.build_solution(
         cache, cache.opt, minx,
