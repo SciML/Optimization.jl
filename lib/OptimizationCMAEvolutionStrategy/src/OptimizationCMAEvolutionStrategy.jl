@@ -17,6 +17,24 @@ SciMLBase.requireshessian(::CMAEvolutionStrategyOpt) = false
 SciMLBase.requiresconsjac(::CMAEvolutionStrategyOpt) = false
 SciMLBase.requiresconshess(::CMAEvolutionStrategyOpt) = false
 
+# Map `CMAEvolutionStrategy.Stop.reason` to a `SciMLBase.ReturnCode.T`. The
+# reasons come from `CMAEvolutionStrategy/src/stop.jl` — the full set is
+# `:maxiter`, `:maxtime`, `:maxfevals`, `:ftarget`, `:xtol`, `:ftol`, `:stagnation`
+# (plus `:none` for the pre-termination state).
+function _cma_retcode(reason::Symbol)
+    if reason === :ftarget || reason === :xtol || reason === :ftol
+        return SciMLBase.ReturnCode.Success
+    elseif reason === :maxiter || reason === :maxfevals
+        return SciMLBase.ReturnCode.MaxIters
+    elseif reason === :maxtime
+        return SciMLBase.ReturnCode.MaxTime
+    elseif reason === :stagnation
+        return SciMLBase.ReturnCode.Stalled
+    else
+        return SciMLBase.ReturnCode.Default
+    end
+end
+
 function __map_optimizer_args(
         prob::OptimizationBase.OptimizationCache, opt::CMAEvolutionStrategyOpt;
         callback = nothing,
@@ -96,7 +114,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: CMAEvolution
     opt_res = CMAEvolutionStrategy.minimize(_loss, cache.u0, 0.1; opt_args...)
     t1 = time()
 
-    opt_ret = OptimizationBase.deduce_retcode(String(opt_res.stop.reason))
+    opt_ret = _cma_retcode(opt_res.stop.reason)
     stats = OptimizationBase.OptimizationStats(;
         iterations = length(opt_res.logger.fmedian),
         time = t1 - t0,
