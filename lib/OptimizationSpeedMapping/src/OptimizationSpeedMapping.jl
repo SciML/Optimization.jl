@@ -79,7 +79,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SpeedMapping
         upper = cache.ub, opt_args...
     )
     t1 = time()
-    opt_ret = Symbol(opt_res.converged)
+    opt_ret = opt_res.converged ? SciMLBase.ReturnCode.Success :
+        SciMLBase.ReturnCode.Failure
     stats = OptimizationBase.OptimizationStats(; time = t1 - t0)
     return SciMLBase.build_solution(
         cache, cache.opt,

@@ -165,7 +165,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         end
     end
     t1 = time()
-    opt_ret = Symbol(Evolutionary.converged(opt_res))
+    opt_ret = Evolutionary.converged(opt_res) ? SciMLBase.ReturnCode.Success :
+        SciMLBase.ReturnCode.Failure
     stats = OptimizationBase.OptimizationStats(;
         iterations = opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls

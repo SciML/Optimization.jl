@@ -113,7 +113,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: GCMAESOpt}
     )
     return SciMLBase.build_solution(
         cache, cache.opt,
-        opt_xmin, opt_fmin; retcode = Symbol(Bool(opt_ret)),
+        opt_xmin, opt_fmin;
+        retcode = Bool(opt_ret) ? SciMLBase.ReturnCode.Success :
+            SciMLBase.ReturnCode.Failure,
         stats = stats
     )
 end

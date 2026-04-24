@@ -321,4 +321,43 @@ end
         sol = solve(prob, BFGS(), store_trace = true)
         @test sol isa Any  # just test it doesn't throw
     end
+
+    @testset "Issue #1187 retcode is SciMLBase.ReturnCode.T" begin
+        # Ensure the returned retcode is a `SciMLBase.ReturnCode.T` and not a Symbol.
+        # Regression test for https://github.com/SciML/Optimization.jl/issues/1187
+        rb(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+        x0 = zeros(2)
+        _p = [1.0, 100.0]
+
+        optf = OptimizationFunction(rb, OptimizationBase.AutoForwardDiff())
+        prob = OptimizationProblem(optf, x0, _p)
+
+        # Converged -> Success (exercises the unconstrained path: line ~269 of src)
+        sol = solve(prob, LBFGS())
+        @test sol.retcode isa SciMLBase.ReturnCode.T
+        @test sol.retcode == SciMLBase.ReturnCode.Success
+
+        # Very small maxiters so the optimizer terminates due to iteration limit.
+        # Exercises the MaxIters branch of `_optim_retcode`.
+        sol_maxit = solve(prob, LBFGS(); maxiters = 1)
+        @test sol_maxit.retcode isa SciMLBase.ReturnCode.T
+        @test sol_maxit.retcode == SciMLBase.ReturnCode.MaxIters
+
+        # Fminbox path (line ~353 of src): bounded problem.
+        prob_b = OptimizationProblem(optf, x0, _p; lb = [-5.0, -5.0], ub = [5.0, 5.0])
+        sol_b = solve(prob_b, Optim.Fminbox(BFGS()))
+        @test sol_b.retcode isa SciMLBase.ReturnCode.T
+
+        # ConstrainedOptimizer path (line ~506 of src): IPNewton with constraints.
+        cons(res, x, p) = (res[1] = x[1]^2 + x[2]^2)
+        optf_c = OptimizationFunction(
+            rb, OptimizationBase.AutoForwardDiff(); cons = cons
+        )
+        prob_c = OptimizationProblem(
+            optf_c, x0, _p; lcons = [-Inf], ucons = [100.0],
+            lb = [-5.0, -5.0], ub = [5.0, 5.0]
+        )
+        sol_c = solve(prob_c, IPNewton())
+        @test sol_c.retcode isa SciMLBase.ReturnCode.T
+    end
 end

@@ -96,7 +96,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: CMAEvolution
     opt_res = CMAEvolutionStrategy.minimize(_loss, cache.u0, 0.1; opt_args...)
     t1 = time()
 
-    opt_ret = opt_res.stop.reason
+    opt_ret = OptimizationBase.deduce_retcode(String(opt_res.stop.reason))
     stats = OptimizationBase.OptimizationStats(;
         iterations = length(opt_res.logger.fmedian),
         time = t1 - t0,
