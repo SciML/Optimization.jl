@@ -38,6 +38,16 @@ SciMLBase.allowsbounds(opt::Optim.SimulatedAnnealing) = false
 SciMLBase.requiresbounds(opt::Optim.Fminbox) = true
 SciMLBase.requiresbounds(opt::Optim.SAMIN) = true
 
+function _optim_retcode(opt_res)
+    if Optim.converged(opt_res)
+        return SciMLBase.ReturnCode.Success
+    elseif Optim.iteration_limit_reached(opt_res)
+        return SciMLBase.ReturnCode.MaxIters
+    else
+        return SciMLBase.ReturnCode.Failure
+    end
+end
+
 SciMLBase.has_init(opt::Optim.AbstractOptimizer) = true
 SciMLBase.has_init(opt::Union{Optim.Fminbox, Optim.SAMIN}) = true
 SciMLBase.has_init(opt::Optim.ConstrainedOptimizer) = true
@@ -260,7 +270,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
     t0 = time()
     opt_res = Optim.optimize(optim_f, cache.u0, cache.opt, opt_args)
     t1 = time()
-    opt_ret = Symbol(Optim.converged(opt_res))
+    opt_ret = _optim_retcode(opt_res)
     stats = OptimizationBase.OptimizationStats(;
         iterations = opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls,
@@ -344,7 +354,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     t0 = time()
     opt_res = Optim.optimize(optim_f, cache.lb, cache.ub, cache.u0, cache.opt, opt_args)
     t1 = time()
-    opt_ret = Symbol(Optim.converged(opt_res))
+    opt_ret = _optim_retcode(opt_res)
     stats = OptimizationBase.OptimizationStats(;
         iterations = opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls,
@@ -497,7 +507,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         opt_res = Optim.optimize(optim_f, optim_fc, cache.u0, cache.opt, opt_args)
     end
     t1 = time()
-    opt_ret = Symbol(Optim.converged(opt_res))
+    opt_ret = _optim_retcode(opt_res)
     stats = OptimizationBase.OptimizationStats(;
         iterations = opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls,
