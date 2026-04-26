@@ -4,6 +4,7 @@ using Reexport
 @reexport using OptimizationBase, SciMLBase
 using LinearAlgebra, ForwardDiff
 using DiffEqBase
+using ADTypes: AutoFiniteDiff
 
 using NonlinearSolve
 using OrdinaryDiffEq, SteadyStateDiffEq
@@ -24,7 +25,7 @@ struct DAEOptimizer{T}
     solver::T
 end
 
-DAEMassMatrix() = DAEOptimizer(Rodas5P(autodiff = false))
+DAEMassMatrix() = DAEOptimizer(Rodas5P(autodiff = AutoFiniteDiff()))
 
 SciMLBase.requiresbounds(::ODEOptimizer) = false
 SciMLBase.allowsbounds(::ODEOptimizer) = false
@@ -126,15 +127,15 @@ function solve_ode(cache, dt, maxit, u0, p)
     solve_kwargs[:progress] = cache.progress
 
     sol = solve(ss_prob, algorithm; solve_kwargs...)
-    has_destats = hasproperty(sol, :destats)
+    has_stats = hasproperty(sol, :stats) && sol.stats !== nothing
     has_t = hasproperty(sol, :t) && !isempty(sol.t)
 
     stats = OptimizationBase.OptimizationStats(
-        iterations = has_destats ? get(sol.destats, :iters, 10) :
+        iterations = has_stats ? sol.stats.naccept :
             (has_t ? length(sol.t) - 1 : 10),
         time = has_t ? sol.t[end] : 0.0,
-        fevals = has_destats ? get(sol.destats, :f_calls, 0) : 0,
-        gevals = has_destats ? get(sol.destats, :iters, 0) : 0,
+        fevals = has_stats ? sol.stats.nf : 0,
+        gevals = has_stats ? sol.stats.naccept : 0,
         hevals = 0
     )
 
