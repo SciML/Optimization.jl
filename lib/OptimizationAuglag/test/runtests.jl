@@ -201,6 +201,107 @@ end
         @test seen_ρ[] == ρ_init
     end
 
+    @testset "lower-bounded inequality (c ≥ lcons)" begin
+        # min ‖θ - target‖²  s.t.  θ₁ + θ₂ ≥ 1.
+        # Unconstrained minimizer is `target = (0.0, 0.0)`, infeasible.
+        # Active-constraint optimum: project target onto θ₁ + θ₂ = 1, giving
+        # (0.5, 0.5).
+        target = [0.0, 0.0]
+        loss(θ, _p) = sum(abs2, θ .- target)
+        cons!(res, θ, _p = nothing) = (res[1] = θ[1] + θ[2]; nothing)
+
+        optf = OptimizationFunction(loss, AutoForwardDiff(); cons = cons!)
+        prob = OptimizationProblem(optf, [-1.0, -1.0], nothing;
+            lcons = [1.0], ucons = [Inf])
+        result = solve(prob,
+            AugLag(; inner = Adam(0.05), inner_maxiters = 200);
+            maxiters = 200)
+
+        @test result.retcode === ReturnCode.Success
+        @test result.u[1] + result.u[2] ≥ 1 - 1.0e-3
+        @test norm(result.u .- [0.5, 0.5], Inf) < 5.0e-2
+    end
+
+    @testset "two-sided inequality (lcons ≤ c ≤ ucons)" begin
+        # min (θ₁ - 2)² + (θ₂ + 1)²  s.t.  −0.5 ≤ θ₁ + θ₂ ≤ 0.5.
+        # Unconstrained minimizer (2, −1) has θ₁+θ₂ = 1 > 0.5 → upper-active.
+        # Project onto θ₁ + θ₂ = 0.5: optimum is (1.75, −1.25).
+        target = [2.0, -1.0]
+        loss(θ, _p) = (θ[1] - target[1])^2 + (θ[2] - target[2])^2
+        cons!(res, θ, _p = nothing) = (res[1] = θ[1] + θ[2]; nothing)
+
+        optf = OptimizationFunction(loss, AutoForwardDiff(); cons = cons!)
+        prob = OptimizationProblem(optf, [0.0, 0.0], nothing;
+            lcons = [-0.5], ucons = [0.5])
+        result = solve(prob,
+            AugLag(; inner = Adam(0.05), inner_maxiters = 200);
+            maxiters = 200)
+
+        @test result.retcode === ReturnCode.Success
+        @test -0.5 - 1.0e-3 ≤ result.u[1] + result.u[2] ≤ 0.5 + 1.0e-3
+        @test norm(result.u .- [1.75, -1.25], Inf) < 5.0e-2
+    end
+
+    @testset "two-sided inequality activates lower side" begin
+        # Same constraint −0.5 ≤ θ₁ + θ₂ ≤ 0.5, but with a target that pulls
+        # the sum below the lower bound: target (−2, 0) → unconstrained sum −2.
+        # Project onto θ₁ + θ₂ = −0.5: optimum is (−1.25, 0.75).
+        target = [-2.0, 0.0]
+        loss(θ, _p) = (θ[1] - target[1])^2 + (θ[2] - target[2])^2
+        cons!(res, θ, _p = nothing) = (res[1] = θ[1] + θ[2]; nothing)
+
+        optf = OptimizationFunction(loss, AutoForwardDiff(); cons = cons!)
+        prob = OptimizationProblem(optf, [0.0, 0.0], nothing;
+            lcons = [-0.5], ucons = [0.5])
+        result = solve(prob,
+            AugLag(; inner = Adam(0.05), inner_maxiters = 200);
+            maxiters = 200)
+
+        @test result.retcode === ReturnCode.Success
+        @test -0.5 - 1.0e-3 ≤ result.u[1] + result.u[2] ≤ 0.5 + 1.0e-3
+        @test norm(result.u .- [-1.25, 0.75], Inf) < 5.0e-2
+    end
+
+    @testset "cons! sees cache.p (DataLoader), not per-batch slices" begin
+        # AugLag treats constraints as non-stochastic / batch-independent:
+        # `cons!(res, θ, p)` must always be called with the full `cache.p`
+        # (here the DataLoader iterator itself), never with a per-batch
+        # tuple, even though the inner Adam solve iterates over batches.
+        # A regression that routed per-batch `p` into `cons!` would show
+        # up as cons-tuple entries in `seen_ps` instead of the iterator.
+        rng = Xoshiro(0x5CA11e)
+        N, d, M = 80, 3, 1
+        X = randn(rng, d, N)
+        y = X' * randn(rng, d) .+ 0.01 .* randn(rng, N)
+        A = randn(rng, M, d)
+        dl = MLUtils.DataLoader((X, y); batchsize = 20, shuffle = false)
+
+        seen_ps = Any[]
+        loss(θ, batch) = sum(abs2, batch[1]' * θ .- batch[2]) / length(batch[2])
+        function cons_record!(res, θ, p)
+            push!(seen_ps, p)
+            res .= A * θ
+            return nothing
+        end
+
+        optf = OptimizationFunction(loss, AutoForwardDiff(); cons = cons_record!)
+        prob = OptimizationProblem(optf, zeros(d), dl;
+            lcons = zeros(M), ucons = zeros(M))
+
+        solve(prob,
+            AugLag(; inner = Adam(0.02), inner_maxiters = 4);
+            maxiters = 2)
+
+        @test !isempty(seen_ps)
+        n_dl = count(p -> p === dl, seen_ps)
+        n_other = count(p -> p !== dl, seen_ps)
+        # The DI cons_j preparation calls cons once or twice with the
+        # closed-over first batch — those are the only legal non-DL
+        # entries. Every call from `__solve` onward must be the iterator.
+        @test n_dl ≥ 1
+        @test n_dl > n_other
+    end
+
     @testset "degenerate pure-penalty (γ=1, λ=μ=0)" begin
         # Pure quadratic penalty: γ = 1 freezes ρ at ρ_init, and clamping the
         # multiplier bounds to zero forces λ ≡ 0, μ ≡ 0. Only the penalty term

@@ -151,7 +151,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
 
     for i in 1:maxiters
         n_outer = i
-        # warm-started inner solve of the augmented Lagrangian subproblem
+
+        # Warm-started inner solve of the augmented Lagrangian subproblem.
         if SciMLBase.has_init(cache.opt.inner)
             SciMLBase.reinit!(inner_cache; u0 = θ)
             res = solve!(inner_cache)
@@ -163,63 +164,79 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
         total_gevals += res.stats.gevals
 
         θ = res.u
-        cons_tmp .= 0.0
-        cache.f.cons(cons_tmp, θ)
+        cons_tmp .= zero(T)
+        cache.f.cons(cons_tmp, θ, cache.p)
+        ρ = ρ_ref[]
 
-        λ = max.(min.(λmax, λ .+ ρ * (cons_tmp[eq_inds] .- cache.lcons[eq_inds])), λmin)
-        β = max.(cons_tmp[ineq_inds], -1 .* μ ./ ρ)
-        μ = min.(μmax, max.(μ .+ ρ * cons_tmp[ineq_inds], μmin))
+        # Multiplier updates. Equality: standard λ ← λ + ρ(c - l), clipped.
+        # Inequalities: separate dual ascent on each finite-bounded side, with
+        # `μ ≥ 0` enforced by the lower clamp (μmin defaults to 0).
+        @inbounds for (i_loc, idx) in enumerate(eq_inds)
+            λ[i_loc] = clamp(λ[i_loc] + ρ * (cons_tmp[idx] - cache.lcons[idx]),
+                λmin, λmax)
+        end
+        @inbounds for (i_loc, idx) in enumerate(ineq_upper_inds)
+            μ_upper[i_loc] = clamp(
+                μ_upper[i_loc] + ρ * (cons_tmp[idx] - cache.ucons[idx]),
+                μmin, μmax
+            )
+        end
+        @inbounds for (i_loc, idx) in enumerate(ineq_lower_inds)
+            μ_lower[i_loc] = clamp(
+                μ_lower[i_loc] + ρ * (cache.lcons[idx] - cons_tmp[idx]),
+                μmin, μmax
+            )
+        end
 
-        r_primal = norm(cons_tmp[eq_inds] .- cache.lcons[eq_inds], Inf)
+        r_primal, r_compl = primal_and_complementarity(
+            cons_tmp, cache.lcons, cache.ucons,
+            eq_inds, ineq_upper_inds, ineq_lower_inds,
+            μ_upper, μ_lower, ρ
+        )
+        # ‖Δλ‖ scales with ρ‖c‖, so an effective dual tolerance bounded below
+        # by ρ·ϵ_primal keeps convergence checks well-defined at large ρ.
         r_dual = ρ * r_primal
-        r_compl = norm(β, Inf)
-
-        # effective dual tolerance scales with ρ since at high ρ values
-        # ||Δλ|| = ρ * ||c|| cannot go below `ϵ_primal * ρ` once primal
-        # feasibility is achieved to the primal tolerance.
         ϵ_dual_eff = max(ϵ_dual, ϵ_primal * ρ)
 
-        # outer-loop callback: one firing per outer iteration; AugLag-internal
-        # state (residuals, multipliers, penalty) is exposed via `original`
-        # for callers that want it.
         opt_state = OptimizationBase.OptimizationState(
             iter = i, u = θ, objective = res.objective,
-            original = (; r_primal, r_dual, r_compl, λ, μ, ρ)
+            original = (;
+                r_primal, r_dual, r_compl,
+                λ, μ_upper, μ_lower, ρ
+            )
         )
         if cache.callback(opt_state, res.objective)
             opt_ret = ReturnCode.Terminated
             break
         end
 
-        # convergence check
         if r_primal < ϵ_primal && r_dual < ϵ_dual_eff && r_compl < ϵ_primal
             opt_ret = ReturnCode.Success
             break
         end
 
-        # instability detection
         if !isfinite(r_primal) || !isfinite(r_dual)
             opt_ret = ReturnCode.Unstable
             break
         end
 
-        # maxtime enforced at outer-loop granularity
         if !isnothing(maxtime) && (time() - t0) > maxtime
             opt_ret = ReturnCode.MaxTime
             break
         end
 
-        # window-based progress check compatible with stochastic optimizers
+        # Window-based progress check, compatible with stochastic inner solvers.
         worst = max(r_primal, r_compl)
         best_in_window = min(best_in_window, worst)
         iters_in_window += 1
 
         if iters_in_window ≥ W
-            if best_in_window > τ * best_prev_window && best_in_window > ϵ_primal && ρ < ρmax
-                ρ = min(ρmax, γ * ρ)
+            if best_in_window > τ * best_prev_window &&
+                    best_in_window > ϵ_primal && ρ < ρmax
+                ρ_ref[] = min(ρmax, γ * ρ)
             end
             best_prev_window = best_in_window
-            best_in_window = Inf
+            best_in_window = T(Inf)
             iters_in_window = 0
         end
     end
@@ -251,6 +268,47 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
         cache, cache.opt, θ, obj,
         stats = stats, retcode = opt_ret
     )
+end
+
+function initial_violation(cons_tmp, lcons, ucons,
+        eq_inds, ineq_upper_inds, ineq_lower_inds)
+    v = zero(eltype(cons_tmp))
+    @inbounds for idx in eq_inds
+        v = max(v, abs(cons_tmp[idx] - lcons[idx]))
+    end
+    @inbounds for idx in ineq_upper_inds
+        v = max(v, max(zero(v), cons_tmp[idx] - ucons[idx]))
+    end
+    @inbounds for idx in ineq_lower_inds
+        v = max(v, max(zero(v), lcons[idx] - cons_tmp[idx]))
+    end
+    return v
+end
+
+function primal_and_complementarity(
+        cons_tmp, lcons, ucons,
+        eq_inds, ineq_upper_inds, ineq_lower_inds,
+        μ_upper, μ_lower, ρ
+    )
+    T = eltype(cons_tmp)
+    r_primal = zero(T)
+    r_compl = zero(T)
+    @inbounds for idx in eq_inds
+        r_primal = max(r_primal, abs(cons_tmp[idx] - lcons[idx]))
+    end
+    @inbounds for (i_loc, idx) in enumerate(ineq_upper_inds)
+        gu = cons_tmp[idx] - ucons[idx]
+        r_primal = max(r_primal, max(zero(T), gu))
+        β = max(gu, -μ_upper[i_loc] / ρ)
+        r_compl = max(r_compl, abs(β))
+    end
+    @inbounds for (i_loc, idx) in enumerate(ineq_lower_inds)
+        gl = lcons[idx] - cons_tmp[idx]
+        r_primal = max(r_primal, max(zero(T), gl))
+        β = max(gl, -μ_lower[i_loc] / ρ)
+        r_compl = max(r_compl, abs(β))
+    end
+    return r_primal, r_compl
 end
 
 end
