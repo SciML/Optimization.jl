@@ -176,7 +176,7 @@ function instantiate_function(
 
     cons = if f.cons !== nothing
         let f = f, p = p
-            (res, x) -> f.cons(res, x, p)
+            (res, x, p_call = p) -> f.cons(res, x, p_call)
         end
     else
         nothing
@@ -541,7 +541,9 @@ function instantiate_function(
 
     # Create constraint-related closures
     cons = if f.cons !== nothing
-        Base.Fix2(f.cons, p)
+        let f = f, p = p
+            (x, p_call = p) -> f.cons(x, p_call)
+        end
     else
         nothing
     end
