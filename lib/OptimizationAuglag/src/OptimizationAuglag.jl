@@ -8,6 +8,8 @@ using LinearAlgebra: norm
 
 export AugLag
 
+include("auglag_function.jl")
+
 struct AugLag{I, T, C, R}
     inner::I
     τ::T
@@ -47,6 +49,7 @@ SciMLBase.has_init(::AugLag) = true
 SciMLBase.allowscallback(::AugLag) = true
 SciMLBase.allowsbounds(::AugLag) = true
 SciMLBase.requiresgradient(::AugLag) = true
+SciMLBase.allowsfg(::AugLag) = true
 SciMLBase.allowsconstraints(::AugLag) = true
 SciMLBase.requiresconsjac(::AugLag) = true
 
@@ -58,8 +61,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
         throw(ArgumentError("AugLag requires constraints; got cache.f.cons === nothing"))
     end
 
-    eq_inds = [cache.lcons[i] == cache.ucons[i] for i in eachindex(cache.lcons)]
-    ineq_inds = (!).(eq_inds)
+    eq_inds, ineq_upper_inds, ineq_lower_inds = classify_constraints(
+        cache.lcons, cache.ucons
+    )
 
     τ = cache.opt.τ
     γ = cache.opt.γ
@@ -75,8 +79,6 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
     inner_maxtime = cache.opt.inner_maxtime
     inner_callback = cache.opt.inner_callback
 
-    # kwargs forwarded to the inner solve — only include set ones so the
-    # inner optimizer's own defaults apply otherwise.
     inner_kwargs = (;)
     isnothing(inner_maxiters) ||
         (inner_kwargs = merge(inner_kwargs, (; maxiters = inner_maxiters)))
@@ -85,67 +87,46 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
     isnothing(inner_callback) ||
         (inner_kwargs = merge(inner_kwargs, (; callback = inner_callback)))
 
-    λ = zeros(eltype(cache.u0), sum(eq_inds))
-    μ = zeros(eltype(cache.u0), sum(ineq_inds))
+    T = eltype(cache.u0)
+    λ = zeros(T, length(eq_inds))
+    μ_upper = zeros(T, length(ineq_upper_inds))
+    μ_lower = zeros(T, length(ineq_lower_inds))
+    ρ_ref = Ref(zero(T))
 
-    cons_tmp = zeros(eltype(cache.u0), length(cache.lcons))
-    cache.f.cons(cons_tmp, cache.u0)
-    ρ = if isnothing(cache.opt.ρ_init)
+    cons_tmp = zeros(T, length(cache.lcons))
+    cache.f.cons(cons_tmp, cache.u0, cache.p)
+
+    # Initial penalty: scale to (very roughly) balance objective and worst
+    # constraint violation at u0. Falls back to 1.0 when u0 is already feasible
+    # (no violations to scale against) or when the user pins ρ_init.
+    ρ_ref[] = if isnothing(cache.opt.ρ_init)
         f_u0 = if OptimizationBase.isa_dataiterator(cache.p)
             cache.f(cache.u0, iterate(cache.p)[1])
         else
             cache.f(cache.u0, cache.p)
         end
-        max(1.0e-6, min(10, 2 * abs(f_u0) / norm(cons_tmp)))
+        v0 = initial_violation(cons_tmp, cache.lcons, cache.ucons,
+            eq_inds, ineq_upper_inds, ineq_lower_inds)
+        v0 < eps(T) ? one(T) :
+        T(max(1.0e-6, min(10.0, 2 * abs(first(f_u0)) / v0)))
     else
-        cache.opt.ρ_init
+        T(cache.opt.ρ_init)
     end
 
-    _loss = function (θ, p = cache.p)
-        x = cache.f(θ, p)
-        cons_tmp .= zero(eltype(θ))
-        cache.f.cons(cons_tmp, θ)
-        cons_tmp[eq_inds] .= cons_tmp[eq_inds] - cache.lcons[eq_inds]
-        cons_tmp[ineq_inds] .= cons_tmp[ineq_inds] .- cache.ucons[ineq_inds]
-        return x[1] + sum(@. λ * cons_tmp[eq_inds] + ρ / 2 * (cons_tmp[eq_inds] .^ 2)) +
-               1 / (2 * ρ) * sum((max.(Ref(0.0), μ .+ (ρ .* cons_tmp[ineq_inds]))) .^ 2)
-    end
-
-    θ = copy(cache.u0)
-    β = max.(cons_tmp[ineq_inds], -1 .* μ ./ ρ)
-    eqidxs = [eq_inds[i] > 0 ? i : nothing for i in eachindex(ineq_inds)]
-    ineqidxs = [ineq_inds[i] > 0 ? i : nothing for i in eachindex(ineq_inds)]
-    eqidxs = eqidxs[eqidxs .!= nothing]
-    ineqidxs = ineqidxs[ineqidxs .!= nothing]
-    function aug_grad(G, θ, p)
-        cache.f.grad(G, θ, p)
-        if !isnothing(cache.f.cons_jac_prototype)
-            J = similar(cache.f.cons_jac_prototype, eltype(θ))
-        else
-            J = zeros(eltype(θ), length(cache.lcons), length(θ))
-        end
-        cache.f.cons_j(J, θ)
-        __tmp = zero(cons_tmp)
-        cache.f.cons(__tmp, θ)
-        __tmp[eq_inds] .= __tmp[eq_inds] .- cache.lcons[eq_inds]
-        __tmp[ineq_inds] .= __tmp[ineq_inds] .- cache.ucons[ineq_inds]
-        G .+= sum(
-            λ[i] .* J[idx, :] + ρ * (__tmp[idx] .* J[idx, :])
-                for (i, idx) in enumerate(eqidxs);
-            init = zero(G)
-        )
-        return G .+= sum(
-            1 / ρ * (max.(Ref(0.0), μ[i] .+ (ρ .* __tmp[idx])) .* J[idx, :])
-                for (i, idx) in enumerate(ineqidxs);
-            init = zero(G)
-        )
-    end
-
-    opt_ret = ReturnCode.MaxIters
-
-    augprob = OptimizationProblem(
-        OptimizationFunction(_loss; grad = aug_grad), cache.u0, cache.p
+    auglag_optf = generate_auglag(
+        cache, eq_inds, ineq_upper_inds, ineq_lower_inds,
+        λ, μ_upper, μ_lower, ρ_ref
     )
+
+    # Forward θ-bounds only when the inner solver can use them; otherwise the
+    # bounds are honored only as far as AugLag itself constrains things.
+    augprob = if cache.lb !== nothing && cache.ub !== nothing &&
+            SciMLBase.allowsbounds(cache.opt.inner)
+        OptimizationProblem(auglag_optf, cache.u0, cache.p;
+            lb = cache.lb, ub = cache.ub)
+    else
+        OptimizationProblem(auglag_optf, cache.u0, cache.p)
+    end
 
     t0 = time()
     if SciMLBase.has_init(cache.opt.inner)
@@ -154,15 +135,18 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
         inner_cache = augprob
     end
 
+    θ = copy(cache.u0)
+    opt_ret = ReturnCode.MaxIters
+
     n_outer = 0
     total_fevals = 0
     total_gevals = 0
-    r_primal = Inf
-    r_dual = Inf
-    r_compl = Inf
+    r_primal = T(Inf)
+    r_dual = T(Inf)
+    r_compl = T(Inf)
 
-    best_in_window = Inf
-    best_prev_window = Inf
+    best_in_window = T(Inf)
+    best_prev_window = T(Inf)
     iters_in_window = 0
 
     for i in 1:maxiters
