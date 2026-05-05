@@ -51,6 +51,7 @@ function instantiate_function(
             return y
         end
         if p !== SciMLBase.NullParameters()
+            prep_grad = prepare_gradient(f.f, adtype.dense_ad, x, Constant(p))
             function fg!(res, θ, p)
                 (
                     y,
