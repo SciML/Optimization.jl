@@ -10,7 +10,7 @@ export AugLag
 
 include("auglag_function.jl")
 
-struct AugLag{I, T, C, R}
+struct AugLag{I, T, R, K}
     inner::I
     τ::T
     γ::T
@@ -23,9 +23,7 @@ struct AugLag{I, T, C, R}
     ρmax::T
     ρ_init::R
     progress_window::Int
-    inner_maxiters::Union{Int, Nothing}
-    inner_maxtime::Union{Float64, Nothing}
-    inner_callback::C
+    inner_kwargs::K
 end
 
 function AugLag(;
@@ -34,14 +32,12 @@ function AugLag(;
         μmin = 0.0, μmax = 1.0e20,
         ϵ = 1.0e-8, ϵ_primal = ϵ, ϵ_dual = ϵ,
         ρmax = 1.0e12, ρ_init = nothing, progress_window = 5,
-        inner_maxiters = nothing,
-        inner_maxtime = nothing,
-        inner_callback = nothing
+        inner_kwargs = (;)
     )
     AugLag(
         inner, τ, γ, λmin, λmax, μmin, μmax,
         ϵ_primal, ϵ_dual, ρmax, ρ_init, progress_window,
-        inner_maxiters, inner_maxtime, inner_callback
+        inner_kwargs
     )
 end
 
@@ -75,17 +71,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
     ϵ_dual = cache.opt.ϵ_dual
     ρmax = cache.opt.ρmax
     W = cache.opt.progress_window
-    inner_maxiters = cache.opt.inner_maxiters
-    inner_maxtime = cache.opt.inner_maxtime
-    inner_callback = cache.opt.inner_callback
-
-    inner_kwargs = (;)
-    isnothing(inner_maxiters) ||
-        (inner_kwargs = merge(inner_kwargs, (; maxiters = inner_maxiters)))
-    isnothing(inner_maxtime) ||
-        (inner_kwargs = merge(inner_kwargs, (; maxtime = inner_maxtime)))
-    isnothing(inner_callback) ||
-        (inner_kwargs = merge(inner_kwargs, (; callback = inner_callback)))
+    inner_kwargs = cache.opt.inner_kwargs
 
     T = eltype(cache.u0)
     λ = zeros(T, length(eq_inds))
@@ -158,7 +144,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
             res = solve!(inner_cache)
         else
             new_prob = remake(inner_cache, u0 = θ)
-            res = solve(new_prob, cache.opt.inner; maxiters = inner_maxiters)
+            res = solve(new_prob, cache.opt.inner; inner_kwargs...)
         end
         total_fevals += res.stats.fevals
         total_gevals += res.stats.gevals

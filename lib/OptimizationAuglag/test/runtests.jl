@@ -75,7 +75,7 @@ end
             lcons = [-Inf], ucons = [1],
             lb = fill(-10.0, 5), ub = fill(10.0, 5))
         result = solve(prob,
-            AugLag(; inner = Adam(), inner_maxiters = 100);
+            AugLag(; inner = Adam(), inner_kwargs = (; maxiters = 100));
             maxiters = 100)
         @test result.objective < l0
     end
@@ -83,7 +83,7 @@ end
     @testset "equality constraints — Success with KKT agreement" begin
         fx = eqls_fixture()
         result = solve(fx.prob,
-            AugLag(; inner = Adam(0.02), inner_maxiters = 200);
+            AugLag(; inner = Adam(0.02), inner_kwargs = (; maxiters = 200));
             maxiters = 200)
 
         @test result.retcode === ReturnCode.Success
@@ -95,7 +95,7 @@ end
         # Tight primal tolerance + small budget → primal can't be met.
         fx = eqls_fixture()
         result = solve(fx.prob,
-            AugLag(; inner = Adam(0.02), inner_maxiters = 100, ϵ_primal = 1e-12);
+            AugLag(; inner = Adam(0.02), inner_kwargs = (; maxiters = 100), ϵ_primal = 1e-12);
             maxiters = 20)
         @test result.retcode === ReturnCode.ConvergenceFailure
     end
@@ -108,7 +108,7 @@ end
             return state.iter ≥ 3   # stop after 3 outer iters
         end
         result = solve(fx.prob,
-            AugLag(; inner = Adam(0.02), inner_maxiters = 50);
+            AugLag(; inner = Adam(0.02), inner_kwargs = (; maxiters = 50));
             maxiters = 100, callback = cb)
         @test result.retcode === ReturnCode.Terminated
         @test fired_at[] == 3
@@ -117,7 +117,7 @@ end
     @testset "MaxTime enforced at outer loop" begin
         fx = eqls_fixture()
         result = solve(fx.prob,
-            AugLag(; inner = Adam(0.02), inner_maxiters = 100);
+            AugLag(; inner = Adam(0.02), inner_kwargs = (; maxiters = 100));
             maxiters = 10_000, maxtime = 0.01)
         @test result.retcode === ReturnCode.MaxTime
     end
@@ -126,13 +126,13 @@ end
         optf = OptimizationFunction((θ, _p) -> sum(abs2, θ), AutoForwardDiff())
         prob = OptimizationProblem(optf, [1.0, 2.0])
         @test_throws ArgumentError solve(prob,
-            AugLag(; inner = Adam(), inner_maxiters = 10); maxiters = 10)
+            AugLag(; inner = Adam(), inner_kwargs = (; maxiters = 10)); maxiters = 10)
     end
 
     @testset "stats are populated honestly" begin
         fx = eqls_fixture()
         result = solve(fx.prob,
-            AugLag(; inner = Adam(0.02), inner_maxiters = 100);
+            AugLag(; inner = Adam(0.02), inner_kwargs = (; maxiters = 100));
             maxiters = 50)
         @test result.stats.iterations > 0
         @test result.stats.fevals > 0
@@ -152,13 +152,11 @@ end
         @test alg.ϵ_dual == 1e-2
     end
 
-    @testset "defaults for ρmax, progress_window, inner_* kwargs" begin
+    @testset "defaults for ρmax, progress_window, inner_kwargs" begin
         alg = AugLag(; inner = Adam())
         @test alg.ρmax == 1.0e12
         @test alg.progress_window == 5
-        @test alg.inner_maxiters === nothing
-        @test alg.inner_maxtime === nothing
-        @test alg.inner_callback === nothing
+        @test alg.inner_kwargs === (;)
         @test AugLag(; inner = Adam(), ρmax = 1e6).ρmax == 1e6
         @test AugLag(; inner = Adam(), progress_window = 10).progress_window == 10
     end
@@ -169,7 +167,7 @@ end
         # initial-ρ heuristic and the inner-solve path.
         fx = eqls_fixture(; data_iterator = false)
         result = solve(fx.prob,
-            AugLag(; inner = Adam(0.02), inner_maxiters = 200);
+            AugLag(; inner = Adam(0.02), inner_kwargs = (; maxiters = 200));
             maxiters = 200)
 
         @test result.retcode === ReturnCode.Success
@@ -195,7 +193,7 @@ end
         end
         ρ_init = 42.0
         solve(fx.prob,
-            AugLag(; inner = Adam(0.02), inner_maxiters = 10,
+            AugLag(; inner = Adam(0.02), inner_kwargs = (; maxiters = 10),
                 γ = 1.0, ρ_init = ρ_init);
             maxiters = 5, callback = cb)
         @test seen_ρ[] == ρ_init
@@ -214,7 +212,7 @@ end
         prob = OptimizationProblem(optf, [-1.0, -1.0], nothing;
             lcons = [1.0], ucons = [Inf])
         result = solve(prob,
-            AugLag(; inner = Adam(0.05), inner_maxiters = 200);
+            AugLag(; inner = Adam(0.05), inner_kwargs = (; maxiters = 200));
             maxiters = 200)
 
         @test result.retcode === ReturnCode.Success
@@ -234,7 +232,7 @@ end
         prob = OptimizationProblem(optf, [0.0, 0.0], nothing;
             lcons = [-0.5], ucons = [0.5])
         result = solve(prob,
-            AugLag(; inner = Adam(0.05), inner_maxiters = 200);
+            AugLag(; inner = Adam(0.05), inner_kwargs = (; maxiters = 200));
             maxiters = 200)
 
         @test result.retcode === ReturnCode.Success
@@ -254,7 +252,7 @@ end
         prob = OptimizationProblem(optf, [0.0, 0.0], nothing;
             lcons = [-0.5], ucons = [0.5])
         result = solve(prob,
-            AugLag(; inner = Adam(0.05), inner_maxiters = 200);
+            AugLag(; inner = Adam(0.05), inner_kwargs = (; maxiters = 200));
             maxiters = 200)
 
         @test result.retcode === ReturnCode.Success
@@ -289,7 +287,7 @@ end
             lcons = zeros(M), ucons = zeros(M))
 
         solve(prob,
-            AugLag(; inner = Adam(0.02), inner_maxiters = 4);
+            AugLag(; inner = Adam(0.02), inner_kwargs = (; maxiters = 4));
             maxiters = 2)
 
         @test !isempty(seen_ps)
@@ -310,7 +308,7 @@ end
         ρ_init = 1.0e4
         ϵ_primal = 1.0e-2
         result = solve(fx.prob,
-            AugLag(; inner = Adam(0.05), inner_maxiters = 500,
+            AugLag(; inner = Adam(0.05), inner_kwargs = (; maxiters = 500),
                 γ = 1.0, ρ_init = ρ_init,
                 λmin = 0.0, λmax = 0.0,
                 μmin = 0.0, μmax = 0.0,
