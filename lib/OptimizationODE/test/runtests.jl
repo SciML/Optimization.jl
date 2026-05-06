@@ -2,7 +2,7 @@ using Test
 using OptimizationODE
 using OptimizationBase
 using LinearAlgebra, ForwardDiff
-using OrdinaryDiffEq, SteadyStateDiffEq, Sundials
+using Sundials: IDA
 
 # Test helper functions
 function rosenbrock(x, p)
