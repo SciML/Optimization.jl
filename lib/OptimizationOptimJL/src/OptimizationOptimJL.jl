@@ -74,7 +74,7 @@ function SciMLBase.requireshessian(
     return true
 end
 SciMLBase.requiresgradient(opt::Optim.Fminbox) = true
-# SciMLBase.allowsfg(opt::Union{Optim.AbstractOptimizer, Optim.ConstrainedOptimizer, Optim.Fminbox, Optim.SAMIN}) = true
+SciMLBase.allowsfg(opt::Union{Optim.AbstractOptimizer, Optim.ConstrainedOptimizer, Optim.Fminbox, Optim.SAMIN}) = true
 
 function __map_optimizer_args(
         cache::OptimizationBase.OptimizationCache,
