@@ -205,8 +205,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
         return cache.sense === OptimizationBase.MaxSense ? -__x : __x
     end
 
-    if cache.f.fg === nothing
-        fg! = function (G, θ)
+    fg! = if cache.f.fg === nothing
+        function (G, θ)
             if G !== nothing
                 cache.f.grad(G, θ)
                 if cache.sense === OptimizationBase.MaxSense
@@ -215,8 +215,14 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
             end
             return _loss(θ)
         end
+    elseif cache.sense === OptimizationBase.MaxSense
+        function (G, θ)
+            y = cache.f.fg(G, θ)
+            G .*= -one(eltype(G))
+            return -y
+        end
     else
-        fg! = cache.f.fg
+        cache.f.fg
     end
 
     if cache.opt isa Optim.KrylovTrustRegion
@@ -320,8 +326,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         return cache.sense === OptimizationBase.MaxSense ? -__x : __x
     end
 
-    if cache.f.fg === nothing
-        fg! = function (G, θ)
+    fg! = if cache.f.fg === nothing
+        function (G, θ)
             if G !== nothing
                 cache.f.grad(G, θ)
                 if cache.sense === OptimizationBase.MaxSense
@@ -330,8 +336,14 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
             end
             return _loss(θ)
         end
+    elseif cache.sense === OptimizationBase.MaxSense
+        function (G, θ)
+            y = cache.f.fg(G, θ)
+            G .*= -one(eltype(G))
+            return -y
+        end
     else
-        fg! = cache.f.fg
+        cache.f.fg
     end
 
     gg = function (G, θ)
@@ -401,8 +413,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         return cache.sense === OptimizationBase.MaxSense ? -__x : __x
     end
 
-    if cache.f.fg === nothing
-        fg! = function (G, θ)
+    fg! = if cache.f.fg === nothing
+        function (G, θ)
             if G !== nothing
                 cache.f.grad(G, θ)
                 if cache.sense === OptimizationBase.MaxSense
@@ -411,8 +423,14 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
             end
             return _loss(θ)
         end
+    elseif cache.sense === OptimizationBase.MaxSense
+        function (G, θ)
+            y = cache.f.fg(G, θ)
+            G .*= -one(eltype(G))
+            return -y
+        end
     else
-        fg! = cache.f.fg
+        cache.f.fg
     end
 
     gg = function (G, θ)
