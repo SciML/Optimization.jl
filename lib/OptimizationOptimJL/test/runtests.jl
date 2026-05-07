@@ -65,6 +65,74 @@ end
         @test isapprox(sol_max.objective, 20.0; atol = 1.0e-2)
     end
 
+    @testset "MaxSense with user-provided fg" begin
+        # Regression test: when the user supplies an `fg` callback and
+        # sense = MaxSense, the OptimJL backend must negate both the value and
+        # the gradient itself, because `supports_sense(::Optim.AbstractOptimizer)
+        # = true` leaves sense handling to the backend (apply_sense is skipped
+        # in the cache).
+
+        # Concave quadratic with maximum at [1.0, 2.0], value 0.
+        obj(x, p) = -((x[1] - 1.0)^2 + (x[2] - 2.0)^2)
+        function grad!(G, x, p)
+            G[1] = -2.0 * (x[1] - 1.0)
+            G[2] = -2.0 * (x[2] - 2.0)
+            return nothing
+        end
+        function fg!(G, x, p)
+            G[1] = -2.0 * (x[1] - 1.0)
+            G[2] = -2.0 * (x[2] - 2.0)
+            return -((x[1] - 1.0)^2 + (x[2] - 2.0)^2)
+        end
+        optf = OptimizationFunction(obj; grad = grad!, fg = fg!)
+
+        # Unconstrained MaxSense (AbstractOptimizer dispatch)
+        prob_max = OptimizationProblem(
+            optf, [5.0, 5.0], nothing; sense = OptimizationBase.MaxSense
+        )
+        sol_max = solve(prob_max, BFGS())
+        @test isapprox(sol_max.u, [1.0, 2.0]; atol = 1.0e-3)
+        @test isapprox(sol_max.objective, 0.0; atol = 1.0e-6)
+
+        # Bounded MaxSense (Fminbox dispatch). Linear objective so the
+        # corner is the maximizer and we can detect a wrong-sign bug.
+        obj_lin(x, p) = x[1] + x[2]
+        function grad_lin!(G, x, p)
+            G[1] = 1.0
+            G[2] = 1.0
+            return nothing
+        end
+        function fg_lin!(G, x, p)
+            G[1] = 1.0
+            G[2] = 1.0
+            return x[1] + x[2]
+        end
+        function hess_lin!(H, x, p)
+            H .= 0.0
+            return nothing
+        end
+        optf_lin = OptimizationFunction(
+            obj_lin; grad = grad_lin!, fg = fg_lin!, hess = hess_lin!
+        )
+
+        prob_max_box = OptimizationProblem(
+            optf_lin, [5.0, 5.0], nothing;
+            lb = [0.0, 0.0], ub = [10.0, 10.0], sense = OptimizationBase.MaxSense
+        )
+        sol_max_box = solve(prob_max_box, BFGS(); x_abstol = 0.1)
+        @test isapprox(sol_max_box.u, [10.0, 10.0]; atol = 1.0e-2)
+        @test isapprox(sol_max_box.objective, 20.0; atol = 1.0e-2)
+
+        # Constrained MaxSense (ConstrainedOptimizer / IPNewton dispatch).
+        prob_max_ipn = OptimizationProblem(
+            optf_lin, [5.0, 5.0], nothing;
+            lb = [0.0, 0.0], ub = [10.0, 10.0], sense = OptimizationBase.MaxSense
+        )
+        sol_max_ipn = solve(prob_max_ipn, Optim.IPNewton(); x_abstol = 0.1)
+        @test isapprox(sol_max_ipn.u, [10.0, 10.0]; atol = 1.0e-2)
+        @test isapprox(sol_max_ipn.objective, 20.0; atol = 1.0e-2)
+    end
+
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = zeros(2)
     _p = [1.0, 100.0]

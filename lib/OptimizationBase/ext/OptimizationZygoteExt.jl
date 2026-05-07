@@ -50,7 +50,10 @@ function OptimizationBase.instantiate_function(
     end
 
     if fg == true && f.fg === nothing
-        if g == false
+        # Prepare a gradient prep for fg unless we already have one from the
+        # `g == true && f.grad === nothing` branch above. When the user supplied
+        # `f.grad`, line 37 didn't run, so `prep_grad` was never assigned.
+        if !(g == true && f.grad === nothing)
             prep_grad = prepare_gradient(f.f, adtype, x, Constant(p), strict = Val(false))
         end
         function fg!(res, θ)
