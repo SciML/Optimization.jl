@@ -124,13 +124,6 @@ prob = SciMLBase.OptimizationProblem(optf, x0, _p, lcons = [-Inf], ucons = [0.25
 sol = solve(prob, IPNewton()) # -Inf < cons_circ(sol.u, _p) = 0.25^2
 ```
 
-## Evolutionary.jl Solvers
-
-```@example rosenbrock
-using OptimizationEvolutionary
-sol = solve(prob, CMAES(μ = 40, λ = 100), abstol = 1e-15) # -Inf < cons_circ(sol.u, _p) = 0.25^2
-```
-
 ## IPOPT through OptimizationMOI
 
 ```@example rosenbrock
