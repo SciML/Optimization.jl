@@ -34,7 +34,7 @@ function AugLag(;
         ρmax = 1.0e12, ρ_init = nothing, progress_window = 5,
         inner_kwargs = (;)
     )
-    AugLag(
+    return AugLag(
         inner, τ, γ, λmin, λmax, μmin, μmax,
         ϵ_primal, ϵ_dual, ρmax, ρ_init, progress_window,
         inner_kwargs
@@ -91,10 +91,12 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
         else
             cache.f(cache.u0, cache.p)
         end
-        v0 = initial_violation(cons_tmp, cache.lcons, cache.ucons,
-            eq_inds, ineq_upper_inds, ineq_lower_inds)
+        v0 = initial_violation(
+            cons_tmp, cache.lcons, cache.ucons,
+            eq_inds, ineq_upper_inds, ineq_lower_inds
+        )
         v0 < eps(T) ? one(T) :
-        T(max(1.0e-6, min(10.0, 2 * abs(first(f_u0)) / v0)))
+            T(max(1.0e-6, min(10.0, 2 * abs(first(f_u0)) / v0)))
     else
         T(cache.opt.ρ_init)
     end
@@ -108,8 +110,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
     # bounds are honored only as far as AugLag itself constrains things.
     augprob = if cache.lb !== nothing && cache.ub !== nothing &&
             SciMLBase.allowsbounds(cache.opt.inner)
-        OptimizationProblem(auglag_optf, cache.u0, cache.p;
-            lb = cache.lb, ub = cache.ub)
+        OptimizationProblem(
+            auglag_optf, cache.u0, cache.p;
+            lb = cache.lb, ub = cache.ub
+        )
     else
         OptimizationProblem(auglag_optf, cache.u0, cache.p)
     end
@@ -158,8 +162,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
         # Inequalities: separate dual ascent on each finite-bounded side, with
         # `μ ≥ 0` enforced by the lower clamp (μmin defaults to 0).
         @inbounds for (i_loc, idx) in enumerate(eq_inds)
-            λ[i_loc] = clamp(λ[i_loc] + ρ * (cons_tmp[idx] - cache.lcons[idx]),
-                λmin, λmax)
+            λ[i_loc] = clamp(
+                λ[i_loc] + ρ * (cons_tmp[idx] - cache.lcons[idx]),
+                λmin, λmax
+            )
         end
         @inbounds for (i_loc, idx) in enumerate(ineq_upper_inds)
             μ_upper[i_loc] = clamp(
@@ -188,7 +194,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
             iter = i, u = θ, objective = res.objective,
             original = (;
                 r_primal, r_dual, r_compl,
-                λ, μ_upper, μ_lower, ρ
+                λ, μ_upper, μ_lower, ρ,
             )
         )
         if cache.callback(opt_state, res.objective)
@@ -256,8 +262,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
     )
 end
 
-function initial_violation(cons_tmp, lcons, ucons,
-        eq_inds, ineq_upper_inds, ineq_lower_inds)
+function initial_violation(
+        cons_tmp, lcons, ucons,
+        eq_inds, ineq_upper_inds, ineq_lower_inds
+    )
     v = zero(eltype(cons_tmp))
     @inbounds for idx in eq_inds
         v = max(v, abs(cons_tmp[idx] - lcons[idx]))
