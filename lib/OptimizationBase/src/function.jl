@@ -50,11 +50,16 @@ function OptimizationBase.instantiate_function(
     hess = f.hess === nothing ? nothing :
         [(H, x, args...) -> h(H, x, p, args...) for h in f.hess]
     hv = f.hv === nothing ? nothing : (H, x, v, args...) -> f.hv(H, x, v, p, args...)
-    cons = f.cons === nothing ? nothing : (res, x) -> f.cons(res, x, p)
-    cons_j = f.cons_j === nothing ? nothing : (res, x) -> f.cons_j(res, x, p)
-    cons_jvp = f.cons_jvp === nothing ? nothing : (res, x) -> f.cons_jvp(res, x, p)
-    cons_vjp = f.cons_vjp === nothing ? nothing : (res, x) -> f.cons_vjp(res, x, p)
-    cons_h = f.cons_h === nothing ? nothing : (res, x) -> f.cons_h(res, x, p)
+    cons = f.cons === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons(res, x, p_call)
+    cons_j = f.cons_j === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_j(res, x, p_call)
+    cons_jvp = f.cons_jvp === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_jvp(res, x, p_call)
+    cons_vjp = f.cons_vjp === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_vjp(res, x, p_call)
+    cons_h = f.cons_h === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_h(res, x, p_call)
     hess_prototype = f.hess_prototype === nothing ? nothing :
         similar(f.hess_prototype, eltype(x))
     cons_jac_prototype = f.cons_jac_prototype === nothing ? nothing :
@@ -88,11 +93,16 @@ function OptimizationBase.instantiate_function(
     hess = f.hess === nothing ? nothing :
         [(H, x, args...) -> h(H, x, cache.p, args...) for h in f.hess]
     hv = f.hv === nothing ? nothing : (H, x, v, args...) -> f.hv(H, x, v, cache.p, args...)
-    cons = f.cons === nothing ? nothing : (res, x) -> f.cons(res, x, cache.p)
-    cons_j = f.cons_j === nothing ? nothing : (res, x) -> f.cons_j(res, x, cache.p)
-    cons_jvp = f.cons_jvp === nothing ? nothing : (res, x) -> f.cons_jvp(res, x, cache.p)
-    cons_vjp = f.cons_vjp === nothing ? nothing : (res, x) -> f.cons_vjp(res, x, cache.p)
-    cons_h = f.cons_h === nothing ? nothing : (res, x) -> f.cons_h(res, x, cache.p)
+    cons = f.cons === nothing ? nothing :
+        (res, x, p_call = cache.p) -> f.cons(res, x, p_call)
+    cons_j = f.cons_j === nothing ? nothing :
+        (res, x, p_call = cache.p) -> f.cons_j(res, x, p_call)
+    cons_jvp = f.cons_jvp === nothing ? nothing :
+        (res, x, p_call = cache.p) -> f.cons_jvp(res, x, p_call)
+    cons_vjp = f.cons_vjp === nothing ? nothing :
+        (res, x, p_call = cache.p) -> f.cons_vjp(res, x, p_call)
+    cons_h = f.cons_h === nothing ? nothing :
+        (res, x, p_call = cache.p) -> f.cons_h(res, x, p_call)
     hess_prototype = f.hess_prototype === nothing ? nothing :
         similar(f.hess_prototype, eltype(cache.u0))
     cons_jac_prototype = f.cons_jac_prototype === nothing ? nothing :
@@ -185,11 +195,16 @@ function OptimizationBase.instantiate_function(
         end
     end
 
-    cons = f.cons === nothing ? nothing : (res, x) -> f.cons(res, x, p)
-    cons_j = f.cons_j === nothing ? nothing : (res, x) -> f.cons_j(res, x, p)
-    cons_vjp = f.cons_vjp === nothing ? nothing : (res, x) -> f.cons_vjp(res, x, p)
-    cons_jvp = f.cons_jvp === nothing ? nothing : (res, x) -> f.cons_jvp(res, x, p)
-    cons_h = f.cons_h === nothing ? nothing : (res, x) -> f.cons_h(res, x, p)
+    cons = f.cons === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons(res, x, p_call)
+    cons_j = f.cons_j === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_j(res, x, p_call)
+    cons_vjp = f.cons_vjp === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_vjp(res, x, p_call)
+    cons_jvp = f.cons_jvp === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_jvp(res, x, p_call)
+    cons_h = f.cons_h === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_h(res, x, p_call)
 
     if f.lag_h === nothing
         lag_h = nothing

@@ -51,6 +51,7 @@ function instantiate_function(
             return y
         end
         if p !== SciMLBase.NullParameters()
+            prep_grad = prepare_gradient(f.f, adtype.dense_ad, x, Constant(p))
             function fg!(res, θ, p)
                 (
                     y,
@@ -138,7 +139,9 @@ function instantiate_function(
     if f.cons === nothing
         cons = nothing
     else
-        cons = (res, θ) -> f.cons(res, θ, p)
+        cons = let f = f, p = p
+            (res, θ, p_call = p) -> f.cons(res, θ, p_call)
+        end
 
         function cons_oop(x)
             _res = zeros(eltype(x), num_cons)
@@ -446,7 +449,9 @@ function instantiate_function(
     if f.cons === nothing
         cons = nothing
     else
-        cons = Base.Fix2(f.cons, p)
+        cons = let f = f, p = p
+            (x, p_call = p) -> f.cons(x, p_call)
+        end
 
         function lagrangian(θ, σ, λ, p)
             return σ * f.f(θ, p) + dot(λ, f.cons(θ, p))
