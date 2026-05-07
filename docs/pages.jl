@@ -28,7 +28,6 @@ pages = [
     "Optimizer Packages" => [
         "BlackBoxOptim.jl" => "optimization_packages/blackboxoptim.md",
         "CMAEvolutionStrategy.jl" => "optimization_packages/cmaevolutionstrategy.md",
-        "Evolutionary.jl" => "optimization_packages/evolutionary.md",
         "GCMAES.jl" => "optimization_packages/gcmaes.md",
         "Ipopt.jl" => "optimization_packages/ipopt.md",
         "LBFGSB.jl" => "optimization_packages/lbfgsb.md",

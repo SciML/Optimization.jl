@@ -70,14 +70,6 @@ the top level package does not add any extra behavior.
     - Box Constraints
 </details>
 <details>
-  <summary><strong>Evolutionary</strong></summary>
-  - <strong>Global Methods</strong>
-    - Zeroth order
-    - Unconstrained
-    - Box Constraints
-    - Non-linear Constraints
-</details>
-<details>
   <summary><strong>GCMAES</strong></summary>
   - <strong>Global Methods</strong>
     - First order
