@@ -7,7 +7,13 @@ using DiffEqBase
 using ADTypes: AutoFiniteDiff
 
 using NonlinearSolve
-using OrdinaryDiffEq, SteadyStateDiffEq
+using OrdinaryDiffEqLowOrderRK: Euler
+using OrdinaryDiffEqStabilizedRK: ROCK2
+using OrdinaryDiffEqTsit5: Tsit5
+using OrdinaryDiffEqVerner: Vern7
+using OrdinaryDiffEqRosenbrock: Rodas5P
+using OrdinaryDiffEqNonlinearSolve: BrownFullBasicInit
+using SteadyStateDiffEq
 
 export ODEOptimizer, ODEGradientDescent, RKChebyshevDescent, RKAccelerated, HighOrderDescent
 export DAEOptimizer, DAEMassMatrix
@@ -187,6 +193,7 @@ function solve_dae_mass_matrix(cache, dt, maxit, u0, p)
     if dt !== nothing
         solve_kwargs[:dt] = dt
     end
+    solve_kwargs[:initializealg] = BrownFullBasicInit()
 
     sol = solve(ss_prob, DynamicSS(cache.opt.solver); solve_kwargs...)
     # if sol.retcode ≠ ReturnCode.Success
