@@ -4,6 +4,39 @@ using Test
 using Random
 
 @testset "OptimizationBBO.jl" begin
+    @testset "Issue #1206 maxiters respected when maxtime is set" begin
+        # BlackBoxOptim's `check_valid!` clears `MaxSteps` whenever `MaxTime`
+        # is set, so prior to the fix `maxiters` was silently ignored when
+        # combined with `maxtime`.
+        Random.seed!(1234)
+        rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+        f = OptimizationFunction(rosenbrock)
+        prob = OptimizationBase.OptimizationProblem(
+            f, zeros(2), [1.0, 100.0], lb = [-1.0, -1.0], ub = [1.0, 1.0]
+        )
+
+        sol_iters = solve(
+            prob, BBO_adaptive_de_rand_1_bin_radiuslimited(); maxiters = 500
+        )
+        @test sol_iters.stats.iterations <= 600
+
+        sol_both = solve(
+            prob, BBO_adaptive_de_rand_1_bin_radiuslimited();
+            maxiters = 500, maxtime = 30
+        )
+        @test sol_both.stats.iterations <= 600
+
+        # `maxiters` still works alongside a user callback.
+        calls = Ref(0)
+        sol_cb = solve(
+            prob, BBO_adaptive_de_rand_1_bin_radiuslimited();
+            maxiters = 300, maxtime = 30,
+            callback = (state, fitness) -> (calls[] += 1; false)
+        )
+        @test sol_cb.stats.iterations <= 400
+        @test calls[] > 0
+    end
+
     @testset "Issue #976 MaxSense regression" begin
         Random.seed!(1234)
         J(x, p) = x[1]

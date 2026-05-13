@@ -105,10 +105,18 @@ function map_objective(obj::BlackBoxOptim.IndexedTupleFitness)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: BBO}
+    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
+    maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
+
+    # When `MaxTime` is set, BlackBoxOptim's `check_valid!` clears `MaxSteps` to
+    # zero, so the user's `maxiters` is silently dropped. Enforce it ourselves
+    # from the callback (issue SciML/Optimization.jl#1206).
+    enforce_maxiters = !isnothing(maxiters) && !isnothing(maxtime)
+    has_user_callback = cache.callback !== OptimizationBase.DEFAULT_CALLBACK
+
     function _cb(trace)
-        if cache.callback === OptimizationBase.DEFAULT_CALLBACK
-            cb_call = false
-        else
+        cb_call = false
+        if has_user_callback
             n_steps = BlackBoxOptim.num_steps(trace)
             curr_u = decompose_trace(trace, cache.progress)
             objective = map_objective(BlackBoxOptim.best_fitness(trace))
@@ -120,20 +128,21 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: BBO}
                 original = trace
             )
             cb_call = cache.callback(opt_state, objective)
+            if !(cb_call isa Bool)
+                error("The callback should return a boolean `halt` for whether to stop the optimization process.")
+            end
         end
 
-        if !(cb_call isa Bool)
-            error("The callback should return a boolean `halt` for whether to stop the optimization process.")
+        if enforce_maxiters && BlackBoxOptim.num_steps(trace) >= maxiters
+            cb_call = true
         end
+
         if cb_call == true
-            BlackBoxOptim.shutdown_optimizer!(trace) #doesn't work
+            BlackBoxOptim.shutdown_optimizer!(trace)
         end
 
         return cb_call
     end
-
-    maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
-    maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     _loss = function (θ)
         return cache.f(θ, cache.p)
@@ -141,8 +150,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: BBO}
 
     opt_args = __map_optimizer_args(
         cache, cache.opt;
-        callback = cache.callback === OptimizationBase.DEFAULT_CALLBACK ?
-            nothing : _cb,
+        callback = (has_user_callback || enforce_maxiters) ? _cb : nothing,
         cache.solver_args...,
         maxiters = maxiters,
         maxtime = maxtime
