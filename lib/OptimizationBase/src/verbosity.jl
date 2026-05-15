@@ -21,73 +21,73 @@
 
     presets = (
         None = (
-            unsupported_kwargs = Silent,
-            convergence_failure = Silent,
-            nan_inf_gradients = Silent,
-            singularity_at_bounds = Silent,
-            unrecognized_stop_reason = Silent,
-            unsupported_bounds = Silent,
-            equality_constraints_ignored = Silent,
-            inequality_constraints_ignored = Silent,
-            missing_second_order_ad = Silent,
-            incompatible_ad_backend = Silent,
-            unsupported_callbacks = Silent,
+            unsupported_kwargs = Silent(),
+            convergence_failure = Silent(),
+            nan_inf_gradients = Silent(),
+            singularity_at_bounds = Silent(),
+            unrecognized_stop_reason = Silent(),
+            unsupported_bounds = Silent(),
+            equality_constraints_ignored = Silent(),
+            inequality_constraints_ignored = Silent(),
+            missing_second_order_ad = Silent(),
+            incompatible_ad_backend = Silent(),
+            unsupported_callbacks = Silent(),
             ipopt_verbosity = MessageLevel(0),
         ),
         Minimal = (
-            unsupported_kwargs = Silent,
-            convergence_failure = WarnLevel,
-            nan_inf_gradients = WarnLevel,
-            singularity_at_bounds = WarnLevel,
-            unrecognized_stop_reason = WarnLevel,
-            unsupported_bounds = Silent,
-            equality_constraints_ignored = Silent,
-            inequality_constraints_ignored = Silent,
-            missing_second_order_ad = WarnLevel,
-            incompatible_ad_backend = WarnLevel,
-            unsupported_callbacks = Silent,
+            unsupported_kwargs = Silent(),
+            convergence_failure = WarnLevel(),
+            nan_inf_gradients = WarnLevel(),
+            singularity_at_bounds = WarnLevel(),
+            unrecognized_stop_reason = WarnLevel(),
+            unsupported_bounds = Silent(),
+            equality_constraints_ignored = Silent(),
+            inequality_constraints_ignored = Silent(),
+            missing_second_order_ad = WarnLevel(),
+            incompatible_ad_backend = WarnLevel(),
+            unsupported_callbacks = Silent(),
             ipopt_verbosity = MessageLevel(0),
         ),
         Standard = (
-            unsupported_kwargs = InfoLevel,
-            convergence_failure = WarnLevel,
-            nan_inf_gradients = WarnLevel,
-            singularity_at_bounds = WarnLevel,
-            unrecognized_stop_reason = WarnLevel,
-            unsupported_bounds = WarnLevel,
-            equality_constraints_ignored = WarnLevel,
-            inequality_constraints_ignored = WarnLevel,
-            missing_second_order_ad = WarnLevel,
-            incompatible_ad_backend = WarnLevel,
-            unsupported_callbacks = WarnLevel,
+            unsupported_kwargs = InfoLevel(),
+            convergence_failure = WarnLevel(),
+            nan_inf_gradients = WarnLevel(),
+            singularity_at_bounds = WarnLevel(),
+            unrecognized_stop_reason = WarnLevel(),
+            unsupported_bounds = WarnLevel(),
+            equality_constraints_ignored = WarnLevel(),
+            inequality_constraints_ignored = WarnLevel(),
+            missing_second_order_ad = WarnLevel(),
+            incompatible_ad_backend = WarnLevel(),
+            unsupported_callbacks = WarnLevel(),
             ipopt_verbosity = MessageLevel(5),
         ),
         Detailed = (
-            unsupported_kwargs = InfoLevel,
-            convergence_failure = WarnLevel,
-            nan_inf_gradients = WarnLevel,
-            singularity_at_bounds = WarnLevel,
-            unrecognized_stop_reason = WarnLevel,
-            unsupported_bounds = WarnLevel,
-            equality_constraints_ignored = WarnLevel,
-            inequality_constraints_ignored = WarnLevel,
-            missing_second_order_ad = WarnLevel,
-            incompatible_ad_backend = WarnLevel,
-            unsupported_callbacks = WarnLevel,
+            unsupported_kwargs = InfoLevel(),
+            convergence_failure = WarnLevel(),
+            nan_inf_gradients = WarnLevel(),
+            singularity_at_bounds = WarnLevel(),
+            unrecognized_stop_reason = WarnLevel(),
+            unsupported_bounds = WarnLevel(),
+            equality_constraints_ignored = WarnLevel(),
+            inequality_constraints_ignored = WarnLevel(),
+            missing_second_order_ad = WarnLevel(),
+            incompatible_ad_backend = WarnLevel(),
+            unsupported_callbacks = WarnLevel(),
             ipopt_verbosity = MessageLevel(7),
         ),
         All = (
-            unsupported_kwargs = InfoLevel,
-            convergence_failure = WarnLevel,
-            nan_inf_gradients = WarnLevel,
-            singularity_at_bounds = WarnLevel,
-            unrecognized_stop_reason = WarnLevel,
-            unsupported_bounds = WarnLevel,
-            equality_constraints_ignored = WarnLevel,
-            inequality_constraints_ignored = WarnLevel,
-            missing_second_order_ad = WarnLevel,
-            incompatible_ad_backend = WarnLevel,
-            unsupported_callbacks = WarnLevel,
+            unsupported_kwargs = InfoLevel(),
+            convergence_failure = WarnLevel(),
+            nan_inf_gradients = WarnLevel(),
+            singularity_at_bounds = WarnLevel(),
+            unrecognized_stop_reason = WarnLevel(),
+            unsupported_bounds = WarnLevel(),
+            equality_constraints_ignored = WarnLevel(),
+            inequality_constraints_ignored = WarnLevel(),
+            missing_second_order_ad = WarnLevel(),
+            incompatible_ad_backend = WarnLevel(),
+            unsupported_callbacks = WarnLevel(),
             ipopt_verbosity = MessageLevel(12),
         ),
     )
@@ -140,7 +140,7 @@ diagnostic messages and warnings during optimization.
 - `unsupported_kwargs`: Messages when common optimization parameters (abstol, reltol, maxtime, maxiters) are not supported by the algorithm
 
 ## Solver Verbosity Group
-- `ipopt_verbosity`: Controls Ipopt solver output verbosity (0=silent, 5=default, 12=maximum). Use a `SciMLLogging.MessageLevel(n)` to specify an integer verbosity level.
+- `ipopt_verbosity`: Controls Ipopt solver output verbosity (0=silent, 5=default, 12=maximum). Use `SciMLLogging.MessageLevel(n)` to specify an integer verbosity level.
 
 # Constructors
 
@@ -165,20 +165,20 @@ verbose = OptimizationVerbosity(SciMLLogging.Standard())
 
 # Set entire groups
 verbose = OptimizationVerbosity(
-    convergence_numerical = SciMLLogging.WarnLevel,
-    feature_support = SciMLLogging.InfoLevel
+    convergence_numerical = SciMLLogging.WarnLevel(),
+    feature_support = SciMLLogging.InfoLevel()
 )
 
 # Set individual fields
 verbose = OptimizationVerbosity(
-    convergence_failure = SciMLLogging.ErrorLevel,
-    unsupported_kwargs = SciMLLogging.Silent
+    convergence_failure = SciMLLogging.ErrorLevel(),
+    unsupported_kwargs = SciMLLogging.Silent()
 )
 
 # Mix group and individual settings
 verbose = OptimizationVerbosity(
-    feature_support = SciMLLogging.InfoLevel,  # Set all feature warnings to InfoLevel
-    unsupported_callbacks = SciMLLogging.Silent  # Override specific field
+    feature_support = SciMLLogging.InfoLevel(),  # Set all feature warnings to InfoLevel
+    unsupported_callbacks = SciMLLogging.Silent()  # Override specific field
 )
 ```
 """
