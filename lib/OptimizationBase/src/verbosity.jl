@@ -32,7 +32,7 @@
             missing_second_order_ad = Silent(),
             incompatible_ad_backend = Silent(),
             unsupported_callbacks = Silent(),
-            ipopt_verbosity = CustomLevel(0),
+            ipopt_verbosity = MessageLevel(0),
         ),
         Minimal = (
             unsupported_kwargs = Silent(),
@@ -46,7 +46,7 @@
             missing_second_order_ad = WarnLevel(),
             incompatible_ad_backend = WarnLevel(),
             unsupported_callbacks = Silent(),
-            ipopt_verbosity = CustomLevel(0),
+            ipopt_verbosity = MessageLevel(0),
         ),
         Standard = (
             unsupported_kwargs = InfoLevel(),
@@ -60,7 +60,7 @@
             missing_second_order_ad = WarnLevel(),
             incompatible_ad_backend = WarnLevel(),
             unsupported_callbacks = WarnLevel(),
-            ipopt_verbosity = CustomLevel(5),
+            ipopt_verbosity = MessageLevel(5),
         ),
         Detailed = (
             unsupported_kwargs = InfoLevel(),
@@ -74,7 +74,7 @@
             missing_second_order_ad = WarnLevel(),
             incompatible_ad_backend = WarnLevel(),
             unsupported_callbacks = WarnLevel(),
-            ipopt_verbosity = CustomLevel(7),
+            ipopt_verbosity = MessageLevel(7),
         ),
         All = (
             unsupported_kwargs = InfoLevel(),
@@ -88,7 +88,7 @@
             missing_second_order_ad = WarnLevel(),
             incompatible_ad_backend = WarnLevel(),
             unsupported_callbacks = WarnLevel(),
-            ipopt_verbosity = CustomLevel(12),
+            ipopt_verbosity = MessageLevel(12),
         ),
     )
 
@@ -140,7 +140,7 @@ diagnostic messages and warnings during optimization.
 - `unsupported_kwargs`: Messages when common optimization parameters (abstol, reltol, maxtime, maxiters) are not supported by the algorithm
 
 ## Solver Verbosity Group
-- `ipopt_verbosity`: Controls Ipopt solver output verbosity (0=silent, 5=default, 12=maximum). Use a SciMLLogging.CustomLevel to specify an integer verbosity level. 
+- `ipopt_verbosity`: Controls Ipopt solver output verbosity (0=silent, 5=default, 12=maximum). Use `SciMLLogging.MessageLevel(n)` to specify an integer verbosity level.
 
 # Constructors
 
