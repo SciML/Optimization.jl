@@ -65,7 +65,7 @@ function OptimizationBase.OptimizationCache(
         progress, callback, nothing,
         OptimizationBase.OptimizationBase.AnalysisResults(nothing, nothing),
         merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs)),
-        processed_verbose
+        processed_verbose, prob
     )
 end
 
