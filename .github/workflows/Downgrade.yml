@@ -12,7 +12,6 @@ on:
       - 'docs/**'
 jobs:
   test:
-    if: false  # Disabled: see https://github.com/SciML/Optimization.jl/issues/1156
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -31,6 +30,6 @@ jobs:
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         with:
-          ALLOW_RERESOLVE: false
+          allow_reresolve: true
         env:
           GROUP: ${{ matrix.group }}
