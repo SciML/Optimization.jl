@@ -10,63 +10,24 @@ on:
       - master
     paths-ignore:
       - 'docs/**'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        downgrade_mode: ['alldeps']
-        julia-version: ['1.10']
-        project:
-          - 'lib/OptimizationBBO'
-          - 'lib/OptimizationCMAEvolutionStrategy'
-          - 'lib/OptimizationEvolutionary'
-          - 'lib/OptimizationGCMAES'
-          - 'lib/OptimizationMOI'
-          - 'lib/OptimizationManopt'
-          # OptimizationMetaheuristics disabled: the downgrade resolves Metaheuristics.jl to a
-          # version that fails to precompile on Julia 1.11 (`UndefVarError: compute_itspace not
-          # defined in Base`). Verified in a clean isolated depot — a genuine too-low Metaheuristics
-          # floor, left for a separate floor-bump fix.
-          # - 'lib/OptimizationMetaheuristics'
-          - 'lib/OptimizationMultistartOptimization'
-          - 'lib/OptimizationNLPModels'
-          - 'lib/OptimizationNLopt'
-          - 'lib/OptimizationNOMAD'
-          # OptimizationODE disabled: the downgrade resolves the split OrdinaryDiffEq subpackages
-          # (OrdinaryDiffEqVerner/Rosenbrock/... = 1.0.0) against an incompatible OrdinaryDiffEqCore
-          # 1.36.0, so they fail to precompile (`get_fsalfirstlast` MethodError; `namify` not
-          # importable). Verified in a clean isolated depot — a genuine too-loose lower-bound
-          # combination in OptimizationODE's compat, left for a separate floor-bump fix.
-          # - 'lib/OptimizationODE'
-          # OptimizationOptimJL disabled: resolve+build pass, but the test env (its [targets] test
-          # set pulls in ModelingToolkit) fails: ModelingToolkit does not precompile under the
-          # downgraded deps (errors in ModelingToolkit/src/systems/abstractsystem.jl:2017), so test
-          # setup aborts. Verified in a clean isolated depot, so not parallel-precompile contention;
-          # genuine downgrade incompatibility in the MTK test stack, left for a separate fix.
-          # - 'lib/OptimizationOptimJL'
-          - 'lib/OptimizationOptimisers'
-          - 'lib/OptimizationPRIMA'
-          - 'lib/OptimizationPolyalgorithms'
-          - 'lib/OptimizationPyCMA'
-          - 'lib/OptimizationQuadDIRECT'
-          - 'lib/OptimizationSciPy'
-          - 'lib/OptimizationSpeedMapping'
-    steps:
-      - uses: actions/checkout@v6
-      - uses: julia-actions/setup-julia@v3
-        with:
-          version: ${{ matrix.julia-version }}
-      - uses: julia-actions/julia-downgrade-compat@v2
-        with:
-          projects: ${{ matrix.project }}
-          # SymbolicAnalysis skipped: 0.3.x doesn't support Symbolics 7 (required by ModelingToolkit 11)
-          skip: Pkg,TOML,LinearAlgebra,Logging,Printf,Random,SparseArrays,Test,SymbolicAnalysis
-      - uses: julia-actions/julia-buildpkg@v1
-        with:
-          project: ${{ matrix.project }}
-      - uses: julia-actions/julia-runtest@v1
-        with:
-          project: ${{ matrix.project }}
-          allow_reresolve: true
+  downgrade-sublibraries:
+    uses: "SciML/.github/.github/workflows/sublibrary-downgrade.yml@v1"
+    secrets: "inherit"
+    with:
+      julia-version: "1.10"
+      # SymbolicAnalysis skipped: 0.3.x doesn't support Symbolics 7 (required by ModelingToolkit 11)
+      skip: "Pkg,TOML,LinearAlgebra,Logging,Printf,Random,SparseArrays,Test,SymbolicAnalysis"
+      allow-reresolve: true
+      # Explicit project list preserves the curated set from the bespoke matrix.
+      # Intentionally omitted (genuine downgrade incompatibilities, left for separate floor-bump fixes):
+      #   - lib/OptimizationMetaheuristics: Metaheuristics.jl floor fails to precompile on 1.11
+      #     (UndefVarError: compute_itspace not defined in Base)
+      #   - lib/OptimizationODE: downgraded OrdinaryDiffEq subpackages vs incompatible
+      #     OrdinaryDiffEqCore fail to precompile (get_fsalfirstlast MethodError; namify)
+      #   - lib/OptimizationOptimJL: ModelingToolkit (pulled by its test [targets]) fails to
+      #     precompile under the downgraded deps
+      projects: "lib/OptimizationBBO lib/OptimizationCMAEvolutionStrategy lib/OptimizationEvolutionary lib/OptimizationGCMAES lib/OptimizationMOI lib/OptimizationManopt lib/OptimizationMultistartOptimization lib/OptimizationNLPModels lib/OptimizationNLopt lib/OptimizationNOMAD lib/OptimizationOptimisers lib/OptimizationPRIMA lib/OptimizationPolyalgorithms lib/OptimizationPyCMA lib/OptimizationQuadDIRECT lib/OptimizationSciPy lib/OptimizationSpeedMapping"
