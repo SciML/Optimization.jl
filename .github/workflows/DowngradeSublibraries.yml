@@ -22,12 +22,3 @@ jobs:
       # SymbolicAnalysis skipped: 0.3.x doesn't support Symbolics 7 (required by ModelingToolkit 11)
       skip: "Pkg,TOML,LinearAlgebra,Logging,Printf,Random,SparseArrays,Test,SymbolicAnalysis"
       allow-reresolve: true
-      # Explicit project list preserves the curated set from the bespoke matrix.
-      # Intentionally omitted (genuine downgrade incompatibilities, left for separate floor-bump fixes):
-      #   - lib/OptimizationMetaheuristics: Metaheuristics.jl floor fails to precompile on 1.11
-      #     (UndefVarError: compute_itspace not defined in Base)
-      #   - lib/OptimizationODE: downgraded OrdinaryDiffEq subpackages vs incompatible
-      #     OrdinaryDiffEqCore fail to precompile (get_fsalfirstlast MethodError; namify)
-      #   - lib/OptimizationOptimJL: ModelingToolkit (pulled by its test [targets]) fails to
-      #     precompile under the downgraded deps
-      projects: "lib/OptimizationBBO lib/OptimizationCMAEvolutionStrategy lib/OptimizationEvolutionary lib/OptimizationGCMAES lib/OptimizationMOI lib/OptimizationManopt lib/OptimizationMultistartOptimization lib/OptimizationNLPModels lib/OptimizationNLopt lib/OptimizationNOMAD lib/OptimizationOptimisers lib/OptimizationPRIMA lib/OptimizationPolyalgorithms lib/OptimizationPyCMA lib/OptimizationQuadDIRECT lib/OptimizationSciPy lib/OptimizationSpeedMapping"
