@@ -1,14 +1,7 @@
-using OptimizationQuadDIRECT, OptimizationBase
-using Test
+using SafeTestsets
 
-@testset "OptimizationQuadDIRECT.jl" begin
-    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
-    x0 = zeros(2)
-    _p = [1.0, 100.0]
-    l1 = rosenbrock(x0, _p)
-    optprob = OptimizationFunction(rosenbrock)
-    prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+const TEST_GROUP = get(ENV, "OPTIMIZATION_TEST_GROUP", "ALL")
 
-    sol = solve(prob, QuadDirect(); splits = ([-0.5, 0.0, 0.5], [-0.5, 0.0, 0.5]))
-    @test 10 * sol.objective < l1
+if TEST_GROUP == "Core" || TEST_GROUP == "ALL"
+    @time @safetestset "Core" include("core_tests.jl")
 end

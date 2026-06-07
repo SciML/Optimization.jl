@@ -19,5 +19,10 @@ jobs:
     secrets: "inherit"
     with:
       julia-version: "1.10"
-      # SymbolicAnalysis skipped: 0.3.x doesn't support Symbolics 7 (required by ModelingToolkit 11)
-      skip: "Pkg,TOML,LinearAlgebra,Logging,Printf,Random,SparseArrays,Test,SymbolicAnalysis"
+      # Skip stdlibs, the locally-developed in-repo sibling packages (resolved via
+      # [sources], not registered), and SymbolicAnalysis (0.3.x doesn't support
+      # Symbolics 7, which is required by ModelingToolkit 11).
+      skip: "Pkg,TOML,LinearAlgebra,Logging,Printf,Random,SparseArrays,Test,SymbolicAnalysis,OptimizationBase,OptimizationLBFGSB,OptimizationManopt,OptimizationMOI,OptimizationNLPModels,OptimizationNLopt,OptimizationOptimJL,OptimizationOptimisers"
+      group-env-name: "OPTIMIZATION_TEST_GROUP"
+      group-env-value: "Core"
+      # Every lib/* sublibrary is downgrade-tested (projects auto-discovered, no exclusions).

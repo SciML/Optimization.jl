@@ -1,11 +1,7 @@
-using OptimizationBase
-using Test
+using SafeTestsets
 
-@testset "OptimizationBase.jl" begin
-    include("adtests.jl")
-    include("cvxtest.jl")
-    include("matrixvalued.jl")
-    include("solver_missing_error_messages.jl")
-    include("lag_h_sigma_zero_test.jl")
-    include("solve_internals_test.jl")
+const TEST_GROUP = get(ENV, "OPTIMIZATION_TEST_GROUP", "ALL")
+
+if TEST_GROUP == "Core" || TEST_GROUP == "ALL"
+    @time @safetestset "Core" include("core_tests.jl")
 end

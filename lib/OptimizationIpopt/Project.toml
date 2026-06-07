@@ -12,6 +12,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SymbolicIndexingInterface = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
 
 [compat]
+SafeTestsets = "0.1"
 Ipopt = "1.10.3"
 LinearAlgebra = "1.10.0"
 ModelingToolkit = "11"
@@ -27,6 +28,7 @@ julia = "1.10"
 OptimizationBase = {path = "../OptimizationBase"}
 
 [extras]
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -36,4 +38,4 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Aqua", "ModelingToolkit", "Random", "ReverseDiff", "Test", "Symbolics", "Zygote"]
+test = ["Aqua", "ModelingToolkit", "Random", "ReverseDiff", "Test", "Symbolics", "Zygote", "SafeTestsets"]

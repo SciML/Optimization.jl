@@ -1,0 +1,431 @@
+using OptimizationOptimJL,
+    OptimizationOptimJL.Optim, OptimizationBase, ForwardDiff, Zygote, ReverseDiff,
+    Random, ModelingToolkit, OptimizationBase.OptimizationBase.DifferentiationInterface
+using Test
+
+struct CallbackTester
+    dim::Int
+    has_grad::Bool
+    has_hess::Bool
+end
+function CallbackTester(dim::Int; has_grad = false, has_hess = false)
+    return CallbackTester(dim, has_grad, has_hess)
+end
+
+function (cb::CallbackTester)(state, loss_val)
+    @test length(state.u) == cb.dim
+    if cb.has_grad
+        @test state.grad isa AbstractVector
+        @test length(state.grad) == cb.dim
+    else
+        @test state.grad === nothing
+    end
+    if cb.has_hess
+        @test state.hess isa AbstractMatrix
+        @test size(state.hess) == (cb.dim, cb.dim)
+    else
+        @test state.hess === nothing
+    end
+    return false
+end
+
+@testset "OptimizationOptimJL.jl" begin
+    @testset "Issue #976 MaxSense with bounds" begin
+        obj(x, p) = x[1] + x[2]
+        lb = [0.0, 0.0]
+        ub = [10.0, 10.0]
+        x0 = [5.0, 5.0]
+        optf = OptimizationFunction(obj, OptimizationBase.AutoForwardDiff())
+
+        prob_min = OptimizationProblem(optf, x0, nothing; lb = lb, ub = ub)
+        sol_min = solve(prob_min, LBFGS(); x_abstol = 0.1)
+        @test isapprox(sol_min.u, [0.0, 0.0]; atol = 1.0e-2)
+        @test isapprox(sol_min.objective, 0.0; atol = 1.0e-2)
+
+        prob_max = OptimizationProblem(
+            optf, x0, nothing; lb = lb, ub = ub, sense = OptimizationBase.MaxSense
+        )
+        sol_max = solve(prob_max, LBFGS(); x_abstol = 0.1)
+        @test isapprox(sol_max.u, [10.0, 10.0]; atol = 1.0e-2)
+        @test isapprox(sol_max.objective, 20.0; atol = 1.0e-2)
+    end
+
+    @testset "MaxSense with IPNewton" begin
+        obj(x, p) = x[1] + x[2]
+        lb = [0.0, 0.0]
+        ub = [10.0, 10.0]
+        x0 = [5.0, 5.0]
+        optf = OptimizationFunction(obj, OptimizationBase.AutoForwardDiff())
+
+        prob_max = OptimizationProblem(
+            optf, x0, nothing; lb = lb, ub = ub, sense = OptimizationBase.MaxSense
+        )
+        sol_max = solve(prob_max, Optim.IPNewton(); x_abstol = 0.1)
+        @test isapprox(sol_max.u, [10.0, 10.0]; atol = 1.0e-2)
+        @test isapprox(sol_max.objective, 20.0; atol = 1.0e-2)
+    end
+
+    @testset "MaxSense with user-provided fg" begin
+        # Regression test: when the user supplies an `fg` callback and
+        # sense = MaxSense, the OptimJL backend must negate both the value and
+        # the gradient itself, because `supports_sense(::Optim.AbstractOptimizer)
+        # = true` leaves sense handling to the backend (apply_sense is skipped
+        # in the cache).
+
+        # Concave quadratic with maximum at [1.0, 2.0], value 0.
+        obj(x, p) = -((x[1] - 1.0)^2 + (x[2] - 2.0)^2)
+        function grad!(G, x, p)
+            G[1] = -2.0 * (x[1] - 1.0)
+            G[2] = -2.0 * (x[2] - 2.0)
+            return nothing
+        end
+        function fg!(G, x, p)
+            G[1] = -2.0 * (x[1] - 1.0)
+            G[2] = -2.0 * (x[2] - 2.0)
+            return -((x[1] - 1.0)^2 + (x[2] - 2.0)^2)
+        end
+        optf = OptimizationFunction(obj; grad = grad!, fg = fg!)
+
+        # Unconstrained MaxSense (AbstractOptimizer dispatch)
+        prob_max = OptimizationProblem(
+            optf, [5.0, 5.0], nothing; sense = OptimizationBase.MaxSense
+        )
+        sol_max = solve(prob_max, BFGS())
+        @test isapprox(sol_max.u, [1.0, 2.0]; atol = 1.0e-3)
+        @test isapprox(sol_max.objective, 0.0; atol = 1.0e-6)
+
+        # Bounded MaxSense (Fminbox dispatch). Linear objective so the
+        # corner is the maximizer and we can detect a wrong-sign bug.
+        obj_lin(x, p) = x[1] + x[2]
+        function grad_lin!(G, x, p)
+            G[1] = 1.0
+            G[2] = 1.0
+            return nothing
+        end
+        function fg_lin!(G, x, p)
+            G[1] = 1.0
+            G[2] = 1.0
+            return x[1] + x[2]
+        end
+        function hess_lin!(H, x, p)
+            H .= 0.0
+            return nothing
+        end
+        optf_lin = OptimizationFunction(
+            obj_lin; grad = grad_lin!, fg = fg_lin!, hess = hess_lin!
+        )
+
+        prob_max_box = OptimizationProblem(
+            optf_lin, [5.0, 5.0], nothing;
+            lb = [0.0, 0.0], ub = [10.0, 10.0], sense = OptimizationBase.MaxSense
+        )
+        sol_max_box = solve(prob_max_box, BFGS(); x_abstol = 0.1)
+        @test isapprox(sol_max_box.u, [10.0, 10.0]; atol = 1.0e-2)
+        @test isapprox(sol_max_box.objective, 20.0; atol = 1.0e-2)
+
+        # Constrained MaxSense (ConstrainedOptimizer / IPNewton dispatch).
+        prob_max_ipn = OptimizationProblem(
+            optf_lin, [5.0, 5.0], nothing;
+            lb = [0.0, 0.0], ub = [10.0, 10.0], sense = OptimizationBase.MaxSense
+        )
+        sol_max_ipn = solve(prob_max_ipn, Optim.IPNewton(); x_abstol = 0.1)
+        @test isapprox(sol_max_ipn.u, [10.0, 10.0]; atol = 1.0e-2)
+        @test isapprox(sol_max_ipn.objective, 20.0; atol = 1.0e-2)
+    end
+
+    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+    x0 = zeros(2)
+    _p = [1.0, 100.0]
+    l1 = rosenbrock(x0, _p)
+
+    prob = OptimizationProblem(rosenbrock, x0, _p)
+    sol = solve(
+        prob,
+        Optim.NelderMead(;
+            initial_simplex = Optim.AffineSimplexer(;
+                a = 0.025,
+                b = 0.5
+            )
+        ); callback = CallbackTester(length(x0))
+    )
+    @test 10 * sol.objective < l1
+
+    f = OptimizationFunction(rosenbrock, AutoReverseDiff())
+
+    Random.seed!(1234)
+    prob = OptimizationProblem(f, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+    sol = solve(prob, SAMIN(); callback = CallbackTester(length(x0)))
+    @test 10 * sol.objective < l1
+
+    sol = solve(
+        prob, Optim.IPNewton();
+        callback = CallbackTester(length(x0); has_grad = true, has_hess = true)
+    )
+    @test 10 * sol.objective < l1
+
+    prob = OptimizationProblem(f, x0, _p)
+    Random.seed!(1234)
+    sol = solve(prob, SimulatedAnnealing(); callback = CallbackTester(length(x0)))
+    @test 10 * sol.objective < l1
+
+    sol = solve(prob, Optim.BFGS(); callback = CallbackTester(length(x0); has_grad = true))
+    @test 10 * sol.objective < l1
+
+    sol = solve(
+        prob, Optim.Newton();
+        callback = CallbackTester(length(x0); has_grad = true, has_hess = true)
+    )
+    @test 10 * sol.objective < l1
+
+    sol = solve(prob, Optim.KrylovTrustRegion())
+    @test 10 * sol.objective < l1
+
+    sol = solve(
+        prob, Optim.BFGS();
+        maxiters = 1, callback = CallbackTester(length(x0); has_grad = true)
+    )
+    @test sol.original.iterations == 1
+
+    sol = solve(prob, Optim.BFGS(), maxiters = 1, local_maxiters = 2)
+    @test sol.original.iterations == 1
+
+    sol = solve(prob, Optim.BFGS(), local_maxiters = 2)
+    @test sol.original.iterations > 2
+
+    cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
+    optprob = OptimizationFunction(
+        rosenbrock, OptimizationBase.AutoSymbolics();
+        cons = cons
+    )
+
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [-5.0], ucons = [10.0])
+    sol = solve(prob, IPNewton())
+    @test 10 * sol.objective < l1
+
+    optprob = OptimizationFunction(
+        rosenbrock, OptimizationBase.AutoForwardDiff();
+        cons = cons
+    )
+
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [Inf])
+    sol = solve(prob, IPNewton())
+    @test 10 * sol.objective < l1
+
+    prob = OptimizationProblem(
+        optprob, x0, _p, lcons = [-Inf], ucons = [Inf],
+        lb = [-500.0, -500.0], ub = [50.0, 50.0]
+    )
+    sol = solve(prob, IPNewton())
+    @test sol.objective < l1
+
+    function con2_c(res, x, p)
+        res .= [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
+    end
+
+    optprob = OptimizationFunction(
+        rosenbrock, OptimizationBase.AutoForwardDiff();
+        cons = con2_c
+    )
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf, -Inf], ucons = [Inf, Inf])
+    sol = solve(prob, IPNewton())
+    @test 10 * sol.objective < l1
+
+    cons_circ = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
+    optprob = OptimizationFunction(
+        rosenbrock, OptimizationBase.AutoForwardDiff();
+        cons = cons_circ
+    )
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [0.25^2])
+    cache = OptimizationBase.init(prob, Optim.IPNewton())
+    sol = OptimizationBase.solve!(cache)
+    res = Array{Float64}(undef, 1)
+    cons(res, sol.u, nothing)
+    @test sqrt(res[1]) ≈ 0.25 rtol = 1.0e-6
+
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
+
+    prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+    sol = solve(
+        prob, Optim.Fminbox(); callback = CallbackTester(length(x0); has_grad = true)
+    )
+    @test 10 * sol.objective < l1
+
+    Random.seed!(1234)
+    prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+    cache = OptimizationBase.init(prob, Optim.SAMIN())
+    sol = OptimizationBase.solve!(cache)
+    @test 10 * sol.objective < l1
+
+    optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), OptimizationBase.AutoZygote())
+    prob = OptimizationProblem(optprob, x0, _p; sense = OptimizationBase.MaxSense)
+
+    sol = solve(prob, NelderMead())
+    @test 10 * sol.objective < l1
+
+    sol = solve(prob, BFGS())
+    @test 10 * sol.objective < l1
+
+    function g!(G, x, p = nothing)
+        G[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]
+        G[2] = 200.0 * (x[2] - x[1]^2)
+    end
+    optprob = OptimizationFunction(
+        (x, p) -> -rosenbrock(x, p), OptimizationBase.AutoZygote(),
+        grad = g!
+    )
+    prob = OptimizationProblem(optprob, x0, _p; sense = OptimizationBase.MaxSense)
+    sol = solve(prob, BFGS())
+    @test 10 * sol.objective < l1
+
+    optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoSymbolics())
+    prob = OptimizationProblem(optprob, x0, _p)
+    sol = solve(prob, Optim.BFGS())
+    @test 10 * sol.objective < l1
+
+    optprob = OptimizationFunction(
+        rosenbrock,
+        OptimizationBase.AutoSparse(OptimizationBase.AutoSymbolics())
+    )
+    prob = OptimizationProblem(optprob, x0, _p)
+    sol = solve(prob, Optim.Newton())
+    @test 10 * sol.objective < l1
+
+    sol = solve(prob, Optim.KrylovTrustRegion())
+    @test 10 * sol.objective < l1
+
+    prob = OptimizationProblem(
+        optprob, x0, _p; sense = OptimizationBase.MaxSense, lb = [-1.0, -1.0], ub = [
+            0.8, 0.8,
+        ]
+    )
+    sol = solve(prob, BFGS())
+    @test sol.objective > l1
+
+    function rosenbrock_grad!(dx, x, p)
+        dx[1] = -2 * (p[1] - x[1]) - 4 * p[2] * (x[2] - x[1]^2) * x[1]
+        dx[2] = 2 * p[2] * (x[2] - x[1]^2)
+        return nothing
+    end
+
+    # https://github.com/SciML/OptimizationBase.jl/issues/754 Optim.BFGS() with explicit gradient function
+    optprob = OptimizationFunction(rosenbrock; grad = rosenbrock_grad!)
+    prob = OptimizationProblem(optprob, x0, _p)
+    @test (sol = solve(prob, Optim.BFGS())) isa Any # test exception not thrown
+    @test 10 * sol.objective < l1
+
+    # https://github.com/SciML/OptimizationBase.jl/issues/754 Optim.BFGS() with bounds and explicit gradient function
+    optprob = OptimizationFunction(rosenbrock; grad = rosenbrock_grad!)
+    prob = OptimizationProblem(optprob, x0, _p; lb = [-1.0, -1.0], ub = [0.8, 0.8])
+    @test (sol = solve(prob, Optim.BFGS())) isa Any  # test exception not thrown
+    @test 10 * sol.objective < l1
+
+    # test that Optim.BFGS() with bounds but no AD or user-supplied gradient fails
+    optprob = OptimizationFunction(rosenbrock, SciMLBase.NoAD())
+    prob = OptimizationProblem(optprob, x0, _p; lb = [-1.0, -1.0], ub = [0.8, 0.8])
+    @test_throws ArgumentError (sol = solve(prob, Optim.BFGS())) isa Any  # test exception is thrown
+    @test 10 * sol.objective < l1
+
+    # Test for issue #1073: callbacks should receive scalar non-negative loss values
+    # when using (L)BFGS with bounds and automatic differentiation
+    @testset "Issue #1073: LBFGS/BFGS callback receives correct scalar loss with bounds" begin
+        # Create a non-negative loss function (sum of squares)
+        loss_vals = Float64[]
+        function test_callback(state, loss_val)
+            # Verify loss_val is a scalar Float64, not a Dual number
+            @test loss_val isa Float64
+            # For a sum-of-squares loss, values should be non-negative
+            push!(loss_vals, loss_val)
+            return false
+        end
+
+        # Test with LBFGS + bounds (triggers Fminbox wrapping)
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
+        prob = OptimizationProblem(optprob, x0, _p; lb = [-1.0, -1.0], ub = [0.8, 0.8])
+        empty!(loss_vals)
+        sol = solve(prob, Optim.LBFGS(); callback = test_callback, maxiters = 10)
+        @test all(>=(0), loss_vals)  # All loss values should be non-negative
+        @test length(loss_vals) > 0  # Callback should have been called
+
+        # Test with BFGS + bounds
+        empty!(loss_vals)
+        sol = solve(prob, Optim.BFGS(); callback = test_callback, maxiters = 10)
+        @test all(>=(0), loss_vals)  # All loss values should be non-negative
+        @test length(loss_vals) > 0  # Callback should have been called
+    end
+
+    @testset "cache" begin
+        objective(x, p) = (p[1] - x[1])^2
+        x0 = zeros(1)
+        p = [1.0]
+
+        prob = OptimizationProblem(objective, x0, p)
+        cache = OptimizationBase.init(prob, Optim.NelderMead())
+        sol = OptimizationBase.solve!(cache)
+        @test sol.u ≈ [1.0] atol = 1.0e-3
+
+        cache = OptimizationBase.reinit!(cache; p = [2.0])
+        sol = OptimizationBase.solve!(cache)
+        @test sol.u ≈ [2.0] atol = 1.0e-3
+    end
+
+    @testset "store_trace=true" begin
+        # Test that store_trace=true works without throwing errors (issue #990)
+        x0 = zeros(2)
+        _p = [1.0, 100.0]
+
+        # Test with NelderMead
+        prob = OptimizationProblem(rosenbrock, x0, _p)
+        sol = solve(prob, NelderMead(), store_trace = true)
+        @test sol isa Any  # just test it doesn't throw
+
+        # Test with Fminbox(NelderMead)
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
+        prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+        sol = solve(prob, Optim.Fminbox(NelderMead()), store_trace = true)
+        @test sol isa Any  # just test it doesn't throw
+
+        # Test with BFGS
+        prob = OptimizationProblem(optprob, x0, _p)
+        sol = solve(prob, BFGS(), store_trace = true)
+        @test sol isa Any  # just test it doesn't throw
+    end
+
+    @testset "Issue #1187 retcode is SciMLBase.ReturnCode.T" begin
+        # Ensure the returned retcode is a `SciMLBase.ReturnCode.T` and not a Symbol.
+        # Regression test for https://github.com/SciML/Optimization.jl/issues/1187
+        rb(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+        x0 = zeros(2)
+        _p = [1.0, 100.0]
+
+        optf = OptimizationFunction(rb, OptimizationBase.AutoForwardDiff())
+        prob = OptimizationProblem(optf, x0, _p)
+
+        # Converged -> Success (exercises the unconstrained path: line ~269 of src)
+        sol = solve(prob, LBFGS())
+        @test sol.retcode isa SciMLBase.ReturnCode.T
+        @test sol.retcode == SciMLBase.ReturnCode.Success
+
+        # Very small maxiters so the optimizer terminates due to iteration limit.
+        # Exercises the MaxIters branch of `_optim_retcode`.
+        sol_maxit = solve(prob, LBFGS(); maxiters = 1)
+        @test sol_maxit.retcode isa SciMLBase.ReturnCode.T
+        @test sol_maxit.retcode == SciMLBase.ReturnCode.MaxIters
+
+        # Fminbox path (line ~353 of src): bounded problem.
+        prob_b = OptimizationProblem(optf, x0, _p; lb = [-5.0, -5.0], ub = [5.0, 5.0])
+        sol_b = solve(prob_b, Optim.Fminbox(BFGS()))
+        @test sol_b.retcode isa SciMLBase.ReturnCode.T
+
+        # ConstrainedOptimizer path (line ~506 of src): IPNewton with constraints.
+        cons(res, x, p) = (res[1] = x[1]^2 + x[2]^2)
+        optf_c = OptimizationFunction(
+            rb, OptimizationBase.AutoForwardDiff(); cons = cons
+        )
+        prob_c = OptimizationProblem(
+            optf_c, x0, _p; lcons = [-Inf], ucons = [100.0],
+            lb = [-5.0, -5.0], ub = [5.0, 5.0]
+        )
+        sol_c = solve(prob_c, IPNewton())
+        @test sol_c.retcode isa SciMLBase.ReturnCode.T
+    end
+end
