@@ -1,2 +1,2 @@
 [Core]
-versions = ["lts", "1.11", "1", "pre"]
+versions = ["lts", "1", "pre"]
