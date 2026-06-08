@@ -14,25 +14,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref_name != github.event.repository.default_branch || github.ref != 'refs/tags/v*' }}
 jobs:
-  test:
-    name: "Tests"
-    strategy:
-      fail-fast: false
-      matrix:
-        group:
-          - "Core"
-        version:
-          - "lts"
-          - "1"
-          - "pre"
-        include:
-          - group: "QA"
-            version: "lts"
-          - group: "QA"
-            version: "1"
-    uses: "SciML/.github/.github/workflows/tests.yml@v1"
+  tests:
+    uses: "SciML/.github/.github/workflows/grouped-tests.yml@v1"
     with:
-      julia-version: "${{ matrix.version }}"
-      group: "${{ matrix.group }}"
       coverage-directories: "src,lib/OptimizationBase/src,lib/OptimizationBBO/src,lib/OptimizationCMAEvolutionStrategy/src,lib/OptimizationEvolutionary/src,lib/OptimizationGCMAES/src,lib/OptimizationIpopt/src,lib/OptimizationMadNLP/src,lib/OptimizationManopt/src,lib/OptimizationMOI/src,lib/OptimizationMetaheuristics/src,lib/OptimizationMultistartOptimization/src,lib/OptimizationNLopt/src,lib/OptimizationNOMAD/src,lib/OptimizationOptimJL/src,lib/OptimizationOptimisers/src,lib/OptimizationPolyalgorithms/src,lib/OptimizationQuadDIRECT/src,lib/OptimizationSpeedMapping/src"
     secrets: "inherit"
