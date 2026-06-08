@@ -18,6 +18,11 @@ jobs:
     uses: "SciML/.github/.github/workflows/sublibrary-downgrade.yml@v1"
     secrets: "inherit"
     with:
-      julia-version: "1.10"
-      # SymbolicAnalysis skipped: 0.3.x doesn't support Symbolics 7 (required by ModelingToolkit 11)
-      skip: "Pkg,TOML,LinearAlgebra,Logging,Printf,Random,SparseArrays,Test,SymbolicAnalysis"
+      julia-version: "lts"
+      # SymbolicAnalysis skipped: 0.3.x doesn't support Symbolics 7 (required by
+      # ModelingToolkit 11). Stdlibs and in-repo sublibraries are auto-populated by
+      # the centralized workflow.
+      skip: "SymbolicAnalysis"
+      group-env-name: "OPTIMIZATION_TEST_GROUP"
+      group-env-value: "Core"
+      # Every lib/* sublibrary is downgrade-tested (projects auto-discovered, no exclusions).

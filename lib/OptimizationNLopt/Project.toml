@@ -11,6 +11,7 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [extras]
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
@@ -19,6 +20,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
+SafeTestsets = "0.1"
 julia = "1.10"
 OptimizationBase = "5.1"
 NLopt = "1.1"
@@ -26,4 +28,4 @@ SciMLBase = "2.122.1, 3"
 Reexport = "1.2"
 
 [targets]
-test = ["ReverseDiff", "Test", "Zygote"]
+test = ["ReverseDiff", "Test", "Zygote", "SafeTestsets"]

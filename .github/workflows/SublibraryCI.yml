@@ -19,4 +19,7 @@ concurrency:
 jobs:
   sublibraries:
     uses: "SciML/.github/.github/workflows/sublibrary-project-tests.yml@v1"
+    with:
+      group-env-name: OPTIMIZATION_TEST_GROUP
+      check-bounds: auto
     secrets: "inherit"
