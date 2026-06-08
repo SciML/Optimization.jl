@@ -3,7 +3,3 @@ versions = ["lts", "1", "pre"]
 
 [QA]
 versions = ["lts", "1"]
-
-[GPU]
-versions = ["1"]
-runner = ["self-hosted", "Linux", "X64", "gpu"]
