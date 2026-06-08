@@ -96,11 +96,10 @@ end
             # @safetestset "DiffEqFlux" include("diffeqfluxtests.jl")
             @safetestset "Interface Compatibility" include("interface_tests.jl")
             @safetestset "Sense Handling" include("sense_tests.jl")
-            # QA runs last so the isolated qa environment is activated only after the
-            # main-environment tests above have finished.
-            activate_qa_env()
-            @safetestset "Quality Assurance" include("qa/qa.jl")
         end
+    elseif GROUP == "QA"
+        activate_qa_env()
+        @safetestset "Quality Assurance" include("qa/qa.jl")
     elseif GROUP == "GPU"
         activate_downstream_env()
         @safetestset "DiffEqFlux GPU" include("downstream/gpu_neural_ode.jl")
