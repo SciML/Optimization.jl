@@ -9,6 +9,17 @@ function activate_downstream_env()
     return Pkg.instantiate()
 end
 
+# QA (Aqua + JET) runs in an isolated environment (test/qa) so its tooling deps
+# never enter the main test target's resolve. On Julia < 1.11 the [sources] table
+# is ignored, so develop the package by path to test the PR branch code.
+function activate_qa_env()
+    Pkg.activate(joinpath(@__DIR__, "qa"))
+    if VERSION < v"1.11.0-DEV.0"
+        Pkg.develop(PackageSpec(path = dirname(@__DIR__)))
+    end
+    return Pkg.instantiate()
+end
+
 @time begin
     # Detect sublibrary test groups.
     # GROUP can be a bare sublibrary name (Core test group) or
@@ -74,7 +85,6 @@ end
         end
     elseif GROUP == "Core"
         @testset verbose = true "Optimization.jl" begin
-            @safetestset "Quality Assurance" include("qa.jl")
             @safetestset "Utils Tests" include("utils.jl")
             @safetestset "Verbosity Tests" include("verbosity.jl")
             @safetestset "AD Tests" include("ADtests.jl")
@@ -86,6 +96,10 @@ end
             # @safetestset "DiffEqFlux" include("diffeqfluxtests.jl")
             @safetestset "Interface Compatibility" include("interface_tests.jl")
             @safetestset "Sense Handling" include("sense_tests.jl")
+            # QA runs last so the isolated qa environment is activated only after the
+            # main-environment tests above have finished.
+            activate_qa_env()
+            @safetestset "Quality Assurance" include("qa/qa.jl")
         end
     elseif GROUP == "GPU"
         activate_downstream_env()

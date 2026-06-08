@@ -1,4 +1,6 @@
 using Optimization, Aqua, JET
+using Test
+
 @testset "Aqua" begin
     Aqua.find_persistent_tasks_deps(Optimization)
     Aqua.test_ambiguities(Optimization, recursive = false)
