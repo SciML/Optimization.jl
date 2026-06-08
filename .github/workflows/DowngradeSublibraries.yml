@@ -18,7 +18,7 @@ jobs:
     uses: "SciML/.github/.github/workflows/sublibrary-downgrade.yml@v1"
     secrets: "inherit"
     with:
-      julia-version: "1.10"
+      julia-version: "1.11"
       # Skip stdlibs, the locally-developed in-repo sibling packages (resolved via
       # [sources], not registered), and SymbolicAnalysis (0.3.x doesn't support
       # Symbolics 7, which is required by ModelingToolkit 11).

@@ -1,32 +1,12 @@
 name: Documentation
-
 on:
   push:
     branches:
       - master
-    tags: "*"
+    tags: '*'
   pull_request:
-
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: julia-actions/setup-julia@latest
-        with:
-          version: "1"
-      - name: Add the HolyLabRegistry
-        run: julia --project -e 'using Pkg; Pkg.Registry.add(); Pkg.Registry.add(RegistrySpec(url  = "https://github.com/HolyLab/HolyLabRegistry.git"))'
-      - name: Install dependencies
-        run: julia --project=docs/ -e 'using Pkg; Pkg.develop(vcat(PackageSpec(path = pwd()), [PackageSpec(path = joinpath("lib", dir)) for dir in readdir("lib") if (dir !== "OptimizationMultistartOptimization")])); Pkg.instantiate()'
-      - name: Build and deploy
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }} # For authentication with SSH deploy key
-        run: julia --color=yes --project=docs/ --code-coverage=user docs/make.jl
-      - uses: julia-actions/julia-processcoverage@v1
-        with:
-          directories: src,lib/OptimizationBBO/src,lib/OptimizationCMAEvolutionStrategy/src,lib/OptimizationEvolutionary/src,lib/OptimizationGCMAES/src,lib/OptimizationMOI/src,lib/OptimizationMetaheuristics/src,lib/OptimizationMultistartOptimization/src,lib/OptimizationNLopt/src,lib/OptimizationNOMAD/src,lib/OptimizationOptimJL/src,lib/OptimizationOptimisers/src,lib/OptimizationPolyalgorithms/src,lib/OptimizationQuadDIRECT/src,lib/OptimizationSpeedMapping/src
-      - uses: codecov/codecov-action@v6
-        with:
-          file: lcov.info
+  build-and-deploy-docs:
+    name: "Documentation"
+    uses: "SciML/.github/.github/workflows/documentation.yml@v1"
+    secrets: "inherit"

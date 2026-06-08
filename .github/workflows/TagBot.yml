@@ -1,15 +1,76 @@
 name: TagBot
+
 on:
   issue_comment:
     types:
       - created
   workflow_dispatch:
+    inputs:
+      lookback:
+        default: "3"
+
+permissions:
+  actions: read
+  checks: read
+  contents: write
+  deployments: read
+  issues: read
+  discussions: read
+  packages: read
+  pages: read
+  pull-requests: read
+  repository-projects: read
+  security-events: read
+  statuses: read
+
 jobs:
-  TagBot:
+  TagBot-Optimization:
     if: github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'
     runs-on: ubuntu-latest
     steps:
-      - uses: JuliaRegistries/TagBot@v1
+      - name: Tag Optimization
+        uses: JuliaRegistries/TagBot@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ssh: ${{ secrets.DOCUMENTER_KEY }}
+
+  TagBot-Subpackages:
+    if: github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - OptimizationAuglag
+          - OptimizationBBO
+          - OptimizationBase
+          - OptimizationCMAEvolutionStrategy
+          - OptimizationEvolutionary
+          - OptimizationGCMAES
+          - OptimizationIpopt
+          - OptimizationLBFGSB
+          - OptimizationMOI
+          - OptimizationMadNLP
+          - OptimizationManopt
+          - OptimizationMetaheuristics
+          - OptimizationMultistartOptimization
+          - OptimizationNLPModels
+          - OptimizationNLopt
+          - OptimizationNOMAD
+          - OptimizationODE
+          - OptimizationOptimJL
+          - OptimizationOptimisers
+          - OptimizationPRIMA
+          - OptimizationPolyalgorithms
+          - OptimizationPyCMA
+          - OptimizationSciPy
+          - OptimizationSophia
+          - OptimizationSpeedMapping
+          - SimpleOptimization
+    steps:
+      - name: Tag ${{ matrix.package }}
+        uses: JuliaRegistries/TagBot@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ssh: ${{ secrets.DOCUMENTER_KEY }}
+          subdir: "lib/${{ matrix.package }}"
