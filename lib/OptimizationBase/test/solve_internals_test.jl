@@ -187,6 +187,24 @@ function OptimizationBase.__solve(
     )
 end
 
+# Mock solver with has_init = true that also allows constraints, so a constrained
+# problem routes through the real OptimizationCache (not DefaultOptimizationCache).
+struct MockSolverWithInitCons end
+SciMLBase.has_init(::MockSolverWithInitCons) = true
+OptimizationBase.allowsconstraints(::MockSolverWithInitCons) = true
+
+function OptimizationBase.__solve(
+        cache::OptimizationBase.OptimizationCache{MockSolverWithInitCons}
+    )
+    stats = SciMLBase.OptimizationStats(; iterations = 1, time = 0.0, fevals = 1)
+    u = cache.reinit_cache.u0
+    return SciMLBase.build_solution(
+        cache, cache.opt, u, cache.f.f(u, cache.reinit_cache.p);
+        retcode = ReturnCode.Success,
+        stats = stats
+    )
+end
+
 # Mock solver that allows constraints (for _check_opt_alg tests)
 struct MockAlgWithCons end
 OptimizationBase.allowsconstraints(::MockAlgWithCons) = true
@@ -328,4 +346,41 @@ end
     sol = solve_up(prob, nothing, prob.u0, prob.p, alg, :extra_arg)
     @test SciMLBase.successful_retcode(sol)
     @test _mock_ncalls[] == 1
+end
+
+# ============================================================
+# OptimizationCache retains the original OptimizationProblem (issue #1191)
+# ============================================================
+
+@testset "cache retains the original problem" begin
+    objfun = (x, p) -> sum(abs2, x) + sum(p)
+    # Raw, un-instantiated constraint: takes p explicitly and is not p-baked.
+    consfun = (res, x, p) -> (res .= x[1]^2 + x[2]^2)
+    f = OptimizationFunction(objfun, SciMLBase.NoAD(); cons = consfun)
+    p0 = [3.0, 5.0]
+    prob = OptimizationProblem(f, [0.5, 0.5], p0; lcons = [0.0], ucons = [2.0])
+
+    # `init` does not remake the problem, so the cache holds it by identity.
+    cache = init(prob, MockSolverWithInitCons())
+    @test cache.prob === prob
+
+    sol = solve!(cache)
+    # The original problem is recoverable from the solution via the cache.
+    @test sol.cache.prob === prob
+    @test sol.cache.prob.p === p0
+    @test sol.cache.prob.f.f === objfun
+    # The original constraint is the raw user function, not the p-baked closure
+    # that the instantiated cache function carries.
+    @test sol.cache.prob.f.cons === consfun
+    @test sol.cache.f.cons !== consfun
+    @test sol.cache.prob.lcons == [0.0]
+    @test sol.cache.prob.ucons == [2.0]
+
+    # The end-to-end `solve` path remakes the problem, but the stored problem is
+    # still an OptimizationProblem carrying the original objective and parameters.
+    sol2 = solve(prob, MockSolverWithInitCons())
+    @test sol2.cache.prob isa OptimizationProblem
+    @test sol2.cache.prob.f.f === objfun
+    @test sol2.cache.prob.f.cons === consfun
+    @test sol2.cache.prob.p == p0
 end

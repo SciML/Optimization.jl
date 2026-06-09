@@ -7,7 +7,7 @@ end
 
 struct OptimizationCache{
         O, IIP, F <: SciMLBase.AbstractOptimizationFunction{IIP},
-        RC, LB, UB, LC, UC, S, P, C, M, V,
+        RC, LB, UB, LC, UC, S, P, C, M, V, PR,
     } <:
     SciMLBase.AbstractOptimizationCache
     opt::O
@@ -24,6 +24,13 @@ struct OptimizationCache{
     analysis_results::AnalysisResults
     solver_args::NamedTuple
     verbose::V
+    # Original `OptimizationProblem` the cache was built from. Unlike `f`, which
+    # holds the instantiated objective/constraints with `p` baked into closures,
+    # `prob` keeps the user's untouched problem so the original objective,
+    # constraints, parameters, and bounds remain recoverable from the solution.
+    # Not updated by `reinit!` (which only mutates `reinit_cache`); use
+    # `cache.u0`/`cache.p` for the current state.
+    prob::PR
 end
 
 function OptimizationCache(
@@ -111,7 +118,7 @@ function OptimizationCache(
         prob.ucons, prob.sense,
         progress, callback, manifold, AnalysisResults(obj_res, cons_res),
         merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs)),
-        processed_verbose
+        processed_verbose, prob
     )
 end
 
