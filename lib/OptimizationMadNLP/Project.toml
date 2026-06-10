@@ -14,6 +14,7 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 SymbolicIndexingInterface = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
 
 [compat]
+Pkg = "1"
 SafeTestsets = "0.1"
 DifferentiationInterface = "0.7"
 ForwardDiff = "1.2.1"
@@ -34,6 +35,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 OptimizationNLPModels = {path = "../OptimizationNLPModels"}
 
 [extras]
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
@@ -48,4 +50,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["ADTypes", "Aqua", "DifferentiationInterface", "ForwardDiff", "ModelingToolkit", "Random", "ReverseDiff", "Test", "SparseArrays", "Symbolics", "Zygote", "SafeTestsets"]
+test = ["ADTypes", "Aqua", "DifferentiationInterface", "ForwardDiff", "ModelingToolkit", "Random", "ReverseDiff", "Test", "SparseArrays", "Symbolics", "Zygote", "SafeTestsets", "Pkg"]
