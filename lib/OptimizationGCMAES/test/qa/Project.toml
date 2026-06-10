@@ -1,0 +1,15 @@
+[deps]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
+OptimizationGCMAES = "6f0a0517-dbc2-4a7a-8a20-99ae7f27e911"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[sources]
+OptimizationGCMAES = {path = "../.."}
+
+[compat]
+Aqua = "0.8"
+JET = "0.9, 0.10, 0.11"
+OptimizationGCMAES = "0.3"
+Test = "1"
+julia = "1.10"
