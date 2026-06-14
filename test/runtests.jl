@@ -1,59 +1,29 @@
 using Pkg
 using SafeTestsets, Test
+using SciMLTesting
 
-const GROUP = get(ENV, "GROUP", "Core")
-
-function activate_downstream_env()
-    Pkg.activate("downstream")
-    Pkg.develop(PackageSpec(path = dirname(@__DIR__)))
-    return Pkg.instantiate()
-end
-
-# QA (Aqua + JET) runs in an isolated environment (test/qa) so its tooling deps
-# never enter the main test target's resolve. On Julia < 1.11 the [sources] table
-# is ignored, so develop the package by path to test the PR branch code.
-function activate_qa_env()
-    Pkg.activate(joinpath(@__DIR__, "qa"))
-    if VERSION < v"1.11.0-DEV.0"
-        Pkg.develop(PackageSpec(path = dirname(@__DIR__)))
-    end
-    return Pkg.instantiate()
-end
+const GROUP = current_group(; default = "Core")
+const LIB_DIR = joinpath(dirname(@__DIR__), "lib")
 
 @time begin
-    # Detect sublibrary test groups.
-    # GROUP can be a bare sublibrary name (Core test group) or
-    # "{sublibrary}_{TEST_GROUP}" for any custom group (e.g., QA, GPU, etc.).
-    # Sublibraries declare their groups in test/test_groups.toml.
-    lib_dir = joinpath(dirname(@__DIR__), "lib")
+    # Monorepo sublibrary routing: a bare sublibrary name (its Core group) or
+    # "<sublibrary>_<group>" selects a lib/<Sublibrary> sub-package, which is
+    # activated and `Pkg.test`ed with OPTIMIZATION_TEST_GROUP set. This pre-step is
+    # kept explicit (not delegated to run_tests' lib_dir routing) to preserve the
+    # `--check-bounds=auto` julia arg, `force_latest_compatible_version = false`, and
+    # the pre-1.11 transitive [sources] develop walk byte-for-byte.
+    base_group, test_group = detect_sublibrary_group(GROUP, LIB_DIR)
 
-    # Check if GROUP matches a sublibrary, possibly with a _SUFFIX for the test group.
-    # Scan underscores right-to-left to find the longest matching sublibrary prefix.
-    function _detect_sublibrary_group(group, lib_dir)
-        isdir(joinpath(lib_dir, group)) && return (group, "Core")
-        for i in length(group):-1:1
-            if group[i] == '_' && isdir(joinpath(lib_dir, group[1:(i - 1)]))
-                return (group[1:(i - 1)], group[(i + 1):end])
-            end
-        end
-        return (group, "Core")
-    end
-    base_group, test_group = _detect_sublibrary_group(GROUP, lib_dir)
-
-    if isdir(joinpath(lib_dir, base_group))
-        Pkg.activate(joinpath(lib_dir, base_group))
-        # On Julia < 1.11, the [sources] section in Project.toml is not supported.
-        # Manually Pkg.develop local path dependencies so CI tests the PR branch code.
-        # We resolve transitively: each developed dependency's own [sources] are also
-        # developed, so sibling sublibraries reachable through a chain of [sources]
-        # (e.g. OptimizationBase under OptimizationNLPModels) are correctly found.
+    if !isempty(base_group) && isdir(joinpath(LIB_DIR, base_group))
+        Pkg.activate(joinpath(LIB_DIR, base_group))
+        # On Julia < 1.11 the [sources] table is ignored, so manually develop local
+        # path dependencies (transitively, following each dep's own [sources]) so CI
+        # tests the PR-branch code.
         if VERSION < v"1.11.0-DEV.0"
             developed = Set{String}()
-            # Never develop the active project itself; Pkg refuses with "package <X>
-            # has the same name or UUID as the active project".
-            push!(developed, normpath(joinpath(lib_dir, base_group)))
+            push!(developed, normpath(joinpath(LIB_DIR, base_group)))
             specs = Pkg.PackageSpec[]
-            queue = [joinpath(lib_dir, base_group)]
+            queue = [joinpath(LIB_DIR, base_group)]
             while !isempty(queue)
                 pkg_dir = popfirst!(queue)
                 toml_path = joinpath(pkg_dir, "Project.toml")
@@ -83,25 +53,35 @@ end
                 allow_reresolve = true
             )
         end
-    elseif GROUP == "Core"
-        @testset verbose = true "Optimization.jl" begin
-            @safetestset "Utils Tests" include("utils.jl")
-            @safetestset "Verbosity Tests" include("verbosity.jl")
-            @safetestset "AD Tests" include("ADtests.jl")
-            @safetestset "AD Performance Regression Tests" include("AD_performance_regression.jl")
-            @safetestset "Optimization" include("native.jl")
-            @safetestset "Mini batching" include("minibatch.jl")
-            # DiffEqFlux test temporarily skipped due to ForwardDiff gradient dispatch issue
-            # with Float32 ComponentArrays. See GitHub issue for tracking.
-            # @safetestset "DiffEqFlux" include("diffeqfluxtests.jl")
-            @safetestset "Interface Compatibility" include("interface_tests.jl")
-            @safetestset "Sense Handling" include("sense_tests.jl")
-        end
-    elseif GROUP == "QA"
-        activate_qa_env()
-        @safetestset "Quality Assurance" include("qa/qa.jl")
-    elseif GROUP == "GPU"
-        activate_downstream_env()
-        @safetestset "DiffEqFlux GPU" include("downstream/gpu_neural_ode.jl")
+    else
+        run_tests(;
+            default = "Core",
+            core = function ()
+                @safetestset "Utils Tests" include("utils.jl")
+                @safetestset "Verbosity Tests" include("verbosity.jl")
+                @safetestset "AD Tests" include("ADtests.jl")
+                @safetestset "AD Performance Regression Tests" include("AD_performance_regression.jl")
+                @safetestset "Optimization" include("native.jl")
+                @safetestset "Mini batching" include("minibatch.jl")
+                # DiffEqFlux test temporarily skipped due to ForwardDiff gradient dispatch
+                # issue with Float32 ComponentArrays. See GitHub issue for tracking.
+                # @safetestset "DiffEqFlux" include("diffeqfluxtests.jl")
+                @safetestset "Interface Compatibility" include("interface_tests.jl")
+                @safetestset "Sense Handling" include("sense_tests.jl")
+            end,
+            groups = Dict(
+                "GPU" => (;
+                    env = joinpath(@__DIR__, "downstream"),
+                    body = function ()
+                        @safetestset "DiffEqFlux GPU" include("downstream/gpu_neural_ode.jl")
+                    end,
+                ),
+            ),
+            qa = (;
+                env = joinpath(@__DIR__, "qa"),
+                body = joinpath(@__DIR__, "qa", "qa.jl"),
+            ),
+            all = String[],
+        )
     end
 end

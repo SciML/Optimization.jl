@@ -1,3 +1,14 @@
 [deps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 DiffEqFlux = "aae7a2af-3d4f-5e19-a356-7da93b79d9d0"
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[sources]
+Optimization = {path = "../.."}
+
+[compat]
+SafeTestsets = "0.0.1, 0.1"
+SciMLTesting = "1"
+Test = "1.10"
