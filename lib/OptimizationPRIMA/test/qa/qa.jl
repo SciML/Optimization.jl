@@ -1,0 +1,10 @@
+using OptimizationPRIMA, Aqua, JET
+using Test
+
+@testset "Aqua" begin
+    Aqua.test_all(OptimizationPRIMA)
+end
+
+@testset "JET static analysis" begin
+    JET.test_package(OptimizationPRIMA; target_defined_modules = true)
+end

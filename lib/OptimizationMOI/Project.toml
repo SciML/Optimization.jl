@@ -23,6 +23,7 @@ ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
+Pkg = "1"
 SafeTestsets = "0.1"
 AmplNLWriter = "1"
 HiGHS = "1"
@@ -47,6 +48,7 @@ Zygote = "0.6, 0.7"
 julia = "1.10"
 
 [extras]
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 AmplNLWriter = "7c4d4715-977e-5154-bfe0-e096adeac482"
 HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
@@ -59,4 +61,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["AmplNLWriter", "HiGHS", "Ipopt", "Ipopt_jll", "Juniper", "NLopt", "ReverseDiff", "Test", "Zygote", "SafeTestsets"]
+test = ["AmplNLWriter", "HiGHS", "Ipopt", "Ipopt_jll", "Juniper", "NLopt", "ReverseDiff", "Test", "Zygote", "SafeTestsets", "Pkg"]
