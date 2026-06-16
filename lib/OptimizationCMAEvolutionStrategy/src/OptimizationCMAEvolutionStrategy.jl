@@ -42,7 +42,12 @@ function __map_optimizer_args(
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
-        verbose::Bool = false
+        verbose::Bool = false,
+        # `sigma0` is the initial step size; it is the positional `s0` argument of
+        # `CMAEvolutionStrategy.minimize`, so it is handled in `__solve` and only
+        # captured here to keep it out of the forwarded `kwargs`.
+        sigma0 = nothing,
+        kwargs...
     )
     if !isnothing(reltol)
         @SciMLMessage(
@@ -51,7 +56,9 @@ function __map_optimizer_args(
         )
     end
 
+    mapped_args = (; kwargs...)
     mapped_args = (;
+        mapped_args...,
         lower = prob.lb,
         upper = prob.ub,
         logger = CMAEvolutionStrategy.BasicLogger(
@@ -110,8 +117,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: CMAEvolution
         maxtime = maxtime
     )
 
+    sigma0 = get(cache.solver_args, :sigma0, 0.1)
+
     t0 = time()
-    opt_res = CMAEvolutionStrategy.minimize(_loss, cache.u0, 0.1; opt_args...)
+    opt_res = CMAEvolutionStrategy.minimize(_loss, cache.u0, sigma0; opt_args...)
     t1 = time()
 
     opt_ret = _cma_retcode(opt_res.stop.reason)

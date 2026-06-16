@@ -27,6 +27,21 @@ using Test
     sol_maxit = solve(prob, CMAEvolutionStrategyOpt(), maxiters = 2)
     @test sol_maxit.retcode == SciMLBase.ReturnCode.MaxIters
 
+    @testset "solver kwargs are forwarded" begin
+        # `popsize` is a keyword of `CMAEvolutionStrategy.minimize`; `sigma0` is its
+        # positional `s0` (initial step size). Both should be reachable through solve.
+        sol_kw = solve(prob, CMAEvolutionStrategyOpt(); popsize = 20, maxiters = 10)
+        @test sol_kw.original.p.λ == 20
+
+        sol_default = solve(prob, CMAEvolutionStrategyOpt(); maxiters = 10)
+        @test sol_default.original.p.λ != 20
+
+        sol_sigma = solve(
+            prob, CMAEvolutionStrategyOpt(); sigma0 = 0.5, maxiters = 10
+        )
+        @test sol_sigma.retcode isa SciMLBase.ReturnCode.T
+    end
+
     @testset "_cma_retcode symbol mapping" begin
         _cma_retcode = OptimizationCMAEvolutionStrategy._cma_retcode
         @test _cma_retcode(:ftarget) == SciMLBase.ReturnCode.Success
