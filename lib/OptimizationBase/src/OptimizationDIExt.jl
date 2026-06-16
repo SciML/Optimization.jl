@@ -15,6 +15,30 @@ import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,
 using ADTypes, SciMLBase
 using OptimizationBase.FastClosures
 
+# --- Dual-tolerant gradient dispatch ------------------------------------------------------
+# A DI preparation is monomorphic: built once at the construction types (`x`, `p`), its
+# internal buffers are concrete (e.g. `Float64`) and reject inputs of any other type. That is
+# correct and fast for the optimization solve, but a downstream sensitivity layer (e.g.
+# SciMLSensitivity's `OptimizationAdjoint`) differentiates the KKT stationarity conditions
+# w.r.t. the parameters by pushing `ForwardDiff.Dual`s through the gradient: a dual `p` (and a
+# dual output buffer) evaluated at a real `θ = x*`. Those duals hit the prepared buffers and
+# throw `DifferentiationInterface.PreparationMismatchError`.
+#
+# To support that without slowing the solve, the gradient closures keep the prepared fast path
+# for the prepared type and fall back to a prep-free DI call (which prepares at the actual
+# argument types each call) for anything else. The fallback cost is irrelevant off the
+# optimization hot loop — sensitivity does one such call per solve, not per iteration.
+_grad_param_eltype(p) = p isa Union{SciMLBase.NullParameters, Nothing} ? nothing : eltype(p)
+
+# True when every float-bearing input matches the prepared element type `T0`, so the prepared
+# path is valid. A dual `θ` or dual `p` (the sensitivity case) flunks this and routes to the
+# prep-free fallback. `NullParameters`/`nothing` carry no differentiable parameters, so they
+# never veto the fast path.
+@inline function _grad_use_prep(::Type{T0}, θ, p) where {T0}
+    pe = _grad_param_eltype(p)
+    eltype(θ) === T0 && (pe === nothing || pe === T0)
+end
+
 function instantiate_function(
         f::OptimizationFunction{true}, x, ::ADTypes.AutoSparse{<:ADTypes.AutoSymbolics},
         args...; kwargs...
@@ -39,16 +63,31 @@ function instantiate_function(
     )
     adtype, soadtype = generate_adtype(adtype)
 
-    # Create gradient closures with proper type stability using let blocks
+    # Create gradient closures with proper type stability using let blocks.
+    # `T0 = eltype(x)` is the prepared element type; `_grad_use_prep` gates the prepared fast
+    # path vs the prep-free fallback (see the note above the imports).
     grad = if g == true && f.grad === nothing
         _prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
+        T0 = eltype(x)
         if p !== SciMLBase.NullParameters() && p !== nothing
-            let _prep_grad = _prep_grad, f = f, adtype = adtype
-                (res, θ, p = p) -> gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
+            let _prep_grad = _prep_grad, f = f, adtype = adtype, T0 = T0
+                function (res, θ, p = p)
+                    if _grad_use_prep(T0, θ, p) && eltype(res) === T0
+                        gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
+                    else
+                        gradient!(f.f, res, adtype, θ, Constant(p))
+                    end
+                end
             end
         else
-            let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p
-                (res, θ, p = p) -> gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
+            let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p, T0 = T0
+                function (res, θ, p = p)
+                    if _grad_use_prep(T0, θ, p) && eltype(res) === T0
+                        gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
+                    else
+                        gradient!(f.f, res, adtype, θ, Constant(p))
+                    end
+                end
             end
         end
     elseif g == true
@@ -428,16 +467,27 @@ function instantiate_function(
     )
     adtype, soadtype = generate_adtype(adtype)
 
-    # Create gradient closures with proper type stability using let blocks
+    # Create gradient closures with proper type stability using let blocks.
+    # `T0 = eltype(x)` is the prepared element type; `_grad_use_prep` gates the prepared fast
+    # path vs the prep-free fallback (see the note above the imports).
     grad = if g == true && f.grad === nothing
         _prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
+        T0 = eltype(x)
         if p !== SciMLBase.NullParameters() && p !== nothing
-            let _prep_grad = _prep_grad, f = f, adtype = adtype
-                (θ, p = p) -> gradient(f.f, _prep_grad, adtype, θ, Constant(p))
+            let _prep_grad = _prep_grad, f = f, adtype = adtype, T0 = T0
+                function (θ, p = p)
+                    _grad_use_prep(T0, θ, p) ?
+                        gradient(f.f, _prep_grad, adtype, θ, Constant(p)) :
+                        gradient(f.f, adtype, θ, Constant(p))
+                end
             end
         else
-            let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p
-                (θ, p = p) -> gradient(f.f, _prep_grad, adtype, θ, Constant(p))
+            let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p, T0 = T0
+                function (θ, p = p)
+                    _grad_use_prep(T0, θ, p) ?
+                        gradient(f.f, _prep_grad, adtype, θ, Constant(p)) :
+                        gradient(f.f, adtype, θ, Constant(p))
+                end
             end
         end
     elseif g == true
