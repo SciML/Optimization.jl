@@ -1,8 +1,10 @@
 module OptimizationManopt
 
 using Reexport
-@reexport using Manopt
-using OptimizationBase, Manopt, ManifoldsBase, ManifoldDiff, SciMLBase
+@reexport using OptimizationBase
+using ManifoldsBase, ManifoldDiff, SciMLBase
+import Manopt
+using Dates: Millisecond
 
 """
     abstract type AbstractManoptOptimizer end
@@ -34,7 +36,7 @@ function __map_optimizer_args!(
     end
 
     if !isnothing(maxtime)
-        push!(criteria, Manopt.StopAfter(maxtime))
+        push!(criteria, Manopt.StopAfter(Millisecond(round(Int, maxtime * 1000))))
     end
 
     if !isnothing(abstol)
