@@ -36,7 +36,7 @@ _grad_param_eltype(p) = p isa Union{SciMLBase.NullParameters, Nothing} ? nothing
 # never veto the fast path.
 @inline function _grad_use_prep(::Type{T0}, θ, p) where {T0}
     pe = _grad_param_eltype(p)
-    eltype(θ) === T0 && (pe === nothing || pe === T0)
+    return eltype(θ) === T0 && (pe === nothing || pe === T0)
 end
 
 function instantiate_function(
@@ -72,7 +72,7 @@ function instantiate_function(
         if p !== SciMLBase.NullParameters() && p !== nothing
             let _prep_grad = _prep_grad, f = f, adtype = adtype, T0 = T0
                 function (res, θ, p = p)
-                    if _grad_use_prep(T0, θ, p) && eltype(res) === T0
+                    return if _grad_use_prep(T0, θ, p) && eltype(res) === T0
                         gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
                     else
                         gradient!(f.f, res, adtype, θ, Constant(p))
@@ -82,7 +82,7 @@ function instantiate_function(
         else
             let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p, T0 = T0
                 function (res, θ, p = p)
-                    if _grad_use_prep(T0, θ, p) && eltype(res) === T0
+                    return if _grad_use_prep(T0, θ, p) && eltype(res) === T0
                         gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
                     else
                         gradient!(f.f, res, adtype, θ, Constant(p))
@@ -499,7 +499,7 @@ function instantiate_function(
         if p !== SciMLBase.NullParameters() && p !== nothing
             let _prep_grad = _prep_grad, f = f, adtype = adtype, T0 = T0
                 function (θ, p = p)
-                    _grad_use_prep(T0, θ, p) ?
+                    return _grad_use_prep(T0, θ, p) ?
                         gradient(f.f, _prep_grad, adtype, θ, Constant(p)) :
                         gradient(f.f, adtype, θ, Constant(p))
                 end
@@ -507,7 +507,7 @@ function instantiate_function(
         else
             let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p, T0 = T0
                 function (θ, p = p)
-                    _grad_use_prep(T0, θ, p) ?
+                    return _grad_use_prep(T0, θ, p) ?
                         gradient(f.f, _prep_grad, adtype, θ, Constant(p)) :
                         gradient(f.f, adtype, θ, Constant(p))
                 end
