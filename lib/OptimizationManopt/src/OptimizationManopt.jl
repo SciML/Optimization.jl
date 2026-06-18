@@ -1,9 +1,9 @@
 module OptimizationManopt
 
 using Reexport
-@reexport using OptimizationBase
+@reexport using Manopt
+import OptimizationBase
 using ManifoldsBase, ManifoldDiff, SciMLBase
-import Manopt
 using Dates: Millisecond
 
 """
@@ -281,7 +281,7 @@ function _default_convergence_criterion(::AbstractManoptOptimizer, M, abstol)
     return Manopt.StopWhenChangeLess(M, abstol)
 end
 
-function build_loss(f::OptimizationFunction, prob, cb)
+function build_loss(f::OptimizationBase.OptimizationFunction, prob, cb)
     # TODO: I do not understand this. Why is the manifold not used?
     # Either this is an Euclidean cost, then we should probably still call `embed`,
     # or it is not, then we need M.
@@ -293,7 +293,7 @@ function build_loss(f::OptimizationFunction, prob, cb)
     end
 end
 
-function build_gradF(f::OptimizationFunction{true})
+function build_gradF(f::OptimizationBase.OptimizationFunction{true})
     function g(M::AbstractManifold, G, θ)
         f.grad(G, θ)
         return G .= riemannian_gradient(M, θ, G)
@@ -306,7 +306,7 @@ function build_gradF(f::OptimizationFunction{true})
     return g
 end
 
-function build_hessF(f::OptimizationFunction{true})
+function build_hessF(f::OptimizationBase.OptimizationFunction{true})
     function h(M::AbstractManifold, H1, θ, X)
         H = zeros(eltype(θ), length(θ))
         f.hv(H, θ, X)
@@ -324,7 +324,7 @@ function build_hessF(f::OptimizationFunction{true})
     return h
 end
 
-function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractManoptOptimizer}
+function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{O}) where {O <: AbstractManoptOptimizer}
     local x, cur, state
 
     manifold = cache.manifold
