@@ -3,6 +3,7 @@ module OptimizationManopt
 using Reexport
 @reexport using Manopt
 import OptimizationBase
+using OptimizationBase: @SciMLMessage
 using ManifoldsBase, ManifoldDiff, SciMLBase
 using Dates: Millisecond
 
