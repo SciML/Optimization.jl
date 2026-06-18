@@ -3,12 +3,13 @@ uuid = "e57b7fff-7ee7-4550-b4f0-90e9476e9fb6"
 authors = ["Mateusz Baran <mateuszbaran89@gmail.com>", "Ronny Bergmann <manopt@ronnybergmann.net>"]
 version = "1.4.0"
 [deps]
-Manopt = "0fc0a36d-df90-57f3-8f93-d78a9fc72bb5"
-OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-ManifoldsBase = "3362f125-f0bb-47a3-aa74-596ffd7ef2fb"
 ManifoldDiff = "af67fdf4-a580-4b9f-bbec-742ef357defd"
 Manifolds = "1cead3c2-87b3-11e9-0ccd-23c62b72b94e"
+ManifoldsBase = "3362f125-f0bb-47a3-aa74-596ffd7ef2fb"
+Manopt = "0fc0a36d-df90-57f3-8f93-d78a9fc72bb5"
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 
@@ -33,6 +34,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
 Aqua = "0.8"
+Dates = "1.10"
 DifferentiationInterface = "0.7"
 Enzyme = "0.13"
 FiniteDiff = "2"
