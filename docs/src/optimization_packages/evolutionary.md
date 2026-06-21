@@ -1,6 +1,6 @@
 # Evolutionary.jl
 
-[`Evolutionary`](https://github.com/wildart/Evolutionary.jl) is a Julia package implementing various evolutionary and genetic algorithm.
+[`Evolutionary`](https://github.com/SciML/Evolutionary.jl) is a Julia package implementing various evolutionary and genetic algorithm.
 
 ## Installation: OptimizationEvolutionary.jl
 
@@ -15,16 +15,16 @@ Pkg.add("OptimizationEvolutionary");
 
 ### Without Constraint Equations
 
-The methods in [`Evolutionary`](https://github.com/wildart/Evolutionary.jl) are performing global optimization on problems without
+The methods in [`Evolutionary`](https://github.com/SciML/Evolutionary.jl) are performing global optimization on problems without
 constraint equations. These methods work both with and without lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem`.
 
 A `Evolutionary` algorithm is called by one of the following:
 
-  - [`Evolutionary.GA()`](https://wildart.github.io/Evolutionary.jl/stable/ga/): **Genetic Algorithm optimizer**
+  - [`Evolutionary.GA()`](https://sciml.github.io/Evolutionary.jl/stable/ga/): **Genetic Algorithm optimizer**
 
-  - [`Evolutionary.DE()`](https://wildart.github.io/Evolutionary.jl/stable/de/): **Differential Evolution optimizer**
-  - [`Evolutionary.ES()`](https://wildart.github.io/Evolutionary.jl/stable/es/): **Evolution Strategy algorithm**
-  - [`Evolutionary.CMAES()`](https://wildart.github.io/Evolutionary.jl/stable/cmaes/): **Covariance Matrix Adaptation Evolution Strategy algorithm**
+  - [`Evolutionary.DE()`](https://sciml.github.io/Evolutionary.jl/stable/de/): **Differential Evolution optimizer**
+  - [`Evolutionary.ES()`](https://sciml.github.io/Evolutionary.jl/stable/es/): **Evolution Strategy algorithm**
+  - [`Evolutionary.CMAES()`](https://sciml.github.io/Evolutionary.jl/stable/cmaes/): **Covariance Matrix Adaptation Evolution Strategy algorithm**
 
 Algorithm-specific options are defined as `kwargs`. See the respective documentation for more detail.
 

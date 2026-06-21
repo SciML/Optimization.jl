@@ -181,7 +181,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleLBFGS}
         nlprob,
         SimpleLimitedMemoryBroyden(;
             threshold = __get_threshold(cache.opt),
-            linesearch = Val(false)
+            linesearch = nothing
         );
         maxiters = maxiters,
         abstol = abstol,
@@ -222,7 +222,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleBFGS}
     nlprob = NonlinearProblem(∇f, cache.u0)
     nlsol = solve(
         nlprob,
-        SimpleBroyden(; linesearch = Val(false));
+        SimpleBroyden(; linesearch = nothing);
         maxiters = maxiters,
         abstol = abstol,
         reltol = reltol
