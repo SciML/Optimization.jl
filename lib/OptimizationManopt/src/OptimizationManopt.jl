@@ -4,7 +4,9 @@ using Reexport
 @reexport using Manopt
 import OptimizationBase
 using OptimizationBase: @SciMLMessage
-using ManifoldsBase, ManifoldDiff, SciMLBase
+using ManifoldsBase, ManifoldDiff
+import SciMLBase
+using SciMLBase: ReturnCode
 using Dates: Millisecond
 
 """
