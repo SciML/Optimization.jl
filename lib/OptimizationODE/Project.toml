@@ -1,51 +1,52 @@
 name = "OptimizationODE"
 uuid = "dfa73e59-e644-4d8a-bf84-188d7ecb34e4"
 authors = ["Paras Puneet Singh <paras.puneet2204@gmail.com>"]
-version = "0.1.6"
+version = "0.1.7"
+
 [deps]
-ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
-DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
+NonlinearSolve = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-OrdinaryDiffEqLowOrderRK = "1344f307-1e59-4825-a18e-ace9aa3fa4c6"
-OrdinaryDiffEqNonlinearSolve = "127b3ac7-2247-4354-8eb6-78cf4e7c58e8"
-OrdinaryDiffEqRosenbrock = "43230ef6-c299-4910-a778-202eb28ce4ce"
-OrdinaryDiffEqStabilizedRK = "358294b1-0aab-51c3-aafe-ad5ab194a2ad"
 OrdinaryDiffEqTsit5 = "b1df2697-797e-41e3-8120-5422d3b24e4a"
 OrdinaryDiffEqVerner = "79d7bb75-1356-48c1-b8c0-6832512096c2"
-Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 SteadyStateDiffEq = "9672c7b4-1e72-59bd-8a11-6ac3964bc41f"
-NonlinearSolve = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
-
-[compat]
-Pkg = "1"
-SafeTestsets = "0.1"
-ADTypes = "1.18"
-DiffEqBase = "6.190.2, 7"
-ForwardDiff = "0.10, 1"
-OptimizationBase = "5"
-OrdinaryDiffEqLowOrderRK = "1, 2"
-OrdinaryDiffEqNonlinearSolve = "1, 2"
-OrdinaryDiffEqRosenbrock = "1, 2"
-OrdinaryDiffEqStabilizedRK = "1, 2"
-OrdinaryDiffEqTsit5 = "1.2.0, 2"
-OrdinaryDiffEqVerner = "1, 2"
-NonlinearSolve = "4.11"
-Reexport = "1"
-SciMLBase = "2.122.1, 3"
-SteadyStateDiffEq = "2.5"
-julia = "1.10"
-
-[sources]
-OptimizationBase = {path = "../OptimizationBase"}
+OrdinaryDiffEqLowOrderRK = "1344f307-1e59-4825-a18e-ace9aa3fa4c6"
+OrdinaryDiffEqStabilizedRK = "358294b1-0aab-51c3-aafe-ad5ab194a2ad"
+ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
+OrdinaryDiffEqNonlinearSolve = "127b3ac7-2247-4354-8eb6-78cf4e7c58e8"
+OrdinaryDiffEqRosenbrock = "43230ef6-c299-4910-a778-202eb28ce4ce"
+DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [extras]
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
-Sundials = "c3572dad-4567-51f8-b174-8c6c989267f4"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Sundials = "c3572dad-4567-51f8-b174-8c6c989267f4"
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+
+[compat]
+Pkg = "1"
+NonlinearSolve = "4.11"
+ForwardDiff = "0.10, 1"
+OptimizationBase = "5"
+OrdinaryDiffEqTsit5 = "2"
+OrdinaryDiffEqVerner = "2"
+SciMLBase = "3"
+SteadyStateDiffEq = "2.5"
+OrdinaryDiffEqLowOrderRK = "2"
+OrdinaryDiffEqStabilizedRK = "2"
+julia = "1.10"
+ADTypes = "1.18"
+OrdinaryDiffEqNonlinearSolve = "2"
+OrdinaryDiffEqRosenbrock = "2"
+DiffEqBase = "7"
+SafeTestsets = "0.1"
+Reexport = "1"
 
 [targets]
 test = ["Sundials", "Test", "SafeTestsets", "Pkg"]
+
+[sources.OptimizationBase]
+path = "../OptimizationBase"

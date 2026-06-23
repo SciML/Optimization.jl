@@ -145,7 +145,11 @@ Random.seed!(42)
                         ) -> prob_func(x)
                     )
                     prob = OptimizationProblem(multi_obj_fun, lb; lb = lb, ub = ub)
-                    if (alg_name == "Metaheuristics.Algorithm{CCMO{NSGA2}}")
+                    # CCMO wraps a base algorithm and has no `N` on its own
+                    # parameters, so the `use_initial` seeding path does not apply.
+                    # Detect it by type rather than a stringified type name, which
+                    # is fragile across Metaheuristics' type-printing changes.
+                    if alg.parameters isa Metaheuristics.CCMO
                         sol = solve(prob, alg)
                     else
                         sol = solve(prob, alg; maxiters = 10000, use_initial = true)
