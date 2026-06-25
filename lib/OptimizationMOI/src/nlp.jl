@@ -555,7 +555,6 @@ function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
     opt_setup = __map_optimizer_args(
-        cache,
         cache.opt;
         abstol = cache.solver_args.abstol,
         reltol = cache.solver_args.reltol,
