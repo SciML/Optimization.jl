@@ -88,7 +88,6 @@ function _create_new_optimizer(opt::MOI.AbstractOptimizer)
 end
 
 function __map_optimizer_args(
-        cache,
         opt::Union{
             MOI.AbstractOptimizer, MOI.OptimizerWithAttributes,
         };
@@ -96,8 +95,12 @@ function __map_optimizer_args(
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
+        verbose = OptimizationBase.DEFAULT_VERBOSE,
         kwargs...
     )
+    # `verbose` is consumed here as a named keyword so it isn't forwarded into the
+    # `kwargs` loop below, which would otherwise try to set it as a raw solver attribute.
+    opt_verbose = OptimizationBase._process_verbose_param(verbose)
     optimizer = _create_new_optimizer(opt)
     for (key, value) in kwargs
         MOI.set(optimizer, MOI.RawOptimizerAttribute("$(key)"), value)
@@ -108,19 +111,19 @@ function __map_optimizer_args(
     if !isnothing(reltol)
         @SciMLMessage(
             lazy"common reltol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword arguments.",
-            cache.verbose, :unsupported_kwargs
+            opt_verbose, :unsupported_kwargs
         )
     end
     if !isnothing(abstol)
         @SciMLMessage(
             lazy"common abstol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword arguments.",
-            cache.verbose, :unsupported_kwargs
+            opt_verbose, :unsupported_kwargs
         )
     end
     if !isnothing(maxiters)
         @SciMLMessage(
             lazy"common maxiters argument is currently not used by $(optimizer). Set number of iterations via optimizer specific keyword arguments.",
-            cache.verbose, :unsupported_kwargs
+            opt_verbose, :unsupported_kwargs
         )
     end
     return optimizer

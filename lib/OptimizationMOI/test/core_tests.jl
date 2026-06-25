@@ -267,6 +267,26 @@ end
     end
 end
 
+@testset "verbose kwarg" begin
+    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+    optprob = OptimizationFunction(rosenbrock, AutoZygote())
+    prob = OptimizationProblem(optprob, zeros(2), [1.0, 100.0]; lb = [-5.0, -5.0], ub = [5.0, 5.0])
+
+    # `verbose` must be consumed as a verbosity setting, not forwarded as a raw
+    # MOI optimizer attribute.
+    sol = solve(prob, Ipopt.Optimizer(); verbose = OptimizationVerbosity())
+    @test sol.retcode == ReturnCode.Success
+
+    # Passing a common tolerance triggers the `:unsupported_kwargs` message path,
+    # which previously read a nonexistent `cache.verbose` field and threw.
+    sol = solve(prob, Ipopt.Optimizer(); abstol = 1.0e-8, verbose = OptimizationVerbosity())
+    @test sol.retcode == ReturnCode.Success
+
+    # A `Bool` verbosity must also be accepted.
+    sol = solve(prob, Ipopt.Optimizer(); abstol = 1.0e-8, verbose = true)
+    @test sol.retcode == ReturnCode.Success
+end
+
 @testset "MOI" begin
     @parameters c = 0.0
     @variables x[1:2] = [0.0, 0.0] [bounds = ([c, c], [Inf, Inf])]
