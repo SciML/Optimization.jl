@@ -33,7 +33,7 @@ run_qa(
     ),
     ei_kwargs = (;
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
-        all_qualified_accesses_are_public = (; ignore = (:OptimizationStats, :__init, :__solve, :allowsbounds, :allowscallback, :build_solution, :has_init, :requiresbounds)),
+        all_qualified_accesses_are_public = (; ignore = (:OptimizationStats, :__init, :__solve, :allowsbounds, :allowscallback, :requiresbounds)),
     ),
     ei_broken = (:no_implicit_imports,),
 )

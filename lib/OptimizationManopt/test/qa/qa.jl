@@ -18,7 +18,7 @@ run_qa(
     ),
     ei_kwargs = (;
         all_qualified_accesses_via_owners = (; ignore = (:AbstractManifold,)),
-        all_qualified_accesses_are_public = (; ignore = (:AbstractManifold, :Failure, :MaxIters, :MaxTime, :OptimizationState, :Stalled, :Success, :Unstable, :__solve, :allowscallback, :build_solution, :has_init, :requiresgradient, :requireshessian, :supports_sense)),
+        all_qualified_accesses_are_public = (; ignore = (:AbstractManifold, :OptimizationState, :__solve, :allowscallback, :build_solution, :requiresgradient, :requireshessian, :supports_sense)),
     ),
     ei_broken = (:no_implicit_imports,),
 )

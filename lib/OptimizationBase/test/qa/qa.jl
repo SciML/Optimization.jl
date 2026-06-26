@@ -26,7 +26,11 @@ run_qa(
     ei_kwargs = (;
         no_stale_explicit_imports = (; ignore = (:I, :OptimizationStats, :extract_alg)),
         all_qualified_accesses_via_owners = (; ignore = (:IsInfinite, :IteratorSize, :SizeUnknown)),
-        all_qualified_accesses_are_public = (; ignore = (:AbstractOptimizationCache, :AbstractOptimizationFunction, :AbstractOptimizationSolution, :AbstractTracer, :ChainRulesOriginator, :ConvergenceFailure, :Default, :DtLessThanMin, :Failure, :Fix2, :Infeasible, :InitialFailure, :IsInfinite, :IteratorSize, :MaxIters, :MaxSense, :MaxTime, :MinSense, :NoAD, :NoColoringAlgorithm, :NoSparsityDetector, :NonConcreteEltypeError, :NullParameters, :SizeUnknown, :Success, :Terminated, :Unstable, :__init, :allowsconsjvp, :allowsconsvjp, :allowsfg, :allowsfgh, :build_solution, :has_init, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :requireslagh, :tail)),
+        # Names imported/accessed from SciMLBase (plus Base.Iterators and
+        # SparseConnectivityTracer's AbstractTracer) that remain non-public in their
+        # source pkg on the registered releases (SciMLBase 3.24.0). The fix belongs
+        # upstream via `public` declarations there, not a local change.
+        all_qualified_accesses_are_public = (; ignore = (:AbstractOptimizationCache, :AbstractOptimizationFunction, :AbstractOptimizationSolution, :AbstractTracer, :ChainRulesOriginator, :IsInfinite, :IteratorSize, :MaxSense, :MinSense, :NoAD, :NonConcreteEltypeError, :SizeUnknown, :__init, :allowsconsjvp, :allowsconsvjp, :allowsfg, :allowsfgh, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :requireslagh)),
         all_explicit_imports_are_public = (; ignore = (:KeywordArgError, :MaxSense, :MinSense, :ObjSense, :OptimizationStats, :__init, :__solve, :_concrete_solve_adjoint, :_concrete_solve_forward, :allowsbounds, :allowscallback, :allowsconstraints, :extract_alg, :get_concrete_p, :get_concrete_u0, :get_root_indp, :get_updated_symbolic_problem, :has_kwargs, :promote_u0, :requiresbounds, :requiresconshess, :requiresconsjac, :requiresconstraints, :requiresgradient, :requireshessian, :wrap_sol)),
     ),
     ei_broken = (:no_implicit_imports,),

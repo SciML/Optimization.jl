@@ -13,7 +13,7 @@ run_qa(
     explicit_imports = true,
     ei_kwargs = (;
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
-        all_qualified_accesses_are_public = (; ignore = (Symbol("@logmsg"), :LogLevel, :OptRunController, :OptimizationState, :OptimizationStats, :SingleObjectiveMethodNames, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowsbounds, :allowscallback, :build_solution, :deduce_retcode, :elapsed_time, :has_init, :num_steps, :parse, :requiresbounds, :shutdown_optimizer!)),
+        all_qualified_accesses_are_public = (; ignore = (Symbol("@logmsg"), :LogLevel, :OptRunController, :OptimizationState, :OptimizationStats, :SingleObjectiveMethodNames, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowsbounds, :allowscallback, :deduce_retcode, :elapsed_time, :num_steps, :requiresbounds, :shutdown_optimizer!)),
     ),
     ei_broken = (:no_implicit_imports,),
 )
