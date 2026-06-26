@@ -48,7 +48,9 @@ function Base.setproperty!(cache::MOIOptimizationNLPCache{E}, name::Symbol, x) w
     elseif name in fieldnames(OptimizationBase.ReInitCache)
         return setfield!(cache.evaluator.reinit_cache, name, x)
     end
-    return setfield!(cache, name, x)
+    # The cache itself is immutable; its own fields delegate reads through
+    # `getproperty` but are never reassigned, so there is no valid setter.
+    throw(ArgumentError(lazy"field `$name` of `MOIOptimizationNLPCache` is immutable and cannot be set"))
 end
 
 function SciMLBase.get_p(
