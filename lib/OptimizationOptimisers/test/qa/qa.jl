@@ -24,7 +24,7 @@ run_qa(
     ),
     ei_kwargs = (;
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
-        all_qualified_accesses_are_public = (; ignore = (:OptimizationState, :OptimizationStats, :__init, :__solve, :_check_and_convert_maxiters, :allowscallback, :allowsfg, :build_solution, :has_init, :isa_dataiterator, :requiresgradient, :setup, :update)),
+        all_qualified_accesses_are_public = (; ignore = (:OptimizationState, :OptimizationStats, :__init, :__solve, :_check_and_convert_maxiters, :allowscallback, :allowsfg, :build_solution, :isa_dataiterator, :requiresgradient)),
     ),
     ei_broken = (:no_implicit_imports,),
 )

@@ -12,7 +12,7 @@ run_qa(
     OptimizationSophia;
     explicit_imports = true,
     ei_kwargs = (;
-        all_qualified_accesses_are_public = (; ignore = (:OptimizationState, :Success, :__init, :__solve, :_check_and_convert_maxiters, :allowscallback, :allowsfg, :build_solution, :has_init, :isa_dataiterator, :requiresgradient, :requireshessian)),
+        all_qualified_accesses_are_public = (; ignore = (:OptimizationState, :__init, :__solve, :_check_and_convert_maxiters, :allowscallback, :allowsfg, :isa_dataiterator, :requiresgradient, :requireshessian)),
     ),
     ei_broken = (:no_implicit_imports,),
 )

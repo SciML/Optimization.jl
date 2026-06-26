@@ -26,6 +26,10 @@ run_qa(
             ignore = (:instantiate_function, :ReInitCache, :OptimizationStats),
         ),
         all_explicit_imports_are_public = (;
+            # Owned by SciMLBase (MaxSense/MinSense/ObjSense/OptimizationStats) and
+            # OptimizationBase (ReInitCache/instantiate_function); not yet declared
+            # public in their source pkgs (verified non-public on SciMLBase 3.24.0 /
+            # OptimizationBase 5.1.3). Fix belongs upstream via `public` declarations.
             ignore = (
                 :MaxSense, :MinSense, :ObjSense, :OptimizationStats,
                 :ReInitCache, :instantiate_function,

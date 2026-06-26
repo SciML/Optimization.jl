@@ -24,6 +24,8 @@ run_qa(
         ),
     ),
     ei_kwargs = (;
+        # `NoAD` is owned by SciMLBase and remains non-public there on the registered
+        # release (SciMLBase 3.24.0); fix belongs upstream via a `public` declaration.
         all_qualified_accesses_are_public = (; ignore = (:NoAD,)),
     ),
     ei_broken = (:no_implicit_imports,),

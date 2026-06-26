@@ -32,7 +32,7 @@ run_qa(
     ),
     ei_kwargs = (;
         all_qualified_accesses_via_owners = (; ignore = (:NLSolversBase, :OptimizationStats)),
-        all_qualified_accesses_are_public = (; ignore = (:AbstractConstrainedOptimizer, :AbstractOptimizer, :ConstrainedOptimizer, :Failure, :KrylovTrustRegion, :MaxIters, :NLSolversBase, :NoAD, :OptimizationState, :OptimizationStats, :Options, :Success, :ZerothOrderOptimizer, :__init, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :alloc_DF, :alloc_H, :allowsbounds, :allowscallback, :allowsconstraints, :allowsfg, :build_solution, :converged, :has_init, :iteration_limit_reached, :requiresbounds, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :supports_sense, :value)),
+        all_qualified_accesses_are_public = (; ignore = (:AbstractConstrainedOptimizer, :AbstractOptimizer, :ConstrainedOptimizer, :KrylovTrustRegion, :NLSolversBase, :NoAD, :OptimizationState, :OptimizationStats, :Options, :ZerothOrderOptimizer, :__init, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :alloc_DF, :alloc_H, :allowsbounds, :allowscallback, :allowsconstraints, :allowsfg, :converged, :iteration_limit_reached, :requiresbounds, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :supports_sense, :value)),
     ),
     ei_broken = (:no_implicit_imports,),
 )
