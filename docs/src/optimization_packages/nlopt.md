@@ -1,6 +1,6 @@
 # NLopt.jl
 
-[`NLopt`](https://github.com/jump-dev/NLopt.jl) is Julia package interfacing to the free/open-source [`NLopt library`](http://ab-initio.mit.edu/nlopt/) which implements many optimization methods both global and local [`NLopt Documentation`](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/).
+[`NLopt`](https://github.com/jump-dev/NLopt.jl) is Julia package interfacing to the free/open-source [`NLopt library`](https://nlopt.readthedocs.io/en/latest/) which implements many optimization methods both global and local [`NLopt Documentation`](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/).
 
 ## Installation: OptimizationNLopt.jl
 

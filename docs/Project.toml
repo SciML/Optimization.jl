@@ -130,6 +130,9 @@ path = "../lib/OptimizationPyCMA"
 [sources.OptimizationQuadDIRECT]
 path = "../lib/OptimizationQuadDIRECT"
 
+[sources.QuadDIRECT]
+url = "https://github.com/timholy/QuadDIRECT.jl.git"
+
 [sources.OptimizationSciPy]
 path = "../lib/OptimizationSciPy"
 
