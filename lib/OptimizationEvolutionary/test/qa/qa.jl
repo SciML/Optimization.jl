@@ -34,7 +34,7 @@ run_qa(
     ),
     ei_kwargs = (;
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats, :minimum)),
-        all_qualified_accesses_are_public = (; ignore = (:AbstractOptimizer, :OptimizationState, :OptimizationStats, :OptimizationTrace, :OptimizationTraceRecord, :Options, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowsbounds, :allowscallback, :allowsconstraints, :converged, :minimizer, :minimum, :optimize, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :trace!, :update!)),
+        all_qualified_accesses_are_public = (; ignore = (:AbstractOptimizer, :OptimizationState, :OptimizationStats, :OptimizationTrace, :OptimizationTraceRecord, :Options, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback, :converged, :minimizer, :minimum, :optimize, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :trace!, :update!)),
     ),
     ei_broken = (:no_implicit_imports,),
 )

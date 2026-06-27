@@ -18,7 +18,7 @@ run_qa(
     aqua_broken = (:undefined_exports,),
     ei_kwargs = (;
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
-        all_qualified_accesses_are_public = (; ignore = (Symbol("@logmsg"), :AbstractBarrierUpdate, :AbstractMadNLPSolver, :AbstractUserCallback, :DIVERGING_ITERATES, :ExactHessian, :INFEASIBLE_PROBLEM_DETECTED, :INFO, :LogLevel, :LogLevels, :MAXIMUM_ITERATIONS_EXCEEDED, :MAXIMUM_WALLTIME_EXCEEDED, :NOT_ENOUGH_DEGREES_OF_FREEDOM, :OptimizationState, :OptimizationStats, :QuasiNewtonOptions, :RESTORATION_FAILED, :SEARCH_DIRECTION_BECOMES_TOO_SMALL, :SOLVED_TO_ACCEPTABLE_LEVEL, :SOLVE_SUCCEEDED, :Status, :USER_REQUESTED_STOP, :WARN, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowsbounds, :allowscallback, :allowsconsjvp, :allowsconstraints, :allowsconsvjp, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :requireslagh, :supports_sense)),
+        all_qualified_accesses_are_public = (; ignore = (Symbol("@logmsg"), :AbstractBarrierUpdate, :AbstractMadNLPSolver, :AbstractUserCallback, :DIVERGING_ITERATES, :ExactHessian, :INFEASIBLE_PROBLEM_DETECTED, :INFO, :LogLevel, :LogLevels, :MAXIMUM_ITERATIONS_EXCEEDED, :MAXIMUM_WALLTIME_EXCEEDED, :NOT_ENOUGH_DEGREES_OF_FREEDOM, :OptimizationState, :OptimizationStats, :QuasiNewtonOptions, :RESTORATION_FAILED, :SEARCH_DIRECTION_BECOMES_TOO_SMALL, :SOLVED_TO_ACCEPTABLE_LEVEL, :SOLVE_SUCCEEDED, :Status, :USER_REQUESTED_STOP, :WARN, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback, :allowsconsjvp, :allowsconsvjp, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :requireslagh, :supports_sense)),
     ),
     ei_broken = (:no_implicit_imports,),
 )

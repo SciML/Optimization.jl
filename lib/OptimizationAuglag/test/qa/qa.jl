@@ -18,7 +18,7 @@ run_qa(
     ),
     ei_kwargs = (;
         no_stale_explicit_imports = (; ignore = (:norm,)),
-        all_qualified_accesses_are_public = (; ignore = (:OptimizationState, :__solve, :_check_and_convert_maxiters, :allowsbounds, :allowscallback, :allowsconstraints, :allowsfg, :isa_dataiterator, :requiresconsjac, :requiresgradient)),
+        all_qualified_accesses_are_public = (; ignore = (:OptimizationState, :__solve, :_check_and_convert_maxiters, :allowscallback, :allowsfg, :isa_dataiterator, :requiresconsjac, :requiresgradient)),
         all_explicit_imports_are_public = (; ignore = (:OptimizationStats,)),
     ),
     ei_broken = (:no_implicit_imports,),

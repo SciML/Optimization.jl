@@ -18,7 +18,7 @@ run_qa(
     aqua_broken = (:undefined_exports,),
     ei_kwargs = (;
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
-        all_qualified_accesses_are_public = (; ignore = (:DefaultOptimizationCache, :OptimizationStats, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowsbounds, :allowscallback, :allowsconstraints)),
+        all_qualified_accesses_are_public = (; ignore = (:DefaultOptimizationCache, :OptimizationStats, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback)),
     ),
     ei_broken = (:no_implicit_imports,),
 )

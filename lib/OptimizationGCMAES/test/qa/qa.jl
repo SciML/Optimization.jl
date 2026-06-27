@@ -13,7 +13,7 @@ run_qa(
     explicit_imports = true,
     ei_kwargs = (;
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
-        all_qualified_accesses_are_public = (; ignore = (:OptimizationStats, :__init, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowsbounds, :allowscallback, :maximize, :minimize, :requiresbounds, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :supports_sense)),
+        all_qualified_accesses_are_public = (; ignore = (:OptimizationStats, :__init, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback, :maximize, :minimize, :requiresbounds, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :supports_sense)),
     ),
     ei_broken = (:no_implicit_imports,),
 )
