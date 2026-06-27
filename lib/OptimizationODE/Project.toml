@@ -44,6 +44,9 @@ OrdinaryDiffEqRosenbrock = "2"
 DiffEqBase = "7"
 SafeTestsets = "0.1"
 Reexport = "1"
+Sundials = "6"
+Test = "1"
+LinearAlgebra = "1"
 
 [targets]
 test = ["Sundials", "Test", "SafeTestsets", "Pkg"]

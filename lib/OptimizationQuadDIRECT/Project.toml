@@ -22,6 +22,7 @@ QuadDIRECT = "0.1.2"
 SciMLBase = "2.58, 3"
 SafeTestsets = "0.1"
 Reexport = "1.2"
+Test = "1"
 
 [targets]
 test = ["Pkg", "Test", "SafeTestsets"]

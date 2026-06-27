@@ -25,6 +25,8 @@ BlackBoxOptim = "0.6.3"
 OptimizationBase = "5"
 SciMLBase = "2.122.1, 3"
 Reexport = "1.2"
+Random = "1"
+Test = "1"
 
 [targets]
 test = ["Random", "Test", "SafeTestsets", "Pkg"]

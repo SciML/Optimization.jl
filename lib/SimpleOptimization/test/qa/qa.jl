@@ -1,10 +1,23 @@
-using SimpleOptimization, Aqua, JET
+using SciMLTesting, SimpleOptimization, JET
 using Test
 
-@testset "Aqua" begin
-    Aqua.test_all(SimpleOptimization)
-end
-
-@testset "JET static analysis" begin
-    JET.test_package(SimpleOptimization; target_defined_modules = true)
-end
+# ExplicitImports findings, all tracked against SciML/Optimization.jl:
+#  * no_implicit_imports broken: the module relies on `@reexport`/`using`
+#    module names (SciMLBase/OptimizationBase/Reexport/...) that cannot be made
+#    explicit without restructuring.
+#  * the ignored *_are_public / *_via_owners names are owned by SciMLBase,
+#    OptimizationBase, the backend, or Base and are not (yet) declared public;
+#    the proper fix is upstream `public` declarations, not a local change.
+run_qa(
+    SimpleOptimization;
+    explicit_imports = true,
+    ei_kwargs = (;
+        all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
+        # `gradient` (ForwardDiff) and `instantiate_gradient` (SimpleOptimization's
+        # own internal) are non-public in their owners; `_unwrap_val` is a SciMLBase
+        # internal still non-public on the registered release (SciMLBase 3.24.0).
+        all_qualified_accesses_are_public = (; ignore = (:gradient, :instantiate_gradient)),
+        all_explicit_imports_are_public = (; ignore = (:_unwrap_val,)),
+    ),
+    ei_broken = (:no_implicit_imports,),
+)
