@@ -2,7 +2,12 @@ using OptimizationManopt, Aqua, JET
 using Test
 
 @testset "Aqua" begin
-    Aqua.test_all(OptimizationManopt)
+    # Manifolds is declared because the curvature analysis path may pull it in,
+    # but no symbol from it is currently used in src — ignore it for now.
+    Aqua.test_all(
+        OptimizationManopt;
+        stale_deps = (; ignore = [:Manifolds])
+    )
 end
 
 @testset "JET static analysis" begin
