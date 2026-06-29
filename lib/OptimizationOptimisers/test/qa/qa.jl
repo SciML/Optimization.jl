@@ -8,9 +8,16 @@ using Test
 #  * the ignored *_are_public / *_via_owners names are owned by SciMLBase,
 #    OptimizationBase, the backend, or Base and are not (yet) declared public;
 #    the proper fix is upstream `public` declarations, not a local change.
+# jet_broken (tracked against SciML/Optimization.jl): JET typo-mode flags
+# `local variable `x` may be undefined` in `__solve` (src/OptimizationOptimisers.jl)
+# — `x` (the loss value) is assigned only inside the `for epoch in 1:epochs, d in
+# data` loop and read after it via `first(x)`, so a zero-epoch run would be
+# undefined. Pre-existing latent issue surfaced by enabling JET; the solver-
+# correctness fix is handled separately, not part of the QA conversion.
 run_qa(
     OptimizationOptimisers;
     explicit_imports = true,
+    jet_broken = true,
     aqua_kwargs = (;
         # The sublibrary extends SciMLBase's solver-trait/__init/__solve interface
         # onto its backend's optimizer types, so those methods are intentional.

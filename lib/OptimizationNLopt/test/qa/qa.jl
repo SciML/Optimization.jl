@@ -8,9 +8,18 @@ using Test
 #  * the ignored *_are_public / *_via_owners names are owned by SciMLBase,
 #    OptimizationBase, the backend, or Base and are not (yet) declared public;
 #    the proper fix is upstream `public` declarations, not a local change.
+# jet_broken (tracked against SciML/Optimization.jl): JET typo-mode flags
+# `local variable `thetacache`/`Jthetacache` is not defined` inside the
+# constraint-callback closures of `__solve` (src/OptimizationNLopt.jl). Both are
+# assigned before the closures (lines 199-200) but reassigned *inside* them, so
+# Julia boxes the captured binding and JET's closure analysis cannot prove the box
+# is initialized — a benign closure-capture artifact, not a runtime bug.
+# Pre-existing latent issue surfaced by enabling JET; resolving it is a separate
+# closure refactor, not part of the QA conversion.
 run_qa(
     OptimizationNLopt;
     explicit_imports = true,
+    jet_broken = true,
     aqua_kwargs = (;
         # The sublibrary extends SciMLBase's solver-trait/__init/__solve interface
         # onto its backend's optimizer types, so those methods are intentional.

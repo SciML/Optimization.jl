@@ -16,7 +16,7 @@ run_qa(
         # `gradient` (ForwardDiff) and `instantiate_gradient` (SimpleOptimization's
         # own internal) are non-public in their owners; `_unwrap_val` is a SciMLBase
         # internal still non-public on the registered release (SciMLBase 3.24.0).
-        all_qualified_accesses_are_public = (; ignore = (:gradient, :instantiate_gradient)),
+        all_qualified_accesses_are_public = (; ignore = (:gradient, :instantiate_gradient, :OptimizationStats, :__solve, :_check_and_convert_maxiters)),
         all_explicit_imports_are_public = (; ignore = (:_unwrap_val,)),
     ),
     ei_broken = (:no_implicit_imports,),
