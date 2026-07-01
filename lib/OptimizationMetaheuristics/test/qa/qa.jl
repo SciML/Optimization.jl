@@ -3,15 +3,22 @@ using Test
 using Metaheuristics
 
 @testset "Aqua" begin
-    # Extending SciMLBase traits onto Metaheuristics optimizer types is the entire purpose
-    # of this package, so flag those types as "our own" for Aqua's piracy check.
+    # OptimizationMetaheuristics implements the SciML optimization interface for
+    # Metaheuristics, so the trait/interface methods it adds extend SciML's *own*
+    # functions rather than committing type piracy — mark those functions as own.
     # `@reexport using Metaheuristics` exports `solve!`, which clashes with SciMLBase's
     # `solve!` brought in transitively via OptimizationBase; mark broken until restructured.
+    SB = OptimizationMetaheuristics.SciMLBase
     Aqua.test_all(
         OptimizationMetaheuristics;
         piracies = (
             treat_as_own = [
-                Metaheuristics.AbstractAlgorithm,
+                SB.__init,
+                SB.__solve,
+                SB.allowsbounds,
+                SB.allowscallback,
+                SB.has_init,
+                SB.requiresbounds,
             ],
         ),
         undefined_exports = (; broken = true)

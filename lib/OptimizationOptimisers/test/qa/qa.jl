@@ -3,13 +3,20 @@ using Test
 using Optimisers
 
 @testset "Aqua" begin
-    # Extending SciMLBase traits onto Optimisers optimizer types is the entire purpose
-    # of this package, so flag those types as "our own" for Aqua's piracy check.
+    # OptimizationOptimisers implements the SciML optimization interface for
+    # Optimisers, so the trait/interface methods it adds extend SciML's *own*
+    # functions rather than committing type piracy — mark those functions as own.
+    SB = OptimizationOptimisers.SciMLBase
     Aqua.test_all(
         OptimizationOptimisers;
         piracies = (
             treat_as_own = [
-                Optimisers.AbstractRule,
+                SB.__init,
+                SB.__solve,
+                SB.allowscallback,
+                SB.allowsfg,
+                SB.has_init,
+                SB.requiresgradient,
             ],
         )
     )

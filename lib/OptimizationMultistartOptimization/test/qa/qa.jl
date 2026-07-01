@@ -3,14 +3,21 @@ using Test
 using MultistartOptimization
 
 @testset "Aqua" begin
-    # Extending SciMLBase traits onto MultistartOptimization optimizer types is the
-    # entire purpose of this package, so flag those types as "our own" for Aqua's
-    # piracy check.
+    # OptimizationMultistartOptimization implements the SciML optimization interface
+    # for MultistartOptimization, so the trait/interface methods it adds extend
+    # SciML's *own* functions rather than committing type piracy — mark those
+    # functions as own.
+    SB = OptimizationMultistartOptimization.SciMLBase
     Aqua.test_all(
         OptimizationMultistartOptimization;
         piracies = (
             treat_as_own = [
-                MultistartOptimization.TikTak,
+                SB.__init,
+                SB.__solve,
+                SB.allowsbounds,
+                SB.allowscallback,
+                SB.has_init,
+                SB.requiresbounds,
             ],
         ),
         # OptimizationNLopt is used in tests as the inner solver, not in src.

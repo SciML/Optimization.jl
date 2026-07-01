@@ -3,21 +3,28 @@ using Test
 using Optim
 
 @testset "Aqua" begin
-    # Extending SciMLBase traits onto Optim optimizer types is the entire purpose
-    # of this package, so flag those types as "our own" for Aqua's piracy check.
+    # OptimizationOptimJL implements the SciML optimization interface for Optim,
+    # so the trait/interface methods it adds extend SciML's *own* functions rather
+    # than committing type piracy — mark those functions as own.
+    SB = OptimizationOptimJL.SciMLBase
+    OB = OptimizationOptimJL.OptimizationBase
     Aqua.test_all(
         OptimizationOptimJL;
         piracies = (
             treat_as_own = [
-                Optim.AbstractOptimizer,
-                Optim.ConstrainedOptimizer,
-                Optim.Fminbox,
-                Optim.IPNewton,
-                Optim.KrylovTrustRegion,
-                Optim.Newton,
-                Optim.NewtonTrustRegion,
-                Optim.SAMIN,
-                Optim.SimulatedAnnealing,
+                SB.__init,
+                SB.__solve,
+                SB.allowsbounds,
+                SB.allowscallback,
+                SB.allowsconstraints,
+                SB.allowsfg,
+                SB.has_init,
+                SB.requiresbounds,
+                SB.requiresconshess,
+                SB.requiresconsjac,
+                SB.requiresgradient,
+                SB.requireshessian,
+                OB.supports_sense,
             ],
         )
     )
