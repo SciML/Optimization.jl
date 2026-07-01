@@ -21,9 +21,14 @@ jobs:
       julia-version: "lts"
       # SymbolicAnalysis skipped: 0.3.x doesn't support Symbolics 7 (required by
       # ModelingToolkit 11). QuadDIRECT skipped: it is unregistered, so the
-      # downgrade resolver cannot look up its versions. Stdlibs and in-repo
-      # sublibraries are auto-populated by the centralized workflow.
-      skip: "SymbolicAnalysis,QuadDIRECT"
+      # downgrade resolver cannot look up its versions. LogExpFunctions skipped:
+      # the downgrade pins it to its latest (1.0.1), but SparseConnectivityTracer
+      # (a transitive dep of OptimizationBase, pulled in by solver stacks such as
+      # BlackBoxOptim/Evolutionary/NOMAD) only supports LogExpFunctions 0.3 via
+      # its extension, so pinning it high makes the resolve unsatisfiable.
+      # Stdlibs and in-repo sublibraries are auto-populated by the centralized
+      # workflow.
+      skip: "SymbolicAnalysis,QuadDIRECT,LogExpFunctions"
       group-env-name: "OPTIMIZATION_TEST_GROUP"
       group-env-value: "Core"
       # Every lib/* sublibrary is downgrade-tested (projects auto-discovered, no exclusions).

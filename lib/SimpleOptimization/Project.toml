@@ -29,7 +29,7 @@ SimpleOptimizationEnzymeExt = "Enzyme"
 SimpleOptimizationForwardDiffExt = "ForwardDiff"
 
 [compat]
-ADTypes = "1"
+ADTypes = "1.14"
 Enzyme = "0.13"
 ForwardDiff = "0.10, 1"
 LinearAlgebra = "1.10"

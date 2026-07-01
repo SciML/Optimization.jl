@@ -28,3 +28,6 @@ test = ["Pkg", "Test", "SafeTestsets"]
 
 [sources.OptimizationBase]
 path = "../OptimizationBase"
+
+[sources.QuadDIRECT]
+url = "https://github.com/timholy/QuadDIRECT.jl.git"
