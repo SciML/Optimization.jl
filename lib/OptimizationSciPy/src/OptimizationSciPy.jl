@@ -29,7 +29,7 @@ function safe_get_message(result)
     if pyisinstance(msg, pybuiltins.list) || pyisinstance(msg, pybuiltins.tuple)
         return join(pyconvert(Vector{String}, msg), ", ")
     end
-    return string(pytypeof(msg))
+    return string(pytype(msg))
 end
 
 # Squash any kind of numeric object down to a Julia Float64.

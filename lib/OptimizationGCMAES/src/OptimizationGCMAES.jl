@@ -72,12 +72,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: GCMAESOpt}
         return x[1]
     end
 
-    local g
-    if !isnothing(cache.f.grad)
-        g = function (θ)
-            cache.f.grad(G, θ)
-            return G
-        end
+    g = function (θ)
+        cache.f.grad(G, θ)
+        return G
     end
 
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)

@@ -80,6 +80,8 @@ function get_solve_func(opt::PRIMASolvers)
         return PRIMA.lincoa
     elseif opt isa COBYLA
         return PRIMA.cobyla
+    else
+        error("Unknown PRIMA solver type: $(typeof(opt))")
     end
 end
 
