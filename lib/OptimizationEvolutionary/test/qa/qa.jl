@@ -3,16 +3,14 @@ using Test
 using Evolutionary
 
 @testset "Aqua" begin
-    # OptimizationEvolutionary implements the SciML optimization interface for
-    # Evolutionary, so the trait/interface methods it adds extend SciML's *own*
-    # functions rather than committing type piracy — mark those functions as own.
-    # Evolutionary.trace! is also extended (to feed Evolutionary's tracing into
-    # our callbacks); it has no SciML function to attribute it to, so mark that
-    # function as own too.
+    # SciML trait/interface methods are our own, not piracy — mark them as such.
+    # The Evolutionary.trace! override IS genuine piracy (changes Evolutionary's
+    # tracing globally); mark the piracy test broken until it's replaced.
     SB = OptimizationEvolutionary.SciMLBase
     Aqua.test_all(
         OptimizationEvolutionary;
         piracies = (
+            broken = true,
             treat_as_own = [
                 SB.__solve,
                 SB.allowsbounds,
@@ -23,7 +21,6 @@ using Evolutionary
                 SB.requiresconsjac,
                 SB.requiresgradient,
                 SB.requireshessian,
-                Evolutionary.trace!,
             ],
         )
     )
