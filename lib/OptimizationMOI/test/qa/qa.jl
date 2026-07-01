@@ -1,5 +1,6 @@
 using OptimizationMOI, Aqua, JET
 using Test
+using MathOptInterface
 
 @testset "Aqua" begin
     # OptimizationMOI deliberately extends SciMLBase's solver-trait interface onto the

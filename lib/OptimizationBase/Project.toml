@@ -56,7 +56,7 @@ BenchmarkTools = "1"
 ChainRulesCore = "1"
 ComponentArrays = ">= 0.13.9"
 DifferentiationInterface = "0.7.13"
-DocStringExtensions = "0.9"
+DocStringExtensions = "0.9.5"
 Enzyme = "0.13.2"
 FastClosures = "0.3"
 FiniteDiff = "2.12"
@@ -66,7 +66,7 @@ LinearAlgebra = "1.9, 1.10"
 Lux = "1.12"
 MLDataDevices = "1"
 MLUtils = "0.4"
-Manifolds = "0.10"
+Manifolds = "0.10, 0.11"
 ModelingToolkit = "11"
 Optim = ">= 1.4.1"
 Optimisers = ">= 0.2.5"
@@ -120,4 +120,4 @@ Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["ADTypes", "Aqua", "BenchmarkTools", "ChainRulesCore", "ComponentArrays", "DifferentiationInterface", "Enzyme", "FiniteDiff", "ForwardDiff", "IterTools", "LinearAlgebra", "Lux", "MLUtils", "Manifolds", "ModelingToolkit", "Optim", "Optimisers", "OptimizationLBFGSB", "OptimizationManopt", "Pkg", "Random", "ReverseDiff", "SafeTestsets", "SciMLBase", "SparseArrays", "SparseConnectivityTracer", "SymbolicAnalysis", "Symbolics", "Test", "Tracker", "Zygote"]
+test = ["Aqua", "BenchmarkTools", "ChainRulesCore", "ComponentArrays", "Enzyme", "FiniteDiff", "ForwardDiff", "IterTools", "Lux", "MLUtils", "Manifolds", "ModelingToolkit", "Optim", "Optimisers", "OptimizationLBFGSB", "OptimizationManopt", "Pkg", "Random", "ReverseDiff", "SafeTestsets", "SymbolicAnalysis", "Symbolics", "Test", "Tracker", "Zygote"]

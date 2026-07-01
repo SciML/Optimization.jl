@@ -72,6 +72,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: GCMAESOpt}
         return x[1]
     end
 
+    local g
     if !isnothing(cache.f.grad)
         g = function (θ)
             cache.f.grad(G, θ)

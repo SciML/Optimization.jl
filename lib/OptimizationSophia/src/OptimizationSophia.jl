@@ -114,6 +114,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Sophia}
     gₜ = zero(θ)
     mₜ = zero(θ)
     hₜ = zero(θ)
+    x = cache.f(θ, first(data))
     for epoch in 1:maxiters
         for (i, d) in enumerate(data)
             if cache.f.fg !== nothing && dataiterate

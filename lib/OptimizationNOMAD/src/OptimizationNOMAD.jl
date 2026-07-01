@@ -74,8 +74,10 @@ function SciMLBase.__solve(
         return first(x)
     end
 
+    bb = nothing
+    bbcons = nothing
     if prob.f.cons === nothing
-        function bb(x)
+        bb = function (x)
             l = _loss(x)
             success = !isnan(l) && !isinf(l)
             count_eval = true
@@ -83,7 +85,7 @@ function SciMLBase.__solve(
         end
     else
         eqinds = findall(i -> prob.lcons[i] == prob.ucons[i], 1:length(prob.ucons))
-        function bbcons(x)
+        bbcons = function (x)
             l = _loss(x)
             c = zeros(eltype(x), length(prob.ucons))
             prob.f.cons(c, x, prob.p)

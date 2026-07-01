@@ -25,6 +25,8 @@ OptimizationBase = "5"
 Metaheuristics = "3.3"
 SciMLBase = "2.122.1, 3"
 Reexport = "1.2"
+Random = "1.10"
+Test = "1.10"
 
 [targets]
 test = ["Random", "Test", "SafeTestsets", "Pkg"]

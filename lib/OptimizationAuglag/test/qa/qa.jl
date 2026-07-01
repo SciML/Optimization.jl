@@ -2,7 +2,11 @@ using OptimizationAuglag, Aqua, JET
 using Test
 
 @testset "Aqua" begin
-    Aqua.test_all(OptimizationAuglag)
+    # OptimizationOptimisers is used in tests as the inner solver, not in src.
+    Aqua.test_all(
+        OptimizationAuglag;
+        stale_deps = (; ignore = [:OptimizationOptimisers])
+    )
 end
 
 @testset "JET static analysis" begin

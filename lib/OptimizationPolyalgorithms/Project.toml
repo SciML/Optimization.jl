@@ -21,14 +21,16 @@ OptimizationOptimisers = {path = "../OptimizationOptimisers"}
 OptimizationOptimJL = {path = "../OptimizationOptimJL"}
 
 [compat]
-Pkg = "1"
-SafeTestsets = "0.1"
-julia = "1.10"
+ForwardDiff = "0.10, 1"
 OptimizationBase = "5"
 OptimizationOptimisers = "0.3.16"
-SciMLBase = "2.58, 3"
-Reexport = "1.2"
 OptimizationOptimJL = "0.4.10"
+Pkg = "1"
+Reexport = "1.2.2"
+SafeTestsets = "0.1"
+SciMLBase = "2.122.1, 3"
+Test = "1.10"
+julia = "1.10"
 
 [targets]
 test = ["ForwardDiff", "Test", "SafeTestsets", "Pkg"]
