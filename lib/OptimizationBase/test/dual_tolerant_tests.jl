@@ -2,7 +2,7 @@
 # derivative closures added on the `dual-tolerant-grad` branch.
 #
 # The behaviors under test (all previously uncovered):
-#   1. `_grad_use_prep` gating logic in isolation.
+#   1. `_use_prep` dual-detection gating logic in isolation.
 #   2. `grad`/`cons_j` still hit the prepared fast path for the construction types
 #      and stay numerically correct.
 #   3. `grad`/`cons_j` accept an explicit `p` different from the construction `p`.
@@ -13,7 +13,7 @@
 using OptimizationBase, Test, ForwardDiff, FiniteDiff
 using ADTypes, Enzyme
 import SciMLBase
-using OptimizationBase: _grad_use_prep
+using OptimizationBase: _use_prep
 
 # Parametrized objective and constraint whose derivatives genuinely depend on `p`,
 # so a dual `p` produces a nonzero, checkable sensitivity.
@@ -29,19 +29,22 @@ p1 = [5.0, 7.0]           # a different parameter value
 ∇xf(x, p) = ForwardDiff.gradient(xx -> objp(xx, p), x)
 consjac(x, p) = ForwardDiff.jacobian(xx -> consp(xx, p), x)
 
-@testset "_grad_use_prep gating" begin
+@testset "_use_prep dual gating" begin
     d = ForwardDiff.Dual{Nothing}(1.0, 1.0)
-    # Matching real inputs -> prepared fast path.
-    @test _grad_use_prep(Float64, [1.0, 2.0], [3.0, 4.0])
-    # NullParameters / nothing carry no differentiable params, never veto.
-    @test _grad_use_prep(Float64, [1.0, 2.0], SciMLBase.NullParameters())
-    @test _grad_use_prep(Float64, [1.0, 2.0], nothing)
+    # No duals -> prepared fast path, regardless of real parameter eltype.
+    @test _use_prep([1.0, 2.0], [3.0, 4.0])
+    @test _use_prep([1.0, 2.0], SciMLBase.NullParameters())
+    @test _use_prep([1.0, 2.0], nothing)
+    @test _use_prep([1.0, 2.0], [1, 100])            # Int p keeps the fast path
+    @test _use_prep([1.0, 2.0], Float32[1, 2])       # mixed-precision p keeps it too
+    @test _use_prep([1.0, 2.0], (rand(2, 2), rand(2)))  # structured (tuple) p keeps it
+    @test _use_prep(Float32[1.0, 2.0], [3.0, 4.0])   # off-construction real eltype: still fast
     # Dual θ -> fallback.
-    @test !_grad_use_prep(Float64, [d, d], [3.0, 4.0])
+    @test !_use_prep([d, d], [3.0, 4.0])
     # Real θ but dual p (the sensitivity case) -> fallback.
-    @test !_grad_use_prep(Float64, [1.0, 2.0], [d, d])
-    # Mismatched θ element type -> fallback.
-    @test !_grad_use_prep(Float64, Float32[1.0, 2.0], [3.0, 4.0])
+    @test !_use_prep([1.0, 2.0], [d, d])
+    # Dual nested inside a structured p -> fallback (anyeltypedual recurses).
+    @test !_use_prep([1.0, 2.0], ([d, d], [1.0]))
 end
 
 # Runs the full matrix of assertions against an already-instantiated problem.
@@ -130,7 +133,7 @@ end
     optprob.grad(g, xt)
     @test g ≈ ForwardDiff.gradient(xx -> losst(xx, pt), xt) rtol = 1.0e-6
     # A structured `p` must still route through the prepared fast path.
-    @test OptimizationBase._grad_use_prep(Float64, xt, pt)
+    @test _use_prep(xt, pt)
 end
 
 @testset "parametrized cons_j (Enzyme)" begin
