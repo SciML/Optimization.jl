@@ -28,15 +28,31 @@ using OptimizationBase.FastClosures
 # for the prepared type and fall back to a prep-free DI call (which prepares at the actual
 # argument types each call) for anything else. The fallback cost is irrelevant off the
 # optimization hot loop — sensitivity does one such call per solve, not per iteration.
-_grad_param_eltype(p) = p isa Union{SciMLBase.NullParameters, Nothing} ? nothing : eltype(p)
+# Scalar eltype of `p`, or `nothing` when `p` has no scalar to match: NullParameters/nothing,
+# and structured `p` (tuple/array-of-arrays) whose `eltype` is not a `Number`. Only a numeric
+# `p` returns a type that can veto the fast path.
+function _grad_param_eltype(p)
+    p isa Union{SciMLBase.NullParameters, Nothing} && return nothing
+    pe = eltype(p)
+    return pe <: Number ? pe : nothing
+end
 
 # True when every float-bearing input matches the prepared element type `T0`, so the prepared
-# path is valid. A dual `θ` or dual `p` (the sensitivity case) flunks this and routes to the
-# prep-free fallback. `NullParameters`/`nothing` carry no differentiable parameters, so they
-# never veto the fast path.
+# path is valid. A dual `θ` or dual numeric `p` (the sensitivity case) flunks this and routes to
+# the prep-free fallback; `nothing`-eltype `p` never vetoes.
 @inline function _grad_use_prep(::Type{T0}, θ, p) where {T0}
     pe = _grad_param_eltype(p)
     return eltype(θ) === T0 && (pe === nothing || pe === T0)
+end
+
+# Output-buffer eltype for the `p`-accepting constraint wrapper. Promote against `eltype(p)` only
+# when it is a `Number` (so a dual `p` propagates in the sensitivity case); a structured `p` has
+# a non-`Number` eltype that would promote to `Union{}`, so fall back to `eltype(x)` there.
+@inline function _cons_out_eltype(x, p)
+    p isa Union{SciMLBase.NullParameters, Nothing} && return eltype(x)
+    pe = eltype(p)
+    T = pe <: Number ? Base.promote_op(+, eltype(x), pe) : eltype(x)
+    return T === Union{} ? eltype(x) : T
 end
 
 function instantiate_function(
@@ -237,14 +253,11 @@ function instantiate_function(
         # at parameters other than the construction `p` — including duals pushed in by a
         # sensitivity layer differentiating the constraint Jacobian w.r.t. `p` (the mixed
         # ∂²cᵢ/∂x∂p term of the KKT residual). The prepared `cons_oop` bakes `p` in and
-        # exposes no parameter slot, so we cannot reuse it here. Output eltype promotes
-        # against `q` so duals propagate (Base.promote_op, not promote_type: ForwardDiff's
-        # dual ops bypass promote_type).
+        # exposes no parameter slot, so we cannot reuse it here. `_cons_out_eltype` picks the
+        # output eltype so duals propagate without poisoning it to `Union{}`.
         _cons_oop_p = let f = f, num_cons = num_cons
             function (x, p)
-                T = p isa Union{SciMLBase.NullParameters, Nothing} ? eltype(x) :
-                    Base.promote_op(+, eltype(x), eltype(p))
-                res = Vector{T}(undef, num_cons)
+                res = Vector{_cons_out_eltype(x, p)}(undef, num_cons)
                 f.cons(res, x, p)
                 return res
             end
