@@ -18,14 +18,22 @@ OptimizationMOI = {path = "../OptimizationMOI"}
 OptimizationOptimJL = {path = "../OptimizationOptimJL"}
 
 [compat]
-Pkg = "1"
-SafeTestsets = "0.1"
 ADTypes = "1.18"
+Ipopt = "1"
 NLPModels = "0.21"
+NLPModelsTest = "0.10"
 OptimizationBase = "5"
+OptimizationLBFGSB = "1.2"
+OptimizationMOI = "1"
+OptimizationOptimJL = "0.4.10"
+Pkg = "1"
 Reexport = "1.2"
-SciMLBase = "2.122.1, 3"
+ReverseDiff = "1"
+SafeTestsets = "0.1"
+SciMLBase = "2.130, 3"
 SparseArrays = "1.10.0"
+Test = "1.10"
+Zygote = "0.6, 0.7"
 julia = "1.10"
 
 [extras]

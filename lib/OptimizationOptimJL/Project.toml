@@ -28,6 +28,12 @@ SparseArrays = "1.6"
 Optim = "2"
 Reexport = "1.2"
 SciMLBase = "2.122.1, 3"
+ForwardDiff = "0.10, 1"
+ModelingToolkit = "11"
+Random = "1.10"
+ReverseDiff = "1"
+Test = "1.10"
+Zygote = "0.6, 0.7"
 
 [sources]
 OptimizationBase = {path = "../OptimizationBase"}

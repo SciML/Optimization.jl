@@ -160,6 +160,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
         end
 
         opt_ret = ReturnCode.MaxIters
+        res = (cache.u0, nothing)
         n = length(cache.u0)
 
         if cache.lb === nothing

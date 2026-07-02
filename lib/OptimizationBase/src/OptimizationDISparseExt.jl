@@ -142,25 +142,25 @@ function instantiate_function(
         cons = let f = f, p = p
             (res, θ, p_call = p) -> f.cons(res, θ, p_call)
         end
+    end
 
-        function cons_oop(x)
-            _res = zeros(eltype(x), num_cons)
-            f.cons(_res, x, p)
-            return _res
-        end
+    function cons_oop(x)
+        _res = zeros(eltype(x), num_cons)
+        f.cons(_res, x, p)
+        return _res
+    end
 
-        function cons_oop(x, i)
-            _res = zeros(eltype(x), num_cons)
-            f.cons(_res, x, p)
-            return _res[i]
-        end
+    function cons_oop(x, i)
+        _res = zeros(eltype(x), num_cons)
+        f.cons(_res, x, p)
+        return _res[i]
+    end
 
-        function lagrangian(θ, σ, λ, p)
-            if eltype(θ) <: SparseConnectivityTracer.AbstractTracer || !iszero(θ)
-                return σ * f.f(θ, p) + dot(λ, cons_oop(θ))
-            else
-                return dot(λ, cons_oop(θ))
-            end
+    function lagrangian(θ, σ, λ, p)
+        if eltype(θ) <: SparseConnectivityTracer.AbstractTracer || !iszero(θ)
+            return σ * f.f(θ, p) + dot(λ, cons_oop(θ))
+        else
+            return dot(λ, cons_oop(θ))
         end
     end
 
@@ -452,10 +452,10 @@ function instantiate_function(
         cons = let f = f, p = p
             (x, p_call = p) -> f.cons(x, p_call)
         end
+    end
 
-        function lagrangian(θ, σ, λ, p)
-            return σ * f.f(θ, p) + dot(λ, f.cons(θ, p))
-        end
+    function lagrangian(θ, σ, λ, p)
+        return σ * f.f(θ, p) + dot(λ, f.cons(θ, p))
     end
 
     cons_jac_prototype = f.cons_jac_prototype

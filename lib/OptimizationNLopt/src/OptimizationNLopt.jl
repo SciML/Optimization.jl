@@ -196,14 +196,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         eqinds = map((y) -> y[1] == y[2], zip(cache.lcons, cache.ucons))
         ineqinds = map((y) -> y[1] != y[2], zip(cache.lcons, cache.ucons))
         cons_cache = zeros(eltype(cache.u0), sum(eqinds) + sum(ineqinds))
-        thetacache = rand(size(cache.u0))
-        Jthetacache = rand(size(cache.u0))
         Jcache = zeros(eltype(cache.u0), sum(ineqinds) + sum(eqinds), length(cache.u0))
         evalcons = function (θ, ineqoreq)
-            if thetacache != θ
-                cache.f.cons(cons_cache, θ)
-                thetacache = copy(θ)
-            end
+            cache.f.cons(cons_cache, θ)
             if ineqoreq == :eq
                 return @view(cons_cache[eqinds])
             else
@@ -212,11 +207,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         end
 
         evalconj = function (θ, ineqoreq)
-            if Jthetacache != θ
-                cache.f.cons_j(Jcache, θ)
-                Jthetacache = copy(θ)
-            end
-
+            cache.f.cons_j(Jcache, θ)
             if ineqoreq == :eq
                 return @view(Jcache[eqinds, :])'
             else

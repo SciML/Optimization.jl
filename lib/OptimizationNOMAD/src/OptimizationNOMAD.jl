@@ -74,16 +74,27 @@ function SciMLBase.__solve(
         return first(x)
     end
 
+    bb = nothing
+    bounds = (;)
+    if !isnothing(prob.lb)
+        bounds = (; bounds..., lower_bound = prob.lb)
+    end
+
+    if !isnothing(prob.ub)
+        bounds = (; bounds..., upper_bound = prob.ub)
+    end
+
     if prob.f.cons === nothing
-        function bb(x)
+        bb = function (x)
             l = _loss(x)
             success = !isnan(l) && !isinf(l)
             count_eval = true
             return (success, count_eval, [l])
         end
+        opt_setup = NOMAD.NomadProblem(length(prob.u0), 1, ["OBJ"], bb; bounds...)
     else
         eqinds = findall(i -> prob.lcons[i] == prob.ucons[i], 1:length(prob.ucons))
-        function bbcons(x)
+        bbcons = function (x)
             l = _loss(x)
             c = zeros(eltype(x), length(prob.ucons))
             prob.f.cons(c, x, prob.p)
@@ -95,20 +106,6 @@ function SciMLBase.__solve(
             count_eval = true
             return (success, count_eval, vcat(l, c))
         end
-    end
-
-    bounds = (;)
-    if !isnothing(prob.lb)
-        bounds = (; bounds..., lower_bound = prob.lb)
-    end
-
-    if !isnothing(prob.ub)
-        bounds = (; bounds..., upper_bound = prob.ub)
-    end
-
-    if prob.f.cons === nothing
-        opt_setup = NOMAD.NomadProblem(length(prob.u0), 1, ["OBJ"], bb; bounds...)
-    else
         opt_setup = NOMAD.NomadProblem(
             length(prob.u0), 1 + length(prob.ucons),
             vcat("OBJ", fill(strcnsmethod(cons_method), length(prob.ucons))),

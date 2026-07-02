@@ -273,6 +273,7 @@ function instantiate_function(
     else
         min(open_nrmlbrkt_ind, open_squigllybrkt_ind)
     end
-    adpkg = adtypestr[strtind:(open_brkt_ind - 1)]
+    lastidx = isnothing(open_brkt_ind) ? lastindex(adtypestr) : (open_brkt_ind - 1)
+    adpkg = adtypestr[strtind:lastidx]
     throw(ArgumentError("The passed automatic differentiation backend choice is not available. Please load the corresponding AD package $adpkg."))
 end

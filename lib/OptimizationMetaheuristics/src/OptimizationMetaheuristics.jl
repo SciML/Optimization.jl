@@ -107,6 +107,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         end
     end
 
+    opt_bounds = nothing
     if !isnothing(cache.lb) & !isnothing(cache.ub)
         opt_bounds = [cache.lb cache.ub]'
     end
