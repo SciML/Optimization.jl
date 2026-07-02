@@ -3,6 +3,7 @@ using Test
 
 @testset "OptimizationBase.jl" begin
     include("adtests.jl")
+    include("dual_tolerant_tests.jl")
     include("cvxtest.jl")
     include("matrixvalued.jl")
     include("solver_missing_error_messages.jl")
