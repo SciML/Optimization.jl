@@ -110,6 +110,29 @@ end
     end
 end
 
+@testset "structured (tuple) parameters" begin
+    # Regression: a tuple-valued `p` has a non-`Number` eltype. The output-buffer eltype
+    # must not promote to `Union{}` (which crashed the constraint Jacobian), and such a `p`
+    # must not veto the prepared fast path — it carries no scalar for the prep to match.
+    losst(x, p) = sum(abs2, p[1] * x .- p[2])
+    tcons!(res, x, p) = (res[1] = sum(abs2, x) - 1.0; return nothing)
+    pt = ([1.0 0.5; 0.5 1.0; 0.2 0.3], [0.1, 0.2, 0.3])   # (Matrix, Vector) tuple
+
+    optf = OptimizationFunction(losst, ADTypes.AutoForwardDiff(); cons = tcons!)
+    optprob = OptimizationBase.instantiate_function(
+        optf, x0, ADTypes.AutoForwardDiff(), pt, 1; g = true, cons_j = true
+    )
+
+    J = zeros(2)
+    optprob.cons_j(J, xt)
+    @test J ≈ [2xt[1], 2xt[2]] rtol = 1.0e-6         # ∂(‖x‖²-1)/∂x
+    g = zeros(2)
+    optprob.grad(g, xt)
+    @test g ≈ ForwardDiff.gradient(xx -> losst(xx, pt), xt) rtol = 1.0e-6
+    # A structured `p` must still route through the prepared fast path.
+    @test OptimizationBase._grad_use_prep(Float64, xt, pt)
+end
+
 @testset "parametrized cons_j (Enzyme)" begin
     # The dual-through path is not exercised for Enzyme (ForwardDiff-over-Enzyme
     # nesting is out of scope); this pins the `p`-accepting closure and the
