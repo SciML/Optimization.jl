@@ -17,42 +17,37 @@ using OptimizationBase.FastClosures
 
 # --- Dual-tolerant gradient dispatch ------------------------------------------------------
 # A DI preparation is monomorphic: built once at the construction types (`x`, `p`), its
-# internal buffers are concrete (e.g. `Float64`) and reject inputs of any other type. That is
-# correct and fast for the optimization solve, but a downstream sensitivity layer (e.g.
-# SciMLSensitivity's `OptimizationAdjoint`) differentiates the KKT stationarity conditions
-# w.r.t. the parameters by pushing `ForwardDiff.Dual`s through the gradient: a dual `p` (and a
-# dual output buffer) evaluated at a real `θ = x*`. Those duals hit the prepared buffers and
-# throw `DifferentiationInterface.PreparationMismatchError`.
+# internal buffers are concrete (e.g. `Float64`) and reject `ForwardDiff.Dual`s. That is correct
+# and fast for the solve, but a downstream sensitivity layer (e.g. SciMLSensitivity's
+# `OptimizationAdjoint`) differentiates the KKT conditions w.r.t. the parameters by pushing duals
+# through `grad`/`cons_j` — a dual `p` at a real `θ = x*`. Those duals hit the prepared buffers
+# and throw `DifferentiationInterface.PreparationMismatchError`.
 #
-# To support that without slowing the solve, the gradient closures keep the prepared fast path
-# for the prepared type and fall back to a prep-free DI call (which prepares at the actual
-# argument types each call) for anything else. The fallback cost is irrelevant off the
-# optimization hot loop — sensitivity does one such call per solve, not per iteration.
-# Scalar eltype of `p`, or `nothing` when `p` has no scalar to match: NullParameters/nothing,
-# and structured `p` (tuple/array-of-arrays) whose `eltype` is not a `Number`. Only a numeric
-# `p` returns a type that can veto the fast path.
-function _grad_param_eltype(p)
-    p isa Union{SciMLBase.NullParameters, Nothing} && return nothing
-    pe = eltype(p)
-    return pe <: Number ? pe : nothing
+# So the closures keep the prepared fast path whenever the call carries no dual, and fall back to
+# a prep-free DI call (which prepares at the actual argument types) when one does. Dual-detection
+# reuses SciMLBase's `anyeltypedual` (`== Any` ⇒ no dual, the same convention `promote_u0` uses),
+# which recurses into a structured `p`, so a dual nested in a tuple/ComponentArray is caught too.
+# A *real* `p` of any eltype (Int, Float32, …) keeps the fast path: `p` enters as a Constant, so
+# its eltype never invalidates the prepared gradient.
+@inline function _use_prep(θ, p)
+    return SciMLBase.anyeltypedual(θ) == Any && SciMLBase.anyeltypedual(p) == Any
 end
 
-# True when every float-bearing input matches the prepared element type `T0`, so the prepared
-# path is valid. A dual `θ` or dual numeric `p` (the sensitivity case) flunks this and routes to
-# the prep-free fallback; `nothing`-eltype `p` never vetoes.
-@inline function _grad_use_prep(::Type{T0}, θ, p) where {T0}
-    pe = _grad_param_eltype(p)
-    return eltype(θ) === T0 && (pe === nothing || pe === T0)
-end
-
-# Output-buffer eltype for the `p`-accepting constraint wrapper. Promote against `eltype(p)` only
-# when it is a `Number` (so a dual `p` propagates in the sensitivity case); a structured `p` has
-# a non-`Number` eltype that would promote to `Union{}`, so fall back to `eltype(x)` there.
+# Output-buffer eltype for the `p`-accepting constraint wrapper: the type `f.cons` produces,
+# including the *nested* dual when both `x` (DI's seeds) and `p` (the sensitivity layer) carry
+# duals with different tags (`promote_op(+, …)` nests them). Deliberately uses plain `eltype(p)`
+# rather than `SciMLBase.anyeltypedual`: this runs *inside* the DI-differentiated wrapper, and
+# Enzyme's forward mode corrupts the derivative shadow (DataType-valued entries) when the
+# allocation type flows through `anyeltypedual` — in either its value or its type-level form,
+# and even with an `EnzymeRules.inactive` mark on this helper. A structured `p` (non-`Number`
+# eltype) therefore falls back to `eltype(x)`; duals nested inside such a `p` are the one
+# unsupported case. (`_use_prep` above is free to use `anyeltypedual`: it runs in the outer
+# closure, outside anything a backend differentiates.)
 @inline function _cons_out_eltype(x, p)
-    p isa Union{SciMLBase.NullParameters, Nothing} && return eltype(x)
-    pe = eltype(p)
-    T = pe <: Number ? Base.promote_op(+, eltype(x), pe) : eltype(x)
-    return T === Union{} ? eltype(x) : T
+    Tu = eltype(x)
+    p isa Union{SciMLBase.NullParameters, Nothing} && return Tu
+    Tp = eltype(p)
+    return Tp <: Number ? Base.promote_op(+, Tu, Tp) : Tu
 end
 
 function instantiate_function(
@@ -80,15 +75,14 @@ function instantiate_function(
     adtype, soadtype = generate_adtype(adtype)
 
     # Create gradient closures with proper type stability using let blocks.
-    # `T0 = eltype(x)` is the prepared element type; `_grad_use_prep` gates the prepared fast
-    # path vs the prep-free fallback (see the note above the imports).
+    # `_use_prep` gates the prepared fast path vs the prep-free dual fallback (see the note
+    # above the imports).
     grad = if g == true && f.grad === nothing
         _prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
-        T0 = eltype(x)
         if p !== SciMLBase.NullParameters() && p !== nothing
-            let _prep_grad = _prep_grad, f = f, adtype = adtype, T0 = T0
+            let _prep_grad = _prep_grad, f = f, adtype = adtype
                 function (res, θ, p = p)
-                    return if _grad_use_prep(T0, θ, p) && eltype(res) === T0
+                    return if _use_prep(θ, p)
                         gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
                     else
                         gradient!(f.f, res, adtype, θ, Constant(p))
@@ -96,9 +90,9 @@ function instantiate_function(
                 end
             end
         else
-            let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p, T0 = T0
+            let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p
                 function (res, θ, p = p)
-                    return if _grad_use_prep(T0, θ, p) && eltype(res) === T0
+                    return if _use_prep(θ, p)
                         gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
                     else
                         gradient!(f.f, res, adtype, θ, Constant(p))
@@ -263,12 +257,11 @@ function instantiate_function(
             end
         end
         _prep_jac = prepare_jacobian(_cons_oop_p, adtype, x, Constant(p))
-        T0 = eltype(x)
-        let _cons_oop_p = _cons_oop_p, _prep_jac = _prep_jac, adtype = adtype, p = p, T0 = T0
+        let _cons_oop_p = _cons_oop_p, _prep_jac = _prep_jac, adtype = adtype, p = p
             function (J, θ, p = p)
-                # Prepared fast path when types match the prep; prep-free fallback for duals
-                # (see the `_grad_use_prep` note above the imports).
-                if _grad_use_prep(T0, θ, p) && eltype(J) === T0
+                # Prepared fast path unless a dual is present; prep-free fallback for duals
+                # (see the `_use_prep` note above the imports).
+                if _use_prep(θ, p)
                     jacobian!(_cons_oop_p, J, _prep_jac, adtype, θ, Constant(p))
                 else
                     jacobian!(_cons_oop_p, J, adtype, θ, Constant(p))
@@ -504,23 +497,22 @@ function instantiate_function(
     adtype, soadtype = generate_adtype(adtype)
 
     # Create gradient closures with proper type stability using let blocks.
-    # `T0 = eltype(x)` is the prepared element type; `_grad_use_prep` gates the prepared fast
-    # path vs the prep-free fallback (see the note above the imports).
+    # `_use_prep` gates the prepared fast path vs the prep-free dual fallback (see the note
+    # above the imports).
     grad = if g == true && f.grad === nothing
         _prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
-        T0 = eltype(x)
         if p !== SciMLBase.NullParameters() && p !== nothing
-            let _prep_grad = _prep_grad, f = f, adtype = adtype, T0 = T0
+            let _prep_grad = _prep_grad, f = f, adtype = adtype
                 function (θ, p = p)
-                    return _grad_use_prep(T0, θ, p) ?
+                    return _use_prep(θ, p) ?
                         gradient(f.f, _prep_grad, adtype, θ, Constant(p)) :
                         gradient(f.f, adtype, θ, Constant(p))
                 end
             end
         else
-            let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p, T0 = T0
+            let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p
                 function (θ, p = p)
-                    return _grad_use_prep(T0, θ, p) ?
+                    return _use_prep(θ, p) ?
                         gradient(f.f, _prep_grad, adtype, θ, Constant(p)) :
                         gradient(f.f, adtype, θ, Constant(p))
                 end
@@ -648,13 +640,12 @@ function instantiate_function(
     cons_j! = if f.cons !== nothing && cons_j == true && f.cons_j === nothing
         # `f.cons` is out-of-place here and the prep already takes `Constant(p)`, so this
         # only needs to expose the parameter argument and add the dual-tolerant fallback
-        # (see the `_grad_use_prep` note above the imports) — unlike the in-place method,
+        # (see the `_use_prep` note above the imports) — unlike the in-place method,
         # whose prepared wrapper bakes `p` in.
         _prep_jac = prepare_jacobian(f.cons, adtype, x, Constant(p))
-        T0 = eltype(x)
-        let f = f, _prep_jac = _prep_jac, adtype = adtype, p = p, T0 = T0
+        let f = f, _prep_jac = _prep_jac, adtype = adtype, p = p
             function (θ, p = p)
-                J = _grad_use_prep(T0, θ, p) ?
+                J = _use_prep(θ, p) ?
                     jacobian(f.cons, _prep_jac, adtype, θ, Constant(p)) :
                     jacobian(f.cons, adtype, θ, Constant(p))
                 if size(J, 1) == 1
