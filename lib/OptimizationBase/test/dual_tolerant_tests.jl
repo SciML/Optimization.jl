@@ -52,12 +52,12 @@ function check_dual_tolerant(optprob; inplace::Bool, rtol = 1.0e-6)
     if inplace
         g = zeros(2)
         optprob.grad(g, xt)                       # fast path, default p
-        @test g ≈ gref rtol=rtol
+        @test g ≈ gref rtol = rtol
         optprob.grad(g, xt, p1)                    # explicit different p
-        @test g ≈ ∇xf(xt, p1) rtol=rtol
+        @test g ≈ ∇xf(xt, p1) rtol = rtol
     else
-        @test optprob.grad(xt) ≈ gref rtol=rtol
-        @test optprob.grad(xt, p1) ≈ ∇xf(xt, p1) rtol=rtol
+        @test optprob.grad(xt) ≈ gref rtol = rtol
+        @test optprob.grad(xt, p1) ≈ ∇xf(xt, p1) rtol = rtol
     end
 
     # Dual p, real θ: sensitivity ∂/∂p ∇ₓf. Must not throw, must match FD.
@@ -67,19 +67,19 @@ function check_dual_tolerant(optprob; inplace::Bool, rtol = 1.0e-6)
     else
         gof_p = pp -> optprob.grad(xt, pp)
     end
-    @test ForwardDiff.jacobian(gof_p, p0) ≈ Jsens_ref rtol=rtol
+    @test ForwardDiff.jacobian(gof_p, p0) ≈ Jsens_ref rtol = rtol
 
     # --- constraint Jacobian ---------------------------------------------
     Jref = vec(consjac(xt, p0))
     if inplace
         J = zeros(2)
         optprob.cons_j(J, xt)                      # fast path, default p
-        @test J ≈ Jref rtol=rtol
+        @test J ≈ Jref rtol = rtol
         optprob.cons_j(J, xt, p1)                   # explicit different p
-        @test J ≈ vec(consjac(xt, p1)) rtol=rtol
+        @test J ≈ vec(consjac(xt, p1)) rtol = rtol
     else
-        @test optprob.cons_j(xt) ≈ Jref rtol=rtol
-        @test optprob.cons_j(xt, p1) ≈ vec(consjac(xt, p1)) rtol=rtol
+        @test optprob.cons_j(xt) ≈ Jref rtol = rtol
+        @test optprob.cons_j(xt, p1) ≈ vec(consjac(xt, p1)) rtol = rtol
     end
 
     # Dual p through cons_j: sensitivity ∂/∂p of the constraint Jacobian.
@@ -89,21 +89,23 @@ function check_dual_tolerant(optprob; inplace::Bool, rtol = 1.0e-6)
     else
         cjof_p = pp -> optprob.cons_j(xt, pp)
     end
-    @test ForwardDiff.jacobian(cjof_p, p0) ≈ Jcons_sens_ref rtol=rtol
+    return @test ForwardDiff.jacobian(cjof_p, p0) ≈ Jcons_sens_ref rtol = rtol
 end
 
 @testset "dual-tolerant grad / parametrized cons_j (DI)" begin
     @testset "AutoForwardDiff in-place" begin
         optf = OptimizationFunction(objp, ADTypes.AutoForwardDiff(); cons = consp!)
         optprob = OptimizationBase.instantiate_function(
-            optf, x0, ADTypes.AutoForwardDiff(), p0, 1; g = true, cons_j = true)
+            optf, x0, ADTypes.AutoForwardDiff(), p0, 1; g = true, cons_j = true
+        )
         check_dual_tolerant(optprob; inplace = true)
     end
 
     @testset "AutoForwardDiff out-of-place" begin
         optf = OptimizationFunction{false}(objp, ADTypes.AutoForwardDiff(); cons = consp)
         optprob = OptimizationBase.instantiate_function(
-            optf, x0, ADTypes.AutoForwardDiff(), p0, 1; g = true, cons_j = true)
+            optf, x0, ADTypes.AutoForwardDiff(), p0, 1; g = true, cons_j = true
+        )
         check_dual_tolerant(optprob; inplace = false)
     end
 end
@@ -114,11 +116,12 @@ end
     # de-boxed fast path stay numerically correct at the default and explicit p.
     optf = OptimizationFunction(objp, ADTypes.AutoEnzyme(); cons = consp!)
     optprob = OptimizationBase.instantiate_function(
-        optf, x0, ADTypes.AutoEnzyme(), p0, 1; g = true, cons_j = true)
+        optf, x0, ADTypes.AutoEnzyme(), p0, 1; g = true, cons_j = true
+    )
 
     J = zeros(2)
     optprob.cons_j(J, xt)                          # default p
-    @test J ≈ vec(consjac(xt, p0)) rtol=1.0e-6
+    @test J ≈ vec(consjac(xt, p0)) rtol = 1.0e-6
     optprob.cons_j(J, xt, p1)                       # explicit different p
-    @test J ≈ vec(consjac(xt, p1)) rtol=1.0e-6
+    @test J ≈ vec(consjac(xt, p1)) rtol = 1.0e-6
 end
