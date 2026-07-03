@@ -1,6 +1,6 @@
 name = "OptimizationBase"
 uuid = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-version = "5.1.4"
+version = "5.1.5"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 
 [deps]
@@ -65,7 +65,7 @@ LinearAlgebra = "1.9, 1.10"
 Lux = "1.12"
 MLDataDevices = "1"
 MLUtils = "0.4"
-Mooncake = "0.4.138, 0.5"
+Mooncake = "0.5.36"
 Manifolds = "0.10, 0.11"
 ModelingToolkit = "11"
 Optim = ">= 1.4.1"
