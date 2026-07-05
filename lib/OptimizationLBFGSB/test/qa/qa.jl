@@ -8,16 +8,9 @@ using Test
 #  * the ignored *_are_public / *_via_owners names are owned by SciMLBase,
 #    OptimizationBase, the backend, or Base and are not (yet) declared public;
 #    the proper fix is upstream `public` declarations, not a local change.
-# jet_broken (tracked against SciML/Optimization.jl): JET typo-mode flags
-# `local variable `res` may be undefined` in the constrained `__solve` branch
-# (src/OptimizationLBFGSB.jl) — `res` is assigned inside the `for i in 1:maxiters`
-# Augmented-Lagrangian loop and read after it, so a zero-iteration cache would be
-# undefined. Pre-existing latent issue surfaced by enabling JET; the solver-
-# correctness fix is handled separately, not part of the QA conversion.
 run_qa(
     OptimizationLBFGSB;
     explicit_imports = true,
-    jet_broken = true,
     ei_kwargs = (;
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
         all_qualified_accesses_are_public = (; ignore = (:OptimizationState, :OptimizationStats, :__solve, :_check_and_convert_maxiters, :_opt_bounds, :allowscallback, :requiresconsjac, :requiresgradient, :structdiff)),

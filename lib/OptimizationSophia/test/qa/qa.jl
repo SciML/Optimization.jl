@@ -8,16 +8,9 @@ using Test
 #  * the ignored *_are_public / *_via_owners names are owned by SciMLBase,
 #    OptimizationBase, the backend, or Base and are not (yet) declared public;
 #    the proper fix is upstream `public` declarations, not a local change.
-# jet_broken (tracked against SciML/Optimization.jl): JET typo-mode flags
-# `local variable `x` may be undefined` in `__solve` (src/OptimizationSophia.jl) —
-# `x` (the loss value) is assigned only inside the `for epoch in 1:maxiters` loop
-# and read after it, so a zero-iteration run would be undefined. Pre-existing
-# latent issue surfaced by enabling JET; the solver-correctness fix is handled
-# separately, not part of the QA conversion.
 run_qa(
     OptimizationSophia;
     explicit_imports = true,
-    jet_broken = true,
     ei_kwargs = (;
         all_qualified_accesses_are_public = (; ignore = (:OptimizationState, :__init, :__solve, :_check_and_convert_maxiters, :allowscallback, :allowsfg, :isa_dataiterator, :requiresgradient, :requireshessian)),
     ),
