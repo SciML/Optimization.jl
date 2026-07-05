@@ -1,15 +1,23 @@
-using OptimizationEvolutionary, Aqua, JET
+using SciMLTesting, OptimizationEvolutionary, JET
 using Test
 using Evolutionary
 
-@testset "Aqua" begin
-    # SciML trait/interface methods are our own, not piracy — mark them as such.
-    # The Evolutionary.trace! override IS genuine piracy (changes Evolutionary's
-    # tracing globally); mark the piracy test broken until it's replaced.
-    SB = OptimizationEvolutionary.SciMLBase
-    Aqua.test_all(
-        OptimizationEvolutionary;
-        piracies = (
+# ExplicitImports findings, all tracked against SciML/Optimization.jl:
+#  * no_implicit_imports broken: the module relies on `@reexport`/`using`
+#    module names (SciMLBase/OptimizationBase/Reexport/...) that cannot be made
+#    explicit without restructuring.
+#  * the ignored *_are_public / *_via_owners names are owned by SciMLBase,
+#    OptimizationBase, the backend, or Base and are not (yet) declared public;
+#    the proper fix is upstream `public` declarations, not a local change.
+# SciML trait/interface methods are our own, not piracy — mark them as such.
+# The Evolutionary.trace! override IS genuine piracy (changes Evolutionary's
+# tracing globally); mark the piracy test broken until it's replaced.
+SB = OptimizationEvolutionary.SciMLBase
+run_qa(
+    OptimizationEvolutionary;
+    explicit_imports = true,
+    aqua_kwargs = (;
+        piracies = (;
             broken = true,
             treat_as_own = [
                 SB.__solve,
@@ -22,10 +30,11 @@ using Evolutionary
                 SB.requiresgradient,
                 SB.requireshessian,
             ],
-        )
-    )
-end
-
-@testset "JET static analysis" begin
-    JET.test_package(OptimizationEvolutionary; target_defined_modules = true)
-end
+        ),
+    ),
+    ei_kwargs = (;
+        all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats, :minimum)),
+        all_qualified_accesses_are_public = (; ignore = (:AbstractOptimizer, :OptimizationState, :OptimizationStats, :OptimizationTrace, :OptimizationTraceRecord, :Options, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback, :converged, :minimizer, :minimum, :optimize, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :trace!, :update!)),
+    ),
+    ei_broken = (:no_implicit_imports,),
+)
