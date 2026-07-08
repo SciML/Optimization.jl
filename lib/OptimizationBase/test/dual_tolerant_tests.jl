@@ -2,18 +2,20 @@
 # derivative closures added on the `dual-tolerant-grad` branch.
 #
 # The behaviors under test (all previously uncovered):
-#   1. `_use_prep` dual-detection gating logic in isolation.
+#   1. `_prep_valid` type-match gating logic in isolation.
 #   2. `grad`/`cons_j` still hit the prepared fast path for the construction types
 #      and stay numerically correct.
 #   3. `grad`/`cons_j` accept an explicit `p` different from the construction `p`.
 #   4. Pushing `ForwardDiff.Dual`s (dual `p`, real `θ`) through `grad`/`cons_j`
 #      does not throw `PreparationMismatchError` and yields the correct
 #      sensitivity (∂/∂p of the derivative) — the SciMLSensitivity use case.
+#   5. Any other off-construction eltype (`Float32`, `BigFloat`, …) routes through
+#      the prep-free fallback instead of erroring on the prep built at the construction types.
 
 using OptimizationBase, Test, ForwardDiff, FiniteDiff
 using ADTypes, Enzyme
 import SciMLBase
-using OptimizationBase: _use_prep
+using OptimizationBase: _prep_valid
 
 # Parametrized objective and constraint whose derivatives genuinely depend on `p`,
 # so a dual `p` produces a nonzero, checkable sensitivity.
@@ -29,22 +31,22 @@ p1 = [5.0, 7.0]           # a different parameter value
 ∇xf(x, p) = ForwardDiff.gradient(xx -> objp(xx, p), x)
 consjac(x, p) = ForwardDiff.jacobian(xx -> consp(xx, p), x)
 
-@testset "_use_prep dual gating" begin
+@testset "_prep_valid type-match gating" begin
     d = ForwardDiff.Dual{Nothing}(1.0, 1.0)
-    # No duals -> prepared fast path, regardless of real parameter eltype.
-    @test _use_prep([1.0, 2.0], [3.0, 4.0])
-    @test _use_prep([1.0, 2.0], SciMLBase.NullParameters())
-    @test _use_prep([1.0, 2.0], nothing)
-    @test _use_prep([1.0, 2.0], [1, 100])            # Int p keeps the fast path
-    @test _use_prep([1.0, 2.0], Float32[1, 2])       # mixed-precision p keeps it too
-    @test _use_prep([1.0, 2.0], (rand(2, 2), rand(2)))  # structured (tuple) p keeps it
-    @test _use_prep(Float32[1.0, 2.0], [3.0, 4.0])   # off-construction real eltype: still fast
-    # Dual θ -> fallback.
-    @test !_use_prep([d, d], [3.0, 4.0])
-    # Real θ but dual p (the sensitivity case) -> fallback.
-    @test !_use_prep([1.0, 2.0], [d, d])
-    # Dual nested inside a structured p -> fallback (anyeltypedual recurses).
-    @test !_use_prep([1.0, 2.0], ([d, d], [1.0]))
+    Tx0 = Vector{Float64}   # what the closures capture as the construction type
+
+    # Exact construction type -> prepared fast path.
+    @test _prep_valid(Tx0, [1.0, 2.0])
+    @test _prep_valid(typeof(SciMLBase.NullParameters()), SciMLBase.NullParameters())
+    @test _prep_valid(Nothing, nothing)
+    @test _prep_valid(typeof((rand(2, 2), rand(2))), (rand(2, 2), rand(2)))  # structured p
+
+    # Any deviating type -> fallback. Unlike `anyeltypedual`, non-dual types are caught too.
+    @test !_prep_valid(Tx0, [d, d])                    # dual
+    @test !_prep_valid(Tx0, Float32[1.0, 2.0])         # Float32 (the bug fix)
+    @test !_prep_valid(Tx0, big.([1.0, 2.0]))          # BigFloat
+    @test !_prep_valid(Tx0, [1, 100])                  # Int
+    @test !_prep_valid(typeof((rand(2), [1.0])), ([d, d], [1.0]))  # dual nested in a tuple
 end
 
 # Runs the full matrix of assertions against an already-instantiated problem.
@@ -132,8 +134,37 @@ end
     g = zeros(2)
     optprob.grad(g, xt)
     @test g ≈ ForwardDiff.gradient(xx -> losst(xx, pt), xt) rtol = 1.0e-6
-    # A structured `p` must still route through the prepared fast path.
-    @test _use_prep(xt, pt)
+    # A structured `p`, at its construction type, must still route through the fast path.
+    @test _prep_valid(typeof(x0), xt) && _prep_valid(typeof(pt), pt)
+end
+
+@testset "foreign θ eltype routes through the fallback (no PreparationMismatchError)" begin
+    # A non-dual off-construction eltype (Float32, BigFloat) used to hit the Float64 prep and
+    # throw; the type-match gate routes it to the prep-free fallback instead.
+    for (inplace, cons) in ((true, consp!), (false, consp))
+        optf = inplace ?
+            OptimizationFunction(objp, ADTypes.AutoForwardDiff(); cons = cons) :
+            OptimizationFunction{false}(objp, ADTypes.AutoForwardDiff(); cons = cons)
+        optprob = OptimizationBase.instantiate_function(
+            optf, x0, ADTypes.AutoForwardDiff(), p0, 1; g = true, cons_j = true
+        )
+
+        for T in (Float32, BigFloat)
+            xT = T.(xt)
+            gref = ∇xf(xt, p0)         # reference in Float64; compare at loose tol
+            if inplace
+                gT = zeros(T, 2)
+                @test_nowarn optprob.grad(gT, xT)
+                @test Float64.(gT) ≈ gref rtol = 1.0e-3
+                JT = zeros(T, 2)
+                @test_nowarn optprob.cons_j(JT, xT)
+                @test Float64.(JT) ≈ vec(consjac(xt, p0)) rtol = 1.0e-3
+            else
+                @test Float64.(optprob.grad(xT)) ≈ gref rtol = 1.0e-3
+                @test Float64.(optprob.cons_j(xT)) ≈ vec(consjac(xt, p0)) rtol = 1.0e-3
+            end
+        end
+    end
 end
 
 @testset "parametrized cons_j (Enzyme)" begin
