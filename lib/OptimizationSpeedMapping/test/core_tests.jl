@@ -1,4 +1,4 @@
-using OptimizationSpeedMapping, OptimizationBase, ForwardDiff
+using OptimizationSpeedMapping, OptimizationBase, ForwardDiff, SciMLBase
 using Test
 
 @testset "OptimizationSpeedMapping.jl" begin
@@ -10,6 +10,8 @@ using Test
     prob = OptimizationProblem(f, x0, _p)
     sol = solve(prob, SpeedMappingOpt())
     @test 10 * sol.objective < l1
+    @test SciMLBase.successful_retcode(sol)
+    @test hasproperty(sol.original, :status)
 
     prob = OptimizationProblem(f, x0, _p; lb = [-1.0, -1.0], ub = [1.5, 1.5])
     sol = solve(prob, SpeedMappingOpt())
@@ -37,5 +39,18 @@ using Test
         cache = OptimizationBase.reinit!(cache; p = [2.0])
         sol = OptimizationBase.solve!(cache)
         @test sol.u ≈ [2.0] atol = 1.0e-3
+    end
+
+    @testset "return code mapping" begin
+        @test OptimizationSpeedMapping._retcode((status = :first_order,)) ==
+            SciMLBase.ReturnCode.Success
+        @test OptimizationSpeedMapping._retcode((status = :max_time,)) ==
+            SciMLBase.ReturnCode.MaxTime
+        @test OptimizationSpeedMapping._retcode((status = :max_iter,)) ==
+            SciMLBase.ReturnCode.MaxIters
+        @test OptimizationSpeedMapping._retcode((status = :max_eval,)) ==
+            SciMLBase.ReturnCode.MaxIters
+        @test OptimizationSpeedMapping._retcode((status = :failure,)) ==
+            SciMLBase.ReturnCode.Failure
     end
 end
