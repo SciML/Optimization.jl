@@ -23,8 +23,8 @@ using OptimizationBase.FastClosures
 @inline _prep_valid(::Type{T}, v) where {T} = typeof(v) === T
 
 # Output-buffer eltype for the `p`-accepting constraint wrapper: the type `f.cons` produces,
-# including the *nested* dual when both `x` (DI's seeds) and `p` (the sensitivity layer) carry
-# duals with different tags (`promote_op(+, …)` nests them). Deliberately uses plain `eltype(p)`
+# including nested duals when both `x` (DI's seeds) and `p` (the sensitivity layer) carry
+# duals. Deliberately uses plain `eltype(p)`
 # rather than `SciMLBase.anyeltypedual`: this runs *inside* the DI-differentiated wrapper, and
 # Enzyme's forward mode corrupts the derivative shadow (DataType-valued entries) when the
 # allocation type flows through `anyeltypedual` — in either its value or its type-level form,
@@ -32,11 +32,18 @@ using OptimizationBase.FastClosures
 # eltype) therefore falls back to `eltype(x)`; duals nested inside such a `p` are the one
 # unsupported case. (`_prep_valid` above runs in the outer closure, outside anything a backend
 # differentiates, so its type comparison is safe there.)
+@inline function _add_output_eltype(::Type{Tu}, ::Type{Tp}) where {Tu, Tp}
+    return try
+        typeof(zero(Tu) + zero(Tp))
+    catch
+        Any
+    end
+end
 @inline function _cons_out_eltype(x, p)
     Tu = eltype(x)
     p isa Union{SciMLBase.NullParameters, Nothing} && return Tu
     Tp = eltype(p)
-    return Tp <: Number ? Base.promote_op(+, Tu, Tp) : Tu
+    return Tp <: Number ? _add_output_eltype(Tu, Tp) : Tu
 end
 
 function instantiate_function(
