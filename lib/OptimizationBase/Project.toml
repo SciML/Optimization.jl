@@ -48,7 +48,7 @@ OptimizationLBFGSB = {path = "../OptimizationLBFGSB"}
 OptimizationManopt = {path = "../OptimizationManopt"}
 
 [compat]
-ADTypes = "1.14"
+ADTypes = "1.18"
 Aqua = "0.8"
 ArrayInterface = "7.6"
 BenchmarkTools = "1"
