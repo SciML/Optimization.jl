@@ -13,13 +13,22 @@ SciMLBase.allowscallback(::SpeedMappingOpt) = false
 SciMLBase.has_init(opt::SpeedMappingOpt) = true
 SciMLBase.requiresgradient(opt::SpeedMappingOpt) = true
 
+function _retcode(opt_res)
+    status = opt_res.status
+    status === :first_order && return SciMLBase.ReturnCode.Success
+    status === :max_time && return SciMLBase.ReturnCode.MaxTime
+    status in (:max_iter, :max_eval) && return SciMLBase.ReturnCode.MaxIters
+    return SciMLBase.ReturnCode.Failure
+end
+
 function __map_optimizer_args(
-        cache::OptimizationBase.OptimizationCache, opt::SpeedMappingOpt;
+        cache::OptimizationBase.OptimizationCache,
+        opt::SpeedMappingOpt;
         callback = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
-        reltol::Union{Number, Nothing} = nothing
+        reltol::Union{Number, Nothing} = nothing,
     )
 
     # add optimiser options from kwargs
@@ -37,14 +46,16 @@ function __map_optimizer_args(
     if !isnothing(abstol)
         @SciMLMessage(
             lazy"common abstol is currently not used by $(opt)",
-            cache.verbose, :unsupported_kwargs
+            cache.verbose,
+            :unsupported_kwargs
         )
     end
 
     if !isnothing(reltol)
         @SciMLMessage(
             lazy"common reltol is currently not used by $(opt)",
-            cache.verbose, :unsupported_kwargs
+            cache.verbose,
+            :unsupported_kwargs
         )
     end
 
@@ -66,26 +77,35 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SpeedMapping
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
     opt_args = __map_optimizer_args(
-        cache, cache.opt, maxiters = maxiters,
+        cache,
+        cache.opt,
+        maxiters = maxiters,
         maxtime = maxtime,
         abstol = cache.solver_args.abstol,
-        reltol = cache.solver_args.reltol; cache.solver_args...
+        reltol = cache.solver_args.reltol;
+        cache.solver_args...,
     )
 
     t0 = time()
     opt_res = SpeedMapping.speedmapping(
-        cache.u0; f = _loss, (g!) = cache.f.grad,
+        cache.u0;
+        f = _loss,
+        (g!) = cache.f.grad,
         lower = cache.lb,
-        upper = cache.ub, opt_args...
+        upper = cache.ub,
+        opt_args...,
     )
     t1 = time()
-    opt_ret = opt_res.converged ? SciMLBase.ReturnCode.Success :
-        SciMLBase.ReturnCode.Failure
+    opt_ret = _retcode(opt_res)
     stats = OptimizationBase.OptimizationStats(; time = t1 - t0)
     return SciMLBase.build_solution(
-        cache, cache.opt,
-        opt_res.minimizer, _loss(opt_res.minimizer);
-        original = opt_res, retcode = opt_ret, stats = stats
+        cache,
+        cache.opt,
+        opt_res.minimizer,
+        _loss(opt_res.minimizer);
+        original = opt_res,
+        retcode = opt_ret,
+        stats = stats,
     )
 end
 
