@@ -238,7 +238,7 @@ function OptimizationBase.instantiate_function(
     if f.cons === nothing
         cons = nothing
     else
-        cons = (res, θ) -> f.cons(res, θ, p)
+        cons = (res, θ, p = p) -> f.cons(res, θ, p)
     end
 
     if cons !== nothing && cons_j == true && f.cons_j === nothing
@@ -271,44 +271,45 @@ function OptimizationBase.instantiate_function(
 
         y = zeros(eltype(x), num_cons)
 
-        function cons_j!(J, θ)
-            for jc in Jaccache
-                Enzyme.make_zero!(jc)
-            end
-            Enzyme.make_zero!(y)
-            if func_annot <: Enzyme.Duplicated || func_annot <: Enzyme.BatchDuplicated ||
-                    func_annot <: Enzyme.DuplicatedNoNeed ||
-                    func_annot <: Enzyme.BatchDuplicatedNoNeed
-                for bf in basefunc.dval
-                    Enzyme.make_zero!(bf)
+        # Precompute the duplicated-annotation check as a Bool. Capturing this (rather than the
+        # type-valued `func_annot::DataType`) keeps the closure free of type-valued fields, which
+        # Enzyme's shadow-layout pass cannot reconcile when an outer Enzyme pass differentiates
+        # this closure.
+        dup_annot = func_annot <: Enzyme.Duplicated || func_annot <: Enzyme.BatchDuplicated ||
+            func_annot <: Enzyme.DuplicatedNoNeed || func_annot <: Enzyme.BatchDuplicatedNoNeed
+
+        # `let` so the closure captures stable bindings rather than `Core.Box`es: `basefunc`
+        # is reassigned in the branch above and `y` is captured alongside it, so without this
+        # both get boxed — which defeats specialization in the solve hot loop. The same
+        # `let`-capture idiom is used for the DI-built closures.
+        cons_j! = let basefunc = basefunc, y = y, Jaccache = Jaccache, seeds = seeds,
+                dup_annot = dup_annot, fmode = fmode, p = p
+            function (J, θ, p = p)
+                for jc in Jaccache
+                    Enzyme.make_zero!(jc)
                 end
-            end
-            Enzyme.autodiff(
-                fmode, basefunc, BatchDuplicated(y, Jaccache),
-                BatchDuplicated(θ, seeds), Const(p)
-            )
-            for i in eachindex(θ)
-                if J isa Vector
-                    J[i] = Jaccache[i][1]
-                else
-                    copyto!(@view(J[:, i]), Jaccache[i])
+                Enzyme.make_zero!(y)
+                if dup_annot
+                    for bf in basefunc.dval
+                        Enzyme.make_zero!(bf)
+                    end
                 end
+                Enzyme.autodiff(
+                    fmode, basefunc, BatchDuplicated(y, Jaccache),
+                    BatchDuplicated(θ, seeds), Const(p)
+                )
+                for i in eachindex(θ)
+                    if J isa Vector
+                        J[i] = Jaccache[i][1]
+                    else
+                        copyto!(@view(J[:, i]), Jaccache[i])
+                    end
+                end
+                return
             end
-            # else
-            #     Enzyme.autodiff(Enzyme.Reverse, f.cons, BatchDuplicated(y, seeds),
-            #         BatchDuplicated(θ, Jaccache), Const(p))
-            #     for i in 1:num_cons
-            #         if J isa Vector
-            #             J .= Jaccache[1]
-            #         else
-            #             J[i, :] = Jaccache[i]
-            #         end
-            #     end
-            # end
-            return
         end
     elseif cons_j == true && cons !== nothing
-        cons_j! = (J, θ) -> f.cons_j(J, θ, p)
+        cons_j! = (J, θ, p = p) -> f.cons_j(J, θ, p)
     else
         cons_j! = nothing
     end

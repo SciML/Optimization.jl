@@ -15,6 +15,30 @@ import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,
 using ADTypes, SciMLBase
 using OptimizationBase.FastClosures
 
+# A DI preparation is built for the exact construction types (`x` and `Constant(p)`) and only
+# works for those — otherwise DI throws `PreparationMismatchError`. Reuse it while `θ`/`p` keep
+# those types (e.g. a dual `p` from a sensitivity layer, or a `Float32`/`BigFloat` `θ`, does not),
+# and fall back to a prep-free call otherwise. `T` is a constant, so on the solve path this folds
+# away.
+@inline _prep_valid(::Type{T}, v) where {T} = typeof(v) === T
+
+# Output-buffer eltype for the `p`-accepting constraint wrapper: the type `f.cons` produces,
+# including the *nested* dual when both `x` (DI's seeds) and `p` (the sensitivity layer) carry
+# duals with different tags (`promote_op(+, …)` nests them). Deliberately uses plain `eltype(p)`
+# rather than `SciMLBase.anyeltypedual`: this runs *inside* the DI-differentiated wrapper, and
+# Enzyme's forward mode corrupts the derivative shadow (DataType-valued entries) when the
+# allocation type flows through `anyeltypedual` — in either its value or its type-level form,
+# and even with an `EnzymeRules.inactive` mark on this helper. A structured `p` (non-`Number`
+# eltype) therefore falls back to `eltype(x)`; duals nested inside such a `p` are the one
+# unsupported case. (`_prep_valid` above runs in the outer closure, outside anything a backend
+# differentiates, so its type comparison is safe there.)
+@inline function _cons_out_eltype(x, p)
+    Tu = eltype(x)
+    p isa Union{SciMLBase.NullParameters, Nothing} && return Tu
+    Tp = eltype(p)
+    return Tp <: Number ? Base.promote_op(+, Tu, Tp) : Tu
+end
+
 function instantiate_function(
         f::OptimizationFunction{true}, x, ::ADTypes.AutoSparse{<:ADTypes.AutoSymbolics},
         args...; kwargs...
@@ -39,16 +63,33 @@ function instantiate_function(
     )
     adtype, soadtype = generate_adtype(adtype)
 
-    # Create gradient closures with proper type stability using let blocks
+    # Construction types the DI preps are built at; `_prep_valid` gates the prepared fast path
+    # vs the prep-free fallback (see the note above the imports).
+    Tx0 = typeof(x)
+    Tp0 = typeof(p)
+
+    # Create gradient closures with proper type stability using let blocks.
     grad = if g == true && f.grad === nothing
         _prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
         if p !== SciMLBase.NullParameters() && p !== nothing
-            let _prep_grad = _prep_grad, f = f, adtype = adtype
-                (res, θ, p = p) -> gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
+            let _prep_grad = _prep_grad, f = f, adtype = adtype, Tx0 = Tx0, Tp0 = Tp0
+                function (res, θ, p = p)
+                    return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                        gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
+                    else
+                        gradient!(f.f, res, adtype, θ, Constant(p))
+                    end
+                end
             end
         else
-            let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p
-                (res, θ, p = p) -> gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
+            let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p, Tx0 = Tx0, Tp0 = Tp0
+                function (res, θ, p = p)
+                    return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                        gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
+                    else
+                        gradient!(f.f, res, adtype, θ, Constant(p))
+                    end
+                end
             end
         end
     elseif g == true
@@ -194,10 +235,29 @@ function instantiate_function(
     cons_jac_colorvec = f.cons_jac_colorvec
 
     cons_j! = if f.cons !== nothing && cons_j == true && f.cons_j === nothing
-        _prep_jac = prepare_jacobian(cons_oop, adtype, x)
-        let cons_oop = cons_oop, _prep_jac = _prep_jac, adtype = adtype
-            function (J, θ)
-                jacobian!(cons_oop, J, _prep_jac, adtype, θ)
+        # A `p`-accepting out-of-place constraint wrapper, so the Jacobian can be evaluated
+        # at parameters other than the construction `p` — including duals pushed in by a
+        # sensitivity layer differentiating the constraint Jacobian w.r.t. `p` (the mixed
+        # ∂²cᵢ/∂x∂p term of the KKT residual). The prepared `cons_oop` bakes `p` in and
+        # exposes no parameter slot, so we cannot reuse it here. `_cons_out_eltype` picks the
+        # output eltype so duals propagate without poisoning it to `Union{}`.
+        _cons_oop_p = let f = f, num_cons = num_cons
+            function (x, p)
+                res = Vector{_cons_out_eltype(x, p)}(undef, num_cons)
+                f.cons(res, x, p)
+                return res
+            end
+        end
+        _prep_jac = prepare_jacobian(_cons_oop_p, adtype, x, Constant(p))
+        let _cons_oop_p = _cons_oop_p, _prep_jac = _prep_jac, adtype = adtype, p = p, Tx0 = Tx0, Tp0 = Tp0
+            function (J, θ, p = p)
+                # Prepared fast path when the call types match construction; prep-free fallback
+                # otherwise (see the `_prep_valid` note above the imports).
+                if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                    jacobian!(_cons_oop_p, J, _prep_jac, adtype, θ, Constant(p))
+                else
+                    jacobian!(_cons_oop_p, J, adtype, θ, Constant(p))
+                end
                 return if size(J, 1) == 1
                     J = vec(J)
                 end
@@ -205,7 +265,7 @@ function instantiate_function(
         end
     elseif cons_j == true && f.cons !== nothing
         let f = f, p = p
-            (J, θ) -> f.cons_j(J, θ, p)
+            (J, θ, p = p) -> f.cons_j(J, θ, p)
         end
     else
         nothing
@@ -428,16 +488,29 @@ function instantiate_function(
     )
     adtype, soadtype = generate_adtype(adtype)
 
-    # Create gradient closures with proper type stability using let blocks
+    # Construction types the DI preps are built at; `_prep_valid` gates the prepared fast path
+    # vs the prep-free fallback (see the note above the imports).
+    Tx0 = typeof(x)
+    Tp0 = typeof(p)
+
+    # Create gradient closures with proper type stability using let blocks.
     grad = if g == true && f.grad === nothing
         _prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
         if p !== SciMLBase.NullParameters() && p !== nothing
-            let _prep_grad = _prep_grad, f = f, adtype = adtype
-                (θ, p = p) -> gradient(f.f, _prep_grad, adtype, θ, Constant(p))
+            let _prep_grad = _prep_grad, f = f, adtype = adtype, Tx0 = Tx0, Tp0 = Tp0
+                function (θ, p = p)
+                    return _prep_valid(Tx0, θ) && _prep_valid(Tp0, p) ?
+                        gradient(f.f, _prep_grad, adtype, θ, Constant(p)) :
+                        gradient(f.f, adtype, θ, Constant(p))
+                end
             end
         else
-            let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p
-                (θ, p = p) -> gradient(f.f, _prep_grad, adtype, θ, Constant(p))
+            let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p, Tx0 = Tx0, Tp0 = Tp0
+                function (θ, p = p)
+                    return _prep_valid(Tx0, θ) && _prep_valid(Tp0, p) ?
+                        gradient(f.f, _prep_grad, adtype, θ, Constant(p)) :
+                        gradient(f.f, adtype, θ, Constant(p))
+                end
             end
         end
     elseif g == true
@@ -560,10 +633,16 @@ function instantiate_function(
     cons_jac_colorvec = f.cons_jac_colorvec
 
     cons_j! = if f.cons !== nothing && cons_j == true && f.cons_j === nothing
+        # `f.cons` is out-of-place here and the prep already takes `Constant(p)`, so this
+        # only needs to expose the parameter argument and add the prep-validity fallback
+        # (see the `_prep_valid` note above the imports) — unlike the in-place method,
+        # whose prepared wrapper bakes `p` in.
         _prep_jac = prepare_jacobian(f.cons, adtype, x, Constant(p))
-        let f = f, _prep_jac = _prep_jac, adtype = adtype, p = p
-            function (θ)
-                J = jacobian(f.cons, _prep_jac, adtype, θ, Constant(p))
+        let f = f, _prep_jac = _prep_jac, adtype = adtype, p = p, Tx0 = Tx0, Tp0 = Tp0
+            function (θ, p = p)
+                J = _prep_valid(Tx0, θ) && _prep_valid(Tp0, p) ?
+                    jacobian(f.cons, _prep_jac, adtype, θ, Constant(p)) :
+                    jacobian(f.cons, adtype, θ, Constant(p))
                 if size(J, 1) == 1
                     J = vec(J)
                 end
@@ -572,7 +651,7 @@ function instantiate_function(
         end
     elseif cons_j == true && f.cons !== nothing
         let f = f, p = p
-            (θ) -> f.cons_j(θ, p)
+            (θ, p = p) -> f.cons_j(θ, p)
         end
     else
         nothing
