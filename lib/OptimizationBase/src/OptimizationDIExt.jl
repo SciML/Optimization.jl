@@ -17,10 +17,9 @@ using OptimizationBase.FastClosures
 
 # A DI preparation is built for the exact construction types (`x` and `Constant(p)`) and only
 # works for those — otherwise DI throws `PreparationMismatchError`. Reuse it while `θ`/`p` keep
-# those types; fall back to a prep-free call otherwise. We compare types exactly rather than just
-# looking for duals, so any off-type is caught (a dual `p` from a sensitivity layer, but equally a
-# `Float32`/tracked/`BigFloat` `θ` that a prior `anyeltypedual` gate let slip through and error).
-# `T` is a constant, so on the solve path this folds away.
+# those types (e.g. a dual `p` from a sensitivity layer, or a `Float32`/`BigFloat` `θ`, does not),
+# and fall back to a prep-free call otherwise. `T` is a constant, so on the solve path this folds
+# away.
 @inline _prep_valid(::Type{T}, v) where {T} = typeof(v) === T
 
 # Output-buffer eltype for the `p`-accepting constraint wrapper: the type `f.cons` produces,
