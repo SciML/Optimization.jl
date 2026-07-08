@@ -9,6 +9,7 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [extras]
+LogExpFunctions = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
@@ -17,6 +18,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
+LogExpFunctions = "0.3.28 - 0.3"
 Pkg = "1"
 SafeTestsets = "0.1"
 julia = "1.10"
@@ -27,4 +29,4 @@ Reexport = "1.2"
 Test = "1.10"
 
 [targets]
-test = ["Test", "SafeTestsets", "Pkg"]
+test = ["Test", "SafeTestsets", "Pkg", "LogExpFunctions"]
