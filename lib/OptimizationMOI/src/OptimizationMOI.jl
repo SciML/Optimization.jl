@@ -7,7 +7,6 @@ using SciMLBase
 using SciMLStructures
 using SymbolicIndexingInterface
 using SparseArrays
-import ModelingToolkitBase: parameters, unknowns, varmap_to_vars, mergedefaults, toexpr
 import ModelingToolkitBase
 const MTK = ModelingToolkitBase
 using Symbolics
