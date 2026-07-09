@@ -157,9 +157,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         # Passing the initial point causes the population to be copies of that point,
         # which prevents proper exploration of the search space.
         if isa(f, MultiObjectiveOptimizationFunction)
-            opt_res = Evolutionary.optimize(
-                _loss, _loss(cache.u0), cons, cache.opt, opt_args
-            )
+            opt_res = Evolutionary.optimize(_loss, cons, cache.opt, opt_args)
         else
             opt_res = Evolutionary.optimize(_loss, cons, cache.opt, opt_args)
         end

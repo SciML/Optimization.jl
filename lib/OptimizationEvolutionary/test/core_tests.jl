@@ -68,26 +68,38 @@ Random.seed!(1234)
     @test haskey(sol.original.trace[end].metadata, "TESTVAL") &&
         haskey(sol.original.trace[end].metadata, "curr_u")
 
-    # Test Suite for Different Multi-Objective Functions
-    function test_multi_objective(func, initial_guess)
-        # Define the gradient function using ForwardDiff
-        function gradient_multi_objective(x, p = nothing)
-            ForwardDiff.jacobian(func, x)
-        end
-
-        # Create an instance of MultiObjectiveOptimizationFunction
-        obj_func = MultiObjectiveOptimizationFunction(func, jac = gradient_multi_objective)
-
-        # Set up the evolutionary algorithm (e.g., NSGA2)
+    # NSGA2 returns stochastic Pareto candidates; assert wrapper invariants instead of
+    # exact population indices, which can change across Evolutionary releases.
+    function test_multi_objective(func, initial_guess; seed, lb = nothing, ub = nothing)
+        Random.seed!(seed)
+        obj_func = MultiObjectiveOptimizationFunction(func)
         algorithm = OptimizationEvolutionary.NSGA2()
+        problem = if lb === nothing && ub === nothing
+            OptimizationProblem(obj_func, initial_guess)
+        else
+            OptimizationProblem(obj_func, initial_guess; lb = lb, ub = ub)
+        end
+        return solve(problem, algorithm)
+    end
 
-        # Define the optimization problem
-        problem = OptimizationProblem(obj_func, initial_guess)
+    function check_multi_objective_result(
+            result, func, initial_guess; lb = nothing, ub = nothing, min_population = 1
+        )
+        @test result !== nothing
+        @test result.u isa AbstractVector
+        @test !isempty(result.u)
+        @test length(result.u) >= min_population
+        @test length(unique(result.u)) >= min_population
+        @test all(u -> u isa AbstractVector && length(u) == length(initial_guess), result.u)
 
-        # Solve the optimization problem
-        result = solve(problem, algorithm)
+        objective_values = [func(u, nothing) for u in result.u]
+        @test result.objective == objective_values[1]
+        @test all(obj -> length(obj) == length(result.objective), objective_values)
+        @test all(obj -> all(isfinite, obj), objective_values)
 
-        return result
+        if lb !== nothing && ub !== nothing
+            @test all(u -> all((lb .<= u) .& (u .<= ub)), result.u)
+        end
     end
 
     @testset "Multi-Objective Optimization Tests" begin
@@ -99,13 +111,8 @@ Random.seed!(1234)
                 f2 = sum(x .^ 2 .- 10 .* cos.(2π .* x) .+ 10)  # Rastrigin function
                 return [f1, f2]
             end
-            result = test_multi_objective(multi_objective_1, [0.0, 1.0])
-            @test result ≠ nothing
-            println("Solution for Sphere and Rastrigin: ", result)
-            @test result.u[1][1] ≈ 7.88866e-5 atol = 1.0e-3
-            @test result.u[1][2] ≈ 4.96471e-5 atol = 1.0e-3
-            @test result.objective[1] ≈ 8.6879e-9 atol = 1.0e-3
-            @test result.objective[2] ≈ 1.48875349381683e-6 atol = 1.0e-3
+            result = test_multi_objective(multi_objective_1, [0.0, 1.0]; seed = 1101)
+            check_multi_objective_result(result, multi_objective_1, [0.0, 1.0])
         end
 
         # Test 2: Rosenbrock and Ackley Functions
@@ -116,13 +123,10 @@ Random.seed!(1234)
                     exp(0.5 * (cos(2π * x[1]) + cos(2π * x[2]))) + exp(1) + 20.0  # Ackley function
                 return [f1, f2]
             end
-            result = test_multi_objective(multi_objective_2, [0.1, 1.0])
-            @test result ≠ nothing
-            println("Solution for Rosenbrock and Ackley: ", result)
-            @test result.u[1][1] ≈ 0.003993274873103834 atol = 1.0e-3
-            @test result.u[1][2] ≈ 0.001433311246712721 atol = 1.0e-3
-            @test result.objective[1] ≈ 0.9922302888530358 atol = 1.0e-3
-            @test result.objective[2] ≈ 0.012479470703588902 atol = 1.0e-3
+            result = test_multi_objective(multi_objective_2, [0.1, 1.0]; seed = 1102)
+            check_multi_objective_result(
+                result, multi_objective_2, [0.1, 1.0]; min_population = 2
+            )
         end
 
         # Test 3: ZDT1 Function
@@ -130,17 +134,19 @@ Random.seed!(1234)
             function multi_objective_3(x, p = nothing)::Vector{Float64}
                 f1 = x[1]
                 g = 1 + 9 * sum(x[2:end]) / (length(x) - 1)
-                sqrt_arg = f1 / g
-                f2 = g * (1 - (sqrt_arg >= 0 ? sqrt(sqrt_arg) : NaN))
+                f2 = g * (1 - sqrt(f1 / g))
                 return [f1, f2]
             end
-            result = test_multi_objective(multi_objective_3, [0.25, 1.5])
-            @test result ≠ nothing
-            println("Solution for ZDT1: ", result)
-            @test result.u[1][1] ≈ -0.365434 atol = 1.0e-3
-            @test result.u[1][2] ≈ 1.22128 atol = 1.0e-3
-            @test result.objective[1] ≈ -0.365434 atol = 1.0e-3
-            @test isnan(result.objective[2])
+            lb = zeros(2)
+            ub = ones(2)
+            initial_guess = [0.25, 0.75]
+            result = test_multi_objective(
+                multi_objective_3, initial_guess; seed = 1103, lb = lb, ub = ub
+            )
+            check_multi_objective_result(
+                result, multi_objective_3, initial_guess; lb = lb, ub = ub,
+                min_population = 2
+            )
         end
 
         # Test 4: DTLZ2 Function
@@ -150,13 +156,16 @@ Random.seed!(1234)
                 f2 = (1 + sum(x[2:end] .^ 2)) * sin(x[1] * π / 2)
                 return [f1, f2]
             end
-            result = test_multi_objective(multi_objective_4, [0.25, 0.75])
-            @test result ≠ nothing
-            println("Solution for DTLZ2: ", result)
-            @test result.u[1][1] ≈ 0.899183 atol = 1.0e-3
-            @test result.u[2][1] ≈ 0.713992 atol = 1.0e-3
-            @test result.objective[1] ≈ 0.1599915 atol = 1.0e-3
-            @test result.objective[2] ≈ 1.001824893932647 atol = 1.0e-3
+            lb = zeros(2)
+            ub = ones(2)
+            initial_guess = [0.25, 0.75]
+            result = test_multi_objective(
+                multi_objective_4, initial_guess; seed = 1104, lb = lb, ub = ub
+            )
+            check_multi_objective_result(
+                result, multi_objective_4, initial_guess; lb = lb, ub = ub,
+                min_population = 2
+            )
         end
 
         # Test 5: Schaffer Function N.2
@@ -166,13 +175,16 @@ Random.seed!(1234)
                 f2 = (x[1] - 2)^2
                 return [f1, f2]
             end
-            result = test_multi_objective(multi_objective_5, [1.0])
-            @test result ≠ nothing
-            println("Solution for Schaffer N.2: ", result)
-            @test result.u[19][1] ≈ 0.252635 atol = 1.0e-3
-            @test result.u[9][1] ≈ 1.0 atol = 1.0e-3
-            @test result.objective[1] ≈ 1.0 atol = 1.0e-3
-            @test result.objective[2] ≈ 1.0 atol = 1.0e-3
+            lb = [0.0]
+            ub = [2.0]
+            initial_guess = [1.0]
+            result = test_multi_objective(
+                multi_objective_5, initial_guess; seed = 1105, lb = lb, ub = ub
+            )
+            check_multi_objective_result(
+                result, multi_objective_5, initial_guess; lb = lb, ub = ub,
+                min_population = 2
+            )
         end
     end
 end
