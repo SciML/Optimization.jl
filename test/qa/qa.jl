@@ -1,6 +1,8 @@
 using SciMLTesting, Optimization, JET
 using Test
 
+include("public_docs.jl")
+
 # no_implicit_imports: Optimization is a facade that `@reexport`s SciMLBase/ADTypes/
 # OptimizationBase and `using`s many helper modules; the implicit-import surface is
 # large and intentional. Tracked as known-broken (SciML/Optimization.jl).

@@ -55,7 +55,44 @@ Below is a catalogue of the solver families exposed by `OptimizationSciPy.jl` to
 
 ### Root Finding & Non-Linear Least Squares *(experimental)*
 
-Support for `ScipyRoot`, `ScipyRootScalar` and `ScipyLeastSquares` is available behind the scenes and will be documented once the APIs stabilise.
+Support for `ScipyRoot`, `ScipyRootScalar` and `ScipyLeastSquares` is available for experimental root-finding and non-linear least-squares workflows.
+
+```@docs
+OptimizationSciPy.ScipyMinimize
+OptimizationSciPy.ScipyNelderMead
+OptimizationSciPy.ScipyPowell
+OptimizationSciPy.ScipyCG
+OptimizationSciPy.ScipyBFGS
+OptimizationSciPy.ScipyNewtonCG
+OptimizationSciPy.ScipyLBFGSB
+OptimizationSciPy.ScipyTNC
+OptimizationSciPy.ScipyCOBYLA
+OptimizationSciPy.ScipyCOBYQA
+OptimizationSciPy.ScipySLSQP
+OptimizationSciPy.ScipyTrustConstr
+OptimizationSciPy.ScipyDogleg
+OptimizationSciPy.ScipyTrustNCG
+OptimizationSciPy.ScipyTrustKrylov
+OptimizationSciPy.ScipyTrustExact
+OptimizationSciPy.ScipyMinimizeScalar
+OptimizationSciPy.ScipyBrent
+OptimizationSciPy.ScipyBounded
+OptimizationSciPy.ScipyGolden
+OptimizationSciPy.ScipyLeastSquares
+OptimizationSciPy.ScipyLeastSquaresTRF
+OptimizationSciPy.ScipyLeastSquaresDogbox
+OptimizationSciPy.ScipyLeastSquaresLM
+OptimizationSciPy.ScipyRootScalar
+OptimizationSciPy.ScipyRoot
+OptimizationSciPy.ScipyLinprog
+OptimizationSciPy.ScipyMilp
+OptimizationSciPy.ScipyDifferentialEvolution
+OptimizationSciPy.ScipyBasinhopping
+OptimizationSciPy.ScipyDualAnnealing
+OptimizationSciPy.ScipyShgo
+OptimizationSciPy.ScipyDirect
+OptimizationSciPy.ScipyBrute
+```
 
 ## Examples
 

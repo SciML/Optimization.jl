@@ -30,6 +30,10 @@ OptimizationIpopt.jl provides the `IpoptOptimizer` algorithm, which wraps the Ip
 - Problems with nonlinear constraints
 - Problems requiring high accuracy solutions
 
+```@docs
+OptimizationIpopt.IpoptOptimizer
+```
+
 ### Algorithm Requirements
 
 `IpoptOptimizer` requires:

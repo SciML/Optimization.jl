@@ -5,10 +5,43 @@ using OptimizationBase, SciMLBase, Reexport
 
 abstract type PRIMASolvers end
 
+"""
+    UOBYQA()
+
+Derivative-free PRIMA optimizer for unconstrained problems using quadratic
+approximations.
+"""
 struct UOBYQA <: PRIMASolvers end
+
+"""
+    NEWUOA()
+
+Derivative-free PRIMA optimizer for unconstrained problems using Powell's NEWUOA
+algorithm.
+"""
 struct NEWUOA <: PRIMASolvers end
+
+"""
+    BOBYQA()
+
+Derivative-free PRIMA optimizer for bound-constrained problems.
+"""
 struct BOBYQA <: PRIMASolvers end
+
+"""
+    LINCOA()
+
+Derivative-free PRIMA optimizer for bound-constrained problems with linear
+constraints.
+"""
 struct LINCOA <: PRIMASolvers end
+
+"""
+    COBYLA()
+
+Derivative-free PRIMA optimizer for constrained problems using linear
+approximations.
+"""
 struct COBYLA <: PRIMASolvers end
 
 export UOBYQA, NEWUOA, BOBYQA, LINCOA, COBYLA

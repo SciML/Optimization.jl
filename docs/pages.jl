@@ -27,11 +27,13 @@ pages = [
     ],
     "Optimizer Packages" => [
         "BlackBoxOptim.jl" => "optimization_packages/blackboxoptim.md",
+        "AugLag.jl" => "optimization_packages/auglag.md",
         "CMAEvolutionStrategy.jl" => "optimization_packages/cmaevolutionstrategy.md",
         "Evolutionary.jl" => "optimization_packages/evolutionary.md",
         "GCMAES.jl" => "optimization_packages/gcmaes.md",
         "Ipopt.jl" => "optimization_packages/ipopt.md",
         "LBFGSB.jl" => "optimization_packages/lbfgsb.md",
+        "MadNLP.jl" => "optimization_packages/madnlp.md",
         "Manopt.jl" => "optimization_packages/manopt.md",
         "MathOptInterface.jl" => "optimization_packages/mathoptinterface.md",
         "Metaheuristics.jl" => "optimization_packages/metaheuristics.md",

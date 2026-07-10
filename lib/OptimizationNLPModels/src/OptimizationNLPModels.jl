@@ -69,6 +69,12 @@ function SciMLBase.OptimizationProblem(
     )
 end
 
+"""
+    NLPModelsAdaptor(cache, meta, counters)
+
+NLPModels.jl adapter that exposes an `OptimizationCache` as an
+`NLPModels.AbstractNLPModel`.
+"""
 struct NLPModelsAdaptor{C, T, HB} <: NLPModels.AbstractNLPModel{T, Vector{T}}
     cache::C
     meta::NLPModels.NLPModelMeta{T, Vector{T}}
@@ -315,6 +321,13 @@ function _get_nnzh(f, ncon, nvar)
     end
 end
 
+"""
+    build_nlpmodel_meta(cache)
+
+Build an `NLPModels.NLPModelMeta` object from an Optimization.jl cache, including
+variable bounds, constraint bounds, initial values, and Jacobian/Hessian sparsity
+counts.
+"""
 function build_nlpmodel_meta(cache)
     T = eltype(cache.u0)
 

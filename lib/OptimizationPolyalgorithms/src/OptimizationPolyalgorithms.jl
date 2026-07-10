@@ -4,6 +4,12 @@ using Reexport
 @reexport using OptimizationBase
 using SciMLBase, OptimizationOptimJL, OptimizationOptimisers
 
+"""
+    PolyOpt()
+
+Polyalgorithm that selects or sequences first-order and quasi-Newton optimizers
+for Optimization.jl problems.
+"""
 struct PolyOpt end
 
 SciMLBase.allowscallback(::PolyOpt) = SciMLBase.allowscallback(Optimisers.Adam) && SciMLBase.allowscallback(OptimizationOptimJL.BFGS)

@@ -6,6 +6,11 @@ using SpeedMapping, SciMLBase
 
 export SpeedMappingOpt
 
+"""
+    SpeedMappingOpt()
+
+Optimizer wrapper for SpeedMapping.jl fixed-point acceleration methods.
+"""
 struct SpeedMappingOpt end
 
 SciMLBase.allowsbounds(::SpeedMappingOpt) = true

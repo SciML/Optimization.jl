@@ -5,6 +5,12 @@ using Reexport
 using NOMAD, SciMLBase
 
 export NOMADOpt
+
+"""
+    NOMADOpt()
+
+Optimizer wrapper for NOMAD.jl mesh adaptive direct search.
+"""
 struct NOMADOpt end
 
 @enum ConstraintBarrierType ExtremeBarrierMethod ProgressiveBarrierMethod

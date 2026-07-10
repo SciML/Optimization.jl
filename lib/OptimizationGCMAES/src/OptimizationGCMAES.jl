@@ -6,6 +6,11 @@ using GCMAES, SciMLBase
 
 export GCMAESOpt
 
+"""
+    GCMAESOpt()
+
+Optimizer wrapper for GCMAES.jl gradient-based covariance matrix adaptation.
+"""
 struct GCMAESOpt end
 
 SciMLBase.requiresbounds(::GCMAESOpt) = true

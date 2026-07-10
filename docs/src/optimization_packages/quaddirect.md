@@ -31,6 +31,10 @@ constraint equations. However, lower and upper constraints set by `lb` and `ub` 
 Furthermore, `QuadDirect` requires `splits` which is a list of 3-vectors with initial locations at which to evaluate the function (the values must be in strictly increasing order and lie within the specified bounds) such that
 `solve(problem, QuadDirect(), splits)`.
 
+```@docs
+OptimizationQuadDIRECT.QuadDirect
+```
+
 ## Example
 
 The Rosenbrock function can be optimized using the `QuadDirect()` as follows:

@@ -52,3 +52,8 @@ sol = solve(prob, Ipopt.Optimizer())
 
 Problems represented as `NLPModel`s can be used to create [`OptimizationProblem`](@ref)s and
 [`OptimizationFunction`](@ref).
+
+```@docs
+OptimizationNLPModels.NLPModelsAdaptor
+OptimizationNLPModels.build_nlpmodel_meta
+```

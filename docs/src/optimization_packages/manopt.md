@@ -27,6 +27,17 @@ The following methods are available for the `OptimizationManopt` package:
   - `ConvexBundleOptimizer`: Corresponds to the [`convex_bundle_method`](https://manoptjl.org/stable/solvers/convex_bundle_method/) method in Manopt.
   - `FrankWolfeOptimizer`: Corresponds to the [`FrankWolfe`](https://manoptjl.org/stable/solvers/FrankWolfe/) method in Manopt.
 
+```@docs
+OptimizationManopt.GradientDescentOptimizer
+OptimizationManopt.NelderMeadOptimizer
+OptimizationManopt.ConjugateGradientDescentOptimizer
+OptimizationManopt.ParticleSwarmOptimizer
+OptimizationManopt.QuasiNewtonOptimizer
+OptimizationManopt.CMAESOptimizer
+OptimizationManopt.ConvexBundleOptimizer
+OptimizationManopt.FrankWolfeOptimizer
+```
+
 The common kwargs `maxiters`, `maxtime` and `abstol` are supported by all the optimizers. Solver specific kwargs from Manopt can be passed to the `solve`
 function or `OptimizationProblem`.
 
