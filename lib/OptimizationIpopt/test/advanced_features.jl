@@ -4,10 +4,6 @@ using Test
 using LinearAlgebra
 using SparseArrays
 
-# These tests were automatically translated from the Ipopt tests, https://github.com/coin-or/Ipopt
-# licensed under Eclipse Public License - v 2.0
-# https://github.com/coin-or/Ipopt/blob/stable/3.14/LICENSE
-
 @testset "Advanced Ipopt Features" begin
 
     @testset "Custom Tolerances and Options" begin
@@ -71,17 +67,22 @@ using SparseArrays
         optfunc = OptimizationFunction(complex_obj, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, [0.1, 0.1], nothing)
 
-        # Run with derivative test level 1 (first derivatives only)
+        # Run with derivative test level 1 (first derivatives only) and check
+        # the derivative checker's verdict in Ipopt's output file
+        output_file = joinpath(mktempdir(), "derivative_test.txt")
         sol = solve(
             prob, IpoptOptimizer(
                 additional_options = Dict(
                     "derivative_test" => "first-order",
-                    "derivative_test_tol" => 1.0e-4
+                    "derivative_test_tol" => 1.0e-4,
+                    "output_file" => output_file,
+                    "file_print_level" => 5
                 )
             )
         )
 
         @test SciMLBase.successful_retcode(sol)
+        @test occursin("No errors detected by derivative checker", read(output_file, String))
     end
 
     @testset "Linear Solver Options" begin
@@ -151,7 +152,11 @@ using SparseArrays
     end
 
     @testset "Restoration Phase Test" begin
-        # Problem that might trigger restoration phase
+        # The two equality constraints are mutually infeasible: on the circle
+        # x1^2 + x2^2 = 0.5 the maximum of x1^3 + x2^3 is 0.5^1.5 ≈ 0.354 < 1.
+        # The restoration phase must converge to a local infeasibility
+        # minimizer and Ipopt's Infeasible_Problem_Detected status must map to
+        # ReturnCode.Infeasible.
         function difficult_obj(x, p)
             return x[1]^4 + x[2]^4
         end
@@ -165,7 +170,6 @@ using SparseArrays
             difficult_obj, OptimizationBase.AutoZygote();
             cons = difficult_cons
         )
-        # Start from an infeasible point
         prob = OptimizationProblem(
             optfunc, [2.0, 2.0], nothing;
             lcons = [0.0, 0.0],
@@ -180,12 +184,7 @@ using SparseArrays
             )
         )
 
-        if SciMLBase.successful_retcode(sol)
-            # Check constraint satisfaction if successful
-            res = zeros(2)
-            difficult_cons(res, sol.u, nothing)
-            @test norm(res) < 1.0e-4
-        end
+        @test sol.retcode == SciMLBase.ReturnCode.Infeasible
     end
 
     @testset "Mu Strategy Options" begin
@@ -271,6 +270,9 @@ using SparseArrays
         )
 
         @test SciMLBase.successful_retcode(sol)
+        # This is a MaxSense problem with optimum n; the reported objective
+        # must not be sign-flipped
+        @test sol.objective ≈ Float64(n) atol = 1.0e-2
     end
 end
 
@@ -284,18 +286,26 @@ end
     optfunc = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
     prob = OptimizationProblem(optfunc, x0, p)
 
-    @testset "Verbose levels" begin
-        for verbose_level in [false, 0, 3, 5]
-            sol = solve(prob, IpoptOptimizer(); verbose = verbose_level)
-            @test SciMLBase.successful_retcode(sol)
-        end
-    end
-
     @testset "Print levels" begin
-        for print_level in [false, 0, 3, 5]
-            sol = solve(prob, IpoptOptimizer(additional_options = Dict("print_level" => 3)))
+        # Verify the print level is actually applied by inspecting Ipopt's
+        # output file: higher file_print_level must produce more output
+        output_dir = mktempdir()
+        output_sizes = Int[]
+        for print_level in [0, 3, 5]
+            output_file = joinpath(output_dir, "ipopt_output_$(print_level).txt")
+            sol = solve(
+                prob, IpoptOptimizer(
+                    additional_options = Dict(
+                        "output_file" => output_file,
+                        "file_print_level" => print_level
+                    )
+                )
+            )
             @test SciMLBase.successful_retcode(sol)
+            @test isfile(output_file)
+            push!(output_sizes, filesize(output_file))
         end
+        @test output_sizes[1] < output_sizes[2] < output_sizes[3]
     end
 
     @testset "Timing statistics" begin

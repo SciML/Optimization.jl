@@ -13,7 +13,7 @@ export IpoptOptimizer
 """
     IpoptOptimizer(; kwargs...)
 
-Optimizer using the Interior Point Optimizer (Ipopt) for nonlinear OptimizationBase.
+Optimizer using the Interior Point Optimizer (Ipopt) for nonlinear optimization.
 
 Ipopt is designed to find (local) solutions of mathematical optimization problems of the form:
 
@@ -134,7 +134,7 @@ https://coin-or.github.io/Ipopt/OPTIONS.html
     linear_system_scaling::String = "none"
     hsllib::String = ""
     pardisolib::String = ""
-    linear_scaling_on_demand = "yes"
+    linear_scaling_on_demand::String = "yes"
 
     # NLP options
     nlp_scaling_method::String = "gradient-based"
@@ -174,22 +174,29 @@ end
 SciMLBase.allowscallback(alg::IpoptOptimizer) = true
 OptimizationBase.supports_sense(::IpoptOptimizer) = true
 
-# Compatibility with OptimizationBase@v3
-function SciMLBase.supports_opt_cache_interface(alg::IpoptOptimizer)
-    return true
+# Second order derivatives are only needed when Ipopt uses the exact Hessian
+# (the user may request the limited-memory quasi-Newton approximation either
+# via the struct field or via `additional_options`).
+function _exact_hessian(opt::IpoptOptimizer)
+    return get(
+        opt.additional_options, "hessian_approximation", opt.hessian_approximation
+    ) == "exact"
 end
 
 function SciMLBase.requiresgradient(opt::IpoptOptimizer)
     return true
 end
 function SciMLBase.requireshessian(opt::IpoptOptimizer)
-    return true
+    return _exact_hessian(opt)
 end
 function SciMLBase.requiresconsjac(opt::IpoptOptimizer)
     return true
 end
 function SciMLBase.requiresconshess(opt::IpoptOptimizer)
-    return true
+    return _exact_hessian(opt)
+end
+function SciMLBase.requireslagh(opt::IpoptOptimizer)
+    return _exact_hessian(opt)
 end
 
 function SciMLBase.allowsbounds(opt::IpoptOptimizer)
@@ -199,11 +206,11 @@ function SciMLBase.allowsconstraints(opt::IpoptOptimizer)
     return true
 end
 
-include("cache.jl")
+include("evaluator.jl")
 include("callback.jl")
 
 function __map_optimizer_args(
-        cache,
+        evaluator::IpoptEvaluator,
         opt::IpoptOptimizer;
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
@@ -211,47 +218,62 @@ function __map_optimizer_args(
         reltol::Union{Number, Nothing} = nothing,
         verbose = false,
         progress::Bool = false,
-        callback = nothing
+        callback = nothing,
+        iterations::Ref{Int} = Ref(0)
     )
-    jacobian_sparsity = jacobian_structure(cache)
-    hessian_sparsity = hessian_lagrangian_structure(cache)
+    cache = evaluator.cache
+    n = length(cache.u0)
+    num_cons = cache.ucons === nothing ? 0 : length(cache.ucons)
+    lb = isnothing(cache.lb) ? fill(-Inf, n) : cache.lb
+    ub = isnothing(cache.ub) ? fill(Inf, n) : cache.ub
+    lcons = isnothing(cache.lcons) ? fill(-Inf, num_cons) : Vector{Float64}(cache.lcons)
+    ucons = isnothing(cache.ucons) ? fill(Inf, num_cons) : Vector{Float64}(cache.ucons)
 
-    eval_f(x) = eval_objective(cache, x)
-    eval_grad_f(x, grad_f) = eval_objective_gradient(cache, grad_f, x)
-    eval_g(x, g) = eval_constraint(cache, g, x)
+    jacobian_sparsity = jacobian_structure(evaluator)
+
+    eval_f(x) = eval_objective(evaluator, x)
+    eval_grad_f(x, grad_f) = eval_objective_gradient(evaluator, grad_f, x)
+    eval_g(x, g) = eval_constraint(evaluator, g, x)
     function eval_jac_g(x, rows, cols, values)
         if values === nothing
-            for i in 1:length(jacobian_sparsity)
+            for i in eachindex(jacobian_sparsity)
                 rows[i], cols[i] = jacobian_sparsity[i]
             end
         else
-            eval_constraint_jacobian(cache, values, x)
-        end
-        return
-    end
-    function eval_h(x, rows, cols, obj_factor, lambda, values)
-        if values === nothing
-            for i in 1:length(hessian_sparsity)
-                rows[i], cols[i] = hessian_sparsity[i]
-            end
-        else
-            eval_hessian_lagrangian(cache, values, x, obj_factor, lambda)
+            eval_constraint_jacobian(evaluator, values, x)
         end
         return
     end
 
-    lb = isnothing(cache.lb) ? fill(-Inf, cache.n) : cache.lb
-    ub = isnothing(cache.ub) ? fill(Inf, cache.n) : cache.ub
+    if _exact_hessian(opt)
+        hessian_sparsity = hessian_lagrangian_structure(evaluator)
+        nnz_hess = length(hessian_sparsity)
+        eval_h = function (x, rows, cols, obj_factor, lambda, values)
+            if values === nothing
+                for i in eachindex(hessian_sparsity)
+                    rows[i], cols[i] = hessian_sparsity[i]
+                end
+            else
+                eval_hessian_lagrangian(evaluator, values, x, obj_factor, lambda)
+            end
+            return
+        end
+    else
+        # Ipopt never calls the Hessian callback with
+        # hessian_approximation = "limited-memory"
+        nnz_hess = 0
+        eval_h = nothing
+    end
 
     prob = Ipopt.CreateIpoptProblem(
-        cache.n,
+        n,
         lb,
         ub,
-        cache.num_cons,
-        cache.lcons,
-        cache.ucons,
-        length(jacobian_structure(cache)),
-        length(hessian_lagrangian_structure(cache)),
+        num_cons,
+        lcons,
+        ucons,
+        length(jacobian_sparsity),
+        nnz_hess,
         eval_f,
         eval_g,
         eval_grad_f,
@@ -261,10 +283,20 @@ function __map_optimizer_args(
 
     # Set up progress callback
     progress_callback = IpoptProgressLogger(
-        progress, callback, prob, cache.n, cache.num_cons, maxiters, cache.iterations
+        progress, callback, prob, n, num_cons, maxiters, iterations
     )
     intermediate = (args...) -> progress_callback(args...)
     Ipopt.SetIntermediateCallback(prob, intermediate)
+
+    # Ipopt only minimizes; a negative objective scaling factor makes it
+    # maximize instead, while the objective it reports stays unscaled.
+    obj_scaling = Float64(get(opt.additional_options, "obj_scaling_factor", 1.0))
+    if cache.sense === OptimizationBase.MaxSense
+        obj_scaling = -obj_scaling
+    end
+    if obj_scaling != 1.0
+        Ipopt.AddIpoptNumOption(prob, "obj_scaling_factor", obj_scaling)
+    end
 
     # Apply all options from struct using reflection and type dispatch
     for field in propertynames(opt)
@@ -285,6 +317,7 @@ function __map_optimizer_args(
 
     # Apply additional options with type dispatch
     for (key, value) in opt.additional_options
+        key == "obj_scaling_factor" && continue  # Applied above, sense-aware
         if value isa Int
             Ipopt.AddIpoptIntOption(prob, key, value)
         elseif value isa Float64
@@ -301,7 +334,7 @@ function __map_optimizer_args(
     if !isnothing(abstol)
         @SciMLMessage(
             lazy"common abstol is currently not used by $(opt)",
-            verbose, :unsupported_kwargs
+            cache.verbose, :unsupported_kwargs
         )
     end
     !isnothing(reltol) && !in("tol", optkeys) && Ipopt.AddIpoptNumOption(prob, "tol", reltol)
@@ -352,20 +385,24 @@ function map_retcode(solvestat)
     end
 end
 
-function SciMLBase.__solve(cache::IpoptCache)
+function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: IpoptOptimizer}
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
+    evaluator = IpoptEvaluator(cache)
+    iterations = Ref(0)
+
     opt_setup = __map_optimizer_args(
-        cache,
+        evaluator,
         cache.opt;
         abstol = cache.solver_args.abstol,
         reltol = cache.solver_args.reltol,
         maxiters = maxiters,
         maxtime = maxtime,
-        verbose = cache.solver_args.verbose,
+        verbose = get(cache.solver_args, :verbose, cache.verbose),
         progress = cache.progress,
-        callback = cache.callback
+        callback = cache.callback,
+        iterations = iterations
     )
 
     opt_setup.x .= cache.reinit_cache.u0
@@ -385,7 +422,8 @@ function SciMLBase.__solve(cache::IpoptCache)
 
     stats = OptimizationBase.OptimizationStats(;
         time = time() - start_time,
-        iterations = cache.iterations[], fevals = cache.f_calls, gevals = cache.f_grad_calls
+        iterations = iterations[], fevals = evaluator.f_calls,
+        gevals = evaluator.f_grad_calls
     )
 
     finalize(opt_setup)
@@ -399,30 +437,6 @@ function SciMLBase.__solve(cache::IpoptCache)
         retcode = opt_ret,
         stats = stats
     )
-end
-
-function SciMLBase.__init(
-        prob::OptimizationProblem,
-        opt::IpoptOptimizer;
-        maxiters::Union{Number, Nothing} = nothing,
-        maxtime::Union{Number, Nothing} = nothing,
-        abstol::Union{Number, Nothing} = nothing,
-        reltol::Union{Number, Nothing} = nothing,
-        progress::Bool = false,
-        kwargs...
-    )
-    cache = IpoptCache(
-        prob, opt;
-        maxiters,
-        maxtime,
-        abstol,
-        reltol,
-        progress,
-        kwargs...
-    )
-    cache.reinit_cache.u0 .= prob.u0
-
-    return cache
 end
 
 end # OptimizationIpopt
