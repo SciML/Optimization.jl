@@ -24,7 +24,7 @@ using OptimizationBase.FastClosures
 
 # Output-buffer eltype for the `p`-accepting constraint wrapper: the type `f.cons` produces,
 # including the *nested* dual when both `x` (DI's seeds) and `p` (the sensitivity layer) carry
-# duals with different tags (`promote_op(+, …)` nests them). Deliberately uses plain `eltype(p)`
+# duals with different tags (`promote_type` nests them). Deliberately uses plain `eltype(p)`
 # rather than `SciMLBase.anyeltypedual`: this runs *inside* the DI-differentiated wrapper, and
 # Enzyme's forward mode corrupts the derivative shadow (DataType-valued entries) when the
 # allocation type flows through `anyeltypedual` — in either its value or its type-level form,
@@ -36,7 +36,7 @@ using OptimizationBase.FastClosures
     Tu = eltype(x)
     p isa Union{SciMLBase.NullParameters, Nothing} && return Tu
     Tp = eltype(p)
-    return Tp <: Number ? Base.promote_op(+, Tu, Tp) : Tu
+    return Tp <: Number ? promote_type(Tu, Tp) : Tu
 end
 
 function instantiate_function(
