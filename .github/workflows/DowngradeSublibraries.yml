@@ -23,6 +23,8 @@ jobs:
       # ModelingToolkit 11). Stdlibs and in-repo sublibraries are auto-populated by
       # the centralized workflow.
       skip: "SymbolicAnalysis"
+      exclude: "OptimizationQuadDIRECT"
       group-env-name: "OPTIMIZATION_TEST_GROUP"
       group-env-value: "Core"
-      # Every lib/* sublibrary is downgrade-tested (projects auto-discovered, no exclusions).
+      # OptimizationQuadDIRECT has an unregistered URL source and is tested below
+      # with a manifest repair step after downgrade-compat.

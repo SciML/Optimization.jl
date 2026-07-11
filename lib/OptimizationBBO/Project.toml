@@ -8,6 +8,9 @@ OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
+[weakdeps]
+LogExpFunctions = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
+
 [extras]
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
@@ -19,6 +22,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
 BlackBoxOptim = "0.6.3"
+LogExpFunctions = "0.3.28"
 OptimizationBase = "5"
 Pkg = "1"
 Random = "1.10"
