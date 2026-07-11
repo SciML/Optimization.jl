@@ -13,8 +13,6 @@ using Optimisers
 # Optimisers, so the trait/interface methods it adds extend SciML's *own*
 # functions rather than committing type piracy — mark those functions as own.
 SB = OptimizationOptimisers.SciMLBase
-include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "public_api_docs.jl")))
-
 run_qa(
     OptimizationOptimisers;
     explicit_imports = true,
@@ -34,6 +32,24 @@ run_qa(
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
         all_qualified_accesses_are_public = (; ignore = (:OptimizationState, :OptimizationStats, :__init, :__solve, :_check_and_convert_maxiters, :allowscallback, :allowsfg, :isa_dataiterator, :requiresgradient)),
     ),
-    api_docs_kwargs = public_api_docs_kwargs(OptimizationOptimisers),
+    api_docs_kwargs = (;
+        ignore = (
+            :ADADelta,
+            :ADAGrad,
+            :ADAM,
+            :ADAMW,
+            :AbstractRule,
+            :AutoModelingToolkit,
+            :AutoSparseFastDifferentiation,
+            :AutoSparseFiniteDiff,
+            :AutoSparseForwardDiff,
+            :AutoSparsePolyesterForwardDiff,
+            :AutoSparseReverseDiff,
+            :AutoSparseZygote,
+            :NADAM,
+            :OADAM,
+            :RADAM,
+        ),
+    ),
     ei_broken = (:no_implicit_imports,),
 )

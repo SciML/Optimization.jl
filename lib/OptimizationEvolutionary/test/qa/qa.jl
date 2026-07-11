@@ -13,8 +13,6 @@ using Evolutionary
 # The Evolutionary.trace! override IS genuine piracy (changes Evolutionary's
 # tracing globally); mark the piracy test broken until it's replaced.
 SB = OptimizationEvolutionary.SciMLBase
-include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "public_api_docs.jl")))
-
 run_qa(
     OptimizationEvolutionary;
     explicit_imports = true,
@@ -38,6 +36,29 @@ run_qa(
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats, :minimum)),
         all_qualified_accesses_are_public = (; ignore = (:AbstractOptimizer, :OptimizationState, :OptimizationStats, :OptimizationTrace, :OptimizationTraceRecord, :Options, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback, :converged, :minimizer, :minimum, :optimize, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :trace!, :update!)),
     ),
-    api_docs_kwargs = public_api_docs_kwargs(OptimizationEvolutionary),
+    api_docs_kwargs = (;
+        ignore = (
+            :AutoModelingToolkit,
+            :AutoSparseFastDifferentiation,
+            :AutoSparseFiniteDiff,
+            :AutoSparseForwardDiff,
+            :AutoSparsePolyesterForwardDiff,
+            :AutoSparseReverseDiff,
+            :AutoSparseZygote,
+            :Terminal,
+            :default_options,
+            :discrete,
+            :domainrange,
+            :exponential,
+            :intermediate,
+            :line,
+            :mutationwrapper,
+            :singlepoint,
+            :strategy,
+            :twopoint,
+            :uniformbin,
+            :waverage,
+        ),
+    ),
     ei_broken = (:no_implicit_imports,),
 )

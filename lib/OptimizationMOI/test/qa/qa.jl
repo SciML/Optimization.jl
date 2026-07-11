@@ -15,8 +15,6 @@ using MathOptInterface
 # functions rather than committing type piracy — mark those functions as own.
 SB = OptimizationMOI.SciMLBase
 OB = OptimizationMOI.OptimizationBase
-include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "public_api_docs.jl")))
-
 run_qa(
     OptimizationMOI;
     explicit_imports = true,
@@ -48,6 +46,16 @@ run_qa(
         all_qualified_accesses_are_public = (; ignore = (Symbol("@sync"), :ALMOST_DUAL_INFEASIBLE, :ALMOST_INFEASIBLE, :ALMOST_LOCALLY_SOLVED, :ALMOST_OPTIMAL, :AbstractNLPEvaluator, :AbstractOptimizationCache, :AbstractOptimizer, :BarrierIterations, :CachingOptimizer, :Code, :DEFAULT_VERBOSE, :DUAL_INFEASIBLE, :EqualTo, :GetAttributeNotAllowed, :GreaterThan, :INFEASIBLE, :INFEASIBLE_OR_UNBOUNDED, :INTERRUPTED, :INVALID_MODEL, :INVALID_OPTION, :ITERATION_LIMIT, :Integer, :LOCALLY_INFEASIBLE, :LOCALLY_SOLVED, :LessThan, :MAX_SENSE, :MEMORY_LIMIT, :MIN_SENSE, :NLPBlock, :NLPBlockData, :NLPBoundsPair, :NODE_LIMIT, :NORM_LIMIT, :NUMERICAL_ERROR, :OBJECTIVE_LIMIT, :OPTIMAL, :OPTIMIZE_NOT_CALLED, :OTHER_ERROR, :OTHER_LIMIT, :ObjectiveFunction, :ObjectiveSense, :ObjectiveValue, :OptimizationState, :OptimizationStats, :OptimizerWithAttributes, :RawOptimizerAttribute, :ReInitCache, :ResultCount, :SLOW_PROGRESS, :SOLUTION_LIMIT, :ScalarAffineFunction, :ScalarAffineTerm, :ScalarQuadraticFunction, :ScalarQuadraticTerm, :Silent, :SolveTimeSec, :TIME_LIMIT, :TerminationStatus, :TerminationStatusCode, :TimeLimitSec, :Tunable, :UniversalFallback, :Utilities, :VariableIndex, :VariablePrimal, :VariablePrimalStart, :ZeroOne, :__init, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :_process_verbose_param, :add_constraint, :add_variables, :allowscallback, :canonicalize, :constraint_expr, :empty!, :eval_constraint, :eval_constraint_jacobian, :eval_constraint_jacobian_product, :eval_constraint_jacobian_transpose_product, :eval_hessian_lagrangian, :eval_objective, :eval_objective_gradient, :features_available, :get, :get_observed, :get_p, :get_paramsyms, :get_syms, :hessian_lagrangian_structure, :initialize, :instantiate, :instantiate_function, :is_empty, :jacobian_structure, :objective_expr, :optimize!, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :set, :supports, :supports_incremental_interface, :supports_opt_cache_interface, :supports_sense)),
         all_explicit_imports_are_public = (; ignore = (:varmap_to_vars,)),
     ),
-    api_docs_kwargs = public_api_docs_kwargs(OptimizationMOI),
+    api_docs_kwargs = (;
+        ignore = (
+            :AutoModelingToolkit,
+            :AutoSparseFastDifferentiation,
+            :AutoSparseFiniteDiff,
+            :AutoSparseForwardDiff,
+            :AutoSparsePolyesterForwardDiff,
+            :AutoSparseReverseDiff,
+            :AutoSparseZygote,
+        ),
+    ),
     ei_broken = (:no_implicit_imports,),
 )

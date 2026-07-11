@@ -16,8 +16,6 @@ using Metaheuristics
 # `@reexport using Metaheuristics` exports `solve!`, which clashes with SciMLBase's
 # `solve!` brought in transitively via OptimizationBase; mark broken until restructured.
 SB = OptimizationMetaheuristics.SciMLBase
-include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "public_api_docs.jl")))
-
 run_qa(
     OptimizationMetaheuristics;
     explicit_imports = true,
@@ -38,6 +36,34 @@ run_qa(
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
         all_qualified_accesses_are_public = (; ignore = (:AbstractAlgorithm, :OptimizationStats, :__init, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback, :create_child, :get_best, :requiresbounds)),
     ),
-    api_docs_kwargs = public_api_docs_kwargs(OptimizationMetaheuristics),
+    api_docs_kwargs = (;
+        ignore = (
+            :ArasMethod,
+            :AutoModelingToolkit,
+            :AutoSparseFastDifferentiation,
+            :AutoSparseFiniteDiff,
+            :AutoSparseForwardDiff,
+            :AutoSparsePolyesterForwardDiff,
+            :AutoSparseReverseDiff,
+            :AutoSparseZygote,
+            :CocosoMethod,
+            :CodasMethod,
+            :CoprasMethod,
+            :EdasMethod,
+            :ElectreMethod,
+            :GreyMethod,
+            :MabacMethod,
+            :MaircaMethod,
+            :MarcosMethod,
+            :MooraMethod,
+            :ROVMethod,
+            :SawMethod,
+            :TopsisMethod,
+            :VikorMethod,
+            :WPMMethod,
+            :WaspasMethod,
+            :summary,
+        ),
+    ),
     ei_broken = (:no_implicit_imports,),
 )

@@ -14,8 +14,6 @@ using MultistartOptimization
 # SciML's *own* functions rather than committing type piracy — mark those
 # functions as own.
 SB = OptimizationMultistartOptimization.SciMLBase
-include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "public_api_docs.jl")))
-
 run_qa(
     OptimizationMultistartOptimization;
     explicit_imports = true,
@@ -37,6 +35,16 @@ run_qa(
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
         all_qualified_accesses_are_public = (; ignore = (:OptimizationStats, :__init, :__solve, :allowscallback, :requiresbounds)),
     ),
-    api_docs_kwargs = public_api_docs_kwargs(OptimizationMultistartOptimization),
+    api_docs_kwargs = (;
+        ignore = (
+            :AutoModelingToolkit,
+            :AutoSparseFastDifferentiation,
+            :AutoSparseFiniteDiff,
+            :AutoSparseForwardDiff,
+            :AutoSparsePolyesterForwardDiff,
+            :AutoSparseReverseDiff,
+            :AutoSparseZygote,
+        ),
+    ),
     ei_broken = (:no_implicit_imports,),
 )
