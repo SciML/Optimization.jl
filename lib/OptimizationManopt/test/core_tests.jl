@@ -51,6 +51,28 @@ R2 = Euclidean(2)
         @test sol.objective < 0.2
     end
 
+    @testset "Gradient descent maxiters without abstol still reports Success" begin
+        # Regression test: passing only `maxiters` (no `abstol`) used to fully replace
+        # Manopt's own default `stopping_criterion`, leaving `StopAfterIteration` as the
+        # *only* criterion. Since that criterion never `indicates_convergence`, the run
+        # was structurally guaranteed to report `ReturnCode.MaxIters`, even once it had
+        # actually converged. `maxiters` here is set well above what's needed so the run
+        # converges before hitting the cap.
+        x0 = zeros(2)
+        p = [1.0, 100.0]
+
+        stepsize = Manopt.ArmijoLinesearch(R2)
+        opt = OptimizationManopt.GradientDescentOptimizer()
+
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
+        prob = OptimizationProblem(
+            optprob, x0, p; manifold = R2, stepsize = stepsize, maxiters = 25_000
+        )
+        sol = OptimizationBase.solve(prob, opt)
+        @test sol.objective < 1.0e-10
+        @test SciMLBase.successful_retcode(sol)
+    end
+
     @testset "Nelder-Mead" begin
         x0 = zeros(2)
         p = [1.0, 100.0]
