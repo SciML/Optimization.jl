@@ -10,5 +10,5 @@ Optimization = {path = "../.."}
 
 [compat]
 SafeTestsets = "0.0.1, 0.1"
-SciMLTesting = "1"
+SciMLTesting = "2.1"
 Test = "1.10"

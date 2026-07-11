@@ -1,7 +1,7 @@
 using SciMLTesting, Optimization, JET
 using Test
 
-include("public_docs.jl")
+include("public_api_docs.jl")
 
 # no_implicit_imports: Optimization is a facade that `@reexport`s SciMLBase/ADTypes/
 # OptimizationBase and `using`s many helper modules; the implicit-import surface is
@@ -38,5 +38,6 @@ run_qa(
             ),
         ),
     ),
+    api_docs_kwargs = public_api_docs_kwargs(Optimization),
     ei_broken = (:no_implicit_imports,),
 )

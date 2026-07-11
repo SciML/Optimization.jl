@@ -12,6 +12,8 @@ using Test
 # `@reexport`s two packages that both export the name below, leaving it an
 # unresolved conflict binding; the fix is a maintainer choice of which wins.
 # Conflicting export: `solve` (NOMAD + CommonSolve).
+include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "public_api_docs.jl")))
+
 run_qa(
     OptimizationNOMAD;
     explicit_imports = true,
@@ -20,5 +22,6 @@ run_qa(
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
         all_qualified_accesses_are_public = (; ignore = (:DefaultOptimizationCache, :OptimizationStats, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback)),
     ),
+    api_docs_kwargs = public_api_docs_kwargs(OptimizationNOMAD),
     ei_broken = (:no_implicit_imports,),
 )

@@ -13,6 +13,8 @@ using NLPModels
 # constructors for NLPModels.AbstractNLPModel. Those constructors extend SciML's
 # *own* types, so mark those (not the NLPModels type) as own for the piracy check.
 SB = OptimizationNLPModels.SciMLBase
+include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "public_api_docs.jl")))
+
 run_qa(
     OptimizationNLPModels;
     explicit_imports = true,
@@ -29,5 +31,6 @@ run_qa(
         # release (SciMLBase 3.24.0); fix belongs upstream via a `public` declaration.
         all_qualified_accesses_are_public = (; ignore = (:NoAD,)),
     ),
+    api_docs_kwargs = public_api_docs_kwargs(OptimizationNLPModels),
     ei_broken = (:no_implicit_imports,),
 )
