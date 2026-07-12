@@ -16,7 +16,7 @@ makedocs(
     sitename = "Optimization.jl",
     authors = "Chris Rackauckas, Vaibhav Kumar Dixit et al.",
     modules = [
-        Optimization, Optimization.SciMLBase, Optimization.OptimizationBase, Optimization.ADTypes,
+        Optimization, Optimization.SciMLBase, Optimization.OptimizationBase,
         OptimizationAuglag, OptimizationBBO, OptimizationBase,
         OptimizationCMAEvolutionStrategy, OptimizationGCMAES, OptimizationIpopt,
         OptimizationLBFGSB, OptimizationMadNLP, OptimizationManopt,
