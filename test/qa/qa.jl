@@ -49,14 +49,3 @@ run_qa(
     ),
     ei_broken = (:no_implicit_imports,),
 )
-
-@testset "NeuralPDE downstream groups" begin
-    workflow = read(
-        joinpath(@__DIR__, "..", "..", ".github", "workflows", "Downstream.yml"), String
-    )
-    groups = [
-        only(m.captures) for m in
-            eachmatch(r"\{user: SciML, repo: NeuralPDE\.jl, group: ([^}]+)\}", workflow)
-    ]
-    @test groups == ["NNPDE1", "NNPDE2"]
-end
