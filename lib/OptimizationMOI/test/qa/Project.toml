@@ -7,10 +7,6 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
-[sources]
-OptimizationBase = {path = "../../../OptimizationBase"}
-OptimizationMOI = {path = "../.."}
-
 [compat]
 Aqua = "0.8"
 JET = "0.9, 0.10, 0.11"

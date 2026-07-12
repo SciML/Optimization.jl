@@ -5,9 +5,6 @@ OptimizationPRIMA = "72f8369c-a2ea-4298-9126-56167ce9cbc2"
 SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
-[sources]
-OptimizationPRIMA = {path = "../.."}
-
 [compat]
 Aqua = "0.8"
 JET = "0.9, 0.10, 0.11"

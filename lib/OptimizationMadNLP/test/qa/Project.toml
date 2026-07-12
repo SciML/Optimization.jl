@@ -5,9 +5,6 @@ OptimizationMadNLP = "5d9c809f-c847-4062-9fba-1793bbfef577"
 SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
-[sources]
-OptimizationMadNLP = {path = "../.."}
-
 [compat]
 Aqua = "0.8"
 JET = "0.9, 0.10, 0.11"
