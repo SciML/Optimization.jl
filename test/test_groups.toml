@@ -1,5 +1,11 @@
 [Core]
 versions = ["lts", "1", "pre"]
 
+# Enzyme is expected to fail on Julia prereleases (see
+# https://github.com/SciML/Optimization.jl/issues/1260), so the Enzyme-dependent
+# AD tests run their own group and are excluded from the "pre" channel.
+[AD]
+versions = ["lts", "1"]
+
 [QA]
 versions = ["lts", "1"]

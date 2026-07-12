@@ -59,8 +59,6 @@ const LIB_DIR = joinpath(dirname(@__DIR__), "lib")
             core = function ()
                 @safetestset "Utils Tests" include("utils.jl")
                 @safetestset "Verbosity Tests" include("verbosity.jl")
-                @safetestset "AD Tests" include("ADtests.jl")
-                @safetestset "AD Performance Regression Tests" include("AD_performance_regression.jl")
                 @safetestset "Optimization" include("native.jl")
                 @safetestset "Mini batching" include("minibatch.jl")
                 # DiffEqFlux test temporarily skipped due to ForwardDiff gradient dispatch
@@ -70,6 +68,19 @@ const LIB_DIR = joinpath(dirname(@__DIR__), "lib")
                 @safetestset "Sense Handling" include("sense_tests.jl")
             end,
             groups = Dict(
+                # The AD tests are their own group with their own environment
+                # (test/AD/Project.toml) so their Enzyme-family dependencies stay out
+                # of the main test env, and so the group can be excluded from the Julia
+                # `pre` channel in test_groups.toml: Enzyme is expected to fail on
+                # prereleases until a fixed Enzyme release lands.
+                # See https://github.com/SciML/Optimization.jl/issues/1260.
+                "AD" => (;
+                    env = joinpath(@__DIR__, "AD"),
+                    body = function ()
+                        @safetestset "AD Tests" include("AD/ADtests.jl")
+                        @safetestset "AD Performance Regression Tests" include("AD/AD_performance_regression.jl")
+                    end,
+                ),
                 "GPU" => (;
                     env = joinpath(@__DIR__, "downstream"),
                     body = function ()
