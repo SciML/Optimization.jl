@@ -1,4 +1,4 @@
-using SciMLTesting, OptimizationBase, JET
+using SciMLTesting, OptimizationBase, JET, SciMLBase
 using Test
 
 # ExplicitImports findings, all tracked against SciML/Optimization.jl:
@@ -14,13 +14,18 @@ using Test
 # latter reexported through SciMLBase) on SciMLBase.OptimizationProblem /
 # AbstractOptimizationCache. Those are our *own* interface functions, so mark
 # them as own for the piracy check rather than flagging the SciML types.
-SB = OptimizationBase.SciMLBase
 run_qa(
     OptimizationBase;
     explicit_imports = true,
     aqua_kwargs = (;
         piracies = (;
-            treat_as_own = [SB.__init, SB.__solve, SB.init, SB.solve, SB.solve!],
+            treat_as_own = [
+                SciMLBase.__init,
+                SciMLBase.__solve,
+                SciMLBase.init,
+                SciMLBase.solve,
+                SciMLBase.solve!,
+            ],
         ),
     ),
     ei_kwargs = (;

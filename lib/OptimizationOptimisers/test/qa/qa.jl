@@ -1,4 +1,4 @@
-using SciMLTesting, OptimizationOptimisers, JET
+using SciMLTesting, OptimizationOptimisers, JET, SciMLBase
 using Test
 using Optimisers
 
@@ -12,19 +12,18 @@ using Optimisers
 # OptimizationOptimisers implements the SciML optimization interface for
 # Optimisers, so the trait/interface methods it adds extend SciML's *own*
 # functions rather than committing type piracy — mark those functions as own.
-SB = OptimizationOptimisers.SciMLBase
 run_qa(
     OptimizationOptimisers;
     explicit_imports = true,
     aqua_kwargs = (;
         piracies = (;
             treat_as_own = [
-                SB.__init,
-                SB.__solve,
-                SB.allowscallback,
-                SB.allowsfg,
-                SB.has_init,
-                SB.requiresgradient,
+                SciMLBase.__init,
+                SciMLBase.__solve,
+                SciMLBase.allowscallback,
+                SciMLBase.allowsfg,
+                SciMLBase.has_init,
+                SciMLBase.requiresgradient,
             ],
         ),
     ),

@@ -1,4 +1,4 @@
-using SciMLTesting, OptimizationEvolutionary, JET
+using SciMLTesting, OptimizationEvolutionary, JET, SciMLBase
 using Test
 using Evolutionary
 
@@ -12,7 +12,6 @@ using Evolutionary
 # SciML trait/interface methods are our own, not piracy — mark them as such.
 # The Evolutionary.trace! override IS genuine piracy (changes Evolutionary's
 # tracing globally); mark the piracy test broken until it's replaced.
-SB = OptimizationEvolutionary.SciMLBase
 run_qa(
     OptimizationEvolutionary;
     explicit_imports = true,
@@ -20,15 +19,15 @@ run_qa(
         piracies = (;
             broken = true,
             treat_as_own = [
-                SB.__solve,
-                SB.allowsbounds,
-                SB.allowscallback,
-                SB.allowsconstraints,
-                SB.has_init,
-                SB.requiresconshess,
-                SB.requiresconsjac,
-                SB.requiresgradient,
-                SB.requireshessian,
+                SciMLBase.__solve,
+                SciMLBase.allowsbounds,
+                SciMLBase.allowscallback,
+                SciMLBase.allowsconstraints,
+                SciMLBase.has_init,
+                SciMLBase.requiresconshess,
+                SciMLBase.requiresconsjac,
+                SciMLBase.requiresgradient,
+                SciMLBase.requireshessian,
             ],
         ),
     ),

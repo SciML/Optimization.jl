@@ -1,4 +1,4 @@
-using SciMLTesting, Optimization, JET
+using SciMLTesting, Optimization, JET, SciMLBase
 using Test
 
 # no_implicit_imports: Optimization is a facade that `@reexport`s SciMLBase/ADTypes/
@@ -16,8 +16,8 @@ run_qa(
         ambiguities = (; recursive = false),
         piracies = (;
             treat_as_own = [
-                Optimization.SciMLBase.OptimizationProblem,
-                Optimization.SciMLBase.AbstractOptimizationCache,
+                SciMLBase.OptimizationProblem,
+                SciMLBase.AbstractOptimizationCache,
             ],
         ),
     ),

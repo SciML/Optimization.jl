@@ -1,4 +1,4 @@
-using SciMLTesting, OptimizationMOI, JET
+using SciMLTesting, OptimizationMOI, JET, OptimizationBase, SciMLBase
 using Test
 using MathOptInterface
 
@@ -13,30 +13,28 @@ using MathOptInterface
 # OptimizationMOI implements the SciML optimization interface for
 # MathOptInterface, so the trait/interface methods it adds extend SciML's *own*
 # functions rather than committing type piracy — mark those functions as own.
-SB = OptimizationMOI.SciMLBase
-OB = OptimizationMOI.OptimizationBase
 run_qa(
     OptimizationMOI;
     explicit_imports = true,
     aqua_kwargs = (;
         piracies = (;
             treat_as_own = [
-                SB.__init,
-                SB.__solve,
-                SB.allowsbounds,
-                SB.allowscallback,
-                SB.allowsconstraints,
-                SB.get_observed,
-                SB.get_p,
-                SB.get_paramsyms,
-                SB.get_syms,
-                SB.has_init,
-                SB.requiresconshess,
-                SB.requiresconsjac,
-                SB.requiresgradient,
-                SB.requireshessian,
-                SB.supports_opt_cache_interface,
-                OB.supports_sense,
+                SciMLBase.__init,
+                SciMLBase.__solve,
+                SciMLBase.allowsbounds,
+                SciMLBase.allowscallback,
+                SciMLBase.allowsconstraints,
+                SciMLBase.get_observed,
+                SciMLBase.get_p,
+                SciMLBase.get_paramsyms,
+                SciMLBase.get_syms,
+                SciMLBase.has_init,
+                SciMLBase.requiresconshess,
+                SciMLBase.requiresconsjac,
+                SciMLBase.requiresgradient,
+                SciMLBase.requireshessian,
+                SciMLBase.supports_opt_cache_interface,
+                OptimizationBase.supports_sense,
             ],
         ),
     ),

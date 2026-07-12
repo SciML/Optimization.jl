@@ -1,4 +1,4 @@
-using SciMLTesting, OptimizationNLopt, JET
+using SciMLTesting, OptimizationNLopt, JET, OptimizationBase, SciMLBase
 using Test
 using NLopt
 
@@ -15,24 +15,22 @@ using NLopt
 # check. NLopt.Algorithm is also kept for the `(::NLopt.Algorithm)()`
 # normalization method, which extends NLopt's type directly and has no SciML
 # function to attribute it to.
-SB = OptimizationNLopt.SciMLBase
-OB = OptimizationNLopt.OptimizationBase
 run_qa(
     OptimizationNLopt;
     explicit_imports = true,
     aqua_kwargs = (;
         piracies = (;
             treat_as_own = [
-                SB.__init,
-                SB.__solve,
-                SB.allowsbounds,
-                SB.allowscallback,
-                SB.allowsconstraints,
-                SB.has_init,
-                SB.requiresconsjac,
-                SB.requiresgradient,
-                SB.requireshessian,
-                OB.supports_sense,
+                SciMLBase.__init,
+                SciMLBase.__solve,
+                SciMLBase.allowsbounds,
+                SciMLBase.allowscallback,
+                SciMLBase.allowsconstraints,
+                SciMLBase.has_init,
+                SciMLBase.requiresconsjac,
+                SciMLBase.requiresgradient,
+                SciMLBase.requireshessian,
+                OptimizationBase.supports_sense,
                 NLopt.Algorithm,
             ],
         ),
