@@ -16,5 +16,16 @@ run_qa(
         all_qualified_accesses_are_public = (; ignore = (:OptimizationState, :OptimizationStats, :__solve, :_check_and_convert_maxiters, :_opt_bounds, :allowscallback, :requiresconsjac, :requiresgradient, :structdiff)),
         all_explicit_imports_are_public = (; ignore = (:OptimizationStats, :deduce_retcode)),
     ),
+    api_docs_kwargs = (;
+        ignore = (
+            :AutoModelingToolkit,
+            :AutoSparseFastDifferentiation,
+            :AutoSparseFiniteDiff,
+            :AutoSparseForwardDiff,
+            :AutoSparsePolyesterForwardDiff,
+            :AutoSparseReverseDiff,
+            :AutoSparseZygote,
+        ),
+    ),
     ei_broken = (:no_implicit_imports,),
 )

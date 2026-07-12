@@ -1,4 +1,4 @@
-using SciMLTesting, OptimizationBase, JET
+using SciMLTesting, OptimizationBase, JET, SciMLBase
 using Test
 
 # ExplicitImports findings, all tracked against SciML/Optimization.jl:
@@ -14,13 +14,18 @@ using Test
 # latter reexported through SciMLBase) on SciMLBase.OptimizationProblem /
 # AbstractOptimizationCache. Those are our *own* interface functions, so mark
 # them as own for the piracy check rather than flagging the SciML types.
-SB = OptimizationBase.SciMLBase
 run_qa(
     OptimizationBase;
     explicit_imports = true,
     aqua_kwargs = (;
         piracies = (;
-            treat_as_own = [SB.__init, SB.__solve, SB.init, SB.solve, SB.solve!],
+            treat_as_own = [
+                SciMLBase.__init,
+                SciMLBase.__solve,
+                SciMLBase.init,
+                SciMLBase.solve,
+                SciMLBase.solve!,
+            ],
         ),
     ),
     ei_kwargs = (;
@@ -32,6 +37,17 @@ run_qa(
         # upstream via `public` declarations there, not a local change.
         all_qualified_accesses_are_public = (; ignore = (:AbstractOptimizationCache, :AbstractOptimizationFunction, :AbstractOptimizationSolution, :AbstractTracer, :ChainRulesOriginator, :IsInfinite, :IteratorSize, :MaxSense, :MinSense, :NoAD, :NonConcreteEltypeError, :SizeUnknown, :__init, :allowsconsjvp, :allowsconsvjp, :allowsfg, :allowsfgh, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :requireslagh)),
         all_explicit_imports_are_public = (; ignore = (:KeywordArgError, :MaxSense, :MinSense, :ObjSense, :OptimizationStats, :__init, :__solve, :_concrete_solve_adjoint, :_concrete_solve_forward, :allowscallback, :extract_alg, :get_concrete_p, :get_concrete_u0, :get_root_indp, :get_updated_symbolic_problem, :has_kwargs, :promote_u0, :requiresbounds, :requiresconshess, :requiresconsjac, :requiresconstraints, :requiresgradient, :requireshessian, :wrap_sol)),
+    ),
+    api_docs_kwargs = (;
+        ignore = (
+            :AutoModelingToolkit,
+            :AutoSparseFastDifferentiation,
+            :AutoSparseFiniteDiff,
+            :AutoSparseForwardDiff,
+            :AutoSparsePolyesterForwardDiff,
+            :AutoSparseReverseDiff,
+            :AutoSparseZygote,
+        ),
     ),
     ei_broken = (:no_implicit_imports,),
 )

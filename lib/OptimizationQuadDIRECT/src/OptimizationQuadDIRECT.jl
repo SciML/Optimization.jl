@@ -6,6 +6,12 @@ using QuadDIRECT, SciMLBase
 
 export QuadDirect
 
+"""
+    QuadDirect()
+
+Optimizer wrapper for QuadDIRECT.jl deterministic global optimization with
+required bound splits.
+"""
 struct QuadDirect end
 
 SciMLBase.allowsbounds(::QuadDirect) = true

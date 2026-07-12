@@ -1,5 +1,20 @@
 # Common Solver Options (Solve Keyword Arguments)
 
 ```@docs
-solve(::OptimizationProblem,::Any)
+OptimizationBase.solve(::SciMLBase.OptimizationProblem,::Any)
+OptimizationBase.OptimizationCache
+OptimizationBase.DEFAULT_CALLBACK
+OptimizationBase.DEFAULT_DATA
+OptimizationBase.IncompatibleOptimizerError
+OptimizationBase.OptimizerMissingError
+OptimizationBase.OptimizationVerbosity
+OptimizationBase.allowsbounds
+OptimizationBase.requiresbounds
+OptimizationBase.allowsconstraints
+OptimizationBase.requiresconstraints
+OptimizationBase.allowscallback
+OptimizationBase.requiresgradient
+OptimizationBase.requireshessian
+OptimizationBase.requiresconsjac
+OptimizationBase.requiresconshess
 ```

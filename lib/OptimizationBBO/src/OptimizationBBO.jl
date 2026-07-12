@@ -12,11 +12,29 @@ SciMLBase.allowsbounds(::BBO) = true
 SciMLBase.allowscallback(opt::BBO) = true
 SciMLBase.has_init(opt::BBO) = true
 
-for j in string.(BlackBoxOptim.SingleObjectiveMethodNames)
-    eval(Meta.parse("Base.@kwdef struct BBO_" * j * " <: BBO method=:" * j * " end"))
-    eval(Meta.parse("export BBO_" * j))
+for method in BlackBoxOptim.SingleObjectiveMethodNames
+    method_symbol = Symbol(method)
+    name = Symbol("BBO_", method_symbol)
+    doc = """
+        $(name)()
+
+    BlackBoxOptim global optimizer wrapper for the `$(method_symbol)` method.
+    """
+    @eval begin
+        Base.@kwdef struct $name <: BBO
+            method = $(QuoteNode(method_symbol))
+        end
+        export $name
+    end
+    @eval @doc $doc $name
 end
 
+"""
+    BBO_borg_moea()
+
+BlackBoxOptim multi-objective global optimizer wrapper using the `borg_moea`
+method.
+"""
 Base.@kwdef struct BBO_borg_moea <: BBO
     method = :borg_moea
 end

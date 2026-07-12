@@ -25,6 +25,14 @@ The five Powell's algorithms of the prima library are provided by the PRIMA.jl p
 
 `COBYLA`: (Constrained Optimization BY Linear Approximations) is for general constrained problems with bound constraints, non-linear constraints, linear equality constraints, and linear inequality constraints.
 
+```@docs
+OptimizationPRIMA.UOBYQA
+OptimizationPRIMA.NEWUOA
+OptimizationPRIMA.BOBYQA
+OptimizationPRIMA.LINCOA
+OptimizationPRIMA.COBYLA
+```
+
 ```@example PRIMA
 using OptimizationBase, OptimizationPRIMA
 

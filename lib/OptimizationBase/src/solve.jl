@@ -1,3 +1,10 @@
+"""
+    IncompatibleOptimizerError(msg)
+
+Error thrown when an optimizer cannot solve the supplied `OptimizationProblem`
+because required features, such as bounds, constraints, callbacks, gradients, or
+hessians, are unsupported or missing.
+"""
 struct IncompatibleOptimizerError <: Exception
     err::String
 end
@@ -179,6 +186,13 @@ Make sure that you have loaded an appropriate Optimization.jl solver library, fo
 For more information, see the Optimization.jl documentation: <https://docs.sciml.ai/Optimization/stable/>.
 """
 
+"""
+    OptimizerMissingError(alg)
+
+Error thrown when `solve` or `init` cannot find an Optimization.jl solver
+implementation for `alg`. Load the package that provides the selected optimizer
+before solving the problem.
+"""
 struct OptimizerMissingError <: Exception
     alg::Any
 end

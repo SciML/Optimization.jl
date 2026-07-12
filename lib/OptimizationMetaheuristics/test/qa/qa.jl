@@ -1,4 +1,4 @@
-using SciMLTesting, OptimizationMetaheuristics, JET
+using SciMLTesting, OptimizationMetaheuristics, JET, SciMLBase
 using Test
 using Metaheuristics
 
@@ -15,19 +15,18 @@ using Metaheuristics
 # undefined_exports broken (tracked against SciML/Optimization.jl):
 # `@reexport using Metaheuristics` exports `solve!`, which clashes with SciMLBase's
 # `solve!` brought in transitively via OptimizationBase; mark broken until restructured.
-SB = OptimizationMetaheuristics.SciMLBase
 run_qa(
     OptimizationMetaheuristics;
     explicit_imports = true,
     aqua_kwargs = (;
         piracies = (;
             treat_as_own = [
-                SB.__init,
-                SB.__solve,
-                SB.allowsbounds,
-                SB.allowscallback,
-                SB.has_init,
-                SB.requiresbounds,
+                SciMLBase.__init,
+                SciMLBase.__solve,
+                SciMLBase.allowsbounds,
+                SciMLBase.allowscallback,
+                SciMLBase.has_init,
+                SciMLBase.requiresbounds,
             ],
         ),
     ),
@@ -35,6 +34,35 @@ run_qa(
     ei_kwargs = (;
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
         all_qualified_accesses_are_public = (; ignore = (:AbstractAlgorithm, :OptimizationStats, :__init, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback, :create_child, :get_best, :requiresbounds)),
+    ),
+    api_docs_kwargs = (;
+        ignore = (
+            :ArasMethod,
+            :AutoModelingToolkit,
+            :AutoSparseFastDifferentiation,
+            :AutoSparseFiniteDiff,
+            :AutoSparseForwardDiff,
+            :AutoSparsePolyesterForwardDiff,
+            :AutoSparseReverseDiff,
+            :AutoSparseZygote,
+            :CocosoMethod,
+            :CodasMethod,
+            :CoprasMethod,
+            :EdasMethod,
+            :ElectreMethod,
+            :GreyMethod,
+            :MabacMethod,
+            :MaircaMethod,
+            :MarcosMethod,
+            :MooraMethod,
+            :ROVMethod,
+            :SawMethod,
+            :TopsisMethod,
+            :VikorMethod,
+            :WPMMethod,
+            :WaspasMethod,
+            :summary,
+        ),
     ),
     ei_broken = (:no_implicit_imports,),
 )

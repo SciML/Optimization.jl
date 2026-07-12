@@ -5,6 +5,16 @@ struct AnalysisResults{O, C}
     constraints::C
 end
 
+"""
+    OptimizationCache(prob::OptimizationProblem, opt; kwargs...)
+
+Prepared optimization problem state used by cache-based solvers.
+
+`OptimizationCache` stores the selected optimizer, instantiated objective and
+constraint functions, bounds, constraint limits, callbacks, verbosity settings,
+and solver keyword arguments. Use [`init`](@ref) to construct caches through the
+public solver interface.
+"""
 struct OptimizationCache{
         O, IIP, F <: SciMLBase.AbstractOptimizationFunction{IIP},
         RC, LB, UB, LC, UC, S, P, C, M, V,

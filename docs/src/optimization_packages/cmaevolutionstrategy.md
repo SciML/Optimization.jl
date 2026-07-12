@@ -20,6 +20,10 @@ Pkg.add("OptimizationCMAEvolutionStrategy");
 The method in [`CMAEvolutionStrategy`](https://github.com/jbrea/CMAEvolutionStrategy.jl) is performing global optimization on problems without
 constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
 
+```@docs
+OptimizationCMAEvolutionStrategy.CMAEvolutionStrategyOpt
+```
+
 ## Example
 
 The Rosenbrock function can be optimized using the `CMAEvolutionStrategyOpt()` as follows:

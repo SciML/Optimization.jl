@@ -18,19 +18,61 @@ using SteadyStateDiffEq
 export ODEOptimizer, ODEGradientDescent, RKChebyshevDescent, RKAccelerated, HighOrderDescent
 export DAEOptimizer, DAEMassMatrix
 
+"""
+    ODEOptimizer(solver)
+
+Optimization algorithm that solves the gradient flow steady-state problem with
+the supplied ODE solver.
+"""
 struct ODEOptimizer{T}
     solver::T
 end
 
+"""
+    ODEGradientDescent()
+
+ODE-based gradient descent optimizer using the explicit Euler method.
+"""
 ODEGradientDescent() = ODEOptimizer(Euler())
+
+"""
+    RKChebyshevDescent()
+
+ODE-based gradient descent optimizer using the stabilized ROCK2 Runge-Kutta
+method.
+"""
 RKChebyshevDescent() = ODEOptimizer(ROCK2())
+
+"""
+    RKAccelerated()
+
+ODE-based optimizer using the Tsit5 Runge-Kutta method for accelerated gradient
+flow integration.
+"""
 RKAccelerated() = ODEOptimizer(Tsit5())
+
+"""
+    HighOrderDescent()
+
+ODE-based optimizer using the high-order Vern7 Runge-Kutta method.
+"""
 HighOrderDescent() = ODEOptimizer(Vern7())
 
+"""
+    DAEOptimizer(solver)
+
+Optimization algorithm for constrained problems represented as differential
+algebraic equation steady-state systems.
+"""
 struct DAEOptimizer{T}
     solver::T
 end
 
+"""
+    DAEMassMatrix()
+
+DAE-based optimizer using a Rodas5P mass-matrix formulation.
+"""
 DAEMassMatrix() = DAEOptimizer(Rodas5P(autodiff = AutoFiniteDiff()))
 
 SciMLBase.requiresbounds(::ODEOptimizer) = false
