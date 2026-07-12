@@ -77,7 +77,11 @@ end
 function lagrangian(x, _f::Function, cons::Function, p, λ, σ = one(eltype(x)))
     res = zeros(eltype(x), length(λ))
     cons(res, x, p)
-    return σ * _f(x, p) + dot(λ, res)
+    cons_term = zero(eltype(res))
+    for i in eachindex(λ, res)
+        cons_term += λ[i] * res[i]
+    end
+    return σ * _f(x, p) + cons_term
 end
 
 function lag_grad(mode, x, dx, lagrangian::Function, _f::Function, cons::Function, p, σ, λ)
