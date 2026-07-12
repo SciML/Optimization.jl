@@ -45,6 +45,7 @@ run_qa(
             :get_proximal_map!,
             :get_subgradient!,
             :get_subtrahend_gradient!,
+            :gradient_sampling_subsolver!,
             :linearized_forward_operator!,
             :update_hessian_basis!,
             :ℂ,
