@@ -1,5 +1,9 @@
 [Core]
 versions = ["lts", "1", "pre"]
 
+# Enzyme's Julia prerelease support can lag its registered releases.
+[AD]
+versions = ["lts", "1"]
+
 [QA]
 versions = ["lts", "1"]
