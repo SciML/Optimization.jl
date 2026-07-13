@@ -27,6 +27,9 @@ sol = solve(prob, IpoptOptimizer(hessian_approximation = "limited-memory"); call
 @test SciMLBase.successful_retcode(sol)
 @test sol ≈ [1, 1]
 
+# HS071 translated from the Ipopt examples (examples/hs071_cpp),
+# https://github.com/coin-or/Ipopt, licensed under Eclipse Public License - v 2.0
+# https://github.com/coin-or/Ipopt/blob/stable/3.14/LICENSE
 function _test_sparse_derivatives_hs071(backend, optimizer)
     function objective(x, ::Any)
         return x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3]
@@ -68,10 +71,6 @@ end
     end
 end
 
-# Include additional tests based on Ipopt examples
-# These tests were automatically translated from the Ipopt tests, https://github.com/coin-or/Ipopt
-# licensed under Eclipse Public License - v 2.0
-# https://github.com/coin-or/Ipopt/blob/stable/3.14/LICENSE
 include("additional_tests.jl")
 include("advanced_features.jl")
 include("problem_types.jl")
@@ -113,15 +112,76 @@ end
     sys = complete(sys)
     prob = OptimizationProblem(sys, [x => 0.0]; grad = true, hess = true)
     cache = init(prob, IpoptOptimizer(); verbose = false)
-    @test cache isa OptimizationIpopt.IpoptCache
+    @test cache isa OptimizationBase.OptimizationCache
     sol = solve!(cache)
     @test sol.u ≈ [1.0] # ≈ [1]
 
-    @test_broken begin # needs reinit/remake fixes
-        cache = OptimizationBase.reinit!(cache; p = [2.0])
+    # reinit! with new parameters is still blocked upstream for MTK problems:
+    # a plain vector cannot be `convert`ed into the concretely typed
+    # `ReInitCache{_, MTKParameters}` field, and a symbolic map hits the
+    # generic `process_p_u0_symbolic` fallback in SciMLBase ("Symbolic remake
+    # for OptimizationCache ... is currently not supported").
+    @test_broken begin
+        cache = OptimizationBase.reinit!(cache; p = [a => 2.0])
         sol = solve!(cache)
-        @test sol.u ≈ [2.0]  # ≈ [2]
+        sol.u ≈ [2.0]
     end
+end
+
+@testset "reinit!" begin
+    optfunc = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
+    prob = OptimizationProblem(optfunc, zeros(2), [1.0, 100.0])
+    cache = init(prob, IpoptOptimizer())
+    sol = solve!(cache)
+    @test SciMLBase.successful_retcode(sol)
+    @test sol.u ≈ [1.0, 1.0] atol = 1.0e-6
+
+    # The new parameters must be picked up by the objective and all the
+    # derivative callbacks
+    cache = OptimizationBase.reinit!(cache; p = [2.0, 100.0])
+    sol = solve!(cache)
+    @test SciMLBase.successful_retcode(sol)
+    @test sol.u ≈ [2.0, 4.0] atol = 1.0e-5
+end
+
+@testset "MaxSense objective sign" begin
+    # Maximization is handled through Ipopt's obj_scaling_factor, so the
+    # reported objective (and the value passed to callbacks) must keep the
+    # user's sign convention. Optimum: 5 at (1, 0).
+    maxf(x, p) = -(x[1] - 1.0)^2 - x[2]^2 + 5.0
+    callback_objs = Float64[]
+    cb = (state, l) -> (push!(callback_objs, l); false)
+    prob = OptimizationProblem(
+        OptimizationFunction(maxf, OptimizationBase.AutoForwardDiff()), [3.0, 2.0];
+        sense = OptimizationBase.MaxSense
+    )
+    sol = solve(prob, IpoptOptimizer(); callback = cb)
+    @test SciMLBase.successful_retcode(sol)
+    @test sol.u ≈ [1.0, 0.0] atol = 1.0e-6
+    @test sol.objective ≈ 5.0 atol = 1.0e-6
+    @test last(callback_objs) ≈ 5.0 atol = 1.0e-4
+end
+
+@testset "limited-memory skips Hessian generation" begin
+    optfunc = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
+    prob = OptimizationProblem(optfunc, zeros(2), [1.0, 100.0])
+
+    opt = IpoptOptimizer(hessian_approximation = "limited-memory")
+    @test !SciMLBase.requireshessian(opt)
+    @test !SciMLBase.requireslagh(opt)
+    @test !SciMLBase.requiresconshess(opt)
+    # also when requested through additional_options
+    opt2 = IpoptOptimizer(
+        additional_options = Dict("hessian_approximation" => "limited-memory")
+    )
+    @test !SciMLBase.requireshessian(opt2)
+
+    cache = init(prob, opt)
+    @test cache.f.hess === nothing
+    @test cache.f.lag_h === nothing
+    sol = solve!(cache)
+    @test SciMLBase.successful_retcode(sol)
+    @test sol.u ≈ [1.0, 1.0] atol = 1.0e-5
 end
 
 @testset "Additional Options and Common Interface" begin
@@ -181,25 +241,23 @@ end
         @test SciMLBase.successful_retcode(sol3)
     end
 
-    @testset "Priority: struct < additional_options < solve args" begin
+    @testset "Priority: additional_options > solve args" begin
         optfunc = OptimizationFunction(rosenbrock, OptimizationBase.AutoZygote())
         prob = OptimizationProblem(optfunc, x0, p)
 
-        # Struct field is overridden by solve argument
+        # An explicit Ipopt option in additional_options wins over the common
+        # solve argument: rosenbrock from zeros needs far more than 5
+        # iterations, so hitting max_iter = 5 proves which setting was applied
         opt = IpoptOptimizer(
-            acceptable_tol = 1.0e-4,  # Struct field
-            additional_options = Dict(
-                "max_iter" => 100  # Will be overridden by maxiters
-            )
+            additional_options = Dict("max_iter" => 5)
         )
+        sol = solve(prob, opt; maxiters = 100)
+        @test sol.retcode == SciMLBase.ReturnCode.MaxIters
+        @test sol.stats.iterations <= 5
 
-        sol = solve(
-            prob, opt;
-            maxiters = 50,  # Should override additional_options
-            reltol = 1.0e-10
-        ) # Should set tol
-
-        @test sol.stats.iterations <= 50
-        @test SciMLBase.successful_retcode(sol)
+        # Without the explicit option, the solve argument reaches Ipopt
+        sol2 = solve(prob, IpoptOptimizer(); maxiters = 5)
+        @test sol2.retcode == SciMLBase.ReturnCode.MaxIters
+        @test sol2.stats.iterations <= 5
     end
 end

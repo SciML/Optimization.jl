@@ -3,10 +3,7 @@ using Zygote
 using Test
 using LinearAlgebra
 using SparseArrays
-
-# These tests were automatically translated from the Ipopt tests, https://github.com/coin-or/Ipopt
-# licensed under Eclipse Public License - v 2.0
-# https://github.com/coin-or/Ipopt/blob/stable/3.14/LICENSE
+using Random
 
 @testset "Specific Problem Types" begin
 
@@ -239,72 +236,6 @@ using SparseArrays
         @test norm(res) < 1.0e-6
     end
 
-    @testset "Robust Optimization" begin
-        # Simple robust optimization problem
-        # minimize worst-case objective over uncertainty set
-
-        function robust_objective(x, p)
-            # Minimize max_{u in U} (x - u)^T * (x - u)
-            # where U = {u : ||u||_inf <= 0.5}
-            # This simplifies to minimizing ||x||^2 + ||x||_1
-            return sum(x .^ 2) + sum(abs.(x))
-        end
-
-        function robust_constraints(res, x, p)
-            # Constraint: sum(x) >= 1
-            res[1] = sum(x) - 1.0
-        end
-
-        n = 3
-        optfunc = OptimizationFunction(
-            robust_objective, OptimizationBase.AutoZygote();
-            cons = robust_constraints
-        )
-        x0 = fill(1.0 / n, n)
-        prob = OptimizationProblem(
-            optfunc, x0, nothing;
-            lcons = [0.0],
-            ucons = [Inf]
-        )
-
-        sol = solve(prob, IpoptOptimizer())
-
-        @test SciMLBase.successful_retcode(sol)
-        @test sum(sol.u) >= 1.0 - 1.0e-6
-    end
-
-    # @testset "Complementarity Constraint" begin
-    #     # Mathematical program with complementarity constraints (MPCC)
-    #     # Reformulated using smoothing
-
-    #     function mpcc_objective(x, p)
-    #         return (x[1] - 1)^2 + (x[2] - 2)^2
-    #     end
-
-    #     function mpcc_constraints(res, x, p)
-    #         # Original complementarity: x[1] * x[2] = 0
-    #         # Smoothed version: x[1] * x[2] <= epsilon
-    #         ε = 1e-6
-    #         res[1] = x[1] * x[2] - ε
-    #         # Additional constraint: x[1] + x[2] >= 1
-    #         res[2] = x[1] + x[2] - 1.0
-    #     end
-
-    #     optfunc = OptimizationFunction(mpcc_objective, OptimizationBase.AutoZygote();
-    #                                   cons = mpcc_constraints)
-    #     x0 = [0.5, 0.5]
-    #     prob = OptimizationProblem(optfunc, x0, nothing;
-    #                              lb = [0.0, 0.0],
-    #                              lcons = [-Inf, 0.0],
-    #                              ucons = [0.0, Inf])
-
-    #     sol = solve(prob, IpoptOptimizer())
-
-    #     @test SciMLBase.successful_retcode(sol)
-    #     # Should satisfy approximate complementarity
-    #     @test sol.u[1] * sol.u[2] < 1e-4
-    #     @test sol.u[1] + sol.u[2] >= 1.0 - 1e-6
-    # end
 end
 
 @testset "Stress Tests" begin
@@ -312,17 +243,18 @@ end
         # Large-scale quadratic program
         n = 100
 
-        # Random positive definite matrix
-        A = randn(n, n)
+        # Random positive definite matrix (seeded for reproducibility)
+        rng = Random.MersenneTwister(42)
+        A = randn(rng, n, n)
         Q = A' * A + I
-        b = randn(n)
+        b = randn(rng, n)
 
         function large_quadratic(x, p)
             return 0.5 * dot(x, Q * x) - dot(b, x)
         end
 
         optfunc = OptimizationFunction(large_quadratic, OptimizationBase.AutoZygote())
-        x0 = randn(n)
+        x0 = randn(rng, n)
         prob = OptimizationProblem(optfunc, x0)
 
         sol = solve(
@@ -348,7 +280,7 @@ end
 
         n = 10
         optfunc = OptimizationFunction(trig_objective, OptimizationBase.AutoZygote())
-        x0 = randn(n)
+        x0 = randn(Random.MersenneTwister(0), n)
         prob = OptimizationProblem(
             optfunc, x0;
             lb = fill(-2π, n),

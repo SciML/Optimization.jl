@@ -13,7 +13,7 @@ run_qa(
     explicit_imports = true,
     ei_kwargs = (;
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
-        all_qualified_accesses_are_public = (; ignore = (Symbol("@logmsg"), :AbstractOptimizationCache, :ApplicationReturnStatus, :DEFAULT_VERBOSE, :Diverging_Iterates, :Feasible_Point_Found, :GetIpoptCurrentIterate, :Infeasible_Problem_Detected, :LogLevel, :Maximum_CpuTime_Exceeded, :Maximum_Iterations_Exceeded, :Maximum_WallTime_Exceeded, :OptimizationState, :OptimizationStats, :ReInitCache, :Search_Direction_Becomes_Too_Small, :Solve_Succeeded, :Solved_To_Acceptable_Level, :User_Requested_Stop, :__init, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :_process_verbose_param, :allowscallback, :get_observed, :get_p, :get_paramsyms, :get_syms, :instantiate_function, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :supports_opt_cache_interface, :supports_sense)),
+        all_qualified_accesses_are_public = (; ignore = (Symbol("@logmsg"), :ApplicationReturnStatus, :Diverging_Iterates, :Feasible_Point_Found, :GetIpoptCurrentIterate, :Infeasible_Problem_Detected, :LogLevel, :Maximum_CpuTime_Exceeded, :Maximum_Iterations_Exceeded, :Maximum_WallTime_Exceeded, :OptimizationState, :OptimizationStats, :Search_Direction_Becomes_Too_Small, :Solve_Succeeded, :Solved_To_Acceptable_Level, :User_Requested_Stop, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback, :instantiate_function, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :requireslagh, :supports_sense)),
     ),
     api_docs_kwargs = (;
         ignore = (
