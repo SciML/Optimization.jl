@@ -1,6 +1,6 @@
 using ConvexOptimization
 using SciMLBase
-using SciMLBase: ConvexOptimizationProblem, ConvexOptimizationSolution
+using SciMLBase: ConvexOptimizationProblem, OptimizationSolution
 import MathOptInterface as MOI
 import Clarabel
 using Test
@@ -20,7 +20,7 @@ c = [1.0, 2.0]
 
     sol = solve(prob, ConvexMOI(Clarabel.Optimizer))
 
-    @test sol isa ConvexOptimizationSolution
+    @test sol isa OptimizationSolution
     @test SciMLBase.successful_retcode(sol.retcode)
     @test isapprox(sol.u, [1.0, 0.0]; atol = 1.0e-6)
     @test isapprox(sol.objective, 1.0; atol = 1.0e-6)
