@@ -1,11 +1,16 @@
 [deps]
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
 OptimizationManopt = "e57b7fff-7ee7-4550-b4f0-90e9476e9fb6"
 SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
+[sources]
+OptimizationBase = {path = "../../../OptimizationBase"}
+
 [compat]
+OptimizationBase = "5"
 Aqua = "0.8"
 JET = "0.9, 0.10, 0.11"
 julia = "1.10"
