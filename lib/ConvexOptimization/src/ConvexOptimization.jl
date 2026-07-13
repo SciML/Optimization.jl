@@ -2,7 +2,7 @@ module ConvexOptimization
 
 using Reexport
 @reexport using SciMLBase
-using SciMLBase: ConvexOptimizationProblem, ConvexOptimizationSolution,
+using SciMLBase: ConvexOptimizationProblem, OptimizationSolution,
     OptimizationFunction, AbstractOptimizationCache, AbstractOptimizationAlgorithm,
     NullParameters, ReturnCode
 import MathOptInterface as MOI
@@ -21,8 +21,8 @@ returns the affine map whose image must lie in the MathOptInterface vector cone
 …). The output length of `g` must equal `MOI.dimension(set)`.
 
 The backend traces `g` on its own symbolic variables, so each `ConeConstraint`
-maps to exactly one MOI constraint and therefore one entry of
-`ConvexOptimizationSolution.dual`, in the order the constraints are given.
+maps to exactly one MOI constraint and therefore one entry of the returned
+`OptimizationSolution.dual`, in the order the constraints are given.
 Because the cone is named explicitly, the returned dual is already expressed in
 the user's variables (no sign remap): `>=` → `MOI.Nonnegatives`, `<=` →
 `MOI.Nonpositives`, `==` → `MOI.Zeros`.

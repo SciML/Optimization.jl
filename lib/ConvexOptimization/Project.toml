@@ -13,17 +13,12 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SymbolicAnalysis = "4297ee4d-0239-47d8-ba5d-195ecdf594fe"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
-# Temporary: ConvexOptimizationProblem/Solution are unreleased (SciML/SciMLBase.jl#1440).
-# Drop this [sources] once a SciMLBase with those types is registered.
-[sources]
-SciMLBase = {url = "https://github.com/ChrisRackauckas-Claude/SciMLBase.jl", rev = "convex-optimization-problem"}
-
 [compat]
 Clarabel = "0.10, 0.11"
 LinearAlgebra = "1.10"
 MathOptInterface = "1.45"
 Reexport = "1.2"
-SciMLBase = "3"
+SciMLBase = "3.36"
 SparseArrays = "1.10"
 SymbolicAnalysis = "0.3"
 Symbolics = "7"
