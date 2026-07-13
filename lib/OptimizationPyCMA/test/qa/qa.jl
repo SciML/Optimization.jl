@@ -8,6 +8,17 @@ using Test
 run_qa(
     OptimizationPyCMA;
     explicit_imports = true,
+    api_docs_kwargs = (;
+        ignore = (
+            :AutoModelingToolkit,
+            :AutoSparseFastDifferentiation,
+            :AutoSparseFiniteDiff,
+            :AutoSparseForwardDiff,
+            :AutoSparsePolyesterForwardDiff,
+            :AutoSparseReverseDiff,
+            :AutoSparseZygote,
+        ),
+    ),
     ei_broken = (
         :no_implicit_imports,
         :all_qualified_accesses_via_owners,

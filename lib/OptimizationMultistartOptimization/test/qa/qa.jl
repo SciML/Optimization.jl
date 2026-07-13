@@ -1,4 +1,4 @@
-using SciMLTesting, OptimizationMultistartOptimization, JET
+using SciMLTesting, OptimizationMultistartOptimization, JET, SciMLBase
 using Test
 using MultistartOptimization
 
@@ -13,19 +13,18 @@ using MultistartOptimization
 # for MultistartOptimization, so the trait/interface methods it adds extend
 # SciML's *own* functions rather than committing type piracy — mark those
 # functions as own.
-SB = OptimizationMultistartOptimization.SciMLBase
 run_qa(
     OptimizationMultistartOptimization;
     explicit_imports = true,
     aqua_kwargs = (;
         piracies = (;
             treat_as_own = [
-                SB.__init,
-                SB.__solve,
-                SB.allowsbounds,
-                SB.allowscallback,
-                SB.has_init,
-                SB.requiresbounds,
+                SciMLBase.__init,
+                SciMLBase.__solve,
+                SciMLBase.allowsbounds,
+                SciMLBase.allowscallback,
+                SciMLBase.has_init,
+                SciMLBase.requiresbounds,
             ],
         ),
         # OptimizationNLopt is used in tests as the inner solver, not in src.
@@ -34,6 +33,17 @@ run_qa(
     ei_kwargs = (;
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
         all_qualified_accesses_are_public = (; ignore = (:OptimizationStats, :__init, :__solve, :allowscallback, :requiresbounds)),
+    ),
+    api_docs_kwargs = (;
+        ignore = (
+            :AutoModelingToolkit,
+            :AutoSparseFastDifferentiation,
+            :AutoSparseFiniteDiff,
+            :AutoSparseForwardDiff,
+            :AutoSparsePolyesterForwardDiff,
+            :AutoSparseReverseDiff,
+            :AutoSparseZygote,
+        ),
     ),
     ei_broken = (:no_implicit_imports,),
 )

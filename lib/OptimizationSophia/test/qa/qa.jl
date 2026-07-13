@@ -14,5 +14,16 @@ run_qa(
     ei_kwargs = (;
         all_qualified_accesses_are_public = (; ignore = (:OptimizationState, :__init, :__solve, :_check_and_convert_maxiters, :allowscallback, :allowsfg, :isa_dataiterator, :requiresgradient, :requireshessian)),
     ),
+    api_docs_kwargs = (;
+        ignore = (
+            :AutoModelingToolkit,
+            :AutoSparseFastDifferentiation,
+            :AutoSparseFiniteDiff,
+            :AutoSparseForwardDiff,
+            :AutoSparsePolyesterForwardDiff,
+            :AutoSparseReverseDiff,
+            :AutoSparseZygote,
+        ),
+    ),
     ei_broken = (:no_implicit_imports,),
 )

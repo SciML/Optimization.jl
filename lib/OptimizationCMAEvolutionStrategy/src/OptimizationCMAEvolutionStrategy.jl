@@ -7,6 +7,11 @@ using OptimizationBase: SciMLBase
 
 export CMAEvolutionStrategyOpt
 
+"""
+    CMAEvolutionStrategyOpt()
+
+Optimizer wrapper for CMAEvolutionStrategy.jl covariance matrix adaptation.
+"""
 struct CMAEvolutionStrategyOpt end
 
 SciMLBase.allowscallback(opt::CMAEvolutionStrategyOpt) = true

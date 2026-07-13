@@ -1,17 +1,14 @@
 using Pkg
 using SafeTestsets
+using SciMLTesting
 
 const TEST_GROUP = get(ENV, "OPTIMIZATION_TEST_GROUP", "All")
 
-# QA (Aqua + JET) runs in an isolated environment (test/qa) so its tooling deps
-# never enter the main test target's resolve. On Julia < 1.11 the [sources] table
-# is ignored, so develop the package by path to test the PR branch code.
+# QA (Aqua + JET) runs in an isolated environment (test/qa). activate_group_env
+# develops the package under test (via `parent`) plus its in-repo `[sources]` siblings
+# by path — native `[sources]` on Julia >= 1.11, the develop_sources! backport on 1.10.
 function activate_qa_env()
-    Pkg.activate(joinpath(@__DIR__, "qa"))
-    if VERSION < v"1.11.0-DEV.0"
-        Pkg.develop(PackageSpec(path = dirname(@__DIR__)))
-    end
-    return Pkg.instantiate()
+    return activate_group_env(joinpath(@__DIR__, "qa"))
 end
 
 if TEST_GROUP == "Core" || TEST_GROUP == "All"

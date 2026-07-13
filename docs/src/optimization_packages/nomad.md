@@ -26,6 +26,10 @@ constraint equations. However, linear and nonlinear constraints defined in `Opti
 
 NOMAD works both with and without lower and upper box-constraints set by `lb` and `ub` in the `OptimizationProblem`.
 
+```@docs
+OptimizationNOMAD.NOMADOpt
+```
+
 ## Examples
 
 The Rosenbrock function can be optimized using the `NOMADOpt()` with and without box-constraints as follows:

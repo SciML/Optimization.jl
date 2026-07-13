@@ -1,4 +1,4 @@
-using SciMLTesting, OptimizationNLPModels, JET
+using SciMLTesting, OptimizationNLPModels, JET, SciMLBase
 using Test
 using NLPModels
 
@@ -12,13 +12,12 @@ using NLPModels
 # This package defines SciMLBase.OptimizationFunction / SciMLBase.OptimizationProblem
 # constructors for NLPModels.AbstractNLPModel. Those constructors extend SciML's
 # *own* types, so mark those (not the NLPModels type) as own for the piracy check.
-SB = OptimizationNLPModels.SciMLBase
 run_qa(
     OptimizationNLPModels;
     explicit_imports = true,
     aqua_kwargs = (;
         piracies = (;
-            treat_as_own = [SB.OptimizationFunction, SB.OptimizationProblem],
+            treat_as_own = [SciMLBase.OptimizationFunction, SciMLBase.OptimizationProblem],
         ),
         # Optimization sublibraries used to construct OptimizationProblems in tests
         # but not `using`d in src; Aqua's static analysis can't see test-only usage.
@@ -28,6 +27,22 @@ run_qa(
         # `NoAD` is owned by SciMLBase and remains non-public there on the registered
         # release (SciMLBase 3.24.0); fix belongs upstream via a `public` declaration.
         all_qualified_accesses_are_public = (; ignore = (:NoAD,)),
+    ),
+    api_docs_kwargs = (;
+        ignore = (
+            :AutoModelingToolkit,
+            :AutoSparseFastDifferentiation,
+            :AutoSparseFiniteDiff,
+            :AutoSparseForwardDiff,
+            :AutoSparsePolyesterForwardDiff,
+            :AutoSparseReverseDiff,
+            :AutoSparseZygote,
+            :get_nbatch,
+            :jth_con,
+            :jth_congrad,
+            :jth_congrad!,
+            :jth_sparse_congrad,
+        ),
     ),
     ei_broken = (:no_implicit_imports,),
 )

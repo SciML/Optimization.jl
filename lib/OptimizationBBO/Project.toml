@@ -1,14 +1,18 @@
 name = "OptimizationBBO"
 uuid = "3e6eede4-6085-4f62-9a71-46d9bc1eb92b"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.4.8"
+version = "0.4.9"
 [deps]
 BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
+[weakdeps]
+LogExpFunctions = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
+
 [extras]
+SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -18,7 +22,9 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
+SciMLTesting = "2.1"
 BlackBoxOptim = "0.6.3"
+LogExpFunctions = "0.3.28"
 OptimizationBase = "5"
 Pkg = "1"
 Random = "1.10"
@@ -29,4 +35,4 @@ Test = "1.10"
 julia = "1.10"
 
 [targets]
-test = ["Random", "Test", "SafeTestsets", "Pkg"]
+test = ["SciMLTesting", "Random", "Test", "SafeTestsets", "Pkg"]

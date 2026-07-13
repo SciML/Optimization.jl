@@ -13,15 +13,4 @@ The choices for the auto-AD fill-ins with quick descriptions are:
 
 ## Automatic Differentiation Choice API
 
-The following sections describe the Auto-AD choices in detail. These types are defined in the [ADTypes.jl](https://github.com/SciML/ADTypes.jl) package.
-
-```@docs
-ADTypes.AutoForwardDiff
-ADTypes.AutoFiniteDiff
-ADTypes.AutoReverseDiff
-ADTypes.AutoZygote
-ADTypes.AutoTracker
-ADTypes.AutoSymbolics
-ADTypes.AutoEnzyme
-ADTypes.AutoMooncake
-```
+The Auto-AD choices are defined and documented in [ADTypes.jl](https://github.com/SciML/ADTypes.jl). Optimization.jl accepts these choices when constructing optimization functions, but does not own their API.

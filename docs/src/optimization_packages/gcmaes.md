@@ -20,6 +20,10 @@ The GCMAES algorithm is called by `GCMAESOpt()` and the initial search variance 
 The method in [`GCMAES`](https://github.com/AStupidBear/GCMAES.jl) is performing global optimization on problems without
 constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
 
+```@docs
+OptimizationGCMAES.GCMAESOpt
+```
+
 ## Example
 
 The Rosenbrock function can be optimized using the `GCMAESOpt()` without utilizing the gradient information as follows:

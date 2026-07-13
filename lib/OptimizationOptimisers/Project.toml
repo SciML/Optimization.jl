@@ -1,7 +1,7 @@
 name = "OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.18"
+version = "0.3.19"
 
 [deps]
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
@@ -14,6 +14,7 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
+SciMLTesting = "2.1"
 Pkg = "1"
 SafeTestsets = "0.1"
 Logging = "1.10"
@@ -33,6 +34,7 @@ Test = "1.10"
 Zygote = "0.6, 0.7"
 
 [extras]
+SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 ComponentArrays = "b0b7db55-cfe3-40fc-9ded-d10e2dbeff66"
@@ -46,4 +48,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["ComponentArrays", "ForwardDiff", "Lux", "MLDataDevices", "MLUtils", "Random", "Test", "Zygote", "Printf", "SafeTestsets", "Pkg"]
+test = ["SciMLTesting", "ComponentArrays", "ForwardDiff", "Lux", "MLDataDevices", "MLUtils", "Random", "Test", "Zygote", "Printf", "SafeTestsets", "Pkg"]

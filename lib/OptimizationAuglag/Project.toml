@@ -1,7 +1,7 @@
 name = "OptimizationAuglag"
 uuid = "2ea93f80-9333-43a1-a68d-1f53b957a421"
 authors = ["paramthakkar123 <paramthakkar864@gmail.com>", "Sebastian Micluța-Câmpeanu <sebastian.mc95@proton.me>"]
-version = "2.0.1"
+version = "2.0.2"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -10,6 +10,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 
 [extras]
+SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
@@ -23,6 +24,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 OptimizationOptimisers = {path = "../OptimizationOptimisers"}
 
 [compat]
+SciMLTesting = "2.1"
 Pkg = "1"
 SafeTestsets = "0.1"
 ForwardDiff = "1.0.1"
@@ -37,4 +39,4 @@ Test = "1.10.0"
 julia = "1.10"
 
 [targets]
-test = ["Test", "ForwardDiff", "MLUtils", "OptimizationOptimisers", "Random", "SafeTestsets", "Pkg"]
+test = ["SciMLTesting", "Test", "ForwardDiff", "MLUtils", "OptimizationOptimisers", "Random", "SafeTestsets", "Pkg"]

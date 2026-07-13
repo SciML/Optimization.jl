@@ -16,6 +16,9 @@ Pkg.add("SimpleOptimization");
 ```@docs
 SimpleBFGS
 SimpleLBFGS
+SimpleGradientDescent
+SimpleNewton
+SimpleSOAP
 ```
 
 ## Example

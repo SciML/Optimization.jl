@@ -6,6 +6,11 @@ using PythonCall, SciMLBase
 
 export PyCMAOpt
 
+"""
+    PyCMAOpt()
+
+Optimizer wrapper for Python's `cma` package through PythonCall.
+"""
 struct PyCMAOpt end
 
 # importing PyCMA

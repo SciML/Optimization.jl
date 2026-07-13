@@ -11,6 +11,12 @@ export MadNLPOptimizer
 
 include("callback.jl")
 
+"""
+    MadNLPOptimizer(; kwargs...)
+
+Optimizer wrapper for solving nonlinear programs with MadNLP.jl through the
+Optimization.jl interface.
+"""
 @kwdef struct MadNLPOptimizer{T}
     # General options
     rethrow_error::Bool = true

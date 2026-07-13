@@ -19,6 +19,27 @@ import SciMLBase: solve, init, solve!, __init, __solve,
     KeywordArgError, extract_alg,
     _concrete_solve_adjoint, _concrete_solve_forward
 
+@doc """
+    ObjSense
+
+Abstract objective-sense marker used by `OptimizationProblem` to indicate
+whether the objective should be minimized or maximized.
+
+See also [`MinSense`](@ref) and [`MaxSense`](@ref).
+""" ObjSense
+
+@doc """
+    MinSense
+
+Objective sense for minimizing an `OptimizationProblem`.
+""" MinSense
+
+@doc """
+    MaxSense
+
+Objective sense for maximizing an `OptimizationProblem`.
+""" MaxSense
+
 using SymbolicIndexingInterface: SymbolicIndexingInterface
 
 export ObjSense, MaxSense, MinSense
@@ -30,9 +51,22 @@ using FastClosures
 
 struct NullCallback end
 (x::NullCallback)(args...) = false
+
+"""
+    DEFAULT_CALLBACK
+
+Default callback for `solve` and `init`. It ignores all callback arguments and
+returns `false`, so optimization continues until the solver stops.
+"""
 const DEFAULT_CALLBACK = NullCallback()
 
 struct NullData end
+
+"""
+    DEFAULT_DATA
+
+Default data iterator for optimization problems that are not minibatched.
+"""
 const DEFAULT_DATA = Iterators.cycle((NullData(),))
 Base.iterate(::NullData, i = 1) = nothing
 Base.length(::NullData) = 0

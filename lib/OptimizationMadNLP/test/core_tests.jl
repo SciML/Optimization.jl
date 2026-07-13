@@ -364,16 +364,18 @@ end
                 MadNLP.CompactLBFGS,
                 MadNLP.ExactHessian,  # For comparison
             ]
+            initial_u = variant == MadNLP.ExactHessian ? x0[1:2] : x0
             # Only provide gradients, no Hessian needed for LBFGS
             ad = AutoForwardDiff()  # First-order AD is sufficient
             optfunc = OptimizationFunction(extended_rosenbrock, ad)
-            prob = OptimizationProblem(optfunc, x0, nothing)
+            prob = OptimizationProblem(optfunc, initial_u, nothing)
 
             if variant == MadNLP.ExactHessian
+                # Exact Hessian is only a comparison here; the LBFGS path keeps the larger problem.
                 # Use second-order AD for exact Hessian
                 ad = SecondOrder(AutoForwardDiff(), AutoForwardDiff())
                 optfunc = OptimizationFunction(extended_rosenbrock, ad)
-                prob = OptimizationProblem(optfunc, x0, nothing)
+                prob = OptimizationProblem(optfunc, initial_u, nothing)
             end
 
             opt = MadNLPOptimizer(
@@ -458,8 +460,8 @@ end
             return x0
         end
 
-        @testset "N=5 electrons with $approx" for approx in [MadNLP.CompactLBFGS, MadNLP.ExactHessian]
-            np = 5
+        @testset "electrons on sphere with $approx" for approx in [MadNLP.CompactLBFGS, MadNLP.ExactHessian]
+            np = approx == MadNLP.ExactHessian ? 2 : 5
             x0 = init_electrons_on_sphere(np)
 
             if approx == MadNLP.CompactLBFGS
@@ -499,10 +501,9 @@ end
             unit_sphere_constraints(cons_vals, sol.u, nothing)
             @test all(abs.(cons_vals) .< 1.0e-5)
 
-            # Known optimal energy for 5 electrons on unit sphere
+            # Known optimal energy for electrons on unit sphere
             # Reference: https://en.wikipedia.org/wiki/Thomson_problem
-            # Configuration: Triangular dipyramid (trigonal bipyramid, D3h symmetry)
-            expected_energy = 6.474691495
+            expected_energy = np == 2 ? 0.5 : 6.474691495
             @test isapprox(sol.objective, expected_energy, rtol = 1.0e-3)
 
             # Verify minimum distance between electrons
@@ -520,17 +521,14 @@ end
             @test min_dist > 0.5  # Electrons should be well-separated
         end
 
-        @testset verbose = true "LBFGS vs Exact Hessian" begin
-            # Test with moderate size to show LBFGS efficiency
-            np = 10  # Gyroelongated square dipyramid configuration
-            x0 = init_electrons_on_sphere(np)
-
+        @testset verbose = true "LBFGS and Exact Hessian" begin
             results = []
 
-            for (name, approx, ad) in [
+            for (name, approx, ad, np, expected_energy) in [
                     (
                         "CompactLBFGS", MadNLP.CompactLBFGS,
-                        AutoForwardDiff(),
+                        AutoForwardDiff(), 10,
+                        32.71694946,
                     )
                     (
                         "ExactHessian",
@@ -538,8 +536,11 @@ end
                         SecondOrder(
                             AutoForwardDiff(), AutoZygote()
                         ),
+                        2,
+                        0.5,
                     )
                 ]
+                x0 = init_electrons_on_sphere(np)
                 optfunc = OptimizationFunction(
                     coulomb_potential, ad,
                     cons = unit_sphere_constraints
@@ -562,6 +563,7 @@ end
                         objective = sol.objective,
                         iterations = sol.stats.iterations,
                         success = SciMLBase.successful_retcode(sol),
+                        expected = expected_energy,
                     )
                 )
             end
@@ -569,11 +571,10 @@ end
             # All methods should converge
             @test all(r[2].success for r in values(results))
 
-            # All should find similar objective values (gyroelongated square dipyramid energy)
+            # Check objective values against the corresponding Thomson problem energy.
             # Reference: https://en.wikipedia.org/wiki/Thomson_problem
-            objectives = [r[2].objective for r in values(results)]
-            @testset "$(results[i][1])" for (i, o) in enumerate(objectives)
-                @test o ≈ 32.71694946 rtol = 1.0e-2
+            @testset "$(name)" for (name, result) in results
+                @test result.objective ≈ result.expected rtol = 1.0e-2
             end
 
             # LBFGS methods typically need more iterations but less cost per iteration

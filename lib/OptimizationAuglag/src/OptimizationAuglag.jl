@@ -10,6 +10,21 @@ export AugLag
 
 include("auglag_function.jl")
 
+"""
+    AugLag(; inner, kwargs...)
+
+Augmented Lagrangian optimizer that solves constrained Optimization.jl problems
+by repeatedly calling an inner optimizer on the augmented objective.
+
+## Keyword Arguments
+
+  - `inner`: Inner optimizer used for the augmented subproblems.
+  - `τ`: Constraint violation contraction threshold.
+  - `γ`: Penalty growth factor.
+  - `ϵ`, `ϵ_primal`, `ϵ_dual`: Convergence tolerances.
+  - `ρ_init`: Initial penalty parameter. If `nothing`, a problem-scaled value is chosen.
+  - `inner_kwargs`: Keyword arguments forwarded to the inner optimizer.
+"""
 struct AugLag{I, T, R, K}
     inner::I
     τ::T

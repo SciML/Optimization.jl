@@ -53,6 +53,25 @@ The recommended optimizer is `BBO_adaptive_de_rand_1_bin_radiuslimited()`
 
 The currently available algorithms are listed [here](https://github.com/robertfeldt/BlackBoxOptim.jl#state-of-the-library)
 
+```@docs
+OptimizationBBO.BBO_separable_nes
+OptimizationBBO.BBO_xnes
+OptimizationBBO.BBO_dxnes
+OptimizationBBO.BBO_adaptive_de_rand_1_bin
+OptimizationBBO.BBO_adaptive_de_rand_1_bin_radiuslimited
+OptimizationBBO.BBO_de_rand_1_bin
+OptimizationBBO.BBO_de_rand_1_bin_radiuslimited
+OptimizationBBO.BBO_de_rand_2_bin
+OptimizationBBO.BBO_de_rand_2_bin_radiuslimited
+OptimizationBBO.BBO_generating_set_search
+OptimizationBBO.BBO_probabilistic_descent
+OptimizationBBO.BBO_resampling_memetic_search
+OptimizationBBO.BBO_resampling_inheritance_memetic_search
+OptimizationBBO.BBO_simultaneous_perturbation_stochastic_approximation
+OptimizationBBO.BBO_random_search
+OptimizationBBO.BBO_borg_moea
+```
+
 ## Example
 
 The Rosenbrock function can be optimized using the `BBO_adaptive_de_rand_1_bin_radiuslimited()` as follows:

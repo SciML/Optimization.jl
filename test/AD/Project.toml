@@ -1,0 +1,49 @@
+[deps]
+ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Ipopt = "b6b21f68-93f8-5de0-b562-5493be1d77c9"
+Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
+Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
+OptimizationLBFGSB = "22f7324a-a79d-40f2-bebe-3af60c77bd15"
+OptimizationMOI = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
+OptimizationOptimJL = "36348300-93cb-4f02-beb5-3c3902f8871e"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+
+[sources]
+Optimization = {path = "../.."}
+OptimizationBase = {path = "../../lib/OptimizationBase"}
+OptimizationLBFGSB = {path = "../../lib/OptimizationLBFGSB"}
+OptimizationMOI = {path = "../../lib/OptimizationMOI"}
+OptimizationOptimJL = {path = "../../lib/OptimizationOptimJL"}
+
+[compat]
+ADTypes = "1.18"
+BenchmarkTools = "1"
+Enzyme = "0.13"
+FiniteDiff = "2"
+ForwardDiff = "0.10, 1"
+Ipopt = "1"
+Mooncake = "0.4.138, 0.5"
+Optimization = "5"
+OptimizationBase = "5"
+OptimizationLBFGSB = "1.2"
+OptimizationMOI = "1"
+OptimizationOptimJL = "0.4.10"
+Random = "1.10"
+ReverseDiff = "1"
+SafeTestsets = "0.1"
+SciMLTesting = "2.1"
+Test = "1.10"
+Tracker = "0.2"
+Zygote = "0.6, 0.7"
+julia = "1.10"

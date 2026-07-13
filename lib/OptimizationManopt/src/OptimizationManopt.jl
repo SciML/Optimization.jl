@@ -61,6 +61,11 @@ function __map_optimizer_args!(
 end
 
 ## gradient descent
+"""
+    GradientDescentOptimizer()
+
+Manopt gradient descent optimizer for manifold-valued Optimization.jl problems.
+"""
 struct GradientDescentOptimizer <: AbstractManoptOptimizer end
 
 function call_manopt_optimizer(
@@ -84,6 +89,11 @@ function call_manopt_optimizer(
 end
 
 ## Nelder-Mead
+"""
+    NelderMeadOptimizer()
+
+Manopt Nelder-Mead optimizer for derivative-free manifold optimization.
+"""
 struct NelderMeadOptimizer <: AbstractManoptOptimizer end
 
 function call_manopt_optimizer(
@@ -100,6 +110,11 @@ function call_manopt_optimizer(
 end
 
 ## conjugate gradient descent
+"""
+    ConjugateGradientDescentOptimizer()
+
+Manopt conjugate gradient descent optimizer for manifold-valued problems.
+"""
 struct ConjugateGradientDescentOptimizer <: AbstractManoptOptimizer end
 
 function call_manopt_optimizer(
@@ -124,6 +139,11 @@ function call_manopt_optimizer(
 end
 
 ## particle swarm
+"""
+    ParticleSwarmOptimizer()
+
+Manopt particle swarm optimizer for derivative-free manifold optimization.
+"""
 struct ParticleSwarmOptimizer <: AbstractManoptOptimizer end
 
 function call_manopt_optimizer(
@@ -144,6 +164,11 @@ end
 
 ## quasi Newton
 
+"""
+    QuasiNewtonOptimizer()
+
+Manopt quasi-Newton optimizer for manifold-valued problems.
+"""
 struct QuasiNewtonOptimizer <: AbstractManoptOptimizer end
 
 function call_manopt_optimizer(
@@ -160,6 +185,11 @@ function call_manopt_optimizer(
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
 end
 
+"""
+    CMAESOptimizer()
+
+Manopt covariance matrix adaptation evolution strategy optimizer.
+"""
 struct CMAESOptimizer <: AbstractManoptOptimizer end
 
 function call_manopt_optimizer(
@@ -176,6 +206,11 @@ function call_manopt_optimizer(
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
+"""
+    ConvexBundleOptimizer()
+
+Manopt convex bundle method optimizer for manifold-valued problems.
+"""
 struct ConvexBundleOptimizer <: AbstractManoptOptimizer end
 
 function call_manopt_optimizer(
@@ -236,6 +271,11 @@ function call_manopt_optimizer(
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
+"""
+    FrankWolfeOptimizer()
+
+Manopt Frank-Wolfe optimizer for constrained manifold-valued problems.
+"""
 struct FrankWolfeOptimizer <: AbstractManoptOptimizer end
 
 function call_manopt_optimizer(

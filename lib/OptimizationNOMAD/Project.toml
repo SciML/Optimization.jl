@@ -1,14 +1,18 @@
 name = "OptimizationNOMAD"
 uuid = "2cab0595-8222-4775-b714-9828e6a9e01b"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.7"
+version = "0.3.8"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 NOMAD = "02130f1c-4665-5b79-af82-ff1385104aa0"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
+[weakdeps]
+LogExpFunctions = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
+
 [extras]
+SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
@@ -17,7 +21,9 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
+SciMLTesting = "2.1"
 Pkg = "1"
+LogExpFunctions = "0.3.28"
 SafeTestsets = "0.1"
 julia = "1.10"
 OptimizationBase = "5"
@@ -27,4 +33,4 @@ Reexport = "1.2"
 Test = "1.10"
 
 [targets]
-test = ["Test", "SafeTestsets", "Pkg"]
+test = ["SciMLTesting", "Test", "SafeTestsets", "Pkg"]
