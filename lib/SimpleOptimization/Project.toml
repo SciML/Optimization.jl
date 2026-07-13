@@ -17,6 +17,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SimpleNonlinearSolve = "727e6d20-b764-4bd8-a329-72de5adea6c7"
 
 [extras]
+SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
@@ -30,6 +31,7 @@ SimpleOptimizationEnzymeExt = "Enzyme"
 SimpleOptimizationForwardDiffExt = "ForwardDiff"
 
 [compat]
+SciMLTesting = "2.1"
 ADTypes = "1.18"
 DifferentiationInterface = "0.7.13"
 Enzyme = "0.13"
@@ -45,4 +47,4 @@ Test = "1.10"
 julia = "1.10"
 
 [targets]
-test = ["Test", "ForwardDiff", "SafeTestsets", "Pkg"]
+test = ["SciMLTesting", "Test", "ForwardDiff", "SafeTestsets", "Pkg"]

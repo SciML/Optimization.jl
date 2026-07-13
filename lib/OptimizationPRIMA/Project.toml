@@ -9,6 +9,7 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [extras]
+SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
@@ -17,6 +18,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 
 [compat]
+SciMLTesting = "2.1"
 ForwardDiff = "0.10, 1"
 ModelingToolkit = "11"
 OptimizationBase = "5.1"
@@ -33,4 +35,4 @@ julia = "1.10"
 OptimizationBase = {path = "../OptimizationBase"}
 
 [targets]
-test = ["Test", "ForwardDiff", "ModelingToolkit", "ReverseDiff", "SafeTestsets", "Pkg"]
+test = ["SciMLTesting", "Test", "ForwardDiff", "ModelingToolkit", "ReverseDiff", "SafeTestsets", "Pkg"]
