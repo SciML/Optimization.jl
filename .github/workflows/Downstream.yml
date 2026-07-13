@@ -15,7 +15,7 @@ jobs:
           - {user: SciML, repo: DiffEqFlux.jl, group: DiffEqFlux}
           - {user: SciML, repo: NeuralPDE.jl, group: NNPDE1}
           - {user: SciML, repo: NeuralPDE.jl, group: NNPDE2}
-          - {user: SciML, repo: ModelingToolkit.jl, group: All}
+          - {user: SciML, repo: ModelingToolkit.jl, group: Optimization}
     uses: "SciML/.github/.github/workflows/downstream.yml@v1"
     with:
       owner: "${{ matrix.package.user }}"
