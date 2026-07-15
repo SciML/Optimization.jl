@@ -1,4 +1,7 @@
 using OptimizationOptimisers, ForwardDiff, OptimizationBase
+using CommonSolve: solve
+using Optimisers
+using SciMLBase: OptimizationFunction, OptimizationProblem
 using Test
 using Zygote
 using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
@@ -115,6 +118,36 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
             progress = false,
             callback = callback
         )
+    end
+
+    @testset "Objective evaluations" begin
+        objective_calls = Ref(0)
+        fg_calls = Ref(0)
+        function counted_objective(x, p)
+            objective_calls[] += 1
+            return sum(abs2, x)
+        end
+        function counted_fg!(G, x, p)
+            fg_calls[] += 1
+            G .= 2 .* x
+            return sum(abs2, x)
+        end
+
+        optf = OptimizationFunction(counted_objective; fg = counted_fg!)
+        prob = OptimizationProblem(optf, ones(2), nothing)
+        sol = solve(prob, Optimisers.Adam(); maxiters = 3, save_best = false)
+
+        @test sol.stats.iterations == 3
+        @test fg_calls[] == sol.stats.iterations
+        @test objective_calls[] == 0
+
+        objective_calls[] = 0
+        fg_calls[] = 0
+        sol = solve(prob, Optimisers.Adam(); maxiters = 0.4, save_best = false)
+
+        @test sol.stats.iterations == 0
+        @test sol.stats.fevals == objective_calls[] == 1
+        @test fg_calls[] == 0
     end
 
     @test_throws ArgumentError sol = solve(prob, Optimisers.Adam())
