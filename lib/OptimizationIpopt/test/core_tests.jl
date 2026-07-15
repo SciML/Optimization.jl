@@ -71,6 +71,43 @@ end
     end
 end
 
+@testset "sparse constraint Jacobian with parameters" begin
+    objective(x, p) = sum(abs2, x)
+    function constraints!(res, x, p)
+        res[1] = p[1] * x[1]
+        return nothing
+    end
+    function constraint_jacobian!(J, x, p)
+        J[1, 1] = p[1]
+        return nothing
+    end
+
+    @testset "analytic = $analytic" for analytic in (false, true)
+        jacobian_kwargs = analytic ?
+            (;
+                cons_j = constraint_jacobian!,
+                cons_jac_prototype = sparse([1], [1], [1.0], 1, 2),
+            ) : (;)
+        f = OptimizationFunction{true}(
+            objective, AutoSparse(AutoForwardDiff());
+            cons = constraints!, jacobian_kwargs...
+        )
+        prob = OptimizationProblem(
+            f, [1.0, 1.0], [2.0]; lcons = [0.0], ucons = [0.0]
+        )
+        sol = solve(
+            prob,
+            IpoptOptimizer(;
+                hessian_approximation = "limited-memory",
+                additional_options = Dict{String, Any}("print_level" => 0)
+            )
+        )
+
+        @test SciMLBase.successful_retcode(sol)
+        @test isapprox(sol.u[1], 0.0; atol = 1.0e-8)
+    end
+end
+
 include("additional_tests.jl")
 include("advanced_features.jl")
 include("problem_types.jl")

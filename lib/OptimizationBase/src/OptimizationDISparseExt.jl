@@ -20,6 +20,8 @@ function instantiate_function(
         lag_h = false
     )
     adtype, soadtype = generate_sparse_adtype(adtype)
+    Tx0 = typeof(x)
+    Tp0 = typeof(p)
 
     if g == true && f.grad === nothing
         prep_grad = prepare_gradient(f.f, adtype.dense_ad, x, Constant(p))
@@ -167,17 +169,31 @@ function instantiate_function(
     cons_jac_prototype = f.cons_jac_prototype
     cons_jac_colorvec = f.cons_jac_colorvec
     if f.cons !== nothing && cons_j == true && f.cons_j === nothing
-        prep_jac = prepare_jacobian(cons_oop, adtype, x)
-        function cons_j!(J, θ)
-            jacobian!(cons_oop, J, prep_jac, adtype, θ)
-            return if size(J, 1) == 1
-                J = vec(J)
+        cons_oop_p = let f = f, num_cons = num_cons
+            function (x, p)
+                res = Vector{_cons_out_eltype(x, p)}(undef, num_cons)
+                f.cons(res, x, p)
+                return res
+            end
+        end
+        prep_jac = prepare_jacobian(cons_oop_p, adtype, x, Constant(p))
+        cons_j! = let cons_oop_p = cons_oop_p, prep_jac = prep_jac,
+                adtype = adtype, p = p, Tx0 = Tx0, Tp0 = Tp0
+            function (J, θ, p = p)
+                if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                    jacobian!(cons_oop_p, J, prep_jac, adtype, θ, Constant(p))
+                else
+                    jacobian!(cons_oop_p, J, adtype, θ, Constant(p))
+                end
+                return size(J, 1) == 1 ? vec(J) : J
             end
         end
         cons_jac_prototype = prep_jac.coloring_result.A
         cons_jac_colorvec = prep_jac.coloring_result.color
     elseif cons_j === true && f.cons !== nothing
-        cons_j! = (J, θ) -> f.cons_j(J, θ, p)
+        cons_j! = let f = f, p = p
+            (J, θ, p = p) -> f.cons_j(J, θ, p)
+        end
     else
         cons_j! = nothing
     end
@@ -339,6 +355,8 @@ function instantiate_function(
         lag_h = false
     )
     adtype, soadtype = generate_sparse_adtype(adtype)
+    Tx0 = typeof(x)
+    Tp0 = typeof(p)
 
     if g == true && f.grad === nothing
         prep_grad = prepare_gradient(f.f, adtype.dense_ad, x, Constant(p))
@@ -462,17 +480,23 @@ function instantiate_function(
     cons_jac_colorvec = f.cons_jac_colorvec
     if f.cons !== nothing && cons_j == true && f.cons_j === nothing
         prep_jac = prepare_jacobian(f.cons, adtype, x, Constant(p))
-        function cons_j!(θ)
-            J = jacobian(f.cons, prep_jac, adtype, θ, Constant(p))
-            if size(J, 1) == 1
-                J = vec(J)
+        cons_j! = let f = f, prep_jac = prep_jac, adtype = adtype,
+                p = p, Tx0 = Tx0, Tp0 = Tp0
+            function (θ, p = p)
+                J = if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                    jacobian(f.cons, prep_jac, adtype, θ, Constant(p))
+                else
+                    jacobian(f.cons, adtype, θ, Constant(p))
+                end
+                return size(J, 1) == 1 ? vec(J) : J
             end
-            return J
         end
         cons_jac_prototype = prep_jac.coloring_result.A
         cons_jac_colorvec = prep_jac.coloring_result.color
     elseif cons_j === true && f.cons !== nothing
-        cons_j! = (θ) -> f.cons_j(θ, p)
+        cons_j! = let f = f, p = p
+            (θ, p = p) -> f.cons_j(θ, p)
+        end
     else
         cons_j! = nothing
     end
