@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         package:
-          - {user: SciML, repo: DiffEqFlux.jl, group: DiffEqFlux}
+          - {user: SciML, repo: DiffEqFlux.jl, group: All}
           - {user: SciML, repo: NeuralPDE.jl, group: NNPDE1}
           - {user: SciML, repo: NeuralPDE.jl, group: NNPDE2}
           - {user: SciML, repo: ModelingToolkit.jl, group: Optimization}
