@@ -1,5 +1,8 @@
 using SciMLTesting, OptimizationMetaheuristics, JET, SciMLBase
 using Test
+
+include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "rendered_docs.jl")))
+
 using Metaheuristics
 
 # ExplicitImports findings, all tracked against SciML/Optimization.jl:
@@ -36,6 +39,9 @@ run_qa(
         all_qualified_accesses_are_public = (; ignore = (:AbstractAlgorithm, :OptimizationStats, :__init, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback, :create_child, :get_best, :requiresbounds)),
     ),
     api_docs_kwargs = (;
+        rendered = true,
+        docs_src = OPTIMIZATION_DOCS_SRC,
+        rendered_ignore = optimization_dependency_rendered_ignore(OptimizationMetaheuristics),
         ignore = (
             :ArasMethod,
             :AutoModelingToolkit,

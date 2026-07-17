@@ -1,6 +1,8 @@
 using SciMLTesting, OptimizationNOMAD, JET
 using Test
 
+include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "rendered_docs.jl")))
+
 # ExplicitImports findings, all tracked against SciML/Optimization.jl:
 #  * no_implicit_imports broken: the module relies on `@reexport`/`using`
 #    module names (SciMLBase/OptimizationBase/Reexport/...) that cannot be made
@@ -21,6 +23,9 @@ run_qa(
         all_qualified_accesses_are_public = (; ignore = (:DefaultOptimizationCache, :OptimizationStats, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback)),
     ),
     api_docs_kwargs = (;
+        rendered = true,
+        docs_src = OPTIMIZATION_DOCS_SRC,
+        rendered_ignore = optimization_dependency_rendered_ignore(OptimizationNOMAD),
         ignore = (
             :AutoModelingToolkit,
             :AutoSparseFastDifferentiation,

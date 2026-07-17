@@ -1,3 +1,9 @@
+"""
+    OptimizationBase
+
+Core types, defaults, and solver interface extensions shared by the
+Optimization.jl solver packages.
+"""
 module OptimizationBase
 
 using DocStringExtensions

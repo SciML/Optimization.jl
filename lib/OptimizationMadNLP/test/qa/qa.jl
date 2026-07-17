@@ -1,6 +1,8 @@
 using SciMLTesting, OptimizationMadNLP, JET
 using Test
 
+include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "rendered_docs.jl")))
+
 # ExplicitImports findings, all tracked against SciML/Optimization.jl:
 #  * no_implicit_imports broken: the module relies on `@reexport`/`using`
 #    module names (SciMLBase/OptimizationBase/Reexport/...) that cannot be made
@@ -21,6 +23,9 @@ run_qa(
         all_qualified_accesses_are_public = (; ignore = (Symbol("@logmsg"), :AbstractBarrierUpdate, :AbstractMadNLPSolver, :AbstractUserCallback, :DIVERGING_ITERATES, :ExactHessian, :INFEASIBLE_PROBLEM_DETECTED, :INFO, :LogLevel, :LogLevels, :MAXIMUM_ITERATIONS_EXCEEDED, :MAXIMUM_WALLTIME_EXCEEDED, :NOT_ENOUGH_DEGREES_OF_FREEDOM, :OptimizationState, :OptimizationStats, :QuasiNewtonOptions, :RESTORATION_FAILED, :SEARCH_DIRECTION_BECOMES_TOO_SMALL, :SOLVED_TO_ACCEPTABLE_LEVEL, :SOLVE_SUCCEEDED, :Status, :USER_REQUESTED_STOP, :WARN, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback, :allowsconsjvp, :allowsconsvjp, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :requireslagh, :supports_sense)),
     ),
     api_docs_kwargs = (;
+        rendered = true,
+        docs_src = OPTIMIZATION_DOCS_SRC,
+        rendered_ignore = optimization_dependency_rendered_ignore(OptimizationMadNLP),
         ignore = (
             :AutoModelingToolkit,
             :AutoSparseFastDifferentiation,
