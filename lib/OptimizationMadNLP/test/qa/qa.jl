@@ -25,7 +25,10 @@ run_qa(
     api_docs_kwargs = (;
         rendered = true,
         docs_src = OPTIMIZATION_DOCS_SRC,
-        rendered_ignore = optimization_dependency_rendered_ignore(OptimizationMadNLP),
+        rendered_ignore = (
+            optimization_dependency_rendered_ignore(OptimizationMadNLP)...,
+            :solve!,
+        ),
         ignore = (
             :AutoModelingToolkit,
             :AutoSparseFastDifferentiation,

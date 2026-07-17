@@ -41,7 +41,10 @@ run_qa(
     api_docs_kwargs = (;
         rendered = true,
         docs_src = OPTIMIZATION_DOCS_SRC,
-        rendered_ignore = optimization_dependency_rendered_ignore(OptimizationMetaheuristics),
+        rendered_ignore = (
+            optimization_dependency_rendered_ignore(OptimizationMetaheuristics)...,
+            :summary,
+        ),
         ignore = (
             :ArasMethod,
             :AutoModelingToolkit,
