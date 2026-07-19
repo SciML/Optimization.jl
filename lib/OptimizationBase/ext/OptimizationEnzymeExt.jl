@@ -195,13 +195,7 @@ function OptimizationBase.instantiate_function(
             vdθ = Tuple((Array(r) for r in eachrow(I(length(θ)) * one(eltype(θ)))))
             vdbθ = Tuple(zeros(eltype(θ), length(θ)) for i in eachindex(θ))
             θ_arr = θ isa Array ? θ : Array(θ)
-            if G isa Array
-                G_arr = G
-                Enzyme.make_zero!(G)
-            else
-                G_arr = Array(G)
-                Enzyme.make_zero!(G_arr)
-            end
+            G_arr = G isa Array ? G : Array(G)
 
             Enzyme.autodiff(
                 fmode,
