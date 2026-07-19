@@ -196,6 +196,7 @@ function OptimizationBase.instantiate_function(
             vdbθ = Tuple(zeros(eltype(θ), length(θ)) for i in eachindex(θ))
             θ_arr = θ isa Array ? θ : Array(θ)
             G_arr = G isa Array ? G : Array(G)
+            Enzyme.make_zero!(G_arr)
 
             Enzyme.autodiff(
                 fmode,
@@ -206,6 +207,10 @@ function OptimizationBase.instantiate_function(
                 Const(f.f),
                 Const(p)
             )
+
+            if G !== G_arr
+                G .= G_arr
+            end
 
             for i in eachindex(θ)
                 H[i, :] .= vdbθ[i]
