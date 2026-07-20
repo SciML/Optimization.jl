@@ -148,6 +148,28 @@ using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
         @test sol.stats.iterations == 0
         @test sol.stats.fevals == objective_calls[] == 1
         @test fg_calls[] == 0
+
+        inf_objective_calls = Ref(0)
+        inf_fg_calls = Ref(0)
+        function inf_objective(x, p)
+            inf_objective_calls[] += 1
+            return Inf
+        end
+        function inf_fg!(G, x, p)
+            inf_fg_calls[] += 1
+            G .= 0
+            return Inf
+        end
+
+        inf_optf = OptimizationFunction(inf_objective; fg = inf_fg!)
+        inf_prob = OptimizationProblem(inf_optf, ones(2), nothing)
+        inf_sol = solve(inf_prob, Optimisers.Adam(); maxiters = 1, save_best = false)
+
+        @test isinf(inf_sol.objective)
+        @test inf_sol.stats.iterations == 1
+        @test inf_sol.stats.fevals == 1
+        @test inf_objective_calls[] == 0
+        @test inf_fg_calls[] == 1
     end
 
     @test_throws ArgumentError sol = solve(prob, Optimisers.Adam())

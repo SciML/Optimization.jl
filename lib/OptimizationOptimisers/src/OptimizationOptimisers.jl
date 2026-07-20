@@ -61,7 +61,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
     G = copy(θ)
 
     local x, min_err, min_θ
-    x = nothing
+    x = Inf
     min_err = typemax(eltype(real(cache.u0))) #dummy variables
     min_opt = 1
     min_θ = cache.u0
@@ -151,7 +151,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
             )
         end
     end
-    if isnothing(x)
+    if iszero(iterations)
         x = cache.f(cache.u0, first(data))
         fevals += 1
     end
