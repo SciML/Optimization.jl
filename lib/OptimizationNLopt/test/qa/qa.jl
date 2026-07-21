@@ -1,5 +1,8 @@
 using SciMLTesting, OptimizationNLopt, JET, OptimizationBase, SciMLBase
 using Test
+
+include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "rendered_docs.jl")))
+
 using NLopt
 
 # ExplicitImports findings, all tracked against SciML/Optimization.jl:
@@ -41,6 +44,9 @@ run_qa(
         all_explicit_imports_are_public = (; ignore = (:deduce_retcode,)),
     ),
     api_docs_kwargs = (;
+        rendered = true,
+        docs_src = OPTIMIZATION_DOCS_SRC,
+        rendered_ignore = optimization_dependency_rendered_ignore(OptimizationNLopt),
         ignore = (
             :Algorithm,
             :AutoModelingToolkit,

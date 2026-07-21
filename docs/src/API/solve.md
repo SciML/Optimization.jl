@@ -1,6 +1,7 @@
 # Common Solver Options (Solve Keyword Arguments)
 
 ```@docs
+OptimizationBase
 OptimizationBase.solve(::SciMLBase.OptimizationProblem,::Any)
 OptimizationBase.OptimizationCache
 OptimizationBase.DEFAULT_CALLBACK
