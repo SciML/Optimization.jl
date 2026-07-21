@@ -167,12 +167,13 @@ function OptimizationBase.instantiate_function(
         function hess(res, θ, p = p)
             Enzyme.make_zero!(bθ)
             Enzyme.make_zero!.(vdbθ)
+            θ_arr = θ isa Array ? θ : Array(θ)
 
             Enzyme.autodiff(
                 fmode,
                 inner_grad,
                 Const(rmode),
-                Enzyme.BatchDuplicated(θ, vdθ),
+                Enzyme.BatchDuplicated(θ_arr, vdθ),
                 Enzyme.BatchDuplicatedNoNeed(bθ, vdbθ),
                 Const(f.f),
                 Const(p)
@@ -193,16 +194,23 @@ function OptimizationBase.instantiate_function(
         function fgh!(G, H, θ, p = p)
             vdθ = Tuple((Array(r) for r in eachrow(I(length(θ)) * one(eltype(θ)))))
             vdbθ = Tuple(zeros(eltype(θ), length(θ)) for i in eachindex(θ))
+            θ_arr = θ isa Array ? θ : Array(θ)
+            G_arr = G isa Array ? G : Array(G)
+            Enzyme.make_zero!(G_arr)
 
             Enzyme.autodiff(
                 fmode,
                 inner_grad,
                 Const(rmode),
-                Enzyme.BatchDuplicated(θ, vdθ),
-                Enzyme.BatchDuplicatedNoNeed(G, vdbθ),
+                Enzyme.BatchDuplicated(θ_arr, vdθ),
+                Enzyme.BatchDuplicatedNoNeed(G_arr, vdbθ),
                 Const(f.f),
                 Const(p)
             )
+
+            if !(G isa Array)
+                copyto!(G, G_arr)
+            end
 
             for i in eachindex(θ)
                 H[i, :] .= vdbθ[i]
