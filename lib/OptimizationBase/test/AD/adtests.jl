@@ -911,6 +911,48 @@ end
     @test nnz(lag_H) == 5
 end
 
+@testset "sparse constraint Jacobians use live parameters" begin
+    objective(x, p) = sum(abs2, x)
+    constraints(x, p) = [p[1] * x[1]]
+    function constraints!(res, x, p)
+        res[1] = p[1] * x[1]
+        return nothing
+    end
+    constraint_jacobian(x, p) = sparse([1], [1], [p[1]], 1, 2)
+    function constraint_jacobian!(J, x, p)
+        J[1, 1] = p[1]
+        return nothing
+    end
+
+    x = [1.0, 1.0]
+    initial_p = [2.0]
+    live_p = [3.0]
+
+    @testset "in-place = $iip, analytic = $analytic" for iip in (false, true),
+            analytic in (false, true)
+        jacobian_kwargs = analytic ?
+            (;
+                cons_j = iip ? constraint_jacobian! : constraint_jacobian,
+                cons_jac_prototype = sparse([1], [1], [1.0], 1, 2),
+            ) : (;)
+        optf = OptimizationFunction{iip}(
+            objective, AutoSparse(AutoForwardDiff());
+            cons = iip ? constraints! : constraints, jacobian_kwargs...
+        )
+        optprob = OptimizationBase.instantiate_function(
+            optf, x, optf.adtype, initial_p, 1; cons_j = true
+        )
+
+        if iip
+            J = similar(optprob.cons_jac_prototype, Float64)
+            optprob.cons_j(J, x, live_p)
+            @test vec(Array(J)) == [3.0, 0.0]
+        else
+            @test vec(Array(optprob.cons_j(x, live_p))) == [3.0, 0.0]
+        end
+    end
+end
+
 @testset "OOP" begin
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(
