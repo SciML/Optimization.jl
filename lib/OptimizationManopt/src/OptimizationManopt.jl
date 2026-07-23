@@ -44,6 +44,19 @@ function __map_optimizer_args!(
 
     if !isnothing(abstol)
         push!(criteria, _default_convergence_criterion(opt, manifold, abstol))
+    elseif !isnothing(maxiters) || !isnothing(maxtime)
+        # Without this, `criteria` above would contain *only* `StopAfterIteration`/
+        # `StopAfter`, which never `indicates_convergence` (Manopt.jl semantics), so
+        # `Manopt.has_converged` could never be true and the run would always report
+        # `ReturnCode.MaxIters`/`MaxTime` below, no matter how well it actually converged.
+        # Falling back to each solver's own default tolerance (rather than one constant)
+        # keeps this close to what Manopt would have done with no `stopping_criterion`
+        # override at all; optimizers whose real default isn't a single tolerance-based
+        # criterion opt out via `_default_fallback_abstol` returning `nothing`.
+        fallback_abstol = _default_fallback_abstol(opt)
+        if !isnothing(fallback_abstol)
+            push!(criteria, _default_convergence_criterion(opt, manifold, fallback_abstol))
+        end
     end
 
     if !isnothing(reltol)
@@ -323,6 +336,24 @@ end
 function _default_convergence_criterion(::AbstractManoptOptimizer, M, abstol)
     return Manopt.StopWhenChangeLess(M, abstol)
 end
+
+# Fallback tolerance used, via `_default_convergence_criterion` above, only when the user
+# supplies `maxiters`/`maxtime` without an explicit `abstol` (see `__map_optimizer_args!`).
+# Each value mirrors that solver's own top-level default tolerance in Manopt.jl, so this
+# stays close to "what Manopt would have done with no override at all" instead of imposing
+# one generic number. Optimizers whose real Manopt default is a composite criterion that
+# isn't representable as a single `_default_convergence_criterion` call (`NelderMead`'s
+# `StopWhenPopulationConcentrated`, `CMAES`'s multi-part `default_cma_es_stopping_criterion`,
+# `ConvexBundle`'s `StopWhenLagrangeMultiplierLess`, not gradient-norm) opt out with
+# `nothing`, leaving their pre-existing behavior unchanged.
+_default_fallback_abstol(::GradientDescentOptimizer) = 1.0e-8
+_default_fallback_abstol(::ConjugateGradientDescentOptimizer) = 1.0e-8
+_default_fallback_abstol(::QuasiNewtonOptimizer) = 1.0e-6
+_default_fallback_abstol(::TrustRegionsOptimizer) = 1.0e-6
+_default_fallback_abstol(::AdaptiveRegularizationCubicOptimizer) = 1.0e-9
+_default_fallback_abstol(::FrankWolfeOptimizer) = 1.0e-6
+_default_fallback_abstol(::ParticleSwarmOptimizer) = 1.0e-4
+_default_fallback_abstol(::AbstractManoptOptimizer) = nothing
 
 function build_loss(f::OptimizationBase.OptimizationFunction, prob, cb)
     # TODO: I do not understand this. Why is the manifold not used?

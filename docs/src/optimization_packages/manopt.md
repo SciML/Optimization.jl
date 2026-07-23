@@ -63,10 +63,16 @@ opt = OptimizationManopt.GradientDescentOptimizer()
 optf = OptimizationFunction(rosenbrock, ADTypes.AutoZygote())
 
 prob = OptimizationProblem(
-    optf, x0, p; manifold = R2, stepsize = stepsize)
+    optf, x0, p; manifold = R2, stepsize = stepsize, maxiters = 25000)
 
 sol = Optimization.solve(prob, opt)
 ```
+
+!!! note
+
+    Plain gradient descent zig-zags slowly down Rosenbrock's narrow curved valley, so it
+    needs tens of thousands of iterations (still well under a second here) to bring the
+    gradient norm below the default tolerance and report `retcode = Success`.
 
 The box-constrained Karcher mean problem on the SPD manifold with the Frank-Wolfe algorithm can be solved as follows:
 
@@ -101,10 +107,12 @@ U = mean(data2)
 L = inv(sum(1 / N * inv(matrix) for matrix in data2))
 
 optf = OptimizationFunction(f, ADTypes.AutoZygote())
-prob = OptimizationProblem(optf, U; manifold = M, maxiters = 1000)
+prob = OptimizationProblem(optf, U; manifold = M, maxiters = 5000)
 
+opt = OptimizationManopt.FrankWolfeOptimizer()
 sol = Optimization.solve(
-    prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X))
+    prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X),
+    evaluation = Manopt.InplaceEvaluation())
 ```
 
 This example is based on the [example](https://juliamanifolds.github.io/ManoptExamples.jl/stable/examples/Riemannian-mean/) in the Manopt and [Weber and Sra'22](https://doi.org/10.1007/s10107-022-01840-5).
@@ -126,7 +134,7 @@ egrad(G, x, p = nothing) = (G .= -2 * A * x)
 
 optf = OptimizationFunction(cost, grad = egrad)
 x0 = rand(manifold)
-prob = OptimizationProblem(optf, x0, manifold = manifold)
+prob = OptimizationProblem(optf, x0, manifold = manifold, maxiters = 5000)
 
 sol = solve(prob, GradientDescentOptimizer())
 ```
