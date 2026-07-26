@@ -134,7 +134,11 @@ function OptimizationBase.instantiate_function(
         grad = nothing
     end
 
-    if fg == true && f.fg === nothing
+    if fg == true && f.fg === nothing && f.grad !== nothing
+        # A user-supplied gradient is authoritative; building an AD `fg!` off `f.f` would
+        # silently discard it for every value+gradient evaluation.
+        fg! = (res, θ, p = p) -> (f.grad(res, θ, p); f.f(θ, p))
+    elseif fg == true && f.fg === nothing
         function fg!(res, θ, p = p)
             Enzyme.make_zero!(res)
             y = Enzyme.autodiff(
@@ -526,7 +530,10 @@ function OptimizationBase.instantiate_function(
         grad = nothing
     end
 
-    if fg == true && f.fg === nothing
+    if fg == true && f.fg === nothing && f.grad !== nothing
+        # A user-supplied gradient is authoritative; see the in-place path above.
+        fg! = (θ, p = p) -> (f.f(θ, p), f.grad(θ, p))
+    elseif fg == true && f.fg === nothing
         res_fg = zeros(eltype(x), size(x))
         function fg!(θ, p = p)
             Enzyme.make_zero!(res_fg)
