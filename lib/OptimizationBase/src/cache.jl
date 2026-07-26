@@ -72,23 +72,21 @@ function OptimizationCache(
         processed_verbose = _process_verbose_param(verbose)
     end
 
+    needs_hess = SciMLBase.requireshessian(opt) &&
+        prob.f.hess === nothing && prob.f.fgh === nothing && prob.f.hv === nothing
+    needs_cons_hess = SciMLBase.requiresconshess(opt) && prob.f.cons_h === nothing
+    needs_lag_hess = SciMLBase.requireslagh(opt) && prob.f.lag_h === nothing
+    needs_second_order = needs_hess || needs_cons_hess || needs_lag_hess
+
     if !(
             prob.f.adtype isa DifferentiationInterface.SecondOrder ||
                 prob.f.adtype isa AutoZygote
-        ) &&
-            (
-            SciMLBase.requireshessian(opt) || SciMLBase.requiresconshess(opt) ||
-                SciMLBase.requireslagh(opt)
-        )
+        ) && needs_second_order
         @SciMLMessage(
             lazy"The selected optimization algorithm requires second order derivatives, but `SecondOrder` ADtype was not provided. So a `SecondOrder` with $(prob.f.adtype) for both inner and outer will be created, this can be suboptimal and not work in some cases so an explicit `SecondOrder` ADtype is recommended.",
             processed_verbose, :missing_second_order_ad
         )
-    elseif prob.f.adtype isa AutoZygote &&
-            (
-            SciMLBase.requiresconshess(opt) || SciMLBase.requireslagh(opt) ||
-                SciMLBase.requireshessian(opt)
-        )
+    elseif prob.f.adtype isa AutoZygote && needs_second_order
         @SciMLMessage(
             lazy"The selected optimization algorithm requires second order derivatives, but `AutoZygote` ADtype was provided. So a `SecondOrder` with `AutoZygote` for inner and `AutoForwardDiff` for outer will be created, for choosing another pair an explicit `SecondOrder` ADtype is recommended.",
             processed_verbose, :incompatible_ad_backend
