@@ -6,6 +6,7 @@ using OptimizationLBFGSB
 using MLUtils
 using LBFGSB
 using Test
+import SciMLBase
 
 @testset "OptimizationLBFGSB.jl" begin
     x0 = zeros(2)

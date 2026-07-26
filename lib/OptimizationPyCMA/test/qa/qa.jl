@@ -26,7 +26,6 @@ run_qa(
     ),
     ei_broken = (
         :no_implicit_imports,
-        :all_qualified_accesses_via_owners,
         :all_qualified_accesses_are_public,
     ),
 )

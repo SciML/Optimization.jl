@@ -53,4 +53,7 @@ run_qa(
         ),
     ),
     ei_broken = (:no_implicit_imports,),
+    # `Optimization` is the umbrella over `OptimizationBase`, which curates its own
+    # public API; re-exporting exactly that set is the facade's whole purpose.
+    reexports_allow = optimization_reexports_allow(Optimization.OptimizationBase),
 )

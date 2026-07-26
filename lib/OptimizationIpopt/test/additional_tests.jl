@@ -2,6 +2,7 @@ using OptimizationBase, OptimizationIpopt
 using Zygote
 using Test
 using LinearAlgebra
+import SciMLBase
 
 @testset "Additional Ipopt Examples" begin
     # The MyNLP and Luksan-Vlcek problems below are translated from the Ipopt

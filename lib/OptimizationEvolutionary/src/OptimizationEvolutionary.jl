@@ -1,7 +1,10 @@
 module OptimizationEvolutionary
 
 using Reexport
-@reexport using Evolutionary, OptimizationBase
+@reexport using Evolutionary
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
 using SciMLBase
 
 SciMLBase.allowscallback(opt::Evolutionary.AbstractOptimizer) = true

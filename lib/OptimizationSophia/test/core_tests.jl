@@ -6,6 +6,7 @@ using SciMLSensitivity
 using Test
 using Zygote
 using OrdinaryDiffEqTsit5
+import SciMLBase
 
 function dudt_(u, p, t)
     return ann(u, p, st)[1] .* u

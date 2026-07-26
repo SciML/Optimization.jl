@@ -1,7 +1,11 @@
 module OptimizationOptimisers
 
 using Reexport, Logging
-@reexport using Optimisers, OptimizationBase
+@reexport using Optimisers
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
+using SciMLLogging: @SciMLMessage
 using SciMLBase
 
 SciMLBase.has_init(opt::AbstractRule) = true

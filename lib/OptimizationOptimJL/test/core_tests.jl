@@ -2,6 +2,7 @@ using OptimizationOptimJL,
     OptimizationOptimJL.Optim, OptimizationBase, ForwardDiff, Zygote, ReverseDiff,
     Random, ModelingToolkit, OptimizationBase.OptimizationBase.DifferentiationInterface
 using Test
+import SciMLBase
 
 struct CallbackTester
     dim::Int

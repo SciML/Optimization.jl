@@ -3,6 +3,7 @@ using Zygote
 using Test
 using LinearAlgebra
 using SparseArrays
+import SciMLBase
 
 @testset "Advanced Ipopt Features" begin
 

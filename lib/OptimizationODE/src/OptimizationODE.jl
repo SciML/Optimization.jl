@@ -1,7 +1,10 @@
 module OptimizationODE
 
 using Reexport
-@reexport using OptimizationBase, SciMLBase
+using SciMLBase
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
 using LinearAlgebra, ForwardDiff
 using DiffEqBase
 using ADTypes: AutoFiniteDiff

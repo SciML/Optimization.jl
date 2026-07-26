@@ -1,11 +1,16 @@
 module OptimizationIpopt
 
 using Reexport
-@reexport using OptimizationBase
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
 using Ipopt
 using LinearAlgebra
 using SparseArrays
 using SciMLBase
+import ADTypes
+using SciMLLogging: @SciMLMessage
+import SciMLLogging
 using SymbolicIndexingInterface
 
 export IpoptOptimizer

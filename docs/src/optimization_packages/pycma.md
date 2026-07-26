@@ -22,7 +22,7 @@ OptimizationPyCMA.PyCMAOpt
 ## Example
 
 ```@example PyCMA
-using OptimizationPyCMA
+using Optimization, OptimizationPyCMA
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)

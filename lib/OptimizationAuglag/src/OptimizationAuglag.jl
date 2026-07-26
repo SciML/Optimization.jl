@@ -2,7 +2,9 @@ module OptimizationAuglag
 
 using Reexport
 using SciMLBase
-@reexport using OptimizationBase
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
 using SciMLBase: OptimizationProblem, OptimizationFunction, OptimizationStats
 using LinearAlgebra: norm
 

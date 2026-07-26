@@ -1,7 +1,7 @@
 name = "OptimizationPolyalgorithms"
 uuid = "500b13db-7e66-49ce-bda4-eed966be6282"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.8"
+version = "0.4.0"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 OptimizationOptimisers = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
@@ -24,9 +24,9 @@ OptimizationOptimJL = {path = "../OptimizationOptimJL"}
 [compat]
 SciMLTesting = "2.1"
 ForwardDiff = "0.10, 1"
-OptimizationBase = "5"
-OptimizationOptimisers = "0.3.16"
-OptimizationOptimJL = "0.4.10"
+OptimizationBase = "6"
+OptimizationOptimisers = "0.4"
+OptimizationOptimJL = "0.5"
 Pkg = "1"
 Reexport = "1.2.2"
 SafeTestsets = "0.1"

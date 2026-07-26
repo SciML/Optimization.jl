@@ -3,7 +3,9 @@ module OptimizationSophia
 using Reexport
 using SciMLBase
 using OptimizationBase: OptimizationCache
-@reexport using OptimizationBase
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
 using Random
 
 export Sophia
