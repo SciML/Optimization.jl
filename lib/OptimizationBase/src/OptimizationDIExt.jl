@@ -98,14 +98,18 @@ function instantiate_function(
         nothing
     end
 
-    # Create fg! closures - need separate prep if g was false
-    fg! = if fg == true && f.fg === nothing
-        _prep_grad_fg = if g == false
-            prepare_gradient(f.f, adtype, x, Constant(p))
-        else
-            # Reuse the prep from gradient if available
-            prepare_gradient(f.f, adtype, x, Constant(p))
+    # A user-supplied `f.grad` is authoritative: building an AD `fg!` off `f.f` would silently
+    # discard it (and any tuned preparation behind it) for every value+gradient evaluation.
+    fg! = if fg == true && f.fg === nothing && f.grad !== nothing
+        let f = f, p = p
+            function (res, θ, p = p)
+                f.grad(res, θ, p)
+                return f.f(θ, p)
+            end
         end
+    elseif fg == true && f.fg === nothing
+        # Reuse the gradient prep when `grad` built one; they are the same DI operator.
+        _prep_grad_fg = g == true ? _prep_grad : prepare_gradient(f.f, adtype, x, Constant(p))
         if p !== SciMLBase.NullParameters() && p !== nothing
             let _prep_grad_fg = _prep_grad_fg, f = f, adtype = adtype
                 function (res, θ, p = p)
@@ -520,7 +524,11 @@ function instantiate_function(
     end
 
     # Create fg! closures
-    fg! = if fg == true && f.fg === nothing
+    fg! = if fg == true && f.fg === nothing && f.grad !== nothing
+        let f = f, p = p
+            (θ, p = p) -> (f.f(θ, p), f.grad(θ, p))
+        end
+    elseif fg == true && f.fg === nothing
         _prep_grad_fg = prepare_gradient(f.f, adtype, x, Constant(p))
         if p !== SciMLBase.NullParameters() && p !== nothing
             let _prep_grad_fg = _prep_grad_fg, f = f, adtype = adtype
