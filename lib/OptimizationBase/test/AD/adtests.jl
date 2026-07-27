@@ -1423,3 +1423,32 @@ end
         @test Gad ≈ Gref
     end
 end
+
+@testset "Enzyme out-of-place grad/fg wiring" begin
+    rosen(x, p = nothing) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+    rosen_grad(x, p = nothing) = [
+        -2 * (1 - x[1]) - 400 * x[1] * (x[2] - x[1]^2),
+        200 * (x[2] - x[1]^2),
+    ]
+    ad = AutoEnzyme()
+    z = [0.5, 0.7]
+    gref = rosen_grad(z)
+
+    # `g` alone must honour a supplied gradient; it used to be gated on `fg`.
+    optf = OptimizationBase.instantiate_function(
+        OptimizationFunction{false}(rosen, ad; grad = rosen_grad),
+        zeros(2), ad, nothing; g = true, fg = false
+    )
+    @test optf.grad !== nothing
+    @test optf.grad(z) ≈ gref
+
+    # The AD `fg!` must return the buffer it differentiated into, with or without `g`.
+    for g in (false, true)
+        optf = OptimizationBase.instantiate_function(
+            OptimizationFunction{false}(rosen, ad), zeros(2), ad, nothing; g = g, fg = true
+        )
+        y, G = optf.fg(z)
+        @test y ≈ rosen(z)
+        @test G ≈ gref
+    end
+end

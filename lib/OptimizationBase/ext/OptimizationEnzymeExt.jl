@@ -524,7 +524,7 @@ function OptimizationBase.instantiate_function(
             )
             return res
         end
-    elseif fg == true
+    elseif g == true
         grad = (θ, p = p) -> f.grad(θ, p)
     else
         grad = nothing
@@ -545,7 +545,7 @@ function OptimizationBase.instantiate_function(
                 Enzyme.Duplicated(θ, res_fg),
                 Const(p)
             )[2]
-            return y, res
+            return y, res_fg
         end
     elseif fg == true
         fg! = (θ, p = p) -> f.fg(θ, p)
