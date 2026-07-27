@@ -49,11 +49,13 @@ function OptimizationBase.instantiate_function(
         grad = nothing
     end
 
-    if fg == true && f.fg === nothing
-        # Prepare a gradient prep for fg unless we already have one from the
-        # `g == true && f.grad === nothing` branch above. When the user supplied
-        # `f.grad`, line 37 didn't run, so `prep_grad` was never assigned.
-        if !(g == true && f.grad === nothing)
+    if fg == true && f.fg === nothing && f.grad !== nothing
+        # A user-supplied gradient is authoritative; building an AD `fg!` off `f.f` would
+        # silently discard it for every value+gradient evaluation.
+        fg! = (res, θ, p = p) -> (f.grad(res, θ, p); f.f(θ, p))
+    elseif fg == true && f.fg === nothing
+        # `f.grad === nothing` here, so `g == true` means the branch above already built the prep.
+        if g == false
             prep_grad = prepare_gradient(f.f, adtype, x, Constant(p), strict = Val(false))
         end
         function fg!(res, θ)
@@ -406,7 +408,10 @@ function OptimizationBase.instantiate_function(
         grad = nothing
     end
 
-    if fg == true && f.fg === nothing
+    if fg == true && f.fg === nothing && f.grad !== nothing
+        # A user-supplied gradient is authoritative; see the dense path above.
+        fg! = (res, θ, p = p) -> (f.grad(res, θ, p); f.f(θ, p))
+    elseif fg == true && f.fg === nothing
         if g == false
             extras_grad = prepare_gradient(
                 f.f, adtype.dense_ad, x, Constant(p), strict = Val(false)

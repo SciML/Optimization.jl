@@ -1379,3 +1379,76 @@ using MLUtils
     end
     @test G0 ≈ sum(stochgrads) rtol = 1.0e-1
 end
+
+@testset "user-supplied grad is used by the generated fg!" begin
+    # A supplied `f.grad` must drive `fg!` rather than being replaced by a fresh AD
+    # preparation: rebuilding it silently discards whatever tuning the caller did
+    # (SciML/Optimization.jl#1282).
+    ncalls = Ref(0)
+    rosen(x, p = nothing) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+    function rosen_grad!(res, x, p = nothing)
+        ncalls[] += 1
+        res[1] = -2 * (1 - x[1]) - 400 * x[1] * (x[2] - x[1]^2)
+        res[2] = 200 * (x[2] - x[1]^2)
+        return res
+    end
+
+    Gref = zeros(2)
+    rosen_grad!(Gref, [0.5, 0.7])
+
+    adtypes = (
+        AutoForwardDiff(), AutoReverseDiff(), AutoZygote(), AutoEnzyme(),
+        AutoSparse(AutoZygote()),
+    )
+    for adtype in adtypes, g in (false, true)
+        optf = OptimizationBase.instantiate_function(
+            OptimizationFunction(rosen, adtype; grad = rosen_grad!),
+            zeros(2), adtype, nothing; g = g, fg = true
+        )
+        optf.fg === nothing && continue
+        ncalls[] = 0
+        G = zeros(2)
+        y = optf.fg(G, [0.5, 0.7])
+        @test ncalls[] == 1
+        @test y ≈ rosen([0.5, 0.7])
+        @test G ≈ Gref
+
+        # Without a user gradient the AD path still has to build its own preparation,
+        # including when `fg` is requested but `g` is not.
+        optf_ad = OptimizationBase.instantiate_function(
+            OptimizationFunction(rosen, adtype), zeros(2), adtype, nothing; g = g, fg = true
+        )
+        Gad = zeros(2)
+        @test optf_ad.fg(Gad, [0.5, 0.7]) ≈ rosen([0.5, 0.7])
+        @test Gad ≈ Gref
+    end
+end
+
+@testset "Enzyme out-of-place grad/fg wiring" begin
+    rosen(x, p = nothing) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+    rosen_grad(x, p = nothing) = [
+        -2 * (1 - x[1]) - 400 * x[1] * (x[2] - x[1]^2),
+        200 * (x[2] - x[1]^2),
+    ]
+    ad = AutoEnzyme()
+    z = [0.5, 0.7]
+    gref = rosen_grad(z)
+
+    # `g` alone must honour a supplied gradient; it used to be gated on `fg`.
+    optf = OptimizationBase.instantiate_function(
+        OptimizationFunction{false}(rosen, ad; grad = rosen_grad),
+        zeros(2), ad, nothing; g = true, fg = false
+    )
+    @test optf.grad !== nothing
+    @test optf.grad(z) ≈ gref
+
+    # The AD `fg!` must return the buffer it differentiated into, with or without `g`.
+    for g in (false, true)
+        optf = OptimizationBase.instantiate_function(
+            OptimizationFunction{false}(rosen, ad), zeros(2), ad, nothing; g = g, fg = true
+        )
+        y, G = optf.fg(z)
+        @test y ≈ rosen(z)
+        @test G ≈ gref
+    end
+end
