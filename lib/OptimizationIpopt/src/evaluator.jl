@@ -119,10 +119,13 @@ function eval_constraint_jacobian(evaluator::IpoptEvaluator, j, x)
         )
     end
     J = evaluator.J
-    if _accepts_live_p(evaluator)
-        evaluator.cache.f.cons_j(J, x, evaluator.cache.p)
+    cons_j = evaluator.cache.f.cons_j
+    p = evaluator.cache.p
+    # Sparse instantiation can capture `p` in a two-argument `cons_j` wrapper.
+    if _accepts_live_p(evaluator) && applicable(cons_j, J, x, p)
+        cons_j(J, x, p)
     else
-        evaluator.cache.f.cons_j(J, x)
+        cons_j(J, x)
     end
     if J isa SparseMatrixCSC
         nnz = nonzeros(J)
