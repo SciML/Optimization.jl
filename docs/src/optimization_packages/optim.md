@@ -75,7 +75,7 @@ cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
 x0 = zeros(2)
 p = [1.0, 100.0]
 prob = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff(); cons = cons)
-prob = SciMLBase.OptimizationProblem(prob, x0, p, lcons = [-5.0], ucons = [10.0])
+prob = OptimizationProblem(prob, x0, p, lcons = [-5.0], ucons = [10.0])
 sol = solve(prob, IPNewton())
 ```
 
@@ -119,7 +119,7 @@ using OptimizationBase, OptimizationOptimJL
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
-prob = SciMLBase.OptimizationProblem(rosenbrock, x0, p)
+prob = OptimizationProblem(rosenbrock, x0, p)
 sol = solve(prob, Optim.NelderMead())
 ```
 
@@ -280,7 +280,7 @@ rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 optprob = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
-prob = SciMLBase.OptimizationProblem(optprob, x0, p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+prob = OptimizationProblem(optprob, x0, p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
 sol = solve(prob, Optim.LBFGS())
 ```
 
@@ -341,7 +341,7 @@ rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, ADTypes.AutoSymbolics())
-prob = SciMLBase.OptimizationProblem(f, x0, p)
+prob = OptimizationProblem(f, x0, p)
 sol = solve(prob, Optim.Newton())
 ```
 
@@ -379,7 +379,7 @@ rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 optprob = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
-prob = SciMLBase.OptimizationProblem(optprob, x0, p)
+prob = OptimizationProblem(optprob, x0, p)
 sol = solve(prob, Optim.KrylovTrustRegion())
 ```
 
@@ -405,7 +405,7 @@ rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, Optim.ParticleSwarm(lower = prob.lb, upper = prob.ub, n_particles = 100))
 ```
 
@@ -437,6 +437,6 @@ rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
-prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, Optim.SAMIN())
 ```

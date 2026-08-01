@@ -1,4 +1,7 @@
 using Documenter, Optimization
+# The `@docs` entries under API/ name SciMLBase types directly; nothing re-exports
+# the module binding any more, so bind it here rather than relying on that leak.
+using SciMLBase
 using OptimizationAuglag, OptimizationBBO, OptimizationBase
 using OptimizationCMAEvolutionStrategy, OptimizationGCMAES, OptimizationIpopt
 using OptimizationLBFGSB, OptimizationMadNLP, OptimizationManopt

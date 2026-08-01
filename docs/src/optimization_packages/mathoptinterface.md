@@ -75,7 +75,7 @@ x0 = zeros(2)
 _p = [1.0, 100.0]
 
 f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
-prob = SciMLBase.OptimizationProblem(f, x0, _p)
+prob = OptimizationProblem(f, x0, _p)
 
 opt = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer,
     "nl_solver" => OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
