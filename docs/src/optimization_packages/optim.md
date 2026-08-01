@@ -69,7 +69,7 @@ For a more extensive documentation of all the algorithms and options, please con
 The Rosenbrock function with constraints can be optimized using the `Optim.IPNewton()` as follows:
 
 ```@example Optim1
-using Optimization, OptimizationOptimJL, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationOptimJL, ADTypes, ForwardDiff
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
 x0 = zeros(2)
@@ -115,7 +115,7 @@ Derivative-free optimizers are optimizers that can be used even in cases where n
 The Rosenbrock function can be optimized using the `Optim.NelderMead()` as follows:
 
 ```@example Optim2
-using Optimization, OptimizationOptimJL
+using OptimizationBase, OptimizationOptimJL
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
@@ -275,7 +275,7 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
 The Rosenbrock function can be optimized using the `Optim.LBFGS()` as follows:
 
 ```@example Optim3
-using Optimization, OptimizationOptimJL, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationOptimJL, ADTypes, ForwardDiff
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
@@ -336,7 +336,7 @@ the Hessian in order to be appropriate.
 The Rosenbrock function can be optimized using the `Optim.Newton()` as follows:
 
 ```@example Optim4
-using Optimization, OptimizationOptimJL, ADTypes, ModelingToolkit, Symbolics
+using OptimizationBase, OptimizationOptimJL, ADTypes, ModelingToolkit, Symbolics
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
@@ -374,7 +374,7 @@ special case when considering conditioning of the Hessian.
 The Rosenbrock function can be optimized using the `Optim.KrylovTrustRegion()` as follows:
 
 ```@example Optim5
-using Optimization, OptimizationOptimJL, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationOptimJL, ADTypes, ForwardDiff
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
@@ -400,7 +400,7 @@ box constraints. It works both with and without lower and upper bounds set by `l
 The Rosenbrock function can be optimized using the `Optim.ParticleSwarm()` as follows:
 
 ```@example Optim6
-using Optimization, OptimizationOptimJL
+using OptimizationBase, OptimizationOptimJL
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
@@ -432,7 +432,7 @@ box constraints.
 The Rosenbrock function can be optimized using the `Optim.SAMIN()` as follows:
 
 ```@example Optim7
-using Optimization, OptimizationOptimJL, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationOptimJL, ADTypes, ForwardDiff
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]

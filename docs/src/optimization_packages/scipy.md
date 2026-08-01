@@ -99,7 +99,7 @@ OptimizationSciPy.ScipyBrute
 ### Unconstrained minimisation
 
 ```@example SciPy1
-using Optimization, OptimizationSciPy, ADTypes, Zygote
+using OptimizationBase, OptimizationSciPy, ADTypes, Zygote
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
@@ -115,7 +115,7 @@ sol = solve(prob, ScipyBFGS())
 ### Constrained optimisation with COBYLA
 
 ```@example SciPy2
-using Optimization, OptimizationSciPy
+using OptimizationBase, OptimizationSciPy
 
 # Objective
 obj(x, p) = (x[1] + x[2] - 1)^2
@@ -135,7 +135,7 @@ sol = solve(prob, ScipyCOBYLA())
 ### Differential evolution (global) with custom options
 
 ```@example SciPy3
-using Optimization, OptimizationSciPy, Random, Statistics
+using OptimizationBase, OptimizationSciPy, Random, Statistics
 Random.seed!(123)
 
 ackley(x, p) = -20exp(-0.2*sqrt(mean(x .^ 2))) - exp(mean(cos.(2π .* x))) + 20 + ℯ

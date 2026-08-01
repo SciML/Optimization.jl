@@ -12,7 +12,7 @@ Pkg.add("OptimizationODE")
 ## Usage
 
 ```julia
-using OptimizationODE, Optimization, ADTypes, SciMLBase
+using OptimizationODE, OptimizationBase, ADTypes, SciMLBase
 
 function f(x, p)
     return sum(abs2, x)

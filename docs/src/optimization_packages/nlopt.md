@@ -93,7 +93,7 @@ Derivative-free optimizers are optimizers that can be used even in cases where n
 The Rosenbrock function can be optimized using the `NLopt.LN_NELDERMEAD()` as follows:
 
 ```@example NLopt1
-using Optimization
+using OptimizationBase
 using OptimizationNLopt
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
@@ -126,7 +126,7 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
 The Rosenbrock function can be optimized using `NLopt.LD_LBFGS()` as follows:
 
 ```@example NLopt2
-using Optimization, OptimizationNLopt, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationNLopt, ADTypes, ForwardDiff
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
@@ -164,7 +164,7 @@ constraint equations. However, lower and upper constraints set by `lb` and `ub` 
 The Rosenbrock function can be optimized using `NLopt.GN_DIRECT()` as follows:
 
 ```@example NLopt3
-using Optimization, OptimizationNLopt
+using OptimizationBase, OptimizationNLopt
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
@@ -180,7 +180,7 @@ The Rosenbrock function can be optimized using `NLopt.G_MLSL_LDS()` with `NLopt.
 The local optimizer maximum iterations are set via `local_maxiters`:
 
 ```@example NLopt4
-using Optimization, OptimizationNLopt, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationNLopt, ADTypes, ForwardDiff
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]

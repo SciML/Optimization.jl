@@ -50,7 +50,7 @@ function or `OptimizationProblem`.
 The Rosenbrock function on the Euclidean manifold can be optimized using the `GradientDescentOptimizer` as follows:
 
 ```@example Manopt
-using Optimization, OptimizationManopt, Manifolds, LinearAlgebra, ADTypes, Zygote
+using OptimizationBase, OptimizationManopt, Manifolds, LinearAlgebra, ADTypes, Zygote
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
@@ -65,7 +65,7 @@ optf = OptimizationFunction(rosenbrock, ADTypes.AutoZygote())
 prob = OptimizationProblem(
     optf, x0, p; manifold = R2, stepsize = stepsize)
 
-sol = Optimization.solve(prob, opt)
+sol = OptimizationBase.solve(prob, opt)
 ```
 
 The box-constrained Karcher mean problem on the SPD manifold with the Frank-Wolfe algorithm can be solved as follows:
@@ -103,7 +103,7 @@ L = inv(sum(1 / N * inv(matrix) for matrix in data2))
 optf = OptimizationFunction(f, ADTypes.AutoZygote())
 prob = OptimizationProblem(optf, U; manifold = M, maxiters = 1000)
 
-sol = Optimization.solve(
+sol = OptimizationBase.solve(
     prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X))
 ```
 
@@ -113,7 +113,7 @@ The following example is adapted from the Rayleigh Quotient example in ManoptExa
 We solve the Rayleigh quotient problem on the Sphere manifold:
 
 ```@example Manopt
-using Optimization, OptimizationManopt
+using OptimizationBase, OptimizationManopt
 using Manifolds, LinearAlgebra
 using Manopt
 

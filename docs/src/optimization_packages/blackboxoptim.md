@@ -77,7 +77,7 @@ OptimizationBBO.BBO_borg_moea
 The Rosenbrock function can be optimized using the `BBO_adaptive_de_rand_1_bin_radiuslimited()` as follows:
 
 ```@example BBO
-using Optimization, OptimizationBBO
+using OptimizationBase, OptimizationBBO
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]

@@ -33,7 +33,7 @@ Algorithm-specific options are defined as `kwargs`. See the respective documenta
 The Rosenbrock function can be optimized using the `Evolutionary.CMAES()` as follows:
 
 ```@example Evolutionary
-using Optimization, OptimizationEvolutionary
+using OptimizationBase, OptimizationEvolutionary
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]

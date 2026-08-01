@@ -20,7 +20,7 @@ OptimizationMadNLP.MadNLPOptimizer
 ## Example
 
 ```julia
-using Optimization, OptimizationMadNLP, ADTypes
+using OptimizationBase, OptimizationMadNLP, ADTypes
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 optf = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
