@@ -2,7 +2,7 @@
 
 julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "440df6ee8608a6fbed1625c538a3a8b15cf52099"
+project_hash = "0579c8fd3f4526e939ebcce5c7de686789fc4dd9"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "0a81a018463de6c3f4f2c9360121c562e5add9e4"
@@ -732,9 +732,9 @@ version = "1.0.7"
 
 [[deps.Enzyme]]
 deps = ["CEnum", "EnzymeCore", "Enzyme_jll", "GPUCompiler", "InteractiveUtils", "LLVM", "Libdl", "LinearAlgebra", "ObjectFile", "PrecompileTools", "Preferences", "Printf", "Random", "SparseArrays"]
-git-tree-sha1 = "6087682e50b82df6edd6b4e6ea540fa1c6603b8d"
+git-tree-sha1 = "627db7c9ff4b1e9d84bfb0abfd28de1a1c3096ab"
 uuid = "7da242da-08ed-463a-9acd-ee780be4f1d9"
-version = "0.13.197"
+version = "0.13.198"
 
     [deps.Enzyme.extensions]
     EnzymeBFloat16sExt = "BFloat16s"
@@ -2443,28 +2443,28 @@ version = "0.4.7"
 
 [[deps.Optimization]]
 deps = ["ADTypes", "ArrayInterface", "ConsoleProgressMonitor", "DocStringExtensions", "LinearAlgebra", "Logging", "LoggingExtras", "OptimizationBase", "Printf", "Reexport", "SciMLBase", "SparseArrays", "TerminalLoggers"]
-path = "/home/runner/work/Optimization.jl/Optimization.jl"
+path = "/home/runner/_work/Optimization.jl/Optimization.jl"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
-version = "5.6.6"
+version = "5.7.0"
 
 [[deps.OptimizationAuglag]]
 deps = ["LinearAlgebra", "OptimizationBase", "Reexport", "SciMLBase"]
 path = "../lib/OptimizationAuglag"
 uuid = "2ea93f80-9333-43a1-a68d-1f53b957a421"
-version = "2.0.3"
+version = "2.1.0"
 
 [[deps.OptimizationBBO]]
-deps = ["BlackBoxOptim", "OptimizationBase", "Reexport", "SciMLBase"]
+deps = ["BlackBoxOptim", "OptimizationBase", "Reexport", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationBBO"
 uuid = "3e6eede4-6085-4f62-9a71-46d9bc1eb92b"
-version = "0.4.10"
+version = "0.4.11"
 weakdeps = ["LogExpFunctions"]
 
 [[deps.OptimizationBase]]
-deps = ["ADTypes", "ArrayInterface", "DifferentiationInterface", "DocStringExtensions", "FastClosures", "LinearAlgebra", "PrecompileTools", "Reexport", "SciMLBase", "SciMLLogging", "SparseArrays", "SparseConnectivityTracer", "SparseMatrixColorings", "SymbolicIndexingInterface"]
+deps = ["ADTypes", "ArrayInterface", "DifferentiationInterface", "DocStringExtensions", "FastClosures", "LinearAlgebra", "PrecompileTools", "SciMLBase", "SciMLLogging", "SparseArrays", "SparseConnectivityTracer", "SparseMatrixColorings", "SymbolicIndexingInterface"]
 path = "../lib/OptimizationBase"
 uuid = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-version = "5.2.4"
+version = "5.3.0"
 
     [deps.OptimizationBase.extensions]
     OptimizationChainRulesCoreExt = "ChainRulesCore"
@@ -2491,142 +2491,142 @@ version = "5.2.4"
     Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [[deps.OptimizationCMAEvolutionStrategy]]
-deps = ["CMAEvolutionStrategy", "OptimizationBase", "Reexport", "SciMLBase"]
+deps = ["CMAEvolutionStrategy", "OptimizationBase", "Reexport", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationCMAEvolutionStrategy"
 uuid = "bd407f91-200f-4536-9381-e4ba712f53f8"
-version = "0.3.11"
+version = "0.3.12"
 
 [[deps.OptimizationEvolutionary]]
 deps = ["Evolutionary", "OptimizationBase", "Reexport", "SciMLBase"]
 path = "../lib/OptimizationEvolutionary"
 uuid = "cb963754-43f6-435e-8d4b-99009ff27753"
-version = "0.4.12"
+version = "0.4.13"
 weakdeps = ["LogExpFunctions"]
 
 [[deps.OptimizationGCMAES]]
-deps = ["GCMAES", "OptimizationBase", "Reexport", "SciMLBase"]
+deps = ["GCMAES", "OptimizationBase", "Reexport", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationGCMAES"
 uuid = "6f0a0517-dbc2-4a7a-8a20-99ae7f27e911"
-version = "0.3.11"
+version = "0.3.12"
 
 [[deps.OptimizationIpopt]]
-deps = ["Ipopt", "LinearAlgebra", "OptimizationBase", "Reexport", "SciMLBase", "SparseArrays", "SymbolicIndexingInterface"]
+deps = ["ADTypes", "Ipopt", "LinearAlgebra", "OptimizationBase", "Reexport", "SciMLBase", "SciMLLogging", "SparseArrays", "SymbolicIndexingInterface"]
 path = "../lib/OptimizationIpopt"
 uuid = "43fad042-7963-4b32-ab19-e2a4f9a67124"
-version = "1.3.0"
+version = "1.4.0"
 
 [[deps.OptimizationLBFGSB]]
-deps = ["DocStringExtensions", "LBFGSB", "OptimizationBase", "Reexport", "SciMLBase"]
+deps = ["DocStringExtensions", "LBFGSB", "OptimizationBase", "Reexport", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationLBFGSB"
 uuid = "22f7324a-a79d-40f2-bebe-3af60c77bd15"
-version = "1.4.4"
+version = "1.5.0"
 
 [[deps.OptimizationMOI]]
-deps = ["LinearAlgebra", "MathOptInterface", "ModelingToolkitBase", "OptimizationBase", "Reexport", "SciMLBase", "SciMLStructures", "SparseArrays", "SymbolicIndexingInterface", "SymbolicUtils", "Symbolics"]
+deps = ["ADTypes", "LinearAlgebra", "MathOptInterface", "ModelingToolkitBase", "OptimizationBase", "Reexport", "SciMLBase", "SciMLLogging", "SciMLStructures", "SparseArrays", "SymbolicIndexingInterface", "SymbolicUtils", "Symbolics"]
 path = "../lib/OptimizationMOI"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
-version = "1.3.4"
+version = "1.4.0"
 weakdeps = ["ModelingToolkit"]
 
 [[deps.OptimizationMadNLP]]
-deps = ["LinearAlgebra", "MadNLP", "NLPModels", "OptimizationBase", "OptimizationNLPModels", "Reexport", "SciMLBase", "SymbolicIndexingInterface"]
+deps = ["LinearAlgebra", "MadNLP", "NLPModels", "OptimizationBase", "OptimizationNLPModels", "Reexport", "SciMLBase", "SciMLLogging", "SymbolicIndexingInterface"]
 path = "../lib/OptimizationMadNLP"
 uuid = "5d9c809f-c847-4062-9fba-1793bbfef577"
-version = "2.2.3"
+version = "2.3.0"
 
 [[deps.OptimizationManopt]]
-deps = ["Dates", "LinearAlgebra", "ManifoldDiff", "Manifolds", "ManifoldsBase", "Manopt", "OptimizationBase", "Reexport", "SciMLBase"]
+deps = ["Dates", "LinearAlgebra", "ManifoldDiff", "Manifolds", "ManifoldsBase", "Manopt", "OptimizationBase", "Reexport", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationManopt"
 uuid = "e57b7fff-7ee7-4550-b4f0-90e9476e9fb6"
-version = "1.3.5"
+version = "1.4.0"
 
 [[deps.OptimizationMetaheuristics]]
-deps = ["Metaheuristics", "OptimizationBase", "Reexport", "SciMLBase"]
+deps = ["Metaheuristics", "OptimizationBase", "Reexport", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationMetaheuristics"
 uuid = "3aafef2f-86ae-4776-b337-85a36adf0b55"
-version = "0.3.9"
+version = "0.3.10"
 
 [[deps.OptimizationMultistartOptimization]]
 deps = ["MultistartOptimization", "OptimizationBase", "Reexport", "SciMLBase"]
 path = "../lib/OptimizationMultistartOptimization"
 uuid = "e4316d97-8bbb-4fd3-a7d8-3851d2a72823"
-version = "0.3.8"
+version = "0.3.9"
 
 [[deps.OptimizationNLPModels]]
 deps = ["ADTypes", "NLPModels", "OptimizationBase", "Reexport", "SciMLBase", "SparseArrays"]
 path = "../lib/OptimizationNLPModels"
 uuid = "064b21be-54cf-11ef-1646-cdfee32b588f"
-version = "1.3.4"
+version = "1.4.0"
 
 [[deps.OptimizationNLopt]]
-deps = ["NLopt", "OptimizationBase", "Random", "Reexport", "SciMLBase"]
+deps = ["NLopt", "OptimizationBase", "Random", "Reexport", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationNLopt"
 uuid = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
-version = "0.3.14"
+version = "0.3.15"
 
 [[deps.OptimizationNOMAD]]
-deps = ["NOMAD", "OptimizationBase", "Reexport", "SciMLBase"]
+deps = ["NOMAD", "OptimizationBase", "Reexport", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationNOMAD"
 uuid = "2cab0595-8222-4775-b714-9828e6a9e01b"
-version = "0.3.9"
+version = "0.3.10"
 weakdeps = ["LogExpFunctions"]
 
 [[deps.OptimizationODE]]
 deps = ["ADTypes", "DiffEqBase", "ForwardDiff", "LinearAlgebra", "NonlinearSolve", "OptimizationBase", "OrdinaryDiffEqLowOrderRK", "OrdinaryDiffEqNonlinearSolve", "OrdinaryDiffEqRosenbrock", "OrdinaryDiffEqStabilizedRK", "OrdinaryDiffEqTsit5", "OrdinaryDiffEqVerner", "Reexport", "SciMLBase", "SteadyStateDiffEq"]
 path = "../lib/OptimizationODE"
 uuid = "dfa73e59-e644-4d8a-bf84-188d7ecb34e4"
-version = "0.1.9"
+version = "0.1.10"
 
 [[deps.OptimizationOptimJL]]
 deps = ["Optim", "OptimizationBase", "Reexport", "SciMLBase", "SparseArrays"]
 path = "../lib/OptimizationOptimJL"
 uuid = "36348300-93cb-4f02-beb5-3c3902f8871e"
-version = "0.4.17"
+version = "0.4.18"
 
 [[deps.OptimizationOptimisers]]
-deps = ["Logging", "Optimisers", "OptimizationBase", "Reexport", "SciMLBase"]
+deps = ["Logging", "Optimisers", "OptimizationBase", "Reexport", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
-version = "0.3.20"
+version = "0.3.21"
 
 [[deps.OptimizationPRIMA]]
 deps = ["OptimizationBase", "PRIMA", "Reexport", "SciMLBase"]
 path = "../lib/OptimizationPRIMA"
 uuid = "72f8369c-a2ea-4298-9126-56167ce9cbc2"
-version = "0.3.11"
+version = "0.3.12"
 
 [[deps.OptimizationPolyalgorithms]]
 deps = ["OptimizationBase", "OptimizationOptimJL", "OptimizationOptimisers", "Reexport", "SciMLBase"]
 path = "../lib/OptimizationPolyalgorithms"
 uuid = "500b13db-7e66-49ce-bda4-eed966be6282"
-version = "0.3.9"
+version = "0.3.10"
 
 [[deps.OptimizationPyCMA]]
-deps = ["CondaPkg", "OptimizationBase", "PythonCall", "Reexport", "SciMLBase"]
+deps = ["CondaPkg", "OptimizationBase", "PythonCall", "Reexport", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationPyCMA"
 uuid = "fb0822aa-1fe5-41d8-99a6-e7bf6c238d3b"
-version = "1.3.4"
+version = "1.4.0"
 
 [[deps.OptimizationQuadDIRECT]]
-deps = ["OptimizationBase", "QuadDIRECT", "Reexport", "SciMLBase"]
+deps = ["OptimizationBase", "QuadDIRECT", "Reexport", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationQuadDIRECT"
 uuid = "842ac81e-713d-465f-80f7-84eddaced298"
-version = "0.3.6"
+version = "0.3.7"
 
 [[deps.OptimizationSciPy]]
-deps = ["OptimizationBase", "PythonCall", "Reexport", "SciMLBase"]
+deps = ["OptimizationBase", "PythonCall", "Reexport", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationSciPy"
 uuid = "cce07bd8-c79b-4b00-aee8-8db9cce22837"
-version = "0.4.9"
+version = "0.4.10"
 
 [[deps.OptimizationSophia]]
 deps = ["OptimizationBase", "Random", "Reexport", "SciMLBase"]
 path = "../lib/OptimizationSophia"
 uuid = "892fee11-dca1-40d6-b698-84ba0d87399a"
-version = "1.3.4"
+version = "1.4.0"
 
 [[deps.OptimizationSpeedMapping]]
-deps = ["OptimizationBase", "Reexport", "SciMLBase", "SpeedMapping"]
+deps = ["OptimizationBase", "Reexport", "SciMLBase", "SciMLLogging", "SpeedMapping"]
 path = "../lib/OptimizationSpeedMapping"
 uuid = "3d669222-0d7d-4eb9-8a9f-d8528b0d9b91"
 version = "0.2.8"
@@ -3338,7 +3338,7 @@ weakdeps = ["ChainRulesCore", "ReverseDiff", "Tracker"]
 deps = ["ADTypes", "LinearAlgebra", "OptimizationBase", "Reexport", "SciMLBase", "SimpleNonlinearSolve"]
 path = "../lib/SimpleOptimization"
 uuid = "510db2f7-4254-4e34-bbda-04240c91ca8f"
-version = "1.2.4"
+version = "1.3.0"
 weakdeps = ["DifferentiationInterface", "Enzyme", "ForwardDiff"]
 
     [deps.SimpleOptimization.extensions]
