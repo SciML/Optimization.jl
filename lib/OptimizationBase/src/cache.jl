@@ -74,6 +74,7 @@ function OptimizationCache(
 
     if !(
             prob.f.adtype isa DifferentiationInterface.SecondOrder ||
+                prob.f.adtype isa AutoSparse{<:DifferentiationInterface.SecondOrder} ||
                 prob.f.adtype isa AutoZygote
         ) &&
             (

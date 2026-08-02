@@ -72,6 +72,41 @@ end
     end
 end
 
+@testset "sparse explicit constraint Jacobian with parameters" begin
+    objective(x, p) = (x[1] - p[1])^2 + x[2]^2
+
+    function gradient!(G, x, p)
+        G[1] = 2 * (x[1] - p[1])
+        G[2] = 2 * x[2]
+        return
+    end
+
+    function constraints!(res, x, p)
+        res[1] = x[1] + x[2] - p[1]
+        return
+    end
+
+    function constraint_jacobian!(J, x, p)
+        J[1, 1] = 1
+        J[1, 2] = 1
+        return
+    end
+
+    f = OptimizationFunction(
+        objective,
+        AutoSparse(AutoForwardDiff());
+        grad = gradient!,
+        cons = constraints!,
+        cons_j = constraint_jacobian!,
+        cons_jac_prototype = sparse([1, 1], [1, 2], [1.0, 1.0], 1, 2)
+    )
+    prob = OptimizationProblem(f, [0.0, 0.0], [1.0]; lcons = [0.0], ucons = [0.0])
+    sol = solve(prob, IpoptOptimizer(hessian_approximation = "limited-memory"))
+
+    @test SciMLBase.successful_retcode(sol)
+    @test sol.u ≈ [1.0, 0.0] atol = 1.0e-6
+end
+
 include("additional_tests.jl")
 include("advanced_features.jl")
 include("problem_types.jl")
