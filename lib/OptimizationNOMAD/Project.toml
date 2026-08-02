@@ -1,7 +1,7 @@
 name = "OptimizationNOMAD"
 uuid = "2cab0595-8222-4775-b714-9828e6a9e01b"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.4.0"
+version = "0.3.10"
 [deps]
 NOMAD = "02130f1c-4665-5b79-af82-ff1385104aa0"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
@@ -25,7 +25,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 julia = "1.10"
 LogExpFunctions = "0.3.28"
 NOMAD = "2.4.1"
-OptimizationBase = "6"
+OptimizationBase = "5"
 Pkg = "1"
 Reexport = "1.2"
 SafeTestsets = "0.1"

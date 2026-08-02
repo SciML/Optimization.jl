@@ -14,12 +14,12 @@ OptimizationOptimJL = {path = "../../../OptimizationOptimJL"}
 OptimizationBase = {path = "../../../OptimizationBase"}
 
 [compat]
-OptimizationOptimisers = "0.4"
-OptimizationOptimJL = "0.5"
-OptimizationBase = "6"
+OptimizationOptimisers = "0.3"
+OptimizationOptimJL = "0.4"
+OptimizationBase = "5"
 Aqua = "0.8"
 JET = "0.9, 0.10, 0.11"
 julia = "1.10"
-OptimizationPolyalgorithms = "0.4"
+OptimizationPolyalgorithms = "0.3"
 SciMLTesting = "2.1"
 Test = "1"
