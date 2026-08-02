@@ -8,7 +8,7 @@ import SciMLBase
 using SciMLLogging: @SciMLMessage
 using DocStringExtensions
 import LBFGSB as LBFGSBJL
-using SciMLBase: OptimizationStats, OptimizationFunction
+using SciMLBase: OptimizationStats
 using SciMLBase: ReturnCode
 using OptimizationBase.LinearAlgebra: norm
 using OptimizationBase: deduce_retcode
