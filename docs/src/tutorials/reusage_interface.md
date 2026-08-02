@@ -8,7 +8,7 @@ The `reinit!` function allows you to efficiently reuse an existing optimization 
 
 ```@example reinit
 # Create initial problem and cache
-using Optimization, OptimizationOptimJL, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationOptimJL, ADTypes, ForwardDiff
 rosenbrock(u, p) = (p[1] - u[1])^2 + p[2] * (u[2] - u[1]^2)^2
 u0 = zeros(2)
 p = [1.0, 100.0]
@@ -17,12 +17,12 @@ optf = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
 prob = OptimizationProblem(optf, u0, p)
 
 # Initialize cache and solve
-cache = Optimization.init(prob, Optim.BFGS())
-sol = Optimization.solve!(cache)
+cache = OptimizationBase.init(prob, Optim.BFGS())
+sol = OptimizationBase.solve!(cache)
 
 # Reinitialize cache with new parameters
-cache = Optimization.reinit!(cache; p = [2.0, 50.0])
-sol2 = Optimization.solve!(cache)
+cache = OptimizationBase.reinit!(cache; p = [2.0, 50.0])
+sol2 = OptimizationBase.solve!(cache)
 ```
 
 ### Supported Arguments
@@ -44,12 +44,12 @@ results = []
 p_values = [[1.0, 100.0], [2.0, 100.0], [3.0, 100.0]]
 
 # Create initial cache
-cache = Optimization.init(prob, Optim.BFGS())
+cache = OptimizationBase.init(prob, Optim.BFGS())
 
 function sweep(cache, p_values)
     for p in p_values
-        cache = Optimization.reinit!(cache; p = p)
-        sol = Optimization.solve!(cache)
+        cache = OptimizationBase.reinit!(cache; p = p)
+        sol = OptimizationBase.solve!(cache)
         push!(results, (p = p, u = sol.u, objective = sol.objective))
     end
 end
@@ -65,8 +65,8 @@ u0_values = [[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]]
 
 for u0 in u0_values
     local cache
-    cache = Optimization.reinit!(cache; u0 = u0)
-    sol = Optimization.solve!(cache)
+    cache = OptimizationBase.reinit!(cache; u0 = u0)
+    sol = OptimizationBase.solve!(cache)
     println("Starting from ", u0, " converged to ", sol.u)
 end
 ```

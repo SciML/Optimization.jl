@@ -5,7 +5,12 @@ module Optimization
 
 using DocStringExtensions
 using Reexport
-@reexport using SciMLBase, ADTypes, OptimizationBase
+# `OptimizationBase` curates its own public surface, so re-exporting it wholesale is a
+# bounded, reviewable act. `SciMLBase`/`ADTypes` are deliberately *not* re-exported:
+# blanket-reexporting them is what put 263 names — most of SciMLOperators among them —
+# into every `using Optimization` namespace.
+@reexport using OptimizationBase
+using SciMLBase, ADTypes
 
 using Logging, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra

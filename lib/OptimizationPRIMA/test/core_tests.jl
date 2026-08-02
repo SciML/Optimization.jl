@@ -1,6 +1,7 @@
 using OptimizationPRIMA, OptimizationBase, ForwardDiff, ModelingToolkit, ReverseDiff
 using OptimizationBase: SciMLBase
 using Test
+import SciMLBase
 
 @testset "OptimizationPRIMA.jl" begin
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2

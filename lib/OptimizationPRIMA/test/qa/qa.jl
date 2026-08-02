@@ -23,4 +23,5 @@ run_qa(
         rendered_ignore = optimization_dependency_rendered_ignore(OptimizationPRIMA),
     ),
     ei_broken = (:no_implicit_imports,),
+    reexports_allow = optimization_reexports_allow(OptimizationPRIMA.PRIMA),
 )

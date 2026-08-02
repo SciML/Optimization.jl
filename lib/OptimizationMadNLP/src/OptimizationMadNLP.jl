@@ -1,7 +1,11 @@
 module OptimizationMadNLP
 
 using Reexport
-@reexport using OptimizationBase
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
+import SciMLBase
+using SciMLLogging: @SciMLMessage
 using OptimizationBase: DEFAULT_CALLBACK
 using OptimizationNLPModels: NLPModelsAdaptor, build_nlpmodel_meta
 using MadNLP

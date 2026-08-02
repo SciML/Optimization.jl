@@ -4,6 +4,7 @@ using Test
 using LinearAlgebra
 using SparseArrays
 using Random
+import SciMLBase
 
 @testset "Specific Problem Types" begin
 

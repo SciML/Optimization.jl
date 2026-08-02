@@ -36,8 +36,8 @@ Hock--Schittkowski optimization suite available from `NLPModelsTest` as `HS10`, 
 translate it to an `OptimizationProblem`.
 
 ```@example NLPModels
-using OptimizationNLPModels, Optimization, NLPModelsTest, Ipopt
-using Optimization: OptimizationProblem
+using OptimizationNLPModels, OptimizationBase, NLPModelsTest, Ipopt
+using OptimizationBase: OptimizationProblem
 nlpmodel = NLPModelsTest.HS10()
 prob = OptimizationProblem(nlpmodel, AutoForwardDiff())
 ```

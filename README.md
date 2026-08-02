@@ -22,11 +22,11 @@ unified interface.
 ## Installation
 
 Assuming that you already have Julia correctly installed, it suffices to import
-Optimization.jl in the standard way:
+OptimizationBase in the standard way:
 
 ```julia
 using Pkg
-Pkg.add("Optimization")
+Pkg.add("OptimizationBase")
 ```
 
 The packages relevant to the core functionality of Optimization.jl will be imported
@@ -71,7 +71,7 @@ the documentation, which contains the unreleased features.
 ## Examples
 
 ```julia
-using Optimization
+using OptimizationBase
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]

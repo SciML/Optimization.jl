@@ -3,7 +3,7 @@ module OptimizationManopt
 using Reexport
 @reexport using Manopt
 import OptimizationBase
-using OptimizationBase: @SciMLMessage
+using SciMLLogging: @SciMLMessage
 using ManifoldsBase, ManifoldDiff
 import SciMLBase
 using SciMLBase: ReturnCode

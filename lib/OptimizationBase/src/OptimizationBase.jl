@@ -7,8 +7,12 @@ Optimization.jl solver packages.
 module OptimizationBase
 
 using DocStringExtensions
-using Reexport
-@reexport using SciMLBase, ADTypes, SciMLLogging
+# Deliberately NOT `@reexport`: blanket-reexporting these put 256 names into every
+# downstream namespace — `DynamicalSDEFunction`, `BlockDiagonalOperator`, `AddVector` and
+# the rest of SciMLOperators — of which the whole monorepo referenced 65. The public
+# surface is the explicit `export` lists below; anything else is reached through its
+# owner (`SciMLBase.x`, `ADTypes.x`, `SciMLLogging.x`).
+using SciMLBase, ADTypes, SciMLLogging
 
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 import SciMLBase: solve, init, solve!, __init, __solve,
@@ -91,6 +95,15 @@ include("state.jl")
 export solve, OptimizationCache, DEFAULT_CALLBACK, DEFAULT_DATA
 export IncompatibleOptimizerError, OptimizerMissingError
 export OptimizationVerbosity
+
+# Intentionally re-surfaced API owned elsewhere. Kept to what a user actually needs to
+# state and solve an optimization problem; `run_qa`'s `reexports_allow` lists exactly
+# these, so adding one is a deliberate, reviewable act.
+export OptimizationProblem, OptimizationFunction, MultiObjectiveOptimizationFunction,
+    OptimizationSolution, OptimizationStats
+export init, solve!, remake, ReturnCode
+export AutoEnzyme, AutoFiniteDiff, AutoForwardDiff, AutoMooncake, AutoReverseDiff,
+    AutoSparse, AutoSymbolics, AutoTracker, AutoZygote
 
 include("precompilation.jl")
 

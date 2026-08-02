@@ -26,11 +26,11 @@ SimpleSOAP
 The Rosenbrock function can be optimized using `SimpleBFGS` as follows:
 
 ```@example SimpleOptimization
-using SimpleOptimization, Optimization, ForwardDiff
+using SimpleOptimization, OptimizationBase, ForwardDiff
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = nothing
-optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
 prob = OptimizationProblem(optf, x0, p)
 sol = solve(prob, SimpleBFGS())
 ```

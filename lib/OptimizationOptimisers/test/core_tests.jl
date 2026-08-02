@@ -5,6 +5,7 @@ using SciMLBase: OptimizationFunction, OptimizationProblem
 using Test
 using Zygote
 using Lux, MLUtils, Random, ComponentArrays, Printf, MLDataDevices
+import SciMLBase
 
 @testset "OptimizationOptimisers.jl" begin
     @testset "Sense wrapping" begin

@@ -1,5 +1,6 @@
 using DifferentiationInterface: SecondOrder
 using ForwardDiff
+using SciMLBase
 
 struct ExactHessianOptimizer end
 

@@ -55,4 +55,5 @@ run_qa(
         ),
     ),
     ei_broken = (:no_implicit_imports,),
+    reexports_allow = OPTIMIZATION_CURATED_REEXPORTS,
 )

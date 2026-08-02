@@ -1,6 +1,7 @@
 using OptimizationBase, LinearAlgebra, ForwardDiff, Zygote, FiniteDiff,
     DifferentiationInterface, SparseConnectivityTracer
 using Test, ReverseDiff
+import ADTypes
 
 @testset "Matrix Valued" begin
     for adtype in [

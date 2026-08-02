@@ -20,7 +20,7 @@ OptimizationAuglag.AugLag
 ## Example
 
 ```julia
-using Optimization, OptimizationAuglag, OptimizationOptimJL, ADTypes
+using OptimizationBase, OptimizationAuglag, OptimizationOptimJL, ADTypes
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 cons(res, x, p) = (res .= [x[1]^2 + x[2]^2])

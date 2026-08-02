@@ -1,7 +1,10 @@
 module OptimizationOptimJL
 
 using Reexport
-@reexport using Optim, OptimizationBase
+@reexport using Optim
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
 using SciMLBase, SparseArrays
 
 # Construct a TwiceDifferentiable with Hessian-vector product support for KrylovTrustRegion.

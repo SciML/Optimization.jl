@@ -36,6 +36,20 @@ Optimization.jl is simply a bundle/interface over many of these dependencies.
 It may add some optional higher level behavior in the future but at this time
 the top level package does not add any extra behavior.
 
+### `Optimization` or `OptimizationBase`?
+
+`OptimizationBase` defines the interface — `OptimizationProblem`,
+`OptimizationFunction`, `solve` — and is what every solver package depends on,
+so it is what the examples throughout this documentation load:
+
+```julia
+Pkg.add("OptimizationBase")
+```
+
+`Optimization` re-exports that same interface and nothing else, so the two are
+interchangeable for everything shown here. Install whichever you prefer; you
+need only one of them, alongside a solver package.
+
 ## Contributing
 
   - Please refer to the
