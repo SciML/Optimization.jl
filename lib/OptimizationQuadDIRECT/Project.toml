@@ -1,7 +1,7 @@
 name = "OptimizationQuadDIRECT"
 uuid = "842ac81e-713d-465f-80f7-84eddaced298"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.4.0"
+version = "0.3.7"
 
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
@@ -18,7 +18,7 @@ SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 
 [compat]
 julia = "1.10"
-OptimizationBase = "6"
+OptimizationBase = "5"
 Pkg = "1"
 QuadDIRECT = "0.1.2"
 Reexport = "1.2"
