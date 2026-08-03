@@ -1,0 +1,32 @@
+name = "ConvexOptimization"
+uuid = "e7fa4f8d-d505-4694-8553-7bab99efa7d1"
+authors = ["Chris Rackauckas <accounts@chrisrackauckas.com> and contributors"]
+version = "0.1.0"
+
+[deps]
+Clarabel = "61c947e1-3e6d-4ee4-985a-eec8c727bd6e"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+SymbolicAnalysis = "4297ee4d-0239-47d8-ba5d-195ecdf594fe"
+Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
+
+[compat]
+Clarabel = "0.10, 0.11"
+LinearAlgebra = "1.10"
+MathOptInterface = "1.45"
+Reexport = "1.2"
+SciMLBase = "3.36"
+SparseArrays = "1.10"
+SymbolicAnalysis = "0.3"
+Symbolics = "7"
+julia = "1.10"
+
+[extras]
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test", "SafeTestsets"]
