@@ -1,7 +1,6 @@
 module OptimizationManopt
 
-using Reexport
-@reexport using Manopt
+using Manopt
 import OptimizationBase
 using SciMLLogging: @SciMLMessage
 using ManifoldsBase, ManifoldDiff
