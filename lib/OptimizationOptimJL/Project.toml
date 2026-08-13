@@ -21,7 +21,7 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 
 [compat]
-SciMLTesting = "2.1"
+SciMLTesting = "2.8"
 Pkg = "1"
 SafeTestsets = "0.1"
 julia = "1.10"

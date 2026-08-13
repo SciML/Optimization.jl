@@ -22,7 +22,7 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
-SciMLTesting = "2.1"
+SciMLTesting = "2.8"
 Evolutionary = "0.11"
 LogExpFunctions = "0.3.28"
 OptimizationBase = "5"

@@ -18,7 +18,7 @@ OptimizationMOI = {path = "../OptimizationMOI"}
 OptimizationOptimJL = {path = "../OptimizationOptimJL"}
 
 [compat]
-SciMLTesting = "2.1"
+SciMLTesting = "2.8"
 ADTypes = "1.18"
 Ipopt = "1"
 NLPModels = "0.21"
