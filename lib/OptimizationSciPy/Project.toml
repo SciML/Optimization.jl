@@ -23,7 +23,7 @@ ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 [compat]
 ForwardDiff = "0.10, 1"
 julia = "1.10"
-ModelingToolkit = "11"
+ModelingToolkit = "11.32"
 OptimizationBase = "5"
 Pkg = "1"
 PythonCall = "0.9.30"
