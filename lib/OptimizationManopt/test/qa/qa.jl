@@ -4,8 +4,8 @@ using Test
 include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "rendered_docs.jl")))
 
 # ExplicitImports findings, all tracked against SciML/Optimization.jl:
-#  * no_implicit_imports broken: the module relies on `@reexport`/`using`
-#    module names (SciMLBase/OptimizationBase/Reexport/...) that cannot be made
+#  * no_implicit_imports broken: the module relies on `using` module names
+#    (SciMLBase/OptimizationBase/...) that cannot be made
 #    explicit without restructuring.
 #  * the ignored *_are_public / *_via_owners names are owned by SciMLBase,
 #    OptimizationBase, the backend, or Base and are not (yet) declared public;
@@ -26,40 +26,6 @@ run_qa(
         rendered = true,
         docs_src = OPTIMIZATION_DOCS_SRC,
         rendered_ignore = optimization_dependency_rendered_ignore(OptimizationManopt),
-        ignore = (
-            :AbstractManifoldGradientObjective,
-            :Gradient,
-            :adjoint_linearized_operator!,
-            :cma_es!,
-            :convex_bundle_method_subsolver!,
-            :forward_operator!,
-            :get_constraints,
-            :get_differential_dual_prox!,
-            :get_differential_primal_prox!,
-            :get_dual_prox!,
-            :get_grad_equality_constraint!,
-            :get_grad_inequality_constraint!,
-            :get_gradient!,
-            :get_gradients!,
-            :get_hess_equality_constraint!,
-            :get_hess_inequality_constraint!,
-            :get_hessian!,
-            :get_initial_stepsize,
-            :get_preconditioner!,
-            :get_primal_prox!,
-            :get_proximal_map!,
-            :get_subgradient!,
-            :get_subtrahend_gradient!,
-            :gradient_sampling_subsolver!,
-            :linearized_forward_operator!,
-            :update_hessian_basis!,
-            :ℂ,
-            :ℝ,
-            :≟,
-            :⩻,
-            :⩼,
-        ),
     ),
     ei_broken = (:no_implicit_imports,),
-    reexports_allow = optimization_reexports_allow(OptimizationManopt.Manopt),
 )
