@@ -28,7 +28,7 @@ Sundials = "c3572dad-4567-51f8-b174-8c6c989267f4"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 
 [compat]
-SciMLTesting = "2.1"
+SciMLTesting = "2.8"
 ADTypes = "1.18"
 DiffEqBase = "7"
 ForwardDiff = "0.10, 1"

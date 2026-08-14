@@ -24,7 +24,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 OptimizationOptimisers = {path = "../OptimizationOptimisers"}
 
 [compat]
-SciMLTesting = "2.1"
+SciMLTesting = "2.8"
 Pkg = "1"
 SafeTestsets = "0.1"
 ForwardDiff = "1.0.1"
