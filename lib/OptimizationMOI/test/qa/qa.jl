@@ -48,15 +48,7 @@ run_qa(
         all_explicit_imports_are_public = (; ignore = (:varmap_to_vars,)),
     ),
     api_docs_kwargs = (;
-        docs_src = OPTIMIZATION_DOCS_SRC,
         ignore = (
-            :AutoModelingToolkit,
-            :AutoSparseFastDifferentiation,
-            :AutoSparseFiniteDiff,
-            :AutoSparseForwardDiff,
-            :AutoSparsePolyesterForwardDiff,
-            :AutoSparseReverseDiff,
-            :AutoSparseZygote,
             :DEFAULT_CALLBACK,
             :DEFAULT_DATA,
             :IncompatibleOptimizerError,

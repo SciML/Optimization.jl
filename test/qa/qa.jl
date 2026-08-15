@@ -38,18 +38,6 @@ run_qa(
             ),
         ),
     ),
-    api_docs_kwargs = (;
-        docs_src = OPTIMIZATION_DOCS_SRC,
-        ignore = (
-            :AutoModelingToolkit,
-            :AutoSparseFastDifferentiation,
-            :AutoSparseFiniteDiff,
-            :AutoSparseForwardDiff,
-            :AutoSparsePolyesterForwardDiff,
-            :AutoSparseReverseDiff,
-            :AutoSparseZygote,
-        ),
-    ),
     ei_broken = (:no_implicit_imports,),
     # `Optimization` is the umbrella over `OptimizationBase`, which curates its own
     # public API; re-exporting exactly that set is the facade's whole purpose.

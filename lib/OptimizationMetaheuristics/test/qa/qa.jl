@@ -39,19 +39,11 @@ run_qa(
         all_qualified_accesses_are_public = (; ignore = (:AbstractAlgorithm, :OptimizationStats, :__init, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback, :create_child, :get_best, :requiresbounds)),
     ),
     api_docs_kwargs = (;
-        docs_src = OPTIMIZATION_DOCS_SRC,
         # `summary` is an ambiguous export (see aqua_broken above): the binding has no
         # unique owner, so the harness cannot exempt it as an external reexport.
         rendered_ignore = (:summary,),
         ignore = (
             :ArasMethod,
-            :AutoModelingToolkit,
-            :AutoSparseFastDifferentiation,
-            :AutoSparseFiniteDiff,
-            :AutoSparseForwardDiff,
-            :AutoSparsePolyesterForwardDiff,
-            :AutoSparseReverseDiff,
-            :AutoSparseZygote,
             :CocosoMethod,
             :CodasMethod,
             :CoprasMethod,
