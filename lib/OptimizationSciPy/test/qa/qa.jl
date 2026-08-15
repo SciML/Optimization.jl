@@ -11,9 +11,7 @@ run_qa(
     OptimizationSciPy;
     explicit_imports = true,
     api_docs_kwargs = (;
-        rendered = true,
         docs_src = OPTIMIZATION_DOCS_SRC,
-        rendered_ignore = optimization_dependency_rendered_ignore(OptimizationSciPy),
         ignore = (
             :AutoModelingToolkit,
             :AutoSparseFastDifferentiation,

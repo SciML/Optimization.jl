@@ -42,9 +42,7 @@ run_qa(
         all_qualified_accesses_are_public = (; ignore = (:AbstractConstrainedOptimizer, :AbstractOptimizer, :ConstrainedOptimizer, :KrylovTrustRegion, :NLSolversBase, :NoAD, :OptimizationState, :OptimizationStats, :Options, :ZerothOrderOptimizer, :__init, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :alloc_DF, :alloc_H, :allowscallback, :allowsfg, :converged, :iteration_limit_reached, :requiresbounds, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :supports_sense, :value)),
     ),
     api_docs_kwargs = (;
-        rendered = true,
         docs_src = OPTIMIZATION_DOCS_SRC,
-        rendered_ignore = optimization_dependency_rendered_ignore(OptimizationOptimJL),
         ignore = (
             :AcceleratedGradientDescent,
             :AutoModelingToolkit,

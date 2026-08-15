@@ -23,9 +23,7 @@ run_qa(
         all_qualified_accesses_are_public = (; ignore = (:AbstractManifold, :OptimizationState, :__solve, :allowscallback, :build_solution, :requiresgradient, :requireshessian, :supports_sense)),
     ),
     api_docs_kwargs = (;
-        rendered = true,
         docs_src = OPTIMIZATION_DOCS_SRC,
-        rendered_ignore = optimization_dependency_rendered_ignore(OptimizationManopt),
     ),
     ei_broken = (:no_implicit_imports,),
 )
