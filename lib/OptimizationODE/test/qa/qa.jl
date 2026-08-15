@@ -18,9 +18,7 @@ run_qa(
         all_qualified_accesses_are_public = (; ignore = (:OptimizationStats, :__init, :__solve, :allowscallback, :requiresbounds, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian)),
     ),
     api_docs_kwargs = (;
-        rendered = true,
         docs_src = OPTIMIZATION_DOCS_SRC,
-        rendered_ignore = optimization_dependency_rendered_ignore(OptimizationODE),
         ignore = (
             :AutoModelingToolkit,
             :AutoSparseFastDifferentiation,
