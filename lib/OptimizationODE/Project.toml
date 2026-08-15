@@ -46,7 +46,7 @@ Reexport = "1"
 SafeTestsets = "0.1"
 SciMLBase = "3"
 SteadyStateDiffEq = "2.5"
-Sundials = "5"
+Sundials = "6"
 Test = "1.10"
 julia = "1.10"
 
