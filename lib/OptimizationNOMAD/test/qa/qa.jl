@@ -22,10 +22,5 @@ run_qa(
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
         all_qualified_accesses_are_public = (; ignore = (:DefaultOptimizationCache, :OptimizationStats, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback)),
     ),
-    api_docs_kwargs = (;
-        ignore = (
-            :solve,
-        ),
-    ),
     ei_broken = (:no_implicit_imports,),
 )
