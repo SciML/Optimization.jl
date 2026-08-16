@@ -17,6 +17,10 @@ familiar with the SciML ecosystem. It is also very easy to extend to new
 solvers and new problem types. The package is actively maintained and new
 features are added regularly.
 
+```@docs
+Optimization
+```
+
 ## Installation
 
 In most instances you'll want to use some solver directly. For example, to use

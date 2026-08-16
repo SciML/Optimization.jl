@@ -1,7 +1,6 @@
 module OptimizationNLPModels
 
-using Reexport
-@reexport using NLPModels
+using NLPModels
 using ADTypes
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
@@ -9,7 +8,7 @@ using OptimizationBase
 import SciMLBase
 using SparseArrays
 
-export build_nlpmodel_meta, NLPModelsAdaptor
+export NLPModels, build_nlpmodel_meta, NLPModelsAdaptor
 
 """
     OptimizationFunction(nlpmodel::AbstractNLPModel, adtype::AbstractADType = NoAD())

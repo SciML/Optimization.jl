@@ -6,8 +6,8 @@ include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "rende
 using Optimisers
 
 # ExplicitImports findings, all tracked against SciML/Optimization.jl:
-#  * no_implicit_imports broken: the module relies on `@reexport`/`using`
-#    module names (SciMLBase/OptimizationBase/Reexport/...) that cannot be made
+#  * no_implicit_imports broken: the module relies on `using`
+#    module names (SciMLBase/OptimizationBase/...) that cannot be made
 #    explicit without restructuring.
 #  * the ignored *_are_public / *_via_owners names are owned by SciMLBase,
 #    OptimizationBase, the backend, or Base and are not (yet) declared public;
@@ -34,18 +34,6 @@ run_qa(
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
         all_qualified_accesses_are_public = (; ignore = (:OptimizationState, :OptimizationStats, :__init, :__solve, :_check_and_convert_maxiters, :allowscallback, :allowsfg, :isa_dataiterator, :requiresgradient)),
     ),
-    api_docs_kwargs = (;
-        ignore = (
-            :ADADelta,
-            :ADAGrad,
-            :ADAM,
-            :ADAMW,
-            :AbstractRule,
-            :NADAM,
-            :OADAM,
-            :RADAM,
-        ),
-    ),
     ei_broken = (:no_implicit_imports,),
-    reexports_allow = optimization_reexports_allow(OptimizationOptimisers.Optimisers),
+    reexports_allow = (:Optimisers,),
 )

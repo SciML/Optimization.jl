@@ -18,4 +18,6 @@ OptimizationBase.requiresgradient
 OptimizationBase.requireshessian
 OptimizationBase.requiresconsjac
 OptimizationBase.requiresconshess
+OptimizationBase.init(::SciMLBase.OptimizationProblem,::Any)
+OptimizationBase.solve!(::SciMLBase.AbstractOptimizationCache)
 ```

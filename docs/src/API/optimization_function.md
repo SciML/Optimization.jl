@@ -2,4 +2,5 @@
 
 ```@docs
 SciMLBase.OptimizationFunction
+OptimizationBase.instantiate_function
 ```

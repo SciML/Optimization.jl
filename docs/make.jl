@@ -19,7 +19,7 @@ makedocs(
     sitename = "Optimization.jl",
     authors = "Chris Rackauckas, Vaibhav Kumar Dixit et al.",
     modules = [
-        Optimization, Optimization.SciMLBase, Optimization.OptimizationBase,
+        Optimization, Optimization.OptimizationBase,
         OptimizationAuglag, OptimizationBBO, OptimizationBase,
         OptimizationCMAEvolutionStrategy, OptimizationGCMAES, OptimizationIpopt,
         OptimizationLBFGSB, OptimizationMadNLP, OptimizationManopt,
@@ -28,8 +28,7 @@ makedocs(
         OptimizationQuadDIRECT, OptimizationSciPy, OptimizationSophia,
         OptimizationSpeedMapping, SimpleOptimization,
     ],
-    clean = true, doctest = false, linkcheck = true,
-    warnonly = [:missing_docs, :cross_references],
+    clean = true, linkcheck = true,
     format = Documenter.HTML(
         assets = ["assets/favicon.ico"],
         canonical = "https://docs.sciml.ai/Optimization/stable/"

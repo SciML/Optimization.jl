@@ -91,7 +91,7 @@ end
         prob_max = OptimizationProblem(
             optf, [5.0, 5.0], nothing; sense = OptimizationBase.MaxSense
         )
-        sol_max = solve(prob_max, BFGS())
+        sol_max = solve(prob_max, Optim.BFGS())
         @test isapprox(sol_max.u, [1.0, 2.0]; atol = 1.0e-3)
         @test isapprox(sol_max.objective, 0.0; atol = 1.0e-6)
 
@@ -120,7 +120,7 @@ end
             optf_lin, [5.0, 5.0], nothing;
             lb = [0.0, 0.0], ub = [10.0, 10.0], sense = OptimizationBase.MaxSense
         )
-        sol_max_box = solve(prob_max_box, BFGS(); x_abstol = 0.1)
+        sol_max_box = solve(prob_max_box, Optim.BFGS(); x_abstol = 0.1)
         @test isapprox(sol_max_box.u, [10.0, 10.0]; atol = 1.0e-2)
         @test isapprox(sol_max_box.objective, 20.0; atol = 1.0e-2)
 
@@ -260,10 +260,10 @@ end
     optprob = OptimizationFunction((x, p) -> -rosenbrock(x, p), OptimizationBase.AutoZygote())
     prob = OptimizationProblem(optprob, x0, _p; sense = OptimizationBase.MaxSense)
 
-    sol = solve(prob, NelderMead())
+    sol = solve(prob, Optim.NelderMead())
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, BFGS())
+    sol = solve(prob, Optim.BFGS())
     @test 10 * sol.objective < l1
 
     function g!(G, x, p = nothing)
@@ -275,7 +275,7 @@ end
         grad = g!
     )
     prob = OptimizationProblem(optprob, x0, _p; sense = OptimizationBase.MaxSense)
-    sol = solve(prob, BFGS())
+    sol = solve(prob, Optim.BFGS())
     @test 10 * sol.objective < l1
 
     optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoSymbolics())
@@ -299,7 +299,7 @@ end
             0.8, 0.8,
         ]
     )
-    sol = solve(prob, BFGS())
+    sol = solve(prob, Optim.BFGS())
     @test sol.objective > l1
 
     function rosenbrock_grad!(dx, x, p)
@@ -376,18 +376,18 @@ end
 
         # Test with NelderMead
         prob = OptimizationProblem(rosenbrock, x0, _p)
-        sol = solve(prob, NelderMead(), store_trace = true)
+    sol = solve(prob, Optim.NelderMead(), store_trace = true)
         @test sol isa Any  # just test it doesn't throw
 
         # Test with Fminbox(NelderMead)
         optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
         prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
-        sol = solve(prob, Optim.Fminbox(NelderMead()), store_trace = true)
+    sol = solve(prob, Optim.Fminbox(Optim.NelderMead()), store_trace = true)
         @test sol isa Any  # just test it doesn't throw
 
         # Test with BFGS
         prob = OptimizationProblem(optprob, x0, _p)
-        sol = solve(prob, BFGS(), store_trace = true)
+    sol = solve(prob, Optim.BFGS(), store_trace = true)
         @test sol isa Any  # just test it doesn't throw
     end
 
@@ -414,7 +414,7 @@ end
 
         # Fminbox path (line ~353 of src): bounded problem.
         prob_b = OptimizationProblem(optf, x0, _p; lb = [-5.0, -5.0], ub = [5.0, 5.0])
-        sol_b = solve(prob_b, Optim.Fminbox(BFGS()))
+    sol_b = solve(prob_b, Optim.Fminbox(Optim.BFGS()))
         @test sol_b.retcode isa SciMLBase.ReturnCode.T
 
         # ConstrainedOptimizer path (line ~506 of src): IPNewton with constraints.

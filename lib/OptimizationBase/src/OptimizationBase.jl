@@ -16,26 +16,49 @@ using SciMLBase, ADTypes, SciMLLogging
 
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 import SciMLBase: solve, init, solve!, __init, __solve,
-    OptimizationProblem,
-    OptimizationFunction, ObjSense,
-    MaxSense, MinSense, OptimizationStats,
-    allowsbounds, requiresbounds,
-    allowsconstraints, requiresconstraints,
-    allowscallback, requiresgradient,
-    requireshessian, requiresconsjac,
-    requiresconshess, wrap_sol, has_kwargs,
+    OptimizationProblem, OptimizationFunction, ObjSense,
+    MaxSense, MinSense, OptimizationSolution, OptimizationStats,
+    allowsbounds, requiresbounds, allowsconstraints, requiresconstraints,
+    allowscallback, requiresgradient, requireshessian,
+    requiresconsjac, requiresconshess, wrap_sol, has_kwargs,
     get_root_indp, get_updated_symbolic_problem,
     get_concrete_p, get_concrete_u0, promote_u0,
     KeywordArgError, extract_alg,
     _concrete_solve_adjoint, _concrete_solve_forward
 
 @doc """
+    OptimizationProblem
+
+Container describing an optimization objective, initial state, parameters,
+and optional bounds or constraints.
+""" OptimizationProblem
+
+@doc """
+    OptimizationFunction
+
+Objective function wrapper carrying derivative and constraint information for
+an `OptimizationProblem`.
+""" OptimizationFunction
+
+@doc """
+    OptimizationSolution
+
+Solution type returned by an optimization solver. The concrete fields and
+solution interface are defined by SciMLBase.
+""" OptimizationSolution
+
+@doc """
+    OptimizationStats
+
+Statistics associated with an optimization solve, such as iteration counts,
+function evaluations, and elapsed time.
+""" OptimizationStats
+
+@doc """
     ObjSense
 
-Abstract objective-sense marker used by `OptimizationProblem` to indicate
-whether the objective should be minimized or maximized.
-
-See also [`MinSense`](@ref) and [`MaxSense`](@ref).
+Objective-sense marker used by `OptimizationProblem` to select minimization or
+maximization.
 """ ObjSense
 
 @doc """
@@ -49,6 +72,69 @@ Objective sense for minimizing an `OptimizationProblem`.
 
 Objective sense for maximizing an `OptimizationProblem`.
 """ MaxSense
+
+@doc """
+    allowsbounds(alg)
+
+Return whether `alg` accepts lower and upper bounds in an `OptimizationProblem`.
+Solver packages extend this function for their algorithms.
+""" allowsbounds
+
+@doc """
+    requiresbounds(alg)
+
+Return whether `alg` requires lower and upper bounds in an `OptimizationProblem`.
+Solver packages extend this function for their algorithms.
+""" requiresbounds
+
+@doc """
+    allowsconstraints(alg)
+
+Return whether `alg` accepts constraint equations in an `OptimizationProblem`.
+Solver packages extend this function for their algorithms.
+""" allowsconstraints
+
+@doc """
+    requiresconstraints(alg)
+
+Return whether `alg` requires constraint equations in an `OptimizationProblem`.
+Solver packages extend this function for their algorithms.
+""" requiresconstraints
+
+@doc """
+    allowscallback(alg)
+
+Return whether `alg` accepts a solve callback. Solver packages extend this
+function for their algorithms.
+""" allowscallback
+
+@doc """
+    requiresgradient(alg)
+
+Return whether `alg` requires objective gradient information. Solver packages
+extend this function for their algorithms.
+""" requiresgradient
+
+@doc """
+    requireshessian(alg)
+
+Return whether `alg` requires objective Hessian information. Solver packages
+extend this function for their algorithms.
+""" requireshessian
+
+@doc """
+    requiresconsjac(alg)
+
+Return whether `alg` requires a constraint Jacobian. Solver packages extend
+this function for their algorithms.
+""" requiresconsjac
+
+@doc """
+    requiresconshess(alg)
+
+Return whether `alg` requires a constraint Hessian. Solver packages extend
+this function for their algorithms.
+""" requiresconshess
 
 using SymbolicIndexingInterface: SymbolicIndexingInterface
 

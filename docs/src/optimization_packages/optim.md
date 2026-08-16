@@ -76,7 +76,7 @@ x0 = zeros(2)
 p = [1.0, 100.0]
 prob = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff(); cons = cons)
 prob = OptimizationProblem(prob, x0, p, lcons = [-5.0], ucons = [10.0])
-sol = solve(prob, IPNewton())
+sol = solve(prob, Optim.IPNewton())
 ```
 
 See also in the `Optim.jl` documentation the [Nonlinear constrained optimization](https://julianlsolvers.github.io/Optim.jl/stable/#examples/generated/ipnewton_basics/) example using `IPNewton`.
@@ -89,7 +89,7 @@ Derivative-free optimizers are optimizers that can be used even in cases where n
 
   - [`Optim.NelderMead()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/nelder_mead/): **Nelder-Mead optimizer**
     
-      + `solve(problem, NelderMead(parameters, initial_simplex))`
+      + `solve(problem, Optim.NelderMead(parameters, initial_simplex))`
     
       + `parameters = AdaptiveParameters()` or `parameters = FixedParameters()`
       + `initial_simplex = AffineSimplexer()`
@@ -100,7 +100,7 @@ Derivative-free optimizers are optimizers that can be used even in cases where n
 
   - [`Optim.SimulatedAnnealing()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/simulated_annealing/): **Simulated Annealing**
     
-      + `solve(problem, SimulatedAnnealing(neighbor, T, p))`
+      + `solve(problem, Optim.SimulatedAnnealing(neighbor, T, p))`
     
       + `neighbor` is a mutating function of the current and proposed `x`
       + `T` is a function of the current iteration that returns a temperature
@@ -190,7 +190,7 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
           * `precondprep = (P, x) -> nothing`
   - [`Optim.BFGS()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/lbfgs/): **Broyden-Fletcher-Goldfarb-Shanno algorithm**
     
-      + `solve(problem, BFGS(alphaguess, linesearch, initial_invH, initial_stepnorm, manifold))`
+      + `solve(problem, Optim.BFGS(alphaguess, linesearch, initial_invH, initial_stepnorm, manifold))`
     
       + `alphaguess` computes the initial step length (for more information, consult [this source](https://github.com/JuliaNLSolvers/LineSearches.jl) and [this example](https://julianlsolvers.github.io/LineSearches.jl/latest/examples/generated/optim_initialstep.html))
         
@@ -416,7 +416,7 @@ box constraints.
 
   - [`Optim.SAMIN()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/samin/): **Simulated Annealing with bounds**
     
-      + `solve(problem, SAMIN(nt, ns, rt, neps, f_tol, x_tol, coverage_ok, verbosity))`
+      + `solve(problem, Optim.SAMIN(nt, ns, rt, neps, f_tol, x_tol, coverage_ok, verbosity))`
     
       + Defaults:
         
