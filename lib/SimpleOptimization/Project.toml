@@ -48,7 +48,7 @@ Reexport = "1.2"
 SafeTestsets = "0.1"
 SciMLBase = "3"
 SimpleNonlinearSolve = "2.12"
-StaticArrays = "1.9"
+StaticArrays = "1.9.8"
 Test = "1.10"
 julia = "1.10"
 
