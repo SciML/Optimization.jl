@@ -82,7 +82,7 @@ end
         )
         result = solve(
             prob,
-            AugLag(; inner = Adam(), inner_kwargs = (; maxiters = 100));
+            AugLag(; inner = Optimisers.Adam(), inner_kwargs = (; maxiters = 100));
             maxiters = 100
         )
         @test result.objective < l0
@@ -92,7 +92,7 @@ end
         fx = eqls_fixture()
         result = solve(
             fx.prob,
-            AugLag(; inner = Adam(0.02), inner_kwargs = (; maxiters = 200));
+            AugLag(; inner = Optimisers.Adam(0.02), inner_kwargs = (; maxiters = 200));
             maxiters = 200
         )
 
@@ -106,7 +106,7 @@ end
         fx = eqls_fixture()
         result = solve(
             fx.prob,
-            AugLag(; inner = Adam(0.02), inner_kwargs = (; maxiters = 100), ϵ_primal = 1.0e-12);
+            AugLag(; inner = Optimisers.Adam(0.02), inner_kwargs = (; maxiters = 100), ϵ_primal = 1.0e-12);
             maxiters = 20
         )
         @test result.retcode === ReturnCode.ConvergenceFailure
@@ -121,7 +121,7 @@ end
         end
         result = solve(
             fx.prob,
-            AugLag(; inner = Adam(0.02), inner_kwargs = (; maxiters = 50));
+            AugLag(; inner = Optimisers.Adam(0.02), inner_kwargs = (; maxiters = 50));
             maxiters = 100, callback = cb
         )
         @test result.retcode === ReturnCode.Terminated
@@ -132,7 +132,7 @@ end
         fx = eqls_fixture()
         result = solve(
             fx.prob,
-            AugLag(; inner = Adam(0.02), inner_kwargs = (; maxiters = 100));
+            AugLag(; inner = Optimisers.Adam(0.02), inner_kwargs = (; maxiters = 100));
             maxiters = 10_000, maxtime = 0.01
         )
         @test result.retcode === ReturnCode.MaxTime
@@ -143,7 +143,7 @@ end
         prob = OptimizationProblem(optf, [1.0, 2.0])
         @test_throws ArgumentError solve(
             prob,
-            AugLag(; inner = Adam(), inner_kwargs = (; maxiters = 10)); maxiters = 10
+            AugLag(; inner = Optimisers.Adam(), inner_kwargs = (; maxiters = 10)); maxiters = 10
         )
     end
 
@@ -151,7 +151,7 @@ end
         fx = eqls_fixture()
         result = solve(
             fx.prob,
-            AugLag(; inner = Adam(0.02), inner_kwargs = (; maxiters = 100));
+            AugLag(; inner = Optimisers.Adam(0.02), inner_kwargs = (; maxiters = 100));
             maxiters = 50
         )
         @test result.stats.iterations > 0
@@ -161,24 +161,24 @@ end
     end
 
     @testset "ϵ kwarg seeds both ϵ_primal and ϵ_dual (back-compat)" begin
-        alg = AugLag(; inner = Adam(), ϵ = 1.0e-6)
+        alg = AugLag(; inner = Optimisers.Adam(), ϵ = 1.0e-6)
         @test alg.ϵ_primal == 1.0e-6
         @test alg.ϵ_dual == 1.0e-6
     end
 
     @testset "ϵ_primal and ϵ_dual can be set independently" begin
-        alg = AugLag(; inner = Adam(), ϵ_primal = 1.0e-4, ϵ_dual = 1.0e-2)
+        alg = AugLag(; inner = Optimisers.Adam(), ϵ_primal = 1.0e-4, ϵ_dual = 1.0e-2)
         @test alg.ϵ_primal == 1.0e-4
         @test alg.ϵ_dual == 1.0e-2
     end
 
     @testset "defaults for ρmax, progress_window, inner_kwargs" begin
-        alg = AugLag(; inner = Adam())
+        alg = AugLag(; inner = Optimisers.Adam())
         @test alg.ρmax == 1.0e12
         @test alg.progress_window == 5
         @test alg.inner_kwargs === (;)
-        @test AugLag(; inner = Adam(), ρmax = 1.0e6).ρmax == 1.0e6
-        @test AugLag(; inner = Adam(), progress_window = 10).progress_window == 10
+        @test AugLag(; inner = Optimisers.Adam(), ρmax = 1.0e6).ρmax == 1.0e6
+        @test AugLag(; inner = Optimisers.Adam(), progress_window = 10).progress_window == 10
     end
 
     @testset "plain-vector cache.p (non-DataIterator)" begin
@@ -188,7 +188,7 @@ end
         fx = eqls_fixture(; data_iterator = false)
         result = solve(
             fx.prob,
-            AugLag(; inner = Adam(0.02), inner_kwargs = (; maxiters = 200));
+            AugLag(; inner = Optimisers.Adam(0.02), inner_kwargs = (; maxiters = 200));
             maxiters = 200
         )
 
@@ -198,8 +198,8 @@ end
     end
 
     @testset "ρ_init default is nothing, can be overridden" begin
-        @test AugLag(; inner = Adam()).ρ_init === nothing
-        @test AugLag(; inner = Adam(), ρ_init = 5.0).ρ_init == 5.0
+        @test AugLag(; inner = Optimisers.Adam()).ρ_init === nothing
+        @test AugLag(; inner = Optimisers.Adam(), ρ_init = 5.0).ρ_init == 5.0
     end
 
     @testset "ρ_init override is respected at solve start" begin
@@ -217,7 +217,7 @@ end
         solve(
             fx.prob,
             AugLag(;
-                inner = Adam(0.02), inner_kwargs = (; maxiters = 10),
+                inner = Optimisers.Adam(0.02), inner_kwargs = (; maxiters = 10),
                 γ = 1.0, ρ_init = ρ_init
             );
             maxiters = 5, callback = cb
@@ -241,7 +241,7 @@ end
         )
         result = solve(
             prob,
-            AugLag(; inner = Adam(0.05), inner_kwargs = (; maxiters = 200));
+            AugLag(; inner = Optimisers.Adam(0.05), inner_kwargs = (; maxiters = 200));
             maxiters = 200
         )
 
@@ -265,7 +265,7 @@ end
         )
         result = solve(
             prob,
-            AugLag(; inner = Adam(0.05), inner_kwargs = (; maxiters = 200));
+            AugLag(; inner = Optimisers.Adam(0.05), inner_kwargs = (; maxiters = 200));
             maxiters = 200
         )
 
@@ -289,7 +289,7 @@ end
         )
         result = solve(
             prob,
-            AugLag(; inner = Adam(0.05), inner_kwargs = (; maxiters = 200));
+            AugLag(; inner = Optimisers.Adam(0.05), inner_kwargs = (; maxiters = 200));
             maxiters = 200
         )
 
@@ -328,7 +328,7 @@ end
 
         solve(
             prob,
-            AugLag(; inner = Adam(0.02), inner_kwargs = (; maxiters = 4));
+            AugLag(; inner = Optimisers.Adam(0.02), inner_kwargs = (; maxiters = 4));
             maxiters = 2
         )
 
@@ -352,7 +352,7 @@ end
         result = solve(
             fx.prob,
             AugLag(;
-                inner = Adam(0.05), inner_kwargs = (; maxiters = 500),
+                inner = Optimisers.Adam(0.05), inner_kwargs = (; maxiters = 500),
                 γ = 1.0, ρ_init = ρ_init,
                 λmin = 0.0, λmax = 0.0,
                 μmin = 0.0, μmax = 0.0,
