@@ -10,7 +10,6 @@ using SimpleNonlinearSolve
 using ADTypes
 using LinearAlgebra
 using CommonSolve
-using StaticArrays: SVector, MVector
 using LineSearch: StrongWolfeLineSearch
 
 abstract type SimpleOptimizationAlgorithm end
@@ -36,10 +35,9 @@ is critical.
 last `threshold` iterations of gradient information. This makes it memory-efficient
 for problems with many variables while still achieving superlinear convergence.
 
-The objective is minimized directly with a Strong Wolfe line search. Box constraints
-(`lb`/`ub` on the `OptimizationProblem`) are supported via gradient projection. The
-implementation is allocation-free on static arrays, so it is safe to call from inside
-GPU kernels.
+Minimizes the objective with a Strong Wolfe line search. Supports box constraints
+(`lb`/`ub`) via projection. `u0` must be statically sized (`SVector`, not `Vector`)
+and the objective must be out-of-place (`OptimizationFunction{false}`).
 
 `ReturnCode.Success` when the projected gradient meets the tolerance,
 `ReturnCode.MaxIters` when the iteration limit is hit, and `ReturnCode.Failure`
@@ -48,11 +46,11 @@ on a non-finite iterate or a failed line search.
 ## Example
 
 ```julia
-using SimpleOptimization, Optimization, ForwardDiff
+using SimpleOptimization, Optimization, ForwardDiff, StaticArrays
 
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
-x0 = zeros(2)
-optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+x0 = SVector(0.0, 0.0)
+optf = OptimizationFunction{false}(rosenbrock, Optimization.AutoForwardDiff())
 prob = OptimizationProblem(optf, x0)
 sol = solve(prob, SimpleLBFGS())
 ```
@@ -188,15 +186,7 @@ function instantiate_gradient(f, adtype::ADTypes.AbstractADType)
     throw(ArgumentError("The passed automatic differentiation backend choice is not available. Please load the corresponding AD package $adpkg."))
 end
 
-@inline as_svector(x::SVector) = x
-@inline as_svector(x) = SVector(x)
-
-@inline _restore_u(u0::SVector, u) = u
-@inline function _restore_u(u0, u)
-    θ = similar(u0, eltype(u))
-    copyto!(θ, u)
-    return θ
-end
+@inline _as_u(x, g) = convert(typeof(x), g)
 
 @inline _project(x, ::Nothing, ::Nothing) = x
 @inline _project(x, lb, ub) = clamp.(x, lb, ub)
@@ -235,13 +225,12 @@ end
     ls.retcode == SciMLBase.ReturnCode.Success || return x, fx, g, false
 
     candidate = _project(x + T(ls.step_size) * direction, lb, ub)
-    return candidate, T(f(candidate, p)), as_svector(grad_f(candidate, p)), true
+    return candidate, T(f(candidate, p)), _as_u(x, grad_f(candidate, p)), true
 end
 
 @inline function _lbfgs_direction(g, s_hist, y_hist, pseudo_iteration, ::Val{M}) where {M}
     T = eltype(g)
-    α = MVector{M, T}(undef)
-    fill!(α, zero(T))
+    α = ntuple(_ -> zero(T), Val(M))
     q = g
     lower = pseudo_iteration - M
     upper = pseudo_iteration - 1
@@ -251,7 +240,7 @@ end
         j = mod1(index, M)
         s, y = s_hist[j], y_hist[j]
         ρ = inv(dot(y, s))
-        α[j] = ρ * dot(s, q)
+        α = Base.setindex(α, ρ * dot(s, q), j)
         q -= α[j] * y
     end
 
@@ -278,18 +267,19 @@ end
 end
 
 @inline function _lbfgs(
-        grad_f, f, p, x0::SVector{N, T}, lb, ub,
+        grad_f, f, p, x0, lb, ub,
         maxiters, abstol, reltol, linesearch, ::Val{M}
-    ) where {N, T, M}
+    ) where {M}
+    T = eltype(x0)
     x = _project(x0, lb, ub)
     fx = T(f(x, p))
-    g = SVector{N, T}(grad_f(x, p))
+    g = _as_u(x, grad_f(x, p))
     default_tol = sqrt(eps(T))
     abs_tol = abstol === nothing ? default_tol : max(T(abstol), default_tol)
     rel_tol = reltol === nothing ? zero(T) : max(T(reltol), zero(T))
     initial_residual = maximum(abs, _projected_gradient(x, g, lb, ub))
     tol = max(abs_tol, rel_tol * initial_residual)
-    zero_x = zero(SVector{N, T})
+    zero_x = zero(x)
     s_hist = ntuple(_ -> zero_x, Val(M))
     y_hist = ntuple(_ -> zero_x, Val(M))
     pseudo_iteration = 0
@@ -364,12 +354,17 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleLBFGS}
     abstol = cache.solver_args.abstol
     reltol = cache.solver_args.reltol
 
-    N = length(cache.u0)
-    u0 = SVector{N}(cache.u0)
+    u0 = cache.u0
+    u0 isa Array && throw(
+        ArgumentError(
+            "SimpleLBFGS requires a statically sized `u0` (e.g. `SVector`). Got $(typeof(u0))."
+        )
+    )
+    U = typeof(u0)
     T = eltype(u0)
 
     ∇f_inner = instantiate_gradient(Base.Fix2(cache.f.f, cache.p), cache.f.adtype)
-    grad_f = (u, _) -> SVector{N, T}(∇f_inner(u))
+    grad_f = (u, _) -> convert(U, ∇f_inner(u))
 
     ls = cache.opt.linesearch
     ls isa StrongWolfeLineSearch ||
@@ -381,8 +376,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleLBFGS}
         maxiters = ls.maxiters, zoom_maxiters = ls.zoom_maxiters
     )
 
-    lb = cache.lb === nothing ? nothing : SVector{N, T}(cache.lb)
-    ub = cache.ub === nothing ? nothing : SVector{N, T}(cache.ub)
+    lb = cache.lb === nothing ? nothing : convert(U, cache.lb)
+    ub = cache.ub === nothing ? nothing : convert(U, cache.ub)
 
     t0 = time()
     u, objective, retcode, iters = _lbfgs(
@@ -390,7 +385,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleLBFGS}
         typed_linesearch, __get_threshold(cache.opt)
     )
     return SciMLBase.build_solution(
-        cache, cache.opt, _restore_u(cache.u0, u), objective;
+        cache, cache.opt, u, objective;
         retcode = retcode,
         stats = OptimizationBase.OptimizationStats(; iterations = iters, time = time() - t0)
     )

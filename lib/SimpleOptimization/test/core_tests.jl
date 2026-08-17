@@ -1,40 +1,50 @@
 using SimpleOptimization, OptimizationBase
+using StaticArrays: SVector
 using Test
 
 @testset "SimpleOptimization.jl" begin
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = [0.5, 0.5]
+    x0s = SVector{2}(0.5, 0.5)
     p = [1.0, 100.0]
     l1 = rosenbrock(x0, p)
 
     @testset "ForwardDiff" begin
         using ForwardDiff
         optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
+        optfs = OptimizationFunction{false}(rosenbrock, OptimizationBase.AutoForwardDiff())
         prob = OptimizationProblem(optf, x0, p)
+        probs = OptimizationProblem(optfs, x0s, p)
 
-        sol = solve(prob, SimpleLBFGS())
+        sol = solve(probs, SimpleLBFGS())
         @test sol.objective < l1
         @test sol.u ≈ [1.0, 1.0] atol = 1.0e-4
         @test sol.retcode == ReturnCode.Success
-        @test typeof(sol.u) == typeof(x0)
+        @test typeof(sol.u) == typeof(x0s)
 
-        sol_maxiters = solve(prob, SimpleLBFGS(); maxiters = 1)
+        @test_throws ArgumentError solve(prob, SimpleLBFGS())
+
+        sol_maxiters = solve(probs, SimpleLBFGS(); maxiters = 1)
         @test sol_maxiters.retcode == ReturnCode.MaxIters
-        @test typeof(sol_maxiters.u) == typeof(x0)
+        @test typeof(sol_maxiters.u) == typeof(x0s)
 
-        prob_box = OptimizationProblem(optf, x0, p; lb = [-2.0, -2.0], ub = [2.0, 2.0])
+        lb = SVector(-2.0, -2.0)
+        ub = SVector(2.0, 2.0)
+        prob_box = OptimizationProblem(optfs, x0s, p; lb = lb, ub = ub)
         sol = solve(prob_box, SimpleLBFGS())
         @test sol.u ≈ [1.0, 1.0] atol = 1.0e-4
         @test sol.retcode == ReturnCode.Success
         @test all(-2 .≤ sol.u) && all(sol.u .≤ 2)
-        @test typeof(sol.u) == typeof(x0)
+        @test typeof(sol.u) == typeof(x0s)
 
-        prob_active = OptimizationProblem(optf, x0, p; lb = [-2.0, -2.0], ub = [0.8, 2.0])
+        prob_active = OptimizationProblem(
+            optfs, x0s, p; lb = SVector(-2.0, -2.0), ub = SVector(0.8, 2.0)
+        )
         sol_active = solve(prob_active, SimpleLBFGS())
         @test sol_active.u[1] ≤ 0.8 + 1.0e-8
         @test sol_active.u[1] ≈ 0.8 atol = 1.0e-4
         @test sol_active.retcode == ReturnCode.Success
-        @test typeof(sol_active.u) == typeof(x0)
+        @test typeof(sol_active.u) == typeof(x0s)
 
         sol = solve(prob, SimpleBFGS())
         @test sol.objective < l1

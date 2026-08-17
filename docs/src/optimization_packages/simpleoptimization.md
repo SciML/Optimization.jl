@@ -35,10 +35,16 @@ prob = OptimizationProblem(optf, x0, p)
 sol = solve(prob, SimpleBFGS())
 ```
 
-The same problem with `SimpleLBFGS`, including box constraints:
+The same problem with `SimpleLBFGS` requires a statically sized `u0`:
 
 ```@example SimpleOptimization
-sol = solve(prob, SimpleLBFGS())
-prob_box = OptimizationProblem(optf, x0, p; lb = [-2.0, -2.0], ub = [2.0, 2.0])
+using StaticArrays: SVector
+x0s = SVector(0.0, 0.0)
+optfs = OptimizationFunction{false}(rosenbrock, OptimizationBase.AutoForwardDiff())
+probs = OptimizationProblem(optfs, x0s, p)
+sol = solve(probs, SimpleLBFGS())
+prob_box = OptimizationProblem(
+    optfs, x0s, p; lb = SVector(-2.0, -2.0), ub = SVector(2.0, 2.0)
+)
 sol_box = solve(prob_box, SimpleLBFGS())
 ```
