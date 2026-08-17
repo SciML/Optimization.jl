@@ -16,34 +16,7 @@ using Logging, ConsoleProgressMonitor, TerminalLoggers, LoggingExtras
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 
 import OptimizationBase: instantiate_function, OptimizationCache, ReInitCache
-import SciMLBase: OptimizationProblem, OptimizationFunction, ObjSense,
-    MaxSense, MinSense, OptimizationStats, OptimizationSolution
-
-@doc """
-    ObjSense
-
-Objective-sense marker used by `OptimizationProblem` to select minimization or
-maximization.
-""" ObjSense
-
-@doc """
-    MinSense
-
-Objective sense for minimizing an `OptimizationProblem`.
-""" MinSense
-
-@doc """
-    MaxSense
-
-Objective sense for maximizing an `OptimizationProblem`.
-""" MaxSense
-
-@doc """
-    OptimizationSolution
-
-Solution type returned by an optimization solver. The concrete fields and
-solution interface are defined by SciMLBase.
-""" OptimizationSolution
+import SciMLBase: OptimizationProblem, OptimizationFunction, OptimizationStats
 
 export ObjSense, MaxSense, MinSense
 export solve

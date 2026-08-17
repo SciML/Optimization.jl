@@ -14,88 +14,49 @@ function Base.showerror(io::IO, e::IncompatibleOptimizerError)
 end
 
 """
-```julia
-solve(prob::OptimizationProblem, alg::AbstractOptimizationAlgorithm,
-    args...; kwargs...)::OptimizationSolution
-```
+    solve(prob::OptimizationProblem, alg, args...; kwargs...)
 
-For information about the returned solution object, refer to the documentation for [`OptimizationSolution`](@ref)
+Solve an `OptimizationProblem` with `alg` and return an
+`AbstractOptimizationSolution`.
 
-## Keyword Arguments
+`solve` validates the problem against the algorithm's capability traits and
+dispatches to the solver package that implements `alg`. Solver-specific
+keywords are forwarded unchanged.
 
-The arguments to `solve` are common across all of the optimizers.
-These common arguments are:
+# Arguments
 
-  - `maxiters`: the maximum number of iterations
-  - `maxtime`: the maximum amount of time (typically in seconds) the optimization runs for
-  - `abstol`: absolute tolerance in changes of the objective value
-  - `reltol`: relative tolerance  in changes of the objective value
-  - `callback`: a callback function
+- `prob`: the problem to optimize.
+- `alg`: an algorithm provided by an Optimization.jl solver package.
+- `args...`: positional arguments accepted by the solver implementation.
 
-Some optimizer algorithms have special keyword arguments documented in the
-solver portion of the documentation and their respective documentation.
-These arguments can be passed as `kwargs...` to `solve`. Similarly, the special
-keyword arguments for the `local_method` of a global optimizer are passed as a
-`NamedTuple` to `local_options`.
+# Keyword Arguments
 
-Over time, we hope to cover more of these keyword arguments under the common interface.
+- `sensealg`: sensitivity algorithm used by differentiation integrations.
+- `u0`: replacement initial value for the problem.
+- `p`: replacement parameter value for the problem.
+- `wrap`: whether to return the standard Optimization solution wrapper.
+- `kwargs...`: common and solver-specific options.
 
-A warning will be shown if a common argument is not implemented for an optimizer.
+# Returns
 
-## Callback Functions
+An `AbstractOptimizationSolution` containing the final variables, objective
+value, return code, and `OptimizationStats`.
 
-The callback function `callback` is a function that is called after every optimizer
-step. Its signature is:
+# Callbacks
 
-```julia
-callback = (state, loss_val) -> false
-```
+When supported by `alg`, `callback` is called after an optimization step as
+`callback(state, objective)`. `state` is an `OptimizationState`, and returning
+`true` stops the optimization. The default callback returns `false`.
 
-where `state` is an `OptimizationState` and stores information for the current
-iteration of the solver and `loss_val` is loss/objective value. For more
-information about the fields of the `state` look at the `OptimizationState`
-documentation. The callback should return a Boolean value, and the default
-should be `false`, so the optimization stops if it returns `true`.
-
-### Callback Example
-
-Here we show an example of a callback function that plots the prediction at the current value of the optimization variables.
-For a visualization callback, we would need the prediction at the current parameters i.e. the solution of the `ODEProblem` `prob`.
-So we call the `predict` function within the callback again.
+# Examples
 
 ```julia
-function predict(u)
-    Array(solve(prob, Tsit5(), p = u))
-end
+using Optimization, OptimizationOptimJL
 
-function loss(u, p)
-    pred = predict(u)
-    sum(abs2, batch .- pred)
-end
-
-callback = function (state, l; doplot = false) #callback function to observe training
-    display(l)
-    # plot current prediction against data
-    if doplot
-        pred = predict(state.u)
-        pl = scatter(t, ode_data[1, :], label = "data")
-        scatter!(pl, t, pred[1, :], label = "prediction")
-        display(plot(pl))
-    end
-    return false
-end
+f(u, p) = sum(abs2, u)
+prob = OptimizationProblem(OptimizationFunction(f), [1.0, -2.0])
+sol = solve(prob, Optim.BFGS(); maxiters = 100)
 ```
-
-If the chosen method is a global optimizer that employs a local optimization
-method, a similar set of common local optimizer arguments exists. Look at `MLSL` or `AUGLAG`
-from NLopt for an example. The common local optimizer arguments are:
-
-  - `local_method`: optimizer used for local optimization in global method
-  - `local_maxiters`: the maximum number of iterations
-  - `local_maxtime`: the maximum amount of time (in seconds) the optimization runs for
-  - `local_abstol`: absolute tolerance in changes of the objective value
-  - `local_reltol`: relative tolerance  in changes of the objective value
-  - `local_options`: `NamedTuple` of keyword arguments for local optimizer
 """
 function solve(
         prob::SciMLBase.OptimizationProblem, args...; sensealg = nothing,
@@ -204,26 +165,39 @@ function Base.showerror(io::IO, e::OptimizerMissingError)
 end
 
 """
+    init(prob::OptimizationProblem, alg, args...; kwargs...)
+
+Prepare `prob` and `alg` for an incremental optimization run by constructing
+an `AbstractOptimizationCache`.
+
+# Arguments
+
+- `prob`: the problem to optimize.
+- `alg`: an algorithm provided by an Optimization.jl solver package.
+- `args...`: positional arguments accepted by the solver implementation.
+
+# Keyword Arguments
+
+The common options are the same as for [`solve`](@ref), including `maxiters`,
+`maxtime`, `abstol`, `reltol`, and `callback`. Solver-specific options are
+forwarded to the implementation.
+
+# Returns
+
+An `AbstractOptimizationCache` ready for `solve!`.
+
+# Interface
+
+Solver packages implement `SciMLBase.__init(prob, alg; kwargs...)` when they
+support the cache interface. The returned cache must implement
+`SciMLBase.__solve(cache)`.
+
+# Examples
+
 ```julia
-init(prob::OptimizationProblem, alg::AbstractOptimizationAlgorithm, args...; kwargs...)
+cache = init(prob, alg; maxiters = 100)
+sol = solve!(cache)
 ```
-
-## Keyword Arguments
-
-The arguments to `init` are the same as to `solve` and common across all of the optimizers.
-These common arguments are:
-
-  - `maxiters` (the maximum number of iterations)
-  - `maxtime` (the maximum of time the optimization runs for)
-  - `abstol` (absolute tolerance in changes of the objective value)
-  - `reltol` (relative tolerance  in changes of the objective value)
-  - `callback` (a callback function)
-
-Some optimizer algorithms have special keyword arguments documented in the
-solver portion of the documentation and their respective documentation.
-These arguments can be passed as `kwargs...` to `init`.
-
-See also [`solve(prob::OptimizationProblem, alg, args...; kwargs...)`](@ref)
 """
 function init(
         prob::SciMLBase.OptimizationProblem, alg, args...;
@@ -238,13 +212,31 @@ function init(
 end
 
 """
+    solve!(cache::AbstractOptimizationCache)
+
+Continue an optimization represented by `cache` and return its solution.
+
+# Arguments
+
+- `cache`: a cache returned by [`init`](@ref).
+
+# Returns
+
+An `AbstractOptimizationSolution` containing the final optimization
+state.
+
+# Interface
+
+Solver packages implement `SciMLBase.__solve(cache)` for their concrete cache
+type. The cache is a developer-facing extension point; callers should use
+documented constructors and methods rather than relying on concrete fields.
+
+# Examples
+
 ```julia
-solve!(cache::AbstractOptimizationCache)
+cache = init(prob, alg)
+sol = solve!(cache)
 ```
-
-Solves the given optimization cache.
-
-See also [`init(prob::OptimizationProblem, alg, args...; kwargs...)`](@ref)
 """
 function solve!(cache::SciMLBase.AbstractOptimizationCache)::SciMLBase.AbstractOptimizationSolution
     return __solve(cache)

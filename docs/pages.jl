@@ -14,6 +14,9 @@ pages = [
     "Examples" => [
         "examples/rosenbrock.md",
     ],
+    "Interfaces" => [
+        "interfaces/optimization.md",
+    ],
     "Basics" => [
         "API/optimization_problem.md",
         "API/optimization_function.md",
