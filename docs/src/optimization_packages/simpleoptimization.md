@@ -41,9 +41,9 @@ The same problem with `SimpleLBFGS` requires a statically sized `u0`:
 using StaticArrays: SVector
 x0s = SVector(0.0, 0.0)
 optfs = OptimizationFunction{false}(rosenbrock, OptimizationBase.AutoForwardDiff())
-probs = OptimizationProblem(optfs, x0s, p)
+probs = OptimizationProblem{false}(optfs, x0s, p)
 sol = solve(probs, SimpleLBFGS())
-prob_box = OptimizationProblem(
+prob_box = OptimizationProblem{false}(
     optfs, x0s, p; lb = SVector(-2.0, -2.0), ub = SVector(2.0, 2.0)
 )
 sol_box = solve(prob_box, SimpleLBFGS())

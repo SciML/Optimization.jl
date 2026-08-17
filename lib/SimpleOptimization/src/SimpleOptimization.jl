@@ -51,7 +51,7 @@ using SimpleOptimization, Optimization, ForwardDiff, StaticArrays
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = SVector(0.0, 0.0)
 optf = OptimizationFunction{false}(rosenbrock, Optimization.AutoForwardDiff())
-prob = OptimizationProblem(optf, x0)
+prob = OptimizationProblem{false}(optf, x0)
 sol = solve(prob, SimpleLBFGS())
 ```
 """

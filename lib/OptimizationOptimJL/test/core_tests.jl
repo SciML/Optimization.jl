@@ -376,18 +376,18 @@ end
 
         # Test with NelderMead
         prob = OptimizationProblem(rosenbrock, x0, _p)
-    sol = solve(prob, Optim.NelderMead(), store_trace = true)
+        sol = solve(prob, Optim.NelderMead(), store_trace = true)
         @test sol isa Any  # just test it doesn't throw
 
         # Test with Fminbox(NelderMead)
         optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
         prob = OptimizationProblem(optprob, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
-    sol = solve(prob, Optim.Fminbox(Optim.NelderMead()), store_trace = true)
+        sol = solve(prob, Optim.Fminbox(Optim.NelderMead()), store_trace = true)
         @test sol isa Any  # just test it doesn't throw
 
         # Test with BFGS
         prob = OptimizationProblem(optprob, x0, _p)
-    sol = solve(prob, Optim.BFGS(), store_trace = true)
+        sol = solve(prob, Optim.BFGS(), store_trace = true)
         @test sol isa Any  # just test it doesn't throw
     end
 
@@ -414,7 +414,7 @@ end
 
         # Fminbox path (line ~353 of src): bounded problem.
         prob_b = OptimizationProblem(optf, x0, _p; lb = [-5.0, -5.0], ub = [5.0, 5.0])
-    sol_b = solve(prob_b, Optim.Fminbox(Optim.BFGS()))
+        sol_b = solve(prob_b, Optim.Fminbox(Optim.BFGS()))
         @test sol_b.retcode isa SciMLBase.ReturnCode.T
 
         # ConstrainedOptimizer path (line ~506 of src): IPNewton with constraints.

@@ -14,7 +14,7 @@ using Test
         optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
         optfs = OptimizationFunction{false}(rosenbrock, OptimizationBase.AutoForwardDiff())
         prob = OptimizationProblem(optf, x0, p)
-        probs = OptimizationProblem(optfs, x0s, p)
+        probs = OptimizationProblem{false}(optfs, x0s, p)
 
         sol = solve(probs, SimpleLBFGS())
         @test sol.objective < l1
@@ -30,14 +30,14 @@ using Test
 
         lb = SVector(-2.0, -2.0)
         ub = SVector(2.0, 2.0)
-        prob_box = OptimizationProblem(optfs, x0s, p; lb = lb, ub = ub)
+        prob_box = OptimizationProblem{false}(optfs, x0s, p; lb = lb, ub = ub)
         sol = solve(prob_box, SimpleLBFGS())
         @test sol.u ≈ [1.0, 1.0] atol = 1.0e-4
         @test sol.retcode == ReturnCode.Success
         @test all(-2 .≤ sol.u) && all(sol.u .≤ 2)
         @test typeof(sol.u) == typeof(x0s)
 
-        prob_active = OptimizationProblem(
+        prob_active = OptimizationProblem{false}(
             optfs, x0s, p; lb = SVector(-2.0, -2.0), ub = SVector(0.8, 2.0)
         )
         sol_active = solve(prob_active, SimpleLBFGS())
