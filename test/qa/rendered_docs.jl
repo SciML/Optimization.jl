@@ -1,9 +1,5 @@
 using SciMLTesting: public_api_names
 
-# Every sublibrary is documented in the shared repository manual, so each `run_qa`
-# call points its rendered-docs check here.
-const OPTIMIZATION_DOCS_SRC = normpath(joinpath(@__DIR__, "..", "..", "docs", "src"))
-
 # `run_qa`'s reexport audit flags every public name a package does not own. The glue
 # packages deliberately surface their backend's solver names — that is what they are for
 # — so allow the public API of the modules each one still `@reexport`s. Everything else

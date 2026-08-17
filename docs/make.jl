@@ -1,4 +1,5 @@
 using Documenter, Optimization
+using ADTypes
 # The `@docs` entries under API/ name SciMLBase types directly; nothing re-exports
 # the module binding any more, so bind it here rather than relying on that leak.
 using SciMLBase
@@ -19,7 +20,7 @@ makedocs(
     sitename = "Optimization.jl",
     authors = "Chris Rackauckas, Vaibhav Kumar Dixit et al.",
     modules = [
-        Optimization, Optimization.SciMLBase, Optimization.OptimizationBase,
+        Optimization, Optimization.OptimizationBase,
         OptimizationAuglag, OptimizationBBO, OptimizationBase,
         OptimizationCMAEvolutionStrategy, OptimizationGCMAES, OptimizationIpopt,
         OptimizationLBFGSB, OptimizationMadNLP, OptimizationManopt,
@@ -28,8 +29,7 @@ makedocs(
         OptimizationQuadDIRECT, OptimizationSciPy, OptimizationSophia,
         OptimizationSpeedMapping, SimpleOptimization,
     ],
-    clean = true, doctest = false, linkcheck = true,
-    warnonly = [:missing_docs, :cross_references],
+    clean = true, linkcheck = true,
     format = Documenter.HTML(
         assets = ["assets/favicon.ico"],
         canonical = "https://docs.sciml.ai/Optimization/stable/"

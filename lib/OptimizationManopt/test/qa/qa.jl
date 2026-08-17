@@ -22,8 +22,5 @@ run_qa(
         all_qualified_accesses_via_owners = (; ignore = (:AbstractManifold,)),
         all_qualified_accesses_are_public = (; ignore = (:AbstractManifold, :OptimizationState, :__solve, :allowscallback, :build_solution, :requiresgradient, :requireshessian, :supports_sense)),
     ),
-    api_docs_kwargs = (;
-        docs_src = OPTIMIZATION_DOCS_SRC,
-    ),
     ei_broken = (:no_implicit_imports,),
 )

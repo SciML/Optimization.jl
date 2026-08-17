@@ -21,17 +21,5 @@ run_qa(
         all_qualified_accesses_are_public = (; ignore = (:gradient, :instantiate_gradient, :OptimizationStats, :__solve, :_check_and_convert_maxiters)),
         all_explicit_imports_are_public = (; ignore = (:_unwrap_val,)),
     ),
-    api_docs_kwargs = (;
-        docs_src = OPTIMIZATION_DOCS_SRC,
-        ignore = (
-            :AutoModelingToolkit,
-            :AutoSparseFastDifferentiation,
-            :AutoSparseFiniteDiff,
-            :AutoSparseForwardDiff,
-            :AutoSparsePolyesterForwardDiff,
-            :AutoSparseReverseDiff,
-            :AutoSparseZygote,
-        ),
-    ),
     ei_broken = (:no_implicit_imports,),
 )

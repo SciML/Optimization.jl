@@ -37,8 +37,8 @@ using Test
     nlpmo = NLPModelsTest.BROWNDEN()
     converted = OptimizationNLPModels.OptimizationProblem(nlpmo, OptimizationBase.AutoZygote())
 
-    sol_native = solve(oprob, BFGS())
-    sol_converted = solve(converted, BFGS())
+    sol_native = solve(oprob, OptimizationOptimJL.Optim.BFGS())
+    sol_converted = solve(converted, OptimizationOptimJL.Optim.BFGS())
 
     @test sol_converted.retcode == sol_native.retcode
     @test sol_converted.u ≈ sol_native.u

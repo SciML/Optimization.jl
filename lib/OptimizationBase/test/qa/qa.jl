@@ -37,20 +37,8 @@ run_qa(
         # SparseConnectivityTracer's AbstractTracer) that remain non-public in their
         # source pkg on the registered releases (SciMLBase 3.27.0). The fix belongs
         # upstream via `public` declarations there, not a local change.
-        all_qualified_accesses_are_public = (; ignore = (:AbstractOptimizationCache, :AbstractOptimizationFunction, :AbstractOptimizationSolution, :AbstractTracer, :ChainRulesOriginator, :IsInfinite, :IteratorSize, :MaxSense, :MinSense, :NoAD, :NonConcreteEltypeError, :SizeUnknown, :__init, :allowsconsjvp, :allowsconsvjp, :allowsfg, :allowsfgh, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :requireslagh)),
+        all_qualified_accesses_are_public = (; ignore = (:AbstractOptimizationCache, :AbstractOptimizationFunction, :AbstractOptimizationSolution, :AbstractTracer, :ChainRulesOriginator, :IsInfinite, :IteratorSize, :MaxSense, :MinSense, :NoAD, :NonConcreteEltypeError, :ObjSense, :SizeUnknown, :__init, :allowsconsjvp, :allowsconsvjp, :allowsfg, :allowsfgh, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :requireslagh)),
         all_explicit_imports_are_public = (; ignore = (:KeywordArgError, :MaxSense, :MinSense, :ObjSense, :OptimizationStats, :__init, :__solve, :_concrete_solve_adjoint, :_concrete_solve_forward, :allowscallback, :extract_alg, :get_concrete_p, :get_concrete_u0, :get_root_indp, :get_updated_symbolic_problem, :has_kwargs, :promote_u0, :requiresbounds, :requiresconshess, :requiresconsjac, :requiresconstraints, :requiresgradient, :requireshessian, :wrap_sol)),
-    ),
-    api_docs_kwargs = (;
-        docs_src = OPTIMIZATION_DOCS_SRC,
-        ignore = (
-            :AutoModelingToolkit,
-            :AutoSparseFastDifferentiation,
-            :AutoSparseFiniteDiff,
-            :AutoSparseForwardDiff,
-            :AutoSparsePolyesterForwardDiff,
-            :AutoSparseReverseDiff,
-            :AutoSparseZygote,
-        ),
     ),
     ei_broken = (:no_implicit_imports,),
     reexports_allow = OPTIMIZATION_CURATED_REEXPORTS,

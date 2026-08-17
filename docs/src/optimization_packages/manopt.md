@@ -28,6 +28,7 @@ The following methods are available for the `OptimizationManopt` package:
   - `FrankWolfeOptimizer`: Corresponds to the [`FrankWolfe`](https://manoptjl.org/stable/solvers/FrankWolfe/) method in Manopt.
 
 ```@docs
+OptimizationManopt.AbstractManoptOptimizer
 OptimizationManopt.GradientDescentOptimizer
 OptimizationManopt.NelderMeadOptimizer
 OptimizationManopt.ConjugateGradientDescentOptimizer

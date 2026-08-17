@@ -17,17 +17,5 @@ run_qa(
         all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats,)),
         all_qualified_accesses_are_public = (; ignore = (Symbol("@logmsg"), :LogLevel, :OptRunController, :OptimizationState, :OptimizationStats, :SingleObjectiveMethodNames, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback, :deduce_retcode, :elapsed_time, :num_steps, :requiresbounds, :shutdown_optimizer!)),
     ),
-    api_docs_kwargs = (;
-        docs_src = OPTIMIZATION_DOCS_SRC,
-        ignore = (
-            :AutoModelingToolkit,
-            :AutoSparseFastDifferentiation,
-            :AutoSparseFiniteDiff,
-            :AutoSparseForwardDiff,
-            :AutoSparsePolyesterForwardDiff,
-            :AutoSparseReverseDiff,
-            :AutoSparseZygote,
-        ),
-    ),
     ei_broken = (:no_implicit_imports,),
 )

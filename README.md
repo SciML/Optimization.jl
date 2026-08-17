@@ -38,7 +38,7 @@ offered by them:
   - OptimizationAuglag for augmented Lagrangian methods
   - OptimizationBBO for [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl)
   - OptimizationCMAEvolutionStrategy for [CMAEvolutionStrategy.jl](https://github.com/jbrea/CMAEvolutionStrategy.jl)
-  - OptimizationEvolutionary for [Evolutionary.jl](https://github.com/wildart/Evolutionary.jl) (see also [this documentation](https://wildart.github.io/Evolutionary.jl/dev/))
+  - OptimizationEvolutionary for [Evolutionary.jl](https://github.com/SciML/Evolutionary.jl) (see also [this documentation](https://sciml.github.io/Evolutionary.jl/stable/))
   - OptimizationGCMAES for [GCMAES.jl](https://github.com/AStupidBear/GCMAES.jl)
   - OptimizationIpopt for [Ipopt.jl](https://github.com/jump-dev/Ipopt.jl)
   - OptimizationLBFGSB for [LBFGSB.jl](https://github.com/Gnimuc/LBFGSB.jl)
@@ -79,14 +79,14 @@ p = [1.0, 100.0]
 prob = OptimizationProblem(rosenbrock, x0, p)
 
 using OptimizationOptimJL
-sol = solve(prob, NelderMead())
+sol = solve(prob, Optim.NelderMead())
 
 using OptimizationBBO
 prob = OptimizationProblem(rosenbrock, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
 ```
 
-The output of the first optimization task (with the `NelderMead()` algorithm)
+The output of the first optimization task (with the `Optim.NelderMead()` algorithm)
 is given below:
 
 ```
@@ -113,7 +113,7 @@ We can also explore other methods in a similar way:
 using ForwardDiff, ADTypes
 f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
 prob = OptimizationProblem(f, x0, p)
-sol = solve(prob, BFGS())
+sol = solve(prob, Optim.BFGS())
 ```
 
 For instance, the above optimization task produces the following output:

@@ -32,6 +32,7 @@ OptimizationIpopt.jl provides the `IpoptOptimizer` algorithm, which wraps the Ip
 
 ```@docs
 OptimizationIpopt.IpoptOptimizer
+OptimizationIpopt.IpoptEvaluator
 ```
 
 ### Algorithm Requirements

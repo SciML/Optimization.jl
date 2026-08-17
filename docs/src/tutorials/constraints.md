@@ -36,7 +36,7 @@ We'll use the `IPNewton` solver from Optim to solve the problem.
 ```@example constraints
 optprob = OptimizationFunction(rosenbrock, DifferentiationInterface.SecondOrder(ADTypes.AutoForwardDiff(), ADTypes.AutoForwardDiff()), cons = cons)
 prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf, -1.0], ucons = [0.8, 2.0])
-sol = solve(prob, IPNewton())
+sol = solve(prob, Optim.IPNewton())
 ```
 
 Let's check that the constraints are satisfied,

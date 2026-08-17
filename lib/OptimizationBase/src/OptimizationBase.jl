@@ -16,41 +16,40 @@ using SciMLBase, ADTypes, SciMLLogging
 
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
 import SciMLBase: solve, init, solve!, __init, __solve,
-    OptimizationProblem,
-    OptimizationFunction, ObjSense,
-    MaxSense, MinSense, OptimizationStats,
-    allowsbounds, requiresbounds,
-    allowsconstraints, requiresconstraints,
-    allowscallback, requiresgradient,
-    requireshessian, requiresconsjac,
-    requiresconshess, wrap_sol, has_kwargs,
+    OptimizationProblem, OptimizationFunction,
+    OptimizationSolution, OptimizationStats,
+    allowsbounds, requiresbounds, allowsconstraints, requiresconstraints,
+    allowscallback, requiresgradient, requireshessian,
+    requiresconsjac, requiresconshess, wrap_sol, has_kwargs,
     get_root_indp, get_updated_symbolic_problem,
     get_concrete_p, get_concrete_u0, promote_u0,
     KeywordArgError, extract_alg,
     _concrete_solve_adjoint, _concrete_solve_forward
 
-@doc """
+using SymbolicIndexingInterface: SymbolicIndexingInterface
+
+"""
     ObjSense
 
-Abstract objective-sense marker used by `OptimizationProblem` to indicate
-whether the objective should be minimized or maximized.
+Enumeration type describing whether an optimization problem is minimized or
+maximized. Use [`MinSense`](@ref) or [`MaxSense`](@ref) as the value of the
+`OptimizationProblem` `sense` keyword.
+"""
+const ObjSense = SciMLBase.ObjSense
 
-See also [`MinSense`](@ref) and [`MaxSense`](@ref).
-""" ObjSense
-
-@doc """
+"""
     MinSense
 
-Objective sense for minimizing an `OptimizationProblem`.
-""" MinSense
+Objective sense selecting minimization for an `OptimizationProblem`.
+"""
+const MinSense = SciMLBase.MinSense
 
-@doc """
+"""
     MaxSense
 
-Objective sense for maximizing an `OptimizationProblem`.
-""" MaxSense
-
-using SymbolicIndexingInterface: SymbolicIndexingInterface
+Objective sense selecting maximization for an `OptimizationProblem`.
+"""
+const MaxSense = SciMLBase.MaxSense
 
 export ObjSense, MaxSense, MinSense
 export allowsbounds, requiresbounds, allowsconstraints, requiresconstraints,

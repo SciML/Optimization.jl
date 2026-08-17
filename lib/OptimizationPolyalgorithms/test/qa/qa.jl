@@ -16,17 +16,5 @@ run_qa(
     ei_kwargs = (;
         all_qualified_accesses_are_public = (; ignore = (:__solve, :allowscallback, :requiresgradient)),
     ),
-    api_docs_kwargs = (;
-        docs_src = OPTIMIZATION_DOCS_SRC,
-        ignore = (
-            :AutoModelingToolkit,
-            :AutoSparseFastDifferentiation,
-            :AutoSparseFiniteDiff,
-            :AutoSparseForwardDiff,
-            :AutoSparsePolyesterForwardDiff,
-            :AutoSparseReverseDiff,
-            :AutoSparseZygote,
-        ),
-    ),
     ei_broken = (:no_implicit_imports,),
 )

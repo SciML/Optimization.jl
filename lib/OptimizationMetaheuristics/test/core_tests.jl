@@ -12,46 +12,46 @@ Random.seed!(42)
         optprob, x0, _p, lb = [-1.0, -1.0],
         ub = [1.0, 1.0]
     )
-    sol = solve(prob, ECA())
+    sol = solve(prob, Metaheuristics.ECA())
     @test 10 * sol.objective < l1
 
     sol = solve(prob, Metaheuristics.DE())
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, PSO())
+    sol = solve(prob, Metaheuristics.PSO())
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, ABC())
+    sol = solve(prob, Metaheuristics.ABC())
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, CGSA(N = 100))
+    sol = solve(prob, Metaheuristics.CGSA(N = 100))
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, SA())
+    sol = solve(prob, Metaheuristics.SA())
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, WOA())
+    sol = solve(prob, Metaheuristics.WOA())
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, ECA())
+    sol = solve(prob, Metaheuristics.ECA())
     @test 10 * sol.objective < l1
 
     sol = solve(prob, Metaheuristics.DE(), use_initial = true)
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, PSO(), use_initial = true)
+    sol = solve(prob, Metaheuristics.PSO(), use_initial = true)
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, ABC(), use_initial = true)
+    sol = solve(prob, Metaheuristics.ABC(), use_initial = true)
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, CGSA(N = 100), use_initial = true)
+    sol = solve(prob, Metaheuristics.CGSA(N = 100), use_initial = true)
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, SA(), use_initial = true)
+    sol = solve(prob, Metaheuristics.SA(), use_initial = true)
     @test 10 * sol.objective < l1
 
-    sol = solve(prob, WOA(), use_initial = true)
+    sol = solve(prob, Metaheuristics.WOA(), use_initial = true)
     @test 10 * sol.objective < l1
 
     # Define the benchmark functions as multi-objective problems
@@ -122,15 +122,15 @@ Random.seed!(42)
 
         # Define the different algorithms
         algs = [
-            NSGA2(),
-            NSGA3(),
-            SPEA2(),
-            CCMO(NSGA2(N = 100, p_m = 0.001)),
-            MOEAD_DE(
-                gen_ref_dirs(nobjectives, npartitions),
-                options = Options(debug = false, iterations = 10000)
+            Metaheuristics.NSGA2(),
+            Metaheuristics.NSGA3(),
+            Metaheuristics.SPEA2(),
+            Metaheuristics.CCMO(Metaheuristics.NSGA2(N = 100, p_m = 0.001)),
+            Metaheuristics.MOEAD_DE(
+                Metaheuristics.gen_ref_dirs(nobjectives, npartitions),
+                options = Metaheuristics.Options(debug = false, iterations = 10000)
             ),
-            SMS_EMOA(),
+            Metaheuristics.SMS_EMOA(),
         ]
         Random.seed!(42)
         # Run tests for each problem and algorithm
