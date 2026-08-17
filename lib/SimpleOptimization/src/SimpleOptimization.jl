@@ -9,21 +9,26 @@ using SciMLBase: _unwrap_val
 using SimpleNonlinearSolve
 using ADTypes
 using LinearAlgebra
+using CommonSolve
+using StaticArrays: SVector, MVector
+using LineSearch: StrongWolfeLineSearch
 
 abstract type SimpleOptimizationAlgorithm end
 
 """
-    SimpleLBFGS(; threshold::Union{Val, Int} = Val(10))
+    SimpleLBFGS(; threshold::Union{Val, Int} = Val(10),
+                linesearch = StrongWolfeLineSearch(; maxiters = 50, zoom_maxiters = 50))
 
 A lightweight, loop-unrolled Limited-memory BFGS (L-BFGS) optimization algorithm.
-This algorithm is designed for small-scale unconstrained optimization problems where
-low overhead is critical.
+This algorithm is designed for small-scale optimization problems where low overhead
+is critical.
 
 ## Arguments
 
   - `threshold`: The number of past iterations to store for approximating the inverse
     Hessian. Default is `Val(10)`. Can be specified as either a `Val` type for compile-time
     optimization or an `Int`.
+  - `linesearch`: A `LineSearch.StrongWolfeLineSearch` used for step-size selection.
 
 ## Description
 
@@ -31,8 +36,14 @@ low overhead is critical.
 last `threshold` iterations of gradient information. This makes it memory-efficient
 for problems with many variables while still achieving superlinear convergence.
 
-Internally, it wraps `SimpleLimitedMemoryBroyden` from SimpleNonlinearSolve.jl to find
-the root of the gradient (i.e., the stationary point of the objective).
+The objective is minimized directly with a Strong Wolfe line search. Box constraints
+(`lb`/`ub` on the `OptimizationProblem`) are supported via gradient projection. The
+implementation is allocation-free on static arrays, so it is safe to call from inside
+GPU kernels.
+
+`ReturnCode.Success` when the projected gradient meets the tolerance,
+`ReturnCode.MaxIters` when the iteration limit is hit, and `ReturnCode.Failure`
+on a non-finite iterate or a failed line search.
 
 ## Example
 
@@ -46,10 +57,18 @@ prob = OptimizationProblem(optf, x0)
 sol = solve(prob, SimpleLBFGS())
 ```
 """
-struct SimpleLBFGS{Threshold} <: SimpleOptimizationAlgorithm end
+struct SimpleLBFGS{Threshold, LS} <: SimpleOptimizationAlgorithm
+    linesearch::LS
+end
 
 __get_threshold(::SimpleLBFGS{threshold}) where {threshold} = Val(threshold)
-SimpleLBFGS(; threshold::Union{Val, Int} = Val(10)) = SimpleLBFGS{_unwrap_val(threshold)}()
+function SimpleLBFGS(;
+        threshold::Union{Val, Int} = Val(10),
+        linesearch = StrongWolfeLineSearch(; maxiters = 50, zoom_maxiters = 50)
+    )
+    return SimpleLBFGS{_unwrap_val(threshold), typeof(linesearch)}(linesearch)
+end
+SciMLBase.allowsbounds(::SimpleLBFGS) = true
 
 """
     SimpleBFGS()
@@ -169,6 +188,173 @@ function instantiate_gradient(f, adtype::ADTypes.AbstractADType)
     throw(ArgumentError("The passed automatic differentiation backend choice is not available. Please load the corresponding AD package $adpkg."))
 end
 
+@inline as_svector(x::SVector) = x
+@inline as_svector(x) = SVector(x)
+
+@inline _restore_u(u0::SVector, u) = u
+@inline function _restore_u(u0, u)
+    θ = similar(u0, eltype(u))
+    copyto!(θ, u)
+    return θ
+end
+
+@inline _project(x, ::Nothing, ::Nothing) = x
+@inline _project(x, lb, ub) = clamp.(x, lb, ub)
+
+@inline _projected_gradient(x, g, ::Nothing, ::Nothing) = g
+@inline _projected_gradient(x, g, lb, ub) = x - _project(x - g, lb, ub)
+
+@inline _feasible_direction(x, direction, ::Nothing, ::Nothing) = direction
+@inline function _feasible_direction(x, direction, lb, ub)
+    return map(x, direction, lb, ub) do xi, di, li, ui
+        ((xi ≤ li && di < 0) || (xi ≥ ui && di > 0)) ? zero(di) : di
+    end
+end
+
+@inline _max_feasible_step(x, direction, ::Nothing, ::Nothing, α_max) = α_max
+@inline function _max_feasible_step(x, direction, lb, ub, α_max)
+    α = α_max
+    for i in eachindex(x)
+        if direction[i] > 0
+            α = min(α, (ub[i] - x[i]) / direction[i])
+        elseif direction[i] < 0
+            α = min(α, (lb[i] - x[i]) / direction[i])
+        end
+    end
+    return max(α, zero(α))
+end
+
+@inline function _objective_line_search(
+        ls_cache, f, grad_f, p, x, fx, g, direction, lb, ub
+    )
+    T = eltype(x)
+    α_max = _max_feasible_step(x, direction, lb, ub, T(ls_cache.α_max))
+    α_max ≤ zero(T) && return x, fx, g, false
+
+    ls = CommonSolve.solve!(ls_cache, x, direction; α_max)
+    ls.retcode == SciMLBase.ReturnCode.Success || return x, fx, g, false
+
+    candidate = _project(x + T(ls.step_size) * direction, lb, ub)
+    return candidate, T(f(candidate, p)), as_svector(grad_f(candidate, p)), true
+end
+
+@inline function _lbfgs_direction(g, s_hist, y_hist, pseudo_iteration, ::Val{M}) where {M}
+    T = eltype(g)
+    α = MVector{M, T}(undef)
+    fill!(α, zero(T))
+    q = g
+    lower = pseudo_iteration - M
+    upper = pseudo_iteration - 1
+
+    for index in upper:-1:lower
+        index < 1 && continue
+        j = mod1(index, M)
+        s, y = s_hist[j], y_hist[j]
+        ρ = inv(dot(y, s))
+        α[j] = ρ * dot(s, q)
+        q -= α[j] * y
+    end
+
+    r = q
+    if pseudo_iteration > 1
+        j = mod1(upper, M)
+        s, y = s_hist[j], y_hist[j]
+        r = (dot(s, y) / sum(abs2, y)) * q
+    end
+
+    for index in lower:upper
+        index < 1 && continue
+        j = mod1(index, M)
+        s, y = s_hist[j], y_hist[j]
+        ρ = inv(dot(y, s))
+        r += s * (α[j] - ρ * dot(y, r))
+    end
+    return -r
+end
+
+@inline function _store_history(s_hist, y_hist, pseudo_iteration, s, y, ::Val{M}) where {M}
+    j = mod1(pseudo_iteration, M)
+    return Base.setindex(s_hist, s, j), Base.setindex(y_hist, y, j)
+end
+
+@inline function _lbfgs(
+        grad_f, f, p, x0::SVector{N, T}, lb, ub,
+        maxiters, abstol, reltol, linesearch, ::Val{M}
+    ) where {N, T, M}
+    x = _project(x0, lb, ub)
+    fx = T(f(x, p))
+    g = SVector{N, T}(grad_f(x, p))
+    default_tol = sqrt(eps(T))
+    abs_tol = abstol === nothing ? default_tol : max(T(abstol), default_tol)
+    rel_tol = reltol === nothing ? zero(T) : max(T(reltol), zero(T))
+    initial_residual = maximum(abs, _projected_gradient(x, g, lb, ub))
+    tol = max(abs_tol, rel_tol * initial_residual)
+    zero_x = zero(SVector{N, T})
+    s_hist = ntuple(_ -> zero_x, Val(M))
+    y_hist = ntuple(_ -> zero_x, Val(M))
+    pseudo_iteration = 0
+    retcode = SciMLBase.ReturnCode.MaxIters
+    iters = 0
+
+    optf = OptimizationFunction{false}(f; grad = grad_f)
+    ls_cache = CommonSolve.init(
+        OptimizationProblem{false}(optf, x, p), linesearch, fx, x
+    )
+
+    for i in 1:maxiters
+        if !isfinite(fx) || !all(isfinite, g)
+            retcode = SciMLBase.ReturnCode.Failure
+            break
+        end
+        if maximum(abs, _projected_gradient(x, g, lb, ub)) ≤ tol
+            retcode = SciMLBase.ReturnCode.Success
+            break
+        end
+        iters = i
+
+        pseudo_iteration += 1
+        direction = _feasible_direction(
+            x, _lbfgs_direction(g, s_hist, y_hist, pseudo_iteration, Val(M)), lb, ub
+        )
+        if dot(direction, g) ≥ zero(T)
+            pseudo_iteration = 1
+            direction = _feasible_direction(x, -g, lb, ub)
+        end
+        if maximum(abs, direction) ≤ eps(T)
+            retcode = SciMLBase.ReturnCode.Failure
+            break
+        end
+
+        x_next, fx_next, g_next, accepted = _objective_line_search(
+            ls_cache, f, grad_f, p, x, fx, g, direction, lb, ub
+        )
+        if !accepted
+            retcode = SciMLBase.ReturnCode.Failure
+            break
+        end
+
+        s, y = x_next - x, g_next - g
+        curvature = dot(s, y)
+        curvature_floor = sqrt(eps(T)) * max(norm(s) * norm(y), eps(T))
+        if !isfinite(curvature) || curvature ≤ curvature_floor
+            pseudo_iteration = 0
+        else
+            s_hist, y_hist = _store_history(
+                s_hist, y_hist, pseudo_iteration, s, y, Val(M)
+            )
+        end
+        x, fx, g = x_next, fx_next, g_next
+    end
+    if retcode == SciMLBase.ReturnCode.MaxIters
+        if !isfinite(fx) || !all(isfinite, g)
+            retcode = SciMLBase.ReturnCode.Failure
+        elseif maximum(abs, _projected_gradient(x, g, lb, ub)) ≤ tol
+            retcode = SciMLBase.ReturnCode.Success
+        end
+    end
+    return x, fx, retcode, iters
+end
+
 function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleLBFGS}
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
     if maxiters === nothing
@@ -178,37 +364,35 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleLBFGS}
     abstol = cache.solver_args.abstol
     reltol = cache.solver_args.reltol
 
-    f = Base.Fix2(cache.f.f, cache.p)
-    adtype = cache.f.adtype
-    ∇f_inner = instantiate_gradient(f, adtype)
-    # Wrap gradient to take (u, p) as NonlinearProblem expects
-    ∇f = (u, _) -> ∇f_inner(u)
+    N = length(cache.u0)
+    u0 = SVector{N}(cache.u0)
+    T = eltype(u0)
 
-    nlprob = NonlinearProblem(∇f, cache.u0)
-    nlsol = solve(
-        nlprob,
-        SimpleLimitedMemoryBroyden(;
-            threshold = __get_threshold(cache.opt),
-            linesearch = nothing
-        );
-        maxiters = maxiters,
-        abstol = abstol,
-        reltol = reltol
+    ∇f_inner = instantiate_gradient(Base.Fix2(cache.f.f, cache.p), cache.f.adtype)
+    grad_f = (u, _) -> SVector{N, T}(∇f_inner(u))
+
+    ls = cache.opt.linesearch
+    ls isa StrongWolfeLineSearch ||
+        throw(ArgumentError("SimpleLBFGS requires a StrongWolfeLineSearch"))
+    typed_linesearch = StrongWolfeLineSearch(;
+        autodiff = ls.autodiff,
+        c1 = T(ls.c1), c2 = T(ls.c2),
+        α_init = T(ls.α_init), α_max = T(ls.α_max),
+        maxiters = ls.maxiters, zoom_maxiters = ls.zoom_maxiters
     )
-    θ = nlsol.u
 
-    stats = OptimizationBase.OptimizationStats(;
-        iterations = maxiters,
-        time = 0.0,
-        fevals = 0
+    lb = cache.lb === nothing ? nothing : SVector{N, T}(cache.lb)
+    ub = cache.ub === nothing ? nothing : SVector{N, T}(cache.ub)
+
+    t0 = time()
+    u, objective, retcode, iters = _lbfgs(
+        grad_f, cache.f.f, cache.p, u0, lb, ub, maxiters, abstol, reltol,
+        typed_linesearch, __get_threshold(cache.opt)
     )
     return SciMLBase.build_solution(
-        cache, cache.opt,
-        θ,
-        cache.f(θ, cache.p);
-        original = nlsol,
-        retcode = nlsol.retcode,
-        stats = stats
+        cache, cache.opt, _restore_u(cache.u0, u), objective;
+        retcode = retcode,
+        stats = OptimizationBase.OptimizationStats(; iterations = iters, time = time() - t0)
     )
 end
 

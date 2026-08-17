@@ -14,6 +14,27 @@ using Test
 
         sol = solve(prob, SimpleLBFGS())
         @test sol.objective < l1
+        @test sol.u ≈ [1.0, 1.0] atol = 1.0e-4
+        @test sol.retcode == ReturnCode.Success
+        @test typeof(sol.u) == typeof(x0)
+
+        sol_maxiters = solve(prob, SimpleLBFGS(); maxiters = 1)
+        @test sol_maxiters.retcode == ReturnCode.MaxIters
+        @test typeof(sol_maxiters.u) == typeof(x0)
+
+        prob_box = OptimizationProblem(optf, x0, p; lb = [-2.0, -2.0], ub = [2.0, 2.0])
+        sol = solve(prob_box, SimpleLBFGS())
+        @test sol.u ≈ [1.0, 1.0] atol = 1.0e-4
+        @test sol.retcode == ReturnCode.Success
+        @test all(-2 .≤ sol.u) && all(sol.u .≤ 2)
+        @test typeof(sol.u) == typeof(x0)
+
+        prob_active = OptimizationProblem(optf, x0, p; lb = [-2.0, -2.0], ub = [0.8, 2.0])
+        sol_active = solve(prob_active, SimpleLBFGS())
+        @test sol_active.u[1] ≤ 0.8 + 1.0e-8
+        @test sol_active.u[1] ≈ 0.8 atol = 1.0e-4
+        @test sol_active.retcode == ReturnCode.Success
+        @test typeof(sol_active.u) == typeof(x0)
 
         sol = solve(prob, SimpleBFGS())
         @test sol.objective < l1
