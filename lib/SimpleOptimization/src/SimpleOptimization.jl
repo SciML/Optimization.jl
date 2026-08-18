@@ -36,8 +36,8 @@ last `threshold` iterations of gradient information. This makes it memory-effici
 for problems with many variables while still achieving superlinear convergence.
 
 Minimizes the objective with a Strong Wolfe line search. Supports box constraints
-(`lb`/`ub`) via projection. `u0` must be statically sized (`SVector`, not `Vector`)
-and the objective must be out-of-place (`OptimizationFunction{false}`).
+(`lb`/`ub`) via projection. Works with any `u0`; a statically sized `u0`
+(e.g. `SVector`) keeps the solve allocation-free.
 
 `ReturnCode.Success` when the projected gradient meets the tolerance,
 `ReturnCode.MaxIters` when the iteration limit is hit, and `ReturnCode.Failure`
@@ -46,12 +46,12 @@ on a non-finite iterate or a failed line search.
 ## Example
 
 ```julia
-using SimpleOptimization, Optimization, ForwardDiff, StaticArrays
+using SimpleOptimization, Optimization, ForwardDiff
 
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
-x0 = SVector(0.0, 0.0)
-optf = OptimizationFunction{false}(rosenbrock, Optimization.AutoForwardDiff())
-prob = OptimizationProblem{false}(optf, x0)
+x0 = zeros(2)
+optf = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff())
+prob = OptimizationProblem(optf, x0)
 sol = solve(prob, SimpleLBFGS())
 ```
 """
@@ -355,11 +355,6 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleLBFGS}
     reltol = cache.solver_args.reltol
 
     u0 = cache.u0
-    u0 isa Array && throw(
-        ArgumentError(
-            "SimpleLBFGS requires a statically sized `u0` (e.g. `SVector`). Got $(typeof(u0))."
-        )
-    )
     U = typeof(u0)
     T = eltype(u0)
 

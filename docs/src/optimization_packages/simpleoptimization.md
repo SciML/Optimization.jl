@@ -35,7 +35,8 @@ prob = OptimizationProblem(optf, x0, p)
 sol = solve(prob, SimpleBFGS())
 ```
 
-The same problem with `SimpleLBFGS` requires a statically sized `u0`:
+The same problem with `SimpleLBFGS`, including box constraints. Any `u0` works;
+a statically sized `u0` (`SVector`) makes the solve allocation-free:
 
 ```@example SimpleOptimization
 using StaticArrays: SVector
