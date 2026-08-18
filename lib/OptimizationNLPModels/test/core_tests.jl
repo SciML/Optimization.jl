@@ -129,3 +129,83 @@ using Test
     @test sol_converted.retcode == sol_native.retcode
     @test sol_converted.u ≈ sol_native.u
 end
+
+@testset "sparse lag_h structure/value ordering (canonical contract)" begin
+    # Regression test for the COO ordering bug: the adaptor declared the
+    # lower triangle in CSC order while OptimizationBase's vector lag_h
+    # writes the upper triangle in CSC order — a different enumeration for
+    # any pattern with >= 3 coupled columns, so every off-diagonal value
+    # landed on a wrong index. A 2x2 pattern CANNOT catch this (the two
+    # enumerations coincide by symmetry); this problem has three coupled
+    # variables on purpose.
+    using SparseArrays
+    import ADTypes
+    import ForwardDiff
+    import DifferentiationInterface
+
+    obj(x, p) = (1 - x[1])^2 + 10.0 * (x[2] - x[1]^2)^2 + (x[3] - x[2])^2
+    cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[3]])
+    x0 = [0.4, -0.7, 1.3]
+    σ = 0.7
+    λ = [1.3, -2.1]
+
+    sparse_ad = ADTypes.AutoSparse(
+        DifferentiationInterface.SecondOrder(ADTypes.AutoForwardDiff(), ADTypes.AutoForwardDiff())
+    )
+    dense_ad = DifferentiationInterface.SecondOrder(ADTypes.AutoForwardDiff(), ADTypes.AutoForwardDiff())
+
+    f = OptimizationBase.OptimizationFunction(obj, sparse_ad; cons = cons)
+    inst = OptimizationBase.instantiate_function(
+        f, x0, sparse_ad, nothing, 2; lag_h = true, cons_j = true
+    )
+
+    fd = OptimizationBase.OptimizationFunction(obj, dense_ad; cons = cons)
+    inst_dense = OptimizationBase.instantiate_function(
+        fd, x0, dense_ad, nothing, 2; lag_h = true
+    )
+
+    # Independent dense reference Lagrangian Hessian
+    Href = zeros(3, 3)
+    inst_dense.lag_h(Href, x0, σ, λ)
+
+    proto = inst.lag_hess_prototype
+    @test proto isa SparseMatrixCSC
+
+    # 1. The canonical helper matches the order the vector lag_h writes.
+    rows, cols = OptimizationBase.lag_hess_structure(proto)
+    h = zeros(length(rows))
+    inst.lag_h(h, x0, σ, λ)
+    for k in eachindex(h)
+        @test h[k] ≈ Href[rows[k], cols[k]] atol = 1.0e-10
+    end
+
+    # 2. Guard the test's power: on this pattern the canonical (mirrored)
+    # enumeration must differ from the naive lower-triangle CSC enumeration
+    # that caused the bug — otherwise this test could not detect it.
+    I_, J_, _ = findnz(proto)
+    lower_mask = I_ .>= J_
+    @test !(cols == I_[lower_mask] && rows == J_[lower_mask])
+
+    # 3. Adaptor end-to-end: declared structure + coord values agree with the
+    # dense reference entry-wise.
+    meta = NLPModels.NLPModelMeta(
+        3; ncon = 2, x0 = x0, y0 = zeros(2),
+        lcon = [1.0, 0.5], ucon = [1.0, Inf],
+        nnzj = nnz(inst.cons_jac_prototype), nnzh = length(rows), minimize = true
+    )
+    cache_like = (f = inst, p = nothing, lcons = [1.0, 0.5], ucons = [1.0, Inf])
+    nlp = OptimizationNLPModels.NLPModelsAdaptor(cache_like, meta, NLPModels.Counters())
+
+    srows = zeros(Int, length(rows))
+    scols = zeros(Int, length(rows))
+    NLPModels.hess_structure!(nlp, srows, scols)
+    # NLPModels convention: lower-triangle coordinates (mirrored canonical)
+    @test all(srows .>= scols)
+    @test srows == cols && scols == rows
+
+    vals = zeros(length(rows))
+    NLPModels.hess_coord!(nlp, x0, λ, vals; obj_weight = σ)
+    for k in eachindex(vals)
+        @test vals[k] ≈ Href[srows[k], scols[k]] atol = 1.0e-10
+    end
+end
