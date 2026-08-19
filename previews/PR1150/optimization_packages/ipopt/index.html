@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Ipopt.jl · Optimization.jl</title><meta name="title" content="Ipopt.jl · Optimization.jl"/><meta property="og:title" content="Ipopt.jl · Optimization.jl"/><meta property="twitter:title" content="Ipopt.jl · Optimization.jl"/><meta name="description" content="Documentation for Optimization.jl."/><meta property="og:description" content="Documentation for Optimization.jl."/><meta property="twitter:description" content="Documentation for Optimization.jl."/><meta property="og:url" content="https://docs.sciml.ai/Optimization/stable/optimization_packages/ipopt/"/><meta property="twitter:url" content="https://docs.sciml.ai/Optimization/stable/optimization_packages/ipopt/"/><link rel="canonical" href="https://docs.sciml.ai/Optimization/stable/optimization_packages/ipopt/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Optimization.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Optimization.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Optimization.jl: A Unified Optimization Package</a></li><li><a class="tocitem" href="../../getting_started/">Getting Started with Optimization.jl</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../../tutorials/constraints/">Using Equality and Inequality Constraints</a></li><li><a class="tocitem" href="../../tutorials/ensemble/">Multistart optimization with EnsembleProblem</a></li><li><a class="tocitem" href="../../tutorials/linearandinteger/">Linear and Integer Optimization Problems</a></li><li><a class="tocitem" href="../../tutorials/minibatch/">Data Iterators and Minibatching</a></li><li><a class="tocitem" href="../../tutorials/remakecomposition/">Creating polyalgorithms by chaining solvers using <code>remake</code></a></li><li><a class="tocitem" href="../../tutorials/reusage_interface/">Optimization Problem Reusage and Caching Interface</a></li><li><a class="tocitem" href="../../tutorials/symbolic/">Symbolic Problem Building with ModelingToolkit</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../../examples/rosenbrock/">Solving the Rosenbrock Problem in &gt;10 Ways</a></li></ul></li><li><span class="tocitem">Basics</span><ul><li><a class="tocitem" href="../../API/optimization_problem/">Defining OptimizationProblems</a></li><li><a class="tocitem" href="../../API/optimization_function/">OptimizationFunction</a></li><li><a class="tocitem" href="../../API/ad/">Automatic Differentiation Construction Choice Recommendations</a></li><li><a class="tocitem" href="../../API/solve/">Common Solver Options (Solve Keyword Arguments)</a></li><li><a class="tocitem" href="../../API/optimization_solution/">Optimization Solutions</a></li><li><a class="tocitem" href="../../API/optimization_state/">OptimizationState</a></li><li><a class="tocitem" href="../../API/optimization_stats/">OptimizationStats</a></li><li><a class="tocitem" href="../../API/modelingtoolkit/">ModelingToolkit Integration</a></li><li><a class="tocitem" href="../../API/FAQ/">Frequently Asked Questions</a></li></ul></li><li><span class="tocitem">Optimizer Packages</span><ul><li><a class="tocitem" href="../blackboxoptim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../cmaevolutionstrategy/">CMAEvolutionStrategy.jl</a></li><li><a class="tocitem" href="../evolutionary/">Evolutionary.jl</a></li><li><a class="tocitem" href="../gcmaes/">GCMAES.jl</a></li><li class="is-active"><a class="tocitem" href>Ipopt.jl</a><ul class="internal"><li><a class="tocitem" href="#Installation:-OptimizationIpopt.jl"><span>Installation: OptimizationIpopt.jl</span></a></li><li><a class="tocitem" href="#Methods"><span>Methods</span></a></li><li><a class="tocitem" href="#Options-and-Parameters"><span>Options and Parameters</span></a></li><li><a class="tocitem" href="#Examples"><span>Examples</span></a></li><li><a class="tocitem" href="#Tips-and-Best-Practices"><span>Tips and Best Practices</span></a></li><li><a class="tocitem" href="#References"><span>References</span></a></li></ul></li><li><a class="tocitem" href="../lbfgsb/">LBFGSB.jl</a></li><li><a class="tocitem" href="../manopt/">Manopt.jl</a></li><li><a class="tocitem" href="../mathoptinterface/">MathOptInterface.jl</a></li><li><a class="tocitem" href="../metaheuristics/">Metaheuristics.jl</a></li><li><a class="tocitem" href="../multistartoptimization/">MultistartOptimization.jl</a></li><li><a class="tocitem" href="../nlopt/">NLopt.jl</a></li><li><a class="tocitem" href="../nlpmodels/">NLPModels.jl</a></li><li><a class="tocitem" href="../nomad/">NOMAD.jl</a></li><li><a class="tocitem" href="../ode/">ODE.jl</a></li><li><a class="tocitem" href="../optim/">Optim.jl</a></li><li><a class="tocitem" href="../optimisers/">Optimisers.jl</a></li><li><a class="tocitem" href="../polyopt/">Polyalgorithms.jl</a></li><li><a class="tocitem" href="../prima/">PRIMA.jl</a></li><li><a class="tocitem" href="../pycma/">PyCMA.jl</a></li><li><a class="tocitem" href="../quaddirect/">QuadDIRECT.jl</a></li><li><a class="tocitem" href="../sophia/">Sophia.jl</a></li><li><a class="tocitem" href="../speedmapping/">SpeedMapping.jl</a></li><li><a class="tocitem" href="../scipy/">SciPy.jl</a></li><li><a class="tocitem" href="../simpleoptimization/">SimpleOptimization.jl</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Optimizer Packages</a></li><li class="is-active"><a href>Ipopt.jl</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Ipopt.jl</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/SciML/Optimization.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/SciML/Optimization.jl/blob/master/docs/src/optimization_packages/ipopt.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="OptimizationIpopt.jl"><a class="docs-heading-anchor" href="#OptimizationIpopt.jl">OptimizationIpopt.jl</a><a id="OptimizationIpopt.jl-1"></a><a class="docs-heading-anchor-permalink" href="#OptimizationIpopt.jl" title="Permalink"></a></h1><p><a href="https://github.com/SciML/Optimization.jl/tree/master/lib/OptimizationIpopt"><code>OptimizationIpopt.jl</code></a> is a wrapper package that integrates <a href="https://github.com/jump-dev/Ipopt.jl"><code>Ipopt.jl</code></a> with the <a href="https://github.com/SciML/Optimization.jl"><code>Optimization.jl</code></a> ecosystem. This allows you to use the powerful Ipopt (Interior Point OPTimizer) solver through Optimization.jl&#39;s unified interface.</p><p>Ipopt is a software package for large-scale nonlinear optimization designed to find (local) solutions of mathematical optimization problems of the form:</p><p class="math-container">\[\begin{aligned}
+\min_{x \in \mathbb{R}^n} \quad &amp; f(x) \\
+\text{s.t.} \quad &amp; g_L \leq g(x) \leq g_U \\
+&amp; x_L \leq x \leq x_U
+\end{aligned}\]</p><p>where <span>$f(x): \mathbb{R}^n \to \mathbb{R}$</span> is the objective function, <span>$g(x): \mathbb{R}^n \to \mathbb{R}^m$</span> are the constraint functions, and the vectors <span>$g_L$</span> and <span>$g_U$</span> denote the lower and upper bounds on the constraints, and the vectors <span>$x_L$</span> and <span>$x_U$</span> are the bounds on the variables <span>$x$</span>.</p><h2 id="Installation:-OptimizationIpopt.jl"><a class="docs-heading-anchor" href="#Installation:-OptimizationIpopt.jl">Installation: OptimizationIpopt.jl</a><a id="Installation:-OptimizationIpopt.jl-1"></a><a class="docs-heading-anchor-permalink" href="#Installation:-OptimizationIpopt.jl" title="Permalink"></a></h2><p>To use this package, install the OptimizationIpopt package:</p><pre><code class="language-julia hljs">import Pkg;
+Pkg.add(&quot;OptimizationIpopt&quot;);</code></pre><h2 id="Methods"><a class="docs-heading-anchor" href="#Methods">Methods</a><a id="Methods-1"></a><a class="docs-heading-anchor-permalink" href="#Methods" title="Permalink"></a></h2><p>OptimizationIpopt.jl provides the <code>IpoptOptimizer</code> algorithm, which wraps the Ipopt.jl solver for use with Optimization.jl. This is an interior-point algorithm that uses line search filter methods and is particularly effective for:</p><ul><li>Large-scale nonlinear problems</li><li>Problems with nonlinear constraints</li><li>Problems requiring high accuracy solutions</li></ul><h3 id="Algorithm-Requirements"><a class="docs-heading-anchor" href="#Algorithm-Requirements">Algorithm Requirements</a><a id="Algorithm-Requirements-1"></a><a class="docs-heading-anchor-permalink" href="#Algorithm-Requirements" title="Permalink"></a></h3><p><code>IpoptOptimizer</code> requires:</p><ul><li>Gradient information (via automatic differentiation or user-provided)</li><li>Hessian information (can be approximated or provided)</li><li>Constraint Jacobian (for constrained problems)</li><li>Constraint Hessian (for constrained problems)</li></ul><p>The algorithm supports:</p><ul><li>Box constraints via <code>lb</code> and <code>ub</code> in the <code>OptimizationProblem</code></li><li>General nonlinear equality and inequality constraints via <code>lcons</code> and <code>ucons</code></li></ul><h3 id="Basic-Usage"><a class="docs-heading-anchor" href="#Basic-Usage">Basic Usage</a><a id="Basic-Usage-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-Usage" title="Permalink"></a></h3><pre><code class="language-julia hljs">using OptimizationBase, OptimizationIpopt
+
+# Create optimizer with default settings
+opt = IpoptOptimizer()
+
+# Or configure Ipopt-specific options
+opt = IpoptOptimizer(
+    acceptable_tol = 1e-8,
+    mu_strategy = &quot;adaptive&quot;
+)
+
+# Solve the problem
+sol = solve(prob, opt)</code></pre><h2 id="Options-and-Parameters"><a class="docs-heading-anchor" href="#Options-and-Parameters">Options and Parameters</a><a id="Options-and-Parameters-1"></a><a class="docs-heading-anchor-permalink" href="#Options-and-Parameters" title="Permalink"></a></h2><h3 id="Common-Interface-Options"><a class="docs-heading-anchor" href="#Common-Interface-Options">Common Interface Options</a><a id="Common-Interface-Options-1"></a><a class="docs-heading-anchor-permalink" href="#Common-Interface-Options" title="Permalink"></a></h3><p>The following options can be passed as keyword arguments to <code>solve</code> and follow the common Optimization.jl interface:</p><ul><li><code>maxiters</code>: Maximum number of iterations (overrides Ipopt&#39;s <code>max_iter</code>)</li><li><code>maxtime</code>: Maximum wall time in seconds (overrides Ipopt&#39;s <code>max_wall_time</code>)</li><li><code>abstol</code>: Absolute tolerance (not directly used by Ipopt)</li><li><code>reltol</code>: Convergence tolerance (overrides Ipopt&#39;s <code>tol</code>)</li><li><code>verbose</code>: Control output verbosity (overrides Ipopt&#39;s <code>print_level</code>)<ul><li><code>false</code> or <code>0</code>: No output</li><li><code>true</code> or <code>5</code>: Standard output</li><li>Integer values 0-12: Different verbosity levels</li></ul></li></ul><h3 id="IpoptOptimizer-Constructor-Options"><a class="docs-heading-anchor" href="#IpoptOptimizer-Constructor-Options">IpoptOptimizer Constructor Options</a><a id="IpoptOptimizer-Constructor-Options-1"></a><a class="docs-heading-anchor-permalink" href="#IpoptOptimizer-Constructor-Options" title="Permalink"></a></h3><p>Ipopt-specific options are passed to the <code>IpoptOptimizer</code> constructor. The most commonly used options are available as struct fields:</p><h4 id="Termination-Options"><a class="docs-heading-anchor" href="#Termination-Options">Termination Options</a><a id="Termination-Options-1"></a><a class="docs-heading-anchor-permalink" href="#Termination-Options" title="Permalink"></a></h4><ul><li><code>acceptable_tol::Float64 = 1e-6</code>: Acceptable convergence tolerance (relative)</li><li><code>acceptable_iter::Int = 15</code>: Number of acceptable iterations before termination</li><li><code>dual_inf_tol::Float64 = 1.0</code>: Desired threshold for dual infeasibility</li><li><code>constr_viol_tol::Float64 = 1e-4</code>: Desired threshold for constraint violation</li><li><code>compl_inf_tol::Float64 = 1e-4</code>: Desired threshold for complementarity conditions</li></ul><h4 id="Linear-Solver-Options"><a class="docs-heading-anchor" href="#Linear-Solver-Options">Linear Solver Options</a><a id="Linear-Solver-Options-1"></a><a class="docs-heading-anchor-permalink" href="#Linear-Solver-Options" title="Permalink"></a></h4><ul><li><code>linear_solver::String = &quot;mumps&quot;</code>: Linear solver to use<ul><li>Default: &quot;mumps&quot; (included with Ipopt)</li><li>HSL solvers: &quot;ma27&quot;, &quot;ma57&quot;, &quot;ma86&quot;, &quot;ma97&quot; (require <a href="https://github.com/jump-dev/Ipopt.jl?tab=readme-ov-file#linear-solvers">separate installation</a>)</li><li>Others: &quot;pardiso&quot;, &quot;spral&quot; (require <a href="https://github.com/jump-dev/Ipopt.jl?tab=readme-ov-file#linear-solvers">separate installation</a>)</li></ul></li><li><code>linear_system_scaling::String = &quot;none&quot;</code>: Method for scaling linear system. Use &quot;mc19&quot; for HSL solvers.</li></ul><h4 id="NLP-Scaling-Options"><a class="docs-heading-anchor" href="#NLP-Scaling-Options">NLP Scaling Options</a><a id="NLP-Scaling-Options-1"></a><a class="docs-heading-anchor-permalink" href="#NLP-Scaling-Options" title="Permalink"></a></h4><ul><li><code>nlp_scaling_method::String = &quot;gradient-based&quot;</code>: Scaling method for NLP<ul><li>Options: &quot;none&quot;, &quot;user-scaling&quot;, &quot;gradient-based&quot;, &quot;equilibration-based&quot;</li></ul></li><li><code>nlp_scaling_max_gradient::Float64 = 100.0</code>: Maximum gradient after scaling</li></ul><h4 id="Barrier-Parameter-Options"><a class="docs-heading-anchor" href="#Barrier-Parameter-Options">Barrier Parameter Options</a><a id="Barrier-Parameter-Options-1"></a><a class="docs-heading-anchor-permalink" href="#Barrier-Parameter-Options" title="Permalink"></a></h4><ul><li><code>mu_strategy::String = &quot;monotone&quot;</code>: Update strategy for barrier parameter (&quot;monotone&quot;, &quot;adaptive&quot;)</li><li><code>mu_init::Float64 = 0.1</code>: Initial value for barrier parameter</li><li><code>mu_oracle::String = &quot;quality-function&quot;</code>: Oracle for adaptive mu strategy</li></ul><h4 id="Hessian-Options"><a class="docs-heading-anchor" href="#Hessian-Options">Hessian Options</a><a id="Hessian-Options-1"></a><a class="docs-heading-anchor-permalink" href="#Hessian-Options" title="Permalink"></a></h4><ul><li><code>hessian_approximation::String = &quot;exact&quot;</code>: How to approximate the Hessian<ul><li><code>&quot;exact&quot;</code>: Use exact Hessian</li><li><code>&quot;limited-memory&quot;</code>: Use L-BFGS approximation</li></ul></li><li><code>limited_memory_max_history::Int = 6</code>: History size for L-BFGS</li><li><code>limited_memory_update_type::String = &quot;bfgs&quot;</code>: Quasi-Newton update formula (&quot;bfgs&quot;, &quot;sr1&quot;)</li></ul><h4 id="Line-Search-Options"><a class="docs-heading-anchor" href="#Line-Search-Options">Line Search Options</a><a id="Line-Search-Options-1"></a><a class="docs-heading-anchor-permalink" href="#Line-Search-Options" title="Permalink"></a></h4><ul><li><code>line_search_method::String = &quot;filter&quot;</code>: Line search method (&quot;filter&quot;, &quot;penalty&quot;)</li><li><code>accept_every_trial_step::String = &quot;no&quot;</code>: Accept every trial step (disables line search)</li></ul><h4 id="Output-Options"><a class="docs-heading-anchor" href="#Output-Options">Output Options</a><a id="Output-Options-1"></a><a class="docs-heading-anchor-permalink" href="#Output-Options" title="Permalink"></a></h4><ul><li><code>print_timing_statistics::String = &quot;no&quot;</code>: Print detailed timing information</li><li><code>print_info_string::String = &quot;no&quot;</code>: Print algorithm info string</li></ul><h4 id="Warm-Start-Options"><a class="docs-heading-anchor" href="#Warm-Start-Options">Warm Start Options</a><a id="Warm-Start-Options-1"></a><a class="docs-heading-anchor-permalink" href="#Warm-Start-Options" title="Permalink"></a></h4><ul><li><code>warm_start_init_point::String = &quot;no&quot;</code>: Use warm start from previous solution</li></ul><h4 id="Restoration-Phase-Options"><a class="docs-heading-anchor" href="#Restoration-Phase-Options">Restoration Phase Options</a><a id="Restoration-Phase-Options-1"></a><a class="docs-heading-anchor-permalink" href="#Restoration-Phase-Options" title="Permalink"></a></h4><ul><li><code>expect_infeasible_problem::String = &quot;no&quot;</code>: Enable if problem is expected to be infeasible</li></ul><h3 id="Additional-Options-Dictionary"><a class="docs-heading-anchor" href="#Additional-Options-Dictionary">Additional Options Dictionary</a><a id="Additional-Options-Dictionary-1"></a><a class="docs-heading-anchor-permalink" href="#Additional-Options-Dictionary" title="Permalink"></a></h3><p>For Ipopt options not available as struct fields, use the <code>additional_options</code> dictionary:</p><pre><code class="language-julia hljs">opt = IpoptOptimizer(
+    linear_solver = &quot;ma57&quot;,
+    additional_options = Dict(
+        &quot;derivative_test&quot; =&gt; &quot;first-order&quot;,
+        &quot;derivative_test_tol&quot; =&gt; 1e-4,
+        &quot;fixed_variable_treatment&quot; =&gt; &quot;make_parameter&quot;,
+        &quot;alpha_for_y&quot; =&gt; &quot;primal&quot;
+    )
+)</code></pre><p>The full list of available options is documented in the <a href="https://coin-or.github.io/Ipopt/OPTIONS.html">Ipopt Options Reference</a>.</p><h3 id="Option-Priority"><a class="docs-heading-anchor" href="#Option-Priority">Option Priority</a><a id="Option-Priority-1"></a><a class="docs-heading-anchor-permalink" href="#Option-Priority" title="Permalink"></a></h3><p>Options follow this priority order (highest to lowest):</p><ol><li>Common interface arguments passed to <code>solve</code> (e.g., <code>reltol</code>, <code>maxiters</code>)</li><li>Options in <code>additional_options</code> dictionary</li><li>Struct field values in <code>IpoptOptimizer</code></li></ol><p>Example with multiple option sources:</p><pre><code class="language-julia hljs">opt = IpoptOptimizer(
+    acceptable_tol = 1e-6,           # Struct field
+    mu_strategy = &quot;adaptive&quot;,        # Struct field
+    linear_solver = &quot;ma57&quot;,          # Struct field (needs HSL)
+    print_timing_statistics = &quot;yes&quot;, # Struct field
+    additional_options = Dict(
+        &quot;alpha_for_y&quot; =&gt; &quot;primal&quot;,   # Not a struct field
+        &quot;max_iter&quot; =&gt; 500            # Will be overridden by maxiters below
+    )
+)
+
+sol = solve(prob, opt;
+    maxiters = 1000,  # Overrides max_iter in additional_options
+    reltol = 1e-8     # Sets Ipopt&#39;s tol
+)</code></pre><h2 id="Examples"><a class="docs-heading-anchor" href="#Examples">Examples</a><a id="Examples-1"></a><a class="docs-heading-anchor-permalink" href="#Examples" title="Permalink"></a></h2><h3 id="Basic-Unconstrained-Optimization"><a class="docs-heading-anchor" href="#Basic-Unconstrained-Optimization">Basic Unconstrained Optimization</a><a id="Basic-Unconstrained-Optimization-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-Unconstrained-Optimization" title="Permalink"></a></h3><p>The Rosenbrock function can be minimized using <code>IpoptOptimizer</code>:</p><pre><code class="language-julia hljs">using Optimization, OptimizationIpopt
+using Zygote
+
+rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+x0 = zeros(2)
+p = [1.0, 100.0]
+
+# Ipopt requires gradient information
+optfunc = OptimizationFunction(rosenbrock, AutoZygote())
+prob = OptimizationProblem(optfunc, x0, p)
+sol = solve(prob, IpoptOptimizer())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 2-element Vector{Float64}:
+ 0.9999999999999899
+ 0.9999999999999792</code></pre><h3 id="Box-Constrained-Optimization"><a class="docs-heading-anchor" href="#Box-Constrained-Optimization">Box-Constrained Optimization</a><a id="Box-Constrained-Optimization-1"></a><a class="docs-heading-anchor-permalink" href="#Box-Constrained-Optimization" title="Permalink"></a></h3><p>Adding box constraints to limit the search space:</p><pre><code class="language-julia hljs">using Optimization, OptimizationIpopt
+using Zygote
+
+rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+x0 = zeros(2)
+p = [1.0, 100.0]
+
+optfunc = OptimizationFunction(rosenbrock, AutoZygote())
+prob = OptimizationProblem(optfunc, x0, p;
+                          lb = [-1.0, -1.0],
+                          ub = [1.5, 1.5])
+sol = solve(prob, IpoptOptimizer())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 2-element Vector{Float64}:
+ 0.9999999942690103
+ 0.9999999885017182</code></pre><h3 id="Nonlinear-Constrained-Optimization"><a class="docs-heading-anchor" href="#Nonlinear-Constrained-Optimization">Nonlinear Constrained Optimization</a><a id="Nonlinear-Constrained-Optimization-1"></a><a class="docs-heading-anchor-permalink" href="#Nonlinear-Constrained-Optimization" title="Permalink"></a></h3><p>Solving problems with nonlinear equality and inequality constraints:</p><pre><code class="language-julia hljs">using Optimization, OptimizationIpopt
+using Zygote
+
+# Objective: minimize x[1]^2 + x[2]^2
+objective(x, p) = x[1]^2 + x[2]^2
+
+# Constraint: x[1]^2 + x[2]^2 - 2*x[1] = 0 (equality)
+# and x[1] + x[2] &gt;= 1 (inequality)
+function constraints(res, x, p)
+    res[1] = x[1]^2 + x[2]^2 - 2*x[1]  # equality constraint
+    res[2] = x[1] + x[2]                # inequality constraint
+end
+
+x0 = [0.5, 0.5]
+optfunc = OptimizationFunction(objective, AutoZygote(); cons = constraints)
+
+# First constraint is equality (lcons = ucons = 0)
+# Second constraint is inequality (lcons = 1, ucons = Inf)
+prob = OptimizationProblem(optfunc, x0;
+                          lcons = [0.0, 1.0],
+                          ucons = [0.0, Inf])
+
+sol = solve(prob, IpoptOptimizer())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 2-element Vector{Float64}:
+ 0.29289321506718563
+ 0.7071067774417749</code></pre><h3 id="Using-Limited-Memory-BFGS-Approximation"><a class="docs-heading-anchor" href="#Using-Limited-Memory-BFGS-Approximation">Using Limited-Memory BFGS Approximation</a><a id="Using-Limited-Memory-BFGS-Approximation-1"></a><a class="docs-heading-anchor-permalink" href="#Using-Limited-Memory-BFGS-Approximation" title="Permalink"></a></h3><p>For large-scale problems where computing the exact Hessian is expensive:</p><pre><code class="language-julia hljs">using Optimization, OptimizationIpopt
+using Zygote
+
+# Large-scale problem
+n = 100
+rosenbrock_nd(x, p) = sum(p[2] * (x[i+1] - x[i]^2)^2 + (p[1] - x[i])^2 for i in 1:n-1)
+
+x0 = zeros(n)
+p = [1.0, 100.0]
+
+# Using automatic differentiation for gradients only
+optfunc = OptimizationFunction(rosenbrock_nd, AutoZygote())
+prob = OptimizationProblem(optfunc, x0, p)
+
+# Use L-BFGS approximation for Hessian
+sol = solve(prob, IpoptOptimizer(
+           hessian_approximation = &quot;limited-memory&quot;,
+           limited_memory_max_history = 10);
+           maxiters = 1000)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 100-element Vector{Float64}:
+ 1.0000000000127078
+ 1.0000000000075149
+ 0.9999999999811232
+ 1.0000000000194003
+ 0.9999999999711495
+ 0.9999999999696987
+ 1.0000000000091513
+ 0.9999999999911049
+ 0.9999999999979793
+ 0.9999999999944585
+ ⋮
+ 0.9999999999661779
+ 0.999999999996109
+ 1.0000000000029101
+ 1.0000000002029186
+ 1.000000000298021
+ 1.0000000005183187
+ 1.0000000009206664
+ 1.0000000019803021
+ 1.0000000039715904</code></pre><h3 id="Portfolio-Optimization-Example"><a class="docs-heading-anchor" href="#Portfolio-Optimization-Example">Portfolio Optimization Example</a><a id="Portfolio-Optimization-Example-1"></a><a class="docs-heading-anchor-permalink" href="#Portfolio-Optimization-Example" title="Permalink"></a></h3><p>A practical example of portfolio optimization with constraints:</p><pre><code class="language-julia hljs">using Optimization, OptimizationIpopt
+using Zygote
+using LinearAlgebra
+
+# Portfolio optimization: minimize risk subject to return constraint
+n_assets = 5
+μ = [0.05, 0.10, 0.15, 0.08, 0.12]  # Expected returns
+Σ = [0.05 0.01 0.02 0.01 0.00;      # Covariance matrix
+     0.01 0.10 0.03 0.02 0.01;
+     0.02 0.03 0.15 0.02 0.03;
+     0.01 0.02 0.02 0.08 0.02;
+     0.00 0.01 0.03 0.02 0.06]
+
+target_return = 0.10
+
+# Objective: minimize portfolio variance
+portfolio_risk(w, p) = dot(w, Σ * w)
+
+# Constraints: sum of weights = 1, expected return &gt;= target
+function portfolio_constraints(res, w, p)
+    res[1] = sum(w) - 1.0                    # Sum to 1 (equality)
+    res[2] = dot(μ, w) - target_return       # Minimum return (inequality)
+end
+
+optfunc = OptimizationFunction(portfolio_risk, AutoZygote();
+                              cons = portfolio_constraints)
+w0 = fill(1.0/n_assets, n_assets)
+
+prob = OptimizationProblem(optfunc, w0;
+                          lb = zeros(n_assets),     # No short selling
+                          ub = ones(n_assets),      # No single asset &gt; 100%
+                          lcons = [0.0, 0.0],       # Equality and inequality constraints
+                          ucons = [0.0, Inf])
+
+sol = solve(prob, IpoptOptimizer();
+           reltol = 1e-8,
+           verbose = 5)
+
+println(&quot;Optimal weights: &quot;, sol.u)
+println(&quot;Expected return: &quot;, dot(μ, sol.u))
+println(&quot;Portfolio variance: &quot;, sol.objective)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">This is Ipopt version 3.14.19, running with linear solver MUMPS 5.8.2.
+
+Number of nonzeros in equality constraint Jacobian...:        5
+Number of nonzeros in inequality constraint Jacobian.:        5
+Number of nonzeros in Lagrangian Hessian.............:       15
+
+Total number of variables............................:        5
+                     variables with only lower bounds:        0
+                variables with lower and upper bounds:        5
+                     variables with only upper bounds:        0
+Total number of equality constraints.................:        1
+Total number of inequality constraints...............:        1
+        inequality constraints with only lower bounds:        1
+   inequality constraints with lower and upper bounds:        0
+        inequality constraints with only upper bounds:        0
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+   0  3.1200000e-02 0.00e+00 3.43e-02  -1.0 0.00e+00    -  0.00e+00 0.00e+00   0
+   1  3.2177561e-02 0.00e+00 1.30e-02  -1.7 1.78e-02    -  9.93e-01 1.00e+00h  1
+   2  3.0759152e-02 0.00e+00 4.26e-02  -2.5 5.87e-02    -  9.79e-01 1.00e+00f  1
+   3  2.9846484e-02 0.00e+00 2.83e-08  -2.5 1.07e-01    -  1.00e+00 1.00e+00f  1
+   4  2.8068833e-02 0.00e+00 2.47e-02  -3.8 3.60e-02    -  8.65e-01 1.00e+00f  1
+   5  2.7401391e-02 0.00e+00 1.50e-09  -3.8 2.41e-02    -  1.00e+00 1.00e+00f  1
+   6  2.7234938e-02 0.00e+00 1.46e-04  -5.7 1.03e-02    -  9.79e-01 1.00e+00f  1
+   7  2.7232343e-02 0.00e+00 1.84e-11  -5.7 1.85e-03    -  1.00e+00 1.00e+00f  1
+   8  2.7230500e-02 0.00e+00 2.51e-14  -8.6 1.40e-04    -  1.00e+00 1.00e+00f  1
+
+Number of Iterations....: 8
+
+                                   (scaled)                 (unscaled)
+Objective...............:   2.7230500043271131e-02    2.7230500043271131e-02
+Dual infeasibility......:   2.5091040356528538e-14    2.5091040356528538e-14
+Constraint violation....:   0.0000000000000000e+00    0.0000000000000000e+00
+Variable bound violation:   0.0000000000000000e+00    0.0000000000000000e+00
+Complementarity.........:   6.4320485361913048e-09    6.4320485361913048e-09
+Overall NLP error.......:   6.4320485361913048e-09    6.4320485361913048e-09
+
+
+Number of objective function evaluations             = 9
+Number of objective gradient evaluations             = 9
+Number of equality constraint evaluations            = 9
+Number of inequality constraint evaluations          = 9
+Number of equality constraint Jacobian evaluations   = 9
+Number of inequality constraint Jacobian evaluations = 9
+Number of Lagrangian Hessian evaluations             = 8
+Total seconds in IPOPT                               = 3.857
+
+EXIT: Optimal Solution Found.
+Optimal weights: [0.23290714113956607, 0.16055161296302964, 0.09670863193102121, 0.08466825825418357, 0.42516435571219957]
+Expected return: 0.09999999648873308
+Portfolio variance: 0.02723050004327113</code></pre><h2 id="Tips-and-Best-Practices"><a class="docs-heading-anchor" href="#Tips-and-Best-Practices">Tips and Best Practices</a><a id="Tips-and-Best-Practices-1"></a><a class="docs-heading-anchor-permalink" href="#Tips-and-Best-Practices" title="Permalink"></a></h2><ol><li><p><strong>Scaling</strong>: Ipopt performs better when variables and constraints are well-scaled. Consider normalizing your problem if variables have very different magnitudes.</p></li><li><p><strong>Initial Points</strong>: Provide good initial guesses when possible. Ipopt is a local optimizer and the solution quality depends on the starting point.</p></li><li><p><strong>Hessian Approximation</strong>: For large problems or when Hessian computation is expensive, use <code>hessian_approximation = &quot;limited-memory&quot;</code> in the <code>IpoptOptimizer</code> constructor.</p></li><li><p><strong>Linear Solver Selection</strong>: The choice of linear solver can significantly impact performance. For large problems, consider using HSL solvers (ma27, ma57, ma86, ma97). Note that HSL solvers require <a href="https://github.com/jump-dev/Ipopt.jl?tab=readme-ov-file#linear-solvers">separate installation</a> - see the Ipopt.jl documentation for setup instructions. The default MUMPS solver works well for small to medium problems.</p></li><li><p><strong>Constraint Formulation</strong>: Ipopt handles equality constraints well. When possible, formulate constraints as equalities rather than pairs of inequalities.</p></li><li><p><strong>Warm Starting</strong>: When solving a sequence of similar problems, use the solution from the previous problem as the initial point for the next. You can enable warm starting with <code>IpoptOptimizer(warm_start_init_point = &quot;yes&quot;)</code>.</p></li></ol><h2 id="References"><a class="docs-heading-anchor" href="#References">References</a><a id="References-1"></a><a class="docs-heading-anchor-permalink" href="#References" title="Permalink"></a></h2><p>For more detailed information about Ipopt&#39;s algorithms and options, consult:</p><ul><li><a href="https://coin-or.github.io/Ipopt/">Ipopt Documentation</a></li><li><a href="https://coin-or.github.io/Ipopt/OPTIONS.html">Ipopt Options Reference</a></li><li><a href="https://link.springer.com/article/10.1007/s10107-004-0559-y">Ipopt Implementation Paper</a></li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../gcmaes/">« GCMAES.jl</a><a class="docs-footer-nextpage" href="../lbfgsb/">LBFGSB.jl »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Friday 16 January 2026 13:16">Friday 16 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

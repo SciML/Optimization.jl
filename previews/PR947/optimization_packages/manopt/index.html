@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Manopt.jl · Optimization.jl</title><meta name="title" content="Manopt.jl · Optimization.jl"/><meta property="og:title" content="Manopt.jl · Optimization.jl"/><meta property="twitter:title" content="Manopt.jl · Optimization.jl"/><meta name="description" content="Documentation for Optimization.jl."/><meta property="og:description" content="Documentation for Optimization.jl."/><meta property="twitter:description" content="Documentation for Optimization.jl."/><meta property="og:url" content="https://docs.sciml.ai/Optimization/stable/optimization_packages/manopt/"/><meta property="twitter:url" content="https://docs.sciml.ai/Optimization/stable/optimization_packages/manopt/"/><link rel="canonical" href="https://docs.sciml.ai/Optimization/stable/optimization_packages/manopt/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Optimization.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Optimization.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Optimization.jl: A Unified Optimization Package</a></li><li><a class="tocitem" href="../../getting_started/">Getting Started with Optimization.jl</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../../tutorials/certification/">Using SymbolicAnalysis.jl for convexity certificates</a></li><li><a class="tocitem" href="../../tutorials/constraints/">Using Equality and Inequality Constraints</a></li><li><a class="tocitem" href="../../tutorials/ensemble/">Multistart optimization with EnsembleProblem</a></li><li><a class="tocitem" href="../../tutorials/linearandinteger/">Linear and Integer Optimization Problems</a></li><li><a class="tocitem" href="../../tutorials/minibatch/">Data Iterators and Minibatching</a></li><li><a class="tocitem" href="../../tutorials/remakecomposition/">Creating polyalgorithms by chaining solvers using <code>remake</code></a></li><li><a class="tocitem" href="../../tutorials/symbolic/">Symbolic Problem Building with ModelingToolkit</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../../examples/rosenbrock/">Solving the Rosenbrock Problem in &gt;10 Ways</a></li></ul></li><li><span class="tocitem">Basics</span><ul><li><a class="tocitem" href="../../API/optimization_problem/">Defining OptimizationProblems</a></li><li><a class="tocitem" href="../../API/optimization_function/">OptimizationFunction</a></li><li><a class="tocitem" href="../../API/ad/">Automatic Differentiation Construction Choice Recommendations</a></li><li><a class="tocitem" href="../../API/solve/">Common Solver Options (Solve Keyword Arguments)</a></li><li><a class="tocitem" href="../../API/optimization_solution/">Optimization Solutions</a></li><li><a class="tocitem" href="../../API/optimization_state/">OptimizationState</a></li><li><a class="tocitem" href="../../API/optimization_stats/">OptimizationStats</a></li><li><a class="tocitem" href="../../API/modelingtoolkit/">ModelingToolkit Integration</a></li><li><a class="tocitem" href="../../API/FAQ/">Frequently Asked Questions</a></li></ul></li><li><span class="tocitem">Optimizer Packages</span><ul><li><a class="tocitem" href="../blackboxoptim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../cmaevolutionstrategy/">CMAEvolutionStrategy.jl</a></li><li><a class="tocitem" href="../evolutionary/">Evolutionary.jl</a></li><li><a class="tocitem" href="../gcmaes/">GCMAES.jl</a></li><li class="is-active"><a class="tocitem" href>Manopt.jl</a><ul class="internal"><li><a class="tocitem" href="#Installation:-OptimizationManopt.jl"><span>Installation: OptimizationManopt.jl</span></a></li><li><a class="tocitem" href="#Methods"><span>Methods</span></a></li><li><a class="tocitem" href="#Examples"><span>Examples</span></a></li></ul></li><li><a class="tocitem" href="../mathoptinterface/">MathOptInterface.jl</a></li><li><a class="tocitem" href="../metaheuristics/">Metaheuristics.jl</a></li><li><a class="tocitem" href="../multistartoptimization/">MultistartOptimization.jl</a></li><li><a class="tocitem" href="../nlopt/">NLopt.jl</a></li><li><a class="tocitem" href="../nlpmodels/">NLPModels.jl</a></li><li><a class="tocitem" href="../nomad/">NOMAD.jl</a></li><li><a class="tocitem" href="../optim/">Optim.jl</a></li><li><a class="tocitem" href="../optimisers/">Optimisers.jl</a></li><li><a class="tocitem" href="../optimization/">Optimization.jl</a></li><li><a class="tocitem" href="../polyopt/">Polyalgorithms.jl</a></li><li><a class="tocitem" href="../prima/">PRIMA.jl</a></li><li><a class="tocitem" href="../pycma/">PyCMA.jl</a></li><li><a class="tocitem" href="../quaddirect/">QuadDIRECT.jl</a></li><li><a class="tocitem" href="../speedmapping/">SpeedMapping.jl</a></li><li><a class="tocitem" href="../scipy/">SciPy.jl</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Optimizer Packages</a></li><li class="is-active"><a href>Manopt.jl</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Manopt.jl</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/SciML/Optimization.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/SciML/Optimization.jl/blob/master/docs/src/optimization_packages/manopt.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Manopt.jl"><a class="docs-heading-anchor" href="#Manopt.jl">Manopt.jl</a><a id="Manopt.jl-1"></a><a class="docs-heading-anchor-permalink" href="#Manopt.jl" title="Permalink"></a></h1><p><a href="https://github.com/JuliaManifolds/Manopt.jl">Manopt.jl</a> is a package with implementations of a variety of optimization solvers on manifolds supported by <a href="https://github.com/JuliaManifolds/Manifolds.jl">Manifolds</a>.</p><h2 id="Installation:-OptimizationManopt.jl"><a class="docs-heading-anchor" href="#Installation:-OptimizationManopt.jl">Installation: OptimizationManopt.jl</a><a id="Installation:-OptimizationManopt.jl-1"></a><a class="docs-heading-anchor-permalink" href="#Installation:-OptimizationManopt.jl" title="Permalink"></a></h2><p>To use the Optimization.jl interface to Manopt, install the OptimizationManopt package:</p><pre><code class="language-julia hljs">import Pkg;
+Pkg.add(&quot;OptimizationManopt&quot;);</code></pre><h2 id="Methods"><a class="docs-heading-anchor" href="#Methods">Methods</a><a id="Methods-1"></a><a class="docs-heading-anchor-permalink" href="#Methods" title="Permalink"></a></h2><p>The following methods are available for the <code>OptimizationManopt</code> package:</p><ul><li><code>GradientDescentOptimizer</code>: Corresponds to the <a href="https://manoptjl.org/stable/solvers/gradient_descent/"><code>gradient_descent</code></a> method in Manopt.</li><li><code>NelderMeadOptimizer</code> : Corresponds to the <a href="https://manoptjl.org/stable/solvers/NelderMead/"><code>NelderMead</code></a> method in Manopt.</li><li><code>ConjugateGradientDescentOptimizer</code>: Corresponds to the <a href="https://manoptjl.org/stable/solvers/conjugate_gradient_descent/"><code>conjugate_gradient_descent</code></a> method in Manopt.</li><li><code>ParticleSwarmOptimizer</code>: Corresponds to the <a href="https://manoptjl.org/stable/solvers/particle_swarm/"><code>particle_swarm</code></a> method in Manopt.</li><li><code>QuasiNewtonOptimizer</code>: Corresponds to the <a href="https://manoptjl.org/stable/solvers/quasi_Newton/"><code>quasi_Newton</code></a> method in Manopt.</li><li><code>CMAESOptimizer</code>: Corresponds to the <a href="https://manoptjl.org/stable/solvers/cma_es/"><code>cma_es</code></a> method in Manopt.</li><li><code>ConvexBundleOptimizer</code>: Corresponds to the <a href="https://manoptjl.org/stable/solvers/convex_bundle_method/"><code>convex_bundle_method</code></a> method in Manopt.</li><li><code>FrankWolfeOptimizer</code>: Corresponds to the <a href="https://manoptjl.org/stable/solvers/FrankWolfe/"><code>FrankWolfe</code></a> method in Manopt.</li></ul><p>The common kwargs <code>maxiters</code>, <code>maxtime</code> and <code>abstol</code> are supported by all the optimizers. Solver specific kwargs from Manopt can be passed to the <code>solve</code> function or <code>OptimizationProblem</code>.</p><div class="admonition is-info" id="Note-422561828fcac3e0"><header class="admonition-header">Note<a class="admonition-anchor" href="#Note-422561828fcac3e0" title="Permalink"></a></header><div class="admonition-body"><p>The <code>OptimizationProblem</code> has to be passed the manifold as the <code>manifold</code> keyword argument.</p></div></div><h2 id="Examples"><a class="docs-heading-anchor" href="#Examples">Examples</a><a id="Examples-1"></a><a class="docs-heading-anchor-permalink" href="#Examples" title="Permalink"></a></h2><p>The Rosenbrock function on the Euclidean manifold can be optimized using the <code>GradientDescentOptimizer</code> as follows:</p><pre><code class="language-julia hljs">using Optimization, OptimizationManopt, Manifolds, LinearAlgebra
+rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+x0 = zeros(2)
+p = [1.0, 100.0]
+
+R2 = Euclidean(2)
+
+stepsize = Manopt.ArmijoLinesearch(R2)
+opt = OptimizationManopt.GradientDescentOptimizer()
+
+optf = OptimizationFunction(rosenbrock, Optimization.AutoZygote())
+
+prob = OptimizationProblem(
+    optf, x0, p; manifold = R2, stepsize = stepsize)
+
+sol = Optimization.solve(prob, opt)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Failure
+u: 2-element Vector{Float64}:
+ 0.8165527190561593
+ 0.6672818138967234</code></pre><p>The box-constrained Karcher mean problem on the SPD manifold with the Frank-Wolfe algorithm can be solved as follows:</p><pre><code class="language-julia hljs">M = SymmetricPositiveDefinite(5)
+m = 100
+σ = 0.005
+q = Matrix{Float64}(I, 5, 5) .+ 2.0
+data2 = [exp(M, q, σ * rand(M; vector_at = q)) for i in 1:m]
+
+f(x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
+optf = OptimizationFunction(f, Optimization.AutoZygote())
+prob = OptimizationProblem(optf, data2[1]; manifold = M, maxiters = 1000)
+
+function closed_form_solution!(M::SymmetricPositiveDefinite, q, L, U, p, X)
+    # extract p^1/2 and p^{-1/2}
+    (p_sqrt_inv, p_sqrt) = Manifolds.spd_sqrt_and_sqrt_inv(p)
+    # Compute D &amp; Q
+    e2 = eigen(p_sqrt_inv * X * p_sqrt_inv) # decompose Sk  = QDQ&#39;
+    D = Diagonal(1.0 .* (e2.values .&lt; 0))
+    Q = e2.vectors
+
+    Uprime = Q&#39; * p_sqrt_inv * U * p_sqrt_inv * Q
+    Lprime = Q&#39; * p_sqrt_inv * L * p_sqrt_inv * Q
+    P = cholesky(Hermitian(Uprime - Lprime))
+    z = P.U&#39; * D * P.U + Lprime
+    copyto!(M, q, p_sqrt * Q * z * Q&#39; * p_sqrt)
+    return q
+end
+N = m
+U = mean(data2)
+L = inv(sum(1 / N * inv(matrix) for matrix in data2))
+
+optf = OptimizationFunction(f, Optimization.AutoZygote())
+prob = OptimizationProblem(optf, U; manifold = M, maxiters = 1000)
+
+sol = Optimization.solve(
+    prob, opt, sub_problem = (M, q, p, X) -&gt; closed_form_solution!(M, q, L, U, p, X))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Failure
+u: 5×5 Matrix{Float64}:
+ 3.0021   2.0019   2.00226  2.00235  2.00234
+ 2.0019   3.00175  2.00211  2.00219  2.00222
+ 2.00226  2.00211  3.00248  2.00251  2.00258
+ 2.00235  2.00219  2.00251  3.00261  2.00267
+ 2.00234  2.00222  2.00258  2.00267  3.00271</code></pre><p>This example is based on the <a href="https://juliamanifolds.github.io/ManoptExamples.jl/stable/examples/Riemannian-mean/">example</a> in the Manopt and <a href="https://doi.org/10.1007/s10107-022-01840-5">Weber and Sra&#39;22</a>.</p><p>The following example is adapted from the Rayleigh Quotient example in ManoptExamples.jl. We solve the Rayleigh quotient problem on the Sphere manifold:</p><pre><code class="language-julia hljs">using Optimization, OptimizationManopt
+using Manifolds, LinearAlgebra
+using Manopt
+
+n = 1000
+A = Symmetric(randn(n, n) / n)
+manifold = Sphere(n - 1)
+
+cost(x, p = nothing) = -x&#39; * A * x
+egrad(G, x, p = nothing) = (G .= -2 * A * x)
+
+optf = OptimizationFunction(cost, grad = egrad)
+x0 = rand(manifold)
+prob = OptimizationProblem(optf, x0, manifold = manifold)
+
+sol = solve(prob, GradientDescentOptimizer())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Failure
+u: 1000-element Vector{Float64}:
+ -0.04588038423593707
+ -0.033945399691599876
+ -0.009980032387255588
+ -0.07960900142036194
+ -0.00591175300535294
+ -0.000779248564708365
+  0.009877234784275572
+ -0.014187079420760302
+  0.05102781277756141
+ -0.0019154194743151054
+  ⋮
+  0.025733410479723846
+ -0.08285927680304461
+ -0.01543744507456781
+ -0.023610501966692933
+ -0.044742528973229764
+ -0.01664733227918338
+  0.026849823996735474
+ -0.03328373095648881
+ -0.010120358338233026</code></pre><p>Let&#39;s check that this indeed corresponds to the minimum eigenvalue of the matrix <code>A</code>.</p><pre><code class="language-julia hljs">@show eigmin(A)
+@show sol.objective</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">-0.06246974600111758</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../gcmaes/">« GCMAES.jl</a><a class="docs-footer-nextpage" href="../mathoptinterface/">MathOptInterface.jl »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Wednesday 23 July 2025 07:07">Wednesday 23 July 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
