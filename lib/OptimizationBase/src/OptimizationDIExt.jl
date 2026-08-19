@@ -69,6 +69,11 @@ function instantiate_function(
     Tp0 = typeof(p)
 
     # Create gradient closures with proper type stability using let blocks.
+    # Bound only on the AD path below; downstream reuse (the `fg!` synthesis)
+    # tests `_prep_grad === nothing` rather than the `g` flag — the flags don't
+    # say whether a prep exists (a user-supplied `f.grad` sets `g == true`
+    # without one).
+    _prep_grad = nothing
     grad = if g == true && f.grad === nothing
         _prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
         if p !== SciMLBase.NullParameters() && p !== nothing
@@ -109,7 +114,8 @@ function instantiate_function(
         end
     elseif fg == true && f.fg === nothing
         # Reuse the gradient prep when `grad` built one; they are the same DI operator.
-        _prep_grad_fg = g == true ? _prep_grad : prepare_gradient(f.f, adtype, x, Constant(p))
+        _prep_grad_fg = _prep_grad === nothing ?
+            prepare_gradient(f.f, adtype, x, Constant(p)) : _prep_grad
         if p !== SciMLBase.NullParameters() && p !== nothing
             let _prep_grad_fg = _prep_grad_fg, f = f, adtype = adtype
                 function (res, θ, p = p)
