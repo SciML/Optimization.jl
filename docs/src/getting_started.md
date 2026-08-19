@@ -80,7 +80,7 @@ That's just a bit of what's in there, check out the other pages for more informa
 
 ## Import a different solver package and solve the problem
 
-OptimizationOptimJL is a wrapper for [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) and OptimizationBBO is a wrapper for [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl).
+OptimizationOptimJL is a wrapper for [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) and OptimizationBBO is a wrapper for [BlackBoxOptim.jl](https://github.com/SciML/BlackBoxOptim.jl).
 
 First let's use the NelderMead a derivative free solver from Optim.jl:
 
