@@ -277,3 +277,28 @@ function instantiate_function(
     adpkg = adtypestr[strtind:lastidx]
     throw(ArgumentError("The passed automatic differentiation backend choice is not available. Please load the corresponding AD package $adpkg."))
 end
+
+"""
+    lag_hess_structure(prototype::SparseMatrixCSC) -> (rows, cols)
+
+The canonical coordinates of the entries that the vector-form Lagrangian
+Hessian callback `lag_h(h, θ, σ, λ[, p])` writes, in the exact order it
+writes them. Solver wrappers that declare a sparse Hessian structure and
+fill it from the vector `lag_h` MUST derive their structure with this
+function — entry `k` of the value buffer corresponds to
+`(rows[k], cols[k])`. Wrappers whose convention requires lower-triangle
+coordinates (e.g. NLPModels) mirror each `(i, j)` to `(j, i)`; the
+mirrored sequence is still in `lag_h`'s value order.
+
+The write order is: the upper-triangle entries (`i ≤ j`) of the sparse
+Lagrangian Hessian prototype, enumerated in `findnz` (CSC, column-major)
+order. This order is part of the public API contract of `lag_h` and is
+frozen: changing it silently breaks every consumer that declared a
+structure against it.
+"""
+function lag_hess_structure(prototype::SparseMatrixCSC)
+    rows, cols, _ = findnz(prototype)
+    mask = rows .<= cols
+
+    return rows[mask], cols[mask]
+end

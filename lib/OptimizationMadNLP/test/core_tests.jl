@@ -28,34 +28,46 @@ import SciMLBase
 end
 
 @testset "tutorial" begin
-    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
-    x0 = zeros(2)
-    _p = [1.0, 1.0]
+    # 3 coupled variables on purpose: for a 2x2 pattern the upper- and
+    # lower-triangle CSC enumerations coincide (by symmetry), so a 2x2 test
+    # cannot detect a structure/value ordering mismatch. With three coupled
+    # columns the enumerations diverge from the third entry on.
+    rosenbrock3(x, p) = (1 - x[1])^2 + p[1] * (x[2] - x[1]^2)^2 + (x[3] - x[2])^2
+    x0 = [0.5, 0.5, 1.0]
+    _p = [10.0]
 
-    cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[2]])
+    cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[3]])
 
+    # The vector-form lag_h must write values in the canonical order of
+    # OptimizationBase.lag_hess_structure(lag_hess_prototype): the upper
+    # triangle (i <= j) in findnz/CSC order. For the dense 3x3 pattern that is
+    # (1,1), (1,2), (2,2), (1,3), (2,3), (3,3).
     function lagh(res, x, sigma, mu, p)
-        lH = sigma * [
-            2 + 8(x[1]^2) * p[2] - 4(x[2] - (x[1]^2)) * p[2] -4p[2] * x[1]
-            -4p[2] * x[1] 2p[2]
-        ] .+ [
-            2mu[1] mu[2]
-            mu[2] 2mu[1]
-        ]
-        # MadNLP uses lower triangle. For symmetric sparse([1 1; 1 1]), lower triangle has [1,1], [2,1], and [2,2]
-        res[1] = lH[1, 1]  # Position [1,1]
-        res[2] = lH[2, 1]  # Position [2,1] (off-diagonal)
-        res[3] = lH[2, 2]  # Position [2,2]
+        res[1] = sigma * (2 - 4p[1] * (x[2] - x[1]^2) + 8p[1] * x[1]^2) + 2mu[1] # H[1,1]
+        res[2] = sigma * (-4p[1] * x[1])                                         # H[1,2]
+        res[3] = sigma * (2p[1] + 2) + 2mu[1]                                    # H[2,2]
+        res[4] = mu[2]                                                           # H[1,3]
+        res[5] = sigma * (-2)                                                    # H[2,3]
+        res[6] = sigma * 2                                                       # H[3,3]
     end
-    lag_hess_prototype = sparse([1 1; 1 1])  # Symmetric sparse pattern for Hessian
+    lag_hess_prototype = sparse(ones(3, 3))  # dense symmetric 3x3 pattern
 
-    # Use SecondOrder AD for MadNLP
     ad = SecondOrder(ADTypes.AutoForwardDiff(), ADTypes.AutoZygote())
     optprob = OptimizationFunction(
-        rosenbrock, ad;
+        rosenbrock3, ad;
         cons = cons, lag_h = lagh, lag_hess_prototype
     )
-    prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, 0.5])
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, Inf])
+
+    # Reference: same problem, derivatives fully from AD (no user lag_h).
+    # ForwardDiff-over-ForwardDiff: the Zygote-inner AD-only constrained path
+    # currently errors in OptimizationZygoteExt (closure arity), tracked
+    # separately from this ordering fix.
+    ad_ref = SecondOrder(ADTypes.AutoForwardDiff(), ADTypes.AutoForwardDiff())
+    optprob_ad = OptimizationFunction(rosenbrock3, ad_ref; cons = cons)
+    prob_ad = OptimizationProblem(optprob_ad, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, Inf])
+    sol_ad = solve(prob_ad, MadNLPOptimizer())
+    @test SciMLBase.successful_retcode(sol_ad)
 
     opts = [
         MadNLPOptimizer(),
@@ -66,8 +78,9 @@ end
         sol = solve(prob, opt)
         @test SciMLBase.successful_retcode(sol)
 
-        # compare against Ipopt results
-        @test sol ≈ [0.7071678163428006, 0.7070457460302945] rtol = 1.0e-4
+        # A garbled structure/value ordering shows up as a different (or
+        # non-)optimum than the pure-AD reference.
+        @test sol.u ≈ sol_ad.u rtol = 1.0e-4
     end
 end
 
@@ -193,20 +206,21 @@ end
         # [1    0    2    0  ]
         # [0    1    0    0  ]
         #
-        # Lower triangle indices: [1,1], [3,1], [2,2], [4,2], [3,3]
-        # Total: 5 non-zero elements in lower triangle
+        # Canonical write order (OptimizationBase.lag_hess_structure of the
+        # prototype: upper triangle in findnz/CSC order):
+        # (1,1), (2,2), (1,3), (3,3), (2,4) — 5 stored entries.
 
         # Objective Hessian contribution
         res[1] = sigma * 2.0   # H[1,1] from x1^2
-        res[2] = sigma * 1.0   # H[3,1] from x1*x3
-        res[3] = sigma * 4.0   # H[2,2] from 2*x2^2
-        res[4] = sigma * 1.0   # H[4,2] from x2*x4
-        res[5] = sigma * 2.0   # H[3,3] from x3^2
+        res[2] = sigma * 4.0   # H[2,2] from 2*x2^2
+        res[3] = sigma * 1.0   # H[1,3] from x1*x3
+        res[4] = sigma * 2.0   # H[3,3] from x3^2
+        res[5] = sigma * 1.0   # H[2,4] from x2*x4
 
         # Constraint contributions
         # First constraint (x1+x2+x3+x4=4) has zero Hessian
         # Second constraint (x1*x3>=1) has d²c/dx1dx3 = 1
-        res[2] += mu[2] * 1.0  # Add to H[3,1]
+        res[3] += mu[2] * 1.0  # Add to H[1,3]
     end
 
     # Create sparse prototype with the correct structure
