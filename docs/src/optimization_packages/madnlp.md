@@ -1,7 +1,7 @@
 # MadNLP.jl
 
 `OptimizationMadNLP.jl` connects Optimization.jl problems to
-[`MadNLP.jl`](https://github.com/MadNLP/MadNLP.jl), a nonlinear programming
+[`MadNLP.jl`](https://github.com/madsuite-org/MadNLP.jl), a nonlinear programming
 solver for large-scale constrained optimization.
 
 ## Installation: OptimizationMadNLP.jl

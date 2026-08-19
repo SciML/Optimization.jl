@@ -1,6 +1,6 @@
 # BlackBoxOptim.jl
 
-[`BlackBoxOptim`](https://github.com/robertfeldt/BlackBoxOptim.jl) is a Julia package implementing **(Meta-)heuristic/stochastic algorithms** that do not require differentiability.
+[`BlackBoxOptim`](https://github.com/SciML/BlackBoxOptim.jl) is a Julia package implementing **(Meta-)heuristic/stochastic algorithms** that do not require differentiability.
 
 ## Installation: OptimizationBBO.jl
 
@@ -15,7 +15,7 @@ Pkg.add("OptimizationBBO");
 
 ### Without Constraint Equations
 
-The algorithms in [`BlackBoxOptim`](https://github.com/robertfeldt/BlackBoxOptim.jl) are performing global optimization on problems without
+The algorithms in [`BlackBoxOptim`](https://github.com/SciML/BlackBoxOptim.jl) are performing global optimization on problems without
 constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
 
 A `BlackBoxOptim` algorithm is called by `BBO_` prefix followed by the algorithm name:
@@ -51,7 +51,7 @@ A `BlackBoxOptim` algorithm is called by `BBO_` prefix followed by the algorithm
 
 The recommended optimizer is `BBO_adaptive_de_rand_1_bin_radiuslimited()`
 
-The currently available algorithms are listed [here](https://github.com/robertfeldt/BlackBoxOptim.jl#state-of-the-library)
+The currently available algorithms are listed [here](https://github.com/SciML/BlackBoxOptim.jl#state-of-the-library)
 
 ```@docs
 OptimizationBBO.BBO_separable_nes
