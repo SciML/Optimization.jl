@@ -114,6 +114,20 @@ optprob.cons_h(H3, x0)
     optprob.lag_h(H4, x0, σ, μ)
     @test H4 ≈ σ * H2 + μ[1] * H3[1] rtol = 1.0e-6
 
+    # Test non-Vector AbstractVector (e.g. SubArray) for AutoEnzyme hess and fgh!
+    x_view = @view zeros(4)[1:2]
+    optprob_view = OptimizationBase.instantiate_function(
+        OptimizationFunction(rosenbrock, OptimizationBase.AutoEnzyme()), x_view,
+        OptimizationBase.AutoEnzyme(), nothing, 0, h = true, fgh = true
+    )
+    H_view = Array{Float64}(undef, 2, 2)
+    G_view = Array{Float64}(undef, 2)
+    optprob_view.hess(H_view, x_view)
+    @test H1 == H_view
+    optprob_view.fgh(G_view, H_view, x_view)
+    @test G1 == G_view
+    @test H1 == H_view
+
     G2 = Array{Float64}(undef, 2)
     H2 = Array{Float64}(undef, 2, 2)
 
