@@ -1,4 +1,4 @@
-# NLopt.jl
+# [NLopt.jl](@id nlopt)
 
 [`NLopt`](https://github.com/jump-dev/NLopt.jl) is Julia package interfacing to the free/open-source [`NLopt library`](https://nlopt.readthedocs.io/en/latest/) which implements many optimization methods both global and local [`NLopt Documentation`](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/).
 
@@ -71,6 +71,26 @@ Beyond the common arguments, the following optimizer parameters can be set as `k
   - `initial_step`
   - `population`
   - `vector_storage`
+
+## Reexported NLopt.jl API
+
+`using OptimizationNLopt` brings the following names into scope. They are owned and
+documented by [NLopt.jl](https://github.com/jump-dev/NLopt.jl) and the
+[NLopt library](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/); this package
+only re-exports them.
+
+  - The `NLopt` module itself. NLopt does not export its algorithm constants, so the
+    documented spelling for every algorithm above is qualified — `NLopt.LD_LBFGS()`,
+    `NLopt.GN_DIRECT()` — and the module binding is what makes that work.
+  - `Opt`, the algorithm-and-dimension constructor, so `solve(prob, Opt(:LD_LBFGS, 2))`
+    works unqualified.
+  - `Algorithm`, the type of those algorithm constants.
+
+NLopt's own solver-driving interface (`optimize`, `lower_bounds!`, `ftol_rel!`, …) is
+deliberately *not* re-exported: `solve` configures the `Opt` object for you from the
+common keyword arguments listed above.
+
+Anything else from NLopt.jl must be imported from NLopt directly.
 
 ## Local Optimizer
 

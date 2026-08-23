@@ -12,11 +12,34 @@ Pkg.add("OptimizationOptimisers");
 In addition to the optimisation algorithms provided by the Optimisers.jl package this subpackage
 also provides the Sophia optimisation algorithm.
 
+## Reexported Optimisers.jl API
+
+`using OptimizationOptimisers` brings Optimisers.jl's rules into scope, so that
+`solve(prob, Adam(0.05))` works without a separate `using Optimisers`. These names are
+owned and documented by [Optimisers.jl](https://fluxml.ai/Optimisers.jl/dev/api/); this
+package only re-exports them.
+
+  - Gradient descent rules: `Descent`, `Momentum`, `Nesterov`, `Rprop`
+  - Adaptive rules: `RMSProp`, `Adam`, `RAdam`, `AdaMax`, `OAdam`, `AdaGrad`,
+    `AdaDelta`, `AMSGrad`, `NAdam`, `AdamW`, `AdaBelief`, `Lion`
+  - Legacy all-caps spellings kept for compatibility: `ADAM`, `ADAMW`, `RADAM`,
+    `OADAM`, `NADAM`, `ADAGrad`, `ADADelta`
+  - Gradient modifiers and combinators: `ClipGrad`, `ClipNorm`, `WeightDecay`,
+    `SignDecay`, `AccumGrad`, `OptimiserChain`
+  - The `Optimisers` module itself; the rule supertype is `Optimisers.AbstractRule`
+
+Optimisers' own optimiser-driving interface — `Optimisers.setup`, `Optimisers.update`,
+`Optimisers.update!`, `Optimisers.apply!`, `Optimisers.destructure`,
+`Optimisers.trainables` — is deliberately *not* re-exported: `solve` drives the rule for
+you, and `Optimisers.init` would collide with the SciML `init`.
+
+Anything else from Optimisers.jl must be imported from Optimisers directly.
+
 ## List of optimizers
 
   - [`Optimisers.Descent`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.Descent): **Classic gradient descent optimizer with learning rate**
     
-      + `solve(problem, Optimisers.Descent(η))`
+      + `solve(problem, Descent(η))`
     
       + `η` is the learning rate
       + Defaults:
@@ -25,7 +48,7 @@ also provides the Sophia optimisation algorithm.
 
   - [`Optimisers.Momentum`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.Momentum): **Classic gradient descent optimizer with learning rate and momentum**
     
-      + `solve(problem, Optimisers.Momentum(η, ρ))`
+      + `solve(problem, Momentum(η, ρ))`
     
       + `η` is the learning rate
       + `ρ` is the momentum
@@ -35,7 +58,7 @@ also provides the Sophia optimisation algorithm.
           * `ρ = 0.9`
   - [`Optimisers.Nesterov`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.Nesterov): **Gradient descent optimizer with learning rate and Nesterov momentum**
     
-      + `solve(problem, Optimisers.Nesterov(η, ρ))`
+      + `solve(problem, Nesterov(η, ρ))`
     
       + `η` is the learning rate
       + `ρ` is the Nesterov momentum
@@ -45,7 +68,7 @@ also provides the Sophia optimisation algorithm.
           * `ρ = 0.9`
   - [`Optimisers.RMSProp`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.RMSProp): **RMSProp optimizer**
     
-      + `solve(problem, Optimisers.RMSProp(η, ρ))`
+      + `solve(problem, RMSProp(η, ρ))`
     
       + `η` is the learning rate
       + `ρ` is the momentum
@@ -55,7 +78,7 @@ also provides the Sophia optimisation algorithm.
           * `ρ = 0.9`
   - [`Optimisers.Adam`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.Adam): **Adam optimizer**
     
-      + `solve(problem, Optimisers.Adam(η, β::Tuple))`
+      + `solve(problem, Adam(η, β::Tuple))`
     
       + `η` is the learning rate
       + `β::Tuple` is the decay of momentums
@@ -65,7 +88,7 @@ also provides the Sophia optimisation algorithm.
           * `β::Tuple = (0.9, 0.999)`
   - [`Optimisers.RAdam`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.RAdam): **Rectified Adam optimizer**
     
-      + `solve(problem, Optimisers.RAdam(η, β::Tuple))`
+      + `solve(problem, RAdam(η, β::Tuple))`
     
       + `η` is the learning rate
       + `β::Tuple` is the decay of momentums
@@ -75,7 +98,7 @@ also provides the Sophia optimisation algorithm.
           * `β::Tuple = (0.9, 0.999)`
   - [`Optimisers.OAdam`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.OAdam): **Optimistic Adam optimizer**
     
-      + `solve(problem, Optimisers.OAdam(η, β::Tuple))`
+      + `solve(problem, OAdam(η, β::Tuple))`
     
       + `η` is the learning rate
       + `β::Tuple` is the decay of momentums
@@ -85,7 +108,7 @@ also provides the Sophia optimisation algorithm.
           * `β::Tuple = (0.5, 0.999)`
   - [`Optimisers.AdaMax`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.AdaMax): **AdaMax optimizer**
     
-      + `solve(problem, Optimisers.AdaMax(η, β::Tuple))`
+      + `solve(problem, AdaMax(η, β::Tuple))`
     
       + `η` is the learning rate
       + `β::Tuple` is the decay of momentums
@@ -95,7 +118,7 @@ also provides the Sophia optimisation algorithm.
           * `β::Tuple = (0.9, 0.999)`
   - [`Optimisers.ADAGrad`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.ADAGrad): **ADAGrad optimizer**
     
-      + `solve(problem, Optimisers.ADAGrad(η))`
+      + `solve(problem, ADAGrad(η))`
     
       + `η` is the learning rate
       + Defaults:
@@ -103,7 +126,7 @@ also provides the Sophia optimisation algorithm.
           * `η = 0.1`
   - [`Optimisers.ADADelta`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.ADADelta): **ADADelta optimizer**
     
-      + `solve(problem, Optimisers.ADADelta(ρ))`
+      + `solve(problem, ADADelta(ρ))`
     
       + `ρ` is the gradient decay factor
       + Defaults:
@@ -111,7 +134,7 @@ also provides the Sophia optimisation algorithm.
           * `ρ = 0.9`
   - [`Optimisers.AMSGrad`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.ADAGrad): **AMSGrad optimizer**
     
-      + `solve(problem, Optimisers.AMSGrad(η, β::Tuple))`
+      + `solve(problem, AMSGrad(η, β::Tuple))`
     
       + `η` is the learning rate
       + `β::Tuple` is the decay of momentums
@@ -121,7 +144,7 @@ also provides the Sophia optimisation algorithm.
           * `β::Tuple = (0.9, 0.999)`
   - [`Optimisers.NAdam`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.NAdam): **Nesterov variant of the Adam optimizer**
     
-      + `solve(problem, Optimisers.NAdam(η, β::Tuple))`
+      + `solve(problem, NAdam(η, β::Tuple))`
     
       + `η` is the learning rate
       + `β::Tuple` is the decay of momentums
@@ -131,7 +154,7 @@ also provides the Sophia optimisation algorithm.
           * `β::Tuple = (0.9, 0.999)`
   - [`Optimisers.AdamW`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.AdamW): **AdamW optimizer**
     
-      + `solve(problem, Optimisers.AdamW(η, β::Tuple))`
+      + `solve(problem, AdamW(η, β::Tuple))`
     
       + `η` is the learning rate
       + `β::Tuple` is the decay of momentums
@@ -143,7 +166,7 @@ also provides the Sophia optimisation algorithm.
           * `decay = 0`
   - [`Optimisers.ADABelief`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.ADABelief): **ADABelief variant of Adam**
     
-      + `solve(problem, Optimisers.ADABelief(η, β::Tuple))`
+      + `solve(problem, ADABelief(η, β::Tuple))`
     
       + `η` is the learning rate
       + `β::Tuple` is the decay of momentums

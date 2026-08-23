@@ -1,4 +1,4 @@
-# Manopt.jl
+# [Manopt.jl](@id manopt)
 
 [Manopt.jl](https://github.com/JuliaManifolds/Manopt.jl) is a package providing solvers
 for optimization problems defined on Riemannian manifolds.
@@ -26,6 +26,8 @@ The following methods are available for the `OptimizationManopt` package:
   - `CMAESOptimizer`: Corresponds to the [`cma_es`](https://manoptjl.org/stable/solvers/cma_es/) method in Manopt.
   - `ConvexBundleOptimizer`: Corresponds to the [`convex_bundle_method`](https://manoptjl.org/stable/solvers/convex_bundle_method/) method in Manopt.
   - `FrankWolfeOptimizer`: Corresponds to the [`FrankWolfe`](https://manoptjl.org/stable/solvers/FrankWolfe/) method in Manopt.
+  - `AdaptiveRegularizationCubicOptimizer`: Corresponds to the [`adaptive_regularization_with_cubics`](https://manoptjl.org/stable/solvers/adaptive-regularization-with-cubics/) method in Manopt.
+  - `TrustRegionsOptimizer`: Corresponds to the [`trust_regions`](https://manoptjl.org/stable/solvers/trust_regions/) method in Manopt.
 
 ```@docs
 OptimizationManopt.AbstractManoptOptimizer
@@ -37,6 +39,8 @@ OptimizationManopt.QuasiNewtonOptimizer
 OptimizationManopt.CMAESOptimizer
 OptimizationManopt.ConvexBundleOptimizer
 OptimizationManopt.FrankWolfeOptimizer
+OptimizationManopt.AdaptiveRegularizationCubicOptimizer
+OptimizationManopt.TrustRegionsOptimizer
 ```
 
 The common kwargs `maxiters`, `maxtime` and `abstol` are supported by all the optimizers. Solver specific kwargs from Manopt can be passed to the `solve`
@@ -45,6 +49,29 @@ function or `OptimizationProblem`.
 !!! note
 
     The `OptimizationProblem` has to be passed the manifold as the `manifold` keyword argument.
+
+## Reexported Manopt.jl API
+
+The optimizers listed above are defined by OptimizationManopt itself; they are thin
+wrappers whose names this package owns. From
+[Manopt.jl](https://manoptjl.org/stable/) only the `Manopt` module binding is
+re-exported, so that `using OptimizationManopt` is enough to write
+`Manopt.ArmijoLinesearch(M)` as the examples below do.
+
+Manopt's solver options are passed to `solve` and keep that qualified spelling:
+
+  - Stepsizes, e.g. `Manopt.ArmijoLinesearch`, `Manopt.WolfePowellLinesearch`
+  - Stopping criteria, e.g. `Manopt.StopAfterIteration`,
+    `Manopt.StopWhenGradientNormLess`
+  - Quasi-Newton update rules, e.g. `Manopt.InverseBFGS`, `Manopt.SR1`
+  - Debug and record actions, e.g. `Manopt.DebugCost`, `Manopt.RecordIterate`
+
+Manopt's own surface is roughly 480 names and includes `solve!`, `BFGS`, `NelderMead`
+and `getindex`, so it is deliberately *not* blanket-reexported: doing so shadowed the
+SciML `solve!` and collided with [Optim.jl](@ref optim)'s optimizer names.
+
+Anything else from Manopt.jl must be reached through the `Manopt` module or imported
+from Manopt directly.
 
 ## Examples
 

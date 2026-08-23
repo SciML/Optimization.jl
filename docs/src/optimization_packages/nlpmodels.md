@@ -1,4 +1,4 @@
-# NLPModels.jl
+# [NLPModels.jl](@id nlpmodels)
 
 [NLPModels](https://jso.dev/NLPModels.jl/latest/), similarly to Optimization.jl itself,
 provides a standardized modeling interface for representing Non-Linear Programs that
@@ -47,6 +47,23 @@ which can now be solved like any other `OptimizationProblem`:
 ```@example NLPModels
 sol = solve(prob, Ipopt.Optimizer())
 ```
+
+## Reexported NLPModels.jl API
+
+`using OptimizationNLPModels` brings the following names into scope. They are owned and
+documented by [NLPModels.jl](https://jso.dev/NLPModels.jl/latest/); this package only
+re-exports them.
+
+  - Model types: `AbstractNLPModel`, `AbstractNLSModel`
+  - Metadata and counters: `NLPModelMeta`, `NLSMeta`, `Counters`, `NLSCounters`
+  - The `NLPModels` module itself
+
+NLPModels' evaluation interface — `obj`, `grad`, `cons`, `hess`, `jprod!` and the
+roughly two hundred other functions — is deliberately *not* re-exported: the whole point
+of this package is that `OptimizationFunction` calls them for you. Reach them through
+the module, as `NLPModels.obj(model, x)`.
+
+Anything else from NLPModels.jl must be imported from NLPModels directly.
 
 ## API
 

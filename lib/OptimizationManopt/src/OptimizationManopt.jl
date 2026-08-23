@@ -226,6 +226,12 @@ function call_manopt_optimizer(
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
+"""
+    AdaptiveRegularizationCubicOptimizer()
+
+Manopt adaptive regularization with cubics optimizer. Uses the Hessian when the
+`OptimizationFunction` supplies one.
+"""
 struct AdaptiveRegularizationCubicOptimizer <: AbstractManoptOptimizer end
 
 function call_manopt_optimizer(
@@ -250,6 +256,12 @@ function call_manopt_optimizer(
     return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
+"""
+    TrustRegionsOptimizer()
+
+Manopt Riemannian trust-regions optimizer. Uses the Hessian when the
+`OptimizationFunction` supplies one.
+"""
 struct TrustRegionsOptimizer <: AbstractManoptOptimizer end
 
 function call_manopt_optimizer(
@@ -449,8 +461,20 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{O}) where {
     )
 end
 
-export GradientDescentOptimizer, NelderMeadOptimizer, ConjugateGradientDescentOptimizer,
+# The solvers this package owns. `AdaptiveRegularizationCubicOptimizer` and
+# `TrustRegionsOptimizer` are wrappers just like the rest and are exported for the same
+# reason; they were only reachable qualified before.
+export AbstractManoptOptimizer,
+    GradientDescentOptimizer, NelderMeadOptimizer, ConjugateGradientDescentOptimizer,
     ParticleSwarmOptimizer, QuasiNewtonOptimizer, CMAESOptimizer, ConvexBundleOptimizer,
-    FrankWolfeOptimizer
+    AdaptiveRegularizationCubicOptimizer, TrustRegionsOptimizer, FrankWolfeOptimizer
+
+# Manopt's own surface is ~480 names and includes `solve!`, `BFGS`, `NelderMead` and
+# `getindex`, so blanket-reexporting it was genuinely harmful and is not restored.
+# Everything Optimization.jl's Manopt docs use from it — stepsizes, stopping criteria,
+# quasi-Newton update rules — is spelled qualified (`Manopt.ArmijoLinesearch(...)`), so
+# the module binding is what has to be in scope; exporting it removes the `using Manopt`
+# the docs had to add.
+export Manopt
 
 end # module OptimizationManopt

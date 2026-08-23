@@ -5,7 +5,7 @@ of optimization, this is useful for performing multistart optimization.
 
 This can be useful for complex, low dimensional problems. We demonstrate this, again, on the rosenbrock function.
 
-We first execute a single local optimization with `Optim.BFGS` and `maxiters=5`:
+We first execute a single local optimization with `BFGS` and `maxiters=5`:
 
 ```@example ensemble
 using OptimizationBase, OptimizationOptimJL, Random
@@ -18,7 +18,7 @@ x0 = zeros(2)
 
 optf = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
 prob = OptimizationProblem(optf, x0, [1.0, 100.0])
-@time sol1 = solve(prob, Optim.BFGS(), maxiters = 5)
+@time sol1 = solve(prob, BFGS(), maxiters = 5)
 
 @show sol1.objective
 ```
@@ -32,7 +32,7 @@ function prob_func(prob, ctx)
 end
 
 ensembleprob = EnsembleProblem(prob; prob_func)
-@time sol = solve(ensembleprob, Optim.BFGS(),
+@time sol = solve(ensembleprob, BFGS(),
     EnsembleThreads(), trajectories = 4, maxiters = 5)
 @show minimum(s.objective for s in sol.u)
 ```

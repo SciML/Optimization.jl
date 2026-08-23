@@ -23,4 +23,11 @@ run_qa(
         all_qualified_accesses_are_public = (; ignore = (:AbstractManifold, :OptimizationState, :__solve, :allowscallback, :build_solution, :requiresgradient, :requireshessian, :supports_sense)),
     ),
     ei_broken = (:no_implicit_imports,),
+    # Only the `Manopt` module binding is re-surfaced; every Manopt name the docs use is
+    # spelled qualified through it. Kept in sync with src/OptimizationManopt.jl.
+    reexports_allow = (:Manopt,),
 )
+
+@testset "reexported Manopt module binding" begin
+    test_reexported_names(OptimizationManopt, (:Manopt,))
+end

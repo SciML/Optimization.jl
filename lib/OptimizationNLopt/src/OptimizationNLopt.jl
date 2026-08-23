@@ -1,6 +1,13 @@
 module OptimizationNLopt
 
 using NLopt
+# NLopt names its algorithms `NLopt.LD_LBFGS()` etc. — those constants are not exported
+# by NLopt itself, so the documented spelling has always been qualified and the exported
+# `NLopt` module binding is what makes it work. `Opt` and `Algorithm` are the two names
+# the docs do use bare (`solve(prob, Opt(:LD_LBFGS, 2))`), so they are re-surfaced here.
+# NLopt's own solver-driving API (`optimize`, `lower_bounds!`, …) is not: Optimization.jl
+# drives the solver, and `optimize` collides with the other wrapped backends.
+using NLopt: Algorithm, Opt
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
 using OptimizationBase
@@ -9,6 +16,9 @@ using SciMLBase
 using OptimizationBase: deduce_retcode
 
 export NLopt
+
+# Approved via `reexports_allow` in test/qa/qa.jl.
+export Algorithm, Opt
 
 (f::NLopt.Algorithm)() = f
 

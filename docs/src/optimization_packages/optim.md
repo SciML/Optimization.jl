@@ -49,6 +49,35 @@ The following special keyword arguments which are not covered by the common `sol
 For a more extensive documentation of all the algorithms and options, please consult the
 [`Documentation`](https://julianlsolvers.github.io/Optim.jl/stable/#)
 
+## Reexported Optim.jl API
+
+`using OptimizationOptimJL` brings Optim.jl's optimizer names into scope, so that
+`solve(prob, BFGS())` works without a separate `using Optim`. These names are owned and
+documented by [Optim.jl](https://julianlsolvers.github.io/Optim.jl/stable/); this
+package only re-exports them.
+
+  - Zeroth order: `NelderMead`, `SimulatedAnnealing`, `ParticleSwarm`
+  - First order: `GradientDescent`, `ConjugateGradient`, `BFGS`, `LBFGS`,
+    `AcceleratedGradientDescent`, `MomentumGradientDescent`, `NGMRES`, `OACCEL`
+  - Second order: `Newton`, `NewtonTrustRegion`
+  - Box constrained: `Fminbox`, `SAMIN`
+  - Nonlinearly constrained: `IPNewton`
+  - The `Optim` module itself, for everything below
+
+Deliberately not re-exported, and reached through the `Optim` module instead:
+
+  - `Optim.Adam` and `Optim.AdaMax` — the `Adam` this documentation uses is
+    [Optimisers.jl](@ref optimisers)', and exporting both would make the bare name
+    ambiguous whenever `OptimizationOptimisers` is loaded too.
+  - `Optim.LBFGSB` — `LBFGSB` here is [OptimizationLBFGSB](@ref lbfgsb)'s.
+  - `Optim.KrylovTrustRegion`, `Optim.AffineSimplexer` and friends — Optim does not
+    export them either.
+  - The univariate `Optim.Brent`/`Optim.GoldenSection`, Optim's objective wrappers
+    (`Optim.TwiceDifferentiable` and friends) and its own `Optim.optimize`/`Optim.maximize`
+    entry points, which `solve` replaces.
+
+Anything else from Optim.jl must be imported from Optim directly.
+
 ## Local Optimizer
 
 ### Local Constraint
@@ -89,7 +118,7 @@ Derivative-free optimizers are optimizers that can be used even in cases where n
 
   - [`Optim.NelderMead()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/nelder_mead/): **Nelder-Mead optimizer**
     
-      + `solve(problem, Optim.NelderMead(parameters, initial_simplex))`
+      + `solve(problem, NelderMead(parameters, initial_simplex))`
     
       + `parameters = AdaptiveParameters()` or `parameters = FixedParameters()`
       + `initial_simplex = AffineSimplexer()`
@@ -100,7 +129,7 @@ Derivative-free optimizers are optimizers that can be used even in cases where n
 
   - [`Optim.SimulatedAnnealing()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/simulated_annealing/): **Simulated Annealing**
     
-      + `solve(problem, Optim.SimulatedAnnealing(neighbor, T, p))`
+      + `solve(problem, SimulatedAnnealing(neighbor, T, p))`
     
       + `neighbor` is a mutating function of the current and proposed `x`
       + `T` is a function of the current iteration that returns a temperature
@@ -190,7 +219,7 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
           * `precondprep = (P, x) -> nothing`
   - [`Optim.BFGS()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/lbfgs/): **Broyden-Fletcher-Goldfarb-Shanno algorithm**
     
-      + `solve(problem, Optim.BFGS(alphaguess, linesearch, initial_invH, initial_stepnorm, manifold))`
+      + `solve(problem, BFGS(alphaguess, linesearch, initial_invH, initial_stepnorm, manifold))`
     
       + `alphaguess` computes the initial step length (for more information, consult [this source](https://github.com/JuliaNLSolvers/LineSearches.jl) and [this example](https://julianlsolvers.github.io/LineSearches.jl/latest/examples/generated/optim_initialstep.html))
         
@@ -416,7 +445,7 @@ box constraints.
 
   - [`Optim.SAMIN()`](https://julianlsolvers.github.io/Optim.jl/stable/algo/samin/): **Simulated Annealing with bounds**
     
-      + `solve(problem, Optim.SAMIN(nt, ns, rt, neps, f_tol, x_tol, coverage_ok, verbosity))`
+      + `solve(problem, SAMIN(nt, ns, rt, neps, f_tol, x_tol, coverage_ok, verbosity))`
     
       + Defaults:
         

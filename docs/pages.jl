@@ -26,6 +26,7 @@ pages = [
         "API/optimization_state.md",
         "API/optimization_stats.md",
         "API/modelingtoolkit.md",
+        "API/reexports.md",
         "API/FAQ.md",
     ],
     "Optimizer Packages" => [

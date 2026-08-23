@@ -1,6 +1,14 @@
 module OptimizationNLPModels
 
 using NLPModels
+# The model types are the documented entry point for this package: you hand an
+# `AbstractNLPModel` to `OptimizationProblem`/`OptimizationFunction`, and
+# `build_nlpmodel_meta` hands an `NLPModelMeta` back. Those types are re-surfaced by
+# name below; NLPModels' ~200 evaluation functions (`obj`, `grad`, `hess`, `jprod!`, …)
+# are not — they are reached through the exported `NLPModels` module binding, as the
+# docs spell them. Everything stays owned and documented upstream in NLPModels.jl.
+using NLPModels: AbstractNLPModel, AbstractNLSModel, Counters, NLPModelMeta,
+    NLSCounters, NLSMeta
 using ADTypes
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
@@ -9,6 +17,10 @@ import SciMLBase
 using SparseArrays
 
 export NLPModels, build_nlpmodel_meta, NLPModelsAdaptor
+
+# NLPModels' model/metadata types; approved via `reexports_allow` in test/qa/qa.jl.
+export AbstractNLPModel, AbstractNLSModel, Counters, NLPModelMeta,
+    NLSCounters, NLSMeta
 
 """
     OptimizationFunction(nlpmodel::AbstractNLPModel, adtype::AbstractADType = NoAD())
