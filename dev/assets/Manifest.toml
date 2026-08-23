@@ -527,9 +527,9 @@ version = "1.9.1"
 
 [[deps.DiffEqBase]]
 deps = ["ArrayInterface", "BracketingNonlinearSolve", "ConcreteStructs", "DocStringExtensions", "FastBroadcast", "FastClosures", "FastPower", "FunctionWrappers", "FunctionWrappersWrappers", "LinearAlgebra", "Logging", "Markdown", "MuladdMacro", "PrecompileTools", "Printf", "RecursiveArrayTools", "Reexport", "RespecializeParams", "SciMLBase", "SciMLLogging", "SciMLOperators", "SciMLStructures", "Setfield", "StaticArraysCore", "SymbolicIndexingInterface", "TruncatedStacktraces"]
-git-tree-sha1 = "5faab739ccd53933d0780a7944ac7be7ed9d74d4"
+git-tree-sha1 = "5a4cc8259b903c537e8df3acf80075351d207a15"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "7.16.0"
+version = "7.18.1"
 
     [deps.DiffEqBase.extensions]
     DiffEqBaseCUDAExt = "CUDA"
@@ -683,9 +683,9 @@ version = "1.11.0"
 
 [[deps.Distributions]]
 deps = ["AliasTables", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "Roots", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns"]
-git-tree-sha1 = "d2facc77c08c1c2bfb1a77c148edd05b3db5410b"
+git-tree-sha1 = "a958ab3a40c755563f5e1405c0846cb0446bf19d"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.130"
+version = "0.25.131"
 
     [deps.Distributions.extensions]
     DistributionsChainRulesCoreExt = "ChainRulesCore"
@@ -2023,9 +2023,9 @@ version = "1.52.0"
 
 [[deps.MatrixEquations]]
 deps = ["LinearAlgebra", "LinearMaps"]
-git-tree-sha1 = "e357e9f4cf3b1306ba6119e49e4d94cd57816835"
+git-tree-sha1 = "43d6e9672a6502922c27f79026d7d5317ba53b0e"
 uuid = "99c1a7ee-ab34-5fd5-8076-27c950a045f4"
-version = "2.6.3"
+version = "2.6.4"
 
 [[deps.MaybeInplace]]
 deps = ["ArrayInterface", "LinearAlgebra", "MacroTools"]
@@ -2467,7 +2467,7 @@ version = "0.4.9"
 
 [[deps.Optimization]]
 deps = ["ADTypes", "ArrayInterface", "ConsoleProgressMonitor", "DocStringExtensions", "LinearAlgebra", "Logging", "LoggingExtras", "OptimizationBase", "Printf", "Reexport", "SciMLBase", "SparseArrays", "TerminalLoggers"]
-path = "/home/runner/work/Optimization.jl/Optimization.jl"
+path = "/home/runner/_work/Optimization.jl/Optimization.jl"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 version = "5.7.1"
 
@@ -2568,7 +2568,7 @@ version = "1.5.0"
 deps = ["Metaheuristics", "OptimizationBase", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationMetaheuristics"
 uuid = "3aafef2f-86ae-4776-b337-85a36adf0b55"
-version = "0.3.10"
+version = "0.3.11"
 
 [[deps.OptimizationMultistartOptimization]]
 deps = ["MultistartOptimization", "OptimizationBase", "Reexport", "SciMLBase"]
@@ -2586,7 +2586,7 @@ version = "1.5.0"
 deps = ["NLopt", "OptimizationBase", "Random", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationNLopt"
 uuid = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
-version = "0.3.15"
+version = "0.3.16"
 
 [[deps.OptimizationNOMAD]]
 deps = ["NOMAD", "OptimizationBase", "Reexport", "SciMLBase", "SciMLLogging"]
@@ -2605,13 +2605,13 @@ version = "0.1.10"
 deps = ["Optim", "OptimizationBase", "SciMLBase", "SparseArrays"]
 path = "../lib/OptimizationOptimJL"
 uuid = "36348300-93cb-4f02-beb5-3c3902f8871e"
-version = "0.4.18"
+version = "0.4.19"
 
 [[deps.OptimizationOptimisers]]
 deps = ["Logging", "Optimisers", "OptimizationBase", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
-version = "0.3.21"
+version = "0.3.22"
 
 [[deps.OptimizationPRIMA]]
 deps = ["OptimizationBase", "PRIMA", "Reexport", "SciMLBase"]
@@ -2623,7 +2623,7 @@ version = "0.3.12"
 deps = ["OptimizationBase", "OptimizationOptimJL", "OptimizationOptimisers", "SciMLBase"]
 path = "../lib/OptimizationPolyalgorithms"
 uuid = "500b13db-7e66-49ce-bda4-eed966be6282"
-version = "0.3.10"
+version = "0.3.11"
 
 [[deps.OptimizationPyCMA]]
 deps = ["CondaPkg", "OptimizationBase", "PythonCall", "Reexport", "SciMLBase", "SciMLLogging"]
@@ -2839,9 +2839,9 @@ version = "1.4.4"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "PrecompileTools", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "TOML", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "cb20a4eacda080e517e4deb9cfb6c7c518131265"
+git-tree-sha1 = "83bd514e8ff16b5858ac54c53fa0bcf6002a3b00"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.41.6"
+version = "1.41.7"
 
     [deps.Plots.extensions]
     FileIOExt = "FileIO"
@@ -3151,9 +3151,9 @@ version = "0.5.2+0"
 
 [[deps.Roots]]
 deps = ["Accessors", "CommonSolve", "Printf"]
-git-tree-sha1 = "7fb25a964849d90a0446366cdefca822e0e84900"
+git-tree-sha1 = "13a9e0164267bb9ebc55c1c5d72fceea8f09555b"
 uuid = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
-version = "3.0.6"
+version = "3.0.7"
 
     [deps.Roots.extensions]
     RootsChainRulesCoreExt = "ChainRulesCore"
