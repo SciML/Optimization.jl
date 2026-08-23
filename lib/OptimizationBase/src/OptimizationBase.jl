@@ -55,6 +55,9 @@ export ObjSense, MaxSense, MinSense
 export allowsbounds, requiresbounds, allowsconstraints, requiresconstraints,
     allowscallback, requiresgradient, requireshessian,
     requiresconsjac, requiresconshess
+# Canonical (rows, cols) enumeration of the vector-form lag_h write order;
+# solver wrappers must derive their declared Hessian structure from this.
+export lag_hess_structure
 
 using FastClosures
 

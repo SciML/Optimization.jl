@@ -147,13 +147,18 @@ function NLPModelsAdaptor(
     hess_proto = ncon > 0 ? cache.f.lag_hess_prototype : cache.f.hess_prototype
 
     if !isnothing(hess_proto) && hess_proto isa SparseMatrixCSC
-        I, J, _ = findnz(hess_proto)
-        # Keep only lower triangle
-        lower_mask = I .>= J
-        hess_rows = I[lower_mask]
-        hess_cols = J[lower_mask]
-        # Create a values buffer matching the number of lower triangle elements
-        hess_buffer = zeros(T, sum(lower_mask))
+        # The vector-form `lag_h(h, x, σ, λ)` fills `h` in the canonical order
+        # given by `OptimizationBase.lag_hess_structure` (upper triangle,
+        # findnz/CSC order). The structure declared here must enumerate the
+        # very same entries in the very same order, otherwise the values land
+        # on the wrong indices. NLPModels' convention wants lower-triangle
+        # coordinates, so mirror each (i, j), i ≤ j entry to (j, i) — the
+        # mirrored sequence preserves the value order.
+        rows, cols = OptimizationBase.lag_hess_structure(hess_proto)
+        hess_rows = cols
+        hess_cols = rows
+        # Values buffer matching the number of stored entries
+        hess_buffer = zeros(T, length(rows))
     elseif !isnothing(hess_proto)
         # Dense Hessian
         n = size(hess_proto, 1)

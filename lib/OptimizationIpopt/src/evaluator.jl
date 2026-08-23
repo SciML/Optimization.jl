@@ -143,8 +143,12 @@ function hessian_lagrangian_structure(evaluator::IpoptEvaluator)
     f = evaluator.cache.f
     lagh = f.lag_h !== nothing
     if f.lag_hess_prototype isa SparseMatrixCSC
-        rows, cols, _ = findnz(f.lag_hess_prototype)
-        return Tuple{Int, Int}[(i, j) for (i, j) in zip(rows, cols) if i <= j]
+        # Ipopt accepts either triangle; what matters is that the declared
+        # structure enumerates entries in the exact order the vector-form
+        # lag_h writes values. Derive it from the canonical helper so the
+        # contract lives in one place (OptimizationBase.lag_hess_structure).
+        rows, cols = OptimizationBase.lag_hess_structure(f.lag_hess_prototype)
+        return Tuple{Int, Int}[(i, j) for (i, j) in zip(rows, cols)]
     end
     sparse_obj = evaluator.H isa SparseMatrixCSC
     sparse_constraints = all(H -> H isa SparseMatrixCSC, evaluator.cons_H)
