@@ -26,7 +26,7 @@ The following methods are available for the `OptimizationManopt` package:
   - `CMAESOptimizer`: Corresponds to the [`cma_es`](https://manoptjl.org/stable/solvers/cma_es/) method in Manopt.
   - `ConvexBundleOptimizer`: Corresponds to the [`convex_bundle_method`](https://manoptjl.org/stable/solvers/convex_bundle_method/) method in Manopt.
   - `FrankWolfeOptimizer`: Corresponds to the [`FrankWolfe`](https://manoptjl.org/stable/solvers/FrankWolfe/) method in Manopt.
-  - `AdaptiveRegularizationCubicOptimizer`: Corresponds to the [`adaptive_regularization_with_cubics`](https://manoptjl.org/stable/solvers/adaptive-regularization-with-cubics/) method in Manopt.
+  - `AdaptiveRegularizationCubicOptimizer`: Corresponds to the [`adaptive_regularization_with_cubics`](https://manoptjl.org/stable/solvers/adaptive_regularization_with_cubics/) method in Manopt.
   - `TrustRegionsOptimizer`: Corresponds to the [`trust_regions`](https://manoptjl.org/stable/solvers/trust_regions/) method in Manopt.
 
 ```@docs
