@@ -22,8 +22,6 @@ package only re-exports them.
   - Gradient descent rules: `Descent`, `Momentum`, `Nesterov`, `Rprop`
   - Adaptive rules: `RMSProp`, `Adam`, `RAdam`, `AdaMax`, `OAdam`, `AdaGrad`,
     `AdaDelta`, `AMSGrad`, `NAdam`, `AdamW`, `AdaBelief`, `Lion`
-  - Legacy all-caps spellings kept for compatibility: `ADAM`, `ADAMW`, `RADAM`,
-    `OADAM`, `NADAM`, `ADAGrad`, `ADADelta`
   - Gradient modifiers and combinators: `ClipGrad`, `ClipNorm`, `WeightDecay`,
     `SignDecay`, `AccumGrad`, `OptimiserChain`
   - The `Optimisers` module itself; the rule supertype is `Optimisers.AbstractRule`
@@ -116,23 +114,23 @@ Anything else from Optimisers.jl must be imported from Optimisers directly.
         
           * `η = 0.001`
           * `β::Tuple = (0.9, 0.999)`
-  - [`Optimisers.ADAGrad`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.ADAGrad): **ADAGrad optimizer**
+  - [`Optimisers.AdaGrad`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.AdaGrad): **AdaGrad optimizer**
     
-      + `solve(problem, ADAGrad(η))`
+      + `solve(problem, AdaGrad(η))`
     
       + `η` is the learning rate
       + Defaults:
         
           * `η = 0.1`
-  - [`Optimisers.ADADelta`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.ADADelta): **ADADelta optimizer**
+  - [`Optimisers.AdaDelta`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.AdaDelta): **AdaDelta optimizer**
     
-      + `solve(problem, ADADelta(ρ))`
+      + `solve(problem, AdaDelta(ρ))`
     
       + `ρ` is the gradient decay factor
       + Defaults:
         
           * `ρ = 0.9`
-  - [`Optimisers.AMSGrad`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.ADAGrad): **AMSGrad optimizer**
+  - [`Optimisers.AMSGrad`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.AMSGrad): **AMSGrad optimizer**
     
       + `solve(problem, AMSGrad(η, β::Tuple))`
     
@@ -164,9 +162,9 @@ Anything else from Optimisers.jl must be imported from Optimisers directly.
           * `η = 0.001`
           * `β::Tuple = (0.9, 0.999)`
           * `decay = 0`
-  - [`Optimisers.ADABelief`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.ADABelief): **ADABelief variant of Adam**
+  - [`Optimisers.AdaBelief`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.AdaBelief): **AdaBelief variant of Adam**
     
-      + `solve(problem, ADABelief(η, β::Tuple))`
+      + `solve(problem, AdaBelief(η, β::Tuple))`
     
       + `η` is the learning rate
       + `β::Tuple` is the decay of momentums
