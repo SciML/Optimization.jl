@@ -1,6 +1,6 @@
 name = "OptimizationNLPModels"
 uuid = "064b21be-54cf-11ef-1646-cdfee32b588f"
-version = "1.5.0"
+version = "1.6.0"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 
 [deps]
@@ -24,10 +24,10 @@ ForwardDiff = "0.10, 1"
 Ipopt = "1"
 NLPModels = "0.21"
 NLPModelsTest = "0.10"
-OptimizationBase = "5"
-OptimizationLBFGSB = "1"
-OptimizationMOI = "1"
-OptimizationOptimJL = "0.4"
+OptimizationBase = "5.5.0"
+OptimizationLBFGSB = "1.5.1"
+OptimizationMOI = "1.4.1"
+OptimizationOptimJL = "0.4.20"
 Pkg = "1"
 ReverseDiff = "1"
 SafeTestsets = "0.1"

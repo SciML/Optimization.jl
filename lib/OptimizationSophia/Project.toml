@@ -1,7 +1,7 @@
 name = "OptimizationSophia"
 uuid = "892fee11-dca1-40d6-b698-84ba0d87399a"
 authors = ["paramthakkar123 <paramthakkar864@gmail.com>"]
-version = "1.4.0"
+version = "1.4.1"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -27,7 +27,7 @@ SafeTestsets = "0.1"
 ComponentArrays = "0.15.29"
 Lux = "1.16.0"
 MLUtils = "0.4.8"
-OptimizationBase = "5"
+OptimizationBase = "5.5.0"
 OrdinaryDiffEqTsit5 = "2"
 Random = "1.10.0"
 Reexport = "1.2"

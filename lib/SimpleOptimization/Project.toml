@@ -1,5 +1,5 @@
 name = "SimpleOptimization"
-version = "2.0.0"
+version = "2.0.1"
 uuid = "510db2f7-4254-4e34-bbda-04240c91ca8f"
 authors = ["Utkarsh <rajpututkarsh530@gmail.com> and contributors"]
 
@@ -42,7 +42,7 @@ Enzyme = "0.13"
 ForwardDiff = "0.10, 1"
 LineSearch = "0.1.15"
 LinearAlgebra = "1.10"
-OptimizationBase = "5"
+OptimizationBase = "5.5.0"
 Pkg = "1"
 Reexport = "1.2"
 SafeTestsets = "0.1"

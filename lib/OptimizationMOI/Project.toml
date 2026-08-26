@@ -1,6 +1,6 @@
 name = "OptimizationMOI"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
-version = "1.4.0"
+version = "1.4.1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 
 [deps]
@@ -37,7 +37,7 @@ MathOptInterface = "1.45"
 ModelingToolkit = "11.32"
 ModelingToolkitBase = "1.52"
 NLopt = "1"
-OptimizationBase = "5"
+OptimizationBase = "5.5.0"
 Pkg = "1"
 Reexport = "1.2.2"
 ReverseDiff = "1"

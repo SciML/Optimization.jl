@@ -1,7 +1,7 @@
 name = "OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.22"
+version = "0.3.23"
 
 [deps]
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
@@ -23,7 +23,7 @@ Lux = "1.16.0"
 MLDataDevices = "1"
 MLUtils = "0.4"
 Optimisers = "0.4.2"
-OptimizationBase = "5"
+OptimizationBase = "5.5.0"
 Pkg = "1"
 Printf = "1.10"
 Random = "1.10"

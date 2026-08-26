@@ -1,7 +1,7 @@
 name = "OptimizationSpeedMapping"
 uuid = "3d669222-0d7d-4eb9-8a9f-d8528b0d9b91"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.2.8"
+version = "0.2.9"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
@@ -19,7 +19,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [compat]
 ForwardDiff = "0.10, 1"
 julia = "1.10"
-OptimizationBase = "5"
+OptimizationBase = "5.5.0"
 Pkg = "1"
 Reexport = "1.2"
 SafeTestsets = "0.1"
