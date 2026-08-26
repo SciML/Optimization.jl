@@ -1,9 +1,11 @@
 using OptimizationBase, Test, DifferentiationInterface, SparseArrays, Symbolics
 using ADTypes, ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker
-using ModelingToolkit, Enzyme, Random
+using ModelingToolkit, Enzyme, Random, ComponentArrays, JLArrays
 
 x0 = zeros(2)
 rosenbrock(x, p = nothing) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+component_rosenbrock(x, p = nothing) = (1 - x.x[1])^2 + 100 * (x.x[2] - x.x[1]^2)^2
+jlarray_constant(x::JLArray, p = nothing) = zero(eltype(x))
 l1 = rosenbrock(x0)
 
 function g!(G, x)
@@ -113,6 +115,44 @@ optprob.cons_h(H3, x0)
     σ = rand()
     optprob.lag_h(H4, x0, σ, μ)
     @test H4 ≈ σ * H2 + μ[1] * H3[1] rtol = 1.0e-6
+
+    @testset "ComponentVector container preservation" begin
+        θ = ComponentVector(x = zeros(2))
+        optprob_abstractvector = OptimizationBase.instantiate_function(
+            OptimizationFunction(component_rosenbrock, OptimizationBase.AutoEnzyme()), θ,
+            OptimizationBase.AutoEnzyme(), nothing, 0, h = true, fgh = true
+        )
+        G_abstractvector = Enzyme.make_zero(θ)
+        H_abstractvector = zeros(2, 2)
+        optprob_abstractvector.hess(H_abstractvector, θ)
+        @test H1 == H_abstractvector
+        optprob_abstractvector.fgh(G_abstractvector, H_abstractvector, θ)
+        @test typeof(G_abstractvector) === typeof(θ)
+        @test G1 == collect(G_abstractvector)
+        @test H1 == H_abstractvector
+    end
+
+    @testset "JLArray container preservation" begin
+        x_jlarray = [1.0, 2.0]
+        θ = JLArray(x_jlarray)
+        optprob_abstractvector = OptimizationBase.instantiate_function(
+            OptimizationFunction(jlarray_constant, OptimizationBase.AutoEnzyme()), θ,
+            OptimizationBase.AutoEnzyme(), nothing, 0, h = true, fgh = true
+        )
+        G_abstractvector = zero(θ)
+        fill!(G_abstractvector, 3)
+        H_abstractvector = fill(3.0, 2, 2)
+        optprob_abstractvector.hess(H_abstractvector, θ)
+        @test iszero(H_abstractvector)
+        @test x_jlarray == collect(θ)
+        fill!(G_abstractvector, 3)
+        fill!(H_abstractvector, 3)
+        optprob_abstractvector.fgh(G_abstractvector, H_abstractvector, θ)
+        @test typeof(G_abstractvector) === typeof(θ)
+        @test iszero(collect(G_abstractvector))
+        @test iszero(H_abstractvector)
+        @test x_jlarray == collect(θ)
+    end
 
     G2 = Array{Float64}(undef, 2)
     H2 = Array{Float64}(undef, 2, 2)
