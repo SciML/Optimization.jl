@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Optimization.jl: A Unified Optimization Package · Optimization.jl</title><meta name="title" content="Optimization.jl: A Unified Optimization Package · Optimization.jl"/><meta property="og:title" content="Optimization.jl: A Unified Optimization Package · Optimization.jl"/><meta property="twitter:title" content="Optimization.jl: A Unified Optimization Package · Optimization.jl"/><meta name="description" content="Documentation for Optimization.jl."/><meta property="og:description" content="Documentation for Optimization.jl."/><meta property="twitter:description" content="Documentation for Optimization.jl."/><meta property="og:url" content="https://docs.sciml.ai/Optimization/stable/"/><meta property="twitter:url" content="https://docs.sciml.ai/Optimization/stable/"/><link rel="canonical" href="https://docs.sciml.ai/Optimization/stable/"/><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="search_index.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href><img src="assets/logo.png" alt="Optimization.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href>Optimization.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Optimization.jl: A Unified Optimization Package</a><ul class="internal"><li><a class="tocitem" href="#Installation"><span>Installation</span></a></li><li><a class="tocitem" href="#Contributing"><span>Contributing</span></a></li><li><a class="tocitem" href="#Overview-of-the-solver-packages-in-alphabetical-order"><span>Overview of the solver packages in alphabetical order</span></a></li><li><a class="tocitem" href="#Citation"><span>Citation</span></a></li><li><a class="tocitem" href="#Reproducibility"><span>Reproducibility</span></a></li></ul></li><li><a class="tocitem" href="getting_started/">Getting Started with Optimization.jl</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="tutorials/constraints/">Using Equality and Inequality Constraints</a></li><li><a class="tocitem" href="tutorials/ensemble/">Multistart optimization with EnsembleProblem</a></li><li><a class="tocitem" href="tutorials/linearandinteger/">Linear and Integer Optimization Problems</a></li><li><a class="tocitem" href="tutorials/minibatch/">Data Iterators and Minibatching</a></li><li><a class="tocitem" href="tutorials/remakecomposition/">Creating polyalgorithms by chaining solvers using <code>remake</code></a></li><li><a class="tocitem" href="tutorials/reusage_interface/">Optimization Problem Reusage and Caching Interface</a></li><li><a class="tocitem" href="tutorials/symbolic/">Symbolic Problem Building with ModelingToolkit</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="examples/rosenbrock/">Solving the Rosenbrock Problem in &gt;10 Ways</a></li></ul></li><li><span class="tocitem">Interfaces</span><ul><li><a class="tocitem" href="interfaces/optimization/">Optimization Interface</a></li></ul></li><li><span class="tocitem">Basics</span><ul><li><a class="tocitem" href="API/optimization_problem/">Defining OptimizationProblems</a></li><li><a class="tocitem" href="API/optimization_function/">OptimizationFunction</a></li><li><a class="tocitem" href="API/ad/">Automatic Differentiation Construction Choice Recommendations</a></li><li><a class="tocitem" href="API/solve/">Common Solver Options (Solve Keyword Arguments)</a></li><li><a class="tocitem" href="API/optimization_solution/">Optimization Solutions</a></li><li><a class="tocitem" href="API/optimization_state/">OptimizationState</a></li><li><a class="tocitem" href="API/optimization_stats/">OptimizationStats</a></li><li><a class="tocitem" href="API/modelingtoolkit/">ModelingToolkit Integration</a></li><li><a class="tocitem" href="API/FAQ/">Frequently Asked Questions</a></li></ul></li><li><span class="tocitem">Optimizer Packages</span><ul><li><a class="tocitem" href="optimization_packages/blackboxoptim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="optimization_packages/auglag/">AugLag.jl</a></li><li><a class="tocitem" href="optimization_packages/cmaevolutionstrategy/">CMAEvolutionStrategy.jl</a></li><li><a class="tocitem" href="optimization_packages/evolutionary/">Evolutionary.jl</a></li><li><a class="tocitem" href="optimization_packages/gcmaes/">GCMAES.jl</a></li><li><a class="tocitem" href="optimization_packages/ipopt/">Ipopt.jl</a></li><li><a class="tocitem" href="optimization_packages/lbfgsb/">LBFGSB.jl</a></li><li><a class="tocitem" href="optimization_packages/madnlp/">MadNLP.jl</a></li><li><a class="tocitem" href="optimization_packages/manopt/">Manopt.jl</a></li><li><a class="tocitem" href="optimization_packages/mathoptinterface/">MathOptInterface.jl</a></li><li><a class="tocitem" href="optimization_packages/metaheuristics/">Metaheuristics.jl</a></li><li><a class="tocitem" href="optimization_packages/multistartoptimization/">MultistartOptimization.jl</a></li><li><a class="tocitem" href="optimization_packages/nlopt/">NLopt.jl</a></li><li><a class="tocitem" href="optimization_packages/nlpmodels/">NLPModels.jl</a></li><li><a class="tocitem" href="optimization_packages/nomad/">NOMAD.jl</a></li><li><a class="tocitem" href="optimization_packages/ode/">ODE.jl</a></li><li><a class="tocitem" href="optimization_packages/optim/">Optim.jl</a></li><li><a class="tocitem" href="optimization_packages/optimisers/">Optimisers.jl</a></li><li><a class="tocitem" href="optimization_packages/polyopt/">Polyalgorithms.jl</a></li><li><a class="tocitem" href="optimization_packages/prima/">PRIMA.jl</a></li><li><a class="tocitem" href="optimization_packages/pycma/">PyCMA.jl</a></li><li><a class="tocitem" href="optimization_packages/quaddirect/">QuadDIRECT.jl</a></li><li><a class="tocitem" href="optimization_packages/sophia/">Sophia.jl</a></li><li><a class="tocitem" href="optimization_packages/speedmapping/">SpeedMapping.jl</a></li><li><a class="tocitem" href="optimization_packages/scipy/">SciPy.jl</a></li><li><a class="tocitem" href="optimization_packages/simpleoptimization/">SimpleOptimization.jl</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Optimization.jl: A Unified Optimization Package</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Optimization.jl: A Unified Optimization Package</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/SciML/Optimization.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/SciML/Optimization.jl/blob/master/docs/src/index.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Optimization.jl:-A-Unified-Optimization-Package"><a class="docs-heading-anchor" href="#Optimization.jl:-A-Unified-Optimization-Package">Optimization.jl: A Unified Optimization Package</a><a id="Optimization.jl:-A-Unified-Optimization-Package-1"></a><a class="docs-heading-anchor-permalink" href="#Optimization.jl:-A-Unified-Optimization-Package" title="Permalink"></a></h1><p>Optimization.jl provides the easiest way to create an optimization problem and solve it. It enables rapid prototyping and experimentation with minimal syntax overhead by providing a uniform interface to &gt;25 optimization libraries, hence 100+ optimization solvers encompassing almost all classes of optimization algorithms such as global, mixed-integer, non-convex, second-order local, constrained, etc. It allows you to choose an Automatic Differentiation (AD) backend by simply passing an argument to indicate the package to use and automatically generates the efficient derivatives of the objective and constraints while giving you the flexibility to switch between different AD engines as per your problem. Additionally, Optimization.jl takes care of passing problem specific information to solvers that can leverage it such as the sparsity pattern of the hessian or constraint jacobian and the expression graph.</p><p>It extends the common SciML interface making it very easy to use for anyone familiar with the SciML ecosystem. It is also very easy to extend to new solvers and new problem types. The package is actively maintained and new features are added regularly.</p><article><details class="docstring" open="true"><summary id="Optimization"><a class="docstring-binding" href="#Optimization"><code>Optimization</code></a> — <span class="docstring-category">Module</span></summary><section><div><p><strong>Optimization.jl</strong></p><p><a href="https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged"><img src="https://img.shields.io/static/v1?label=Zulip&amp;message=chat&amp;color=9558b2&amp;labelColor=389826" alt="Join the chat at https://julialang.zulipchat.com #sciml-bridged"/></a> <a href="https://docs.sciml.ai/Optimization/stable/"><img src="https://img.shields.io/badge/docs-SciML-blue.svg" alt="Global Docs"/></a></p><p><a href="https://app.codecov.io/gh/SciML/Optimization.jl"><img src="https://codecov.io/gh/SciML/Optimization.jl/branch/master/graph/badge.svg" alt="codecov"/></a> <a href="https://github.com/SciML/Optimization.jl/actions?query=workflow%3ACI"><img src="https://github.com/SciML/Optimization.jl/workflows/CI/badge.svg" alt="Build Status"/></a></p><p><a href="https://github.com/SciML/ColPrac"><img src="https://img.shields.io/badge/ColPrac-Contributor%27s%20Guide-blueviolet" alt="ColPrac: Contributor&#39;s Guide on Collaborative Practices for Community Packages"/></a> <a href="https://github.com/SciML/SciMLStyle"><img src="https://img.shields.io/static/v1?label=code%20style&amp;message=SciML&amp;color=9558b2&amp;labelColor=389826" alt="SciML Code Style"/></a></p><p><a href="https://doi.org/10.5281/zenodo.7738525"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.7738525.svg" alt="DOI"/></a></p><p>Optimization.jl is a package with a scope that is beyond your normal global optimization package. Optimization.jl seeks to bring together all of the optimization packages it can find, local and global, into one unified Julia interface. This means, you learn one package and you learn them all! Optimization.jl adds a few high-level features, such as integrating with automatic differentiation, to make its usage fairly simple for most cases, while allowing all of the options in a single unified interface.</p><p><strong>Installation</strong></p><p>Assuming that you already have Julia correctly installed, it suffices to import OptimizationBase in the standard way:</p><pre><code class="language-julia hljs">using Pkg
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Optimization.jl: A Unified Optimization Package · Optimization.jl</title><meta name="title" content="Optimization.jl: A Unified Optimization Package · Optimization.jl"/><meta property="og:title" content="Optimization.jl: A Unified Optimization Package · Optimization.jl"/><meta property="twitter:title" content="Optimization.jl: A Unified Optimization Package · Optimization.jl"/><meta name="description" content="Documentation for Optimization.jl."/><meta property="og:description" content="Documentation for Optimization.jl."/><meta property="twitter:description" content="Documentation for Optimization.jl."/><meta property="og:url" content="https://docs.sciml.ai/Optimization/stable/"/><meta property="twitter:url" content="https://docs.sciml.ai/Optimization/stable/"/><link rel="canonical" href="https://docs.sciml.ai/Optimization/stable/"/><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="search_index.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href><img src="assets/logo.png" alt="Optimization.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href>Optimization.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Optimization.jl: A Unified Optimization Package</a><ul class="internal"><li><a class="tocitem" href="#Installation"><span>Installation</span></a></li><li><a class="tocitem" href="#Contributing"><span>Contributing</span></a></li><li><a class="tocitem" href="#Overview-of-the-solver-packages-in-alphabetical-order"><span>Overview of the solver packages in alphabetical order</span></a></li><li><a class="tocitem" href="#Citation"><span>Citation</span></a></li><li><a class="tocitem" href="#Reproducibility"><span>Reproducibility</span></a></li></ul></li><li><a class="tocitem" href="getting_started/">Getting Started with Optimization.jl</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="tutorials/constraints/">Using Equality and Inequality Constraints</a></li><li><a class="tocitem" href="tutorials/ensemble/">Multistart optimization with EnsembleProblem</a></li><li><a class="tocitem" href="tutorials/linearandinteger/">Linear and Integer Optimization Problems</a></li><li><a class="tocitem" href="tutorials/minibatch/">Data Iterators and Minibatching</a></li><li><a class="tocitem" href="tutorials/remakecomposition/">Creating polyalgorithms by chaining solvers using <code>remake</code></a></li><li><a class="tocitem" href="tutorials/reusage_interface/">Optimization Problem Reusage and Caching Interface</a></li><li><a class="tocitem" href="tutorials/symbolic/">Symbolic Problem Building with ModelingToolkit</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="examples/rosenbrock/">Solving the Rosenbrock Problem in &gt;10 Ways</a></li></ul></li><li><span class="tocitem">Interfaces</span><ul><li><a class="tocitem" href="interfaces/optimization/">Optimization Interface</a></li></ul></li><li><span class="tocitem">Basics</span><ul><li><a class="tocitem" href="API/optimization_problem/">Defining OptimizationProblems</a></li><li><a class="tocitem" href="API/optimization_function/">OptimizationFunction</a></li><li><a class="tocitem" href="API/ad/">Automatic Differentiation Construction Choice Recommendations</a></li><li><a class="tocitem" href="API/solve/">Common Solver Options (Solve Keyword Arguments)</a></li><li><a class="tocitem" href="API/optimization_solution/">Optimization Solutions</a></li><li><a class="tocitem" href="API/optimization_state/">OptimizationState</a></li><li><a class="tocitem" href="API/optimization_stats/">OptimizationStats</a></li><li><a class="tocitem" href="API/modelingtoolkit/">ModelingToolkit Integration</a></li><li><a class="tocitem" href="API/reexports/">Reexported API</a></li><li><a class="tocitem" href="API/FAQ/">Frequently Asked Questions</a></li></ul></li><li><span class="tocitem">Optimizer Packages</span><ul><li><a class="tocitem" href="optimization_packages/blackboxoptim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="optimization_packages/auglag/">AugLag.jl</a></li><li><a class="tocitem" href="optimization_packages/cmaevolutionstrategy/">CMAEvolutionStrategy.jl</a></li><li><a class="tocitem" href="optimization_packages/evolutionary/">Evolutionary.jl</a></li><li><a class="tocitem" href="optimization_packages/gcmaes/">GCMAES.jl</a></li><li><a class="tocitem" href="optimization_packages/ipopt/">Ipopt.jl</a></li><li><a class="tocitem" href="optimization_packages/lbfgsb/">LBFGSB.jl</a></li><li><a class="tocitem" href="optimization_packages/madnlp/">MadNLP.jl</a></li><li><a class="tocitem" href="optimization_packages/manopt/">Manopt.jl</a></li><li><a class="tocitem" href="optimization_packages/mathoptinterface/">MathOptInterface.jl</a></li><li><a class="tocitem" href="optimization_packages/metaheuristics/">Metaheuristics.jl</a></li><li><a class="tocitem" href="optimization_packages/multistartoptimization/">MultistartOptimization.jl</a></li><li><a class="tocitem" href="optimization_packages/nlopt/">NLopt.jl</a></li><li><a class="tocitem" href="optimization_packages/nlpmodels/">NLPModels.jl</a></li><li><a class="tocitem" href="optimization_packages/nomad/">NOMAD.jl</a></li><li><a class="tocitem" href="optimization_packages/ode/">ODE.jl</a></li><li><a class="tocitem" href="optimization_packages/optim/">Optim.jl</a></li><li><a class="tocitem" href="optimization_packages/optimisers/">Optimisers.jl</a></li><li><a class="tocitem" href="optimization_packages/polyopt/">Polyalgorithms.jl</a></li><li><a class="tocitem" href="optimization_packages/prima/">PRIMA.jl</a></li><li><a class="tocitem" href="optimization_packages/pycma/">PyCMA.jl</a></li><li><a class="tocitem" href="optimization_packages/quaddirect/">QuadDIRECT.jl</a></li><li><a class="tocitem" href="optimization_packages/sophia/">Sophia.jl</a></li><li><a class="tocitem" href="optimization_packages/speedmapping/">SpeedMapping.jl</a></li><li><a class="tocitem" href="optimization_packages/scipy/">SciPy.jl</a></li><li><a class="tocitem" href="optimization_packages/simpleoptimization/">SimpleOptimization.jl</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Optimization.jl: A Unified Optimization Package</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Optimization.jl: A Unified Optimization Package</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/SciML/Optimization.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/SciML/Optimization.jl/blob/master/docs/src/index.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Optimization.jl:-A-Unified-Optimization-Package"><a class="docs-heading-anchor" href="#Optimization.jl:-A-Unified-Optimization-Package">Optimization.jl: A Unified Optimization Package</a><a id="Optimization.jl:-A-Unified-Optimization-Package-1"></a><a class="docs-heading-anchor-permalink" href="#Optimization.jl:-A-Unified-Optimization-Package" title="Permalink"></a></h1><p>Optimization.jl provides the easiest way to create an optimization problem and solve it. It enables rapid prototyping and experimentation with minimal syntax overhead by providing a uniform interface to &gt;25 optimization libraries, hence 100+ optimization solvers encompassing almost all classes of optimization algorithms such as global, mixed-integer, non-convex, second-order local, constrained, etc. It allows you to choose an Automatic Differentiation (AD) backend by simply passing an argument to indicate the package to use and automatically generates the efficient derivatives of the objective and constraints while giving you the flexibility to switch between different AD engines as per your problem. Additionally, Optimization.jl takes care of passing problem specific information to solvers that can leverage it such as the sparsity pattern of the hessian or constraint jacobian and the expression graph.</p><p>It extends the common SciML interface making it very easy to use for anyone familiar with the SciML ecosystem. It is also very easy to extend to new solvers and new problem types. The package is actively maintained and new features are added regularly.</p><article><details class="docstring" open="true"><summary id="Optimization"><a class="docstring-binding" href="#Optimization"><code>Optimization</code></a> — <span class="docstring-category">Module</span></summary><section><div><p><strong>Optimization.jl</strong></p><p><a href="https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged"><img src="https://img.shields.io/static/v1?label=Zulip&amp;message=chat&amp;color=9558b2&amp;labelColor=389826" alt="Join the chat at https://julialang.zulipchat.com #sciml-bridged"/></a> <a href="https://docs.sciml.ai/Optimization/stable/"><img src="https://img.shields.io/badge/docs-SciML-blue.svg" alt="Global Docs"/></a></p><p><a href="https://app.codecov.io/gh/SciML/Optimization.jl"><img src="https://codecov.io/gh/SciML/Optimization.jl/branch/master/graph/badge.svg" alt="codecov"/></a> <a href="https://github.com/SciML/Optimization.jl/actions?query=workflow%3ACI"><img src="https://github.com/SciML/Optimization.jl/workflows/CI/badge.svg" alt="Build Status"/></a></p><p><a href="https://github.com/SciML/ColPrac"><img src="https://img.shields.io/badge/ColPrac-Contributor%27s%20Guide-blueviolet" alt="ColPrac: Contributor&#39;s Guide on Collaborative Practices for Community Packages"/></a> <a href="https://github.com/SciML/SciMLStyle"><img src="https://img.shields.io/static/v1?label=code%20style&amp;message=SciML&amp;color=9558b2&amp;labelColor=389826" alt="SciML Code Style"/></a></p><p><a href="https://doi.org/10.5281/zenodo.7738525"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.7738525.svg" alt="DOI"/></a></p><p>Optimization.jl is a package with a scope that is beyond your normal global optimization package. Optimization.jl seeks to bring together all of the optimization packages it can find, local and global, into one unified Julia interface. This means, you learn one package and you learn them all! Optimization.jl adds a few high-level features, such as integrating with automatic differentiation, to make its usage fairly simple for most cases, while allowing all of the options in a single unified interface.</p><p><strong>Installation</strong></p><p>Assuming that you already have Julia correctly installed, it suffices to import OptimizationBase in the standard way:</p><pre><code class="language-julia hljs">using Pkg
 Pkg.add(&quot;OptimizationBase&quot;)</code></pre><p>The packages relevant to the core functionality of Optimization.jl will be imported accordingly and, in most cases, you do not have to worry about the manual installation of dependencies. Below is the list of packages that need to be installed explicitly if you intend to use the specific optimization algorithms offered by them:</p><ul><li>OptimizationAuglag for augmented Lagrangian methods</li><li>OptimizationBBO for <a href="https://github.com/robertfeldt/BlackBoxOptim.jl">BlackBoxOptim.jl</a></li><li>OptimizationCMAEvolutionStrategy for <a href="https://github.com/jbrea/CMAEvolutionStrategy.jl">CMAEvolutionStrategy.jl</a></li><li>OptimizationEvolutionary for <a href="https://github.com/SciML/Evolutionary.jl">Evolutionary.jl</a> (see also <a href="https://sciml.github.io/Evolutionary.jl/stable/">this documentation</a>)</li><li>OptimizationGCMAES for <a href="https://github.com/AStupidBear/GCMAES.jl">GCMAES.jl</a></li><li>OptimizationIpopt for <a href="https://github.com/jump-dev/Ipopt.jl">Ipopt.jl</a></li><li>OptimizationLBFGSB for <a href="https://github.com/Gnimuc/LBFGSB.jl">LBFGSB.jl</a></li><li>OptimizationMadNLP for <a href="https://github.com/MadNLP/MadNLP.jl">MadNLP.jl</a></li><li>OptimizationManopt for <a href="https://github.com/JuliaManifolds/Manopt.jl">Manopt.jl</a> (optimization on manifolds)</li><li>OptimizationMetaheuristics for <a href="https://github.com/jmejia8/Metaheuristics.jl">Metaheuristics.jl</a> (see also <a href="https://jmejia8.github.io/Metaheuristics.jl/stable/">this documentation</a>)</li><li>OptimizationMOI for <a href="https://github.com/jump-dev/MathOptInterface.jl">MathOptInterface.jl</a> (usage of algorithm via MathOptInterface API; see also the API <a href="https://jump.dev/MathOptInterface.jl/stable/">documentation</a>)</li><li>OptimizationMultistartOptimization for <a href="https://github.com/tpapp/MultistartOptimization.jl">MultistartOptimization.jl</a> (see also <a href="https://juliahub.com/docs/MultistartOptimization/cVZvi/0.1.0/">this documentation</a>)</li><li>OptimizationNLopt for <a href="https://github.com/jump-dev/NLopt.jl">NLopt.jl</a> (usage via the NLopt API; see also the available <a href="https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/">algorithms</a>)</li><li>OptimizationNLPModels for <a href="https://github.com/JuliaSmoothOptimizers/NLPModels.jl">NLPModels.jl</a></li><li>OptimizationNOMAD for <a href="https://github.com/bbopt/NOMAD.jl">NOMAD.jl</a> (see also <a href="https://bbopt.github.io/NOMAD.jl/stable/">this documentation</a>)</li><li>OptimizationODE for optimization of steady-state and time-dependent ODE problems</li><li>OptimizationOptimJL for <a href="https://github.com/JuliaNLSolvers/Optim.jl">Optim.jl</a></li><li>OptimizationOptimisers for <a href="https://github.com/FluxML/Optimisers.jl">Optimisers.jl</a> (machine learning optimizers)</li><li>OptimizationPolyalgorithms for polyalgorithm optimization strategies</li><li>OptimizationPRIMA for <a href="https://github.com/libprima/PRIMA.jl">PRIMA.jl</a></li><li>OptimizationPyCMA for Python&#39;s CMA-ES implementation via <a href="https://github.com/JuliaPy/PythonCall.jl">PythonCall.jl</a></li><li>OptimizationQuadDIRECT for <a href="https://github.com/timholy/QuadDIRECT.jl">QuadDIRECT.jl</a></li><li>OptimizationSciPy for <a href="https://scipy.org/">SciPy</a> optimization algorithms via <a href="https://github.com/JuliaPy/PythonCall.jl">PythonCall.jl</a></li><li>OptimizationSophia for Sophia optimizer (second-order stochastic optimizer)</li><li>OptimizationSpeedMapping for <a href="https://github.com/NicolasL-S/SpeedMapping.jl">SpeedMapping.jl</a> (see also <a href="https://nicolasl-s.github.io/SpeedMapping.jl/stable/">this documentation</a>)</li></ul><p><strong>Tutorials and Documentation</strong></p><p>For information on using the package, <a href="https://docs.sciml.ai/Optimization/stable/">see the stable documentation</a>. Use the <a href="https://docs.sciml.ai/Optimization/dev/">in-development documentation</a> for the version of the documentation, which contains the unreleased features.</p><p><strong>Examples</strong></p><pre><code class="language-julia hljs">using OptimizationBase
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
@@ -8,11 +8,11 @@ p = [1.0, 100.0]
 prob = OptimizationProblem(rosenbrock, x0, p)
 
 using OptimizationOptimJL
-sol = solve(prob, Optim.NelderMead())
+sol = solve(prob, NelderMead())
 
 using OptimizationBBO
 prob = OptimizationProblem(rosenbrock, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
-sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())</code></pre><p>The output of the first optimization task (with the <code>Optim.NelderMead()</code> algorithm) is given below:</p><pre><code class="language-julia hljs">* Status: success
+sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())</code></pre><p>The output of the first optimization task (with the <code>NelderMead()</code> algorithm) is given below:</p><pre><code class="language-julia hljs">* Status: success
 
 * Candidate solution
    Final objective value:     3.525527e-09
@@ -29,7 +29,7 @@ sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())</code></pre><p>The
    f(x) calls:    118</code></pre><p>We can also explore other methods in a similar way:</p><pre><code class="language-julia hljs">using ForwardDiff, ADTypes
 f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
 prob = OptimizationProblem(f, x0, p)
-sol = solve(prob, Optim.BFGS())</code></pre><p>For instance, the above optimization task produces the following output:</p><pre><code class="language-julia hljs">* Status: success
+sol = solve(prob, BFGS())</code></pre><p>For instance, the above optimization task produces the following output:</p><pre><code class="language-julia hljs">* Status: success
 
 * Candidate solution
    Final objective value:     7.645684e-21
@@ -49,7 +49,7 @@ sol = solve(prob, Optim.BFGS())</code></pre><p>For instance, the above optimizat
    Iterations:    16
    f(x) calls:    53
    ∇f(x) calls:   53</code></pre><pre><code class="language-julia hljs">prob = OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
-sol = solve(prob, Fminbox(GradientDescent()))</code></pre><p>The examples clearly demonstrate that Optimization.jl provides an intuitive way of specifying optimization tasks and offers a relatively easy access to a wide range of optimization algorithms.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/SciML/Optimization.jl/blob/21feb912742b41ac651763b67fbfa8a7356cd7f7/src/Optimization.jl#L1">source</a></section></details></article><h2 id="Installation"><a class="docs-heading-anchor" href="#Installation">Installation</a><a id="Installation-1"></a><a class="docs-heading-anchor-permalink" href="#Installation" title="Permalink"></a></h2><p>In most instances you&#39;ll want to use some solver directly. For example, to use the Optim set of solvers, you&#39;d do:</p><pre><code class="language-julia hljs">Pkg.add(&quot;OptimizationOptimJL&quot;)</code></pre><p>See the solver lists for more details. In many scenarios it&#39;s recommended to have some automatic differentiation (AD) package installed, most tutorials will  use some form AD and thus require installing the associated AD package. AD choices are made with ADTypes, and thus it&#39;s recommended you also add the <code>ADTypes.jl</code> package for most use cases.</p><p>Optimization.jl is simply a bundle/interface over many of these dependencies. It may add some optional higher level behavior in the future but at this time the top level package does not add any extra behavior.</p><h3 id="Optimization-or-OptimizationBase?"><a class="docs-heading-anchor" href="#Optimization-or-OptimizationBase?"><code>Optimization</code> or <code>OptimizationBase</code>?</a><a id="Optimization-or-OptimizationBase?-1"></a><a class="docs-heading-anchor-permalink" href="#Optimization-or-OptimizationBase?" title="Permalink"></a></h3><p><code>OptimizationBase</code> defines the interface — <code>OptimizationProblem</code>, <code>OptimizationFunction</code>, <code>solve</code> — and is what every solver package depends on, so it is what the examples throughout this documentation load:</p><pre><code class="language-julia hljs">Pkg.add(&quot;OptimizationBase&quot;)</code></pre><p><code>Optimization</code> re-exports that same interface and nothing else, so the two are interchangeable for everything shown here. Install whichever you prefer; you need only one of them, alongside a solver package.</p><h2 id="Contributing"><a class="docs-heading-anchor" href="#Contributing">Contributing</a><a id="Contributing-1"></a><a class="docs-heading-anchor-permalink" href="#Contributing" title="Permalink"></a></h2><ul><li><p>Please refer to the <a href="https://sciml.github.io/ColPrac/">SciML ColPrac: Contributor&#39;s Guide on Collaborative Practices for Community Packages</a> for guidance on PRs, issues, and other matters relating to contributing to SciML.</p></li><li><p>See the <a href="https://github.com/SciML/SciMLStyle">SciML Style Guide</a> for common coding practices and other style decisions.</p></li><li><p>There are a few community forums:</p><ul><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.org/slack/">Julia Slack</a></li><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged">Julia Zulip</a></li><li>On the <a href="https://discourse.julialang.org">Julia Discourse forums</a></li><li>See also <a href="https://sciml.ai/community/">SciML Community page</a></li></ul></li></ul><h2 id="Overview-of-the-solver-packages-in-alphabetical-order"><a class="docs-heading-anchor" href="#Overview-of-the-solver-packages-in-alphabetical-order">Overview of the solver packages in alphabetical order</a><a id="Overview-of-the-solver-packages-in-alphabetical-order-1"></a><a class="docs-heading-anchor-permalink" href="#Overview-of-the-solver-packages-in-alphabetical-order" title="Permalink"></a></h2><details>
+sol = solve(prob, Fminbox(GradientDescent()))</code></pre><p>The examples clearly demonstrate that Optimization.jl provides an intuitive way of specifying optimization tasks and offers a relatively easy access to a wide range of optimization algorithms.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/SciML/Optimization.jl/blob/f77eb440dcb871d3b8a4f669bb5df26bd36f69d4/src/Optimization.jl#L1">source</a></section></details></article><h2 id="Installation"><a class="docs-heading-anchor" href="#Installation">Installation</a><a id="Installation-1"></a><a class="docs-heading-anchor-permalink" href="#Installation" title="Permalink"></a></h2><p>In most instances you&#39;ll want to use some solver directly. For example, to use the Optim set of solvers, you&#39;d do:</p><pre><code class="language-julia hljs">Pkg.add(&quot;OptimizationOptimJL&quot;)</code></pre><p>See the solver lists for more details. In many scenarios it&#39;s recommended to have some automatic differentiation (AD) package installed, most tutorials will  use some form AD and thus require installing the associated AD package. AD choices are made with ADTypes, and thus it&#39;s recommended you also add the <code>ADTypes.jl</code> package for most use cases.</p><p>Optimization.jl is simply a bundle/interface over many of these dependencies. It may add some optional higher level behavior in the future but at this time the top level package does not add any extra behavior.</p><h3 id="Optimization-or-OptimizationBase?"><a class="docs-heading-anchor" href="#Optimization-or-OptimizationBase?"><code>Optimization</code> or <code>OptimizationBase</code>?</a><a id="Optimization-or-OptimizationBase?-1"></a><a class="docs-heading-anchor-permalink" href="#Optimization-or-OptimizationBase?" title="Permalink"></a></h3><p><code>OptimizationBase</code> defines the interface — <code>OptimizationProblem</code>, <code>OptimizationFunction</code>, <code>solve</code> — and is what every solver package depends on, so it is what the examples throughout this documentation load:</p><pre><code class="language-julia hljs">Pkg.add(&quot;OptimizationBase&quot;)</code></pre><p><code>Optimization</code> re-exports that same interface and nothing else, so the two are interchangeable for everything shown here. Install whichever you prefer; you need only one of them, alongside a solver package.</p><h2 id="Contributing"><a class="docs-heading-anchor" href="#Contributing">Contributing</a><a id="Contributing-1"></a><a class="docs-heading-anchor-permalink" href="#Contributing" title="Permalink"></a></h2><ul><li><p>Please refer to the <a href="https://sciml.github.io/ColPrac/">SciML ColPrac: Contributor&#39;s Guide on Collaborative Practices for Community Packages</a> for guidance on PRs, issues, and other matters relating to contributing to SciML.</p></li><li><p>See the <a href="https://github.com/SciML/SciMLStyle">SciML Style Guide</a> for common coding practices and other style decisions.</p></li><li><p>There are a few community forums:</p><ul><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.org/slack/">Julia Slack</a></li><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged">Julia Zulip</a></li><li>On the <a href="https://discourse.julialang.org">Julia Discourse forums</a></li><li>See also <a href="https://sciml.ai/community/">SciML Community page</a></li></ul></li></ul><h2 id="Overview-of-the-solver-packages-in-alphabetical-order"><a class="docs-heading-anchor" href="#Overview-of-the-solver-packages-in-alphabetical-order">Overview of the solver packages in alphabetical order</a><a id="Overview-of-the-solver-packages-in-alphabetical-order-1"></a><a class="docs-heading-anchor-permalink" href="#Overview-of-the-solver-packages-in-alphabetical-order" title="Permalink"></a></h2><details>
   <summary><strong>BlackBoxOptim</strong></summary>
   - <strong>Global Methods</strong>
     - Zeroth order
@@ -175,9 +175,9 @@ sol = solve(prob, Fminbox(GradientDescent()))</code></pre><p>The examples clearl
 	doi = {10.5281/zenodo.7738525},
   	url = {https://doi.org/10.5281/zenodo.7738525},
 	year = 2023}</code></pre><h2 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h2><details><summary>The documentation of this SciML package was built using these direct dependencies,</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr32"><span class="sgr1">Status</span></span> `~/_work/Optimization.jl/Optimization.jl/docs/Project.toml`
-  <span class="sgr90">[47edcb42] </span>ADTypes v1.23.0
+  <span class="sgr90">[47edcb42] </span>ADTypes v1.24.0
   <span class="sgr90">[7c4d4715] </span>AmplNLWriter v1.4.1
-  <span class="sgr90">[b0b7db55] </span>ComponentArrays v0.15.45
+  <span class="sgr90">[b0b7db55] </span>ComponentArrays v0.15.46
   <span class="sgr90">[a0c0ee7d] </span>DifferentiationInterface v0.7.21
   <span class="sgr90">[e30172f5] </span>Documenter v1.17.0
   <span class="sgr90">[6a86dc24] </span>FiniteDiff v2.33.0
@@ -190,44 +190,44 @@ sol = solve(prob, Fminbox(GradientDescent()))</code></pre><p>The examples clearl
   <span class="sgr90">[f1d291b0] </span>MLUtils v0.4.13
   <span class="sgr90">[1cead3c2] </span>Manifolds v0.11.29
 <span class="sgr33">⌅</span> <span class="sgr90">[0fc0a36d] </span>Manopt v0.5.39
-  <span class="sgr90">[961ee093] </span>ModelingToolkit v11.39.1
+  <span class="sgr90">[961ee093] </span>ModelingToolkit v11.40.0
   <span class="sgr90">[a4795742] </span>NLPModels v0.21.12
   <span class="sgr90">[7998695d] </span>NLPModelsTest v0.10.9
   <span class="sgr90">[76087f3c] </span>NLopt v1.2.1
-  <span class="sgr90">[7f7a1694] </span>Optimization v5.7.1 `~/_work/Optimization.jl/Optimization.jl`
-  <span class="sgr90">[2ea93f80] </span>OptimizationAuglag v2.1.0 `../lib/OptimizationAuglag`
-  <span class="sgr90">[3e6eede4] </span>OptimizationBBO v0.4.11 `../lib/OptimizationBBO`
-  <span class="sgr90">[bca83a33] </span>OptimizationBase v5.4.0 `../lib/OptimizationBase`
-  <span class="sgr90">[bd407f91] </span>OptimizationCMAEvolutionStrategy v0.3.12 `../lib/OptimizationCMAEvolutionStrategy`
-  <span class="sgr90">[cb963754] </span>OptimizationEvolutionary v0.4.13 `../lib/OptimizationEvolutionary`
-  <span class="sgr90">[6f0a0517] </span>OptimizationGCMAES v0.3.12 `../lib/OptimizationGCMAES`
-  <span class="sgr90">[43fad042] </span>OptimizationIpopt v1.4.0 `../lib/OptimizationIpopt`
-  <span class="sgr90">[22f7324a] </span>OptimizationLBFGSB v1.5.0 `../lib/OptimizationLBFGSB`
-  <span class="sgr90">[fd9f6733] </span>OptimizationMOI v1.4.0 `../lib/OptimizationMOI`
-  <span class="sgr90">[5d9c809f] </span>OptimizationMadNLP v2.3.0 `../lib/OptimizationMadNLP`
-  <span class="sgr90">[e57b7fff] </span>OptimizationManopt v1.5.0 `../lib/OptimizationManopt`
-  <span class="sgr90">[3aafef2f] </span>OptimizationMetaheuristics v0.3.11 `../lib/OptimizationMetaheuristics`
-  <span class="sgr90">[e4316d97] </span>OptimizationMultistartOptimization v0.3.9 `../lib/OptimizationMultistartOptimization`
-  <span class="sgr90">[064b21be] </span>OptimizationNLPModels v1.5.0 `../lib/OptimizationNLPModels`
-  <span class="sgr90">[4e6fcdb7] </span>OptimizationNLopt v0.3.16 `../lib/OptimizationNLopt`
-  <span class="sgr90">[2cab0595] </span>OptimizationNOMAD v0.3.10 `../lib/OptimizationNOMAD`
-  <span class="sgr90">[dfa73e59] </span>OptimizationODE v0.1.10 `../lib/OptimizationODE`
-  <span class="sgr90">[36348300] </span>OptimizationOptimJL v0.4.19 `../lib/OptimizationOptimJL`
-  <span class="sgr90">[42dfb2eb] </span>OptimizationOptimisers v0.3.22 `../lib/OptimizationOptimisers`
-  <span class="sgr90">[72f8369c] </span>OptimizationPRIMA v0.3.12 `../lib/OptimizationPRIMA`
+  <span class="sgr90">[7f7a1694] </span>Optimization v5.8.0 `~/_work/Optimization.jl/Optimization.jl`
+  <span class="sgr90">[2ea93f80] </span>OptimizationAuglag v2.1.1 `../lib/OptimizationAuglag`
+  <span class="sgr90">[3e6eede4] </span>OptimizationBBO v0.4.12 `../lib/OptimizationBBO`
+  <span class="sgr90">[bca83a33] </span>OptimizationBase v5.5.0 `../lib/OptimizationBase`
+  <span class="sgr90">[bd407f91] </span>OptimizationCMAEvolutionStrategy v0.3.13 `../lib/OptimizationCMAEvolutionStrategy`
+  <span class="sgr90">[cb963754] </span>OptimizationEvolutionary v0.4.14 `../lib/OptimizationEvolutionary`
+  <span class="sgr90">[6f0a0517] </span>OptimizationGCMAES v0.3.13 `../lib/OptimizationGCMAES`
+  <span class="sgr90">[43fad042] </span>OptimizationIpopt v1.4.1 `../lib/OptimizationIpopt`
+  <span class="sgr90">[22f7324a] </span>OptimizationLBFGSB v1.5.1 `../lib/OptimizationLBFGSB`
+  <span class="sgr90">[fd9f6733] </span>OptimizationMOI v1.4.1 `../lib/OptimizationMOI`
+  <span class="sgr90">[5d9c809f] </span>OptimizationMadNLP v2.3.1 `../lib/OptimizationMadNLP`
+  <span class="sgr90">[e57b7fff] </span>OptimizationManopt v1.6.0 `../lib/OptimizationManopt`
+  <span class="sgr90">[3aafef2f] </span>OptimizationMetaheuristics v0.3.12 `../lib/OptimizationMetaheuristics`
+  <span class="sgr90">[e4316d97] </span>OptimizationMultistartOptimization v0.3.10 `../lib/OptimizationMultistartOptimization`
+  <span class="sgr90">[064b21be] </span>OptimizationNLPModels v1.6.0 `../lib/OptimizationNLPModels`
+  <span class="sgr90">[4e6fcdb7] </span>OptimizationNLopt v0.3.17 `../lib/OptimizationNLopt`
+  <span class="sgr90">[2cab0595] </span>OptimizationNOMAD v0.3.11 `../lib/OptimizationNOMAD`
+  <span class="sgr90">[dfa73e59] </span>OptimizationODE v0.1.11 `../lib/OptimizationODE`
+  <span class="sgr90">[36348300] </span>OptimizationOptimJL v0.4.20 `../lib/OptimizationOptimJL`
+  <span class="sgr90">[42dfb2eb] </span>OptimizationOptimisers v0.3.23 `../lib/OptimizationOptimisers`
+  <span class="sgr90">[72f8369c] </span>OptimizationPRIMA v0.3.13 `../lib/OptimizationPRIMA`
   <span class="sgr90">[500b13db] </span>OptimizationPolyalgorithms v0.3.11 `../lib/OptimizationPolyalgorithms`
-  <span class="sgr90">[fb0822aa] </span>OptimizationPyCMA v1.4.0 `../lib/OptimizationPyCMA`
+  <span class="sgr90">[fb0822aa] </span>OptimizationPyCMA v1.4.1 `../lib/OptimizationPyCMA`
   <span class="sgr90">[842ac81e] </span>OptimizationQuadDIRECT v0.3.7 `../lib/OptimizationQuadDIRECT`
-  <span class="sgr90">[cce07bd8] </span>OptimizationSciPy v0.4.10 `../lib/OptimizationSciPy`
-  <span class="sgr90">[892fee11] </span>OptimizationSophia v1.4.0 `../lib/OptimizationSophia`
-  <span class="sgr90">[3d669222] </span>OptimizationSpeedMapping v0.2.8 `../lib/OptimizationSpeedMapping`
-  <span class="sgr90">[1dea7af3] </span>OrdinaryDiffEq v7.6.0
+  <span class="sgr90">[cce07bd8] </span>OptimizationSciPy v0.4.11 `../lib/OptimizationSciPy`
+  <span class="sgr90">[892fee11] </span>OptimizationSophia v1.4.1 `../lib/OptimizationSophia`
+  <span class="sgr90">[3d669222] </span>OptimizationSpeedMapping v0.2.9 `../lib/OptimizationSpeedMapping`
+  <span class="sgr90">[1dea7af3] </span>OrdinaryDiffEq v7.8.0
   <span class="sgr90">[91a5bcdd] </span>Plots v1.41.7
   <span class="sgr90">[dae52e8d] </span>QuadDIRECT v0.1.2 `https://github.com/timholy/QuadDIRECT.jl.git#`
   <span class="sgr90">[37e2e3b7] </span>ReverseDiff v1.17.0
-  <span class="sgr90">[0bca4576] </span>SciMLBase v3.49.1
-  <span class="sgr90">[1ed8b502] </span>SciMLSensitivity v7.118.0
-  <span class="sgr90">[510db2f7] </span>SimpleOptimization v2.0.0 `../lib/SimpleOptimization`
+  <span class="sgr90">[0bca4576] </span>SciMLBase v3.49.2
+  <span class="sgr90">[1ed8b502] </span>SciMLSensitivity v7.119.0
+  <span class="sgr90">[510db2f7] </span>SimpleOptimization v2.0.1 `../lib/SimpleOptimization`
   <span class="sgr90">[90137ffa] </span>StaticArrays v1.9.19
   <span class="sgr90">[0c5d862f] </span>Symbolics v7.36.0
   <span class="sgr90">[9f7883ad] </span>Tracker v0.2.38
@@ -240,7 +240,7 @@ Build Info:
   Official https://julialang.org release
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 112 × AMD EPYC 7663 56-Core Processor
+  CPU: 128 × AMD EPYC 7513 32-Core Processor
   WORD_SIZE: 64
   LLVM: libLLVM-18.1.7 (ORCJIT, znver3)
   GC: Built with stock GC
@@ -249,7 +249,7 @@ Environment:
   JULIA_CPU_THREADS = 4
   JULIA_NUM_PRECOMPILE_TASKS = 4
   JULIA_PYTHONCALL_EXE = /home/runner/_work/Optimization.jl/Optimization.jl/docs/.CondaPkg/.pixi/envs/default/bin/python</code></pre></details><details><summary>A more complete overview of all dependencies and their versions is also provided.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr32"><span class="sgr1">Status</span></span> `~/_work/Optimization.jl/Optimization.jl/docs/Manifest.toml`
-  <span class="sgr90">[47edcb42] </span>ADTypes v1.23.0
+  <span class="sgr90">[47edcb42] </span>ADTypes v1.24.0
   <span class="sgr90">[14f7f29c] </span>AMD v0.5.3
   <span class="sgr90">[a4c015fc] </span>ANSIColoredPrinters v0.0.1
   <span class="sgr90">[621f4979] </span>AbstractFFTs v1.5.0
@@ -268,12 +268,11 @@ Environment:
   <span class="sgr90">[fbb218c0] </span>BSON v0.3.9
   <span class="sgr90">[aae01518] </span>BandedMatrices v1.11.0
   <span class="sgr90">[e2ed5e7c] </span>Bijections v0.2.2
-  <span class="sgr90">[b2a6c25c] </span>BinaryHeaps v1.0.4
-  <span class="sgr90">[caf10ac8] </span>BipartiteGraphs v0.1.11
-  <span class="sgr90">[d1d4a3ce] </span>BitFlags v0.1.10
-  <span class="sgr90">[a134a8b2] </span>BlackBoxOptim v0.6.11
+  <span class="sgr90">[b2a6c25c] </span>BinaryHeaps v1.1.0
+  <span class="sgr90">[caf10ac8] </span>BipartiteGraphs v0.1.12
+  <span class="sgr90">[a134a8b2] </span>BlackBoxOptim v0.6.12
   <span class="sgr90">[8e7c35d0] </span>BlockArrays v1.10.0
-  <span class="sgr90">[70df07ce] </span>BracketingNonlinearSolve v1.12.5
+  <span class="sgr90">[70df07ce] </span>BracketingNonlinearSolve v1.12.6
   <span class="sgr90">[fa961155] </span>CEnum v0.5.0
   <span class="sgr90">[8d3b24bd] </span>CMAEvolutionStrategy v0.2.6
   <span class="sgr90">[2a0fbf3d] </span>CPUSummary v0.2.7
@@ -287,15 +286,14 @@ Environment:
   <span class="sgr90">[c3611d14] </span>ColorVectorSpace v0.11.0
   <span class="sgr90">[5ae59095] </span>Colors v0.13.1
 <span class="sgr33">⌅</span> <span class="sgr90">[861a8166] </span>Combinatorics v1.0.2
-  <span class="sgr90">[38540f10] </span>CommonSolve v0.2.13
+  <span class="sgr90">[38540f10] </span>CommonSolve v0.2.14
   <span class="sgr90">[bbf7d656] </span>CommonSubexpressions v0.3.1
-  <span class="sgr90">[f70d9fcc] </span>CommonWorldInvalidations v1.1.2
+  <span class="sgr90">[f70d9fcc] </span>CommonWorldInvalidations v1.2.0
   <span class="sgr90">[34da2185] </span>Compat v4.18.1
-  <span class="sgr90">[b0b7db55] </span>ComponentArrays v0.15.45
+  <span class="sgr90">[b0b7db55] </span>ComponentArrays v0.15.46
   <span class="sgr90">[b152e2b5] </span>CompositeTypes v0.1.4
   <span class="sgr90">[a33af91c] </span>CompositionsBase v0.1.2
-  <span class="sgr90">[2569d6c7] </span>ConcreteStructs v0.2.7
-  <span class="sgr90">[f0e56b4a] </span>ConcurrentUtilities v2.6.0
+  <span class="sgr90">[2569d6c7] </span>ConcreteStructs v0.2.8
   <span class="sgr90">[992eb4ea] </span>CondaPkg v0.2.36
   <span class="sgr90">[88cd18e8] </span>ConsoleProgressMonitor v0.1.2
   <span class="sgr90">[187b0558] </span>ConstructionBase v1.6.0
@@ -305,9 +303,9 @@ Environment:
   <span class="sgr90">[864edb3b] </span>DataStructures v0.19.6
   <span class="sgr90">[e2d170a0] </span>DataValueInterfaces v1.0.0
   <span class="sgr90">[8bb1440f] </span>DelimitedFiles v1.9.1
-  <span class="sgr90">[2b5f629d] </span>DiffEqBase v7.18.1
-  <span class="sgr90">[459566f4] </span>DiffEqCallbacks v4.19.2
-  <span class="sgr90">[77a26b50] </span>DiffEqNoiseProcess v5.35.0
+  <span class="sgr90">[2b5f629d] </span>DiffEqBase v7.18.2
+  <span class="sgr90">[459566f4] </span>DiffEqCallbacks v4.19.3
+  <span class="sgr90">[77a26b50] </span>DiffEqNoiseProcess v5.36.0
   <span class="sgr90">[163ba53b] </span>DiffResults v1.1.0
   <span class="sgr90">[b552c78f] </span>DiffRules v1.16.0
   <span class="sgr90">[a0c0ee7d] </span>DifferentiationInterface v0.7.21
@@ -321,15 +319,14 @@ Environment:
   <span class="sgr90">[4e289a0a] </span>EnumX v1.0.7
   <span class="sgr90">[7da242da] </span>Enzyme v0.13.199
   <span class="sgr90">[f151be2c] </span>EnzymeCore v0.8.21
-  <span class="sgr90">[86b6b26d] </span>Evolutionary v0.11.8
-  <span class="sgr90">[460bff9d] </span>ExceptionUnwrapping v0.1.11
+  <span class="sgr90">[86b6b26d] </span>Evolutionary v0.11.9
   <span class="sgr90">[e2ba6199] </span>ExprTools v0.1.11
   <span class="sgr90">[21656369] </span>ExpressionExplorer v1.1.5
   <span class="sgr90">[55351af7] </span>ExproniconLite v0.10.14
   <span class="sgr90">[c87230d0] </span>FFMPEG v0.4.5
-  <span class="sgr90">[7034ab61] </span>FastBroadcast v1.3.6
+  <span class="sgr90">[7034ab61] </span>FastBroadcast v1.4.0
   <span class="sgr90">[9aa1b823] </span>FastClosures v0.3.2
-  <span class="sgr90">[a4df4552] </span>FastPower v1.4.1
+  <span class="sgr90">[a4df4552] </span>FastPower v1.5.0
   <span class="sgr90">[1a297f60] </span>FillArrays v1.17.0
   <span class="sgr90">[64ca27bc] </span>FindFirstFunctions v3.2.1
   <span class="sgr90">[6a86dc24] </span>FiniteDiff v2.33.0
@@ -337,27 +334,26 @@ Environment:
   <span class="sgr90">[1fa38f19] </span>Format v1.3.7
   <span class="sgr90">[f6369f11] </span>ForwardDiff v1.4.5
   <span class="sgr90">[a85aefff] </span>FunctionMaps v0.1.2
-  <span class="sgr90">[f62d2435] </span>FunctionProperties v1.1.1
+  <span class="sgr90">[f62d2435] </span>FunctionProperties v1.2.0
   <span class="sgr90">[069b7b12] </span>FunctionWrappers v1.1.3
   <span class="sgr90">[77dc65aa] </span>FunctionWrappersWrappers v1.13.0
   <span class="sgr90">[d9f16b24] </span>Functors v0.5.3
   <span class="sgr90">[4aa9d100] </span>GCMAES v0.1.34
   <span class="sgr90">[46192b85] </span>GPUArraysCore v0.2.0
 <span class="sgr33">⌅</span> <span class="sgr90">[61eb1bfa] </span>GPUCompiler v1.23.0
-  <span class="sgr90">[28b8d3ca] </span>GR v0.73.26
+  <span class="sgr90">[28b8d3ca] </span>GR v0.73.27
 <span class="sgr32">⌃</span> <span class="sgr90">[a0844989] </span>Gamma v1.1.0
   <span class="sgr90">[d7ba0133] </span>Git v1.5.0
   <span class="sgr90">[8f48dd54] </span>Glossaries v0.1.1
   <span class="sgr90">[86223c79] </span>Graphs v1.14.0
   <span class="sgr90">[42e2da0e] </span>Grisu v1.0.2
-<span class="sgr33">⌅</span> <span class="sgr90">[cd3eb016] </span>HTTP v1.11.0
   <span class="sgr90">[076d061b] </span>HashArrayMappedTries v0.2.0
   <span class="sgr90">[87dc4568] </span>HiGHS v1.24.1
   <span class="sgr90">[34004b35] </span>HypergeometricFunctions v0.3.30
   <span class="sgr90">[b5f81e59] </span>IOCapture v1.0.0
   <span class="sgr90">[7869d1d1] </span>IRTools v0.4.20
   <span class="sgr90">[615f187c] </span>IfElse v0.1.1
-  <span class="sgr90">[3263718b] </span>ImplicitDiscreteSolve v2.1.5
+  <span class="sgr90">[3263718b] </span>ImplicitDiscreteSolve v2.2.0
   <span class="sgr90">[d25df0c9] </span>Inflate v0.1.5
   <span class="sgr90">[18e54dd8] </span>IntegerMathUtils v0.1.4
   <span class="sgr90">[8197267c] </span>IntervalSets v0.7.14
@@ -371,24 +367,24 @@ Environment:
 <span class="sgr33">⌅</span> <span class="sgr90">[358108f5] </span>JMcDM v0.7.24
   <span class="sgr90">[682c06a0] </span>JSON v1.7.1
   <span class="sgr90">[ae98c720] </span>Jieko v0.2.1
-  <span class="sgr90">[ccbc3e58] </span>JumpProcesses v9.29.3
+  <span class="sgr90">[ccbc3e58] </span>JumpProcesses v9.30.0
   <span class="sgr90">[2ddba703] </span>Juniper v0.9.4
   <span class="sgr90">[63c18a36] </span>KernelAbstractions v0.9.42
   <span class="sgr90">[2c470bb0] </span>Kronecker v0.5.5
   <span class="sgr90">[ba0b0d4f] </span>Krylov v0.10.9
   <span class="sgr90">[5be7bae1] </span>LBFGSB v0.4.1
   <span class="sgr90">[40e66cde] </span>LDLFactorizations v0.10.2
-  <span class="sgr90">[2faa5264] </span>LHLFactorization v2.0.0
+  <span class="sgr90">[2faa5264] </span>LHLFactorization v2.2.0
   <span class="sgr90">[929cbde3] </span>LLVM v9.13.0
   <span class="sgr90">[b964fa9f] </span>LaTeXStrings v1.4.1
   <span class="sgr90">[23fbe1c1] </span>Latexify v0.16.12
   <span class="sgr90">[0e77f7df] </span>LazilyInitializedFields v1.3.0
   <span class="sgr90">[1d6d02ad] </span>LeftChildRightSiblingTrees v0.3.0
-  <span class="sgr90">[87fe0de2] </span>LineSearch v0.1.15
+  <span class="sgr90">[87fe0de2] </span>LineSearch v0.1.16
   <span class="sgr90">[d3d80556] </span>LineSearches v7.7.1
   <span class="sgr90">[7a12625a] </span>LinearMaps v3.11.4
   <span class="sgr90">[5c8ed15e] </span>LinearOperators v2.14.2
-  <span class="sgr90">[7ed4a6bd] </span>LinearSolve v5.12.0
+  <span class="sgr90">[7ed4a6bd] </span>LinearSolve v5.13.1
 <span class="sgr33">⌅</span> <span class="sgr90">[2ab3a3ac] </span>LogExpFunctions v0.3.29
   <span class="sgr90">[e6f89c97] </span>LoggingExtras v1.2.0
   <span class="sgr90">[b2108857] </span>Lux v1.31.4
@@ -405,16 +401,15 @@ Environment:
 <span class="sgr33">⌅</span> <span class="sgr90">[0fc0a36d] </span>Manopt v0.5.39
   <span class="sgr90">[d0879d2d] </span>MarkdownAST v0.1.3
   <span class="sgr90">[8c4f8055] </span>MathOptIIS v0.2.0
-  <span class="sgr90">[b8f27783] </span>MathOptInterface v1.52.0
+  <span class="sgr90">[b8f27783] </span>MathOptInterface v1.53.0
   <span class="sgr90">[99c1a7ee] </span>MatrixEquations v2.6.4
-  <span class="sgr90">[bb5d69b7] </span>MaybeInplace v0.1.7
-  <span class="sgr90">[739be429] </span>MbedTLS v1.1.10
+  <span class="sgr90">[bb5d69b7] </span>MaybeInplace v0.1.8
   <span class="sgr90">[442fdcdd] </span>Measures v0.3.3
   <span class="sgr90">[bcdb8e00] </span>Metaheuristics v3.5.0
   <span class="sgr90">[0b3b1443] </span>MicroMamba v0.1.15
   <span class="sgr90">[e1d29d7a] </span>Missings v1.2.0
-  <span class="sgr90">[961ee093] </span>ModelingToolkit v11.39.1
-  <span class="sgr90">[7771a370] </span>ModelingToolkitBase v1.67.0
+  <span class="sgr90">[961ee093] </span>ModelingToolkit v11.40.0
+  <span class="sgr90">[7771a370] </span>ModelingToolkitBase v1.68.0
   <span class="sgr90">[6bb917b9] </span>ModelingToolkitTearing v1.20.5
   <span class="sgr90">[2e0e35c7] </span>Moshi v0.3.12
   <span class="sgr90">[46d2c3a1] </span>MuladdMacro v0.2.7
@@ -430,67 +425,66 @@ Environment:
 <span class="sgr33">⌅</span> <span class="sgr90">[02130f1c] </span>NOMAD v2.4.2
   <span class="sgr90">[77ba4419] </span>NaNMath v1.1.4
   <span class="sgr90">[356022a1] </span>NamedDims v1.2.3
-  <span class="sgr90">[8913a72c] </span>NonlinearSolve v4.27.0
-  <span class="sgr90">[be0214bd] </span>NonlinearSolveBase v2.46.0
-  <span class="sgr90">[5959db7a] </span>NonlinearSolveFirstOrder v2.4.0
-  <span class="sgr90">[9a2c21bd] </span>NonlinearSolveQuasiNewton v1.15.1
-  <span class="sgr90">[26075421] </span>NonlinearSolveSpectralMethods v1.8.0
+  <span class="sgr90">[8913a72c] </span>NonlinearSolve v4.28.0
+  <span class="sgr90">[be0214bd] </span>NonlinearSolveBase v2.48.0
+  <span class="sgr90">[5959db7a] </span>NonlinearSolveFirstOrder v2.4.1
+  <span class="sgr90">[9a2c21bd] </span>NonlinearSolveQuasiNewton v1.15.2
+  <span class="sgr90">[26075421] </span>NonlinearSolveSpectralMethods v1.8.1
   <span class="sgr90">[d8793406] </span>ObjectFile v0.5.1
   <span class="sgr90">[6fe1bfb0] </span>OffsetArrays v1.17.0
-  <span class="sgr90">[4d8831e6] </span>OpenSSL v1.6.1
   <span class="sgr90">[429524aa] </span>Optim v2.2.2
   <span class="sgr90">[3bd65402] </span>Optimisers v0.4.9
-  <span class="sgr90">[7f7a1694] </span>Optimization v5.7.1 `~/_work/Optimization.jl/Optimization.jl`
-  <span class="sgr90">[2ea93f80] </span>OptimizationAuglag v2.1.0 `../lib/OptimizationAuglag`
-  <span class="sgr90">[3e6eede4] </span>OptimizationBBO v0.4.11 `../lib/OptimizationBBO`
-  <span class="sgr90">[bca83a33] </span>OptimizationBase v5.4.0 `../lib/OptimizationBase`
-  <span class="sgr90">[bd407f91] </span>OptimizationCMAEvolutionStrategy v0.3.12 `../lib/OptimizationCMAEvolutionStrategy`
-  <span class="sgr90">[cb963754] </span>OptimizationEvolutionary v0.4.13 `../lib/OptimizationEvolutionary`
-  <span class="sgr90">[6f0a0517] </span>OptimizationGCMAES v0.3.12 `../lib/OptimizationGCMAES`
-  <span class="sgr90">[43fad042] </span>OptimizationIpopt v1.4.0 `../lib/OptimizationIpopt`
-  <span class="sgr90">[22f7324a] </span>OptimizationLBFGSB v1.5.0 `../lib/OptimizationLBFGSB`
-  <span class="sgr90">[fd9f6733] </span>OptimizationMOI v1.4.0 `../lib/OptimizationMOI`
-  <span class="sgr90">[5d9c809f] </span>OptimizationMadNLP v2.3.0 `../lib/OptimizationMadNLP`
-  <span class="sgr90">[e57b7fff] </span>OptimizationManopt v1.5.0 `../lib/OptimizationManopt`
-  <span class="sgr90">[3aafef2f] </span>OptimizationMetaheuristics v0.3.11 `../lib/OptimizationMetaheuristics`
-  <span class="sgr90">[e4316d97] </span>OptimizationMultistartOptimization v0.3.9 `../lib/OptimizationMultistartOptimization`
-  <span class="sgr90">[064b21be] </span>OptimizationNLPModels v1.5.0 `../lib/OptimizationNLPModels`
-  <span class="sgr90">[4e6fcdb7] </span>OptimizationNLopt v0.3.16 `../lib/OptimizationNLopt`
-  <span class="sgr90">[2cab0595] </span>OptimizationNOMAD v0.3.10 `../lib/OptimizationNOMAD`
-  <span class="sgr90">[dfa73e59] </span>OptimizationODE v0.1.10 `../lib/OptimizationODE`
-  <span class="sgr90">[36348300] </span>OptimizationOptimJL v0.4.19 `../lib/OptimizationOptimJL`
-  <span class="sgr90">[42dfb2eb] </span>OptimizationOptimisers v0.3.22 `../lib/OptimizationOptimisers`
-  <span class="sgr90">[72f8369c] </span>OptimizationPRIMA v0.3.12 `../lib/OptimizationPRIMA`
+  <span class="sgr90">[7f7a1694] </span>Optimization v5.8.0 `~/_work/Optimization.jl/Optimization.jl`
+  <span class="sgr90">[2ea93f80] </span>OptimizationAuglag v2.1.1 `../lib/OptimizationAuglag`
+  <span class="sgr90">[3e6eede4] </span>OptimizationBBO v0.4.12 `../lib/OptimizationBBO`
+  <span class="sgr90">[bca83a33] </span>OptimizationBase v5.5.0 `../lib/OptimizationBase`
+  <span class="sgr90">[bd407f91] </span>OptimizationCMAEvolutionStrategy v0.3.13 `../lib/OptimizationCMAEvolutionStrategy`
+  <span class="sgr90">[cb963754] </span>OptimizationEvolutionary v0.4.14 `../lib/OptimizationEvolutionary`
+  <span class="sgr90">[6f0a0517] </span>OptimizationGCMAES v0.3.13 `../lib/OptimizationGCMAES`
+  <span class="sgr90">[43fad042] </span>OptimizationIpopt v1.4.1 `../lib/OptimizationIpopt`
+  <span class="sgr90">[22f7324a] </span>OptimizationLBFGSB v1.5.1 `../lib/OptimizationLBFGSB`
+  <span class="sgr90">[fd9f6733] </span>OptimizationMOI v1.4.1 `../lib/OptimizationMOI`
+  <span class="sgr90">[5d9c809f] </span>OptimizationMadNLP v2.3.1 `../lib/OptimizationMadNLP`
+  <span class="sgr90">[e57b7fff] </span>OptimizationManopt v1.6.0 `../lib/OptimizationManopt`
+  <span class="sgr90">[3aafef2f] </span>OptimizationMetaheuristics v0.3.12 `../lib/OptimizationMetaheuristics`
+  <span class="sgr90">[e4316d97] </span>OptimizationMultistartOptimization v0.3.10 `../lib/OptimizationMultistartOptimization`
+  <span class="sgr90">[064b21be] </span>OptimizationNLPModels v1.6.0 `../lib/OptimizationNLPModels`
+  <span class="sgr90">[4e6fcdb7] </span>OptimizationNLopt v0.3.17 `../lib/OptimizationNLopt`
+  <span class="sgr90">[2cab0595] </span>OptimizationNOMAD v0.3.11 `../lib/OptimizationNOMAD`
+  <span class="sgr90">[dfa73e59] </span>OptimizationODE v0.1.11 `../lib/OptimizationODE`
+  <span class="sgr90">[36348300] </span>OptimizationOptimJL v0.4.20 `../lib/OptimizationOptimJL`
+  <span class="sgr90">[42dfb2eb] </span>OptimizationOptimisers v0.3.23 `../lib/OptimizationOptimisers`
+  <span class="sgr90">[72f8369c] </span>OptimizationPRIMA v0.3.13 `../lib/OptimizationPRIMA`
   <span class="sgr90">[500b13db] </span>OptimizationPolyalgorithms v0.3.11 `../lib/OptimizationPolyalgorithms`
-  <span class="sgr90">[fb0822aa] </span>OptimizationPyCMA v1.4.0 `../lib/OptimizationPyCMA`
+  <span class="sgr90">[fb0822aa] </span>OptimizationPyCMA v1.4.1 `../lib/OptimizationPyCMA`
   <span class="sgr90">[842ac81e] </span>OptimizationQuadDIRECT v0.3.7 `../lib/OptimizationQuadDIRECT`
-  <span class="sgr90">[cce07bd8] </span>OptimizationSciPy v0.4.10 `../lib/OptimizationSciPy`
-  <span class="sgr90">[892fee11] </span>OptimizationSophia v1.4.0 `../lib/OptimizationSophia`
-  <span class="sgr90">[3d669222] </span>OptimizationSpeedMapping v0.2.8 `../lib/OptimizationSpeedMapping`
+  <span class="sgr90">[cce07bd8] </span>OptimizationSciPy v0.4.11 `../lib/OptimizationSciPy`
+  <span class="sgr90">[892fee11] </span>OptimizationSophia v1.4.1 `../lib/OptimizationSophia`
+  <span class="sgr90">[3d669222] </span>OptimizationSpeedMapping v0.2.9 `../lib/OptimizationSpeedMapping`
 <span class="sgr33">⌅</span> <span class="sgr90">[bac558e1] </span>OrderedCollections v1.8.2
-  <span class="sgr90">[1dea7af3] </span>OrdinaryDiffEq v7.6.0
-  <span class="sgr90">[6ad6398a] </span>OrdinaryDiffEqBDF v2.4.3
-  <span class="sgr90">[bbf590c4] </span>OrdinaryDiffEqCore v4.14.3
-  <span class="sgr90">[50262376] </span>OrdinaryDiffEqDefault v2.4.5
-  <span class="sgr90">[4302a76b] </span>OrdinaryDiffEqDifferentiation v3.9.0
-  <span class="sgr90">[1344f307] </span>OrdinaryDiffEqLowOrderRK v2.2.3
-  <span class="sgr90">[127b3ac7] </span>OrdinaryDiffEqNonlinearSolve v2.8.0
-  <span class="sgr90">[43230ef6] </span>OrdinaryDiffEqRosenbrock v2.6.6
-  <span class="sgr90">[b4bd8bb3] </span>OrdinaryDiffEqRosenbrockTableaus v2.4.1
-  <span class="sgr90">[2d112036] </span>OrdinaryDiffEqSDIRK v2.8.2
-  <span class="sgr90">[358294b1] </span>OrdinaryDiffEqStabilizedRK v2.5.1
-  <span class="sgr90">[b1df2697] </span>OrdinaryDiffEqTsit5 v2.1.3
-  <span class="sgr90">[79d7bb75] </span>OrdinaryDiffEqVerner v2.3.0
+  <span class="sgr90">[1dea7af3] </span>OrdinaryDiffEq v7.8.0
+  <span class="sgr90">[6ad6398a] </span>OrdinaryDiffEqBDF v2.4.5
+  <span class="sgr90">[bbf590c4] </span>OrdinaryDiffEqCore v4.15.1
+  <span class="sgr90">[50262376] </span>OrdinaryDiffEqDefault v2.5.0
+  <span class="sgr90">[4302a76b] </span>OrdinaryDiffEqDifferentiation v3.10.0
+  <span class="sgr90">[1344f307] </span>OrdinaryDiffEqLowOrderRK v2.2.4
+  <span class="sgr90">[127b3ac7] </span>OrdinaryDiffEqNonlinearSolve v2.9.0
+  <span class="sgr90">[43230ef6] </span>OrdinaryDiffEqRosenbrock v2.7.0
+  <span class="sgr90">[b4bd8bb3] </span>OrdinaryDiffEqRosenbrockTableaus v2.4.2
+  <span class="sgr90">[2d112036] </span>OrdinaryDiffEqSDIRK v2.9.1
+  <span class="sgr90">[358294b1] </span>OrdinaryDiffEqStabilizedRK v2.6.0
+  <span class="sgr90">[b1df2697] </span>OrdinaryDiffEqTsit5 v2.1.4
+  <span class="sgr90">[79d7bb75] </span>OrdinaryDiffEqVerner v2.4.0
   <span class="sgr90">[90014a1f] </span>PDMats v0.11.41
   <span class="sgr90">[0a7d04aa] </span>PRIMA v0.2.4
-  <span class="sgr90">[69de0a69] </span>Parsers v2.8.7
+<span class="sgr33">⌅</span> <span class="sgr90">[69de0a69] </span>Parsers v2.8.7
   <span class="sgr90">[fa939f87] </span>Pidfile v1.3.0
   <span class="sgr90">[ccf2f8ad] </span>PlotThemes v3.3.0
   <span class="sgr90">[995b91a9] </span>PlotUtils v1.4.4
   <span class="sgr90">[91a5bcdd] </span>Plots v1.41.7
   <span class="sgr90">[e409e4f3] </span>PoissonRandom v0.4.13
   <span class="sgr90">[85a6dd25] </span>PositiveFactorizations v0.2.4
-  <span class="sgr90">[d236fae5] </span>PreallocationTools v1.5.0
+  <span class="sgr90">[d236fae5] </span>PreallocationTools v1.6.0
   <span class="sgr90">[aea7be01] </span>PrecompileTools v1.3.4
   <span class="sgr90">[21216c6a] </span>Preferences v1.5.2
   <span class="sgr90">[27ebfcd6] </span>Primes v0.5.7
@@ -515,36 +509,35 @@ Environment:
   <span class="sgr90">[2792f1a3] </span>RegistryInstances v0.1.0
   <span class="sgr90">[05181044] </span>RelocatableFolders v1.0.1
   <span class="sgr90">[ae029012] </span>Requires v1.3.1
-  <span class="sgr90">[ae5879a3] </span>ResettableStacks v1.3.0
-  <span class="sgr90">[9fe22ead] </span>RespecializeParams v1.2.0
+  <span class="sgr90">[ae5879a3] </span>ResettableStacks v1.4.0
+  <span class="sgr90">[9fe22ead] </span>RespecializeParams v1.3.0
   <span class="sgr90">[37e2e3b7] </span>ReverseDiff v1.17.0
   <span class="sgr90">[79098fc4] </span>Rmath v0.9.0
   <span class="sgr90">[f2b01f46] </span>Roots v3.0.7
-  <span class="sgr90">[7e49a35a] </span>RuntimeGeneratedFunctions v0.5.24
-  <span class="sgr90">[9dfe8606] </span>SCCNonlinearSolve v1.15.0
-  <span class="sgr90">[0bca4576] </span>SciMLBase v3.49.1
-  <span class="sgr90">[19f34311] </span>SciMLJacobianOperators v0.1.17
-  <span class="sgr90">[a6db7da4] </span>SciMLLogging v2.0.4
-  <span class="sgr90">[c0aeaf25] </span>SciMLOperators v1.28.0
-  <span class="sgr90">[431bcebd] </span>SciMLPublic v1.2.4
-  <span class="sgr90">[1ed8b502] </span>SciMLSensitivity v7.118.0
-  <span class="sgr90">[53ae85a6] </span>SciMLStructures v1.10.4
+  <span class="sgr90">[7e49a35a] </span>RuntimeGeneratedFunctions v0.5.25
+  <span class="sgr90">[9dfe8606] </span>SCCNonlinearSolve v1.15.1
+  <span class="sgr90">[0bca4576] </span>SciMLBase v3.49.2
+  <span class="sgr90">[19f34311] </span>SciMLJacobianOperators v0.1.18
+  <span class="sgr90">[a6db7da4] </span>SciMLLogging v2.1.0
+  <span class="sgr90">[c0aeaf25] </span>SciMLOperators v1.29.0
+  <span class="sgr90">[431bcebd] </span>SciMLPublic v1.3.0
+  <span class="sgr90">[1ed8b502] </span>SciMLSensitivity v7.119.0
+  <span class="sgr90">[53ae85a6] </span>SciMLStructures v1.10.5
   <span class="sgr90">[7e506255] </span>ScopedValues v1.6.2
   <span class="sgr90">[6c6a2e73] </span>Scratch v1.3.0
   <span class="sgr90">[eb7571c6] </span>SearchSpaces v0.2.0
   <span class="sgr90">[efcf1570] </span>Setfield v1.1.2
   <span class="sgr90">[605ecd9f] </span>ShowCases v0.1.0
   <span class="sgr90">[992d4aef] </span>Showoff v1.0.3
-  <span class="sgr90">[777ac1f9] </span>SimpleBufferStream v1.2.0
-  <span class="sgr90">[727e6d20] </span>SimpleNonlinearSolve v2.14.0
-  <span class="sgr90">[510db2f7] </span>SimpleOptimization v2.0.0 `../lib/SimpleOptimization`
+  <span class="sgr90">[727e6d20] </span>SimpleNonlinearSolve v2.14.1
+  <span class="sgr90">[510db2f7] </span>SimpleOptimization v2.0.1 `../lib/SimpleOptimization`
   <span class="sgr90">[699a6c99] </span>SimpleTraits v0.9.6
   <span class="sgr90">[47aef6b3] </span>SimpleWeightedGraphs v1.5.1
   <span class="sgr90">[66db9d55] </span>SnoopPrecompile v1.0.3
   <span class="sgr90">[ed01d8cd] </span>Sobol v1.5.0
   <span class="sgr90">[ff4d7338] </span>SolverCore v0.3.10
   <span class="sgr90">[a2af1166] </span>SortingAlgorithms v1.2.3
-  <span class="sgr90">[a57abbd0] </span>SparseColumnPivotedQR v2.1.6
+  <span class="sgr90">[a57abbd0] </span>SparseColumnPivotedQR v2.1.7
   <span class="sgr90">[9f842d2f] </span>SparseConnectivityTracer v1.2.2
   <span class="sgr90">[dc90abb0] </span>SparseInverseSubset v0.1.3
   <span class="sgr90">[0a514795] </span>SparseMatrixColorings v0.4.27
@@ -560,18 +553,18 @@ Environment:
   <span class="sgr90">[1e83bf80] </span>StaticArraysCore v1.4.4
   <span class="sgr90">[10745b16] </span>Statistics v1.11.1
   <span class="sgr90">[82ae8749] </span>StatsAPI v1.8.0
-  <span class="sgr90">[2913bbd2] </span>StatsBase v0.34.12
+  <span class="sgr90">[2913bbd2] </span>StatsBase v0.34.13
   <span class="sgr90">[4c63d2b9] </span>StatsFuns v2.2.1
-  <span class="sgr90">[9672c7b4] </span>SteadyStateDiffEq v2.14.0
+  <span class="sgr90">[9672c7b4] </span>SteadyStateDiffEq v2.15.0
   <span class="sgr90">[09ab397b] </span>StructArrays v0.7.3
   <span class="sgr90">[53d494c1] </span>StructIO v0.3.1
   <span class="sgr90">[ec057cc2] </span>StructUtils v2.8.5
-  <span class="sgr90">[2efcf032] </span>SymbolicIndexingInterface v0.3.54
-  <span class="sgr90">[19f23fe9] </span>SymbolicLimits v1.1.5
+  <span class="sgr90">[2efcf032] </span>SymbolicIndexingInterface v0.3.55
+  <span class="sgr90">[19f23fe9] </span>SymbolicLimits v1.2.0
   <span class="sgr90">[d1185830] </span>SymbolicUtils v4.45.0
   <span class="sgr90">[0c5d862f] </span>Symbolics v7.36.0
   <span class="sgr90">[3783bdb8] </span>TableTraits v1.0.1
-  <span class="sgr90">[bd369af6] </span>Tables v1.13.0
+  <span class="sgr90">[bd369af6] </span>Tables v1.14.0
   <span class="sgr90">[ed4db957] </span>TaskLocalValues v0.1.3
   <span class="sgr90">[62fd8b95] </span>TensorCore v0.1.1
   <span class="sgr90">[8ea1fca8] </span>TermInterface v2.0.0
@@ -584,7 +577,6 @@ Environment:
   <span class="sgr90">[6dd1b50a] </span>Tulip v0.9.8
   <span class="sgr90">[bc48ee85] </span>Tullio v0.3.9
 <span class="sgr33">⌅</span> <span class="sgr90">[c3b1956e] </span>TypeUtils v1.14.0
-  <span class="sgr90">[5c2747f8] </span>URIs v1.7.0
   <span class="sgr90">[3a884ed6] </span>UnPack v1.0.2
   <span class="sgr90">[1cfade01] </span>UnicodeFun v0.4.1
   <span class="sgr90">[013be700] </span>UnsafeAtomics v0.3.2
@@ -598,15 +590,15 @@ Environment:
   <span class="sgr90">[6e34b625] </span>Bzip2_jll v1.0.9+0
   <span class="sgr90">[83423d85] </span>Cairo_jll v1.18.7+0
   <span class="sgr90">[ee1fde0b] </span>Dbus_jll v1.16.2+0
-  <span class="sgr90">[7cc45869] </span>Enzyme_jll v0.0.290+0
+<span class="sgr33">⌅</span> <span class="sgr90">[7cc45869] </span>Enzyme_jll v0.0.290+0
   <span class="sgr90">[2702e6a9] </span>EpollShim_jll v0.0.20230411+1
   <span class="sgr90">[2e619515] </span>Expat_jll v2.8.3+0
 <span class="sgr33">⌅</span> <span class="sgr90">[b22a6f82] </span>FFMPEG_jll v8.1.2+0
   <span class="sgr90">[a3f928ae] </span>Fontconfig_jll v2.17.1+0
   <span class="sgr90">[d7e528f0] </span>FreeType2_jll v2.14.3+1
   <span class="sgr90">[559328eb] </span>FriBidi_jll v1.0.17+0
-  <span class="sgr90">[0656b61e] </span>GLFW_jll v3.4.1+1
-  <span class="sgr90">[d2c73de3] </span>GR_jll v0.73.26+0
+  <span class="sgr90">[0656b61e] </span>GLFW_jll v3.5.1+0
+  <span class="sgr90">[d2c73de3] </span>GR_jll v0.73.27+0
 <span class="sgr33">⌅</span> <span class="sgr90">[b0724c58] </span>GettextRuntime_jll v0.22.4+0
   <span class="sgr90">[61579ee1] </span>Ghostscript_jll v9.55.1+0
   <span class="sgr90">[020c3dae] </span>Git_LFS_jll v3.7.1+0
@@ -621,7 +613,7 @@ Environment:
   <span class="sgr90">[aacddb02] </span>JpegTurbo_jll v3.2.0+1
   <span class="sgr90">[c1c5ebd0] </span>LAME_jll v3.100.3+0
   <span class="sgr90">[88015f11] </span>LERC_jll v4.1.0+0
-  <span class="sgr90">[dad2f222] </span>LLVMExtra_jll v0.0.46+0
+<span class="sgr33">⌅</span> <span class="sgr90">[dad2f222] </span>LLVMExtra_jll v0.0.46+0
   <span class="sgr90">[1d63c593] </span>LLVMOpenMP_jll v22.1.7+0
   <span class="sgr90">[81d17ec3] </span>L_BFGS_B_jll v3.0.1+0
   <span class="sgr90">[ad6e5548] </span>LibTracyClient_jll v0.13.1+0
@@ -634,7 +626,6 @@ Environment:
   <span class="sgr90">[d00139f3] </span>METIS_jll v5.1.3+0
   <span class="sgr90">[856f044c] </span>MKL_jll v2025.2.0+0
   <span class="sgr90">[d7ed1dd3] </span>MUMPS_seq_jll v500.900.100+0
-  <span class="sgr90">[c8ffd9c3] </span>MbedTLS_jll v2.28.1010+0
   <span class="sgr90">[079eb43e] </span>NLopt_jll v2.11.0+0
 <span class="sgr33">⌅</span> <span class="sgr90">[2fc7fd02] </span>NOMAD_jll v4.3.1+0
   <span class="sgr90">[e7412a2a] </span>Ogg_jll v1.3.6+0
@@ -748,4 +739,4 @@ Environment:
   <span class="sgr90">[8e850b90] </span>libblastrampoline_jll v5.15.0+0
   <span class="sgr90">[8e850ede] </span>nghttp2_jll v1.64.0+1
   <span class="sgr90">[3f19e933] </span>p7zip_jll v17.7.0+0
-<span class="sgr36"><span class="sgr1">Info</span></span> Packages marked with <span class="sgr32">⌃</span> and <span class="sgr33">⌅</span> have new versions available. Those with <span class="sgr32">⌃</span> may be upgradable, but those with <span class="sgr33">⌅</span> are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v5.7.1/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v5.7.1/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/">Getting Started with Optimization.jl »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Sunday 23 August 2026 22:00">Sunday 23 August 2026</span>. Using Julia version 1.12.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<span class="sgr36"><span class="sgr1">Info</span></span> Packages marked with <span class="sgr32">⌃</span> and <span class="sgr33">⌅</span> have new versions available. Those with <span class="sgr32">⌃</span> may be upgradable, but those with <span class="sgr33">⌅</span> are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v5.8.0/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/Optimization.jl/tree/gh-pages/v5.8.0/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/">Getting Started with Optimization.jl »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 26 August 2026 13:30">Wednesday 26 August 2026</span>. Using Julia version 1.12.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
