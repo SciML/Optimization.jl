@@ -22,7 +22,7 @@ OptimizationOptimJL = {path = "../OptimizationOptimJL"}
 
 [compat]
 SciMLTesting = "2.8"
-ForwardDiff = "0.10, 1"
+ForwardDiff = "1"
 OptimizationBase = "5"
 OptimizationOptimisers = "0.3"
 OptimizationOptimJL = "0.4"

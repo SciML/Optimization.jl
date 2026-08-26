@@ -20,7 +20,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
-ForwardDiff = "0.10, 1"
+ForwardDiff = "1"
 GCMAES = "0.1.34"
 julia = "1.10"
 OptimizationBase = "5.5.0"

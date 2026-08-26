@@ -20,7 +20,7 @@ OptimizationOptimJL = {path = "../OptimizationOptimJL"}
 SciMLTesting = "2.8"
 ADTypes = "1.18"
 DifferentiationInterface = "0.7"
-ForwardDiff = "0.10, 1"
+ForwardDiff = "1"
 Ipopt = "1"
 NLPModels = "0.21"
 NLPModelsTest = "0.10"
