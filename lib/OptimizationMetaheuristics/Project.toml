@@ -3,7 +3,7 @@ uuid = "3aafef2f-86ae-4776-b337-85a36adf0b55"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 version = "0.3.12"
 [deps]
-Metaheuristics = "3.4"
+Metaheuristics = "bcdb8e00-2c21-11e9-3065-2b553b22f898"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 SciMLLogging = "a6db7da4-7206-11f0-1eab-35f2a5dbe1d1"
@@ -20,7 +20,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
 julia = "1.10"
-Metaheuristics = "3.3"
+Metaheuristics = "3.4"
 OptimizationBase = "5.5.0"
 Pkg = "1"
 Random = "1.10"
