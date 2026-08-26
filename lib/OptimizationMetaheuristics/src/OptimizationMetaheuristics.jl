@@ -1,6 +1,14 @@
 module OptimizationMetaheuristics
 
 using Metaheuristics
+# The Metaheuristics algorithm names are this package's whole point: `using
+# Optimization, OptimizationMetaheuristics` has to be enough to write
+# `solve(prob, ECA())`, exactly as the docs list them. They are re-surfaced by name
+# below rather than by blanket `@reexport`, which also exported `optimize!`/`minimizer`
+# /`Options` and the MCDM decision-making surface. Everything stays owned and
+# documented upstream in Metaheuristics.jl.
+using Metaheuristics: ABC, BRKGA, CCMO, CGSA, CSO, DE, ECA, GA, GRASP, MCCGA,
+    MOEAD_DE, NSGA2, NSGA3, PSO, RDEx, SA, SHADE, SMS_EMOA, SPEA2, VND, VNS, WOA, εDE
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
 using OptimizationBase
@@ -8,6 +16,12 @@ using SciMLLogging: @SciMLMessage
 using SciMLBase
 
 export Metaheuristics
+
+# Metaheuristics' algorithms; approved via `reexports_allow` in test/qa/qa.jl. The
+# configuration objects stay qualified as the docs spell them (`Metaheuristics.Options`,
+# `Metaheuristics.Information`) — `Options` is far too generic a name to export.
+export ABC, BRKGA, CCMO, CGSA, CSO, DE, ECA, GA, GRASP, MCCGA,
+    MOEAD_DE, NSGA2, NSGA3, PSO, RDEx, SA, SHADE, SMS_EMOA, SPEA2, VND, VNS, WOA, εDE
 
 SciMLBase.requiresbounds(opt::Metaheuristics.AbstractAlgorithm) = true
 SciMLBase.allowsbounds(opt::Metaheuristics.AbstractAlgorithm) = true

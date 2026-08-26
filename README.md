@@ -79,14 +79,14 @@ p = [1.0, 100.0]
 prob = OptimizationProblem(rosenbrock, x0, p)
 
 using OptimizationOptimJL
-sol = solve(prob, Optim.NelderMead())
+sol = solve(prob, NelderMead())
 
 using OptimizationBBO
 prob = OptimizationProblem(rosenbrock, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
 ```
 
-The output of the first optimization task (with the `Optim.NelderMead()` algorithm)
+The output of the first optimization task (with the `NelderMead()` algorithm)
 is given below:
 
 ```
@@ -113,7 +113,7 @@ We can also explore other methods in a similar way:
 using ForwardDiff, ADTypes
 f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
 prob = OptimizationProblem(f, x0, p)
-sol = solve(prob, Optim.BFGS())
+sol = solve(prob, BFGS())
 ```
 
 For instance, the above optimization task produces the following output:

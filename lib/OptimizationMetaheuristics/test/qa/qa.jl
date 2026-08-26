@@ -5,6 +5,15 @@ include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "rende
 
 using Metaheuristics
 
+# Kept in sync with the reexport `export` block in
+# src/OptimizationMetaheuristics.jl: the Metaheuristics algorithm names
+# `using OptimizationMetaheuristics` is expected to bring into scope.
+const METAHEURISTICS_REEXPORTS = (
+    :ABC, :BRKGA, :CCMO, :CGSA, :CSO, :DE, :ECA, :GA, :GRASP, :MCCGA, :MOEAD_DE,
+    :Metaheuristics, :NSGA2, :NSGA3, :PSO, :RDEx, :SA, :SHADE, :SMS_EMOA, :SPEA2,
+    :VND, :VNS, :WOA, :εDE,
+)
+
 # ExplicitImports findings, all tracked against SciML/Optimization.jl:
 #  * no_implicit_imports broken: the module relies on `using`
 #    module names (SciMLBase/OptimizationBase/...) that cannot be made
@@ -35,5 +44,9 @@ run_qa(
         all_qualified_accesses_are_public = (; ignore = (:AbstractAlgorithm, :OptimizationStats, :__init, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback, :create_child, :get_best, :requiresbounds)),
     ),
     ei_broken = (:no_implicit_imports,),
-    reexports_allow = (:Metaheuristics,),
+    reexports_allow = METAHEURISTICS_REEXPORTS,
 )
+
+@testset "reexported Metaheuristics algorithm names" begin
+    test_reexported_names(OptimizationMetaheuristics, METAHEURISTICS_REEXPORTS)
+end

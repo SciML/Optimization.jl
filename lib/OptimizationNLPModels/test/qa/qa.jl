@@ -5,6 +5,12 @@ include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "rende
 
 using NLPModels
 
+# Kept in sync with the reexport `export` block in src/OptimizationNLPModels.jl.
+const NLPMODELS_REEXPORTS = (
+    :AbstractNLPModel, :AbstractNLSModel, :Counters, :NLPModelMeta, :NLPModels,
+    :NLSCounters, :NLSMeta,
+)
+
 # ExplicitImports findings, all tracked against SciML/Optimization.jl:
 #  * no_implicit_imports broken: the module relies on `using`
 #    module names (SciMLBase/OptimizationBase/...) that cannot be made
@@ -32,5 +38,9 @@ run_qa(
         all_qualified_accesses_are_public = (; ignore = (:NoAD,)),
     ),
     ei_broken = (:no_implicit_imports,),
-    reexports_allow = (:NLPModels,),
+    reexports_allow = NLPMODELS_REEXPORTS,
 )
+
+@testset "reexported NLPModels names" begin
+    test_reexported_names(OptimizationNLPModels, NLPMODELS_REEXPORTS)
+end

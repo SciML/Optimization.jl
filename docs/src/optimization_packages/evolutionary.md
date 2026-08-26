@@ -1,4 +1,4 @@
-# Evolutionary.jl
+# [Evolutionary.jl](@id evolutionary)
 
 [`Evolutionary`](https://github.com/SciML/Evolutionary.jl) is a Julia package implementing various evolutionary and genetic algorithm.
 

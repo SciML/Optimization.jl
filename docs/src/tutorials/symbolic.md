@@ -44,7 +44,7 @@ And now we solve.
 ```@example modelingtoolkit
 sys = complete(sys)
 prob = OptimizationProblem(sys, u0, p, grad = true, hess = true)
-solve(prob, Optim.Newton())
+solve(prob, Newton())
 ```
 
 It provides many other features like auto-parallelism and sparsification too.

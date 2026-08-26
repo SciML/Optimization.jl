@@ -5,6 +5,11 @@ include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "rende
 
 using NLopt
 
+# Kept in sync with the reexport `export` block in src/OptimizationNLopt.jl. NLopt's
+# algorithm constants (`NLopt.LD_LBFGS` and friends) are not exported by NLopt itself,
+# so the exported `NLopt` module binding is what makes the documented spelling work.
+const NLOPT_REEXPORTS = (:Algorithm, :NLopt, :Opt)
+
 # ExplicitImports findings, all tracked against SciML/Optimization.jl:
 #  * no_implicit_imports broken: the module relies on `using`
 #    module names (SciMLBase/OptimizationBase/...) that cannot be made
@@ -44,5 +49,11 @@ run_qa(
         all_explicit_imports_are_public = (; ignore = (:deduce_retcode,)),
     ),
     ei_broken = (:no_implicit_imports,),
-    reexports_allow = (:NLopt,),
+    # NLopt.jl ships no docstring for `Opt` or `Algorithm`; the obligation is NLopt's.
+    api_docs_kwargs = (; ignore = (:Algorithm, :Opt)),
+    reexports_allow = NLOPT_REEXPORTS,
 )
+
+@testset "reexported NLopt names" begin
+    test_reexported_names(OptimizationNLopt, NLOPT_REEXPORTS)
+end

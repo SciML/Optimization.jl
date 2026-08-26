@@ -1,4 +1,4 @@
-# Metaheuristics.jl
+# [Metaheuristics.jl](@id metaheuristics)
 
 [`Metaheuristics`](https://github.com/jmejia8/Metaheuristics.jl) is a Julia package implementing **metaheuristic algorithms** for global optimization that does not require for the optimized function to be differentiable.
 
@@ -17,20 +17,20 @@ Pkg.add("OptimizationMetaheuristics");
 
 A `Metaheuristics` Single-Objective algorithm is called using one of the following:
 
-  - Evolutionary Centers Algorithm: `Metaheuristics.ECA()`
+  - Evolutionary Centers Algorithm: `ECA()`
 
-      - Differential Evolution: `Metaheuristics.DE()` with 5 different strategies
+  - Differential Evolution: `DE()` with 5 different strategies
     
-      + `Metaheuristics.DE(strategy=:rand1)` - default strategy
-      + `Metaheuristics.DE(strategy=:rand2)`
-      + `Metaheuristics.DE(strategy=:best1)`
-      + `Metaheuristics.DE(strategy=:best2)`
-      + `Metaheuristics.DE(strategy=:randToBest1)`
-  - Particle Swarm Optimization: `Metaheuristics.PSO()`
-  - Artificial Bee Colony: `Metaheuristics.ABC()`
-  - Gravitational Search Algorithm: `Metaheuristics.CGSA()`
-  - Simulated Annealing: `Metaheuristics.SA()`
-  - Whale Optimization Algorithm: `Metaheuristics.WOA()`
+      + `DE(strategy=:rand1)` - default strategy
+      + `DE(strategy=:rand2)`
+      + `DE(strategy=:best1)`
+      + `DE(strategy=:best2)`
+      + `DE(strategy=:randToBest1)`
+  - Particle Swarm Optimization: `PSO()`
+  - Artificial Bee Colony: `ABC()`
+  - Gravitational Search Algorithm: `CGSA()`
+  - Simulated Annealing: `SA()`
+  - Whale Optimization Algorithm: `WOA()`
 
 `Metaheuristics` also performs [`Multiobjective optimization`](https://jmejia8.github.io/Metaheuristics.jl/stable/examples/#Multiobjective-Optimization), but this is not yet supported by `Optimization`.
 
@@ -38,9 +38,36 @@ Each optimizer sets default settings based on the optimization problem, but spec
 
 Additionally, `Metaheuristics` common settings which would be defined by [`Metaheuristics.Options`](https://jmejia8.github.io/Metaheuristics.jl/stable/api/#Metaheuristics.Options) can be simply passed as special keyword arguments to `solve` without the need to use the `Metaheuristics.Options` struct.
 
-Lastly, information about the optimization problem such as the true optimum is set via [`Metaheuristics.Information`](https://jmejia8.github.io/Metaheuristics.jl/stable/api/#Metaheuristics.Information) and passed as part of the optimizer struct to `solve` e.g., `solve(prob, Metaheuristics.ECA(information = Metaheuristics.Information(f_optimum = 0.0)))`
+Lastly, information about the optimization problem such as the true optimum is set via [`Metaheuristics.Information`](https://jmejia8.github.io/Metaheuristics.jl/stable/api/#Metaheuristics.Information) and passed as part of the optimizer struct to `solve` e.g., `solve(prob, ECA(information = Metaheuristics.Information(f_optimum = 0.0)))`
 
 The currently available algorithms and their parameters are listed [here](https://jmejia8.github.io/Metaheuristics.jl/stable/algorithms/).
+
+## Reexported Metaheuristics.jl API
+
+`using OptimizationMetaheuristics` brings Metaheuristics.jl's algorithm names into
+scope, so that `solve(prob, ECA())` works without a separate `using Metaheuristics`.
+These names are owned and documented by
+[Metaheuristics.jl](https://jmejia8.github.io/Metaheuristics.jl/stable/algorithms/);
+this package only re-exports them.
+
+  - Single objective: `ECA`, `DE`, `PSO`, `ABC`, `CGSA`, `SA`, `WOA`, `GA`, `SHADE`,
+    `RDEx`, `εDE`, `MCCGA`, `BRKGA`, `CSO`, `GRASP`, `VND`, `VNS`
+  - Multi objective and constrained: `NSGA2`, `NSGA3`, `SMS_EMOA`, `SPEA2`, `MOEAD_DE`,
+    `CCMO`
+  - The `Metaheuristics` module itself
+
+Metaheuristics' configuration objects keep the qualified spelling the examples above
+use — `Metaheuristics.Options`, `Metaheuristics.Information` — because `Options` is far
+too generic a name to put into every namespace. Its own `Metaheuristics.optimize` driver
+and its multi-criteria decision-making surface are not re-exported either.
+
+!!! note
+    
+    `DE`, `GA` and `NSGA2` are also exported by
+    [Evolutionary.jl](@ref evolutionary). If you load both
+    `OptimizationMetaheuristics` and `OptimizationEvolutionary`, qualify those three.
+
+Anything else from Metaheuristics.jl must be imported from Metaheuristics directly.
 
 ## Notes
 
@@ -49,7 +76,7 @@ constraint equations. However, lower and upper constraints set by `lb` and `ub` 
 
 ## Examples
 
-The Rosenbrock function can be optimized using the Evolutionary Centers Algorithm `Metaheuristics.ECA()` as follows:
+The Rosenbrock function can be optimized using the Evolutionary Centers Algorithm `ECA()` as follows:
 
 ```@example Metaheuristics
 using OptimizationBase, OptimizationMetaheuristics
@@ -58,13 +85,13 @@ x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
 prob = OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
-sol = solve(prob, Metaheuristics.ECA(), maxiters = 100000, maxtime = 1000.0)
+sol = solve(prob, ECA(), maxiters = 100000, maxtime = 1000.0)
 ```
 
 Per default `Metaheuristics` ignores the initial values `x0` set in the `OptimizationProblem`. In order to for `Optimization` to use `x0` we have to set `use_initial=true`:
 
 ```@example Metaheuristics
-sol = solve(prob, Metaheuristics.ECA(), use_initial = true, maxiters = 100000, maxtime = 1000.0)
+sol = solve(prob, ECA(), use_initial = true, maxiters = 100000, maxtime = 1000.0)
 ```
 
 ### With Constraint Equations

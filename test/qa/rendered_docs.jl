@@ -19,10 +19,24 @@ end
 const OPTIMIZATION_CURATED_REEXPORTS = (
     :AutoEnzyme, :AutoFiniteDiff, :AutoForwardDiff, :AutoMooncake, :AutoReverseDiff,
     :AutoSparse, :AutoSymbolics, :AutoTracker, :AutoZygote,
-    :MaxSense, :MinSense, :ObjSense,
+    :EnsembleDistributed, :EnsembleProblem, :EnsembleSerial, :EnsembleThreads,
+    :MaxSense, :MinSense, :NoAD, :ObjSense,
     :MultiObjectiveOptimizationFunction, :OptimizationFunction, :OptimizationProblem,
     :OptimizationSolution, :OptimizationStats,
     :ReturnCode, :allowsbounds, :allowscallback, :allowsconstraints,
     :init, :remake, :requiresbounds, :requiresconshess, :requiresconsjac,
     :requiresconstraints, :requiresgradient, :requireshessian, :solve, :solve!,
+    :successful_retcode,
 )
+
+# A package's re-surfaced names must actually be exported *and* resolvable from
+# `using <Pkg>`; asserting both keeps the `reexports_allow` list from drifting away
+# from the `export` block in src/ (the drift is what silently strips public API).
+function test_reexported_names(mod::Module, reexports)
+    exported = names(mod)
+    for name in reexports
+        @test name in exported
+        @test isdefined(mod, name)
+    end
+    return nothing
+end

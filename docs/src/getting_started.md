@@ -86,7 +86,7 @@ First let's use the NelderMead a derivative free solver from Optim.jl:
 
 ```@example intro
 using OptimizationOptimJL
-sol = solve(prob, Optim.NelderMead())
+sol = solve(prob, NelderMead())
 ```
 
 BlackBoxOptim.jl offers derivative-free global optimization solvers that require the bounds to be set via `lb` and `ub` in the `OptimizationProblem`. Let's use the BBO_adaptive_de_rand_1_bin_radiuslimited() solver:
@@ -134,7 +134,7 @@ looks like:
 using ForwardDiff, ADTypes
 optf = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
 prob = OptimizationProblem(optf, u0, p)
-sol = solve(prob, Optim.BFGS())
+sol = solve(prob, BFGS())
 ```
 
 We can inspect the `original` to see the statistics on the number of steps
@@ -157,7 +157,7 @@ We can demonstrate this via:
 using Zygote
 optf = OptimizationFunction(rosenbrock, ADTypes.AutoZygote())
 prob = OptimizationProblem(optf, u0, p)
-sol = solve(prob, Optim.BFGS())
+sol = solve(prob, BFGS())
 ```
 
 ## Setting Box Constraints
@@ -170,7 +170,7 @@ optimization with box constraints by rebuilding the OptimizationProblem:
 
 ```@example intro
 prob = OptimizationProblem(optf, u0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
-sol = solve(prob, Optim.BFGS())
+sol = solve(prob, BFGS())
 ```
 
 For more information on handling constraints, in particular equality and

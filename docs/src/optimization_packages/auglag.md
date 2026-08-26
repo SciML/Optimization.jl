@@ -33,5 +33,5 @@ prob = OptimizationProblem(
     lcons = [1.0], ucons = [1.0],
 )
 
-sol = solve(prob, AugLag(inner = Optim.BFGS()); maxiters = 100)
+sol = solve(prob, AugLag(inner = BFGS()); maxiters = 100)
 ```

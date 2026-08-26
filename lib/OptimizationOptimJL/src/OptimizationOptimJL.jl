@@ -1,12 +1,30 @@
 module OptimizationOptimJL
 
 using Optim
+# The Optim algorithm names are this package's whole point: `using Optimization,
+# OptimizationOptimJL` has to be enough to write `solve(prob, BFGS())`, exactly as the
+# docs show. They are re-surfaced by name below rather than by blanket `@reexport`,
+# which also dragged in Optim's objective wrappers and its own `optimize`/`maximize`
+# driver interface. Everything stays owned and documented upstream in Optim.jl.
+using Optim: AcceleratedGradientDescent, BFGS, ConjugateGradient, Fminbox,
+    GradientDescent, IPNewton, LBFGS, MomentumGradientDescent, NGMRES, NelderMead,
+    Newton, NewtonTrustRegion, OACCEL, ParticleSwarm, SAMIN, SimulatedAnnealing
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
 using OptimizationBase
 using SciMLBase, SparseArrays
 
 export Optim
+
+# Optim's optimizers; approved via `reexports_allow` in test/qa/qa.jl. Deliberately
+# excluded: `Optim.Adam`/`Optim.AdaMax` (the documented `Adam` is Optimisers'; exporting
+# both makes the name ambiguous wherever OptimizationOptimisers is also loaded),
+# `Optim.LBFGSB` (OptimizationLBFGSB owns `LBFGSB` here), the univariate `Brent`/
+# `GoldenSection` (no `OptimizationProblem` dispatches to them), and Optim's objective
+# wrappers and `optimize`/`maximize` entry points, which Optimization.jl replaces.
+export AcceleratedGradientDescent, BFGS, ConjugateGradient, Fminbox,
+    GradientDescent, IPNewton, LBFGS, MomentumGradientDescent, NGMRES, NelderMead,
+    Newton, NewtonTrustRegion, OACCEL, ParticleSwarm, SAMIN, SimulatedAnnealing
 
 # Construct a TwiceDifferentiable with Hessian-vector product support for KrylovTrustRegion.
 function _make_hv_objective(f, fg!, hv!, x0)

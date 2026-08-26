@@ -26,6 +26,11 @@ import SciMLBase: solve, init, solve!, __init, __solve,
     KeywordArgError, extract_alg,
     _concrete_solve_adjoint, _concrete_solve_forward
 
+# Re-surfaced below but not referenced inside this module, so they need an explicit
+# import to become bindings here — `export`ing a name that is only visible through
+# `using SciMLBase` does not chain through to `using OptimizationBase`.
+using SciMLBase: NoAD, successful_retcode
+
 using SymbolicIndexingInterface: SymbolicIndexingInterface
 
 """
@@ -103,7 +108,10 @@ export OptimizationVerbosity
 # these, so adding one is a deliberate, reviewable act.
 export OptimizationProblem, OptimizationFunction, MultiObjectiveOptimizationFunction,
     OptimizationSolution, OptimizationStats
-export init, solve!, remake, ReturnCode
+export init, solve!, remake, ReturnCode, successful_retcode, NoAD
+# Multistart optimization through the SciML ensemble interface; see the
+# "Multistart optimization with EnsembleProblem" tutorial.
+export EnsembleProblem, EnsembleSerial, EnsembleThreads, EnsembleDistributed
 export AutoEnzyme, AutoFiniteDiff, AutoForwardDiff, AutoMooncake, AutoReverseDiff,
     AutoSparse, AutoSymbolics, AutoTracker, AutoZygote
 
