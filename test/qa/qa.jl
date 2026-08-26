@@ -3,9 +3,6 @@ using Test
 
 include("rendered_docs.jl")
 
-# no_implicit_imports: Optimization is a facade that `@reexport`s SciMLBase/ADTypes/
-# OptimizationBase and `using`s many helper modules; the implicit-import surface is
-# large and intentional. Tracked as known-broken (SciML/Optimization.jl).
 # no_stale_explicit_imports ignores: `instantiate_function` is reached as
 # `Optimization.instantiate_function` by downstream/tests; `ReInitCache` and
 # `OptimizationStats` are part of the intentionally re-surfaced cache/stats API.
@@ -15,7 +12,6 @@ run_qa(
     Optimization;
     explicit_imports = true,
     aqua_kwargs = (;
-        ambiguities = (; recursive = false),
         piracies = (;
             treat_as_own = [
                 SciMLBase.OptimizationProblem,
@@ -38,7 +34,6 @@ run_qa(
             ),
         ),
     ),
-    ei_broken = (:no_implicit_imports,),
     # `Optimization` is the umbrella over `OptimizationBase`, which curates its own
     # public API; re-exporting exactly that set is the facade's whole purpose.
     reexports_allow = optimization_reexports_allow(Optimization.OptimizationBase),
