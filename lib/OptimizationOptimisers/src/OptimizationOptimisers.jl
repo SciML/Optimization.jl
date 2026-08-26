@@ -8,10 +8,9 @@ using Optimisers
 # `@reexport`, which also exported `Optimisers.init`/`update`/`setup` — and
 # `Optimisers.init` shadowing `SciMLBase.init` broke the cache interface for anyone
 # loading both. Everything stays owned and documented upstream in Optimisers.jl.
-using Optimisers: ADADelta, ADAGrad, ADAM, ADAMW, AMSGrad, AbstractRule, AccumGrad,
-    AdaBelief, AdaDelta, AdaGrad, AdaMax, Adam, AdamW, ClipGrad, ClipNorm, Descent,
-    Lion, Momentum, NADAM, NAdam, Nesterov, OADAM, OAdam, OptimiserChain, RADAM,
-    RAdam, RMSProp, Rprop, SignDecay, WeightDecay
+using Optimisers: AMSGrad, AbstractRule, AccumGrad, AdaBelief, AdaDelta, AdaGrad,
+    AdaMax, Adam, AdamW, ClipGrad, ClipNorm, Descent, Lion, Momentum, NAdam, Nesterov,
+    OAdam, OptimiserChain, RAdam, RMSProp, Rprop, SignDecay, WeightDecay
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
 using OptimizationBase
@@ -24,10 +23,9 @@ export Optimisers
 # own `init`/`setup`/`update`/`apply!`/`destructure` interface is deliberately not
 # re-surfaced — Optimization.jl drives the rules itself, and `init` collides with the
 # SciML `init`. Reach those as `Optimisers.setup` etc.
-export ADADelta, ADAGrad, ADAM, ADAMW, AMSGrad, AccumGrad,
-    AdaBelief, AdaDelta, AdaGrad, AdaMax, Adam, AdamW, ClipGrad, ClipNorm, Descent,
-    Lion, Momentum, NADAM, NAdam, Nesterov, OADAM, OAdam, OptimiserChain, RADAM,
-    RAdam, RMSProp, Rprop, SignDecay, WeightDecay
+export AMSGrad, AccumGrad, AdaBelief, AdaDelta, AdaGrad, AdaMax, Adam, AdamW,
+    ClipGrad, ClipNorm, Descent, Lion, Momentum, NAdam, Nesterov, OAdam,
+    OptimiserChain, RAdam, RMSProp, Rprop, SignDecay, WeightDecay
 
 SciMLBase.has_init(opt::AbstractRule) = true
 SciMLBase.requiresgradient(opt::AbstractRule) = true

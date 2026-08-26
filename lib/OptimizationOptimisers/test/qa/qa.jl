@@ -8,11 +8,9 @@ using Optimisers
 # Kept in sync with the reexport `export` block in src/OptimizationOptimisers.jl: the
 # Optimisers rule names `using OptimizationOptimisers` is expected to bring into scope.
 const OPTIMISERS_REEXPORTS = (
-    :ADADelta, :ADAGrad, :ADAM, :ADAMW, :AMSGrad, :AccumGrad,
-    :AdaBelief, :AdaDelta, :AdaGrad, :AdaMax, :Adam, :AdamW, :ClipGrad, :ClipNorm,
-    :Descent, :Lion, :Momentum, :NADAM, :NAdam, :Nesterov, :OADAM, :OAdam,
-    :OptimiserChain, :Optimisers, :RADAM, :RAdam, :RMSProp, :Rprop, :SignDecay,
-    :WeightDecay,
+    :AMSGrad, :AccumGrad, :AdaBelief, :AdaDelta, :AdaGrad, :AdaMax, :Adam, :AdamW,
+    :ClipGrad, :ClipNorm, :Descent, :Lion, :Momentum, :NAdam, :Nesterov, :OAdam,
+    :OptimiserChain, :Optimisers, :RAdam, :RMSProp, :Rprop, :SignDecay, :WeightDecay,
 )
 
 # ExplicitImports findings, all tracked against SciML/Optimization.jl:
@@ -45,12 +43,6 @@ run_qa(
         all_qualified_accesses_are_public = (; ignore = (:OptimizationState, :OptimizationStats, :__init, :__solve, :_check_and_convert_maxiters, :allowscallback, :allowsfg, :isa_dataiterator, :requiresgradient)),
     ),
     ei_broken = (:no_implicit_imports,),
-    # Optimisers.jl gives its legacy all-caps aliases no docstring of their own; they
-    # are kept public here so code written against `ADAM(0.01)` keeps working. The
-    # docstring obligation is Optimisers.jl's.
-    api_docs_kwargs = (;
-        ignore = (:ADADelta, :ADAGrad, :ADAM, :ADAMW, :NADAM, :OADAM, :RADAM),
-    ),
     reexports_allow = OPTIMISERS_REEXPORTS,
 )
 

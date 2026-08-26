@@ -18,7 +18,7 @@ Pkg.add("OptimizationMultistartOptimization");
 !!! note
     
 
-You also need to load the relevant subpackage for the local method of your choice, for example if you plan to use one of the NLopt.jl's optimizers, you'd install and load OptimizationNLopt as described in the [NLopt.jl](@ref)'s section.
+You also need to load the relevant subpackage for the local method of your choice, for example if you plan to use one of the NLopt.jl's optimizers, you'd install and load OptimizationNLopt as described in the [NLopt.jl](@ref nlopt)'s section.
 
 ## Global Optimizer
 
