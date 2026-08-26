@@ -1,7 +1,7 @@
 name = "OptimizationManopt"
 uuid = "e57b7fff-7ee7-4550-b4f0-90e9476e9fb6"
 authors = ["Mateusz Baran <mateuszbaran89@gmail.com>", "Ronny Bergmann <manopt@ronnybergmann.net>"]
-version = "1.5.0"
+version = "1.6.0"
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -47,7 +47,7 @@ ManifoldDiff = "0.4"
 Manifolds = "0.10, 0.11"
 ManifoldsBase = "1, 2"
 Manopt = "0.5.25, 0.6"
-OptimizationBase = "5"
+OptimizationBase = "5.5.0"
 Pkg = "1"
 QuadraticModels = "0.9"
 Random = "1.10"

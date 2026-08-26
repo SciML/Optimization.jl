@@ -1,7 +1,7 @@
 name = "OptimizationSciPy"
 uuid = "cce07bd8-c79b-4b00-aee8-8db9cce22837"
 authors = ["Aditya Pandey <adityapand3y666@gmail.com> and contributors"]
-version = "0.4.10"
+version = "0.4.11"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
@@ -24,7 +24,7 @@ ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 ForwardDiff = "0.10, 1"
 julia = "1.10"
 ModelingToolkit = "11.32"
-OptimizationBase = "5"
+OptimizationBase = "5.5.0"
 Pkg = "1"
 PythonCall = "0.9.30"
 Random = "1.10"

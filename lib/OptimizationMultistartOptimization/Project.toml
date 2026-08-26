@@ -1,7 +1,7 @@
 name = "OptimizationMultistartOptimization"
 uuid = "e4316d97-8bbb-4fd3-a7d8-3851d2a72823"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.9"
+version = "0.3.10"
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 MultistartOptimization = "3933049c-43be-478e-a8bb-6e0f7fd53575"
@@ -26,12 +26,12 @@ SciMLTesting = "2.8"
 Pkg = "1"
 SafeTestsets = "0.1"
 julia = "1.10"
-OptimizationBase = "5"
+OptimizationBase = "5.5.0"
 MultistartOptimization = "0.3"
 SciMLBase = "3"
 Reexport = "1.2"
 ForwardDiff = "0.10, 1"
-OptimizationNLopt = "0.3"
+OptimizationNLopt = "0.3.17"
 ReverseDiff = "1"
 Test = "1.10"
 
