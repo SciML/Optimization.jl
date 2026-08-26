@@ -49,8 +49,6 @@ run_qa(
         all_explicit_imports_are_public = (; ignore = (:deduce_retcode,)),
     ),
     ei_broken = (:no_implicit_imports,),
-    # NLopt.jl ships no docstring for `Opt` or `Algorithm`; the obligation is NLopt's.
-    api_docs_kwargs = (; ignore = (:Algorithm, :Opt)),
     reexports_allow = NLOPT_REEXPORTS,
 )
 
