@@ -95,6 +95,33 @@ function set_runtime_activity2(
 end
 function_annotation(::Nothing) = Nothing
 function_annotation(::AutoEnzyme{<:Any, A}) where {A} = A
+
+function _onehot_cache(x)
+    ArrayInterface.fast_scalar_indexing(x) && return Enzyme.onehot(x)
+    return Tuple(
+        begin
+                dx = zero(x)
+                ArrayInterface.allowed_setindex!(dx, one(eltype(dx)), i)
+                dx
+            end for i in eachindex(x)
+    )
+end
+
+function _zero_cache!(x)
+    fill!(x, zero(eltype(x)))
+    return x
+end
+
+function _copy_hessian_row!(dest, src, transfer_cache)
+    if transfer_cache === nothing
+        copyto!(dest, src)
+    else
+        copyto!(transfer_cache, src)
+        copyto!(dest, transfer_cache)
+    end
+    return nothing
+end
+
 function OptimizationBase.instantiate_function(
         f::OptimizationFunction{true}, x,
         adtype::AutoEnzyme, p, num_cons = 0;
@@ -157,33 +184,50 @@ function OptimizationBase.instantiate_function(
         fg! = nothing
     end
 
-    if h == true && f.hess === nothing
-        vdθ = Tuple((Array(r) for r in eachrow(I(length(x)) * one(eltype(x)))))
-        bθ = zeros(eltype(x), length(x))
+    second_order_vdθ = if (h == true && f.hess === nothing) ||
+            (fgh == true && f.fgh === nothing)
+        _onehot_cache(x)
+    else
+        nothing
+    end
+    second_order_vdbθ = if (fgh == true && f.fgh === nothing) ||
+            (h == true && f.hess === nothing && f.hess_prototype === nothing)
+        Tuple(zero(x) for _ in eachindex(x))
+    else
+        nothing
+    end
 
-        if f.hess_prototype === nothing
-            vdbθ = Tuple(zeros(eltype(x), length(x)) for i in eachindex(x))
+    if h == true && f.hess === nothing
+        bθ = zero(x)
+        vdbθ = if f.hess_prototype === nothing
+            second_order_vdbθ
         else
-            #useless right now, looks like there is no way to tell Enzyme the sparsity pattern?
-            vdbθ = Tuple((copy(r) for r in eachrow(f.hess_prototype)))
+            Tuple(
+                ArrayInterface.restructure(x, copy(r)) for r in eachrow(f.hess_prototype)
+            )
         end
+        hess_transfer_cache = ArrayInterface.fast_scalar_indexing(x) ? nothing : Vector{
+                eltype(x),
+            }(undef, length(x))
 
         function hess(res, θ, p = p)
-            Enzyme.make_zero!(bθ)
-            Enzyme.make_zero!.(vdbθ)
+            _zero_cache!(bθ)
+            for dbθ in vdbθ
+                _zero_cache!(dbθ)
+            end
 
             Enzyme.autodiff(
                 fmode,
                 inner_grad,
                 Const(rmode),
-                Enzyme.BatchDuplicated(θ, vdθ),
+                Enzyme.BatchDuplicated(θ, second_order_vdθ),
                 Enzyme.BatchDuplicatedNoNeed(bθ, vdbθ),
                 Const(f.f),
                 Const(p)
             )
 
             for i in eachindex(θ)
-                res[i, :] .= vdbθ[i]
+                _copy_hessian_row!(@view(res[i, :]), vdbθ[i], hess_transfer_cache)
             end
             return
         end
@@ -194,22 +238,30 @@ function OptimizationBase.instantiate_function(
     end
 
     if fgh == true && f.fgh === nothing
+        fgh_transfer_cache = ArrayInterface.fast_scalar_indexing(x) ? nothing : Vector{
+                eltype(x),
+            }(undef, length(x))
+
         function fgh!(G, H, θ, p = p)
-            vdθ = Tuple((Array(r) for r in eachrow(I(length(θ)) * one(eltype(θ)))))
-            vdbθ = Tuple(zeros(eltype(θ), length(θ)) for i in eachindex(θ))
+            _zero_cache!(G)
+            for dbθ in second_order_vdbθ
+                _zero_cache!(dbθ)
+            end
 
             Enzyme.autodiff(
                 fmode,
                 inner_grad,
                 Const(rmode),
-                Enzyme.BatchDuplicated(θ, vdθ),
-                Enzyme.BatchDuplicatedNoNeed(G, vdbθ),
+                Enzyme.BatchDuplicated(θ, second_order_vdθ),
+                Enzyme.BatchDuplicatedNoNeed(G, second_order_vdbθ),
                 Const(f.f),
                 Const(p)
             )
 
             for i in eachindex(θ)
-                H[i, :] .= vdbθ[i]
+                _copy_hessian_row!(
+                    @view(H[i, :]), second_order_vdbθ[i], fgh_transfer_cache
+                )
             end
             return
         end
