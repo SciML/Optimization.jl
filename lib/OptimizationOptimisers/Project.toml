@@ -16,7 +16,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 [compat]
 CommonSolve = "0.2"
 ComponentArrays = "0.15"
-ForwardDiff = "0.10, 1"
+ForwardDiff = "1"
 julia = "1.10"
 Logging = "1.10"
 Lux = "1.16.0"

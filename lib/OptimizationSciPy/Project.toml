@@ -21,7 +21,7 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 
 [compat]
-ForwardDiff = "0.10, 1"
+ForwardDiff = "1"
 julia = "1.10"
 ModelingToolkit = "11.32"
 OptimizationBase = "5.5.0"

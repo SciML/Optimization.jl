@@ -20,7 +20,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
 julia = "1.10"
-Metaheuristics = "3.3"
+Metaheuristics = "3.5"
 OptimizationBase = "5.5.0"
 Pkg = "1"
 Random = "1.10"

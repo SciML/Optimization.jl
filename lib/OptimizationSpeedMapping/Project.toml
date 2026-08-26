@@ -17,7 +17,7 @@ ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-ForwardDiff = "0.10, 1"
+ForwardDiff = "1"
 julia = "1.10"
 OptimizationBase = "5.5.0"
 Pkg = "1"
