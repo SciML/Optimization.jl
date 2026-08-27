@@ -43,7 +43,7 @@ Reexport = "1.2.2"
 ReverseDiff = "1"
 SafeTestsets = "0.1"
 SciMLBase = "3"
-SciMLLogging = "2"
+SciMLLogging = "2.1"
 SciMLStructures = "1"
 SciMLTesting = "2.8"
 SparseArrays = "1.6"
@@ -52,6 +52,7 @@ Symbolics = "7.37"
 SymbolicUtils = "4.10"
 Test = "1.6"
 Zygote = "0.7"
+ForwardDiff = "1"
 
 [extras]
 SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
@@ -66,6 +67,7 @@ NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 
 [targets]
-test = ["SciMLTesting", "AmplNLWriter", "HiGHS", "Ipopt", "Ipopt_jll", "Juniper", "NLopt", "ReverseDiff", "Test", "Zygote", "SafeTestsets", "Pkg"]
+test = ["SciMLTesting", "AmplNLWriter", "HiGHS", "Ipopt", "Ipopt_jll", "Juniper", "NLopt", "ReverseDiff", "Test", "Zygote", "ForwardDiff", "SafeTestsets", "Pkg"]
