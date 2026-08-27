@@ -96,16 +96,33 @@ end
 function_annotation(::Nothing) = Nothing
 function_annotation(::AutoEnzyme{<:Any, A}) where {A} = A
 
-function _onehot_cache(x)
-    ArrayInterface.fast_scalar_indexing(x) && return Enzyme.onehot(x)
-    return Tuple(
-        begin
-                dx = zero(x)
-                ArrayInterface.allowed_setindex!(dx, one(eltype(dx)), i)
-                dx
-            end for i in eachindex(x)
-    )
+const _HESSIAN_BATCH_CAP = 8
+
+_hessian_batch_width(n) = min(max(n, 1), _HESSIAN_BATCH_CAP)
+
+function _onehot_cache(x, batch_width)
+    n = length(x)
+    cache_length = cld(n, batch_width) * batch_width
+    if ArrayInterface.fast_scalar_indexing(x)
+        onehot = Enzyme.onehot(x)
+        return ntuple(i -> i <= n ? onehot[i] : zero(x), cache_length)
+    end
+    indices = eachindex(x)
+    return ntuple(cache_length) do i
+        dx = zero(x)
+        if i <= n
+            ArrayInterface.allowed_setindex!(dx, one(eltype(dx)), indices[i])
+        end
+        dx
+    end
 end
+
+_cache_batch(cache, first_index, ::Val{W}) where {W} =
+    ntuple(i -> cache[first_index + i - 1], Val(W))
+
+_batch_starts(cache, ::Val{W}) where {W} = firstindex(cache):W:lastindex(cache)
+
+_valid_batch_width(n, first_index, ::Val{W}) where {W} = min(W, n - first_index + 1)
 
 function _zero_cache!(x)
     fill!(x, zero(eltype(x)))
@@ -186,48 +203,62 @@ function OptimizationBase.instantiate_function(
 
     second_order_vdθ = if (h == true && f.hess === nothing) ||
             (fgh == true && f.fgh === nothing)
-        _onehot_cache(x)
+        _onehot_cache(x, _hessian_batch_width(length(x)))
     else
         nothing
     end
     second_order_vdbθ = if (fgh == true && f.fgh === nothing) ||
             (h == true && f.hess === nothing && f.hess_prototype === nothing)
-        Tuple(zero(x) for _ in eachindex(x))
+        ntuple(_ -> zero(x), length(second_order_vdθ))
     else
         nothing
     end
+    second_order_batch_width = Val(_hessian_batch_width(length(x)))
 
     if h == true && f.hess === nothing
         bθ = zero(x)
         vdbθ = if f.hess_prototype === nothing
             second_order_vdbθ
         else
-            Tuple(
-                ArrayInterface.restructure(x, copy(r)) for r in eachrow(f.hess_prototype)
-            )
+            prototype_rows = eachrow(f.hess_prototype)
+            ntuple(length(second_order_vdθ)) do i
+                i <= length(x) ?
+                    ArrayInterface.restructure(x, copy(prototype_rows[i])) : zero(x)
+            end
         end
         hess_transfer_cache = ArrayInterface.fast_scalar_indexing(x) ? nothing : Vector{
                 eltype(x),
             }(undef, length(x))
 
         function hess(res, θ, p = p)
-            _zero_cache!(bθ)
-            for dbθ in vdbθ
-                _zero_cache!(dbθ)
-            end
+            for first_index in _batch_starts(second_order_vdθ, second_order_batch_width)
+                vdθ_batch = _cache_batch(
+                    second_order_vdθ, first_index, second_order_batch_width
+                )
+                vdbθ_batch = _cache_batch(vdbθ, first_index, second_order_batch_width)
+                _zero_cache!(bθ)
+                for dbθ in vdbθ_batch
+                    _zero_cache!(dbθ)
+                end
 
-            Enzyme.autodiff(
-                fmode,
-                inner_grad,
-                Const(rmode),
-                Enzyme.BatchDuplicated(θ, second_order_vdθ),
-                Enzyme.BatchDuplicatedNoNeed(bθ, vdbθ),
-                Const(f.f),
-                Const(p)
-            )
+                Enzyme.autodiff(
+                    fmode,
+                    inner_grad,
+                    Const(rmode),
+                    Enzyme.BatchDuplicated(θ, vdθ_batch),
+                    Enzyme.BatchDuplicatedNoNeed(bθ, vdbθ_batch),
+                    Const(f.f),
+                    Const(p)
+                )
 
-            for i in eachindex(θ)
-                _copy_hessian_row!(@view(res[i, :]), vdbθ[i], hess_transfer_cache)
+                for lane in 1:_valid_batch_width(
+                        length(θ), first_index, second_order_batch_width
+                    )
+                    i = first_index + lane - 1
+                    _copy_hessian_row!(
+                        @view(res[i, :]), vdbθ_batch[lane], hess_transfer_cache
+                    )
+                end
             end
             return
         end
@@ -243,25 +274,36 @@ function OptimizationBase.instantiate_function(
             }(undef, length(x))
 
         function fgh!(G, H, θ, p = p)
-            _zero_cache!(G)
-            for dbθ in second_order_vdbθ
-                _zero_cache!(dbθ)
-            end
-
-            Enzyme.autodiff(
-                fmode,
-                inner_grad,
-                Const(rmode),
-                Enzyme.BatchDuplicated(θ, second_order_vdθ),
-                Enzyme.BatchDuplicatedNoNeed(G, second_order_vdbθ),
-                Const(f.f),
-                Const(p)
-            )
-
-            for i in eachindex(θ)
-                _copy_hessian_row!(
-                    @view(H[i, :]), second_order_vdbθ[i], fgh_transfer_cache
+            for first_index in _batch_starts(second_order_vdθ, second_order_batch_width)
+                vdθ_batch = _cache_batch(
+                    second_order_vdθ, first_index, second_order_batch_width
                 )
+                vdbθ_batch = _cache_batch(
+                    second_order_vdbθ, first_index, second_order_batch_width
+                )
+                _zero_cache!(G)
+                for dbθ in vdbθ_batch
+                    _zero_cache!(dbθ)
+                end
+
+                Enzyme.autodiff(
+                    fmode,
+                    inner_grad,
+                    Const(rmode),
+                    Enzyme.BatchDuplicated(θ, vdθ_batch),
+                    Enzyme.BatchDuplicatedNoNeed(G, vdbθ_batch),
+                    Const(f.f),
+                    Const(p)
+                )
+
+                for lane in 1:_valid_batch_width(
+                        length(θ), first_index, second_order_batch_width
+                    )
+                    i = first_index + lane - 1
+                    _copy_hessian_row!(
+                        @view(H[i, :]), vdbθ_batch[lane], fgh_transfer_cache
+                    )
+                end
             end
             return
         end
@@ -606,27 +648,37 @@ function OptimizationBase.instantiate_function(
     end
 
     if h == true && f.hess === nothing
-        vdθ = Tuple((Array(r) for r in eachrow(I(length(x)) * one(eltype(x)))))
+        batch_width = _hessian_batch_width(length(x))
+        vdθ = _onehot_cache(x, batch_width)
         bθ = zeros(eltype(x), length(x))
-        vdbθ = Tuple(zeros(eltype(x), length(x)) for i in eachindex(x))
+        vdbθ = ntuple(_ -> zeros(eltype(x), length(x)), length(vdθ))
+        batch_width_value = Val(batch_width)
 
         function hess(θ, p = p)
-            Enzyme.make_zero!(bθ)
-            Enzyme.make_zero!.(vdbθ)
+            H = Matrix{eltype(θ)}(undef, length(θ), length(θ))
+            for first_index in _batch_starts(vdθ, batch_width_value)
+                vdθ_batch = _cache_batch(vdθ, first_index, batch_width_value)
+                vdbθ_batch = _cache_batch(vdbθ, first_index, batch_width_value)
+                Enzyme.make_zero!(bθ)
+                Enzyme.make_zero!.(vdbθ_batch)
 
-            Enzyme.autodiff(
-                fmode,
-                inner_grad,
-                Const(rmode),
-                Enzyme.BatchDuplicated(θ, vdθ),
-                Enzyme.BatchDuplicated(bθ, vdbθ),
-                Const(f.f),
-                Const(p)
-            )
+                Enzyme.autodiff(
+                    fmode,
+                    inner_grad,
+                    Const(rmode),
+                    Enzyme.BatchDuplicated(θ, vdθ_batch),
+                    Enzyme.BatchDuplicated(bθ, vdbθ_batch),
+                    Const(f.f),
+                    Const(p)
+                )
 
-            return reduce(
-                vcat, [reshape(vdbθ[i], (1, length(vdbθ[i]))) for i in eachindex(θ)]
-            )
+                for lane in 1:_valid_batch_width(
+                        length(θ), first_index, batch_width_value
+                    )
+                    H[first_index + lane - 1, :] .= vdbθ_batch[lane]
+                end
+            end
+            return H
         end
     elseif h == true
         hess = (θ, p = p) -> f.hess(θ, p)
@@ -635,28 +687,38 @@ function OptimizationBase.instantiate_function(
     end
 
     if fgh == true && f.fgh === nothing
-        vdθ_fgh = Tuple((Array(r) for r in eachrow(I(length(x)) * one(eltype(x)))))
-        vdbθ_fgh = Tuple(zeros(eltype(x), length(x)) for i in eachindex(x))
+        batch_width_fgh = _hessian_batch_width(length(x))
+        vdθ_fgh = _onehot_cache(x, batch_width_fgh)
+        vdbθ_fgh = ntuple(_ -> zeros(eltype(x), length(x)), length(vdθ_fgh))
         G_fgh = zeros(eltype(x), length(x))
         H_fgh = zeros(eltype(x), length(x), length(x))
+        batch_width_value_fgh = Val(batch_width_fgh)
 
         function fgh!(θ, p = p)
-            Enzyme.make_zero!(G_fgh)
             Enzyme.make_zero!(H_fgh)
-            Enzyme.make_zero!.(vdbθ_fgh)
+            for first_index in _batch_starts(vdθ_fgh, batch_width_value_fgh)
+                vdθ_batch = _cache_batch(vdθ_fgh, first_index, batch_width_value_fgh)
+                vdbθ_batch = _cache_batch(
+                    vdbθ_fgh, first_index, batch_width_value_fgh
+                )
+                Enzyme.make_zero!(G_fgh)
+                Enzyme.make_zero!.(vdbθ_batch)
 
-            Enzyme.autodiff(
-                fmode,
-                inner_grad,
-                Const(rmode),
-                Enzyme.BatchDuplicated(θ, vdθ_fgh),
-                Enzyme.BatchDuplicatedNoNeed(G_fgh, vdbθ_fgh),
-                Const(f.f),
-                Const(p)
-            )
+                Enzyme.autodiff(
+                    fmode,
+                    inner_grad,
+                    Const(rmode),
+                    Enzyme.BatchDuplicated(θ, vdθ_batch),
+                    Enzyme.BatchDuplicatedNoNeed(G_fgh, vdbθ_batch),
+                    Const(f.f),
+                    Const(p)
+                )
 
-            for i in eachindex(θ)
-                H_fgh[i, :] .= vdbθ_fgh[i]
+                for lane in 1:_valid_batch_width(
+                        length(θ), first_index, batch_width_value_fgh
+                    )
+                    H_fgh[first_index + lane - 1, :] .= vdbθ_batch[lane]
+                end
             end
             return G_fgh, H_fgh
         end

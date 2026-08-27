@@ -1,4 +1,4 @@
-using OptimizationBase, Test, DifferentiationInterface, SparseArrays, Symbolics
+using OptimizationBase, Test, DifferentiationInterface, LinearAlgebra, SparseArrays, Symbolics
 using ADTypes, ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker
 using ModelingToolkit, Enzyme, Random, ComponentArrays, JLArrays
 
@@ -1533,4 +1533,35 @@ end
         @test y ≈ rosen(z)
         @test G ≈ gref
     end
+end
+
+@testset "Enzyme Hessian batch cap" begin
+    n = 17
+    x = collect(range(0.1, 1.7; length = n))
+    quartic(x, p = nothing) = sum(abs2(abs2(xi)) for xi in x)
+    expected_hessian = Matrix(Diagonal(12 .* x .^ 2))
+
+    enzyme_ext = Base.get_extension(OptimizationBase, :OptimizationEnzymeExt)
+    @test enzyme_ext._hessian_batch_width(4) == 4
+    @test enzyme_ext._hessian_batch_width(n) == 8
+
+    θ = ComponentVector(x = x)
+    optf = OptimizationBase.instantiate_function(
+        OptimizationFunction(quartic, AutoEnzyme()), θ, AutoEnzyme(), nothing;
+        h = true, fgh = true
+    )
+    gradient = similar(θ)
+    hessian = similar(expected_hessian)
+    optf.hess(hessian, θ)
+    @test hessian ≈ expected_hessian
+    optf.fgh(gradient, hessian, θ)
+    @test hessian ≈ expected_hessian
+
+    optf_oop = OptimizationBase.instantiate_function(
+        OptimizationFunction{false}(quartic, AutoEnzyme()), x, AutoEnzyme(), nothing;
+        h = true, fgh = true
+    )
+    @test optf_oop.hess(x) ≈ expected_hessian
+    _, hessian_oop = optf_oop.fgh(x)
+    @test hessian_oop ≈ expected_hessian
 end
