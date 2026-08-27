@@ -14,6 +14,7 @@ SciMLLogging = "a6db7da4-7206-11f0-1eab-35f2a5dbe1d1"
 SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
@@ -37,4 +38,4 @@ Test = "1.10"
 Zygote = "0.7"
 
 [targets]
-test = ["SciMLTesting", "ReverseDiff", "Test", "Zygote", "SafeTestsets", "Pkg"]
+test = ["SciMLTesting", "ForwardDiff", "ReverseDiff", "Test", "Zygote", "SafeTestsets", "Pkg"]

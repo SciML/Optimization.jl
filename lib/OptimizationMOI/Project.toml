@@ -48,10 +48,10 @@ SciMLStructures = "1"
 SciMLTesting = "2.8"
 SparseArrays = "1.6"
 SymbolicIndexingInterface = "0.3.46"
-Symbolics = "7"
+Symbolics = "7.37"
 SymbolicUtils = "4.10"
 Test = "1.6"
-Zygote = "0.6, 0.7"
+Zygote = "0.7"
 
 [extras]
 SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
