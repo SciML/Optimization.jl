@@ -211,8 +211,8 @@ using Random
 
             @test sol_3 ≠ nothing
             println("Solution for ZDT1: ", sol_3)
-            @test sol_3.objective[1] ≈ 0.273445 atol = 1.0e-3
-            @test sol_3.objective[2] ≈ 0.477079 atol = 1.0e-3
+            @test sol_3.objective == multi_obj_func_3(sol_3.u, nothing)
+            @test sol_3.objective[2] ≈ 1 - sqrt(sol_3.objective[1]) atol = 1.0e-3
         end
     end
 end
