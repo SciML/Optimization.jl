@@ -31,7 +31,7 @@ SciMLLogging = "2"
 SciMLTesting = "2.8"
 SparseArrays = "1.10.0"
 SymbolicIndexingInterface = "0.3.46"
-Symbolics = "7"
+Symbolics = "7.37"
 Test = "1.10"
 Zygote = "0.7"
 
