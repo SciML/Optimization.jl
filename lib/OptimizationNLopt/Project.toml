@@ -27,13 +27,14 @@ NLopt = "1.1"
 OptimizationBase = "5.5.0"
 Pkg = "1"
 Random = "1.10"
+ForwardDiff = "1"
 ReverseDiff = "1"
 SafeTestsets = "0.1"
 SciMLBase = "3"
 SciMLLogging = "2"
 SciMLTesting = "2.8"
 Test = "1.10"
-Zygote = "0.6, 0.7"
+Zygote = "0.7"
 
 [targets]
 test = ["SciMLTesting", "ReverseDiff", "Test", "Zygote", "SafeTestsets", "Pkg"]
