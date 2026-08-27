@@ -223,7 +223,7 @@ function OptimizationBase.instantiate_function(
             prototype_rows = eachrow(f.hess_prototype)
             ntuple(length(second_order_vdθ)) do i
                 i <= length(x) ?
-                ArrayInterface.restructure(x, copy(prototype_rows[i])) : zero(x)
+                    ArrayInterface.restructure(x, copy(prototype_rows[i])) : zero(x)
             end
         end
         hess_transfer_cache = ArrayInterface.fast_scalar_indexing(x) ? nothing : Vector{
