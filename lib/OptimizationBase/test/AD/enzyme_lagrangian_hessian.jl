@@ -46,5 +46,7 @@ function check_lagrangian_hessian(N)
 end
 
 @testset "Enzyme Lagrangian Hessian" begin
-    foreach(check_lagrangian_hessian, (1:10..., 20, 40, 60))
+    @testset "N = $N" for N in (1:10..., 20, 40, 60)
+        check_lagrangian_hessian(N)
+    end
 end
