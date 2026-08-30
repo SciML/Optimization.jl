@@ -208,8 +208,8 @@ function OptimizationBase.instantiate_function(
     if cons !== nothing && f.cons_h === nothing && (cons_h == true || lag_h == true)
         prep_cons_hess = [
             prepare_hessian(
-                    cons_oop, soadtype, x, Constant(i), strict = Val(false)
-                )
+                cons_oop, soadtype, x, Constant(i), strict = Val(false)
+            )
                 for i in 1:num_cons
         ]
     else
@@ -587,8 +587,8 @@ function OptimizationBase.instantiate_function(
     if cons !== nothing && f.cons_h === nothing && cons_h == true
         prep_cons_hess = [
             prepare_hessian(
-                    cons_oop, soadtype, x, Constant(i), strict = Val(false)
-                )
+                cons_oop, soadtype, x, Constant(i), strict = Val(false)
+            )
                 for i in 1:num_cons
         ]
         colores = getfield.(prep_cons_hess, :coloring_result)
