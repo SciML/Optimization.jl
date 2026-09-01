@@ -8,6 +8,20 @@ using NLopt
 # NLopt's own solver-driving API (`optimize`, `lower_bounds!`, …) is not: Optimization.jl
 # drives the solver, and `optimize` collides with the other wrapped backends.
 using NLopt: Algorithm, Opt
+
+@doc """
+    Algorithm
+
+Enumeration of NLopt algorithm identifiers. Access the identifiers through the `NLopt`
+module, for example `NLopt.LD_LBFGS`.
+""" Algorithm
+
+@doc """
+    Opt(algorithm, n)
+
+Construct an NLopt optimizer for `n` variables using `algorithm`. The algorithm may be
+an [`Algorithm`](@ref) value or its symbol, such as `:LD_LBFGS`.
+""" Opt
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
 using OptimizationBase

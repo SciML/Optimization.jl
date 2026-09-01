@@ -12,6 +12,14 @@ using Optimisers: ADADelta, ADAGrad, ADAM, ADAMW, AMSGrad, AbstractRule, AccumGr
     AdaBelief, AdaDelta, AdaGrad, AdaMax, Adam, AdamW, ClipGrad, ClipNorm, Descent,
     Lion, Momentum, NADAM, NAdam, Nesterov, OADAM, OAdam, OptimiserChain, RADAM,
     RAdam, RMSProp, Rprop, SignDecay, WeightDecay
+
+@doc "Deprecated alias for [`AdaDelta`](@ref)." ADADelta
+@doc "Deprecated alias for [`AdaGrad`](@ref)." ADAGrad
+@doc "Deprecated alias for [`Adam`](@ref)." ADAM
+@doc "Deprecated alias for [`AdamW`](@ref)." ADAMW
+@doc "Deprecated alias for [`NAdam`](@ref)." NADAM
+@doc "Deprecated alias for [`OAdam`](@ref)." OADAM
+@doc "Deprecated alias for [`RAdam`](@ref)." RADAM
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
 using OptimizationBase
