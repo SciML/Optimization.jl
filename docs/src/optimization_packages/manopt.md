@@ -46,6 +46,15 @@ OptimizationManopt.TrustRegionsOptimizer
 The common kwargs `maxiters`, `maxtime` and `abstol` are supported by all the optimizers. Solver specific kwargs from Manopt can be passed to the `solve`
 function or `OptimizationProblem`.
 
+Passing `maxiters`/`maxtime` bounds the run while keeping the convergence part of the
+solver's own Manopt default stopping criterion active, so a run that converges before
+hitting the bound reports `retcode = Success` rather than `MaxIters`/`MaxTime`. For the
+derivative-free solvers (`NelderMeadOptimizer`, `ParticleSwarmOptimizer`, `CMAESOptimizer`)
+and `ConvexBundleOptimizer`, Manopt's own stopping criteria never indicate convergence, so
+a run bounded only by `maxiters`/`maxtime` reports `MaxIters`/`MaxTime`. A Manopt
+`stopping_criterion` passed as a solver kwarg is combined with the requested
+`maxiters`/`maxtime` bounds and replaces the default convergence criterion.
+
 !!! note
 
     The `OptimizationProblem` has to be passed the manifold as the `manifold` keyword argument.
@@ -99,8 +108,8 @@ sol = OptimizationBase.solve(prob, opt)
 !!! note
 
     Plain gradient descent zig-zags slowly down Rosenbrock's narrow curved valley, so it
-    needs tens of thousands of iterations (still well under a second here) to bring the
-    gradient norm below the default tolerance and report `retcode = Success`.
+    needs tens of thousands of iterations (a few seconds here) to bring the gradient norm
+    below the default tolerance and report `retcode = Success`.
 
 The box-constrained Karcher mean problem on the SPD manifold with the Frank-Wolfe algorithm can be solved as follows:
 
@@ -112,8 +121,6 @@ q = Matrix{Float64}(I, 5, 5) .+ 2.0
 data2 = [exp(M, q, σ * rand(M; vector_at = q)) for i in 1:m]
 
 f(x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
-optf = OptimizationFunction(f, ADTypes.AutoZygote())
-prob = OptimizationProblem(optf, data2[1]; manifold = M, maxiters = 1000)
 
 function closed_form_solution!(M::SymmetricPositiveDefinite, q, L, U, p, X)
     # extract p^1/2 and p^{-1/2}
