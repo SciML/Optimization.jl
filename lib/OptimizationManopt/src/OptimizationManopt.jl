@@ -29,6 +29,7 @@ function __map_optimizer_args!(
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
+        stopping_criterion::Union{Manopt.StoppingCriterion, Nothing} = nothing,
         kwargs...
     )
     criteria = Manopt.StoppingCriterion[]
@@ -41,8 +42,29 @@ function __map_optimizer_args!(
         push!(criteria, Manopt.StopAfter(Millisecond(round(Int, maxtime * 1000))))
     end
 
+    if !isnothing(stopping_criterion)
+        # A Manopt `stopping_criterion` passed by the user is combined with the other
+        # explicitly requested criteria (`maxiters`/`maxtime`/`abstol`) rather than
+        # silently replaced by them, and it suppresses the convergence fallback below.
+        push!(criteria, stopping_criterion)
+    end
+
     if !isnothing(abstol)
         push!(criteria, _default_convergence_criterion(opt, manifold, abstol))
+    elseif isnothing(stopping_criterion) && (!isnothing(maxiters) || !isnothing(maxtime))
+        # Without this, `criteria` above would contain *only* `StopAfterIteration`/
+        # `StopAfter`, which never `indicates_convergence` (Manopt.jl semantics), so
+        # `Manopt.has_converged` could never be true and the run would always report
+        # `ReturnCode.MaxIters`/`MaxTime` below, no matter how well it actually converged.
+        # Re-adding the convergence part of the solver's own Manopt default keeps the run
+        # behaving as if `maxiters`/`maxtime` merely tightened the default criterion
+        # instead of discarding it; solvers whose Manopt default cannot indicate
+        # convergence opt out via `_manopt_default_convergence_criterion` returning
+        # `nothing` (see the comment there).
+        fallback = _manopt_default_convergence_criterion(opt, manifold)
+        if !isnothing(fallback)
+            push!(criteria, fallback)
+        end
     end
 
     if !isnothing(reltol)
@@ -335,6 +357,46 @@ function _default_convergence_criterion(::AbstractManoptOptimizer, M, abstol)
     return Manopt.StopWhenChangeLess(M, abstol)
 end
 
+# Convergence criterion injected alongside `StopAfterIteration`/`StopAfter` only when the
+# user supplies `maxiters`/`maxtime` without an explicit `abstol` or `stopping_criterion`
+# (see `__map_optimizer_args!`). Each method mirrors, verbatim, the convergence part of the
+# corresponding high-level Manopt solver's default `stopping_criterion` (checked against
+# Manopt 0.5.25 and 0.6.6), so `maxiters`/`maxtime` behaves as if it merely retuned the
+# iteration/time part of Manopt's default instead of discarding the whole thing.
+#
+# The remaining solvers return `nothing` and keep the pre-existing behavior (a
+# `maxiters`-only run reports `ReturnCode.MaxIters`): the convergence-ish criteria in their
+# Manopt defaults — `ParticleSwarm`'s `StopWhenSwarmVelocityLess`, `NelderMead`'s
+# `StopWhenPopulationConcentrated`, `ConvexBundle`'s `StopWhenLagrangeMultiplierLess`, and
+# parts of `CMAES`'s `default_cma_es_stopping_criterion` — all have
+# `Manopt.indicates_convergence(...) == false`, so injecting them could never yield
+# `ReturnCode.Success`; it would only cut the run short and turn `MaxIters` into `Failure`.
+function _manopt_default_convergence_criterion(::GradientDescentOptimizer, M)
+    return Manopt.StopWhenGradientNormLess(1.0e-8)
+end
+function _manopt_default_convergence_criterion(::ConjugateGradientDescentOptimizer, M)
+    return Manopt.StopWhenGradientNormLess(1.0e-8)
+end
+function _manopt_default_convergence_criterion(::QuasiNewtonOptimizer, M)
+    return Manopt.StopWhenGradientNormLess(1.0e-6)
+end
+function _manopt_default_convergence_criterion(::TrustRegionsOptimizer, M)
+    return Manopt.StopWhenGradientNormLess(1.0e-6)
+end
+function _manopt_default_convergence_criterion(::AdaptiveRegularizationCubicOptimizer, M)
+    # Manopt's default also contains `StopWhenAllLanczosVectorsUsed`, a safeguard rather
+    # than a convergence test; it is not constructible independently of the sub-state, and
+    # the always-present `StopAfterIteration` bounds the run in its stead.
+    return Manopt.StopWhenGradientNormLess(1.0e-9)
+end
+function _manopt_default_convergence_criterion(::FrankWolfeOptimizer, M)
+    # Frank-Wolfe solves constrained problems, where the gradient norm alone need not
+    # vanish at a boundary optimum; Manopt's default therefore also stops on the change
+    # between iterates, and dropping that half would leave such runs on `MaxIters`.
+    return Manopt.StopWhenGradientNormLess(1.0e-8) | Manopt.StopWhenChangeLess(M, 1.0e-8)
+end
+_manopt_default_convergence_criterion(::AbstractManoptOptimizer, M) = nothing
+
 function build_loss(f::OptimizationBase.OptimizationFunction, prob, cb)
     # TODO: I do not understand this. Why is the manifold not used?
     # Either this is an Euclidean cost, then we should probably still call `embed`,
@@ -437,6 +499,11 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{O}) where {
     asc = get_stopping_criterion(opt_res.options)
     active = Manopt.get_active_stopping_criteria(asc)
     opt_ret = if Manopt.has_converged(asc)
+        ReturnCode.Success
+    elseif any(c -> c isa Manopt.StopWhenChangeLess, active)
+        # `indicates_convergence(StopWhenChangeLess)` is `false` in Manopt 0.5 but `true`
+        # in Manopt 0.6 (where `has_converged` above already yields `Success`); map it
+        # explicitly so the retcode does not depend on the Manopt version.
         ReturnCode.Success
     elseif any(c -> c isa Manopt.StopAfterIteration, active)
         ReturnCode.MaxIters
