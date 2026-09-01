@@ -9,6 +9,21 @@ using Optim
 using Optim: AcceleratedGradientDescent, BFGS, ConjugateGradient, Fminbox,
     GradientDescent, IPNewton, LBFGS, MomentumGradientDescent, NGMRES, NelderMead,
     Newton, NewtonTrustRegion, OACCEL, ParticleSwarm, SAMIN, SimulatedAnnealing
+
+@doc """
+    AcceleratedGradientDescent(; alphaguess, linesearch, manifold)
+
+Construct Optim's Nesterov-style accelerated gradient-descent method. The keyword
+arguments configure Optim's initial step estimate, line search, and manifold.
+""" AcceleratedGradientDescent
+
+@doc """
+    MomentumGradientDescent(; mu = 0.01, alphaguess, linesearch, manifold)
+
+Construct Optim's momentum gradient-descent method with momentum coefficient `mu`. The
+remaining keyword arguments configure Optim's initial step estimate, line search, and
+manifold.
+""" MomentumGradientDescent
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
 using OptimizationBase
