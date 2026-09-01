@@ -25,7 +25,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 [compat]
 BlackBoxOptim = "0.6.3"
 julia = "1.10"
-LogExpFunctions = "1"
+LogExpFunctions = "0.3.28, 1"
 OptimizationBase = "5.5.0"
 Pkg = "1"
 Random = "1.10"
