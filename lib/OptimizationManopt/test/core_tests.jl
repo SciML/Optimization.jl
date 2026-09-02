@@ -3,7 +3,7 @@ using OptimizationBase
 using Manifolds
 using ForwardDiff, Zygote, Enzyme, FiniteDiff, ReverseDiff
 using DifferentiationInterface: SecondOrder
-using Manopt, RipQP, QuadraticModels
+using Manopt, ManifoldDiff, RipQP, QuadraticModels
 using Test
 using SciMLBase
 using LinearAlgebra
@@ -155,8 +155,6 @@ R2 = Euclidean(2)
 
         opt = OptimizationManopt.AdaptiveRegularizationCubicOptimizer()
 
-        #TODO: This autodiff currently provides a Hessian that seem to not provide a Hessian
-        # ARC Fails but also AD before that warns. So it passes _some_ hessian but a wrong one, even in format
         optprob = OptimizationFunction(rosenbrock, SecondOrder(AutoForwardDiff(), AutoForwardDiff()))
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
@@ -171,14 +169,91 @@ R2 = Euclidean(2)
 
         opt = OptimizationManopt.TrustRegionsOptimizer()
 
-        #TODO: This autodiff currently provides a Hessian that seem to not provide a Hessian
-        # TR Fails but also AD before that warns. So it passes _some_ hessian but a wrong one, even in format
         optprob = OptimizationFunction(rosenbrock, SecondOrder(AutoForwardDiff(), AutoForwardDiff()))
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
         sol = OptimizationBase.solve(prob, opt)
         @test sol.objective < 0.1
         @test SciMLBase.successful_retcode(sol)
+    end
+
+    # Second-order solvers on a manifold with matrix-valued points. The Euclidean Hessian
+    # buffers used to be allocated as flat `length(θ)` vectors, which broke the
+    # `riemannian_Hessian!` projection for anything but vector-shaped points (#1036).
+    @testset "Hessian on matrix manifolds" begin
+        A = [
+            4.0 1.0 0.0 0.0 0.0
+            1.0 3.0 1.0 0.0 0.0
+            0.0 1.0 2.0 1.0 0.0
+            0.0 0.0 1.0 1.0 1.0
+            0.0 0.0 0.0 1.0 5.0
+        ]
+        St = Stiefel(5, 2)
+        # sum of the two smallest eigenvalues of A is the minimum of tr(X'AX) on St
+        target = sum(eigvals(Symmetric(A))[1:2])
+        brockett(X, p) = tr(X' * p * X)
+        egrad!(G, X, p) = (G .= 2 * p * X)
+        ehess!(H, X, p) = (H .= kron(I(2), 2 * p))
+        X0 = Matrix(qr([1.0 0.0; 0.0 1.0; 1.0 1.0; 0.0 1.0; 1.0 0.0]).Q)[:, 1:2]
+
+        for opt in (
+                OptimizationManopt.TrustRegionsOptimizer(),
+                OptimizationManopt.AdaptiveRegularizationCubicOptimizer(),
+            )
+            @testset "$(nameof(typeof(opt)))" begin
+                # Euclidean Hessian-vector product from AD
+                optf = OptimizationFunction(
+                    brockett, SecondOrder(AutoForwardDiff(), AutoForwardDiff())
+                )
+                sol = OptimizationBase.solve(
+                    OptimizationProblem(optf, X0, A; manifold = St), opt
+                )
+                @test SciMLBase.successful_retcode(sol)
+                @test sol.objective ≈ target atol = 1.0e-6
+                @test is_point(St, sol.u; error = :none)
+
+                # User-supplied dense Euclidean Hessian, no `hv`
+                optf = OptimizationFunction(brockett; grad = egrad!, hess = ehess!)
+                sol = OptimizationBase.solve(
+                    OptimizationProblem(optf, X0, A; manifold = St), opt
+                )
+                @test SciMLBase.successful_retcode(sol)
+                @test sol.objective ≈ target atol = 1.0e-6
+
+                # Gradient only: Manopt falls back to its approximate Hessian
+                optf = OptimizationFunction(brockett; grad = egrad!)
+                sol = OptimizationBase.solve(
+                    OptimizationProblem(optf, X0, A; manifold = St), opt
+                )
+                @test SciMLBase.successful_retcode(sol)
+                @test sol.objective ≈ target atol = 1.0e-6
+            end
+        end
+
+        # The converted Hessian agrees with `riemannian_Hessian` fed the exact Euclidean
+        # gradient and Hessian-vector product, and is a tangent vector.
+        optf = OptimizationFunction(brockett, SecondOrder(AutoForwardDiff(), AutoForwardDiff()))
+        cache = OptimizationBase.init(
+            OptimizationProblem(optf, X0, A; manifold = St),
+            OptimizationManopt.TrustRegionsOptimizer()
+        )
+        hessF = OptimizationManopt.build_hessF(cache.f)
+        Xt = project(St, X0, [1.0 0.0; 0.0 -1.0; 0.5 0.5; 0.0 0.0; -1.0 1.0])
+        Y = hessF(St, X0, Xt)
+        Yref = ManifoldDiff.riemannian_Hessian(St, X0, 2 * A * X0, 2 * A * Xt, Xt)
+        @test Y ≈ Yref
+        @test is_vector(St, X0, Y; error = :none)
+        Y2 = zero(X0)
+        hessF(St, Y2, X0, Xt)
+        @test Y2 ≈ Yref
+
+        # No second-order information at all yields `nothing`, not a closure that throws
+        optf_g = OptimizationFunction(brockett; grad = egrad!)
+        cache_g = OptimizationBase.init(
+            OptimizationProblem(optf_g, X0, A; manifold = St),
+            OptimizationManopt.TrustRegionsOptimizer()
+        )
+        @test OptimizationManopt.build_hessF(cache_g.f) === nothing
     end
 
     @testset "Custom constraints" begin
