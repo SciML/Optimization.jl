@@ -360,20 +360,43 @@ function build_gradF(f::OptimizationBase.OptimizationFunction{true})
     return g
 end
 
+"""
+    build_hessF(f::OptimizationFunction)
+
+Build the Riemannian Hessian `hessF(M, [Y,] p, X)` Manopt expects from the Euclidean
+second-order information in `f`, or return `nothing` when `f` carries none so that Manopt
+falls back to its own approximate Hessian.
+
+The Euclidean Hessian-vector product `∇²f(p)[X]` is taken from `f.hv` when available,
+otherwise assembled from the dense `f.hess`. Together with the Euclidean gradient it is
+converted with `ManifoldDiff.riemannian_Hessian`, which projects onto the tangent space
+and adds the Weingarten-map correction for the curvature of the embedding.
+
+All buffers are allocated with `zero(p)` so that matrix-valued points (`Stiefel`,
+`SymmetricPositiveDefinite`, ...) keep their shape; a flat `length(p)` vector would break
+the projection in `riemannian_Hessian!`.
+"""
 function build_hessF(f::OptimizationBase.OptimizationFunction{true})
-    function h(M::AbstractManifold, H1, θ, X)
-        H = zeros(eltype(θ), length(θ))
-        f.hv(H, θ, X)
-        G = zeros(eltype(θ), length(θ))
+    euclidean_hvp! = if f.hv !== nothing
+        (H, θ, X) -> f.hv(H, θ, X)
+    elseif f.hess !== nothing
+        function (H, θ, X)
+            Hmat = zeros(eltype(θ), length(θ), length(θ))
+            f.hess(Hmat, θ)
+            return vec(H) .= Hmat * vec(X)
+        end
+    else
+        return nothing
+    end
+    function h(M::AbstractManifold, Y, θ, X)
+        H = zero(θ)
+        euclidean_hvp!(H, θ, X)
+        G = zero(θ)
         f.grad(G, θ)
-        return riemannian_Hessian!(M, H1, θ, G, H, X)
+        return riemannian_Hessian!(M, Y, θ, G, H, X)
     end
     function h(M::AbstractManifold, θ, X)
-        H = zeros(eltype(θ), length(θ))
-        f.hv(H, θ, X)
-        G = zeros(eltype(θ), length(θ))
-        f.grad(G, θ)
-        return riemannian_Hessian(M, θ, G, H, X)
+        return h(M, zero_vector(M, θ), θ, X)
     end
     return h
 end
