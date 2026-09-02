@@ -1,5 +1,5 @@
 using OptimizationBase, ForwardDiff, SymbolicAnalysis, LinearAlgebra,
-    Manifolds, OptimizationManopt, OptimizationLBFGSB
+    Manifolds, OptimizationManopt, OptimizationLBFGSB, Random
 
 function f(x, p = nothing)
     return exp(x[1]) + x[1]^2
@@ -34,22 +34,25 @@ prob = OptimizationProblem(
 @test res.cache.analysis_results.constraints[2].curvature ==
     SymbolicAnalysis.UnknownCurvature
 
-# Manifold optimization test temporarily skipped due to Manopt linesearch issue
-# producing NaN/Inf in SymmetricPositiveDefinite manifold optimization.
-# See GitHub issue for tracking.
-# m = 100
-# σ = 0.005
-# q = Matrix{Float64}(LinearAlgebra.I(5)) .+ 2.0
-#
-# M = SymmetricPositiveDefinite(5)
-# data2 = [exp(M, q, σ * rand(M; vector_at = q)) for i in 1:m];
-#
-# f(x, p = nothing) = sum(SymbolicAnalysis.distance(M, data2[i], x)^2 for i in 1:5)
-# optf = OptimizationFunction(f, OptimizationBase.AutoForwardDiff())
-# prob = OptimizationProblem(optf, data2[1]; manifold = M, structural_analysis = true)
-#
-# opt = OptimizationManopt.GradientDescentOptimizer()
-# @time sol = solve(prob, opt, maxiters = 100)
-# @test sol.objective < 1.0e-1
-# @test sol.cache.analysis_results.objective.curvature == SymbolicAnalysis.UnknownCurvature
-# @test sol.cache.analysis_results.objective.gcurvature == SymbolicAnalysis.GConvex
+# Manifold optimization on SymmetricPositiveDefinite (#1135). The optimization must not
+# start at one of the data points: at `x == data2[i]` the matrix inside the SPD `log` is
+# the identity, whose eigenvalues are all repeated, and ForwardDiff's `eigen` rule for
+# symmetric matrices divides by eigenvalue differences there. The resulting NaN gradient
+# was what made Manopt's linesearch fail intermittently. Start from the cluster centre.
+Random.seed!(1234)
+m = 100
+σ = 0.005
+q = Matrix{Float64}(LinearAlgebra.I(5)) .+ 2.0
+
+M = SymmetricPositiveDefinite(5)
+data2 = [exp(M, q, σ * rand(M; vector_at = q)) for i in 1:m];
+
+f(x, p = nothing) = sum(SymbolicAnalysis.distance(M, data2[i], x)^2 for i in 1:5)
+optf = OptimizationFunction(f, OptimizationBase.AutoForwardDiff())
+prob = OptimizationProblem(optf, q; manifold = M, structural_analysis = true)
+
+opt = OptimizationManopt.GradientDescentOptimizer()
+@time sol = solve(prob, opt, maxiters = 100)
+@test sol.objective < 1.0e-1
+@test sol.cache.analysis_results.objective.curvature == SymbolicAnalysis.UnknownCurvature
+@test sol.cache.analysis_results.objective.gcurvature == SymbolicAnalysis.GConvex
