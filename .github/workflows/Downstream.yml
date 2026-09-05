@@ -12,15 +12,15 @@ jobs:
       fail-fast: false
       matrix:
         package:
-          - {user: SciML, repo: DiffEqFlux.jl, group: All}
-          - {user: SciML, repo: NeuralPDE.jl, group: NNPDE1}
-          - {user: SciML, repo: NeuralPDE.jl, group: NNPDE2}
-          - {user: SciML, repo: ModelingToolkit.jl, group: Optimization}
+          - {user: SciML, repo: DiffEqFlux.jl, group: All, subdirs: ".,lib/OptimizationOptimJL,lib/OptimizationOptimisers"}
+          - {user: SciML, repo: NeuralPDE.jl, group: NNPDE1, subdirs: ".,lib/OptimizationOptimJL,lib/OptimizationOptimisers"}
+          - {user: SciML, repo: NeuralPDE.jl, group: NNPDE2, subdirs: ".,lib/OptimizationOptimJL,lib/OptimizationOptimisers"}
+          - {user: SciML, repo: ModelingToolkit.jl, group: Optimization, subdirs: ".,lib/*"}
     uses: "SciML/.github/.github/workflows/downstream.yml@v1"
     with:
       owner: "${{ matrix.package.user }}"
       repo: "${{ matrix.package.repo }}"
       group: "${{ matrix.package.group }}"
-      upstream-subdirs: ".,lib/*"
+      upstream-subdirs: "${{ matrix.package.subdirs }}"
       julia-version: "1"
     secrets: "inherit"
