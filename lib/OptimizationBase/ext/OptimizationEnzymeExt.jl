@@ -80,11 +80,9 @@ function lagrangian(x, _f::Function, cons::Function, p, λ, σ = one(eltype(x)))
     return σ * _f(x, p) + dot(λ, res)
 end
 
-function lag_grad(mode, x, dx, lagrangian::Function, _f::Function, cons::Function, p, σ, λ)
-    Enzyme.autodiff_deferred(
-        mode, Const(lagrangian), Active, Enzyme.Duplicated(x, dx),
-        Const(_f), Const(cons), Const(p), Const(λ), Const(σ)
-    )
+function lag_grad(mode, x, dx, f)
+    Enzyme.make_zero!(dx)
+    Enzyme.autodiff(mode, Const(f), Active, Enzyme.Duplicated(x, dx))
     return nothing
 end
 
@@ -498,23 +496,25 @@ function OptimizationBase.instantiate_function(
             lag_vdbθ = Tuple((copy(r) for r in eachrow(f.hess_prototype)))
         end
 
-        function lag_h!(h, θ, σ, μ, p = p)
-            Enzyme.make_zero!(lag_bθ)
-            Enzyme.make_zero!.(lag_vdbθ)
+        function fill_lag_hessian!(θ, σ, μ, p)
+            lag = x -> lagrangian(x, f.f, f.cons, p, μ, σ)
+            for i in eachindex(θ)
+                Enzyme.make_zero!(lag_bθ)
+                Enzyme.make_zero!(lag_vdbθ[i])
+                Enzyme.autodiff(
+                    fmode,
+                    lag_grad,
+                    Const(rmode),
+                    Enzyme.Duplicated(θ, lag_vdθ[i]),
+                    Enzyme.Duplicated(lag_bθ, lag_vdbθ[i]),
+                    Const(lag)
+                )
+            end
+            return nothing
+        end
 
-            Enzyme.autodiff(
-                fmode,
-                lag_grad,
-                Const(rmode),
-                Enzyme.BatchDuplicated(θ, lag_vdθ),
-                Enzyme.BatchDuplicatedNoNeed(lag_bθ, lag_vdbθ),
-                Const(lagrangian),
-                Const(f.f),
-                Const(f.cons),
-                Const(p),
-                Const(σ),
-                Const(μ)
-            )
+        function lag_h!(h, θ, σ, μ, p = p)
+            fill_lag_hessian!(θ, σ, μ, p)
             k = 0
 
             for i in eachindex(θ)
@@ -527,25 +527,12 @@ function OptimizationBase.instantiate_function(
 
         function lag_h!(H::AbstractMatrix, θ, σ, μ, p = p)
             Enzyme.make_zero!(H)
-            Enzyme.make_zero!(lag_bθ)
-            Enzyme.make_zero!.(lag_vdbθ)
-
-            Enzyme.autodiff(
-                fmode,
-                lag_grad,
-                Const(rmode),
-                Enzyme.BatchDuplicated(θ, lag_vdθ),
-                Enzyme.BatchDuplicatedNoNeed(lag_bθ, lag_vdbθ),
-                Const(lagrangian),
-                Const(f.f),
-                Const(f.cons),
-                Const(p),
-                Const(σ),
-                Const(μ)
-            )
+            fill_lag_hessian!(θ, σ, μ, p)
 
             for i in eachindex(θ)
-                H[i, :] .= lag_vdbθ[i]
+                vec_lagv = lag_vdbθ[i]
+                H[i, 1:i] .= @view(vec_lagv[1:i])
+                H[1:i, i] .= @view(vec_lagv[1:i])
             end
             return
         end
