@@ -51,6 +51,50 @@ R2 = Euclidean(2)
         @test sol.objective < 0.2
     end
 
+    @testset "Gradient descent maxiters without abstol still reports Success" begin
+        # Regression test: passing only `maxiters` (no `abstol`) used to fully replace
+        # Manopt's own default `stopping_criterion`, leaving `StopAfterIteration` as the
+        # *only* criterion. Since that criterion never `indicates_convergence`, the run
+        # was structurally guaranteed to report `ReturnCode.MaxIters`, even once it had
+        # actually converged. `maxiters` here is set well above what's needed so the run
+        # converges before hitting the cap.
+        x0 = zeros(2)
+        p = [1.0, 100.0]
+
+        stepsize = Manopt.ArmijoLinesearch(R2)
+        opt = OptimizationManopt.GradientDescentOptimizer()
+
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
+        prob = OptimizationProblem(
+            optprob, x0, p; manifold = R2, stepsize = stepsize, maxiters = 25_000
+        )
+        sol = OptimizationBase.solve(prob, opt)
+        @test sol.objective < 1.0e-10
+        @test SciMLBase.successful_retcode(sol)
+    end
+
+    @testset "User-supplied stopping_criterion is combined, not clobbered" begin
+        # Regression test: a Manopt `stopping_criterion` passed through `solve` used to be
+        # silently overwritten whenever `maxiters`/`maxtime`/`abstol` was also given.
+        x0 = zeros(2)
+        p = [1.0, 100.0]
+
+        stepsize = Manopt.ArmijoLinesearch(R2)
+        opt = OptimizationManopt.GradientDescentOptimizer()
+
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
+        prob = OptimizationProblem(
+            optprob, x0, p; manifold = R2, stepsize = stepsize, maxiters = 25_000
+        )
+        user_sc = Manopt.StopWhenGradientNormLess(1.0e-3)
+        sol = OptimizationBase.solve(prob, opt; stopping_criterion = user_sc)
+        sc = Manopt.get_stopping_criterion(sol.original)
+        @test any(c -> c === user_sc, sc.criteria)
+        # The user's criterion also suppresses the (tighter) 1e-8 default fallback.
+        @test !any(c -> c isa Manopt.StopWhenGradientNormLess && c !== user_sc, sc.criteria)
+        @test SciMLBase.successful_retcode(sol)
+    end
+
     @testset "Nelder-Mead" begin
         x0 = zeros(2)
         p = [1.0, 100.0]
@@ -92,7 +136,11 @@ R2 = Euclidean(2)
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
         sol = OptimizationBase.solve(prob, opt, callback = callback, maxiters = 30)
-        @test sol.objective < 1.0e-14
+        # With `maxiters` given, Manopt's default `StopWhenGradientNormLess(1e-6)` stays
+        # active, so the run stops (converged) slightly earlier than the old
+        # `StopAfterIteration`-only criterion, which ran the budget down to < 1e-14.
+        @test sol.objective < 1.0e-12
+        @test SciMLBase.successful_retcode(sol)
     end
 
     @testset "Particle swarm" begin
@@ -106,6 +154,13 @@ R2 = Euclidean(2)
 
         sol = OptimizationBase.solve(prob, opt)
         @test sol.objective < 0.1
+
+        # Manopt's own PSO convergence test (`StopWhenSwarmVelocityLess`) never
+        # `indicates_convergence`, so no fallback criterion is injected for PSO and a
+        # `maxiters`-bounded run keeps reporting `MaxIters` instead of stopping early on
+        # some unrelated criterion and reporting `Failure`/spurious `Success`.
+        sol = OptimizationBase.solve(prob, opt; maxiters = 100)
+        @test sol.retcode == SciMLBase.ReturnCode.MaxIters
     end
 
     @testset "CMA-ES" begin
