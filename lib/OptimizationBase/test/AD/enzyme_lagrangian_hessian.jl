@@ -1,6 +1,20 @@
-using ChainRulesCore, Enzyme, OptimizationBase, Test
+using ChainRulesCore, Enzyme, ForwardDiff, LinearAlgebra, OptimizationBase, Test
 
-function check_lagrangian_hessian(N)
+function ref_lag_hess!(obj, cons!, x, σ, μ, p)
+    function lag(θ)
+        res = zeros(eltype(θ), length(μ))
+        cons!(res, θ, p)
+        return σ * obj(θ, p) + dot(μ, res)
+    end
+    return ForwardDiff.hessian(lag, x)
+end
+
+function ref_lag_hess(obj, cons, x, σ, μ, p)
+    lag(θ) = σ * obj(θ, p) + dot(μ, cons(θ, p))
+    return ForwardDiff.hessian(lag, x)
+end
+
+function check_inplace_clnlbeam(N; σ = 1.0)
     h = 1 / N
     alpha = 350
     x_offset = N + 1
@@ -21,32 +35,96 @@ function check_lagrangian_hessian(N)
         return nothing
     end
 
-    x = zeros(3(N + 1))
+    # Nonzero point so constraint Hessians (from sin) contribute.
+    x = collect(range(0.05; step = 0.01, length = 3(N + 1)))
+    multipliers = collect(range(0.25; step = 0.05, length = 2N))
     f = OptimizationFunction(objective, AutoEnzyme(); cons = constraint!)
     instantiated = OptimizationBase.instantiate_function(
         f, x, AutoEnzyme(), nothing, 2N; lag_h = true
     )
-    multipliers = ones(2N)
-    expected = zeros(length(x), length(x))
-    for i in 1:(N + 1)
-        expected[i, i] = (i == 1 || i == N + 1) ? -0.5alpha * h : -alpha * h
-        expected[u_offset + i, u_offset + i] =
-            (i == 1 || i == N + 1) ? h : 2h
-    end
-    expected[1, 2] = expected[2, 1] = 1
+    expected = ref_lag_hess!(objective, constraint!, x, σ, multipliers, nothing)
 
     packed = zeros(length(x) * (length(x) + 1) ÷ 2)
-    instantiated.lag_h(packed, x, 1.0, multipliers)
+    instantiated.lag_h(packed, x, σ, multipliers)
     @test packed ≈ [expected[i, j] for i in axes(expected, 1) for j in 1:i]
 
     dense = zeros(length(x), length(x))
-    instantiated.lag_h(dense, x, 1.0, multipliers)
+    instantiated.lag_h(dense, x, σ, multipliers)
     @test dense ≈ expected
     return nothing
 end
 
+function check_inplace_quadratic()
+    # Objective Hessian [[2,1],[1,4]]; constraint x₁²+x₂²-1 has Hessian 2I.
+    objective(x, p) = x[1]^2 + x[1] * x[2] + 2 * x[2]^2 + p[1] * x[1]
+    function constraint!(res, x, p)
+        res[1] = x[1]^2 + x[2]^2 - 1
+        return nothing
+    end
+
+    x = [0.3, -0.4]
+    p = [1.5]
+    f = OptimizationFunction(objective, AutoEnzyme(); cons = constraint!)
+    instantiated = OptimizationBase.instantiate_function(
+        f, x, AutoEnzyme(), p, 1; lag_h = true
+    )
+
+    @testset "σ = $σ, μ = $μ" for (σ, μ) in (
+            (1.0, [1.0]),
+            (0.0, [2.5]),
+            (2.0, [-1.5]),
+            (0.0, [0.0]),
+        )
+        expected = ref_lag_hess!(objective, constraint!, x, σ, μ, p)
+        dense = zeros(2, 2)
+        instantiated.lag_h(dense, x, σ, μ, p)
+        @test dense ≈ expected
+    end
+    return nothing
+end
+
+function check_oop_quadratic(n)
+    # Separable quartic objective + quadratic equality; n padded relative to
+    # the width-8 Enzyme batch size exercises full and partial batches.
+    objective(x, p) = sum(abs2(abs2(xi)) for xi in x) + p[1] * sum(x)
+    cons(x, p) = [sum(abs2, x) - 1, x[1] * x[min(2, n)] - p[2]]
+
+    x = collect(range(0.1; step = 0.05, length = n))
+    p = [0.3, -0.2]
+    μ = [1.25, -0.75]
+    f = OptimizationFunction{false}(objective, AutoEnzyme(); cons = cons)
+    instantiated = OptimizationBase.instantiate_function(
+        f, x, AutoEnzyme(), p, 2; lag_h = true
+    )
+
+    for σ in (1.0, 0.0, 2.5)
+        expected = ref_lag_hess(objective, cons, x, σ, μ, p)
+        H = instantiated.lag_h(x, σ, μ, p)
+        @test H isa Matrix
+        @test size(H) == (n, n)
+        @test H ≈ expected
+        @test H ≈ H'
+    end
+    return nothing
+end
+
 @testset "Enzyme Lagrangian Hessian" begin
-    @testset "N = $N" for N in (1:10..., 20, 40, 60)
-        check_lagrangian_hessian(N)
+    enzyme_ext = Base.get_extension(OptimizationBase, :OptimizationEnzymeExt)
+    @test enzyme_ext._lag_hessian_batch_width(4) ==
+        ((v"1.12" <= VERSION < v"1.13") ? 1 : 4)
+    @test enzyme_ext._lag_hessian_batch_width(17) ==
+        ((v"1.12" <= VERSION < v"1.13") ? 1 : 8)
+
+    @testset "in-place clnlbeam N = $N" for N in (1:10..., 20, 40, 60)
+        check_inplace_clnlbeam(N)
+        check_inplace_clnlbeam(N; σ = 0.0)
+    end
+
+    @testset "in-place quadratic σ/μ cases" begin
+        check_inplace_quadratic()
+    end
+
+    @testset "out-of-place quadratic n = $n" for n in (9, 17)
+        check_oop_quadratic(n)
     end
 end

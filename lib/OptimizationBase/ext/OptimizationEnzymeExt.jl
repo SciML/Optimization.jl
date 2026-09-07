@@ -80,6 +80,10 @@ function lagrangian(x, _f::Function, cons::Function, p, λ, σ = one(eltype(x)))
     return σ * _f(x, p) + dot(λ, res)
 end
 
+function lagrangian_oop(x, _f::Function, cons::Function, p, λ, σ = one(eltype(x)))
+    return σ * _f(x, p) + dot(λ, cons(x, p))
+end
+
 function lag_grad(mode, x, dx, f)
     Enzyme.make_zero!(dx)
     Enzyme.autodiff(mode, Const(f), Active, Enzyme.Duplicated(x, dx))
@@ -98,10 +102,12 @@ const _HESSIAN_BATCH_CAP = 8
 
 _hessian_batch_width(n) = min(max(n, 1), _HESSIAN_BATCH_CAP)
 
-# Enzyme forward-over-reverse BatchDuplicated through the Lagrangian currently
-# yields NaN Hessian rows on Julia 1.12+. Keep the width-8 Hessian-style batches
-# elsewhere; fall back to one seed at a time there.
-_lag_hessian_batch_width(n) = VERSION >= v"1.12" ? 1 : _hessian_batch_width(n)
+# Enzyme forward-over-reverse BatchDuplicated through the Lagrangian yields NaN
+# Hessian rows on Julia 1.12.7. Keep the width-8 Hessian-style batches elsewhere;
+# fall back to one seed at a time only on the known-broken 1.12 series.
+# TODO: re-enable width-8 BatchDuplicated once verified on Julia 1.13+.
+_lag_hessian_batch_width(n) =
+    (v"1.12" <= VERSION < v"1.13") ? 1 : _hessian_batch_width(n)
 
 function _onehot_cache(x, batch_width)
     n = length(x)
@@ -492,9 +498,8 @@ function OptimizationBase.instantiate_function(
 
     if lag_h == true && f.lag_h === nothing && cons !== nothing
         # Cap Enzyme FoR batches like objective Hessians. Full-width batches have
-        # superlinear compile cost; row-wise (width 1) is only used where Enzyme
-        # BatchDuplicated through the Lagrangian is unreliable (see
-        # `_lag_hessian_batch_width`).
+        # superlinear compile cost; row-wise (width 1) is only used on the known-broken
+        # Julia 1.12 series (see `_lag_hessian_batch_width`).
         lag_batch_width = _lag_hessian_batch_width(length(x))
         lag_vdθ = _onehot_cache(x, lag_batch_width)
         lag_bθ = zeros(eltype(x), length(x))
@@ -896,7 +901,7 @@ function OptimizationBase.instantiate_function(
         end
 
         function lag_h!(θ, σ, μ, p = p)
-            lag = x -> lagrangian(x, f.f, f.cons, p, μ, σ)
+            lag = x -> lagrangian_oop(x, f.f, f.cons, p, μ, σ)
             if lag_batch_width == 1
                 for i in eachindex(θ)
                     Enzyme.make_zero!(lag_bθ)
@@ -931,15 +936,14 @@ function OptimizationBase.instantiate_function(
                 end
             end
 
-            n = length(θ)
-            res = zeros(eltype(θ), n * (n + 1) ÷ 2)
-            k = 0
+            H = Matrix{eltype(θ)}(undef, length(θ), length(θ))
+            fill!(H, zero(eltype(θ)))
             for i in eachindex(θ)
                 vec_lagv = lag_vdbθ[i]
-                res[(k + 1):(k + i)] .= @view(vec_lagv[1:i])
-                k += i
+                H[i, 1:i] .= @view(vec_lagv[1:i])
+                H[1:i, i] .= @view(vec_lagv[1:i])
             end
-            return res
+            return H
         end
     elseif lag_h == true && cons !== nothing
         lag_h! = (θ, σ, μ, p = p) -> f.lag_h(θ, σ, μ, p)
