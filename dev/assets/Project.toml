@@ -60,7 +60,7 @@ Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [sources]
-Optimization = {path = "/home/runner/_work/Optimization.jl/Optimization.jl"}
+Optimization = {path = "/home/runner/work/Optimization.jl/Optimization.jl"}
 OptimizationAuglag = {path = "../lib/OptimizationAuglag"}
 OptimizationBBO = {path = "../lib/OptimizationBBO"}
 OptimizationBase = {path = "../lib/OptimizationBase"}
@@ -87,7 +87,7 @@ OptimizationQuadDIRECT = {path = "../lib/OptimizationQuadDIRECT"}
 OptimizationSciPy = {path = "../lib/OptimizationSciPy"}
 OptimizationSophia = {path = "../lib/OptimizationSophia"}
 OptimizationSpeedMapping = {path = "../lib/OptimizationSpeedMapping"}
-QuadDIRECT = {url = "https://github.com/timholy/QuadDIRECT.jl.git"}
+QuadDIRECT = {rev = "master", url = "https://github.com/timholy/QuadDIRECT.jl.git"}
 SimpleOptimization = {path = "../lib/SimpleOptimization"}
 
 [compat]
