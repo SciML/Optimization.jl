@@ -170,3 +170,36 @@ end
     @test isapprox(soli.objective, 0.5; atol = 1.0e-6)
     @test isapprox(soli.u, [0.5, 0.5]; atol = 1.0e-6)
 end
+
+# exp and log lower to the exponential cone. exp is convex so it is bounded
+# above (epigraph); log is concave so it is bounded below (hypograph) and must
+# enter the objective negatively.
+@testset "exp and log objectives lower to the exponential cone" begin
+    # minimize exp(u1) + u2  s.t.  u1 == 1, u2 == 0  ->  e
+    optfe = OptimizationFunction((u, p) -> exp(u[1]) + u[2])
+    conse = [ConeConstraint((u, p) -> [u[1] - 1.0, u[2]], MOI.Zeros(2))]
+    sole = solve(
+        ConvexOptimizationProblem(optfe, [0.0, 0.0]; constraints = conse),
+        ConvexMOI(Clarabel.Optimizer)
+    )
+    @test SciMLBase.successful_retcode(sole.retcode)
+    @test isapprox(sole.objective, exp(1); atol = 1.0e-6)
+
+    # log barrier: minimize -log(u1) s.t. u1 == 2  ->  -log(2)
+    optfl = OptimizationFunction((u, p) -> -log(u[1]))
+    consl = [ConeConstraint((u, p) -> [u[1] - 2.0], MOI.Zeros(1))]
+    soll = solve(
+        ConvexOptimizationProblem(optfl, [1.0]; constraints = consl),
+        ConvexMOI(Clarabel.Optimizer)
+    )
+    @test SciMLBase.successful_retcode(soll.retcode)
+    @test isapprox(soll.objective, -log(2); atol = 1.0e-6)
+    @test length(soll.dual) == 1        # epigraph cone stays out of the user duals
+
+    # a bare `log` objective is concave: minimizing it is not a convex program.
+    optfb = OptimizationFunction((u, p) -> log(u[1]))
+    @test_throws Exception solve(
+        ConvexOptimizationProblem(optfb, [1.0]; constraints = consl),
+        ConvexMOI(Clarabel.Optimizer)
+    )
+end

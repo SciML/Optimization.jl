@@ -41,12 +41,18 @@ Conic backend: certify convexity with SymbolicAnalysis, lower the objective and
 each `ConeConstraint` to a MathOptInterface cone, and solve with
 `optimizer_constructor`.
 
-The objective may be affine or contain `norm` atoms, which are lowered through
-their epigraph: `minimize norm(A*u - b, 2)` introduces an epigraph variable `τ`
-with `(τ, A*u - b) ∈ SecondOrderCone` and minimizes `τ`. `p = 1` and `p = Inf`
-lower the same way to `NormOneCone` and `NormInfinityCone`. Keep a `norm`
-argument an array expression built from `u` (`A*u - b`, `u .- c`); a `Vector`
-literal of scalars scalarizes the atom away before it can be lowered.
+The objective may be affine or contain atoms that are lowered through their
+epigraph: `minimize norm(A*u - b, 2)` introduces an epigraph variable `τ` with
+`(τ, A*u - b) ∈ SecondOrderCone` and minimizes `τ`. Supported atoms are
+
+  - `norm(w, p)` for `p = 1, 2, Inf` (`NormOneCone`, `SecondOrderCone`,
+    `NormInfinityCone`), with `w` an array expression in `u`;
+  - `exp(w)` and `log(w)` for scalar affine `w` (`ExponentialCone`); `log` is
+    concave, so it is bounded below and must enter the objective negatively
+    (e.g. a `-log` barrier).
+
+Keep a `norm` argument an array expression built from `u` (`A*u - b`, `u .- c`);
+a `Vector` literal of scalars scalarizes the atom away before it can be lowered.
 """
 struct ConvexMOI{O} <: AbstractConvexOptAlgorithm
     optimizer_constructor::O
@@ -203,14 +209,18 @@ function lower_to_moi(prob::ConvexOptimizationProblem, alg::ConvexMOI, tr)
     )
     c = vec(_tofloat.(Ao))
     d = _tofloat(only(bo))
-    # `norm(w) <= τ` only bounds the atom from above, so replacing the atom by τ is
-    # valid only where the objective is nondecreasing in τ (nonincreasing for Max).
+    # An epigraph variable only bounds its atom on one side, so substituting it is
+    # valid only where the objective pushes it against that bound: a convex atom
+    # (`dir = +1`, bounded above) needs a nonnegative coefficient under MinSense, a
+    # concave one (`dir = -1`, bounded below) a nonpositive one; both flip for Max.
     sgn = prob.sense === SciMLBase.MaxSense ? -1.0 : 1.0
-    for k in eachindex(tr.taus)
-        sgn * c[n + k] >= 0 || error(
-            "Epigraph lowering of a `norm` atom is valid only when the objective is " *
-                "nondecreasing in it for MinSense (nonincreasing for MaxSense); got " *
-                "coefficient $(c[n + k]) for $(prob.sense). Route to a general " *
+    for (k, at) in enumerate(tr.atoms)
+        sgn * at.dir * c[n + k] >= 0 || error(
+            "Lowering an atom through its " *
+                (at.dir > 0 ? "epigraph" : "hypograph") * " is valid only when the " *
+                "objective is " * (at.dir > 0 ? "nondecreasing" : "nonincreasing") *
+                " in it for MinSense (reversed for MaxSense); got coefficient " *
+                "$(c[n + k]) for $(prob.sense). Route to a general " *
                 "OptimizationProblem/NLP solver."
         )
     end
@@ -247,6 +257,7 @@ implementation detail of the lowering and are deliberately kept out of
 struct AtomCone{S <: MOI.AbstractVectorSet}
     rows::Vector{Symbolics.Num}
     set::S
+    dir::Int   # +1: τ bounds a convex atom above; -1: τ bounds a concave atom below
 end
 
 function _trace_problem(prob)
@@ -283,9 +294,38 @@ function _norm_cone(p, dim)
     )
 end
 
+const LOWERABLE_ATOMS = (LinearAlgebra.norm, exp, log)
+
 function _is_lowerable_atom(ex)
     Symbolics.iscall(ex) || return false
-    return Symbolics.operation(ex) === LinearAlgebra.norm
+    return any(f -> Symbolics.operation(ex) === f, LOWERABLE_ATOMS)
+end
+
+# Each atom becomes `(rows, set, dir)`: `rows ∈ set` ties the epigraph variable
+# `tau` to the atom, and `dir` records which way it is bounded.
+#   convex  `f(w) <= tau`  (epigraph,  dir = +1)
+#   concave `f(w) >= tau`  (hypograph, dir = -1)
+# `MOI.ExponentialCone` is {(a, b, c) : b * exp(a / b) <= c, b > 0}, so
+# `exp(w) <= tau` is `(w, 1, tau)` and `log(w) >= tau` is `(tau, 1, w)`.
+function _atom_lowering(t, tau)
+    f = Symbolics.operation(t)
+    if f === LinearAlgebra.norm
+        w = _asvec(Symbolics.wrap(Symbolics.arguments(t)[1]))
+        return Symbolics.Num[tau; w...], _norm_cone(_norm_order(t), length(w) + 1), 1
+    end
+    w = _scalar_atom_arg(t, f)
+    f === exp && return Symbolics.Num[w, 1, tau], MOI.ExponentialCone(), 1
+    return Symbolics.Num[tau, 1, w], MOI.ExponentialCone(), -1
+end
+
+function _scalar_atom_arg(t, f)
+    a = _asvec(Symbolics.wrap(Symbolics.arguments(t)[1]))
+    length(a) == 1 || error(
+        "`$f` is lowered only for a scalar argument; got one of length $(length(a)). " *
+            "Write the elementwise form as a sum of scalar `$f` terms, or route to a " *
+            "general OptimizationProblem/NLP solver."
+    )
+    return only(a)
 end
 
 function _collect_atoms!(acc, ex)
@@ -334,11 +374,10 @@ function _epigraph_lower(obj)
     atoms = AtomCone[]
     subs = Dict{Any, Symbolics.Num}()
     for (k, t) in enumerate(nodes)
-        w = _asvec(Symbolics.wrap(Symbolics.arguments(t)[1]))
-        set = _norm_cone(_norm_order(t), length(w) + 1)
         tau = variable(:τ, k)
+        rows, set, dir = _atom_lowering(t, tau)
         push!(taus, tau)
-        push!(atoms, AtomCone(Symbolics.Num[tau; w...], set))
+        push!(atoms, AtomCone(rows, set, dir))
         subs[Symbolics.wrap(t)] = tau
     end
     return Symbolics.scalarize(Symbolics.substitute(obj, subs)), taus, atoms
