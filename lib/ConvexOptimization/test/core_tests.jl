@@ -136,8 +136,8 @@ end
     prob2 = ConvexOptimizationProblem(optf2, [0.0])
     @test_throws Exception solve(prob2, ConvexMOI(Clarabel.Optimizer))
 
-    # only the Euclidean norm maps to a second-order cone.
-    optf3 = OptimizationFunction((u, p) -> norm(A * u - b, 1))
+    # p = 3 has no corresponding MOI cone (1, 2 and Inf do).
+    optf3 = OptimizationFunction((u, p) -> norm(A * u - b, 3))
     prob3 = ConvexOptimizationProblem(optf3, [0.0])
     @test_throws Exception solve(prob3, ConvexMOI(Clarabel.Optimizer))
 
@@ -145,4 +145,28 @@ end
     optf4 = OptimizationFunction((u, p) -> norm(u .^ 2 .- 1.0, 2))
     prob4 = ConvexOptimizationProblem(optf4, [0.5, 0.5])
     @test_throws Exception solve(prob4, ConvexMOI(Clarabel.Optimizer))
+end
+
+# l1 and linf norms lower to NormOneCone / NormInfinityCone, which share the
+# (tau, w...) row layout of the second-order cone.
+# Both minimize ||u - 1||_p subject to sum(u) == 1. Substituting u = (t, 1-t):
+#   p = 1:   |t-1| + |t|          -> 1   for any t in [0, 1]
+#   p = Inf: max(|t-1|, |t|)      -> 1/2 at t = 1/2
+@testset "l1 and linf norm objectives lower to their cones" begin
+    cons = [ConeConstraint((u, p) -> [u[1] + u[2] - 1.0], MOI.Zeros(1))]
+
+    optf1 = OptimizationFunction((u, p) -> norm(u .- 1.0, 1))
+    prob1 = ConvexOptimizationProblem(optf1, [0.5, 0.5]; constraints = cons)
+    sol1 = solve(prob1, ConvexMOI(Clarabel.Optimizer))
+    @test SciMLBase.successful_retcode(sol1.retcode)
+    @test isapprox(sol1.objective, 1.0; atol = 1.0e-6)
+    @test isapprox(sum(sol1.u), 1.0; atol = 1.0e-6)
+    @test length(sol1.dual) == 1        # epigraph cone stays out of the user duals
+
+    optfi = OptimizationFunction((u, p) -> norm(u .- 1.0, Inf))
+    probi = ConvexOptimizationProblem(optfi, [0.5, 0.5]; constraints = cons)
+    soli = solve(probi, ConvexMOI(Clarabel.Optimizer))
+    @test SciMLBase.successful_retcode(soli.retcode)
+    @test isapprox(soli.objective, 0.5; atol = 1.0e-6)
+    @test isapprox(soli.u, [0.5, 0.5]; atol = 1.0e-6)
 end

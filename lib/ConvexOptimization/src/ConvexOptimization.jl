@@ -41,11 +41,12 @@ Conic backend: certify convexity with SymbolicAnalysis, lower the objective and
 each `ConeConstraint` to a MathOptInterface cone, and solve with
 `optimizer_constructor`.
 
-The objective may be affine or contain Euclidean-norm atoms, which are lowered
-through their epigraph: `minimize norm(A*u - b, 2)` introduces an epigraph
-variable `τ` with `(τ, A*u - b) ∈ SecondOrderCone` and minimizes `τ`. Keep a
-`norm` argument an array expression built from `u` (`A*u - b`, `u .- c`); a
-`Vector` literal of scalars scalarizes the atom away before it can be lowered.
+The objective may be affine or contain `norm` atoms, which are lowered through
+their epigraph: `minimize norm(A*u - b, 2)` introduces an epigraph variable `τ`
+with `(τ, A*u - b) ∈ SecondOrderCone` and minimizes `τ`. `p = 1` and `p = Inf`
+lower the same way to `NormOneCone` and `NormInfinityCone`. Keep a `norm`
+argument an array expression built from `u` (`A*u - b`, `u .- c`); a `Vector`
+literal of scalars scalarizes the atom away before it can be lowered.
 """
 struct ConvexMOI{O} <: AbstractConvexOptAlgorithm
     optimizer_constructor::O
@@ -263,6 +264,25 @@ end
 
 _norm_order(t) = (a = Symbolics.arguments(t); length(a) == 1 ? 2 : Symbolics.value(a[2]))
 
+# `norm(w, p) <= τ` is a cone membership of `(τ, w...)` for p ∈ {1, 2, Inf}; all
+# three share that row layout, so only the set differs. Other `p` have no
+# corresponding MOI cone.
+function _norm_cone(p, dim)
+    p isa Number || error(
+        "The order `p` of a `norm(w, p)` atom in the objective must be a constant " *
+            "1, 2 or Inf; got a non-constant expression. Route to a general " *
+            "OptimizationProblem/NLP solver."
+    )
+    p == 2 && return MOI.SecondOrderCone(dim)
+    p == 1 && return MOI.NormOneCone(dim)
+    isinf(p) && p > 0 && return MOI.NormInfinityCone(dim)
+    return error(
+        "This backend lowers `norm(w, p)` in the objective only for p = 1, 2 or " *
+            "Inf; got p = $p, which has no corresponding MathOptInterface cone. " *
+            "Reformulate or route to a general OptimizationProblem/NLP solver."
+    )
+end
+
 function _is_lowerable_atom(ex)
     Symbolics.iscall(ex) || return false
     return Symbolics.operation(ex) === LinearAlgebra.norm
@@ -314,18 +334,11 @@ function _epigraph_lower(obj)
     atoms = AtomCone[]
     subs = Dict{Any, Symbolics.Num}()
     for (k, t) in enumerate(nodes)
-        p = _norm_order(t)
-        (p isa Number && p == 2) || error(
-            "This backend lowers only the Euclidean norm `norm(w)` / `norm(w, 2)` " *
-                "in the objective; got `norm(w, p)` with p = " *
-                (p isa Number ? string(p) : "a non-constant expression") *
-                ", which is not a second-order cone. Reformulate or route to a " *
-                "general OptimizationProblem/NLP solver."
-        )
         w = _asvec(Symbolics.wrap(Symbolics.arguments(t)[1]))
+        set = _norm_cone(_norm_order(t), length(w) + 1)
         tau = variable(:τ, k)
         push!(taus, tau)
-        push!(atoms, AtomCone(Symbolics.Num[tau; w...], MOI.SecondOrderCone(length(w) + 1)))
+        push!(atoms, AtomCone(Symbolics.Num[tau; w...], set))
         subs[Symbolics.wrap(t)] = tau
     end
     return Symbolics.scalarize(Symbolics.substitute(obj, subs)), taus, atoms
