@@ -3,6 +3,7 @@ using SciMLBase
 using SciMLBase: ConvexOptimizationProblem, OptimizationSolution
 import MathOptInterface as MOI
 import Clarabel
+using LinearAlgebra
 using Test
 
 # minimize  x1 + 2 x2   s.t.  x1 + x2 == 1,  x >= 0
@@ -78,4 +79,70 @@ end
         @test isapprox(Convex.evaluate(xc), [1.0, 0.0]; atol = 1.0e-6)
         @test isapprox(pc.optval, 1.0; atol = 1.0e-6)
     end
+end
+
+# minimize ||A*u - b||_2 with A = [1;1], b = [0;2]
+# analytic optimum: u* = 1, residual (1,-1), objective sqrt(2).
+# The atom is lowered through its epigraph, so the user sees no epigraph variable:
+# sol.u has length 1 and sol.dual stays 1:1 with the (here empty) user constraints.
+@testset "norm objective is lowered through its epigraph" begin
+    A = reshape([1.0, 1.0], 2, 1)
+    b = [0.0, 2.0]
+    optf = OptimizationFunction((u, p) -> norm(A * u - b, 2))
+    prob = ConvexOptimizationProblem(optf, [0.0])
+
+    sol = solve(prob, ConvexMOI(Clarabel.Optimizer))
+
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test length(sol.u) == 1                       # epigraph variable is internal
+    @test isapprox(sol.u[1], 1.0; atol = 1.0e-6)
+    @test isapprox(sol.objective, sqrt(2); atol = 1.0e-6)
+end
+
+@testset "norm objective with constraints keeps duals 1:1 with user constraints" begin
+    # minimize ||u - [1,1]||_2  s.t.  sum(u) == 1, u >= 0
+    optf = OptimizationFunction((u, p) -> norm(u .- 1.0, 2))
+    cons = [
+        ConeConstraint((u, p) -> [u[1] + u[2] - 1.0], MOI.Zeros(1)),
+        ConeConstraint((u, p) -> [u[1], u[2]], MOI.Nonnegatives(2)),
+    ]
+    prob = ConvexOptimizationProblem(optf, [0.5, 0.5]; constraints = cons)
+
+    sol = solve(prob, ConvexMOI(Clarabel.Optimizer))
+
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test length(sol.u) == 2
+    # projection of [1,1] onto the simplex sum(u)==1, u>=0 is (1/2, 1/2)
+    @test isapprox(sol.u, [0.5, 0.5]; atol = 1.0e-6)
+    @test isapprox(sol.objective, norm([0.5, 0.5] .- 1.0, 2); atol = 1.0e-6)
+    # one dual entry per user constraint, in order — the epigraph cone is not among them
+    @test sol.dual !== nothing
+    @test length(sol.dual) == 2
+    @test length(sol.dual[1]) == 1
+    @test length(sol.dual[2]) == 2
+end
+
+@testset "invalid epigraph lowering is rejected, not silently solved" begin
+    A = reshape([1.0, 1.0], 2, 1)
+    b = [0.0, 2.0]
+
+    # maximizing a norm is not concave: the epigraph bounds the atom from above only.
+    optf = OptimizationFunction((u, p) -> norm(A * u - b, 2))
+    prob = ConvexOptimizationProblem(optf, [0.0]; sense = SciMLBase.MaxSense)
+    @test_throws Exception solve(prob, ConvexMOI(Clarabel.Optimizer))
+
+    # a norm entering with a negative coefficient is concave, not convex.
+    optf2 = OptimizationFunction((u, p) -> -norm(A * u - b, 2))
+    prob2 = ConvexOptimizationProblem(optf2, [0.0])
+    @test_throws Exception solve(prob2, ConvexMOI(Clarabel.Optimizer))
+
+    # only the Euclidean norm maps to a second-order cone.
+    optf3 = OptimizationFunction((u, p) -> norm(A * u - b, 1))
+    prob3 = ConvexOptimizationProblem(optf3, [0.0])
+    @test_throws Exception solve(prob3, ConvexMOI(Clarabel.Optimizer))
+
+    # a non-affine norm argument cannot be lowered.
+    optf4 = OptimizationFunction((u, p) -> norm(u .^ 2 .- 1.0, 2))
+    prob4 = ConvexOptimizationProblem(optf4, [0.5, 0.5])
+    @test_throws Exception solve(prob4, ConvexMOI(Clarabel.Optimizer))
 end
