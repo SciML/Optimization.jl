@@ -20,7 +20,7 @@ MathOptInterface = "1.45"
 Reexport = "1.2"
 SciMLBase = "3.36"
 SparseArrays = "1.10"
-SymbolicAnalysis = "0.3"
+SymbolicAnalysis = "0.3, 0.5"
 Symbolics = "7"
 julia = "1.10"
 
