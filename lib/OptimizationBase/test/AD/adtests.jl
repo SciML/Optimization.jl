@@ -1564,4 +1564,37 @@ end
     @test optf_oop.hess(x) ≈ expected_hessian
     _, hessian_oop = optf_oop.fgh(x)
     @test hessian_oop ≈ expected_hessian
+
+    function quadratic_constraints!(res, x, p)
+        first_constraint = zero(eltype(x))
+        second_constraint = zero(eltype(x))
+        for i in eachindex(x)
+            first_constraint += x[i]^2
+            second_constraint += i * x[i]^2
+        end
+        res[1] = first_constraint
+        res[2] = second_constraint
+        return
+    end
+    σ = 0.7
+    μ = [0.2, -0.1]
+    expected_lagrangian_hessian =
+        σ .* expected_hessian .+ Matrix(Diagonal(2μ[1] .+ 2μ[2] .* eachindex(x)))
+    optf_lagrangian = OptimizationBase.instantiate_function(
+        OptimizationFunction(quartic, AutoEnzyme(); cons = quadratic_constraints!),
+        x, AutoEnzyme(), nothing, 2; lag_h = true
+    )
+    lagrangian_hessian = similar(expected_hessian)
+    optf_lagrangian.lag_h(lagrangian_hessian, x, σ, μ)
+    @test lagrangian_hessian ≈ expected_lagrangian_hessian
+    packed_lagrangian_hessian = Vector{eltype(x)}(undef, n * (n + 1) ÷ 2)
+    optf_lagrangian.lag_h(packed_lagrangian_hessian, x, σ, μ)
+    @test packed_lagrangian_hessian ≈ vcat(
+        [expected_lagrangian_hessian[i, 1:i] for i in 1:n]...
+    )
+    @test any(
+        getfield(optf_lagrangian.lag_h, i) isa Val{8}
+            for i in 1:fieldcount(typeof(optf_lagrangian.lag_h))
+    )
+
 end

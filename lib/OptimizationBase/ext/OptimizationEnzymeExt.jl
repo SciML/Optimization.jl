@@ -139,6 +139,37 @@ function _copy_hessian_row!(dest, src, transfer_cache)
     return nothing
 end
 
+function _lag_hessian_rows!(
+        copy_row!, θ, σ, μ, p, fmode, rmode, vdθ, bθ, vdbθ,
+        batch_width, objective, cons
+    )
+    for first_index in _batch_starts(vdθ, batch_width)
+        vdθ_batch = _cache_batch(vdθ, first_index, batch_width)
+        vdbθ_batch = _cache_batch(vdbθ, first_index, batch_width)
+        _zero_cache!(bθ)
+        for dbθ in vdbθ_batch
+            _zero_cache!(dbθ)
+        end
+        Enzyme.autodiff(
+            fmode,
+            lag_grad,
+            Const(rmode),
+            Enzyme.BatchDuplicated(θ, vdθ_batch),
+            Enzyme.BatchDuplicatedNoNeed(bθ, vdbθ_batch),
+            Const(lagrangian),
+            Const(objective),
+            Const(cons),
+            Const(p),
+            Const(σ),
+            Const(μ)
+        )
+        for lane in 1:_valid_batch_width(length(θ), first_index, batch_width)
+            copy_row!(first_index + lane - 1, vdbθ_batch[lane])
+        end
+    end
+    return nothing
+end
+
 function OptimizationBase.instantiate_function(
         f::OptimizationFunction{true}, x,
         adtype::AutoEnzyme, p, num_cons = 0;
@@ -488,65 +519,45 @@ function OptimizationBase.instantiate_function(
     end
 
     if lag_h == true && f.lag_h === nothing && cons !== nothing
-        lag_vdθ = Tuple((Array(r) for r in eachrow(I(length(x)) * one(eltype(x)))))
-        lag_bθ = zeros(eltype(x), length(x))
+        lag_batch_width = _hessian_batch_width(length(x))
+        lag_vdθ = _onehot_cache(x, lag_batch_width)
+        lag_bθ = zero(x)
 
-        if f.hess_prototype === nothing
-            lag_vdbθ = Tuple(zeros(eltype(x), length(x)) for i in eachindex(x))
+        lag_vdbθ = if f.hess_prototype === nothing
+            ntuple(_ -> zero(x), length(lag_vdθ))
         else
-            #useless right now, looks like there is no way to tell Enzyme the sparsity pattern?
-            lag_vdbθ = Tuple((copy(r) for r in eachrow(f.hess_prototype)))
+            prototype_rows = eachrow(f.hess_prototype)
+            ntuple(length(lag_vdθ)) do i
+                i <= length(x) ?
+                    ArrayInterface.restructure(x, copy(prototype_rows[i])) : zero(x)
+            end
         end
+        lag_batch_width_value = Val(lag_batch_width)
+        lag_hess_transfer_cache = ArrayInterface.fast_scalar_indexing(x) ? nothing : Vector{
+                eltype(x),
+            }(undef, length(x))
 
         function lag_h!(h, θ, σ, μ, p = p)
-            Enzyme.make_zero!(lag_bθ)
-            Enzyme.make_zero!.(lag_vdbθ)
-
-            Enzyme.autodiff(
-                fmode,
-                lag_grad,
-                Const(rmode),
-                Enzyme.BatchDuplicated(θ, lag_vdθ),
-                Enzyme.BatchDuplicatedNoNeed(lag_bθ, lag_vdbθ),
-                Const(lagrangian),
-                Const(f.f),
-                Const(f.cons),
-                Const(p),
-                Const(σ),
-                Const(μ)
-            )
-            k = 0
-
-            for i in eachindex(θ)
-                vec_lagv = lag_vdbθ[i]
-                h[(k + 1):(k + i)] .= @view(vec_lagv[1:i])
-                k += i
+            copy_row! = function (i, row)
+                offset = (i - 1) * i ÷ 2
+                return h[(offset + 1):(offset + i)] .= @view(row[1:i])
             end
+            _lag_hessian_rows!(
+                copy_row!, θ, σ, μ, p, fmode, rmode, lag_vdθ, lag_bθ,
+                lag_vdbθ, lag_batch_width_value, f.f, f.cons
+            )
             return
         end
 
         function lag_h!(H::AbstractMatrix, θ, σ, μ, p = p)
             Enzyme.make_zero!(H)
-            Enzyme.make_zero!(lag_bθ)
-            Enzyme.make_zero!.(lag_vdbθ)
-
-            Enzyme.autodiff(
-                fmode,
-                lag_grad,
-                Const(rmode),
-                Enzyme.BatchDuplicated(θ, lag_vdθ),
-                Enzyme.BatchDuplicatedNoNeed(lag_bθ, lag_vdbθ),
-                Const(lagrangian),
-                Const(f.f),
-                Const(f.cons),
-                Const(p),
-                Const(σ),
-                Const(μ)
-            )
-
-            for i in eachindex(θ)
-                H[i, :] .= lag_vdbθ[i]
+            copy_row! = function (i, row)
+                return _copy_hessian_row!(@view(H[i, :]), row, lag_hess_transfer_cache)
             end
+            _lag_hessian_rows!(
+                copy_row!, θ, σ, μ, p, fmode, rmode, lag_vdθ, lag_bθ,
+                lag_vdbθ, lag_batch_width_value, f.f, f.cons
+            )
             return
         end
     elseif lag_h == true && cons !== nothing
