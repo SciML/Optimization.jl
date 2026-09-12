@@ -3,7 +3,7 @@ module OptimizationEnzymeExt
 import OptimizationBase, OptimizationBase.ArrayInterface
 import SciMLBase: OptimizationFunction
 import SciMLBase
-import OptimizationBase.LinearAlgebra: I, dot
+import OptimizationBase.LinearAlgebra: I
 import OptimizationBase.ADTypes: AutoEnzyme
 using Enzyme
 using Core: Vararg
@@ -77,11 +77,20 @@ end
 function lagrangian(x, _f::Function, cons::Function, p, λ, σ = one(eltype(x)))
     res = zeros(eltype(x), length(λ))
     cons(res, x, p)
-    return σ * _f(x, p) + dot(λ, res)
+    return σ * _f(x, p) + lagrangian_constraints(λ, res)
 end
 
 function lagrangian_oop(x, _f::Function, cons::Function, p, λ, σ = one(eltype(x)))
-    return σ * _f(x, p) + dot(λ, cons(x, p))
+    return σ * _f(x, p) + lagrangian_constraints(λ, cons(x, p))
+end
+
+# Keep the constraint contraction in Julia for nested Enzyme differentiation.
+function lagrangian_constraints(λ, res)
+    value = zero(promote_type(eltype(λ), eltype(res)))
+    for i in eachindex(λ, res)
+        value += conj(λ[i]) * res[i]
+    end
+    return value
 end
 
 function lag_grad(mode, x, dx, f)
@@ -102,12 +111,23 @@ const _HESSIAN_BATCH_CAP = 8
 
 _hessian_batch_width(n) = min(max(n, 1), _HESSIAN_BATCH_CAP)
 
-# Enzyme forward-over-reverse BatchDuplicated through the Lagrangian yields NaN
-# Hessian rows on Julia 1.12.7. Keep the width-8 Hessian-style batches elsewhere;
-# fall back to one seed at a time only on the known-broken 1.12 series.
-# TODO: re-enable width-8 BatchDuplicated once verified on Julia 1.13+.
-_lag_hessian_batch_width(n) =
-    (v"1.12" <= VERSION < v"1.13") ? 1 : _hessian_batch_width(n)
+function lag_hessian!(θ, lag, fmode, rmode, vdθ, bθ, vdbθ, batch_width)
+    for first_index in _batch_starts(vdθ, batch_width)
+        vdθ_batch = _cache_batch(vdθ, first_index, batch_width)
+        vdbθ_batch = _cache_batch(vdbθ, first_index, batch_width)
+        Enzyme.make_zero!(bθ)
+        Enzyme.make_zero!.(vdbθ_batch)
+        Enzyme.autodiff(
+            fmode,
+            lag_grad,
+            Const(rmode),
+            Enzyme.BatchDuplicated(θ, vdθ_batch),
+            Enzyme.BatchDuplicated(bθ, vdbθ_batch),
+            Const(lag)
+        )
+    end
+    return nothing
+end
 
 function _onehot_cache(x, batch_width)
     n = length(x)
@@ -497,10 +517,7 @@ function OptimizationBase.instantiate_function(
     end
 
     if lag_h == true && f.lag_h === nothing && cons !== nothing
-        # Cap Enzyme FoR batches like objective Hessians. Full-width batches have
-        # superlinear compile cost; row-wise (width 1) is only used on the known-broken
-        # Julia 1.12 series (see `_lag_hessian_batch_width`).
-        lag_batch_width = _lag_hessian_batch_width(length(x))
+        lag_batch_width = _hessian_batch_width(length(x))
         lag_vdθ = _onehot_cache(x, lag_batch_width)
         lag_bθ = zeros(eltype(x), length(x))
         lag_batch_width_value = Val(lag_batch_width)
@@ -517,39 +534,9 @@ function OptimizationBase.instantiate_function(
 
         function fill_lag_hessian!(θ, σ, μ, p)
             lag = x -> lagrangian(x, f.f, f.cons, p, μ, σ)
-            if lag_batch_width == 1
-                for i in eachindex(θ)
-                    Enzyme.make_zero!(lag_bθ)
-                    Enzyme.make_zero!(lag_vdbθ[i])
-                    Enzyme.autodiff(
-                        fmode,
-                        lag_grad,
-                        Const(rmode),
-                        Enzyme.Duplicated(θ, lag_vdθ[i]),
-                        Enzyme.Duplicated(lag_bθ, lag_vdbθ[i]),
-                        Const(lag)
-                    )
-                end
-            else
-                for first_index in _batch_starts(lag_vdθ, lag_batch_width_value)
-                    vdθ_batch = _cache_batch(
-                        lag_vdθ, first_index, lag_batch_width_value
-                    )
-                    vdbθ_batch = _cache_batch(
-                        lag_vdbθ, first_index, lag_batch_width_value
-                    )
-                    Enzyme.make_zero!(lag_bθ)
-                    Enzyme.make_zero!.(vdbθ_batch)
-                    Enzyme.autodiff(
-                        fmode,
-                        lag_grad,
-                        Const(rmode),
-                        Enzyme.BatchDuplicated(θ, vdθ_batch),
-                        Enzyme.BatchDuplicated(lag_bθ, vdbθ_batch),
-                        Const(lag)
-                    )
-                end
-            end
+            lag_hessian!(
+                θ, lag, fmode, rmode, lag_vdθ, lag_bθ, lag_vdbθ, lag_batch_width_value
+            )
             return nothing
         end
 
@@ -887,7 +874,7 @@ function OptimizationBase.instantiate_function(
     end
 
     if lag_h == true && f.lag_h === nothing && cons !== nothing
-        lag_batch_width = _lag_hessian_batch_width(length(x))
+        lag_batch_width = _hessian_batch_width(length(x))
         lag_vdθ = _onehot_cache(x, lag_batch_width)
         lag_bθ = zeros(eltype(x), length(x))
         lag_batch_width_value = Val(lag_batch_width)
@@ -902,39 +889,9 @@ function OptimizationBase.instantiate_function(
 
         function lag_h!(θ, σ, μ, p = p)
             lag = x -> lagrangian_oop(x, f.f, f.cons, p, μ, σ)
-            if lag_batch_width == 1
-                for i in eachindex(θ)
-                    Enzyme.make_zero!(lag_bθ)
-                    Enzyme.make_zero!(lag_vdbθ[i])
-                    Enzyme.autodiff(
-                        fmode,
-                        lag_grad,
-                        Const(rmode),
-                        Enzyme.Duplicated(θ, lag_vdθ[i]),
-                        Enzyme.Duplicated(lag_bθ, lag_vdbθ[i]),
-                        Const(lag)
-                    )
-                end
-            else
-                for first_index in _batch_starts(lag_vdθ, lag_batch_width_value)
-                    vdθ_batch = _cache_batch(
-                        lag_vdθ, first_index, lag_batch_width_value
-                    )
-                    vdbθ_batch = _cache_batch(
-                        lag_vdbθ, first_index, lag_batch_width_value
-                    )
-                    Enzyme.make_zero!(lag_bθ)
-                    Enzyme.make_zero!.(vdbθ_batch)
-                    Enzyme.autodiff(
-                        fmode,
-                        lag_grad,
-                        Const(rmode),
-                        Enzyme.BatchDuplicated(θ, vdθ_batch),
-                        Enzyme.BatchDuplicated(lag_bθ, vdbθ_batch),
-                        Const(lag)
-                    )
-                end
-            end
+            lag_hessian!(
+                θ, lag, fmode, rmode, lag_vdθ, lag_bθ, lag_vdbθ, lag_batch_width_value
+            )
 
             H = Matrix{eltype(θ)}(undef, length(θ), length(θ))
             fill!(H, zero(eltype(θ)))

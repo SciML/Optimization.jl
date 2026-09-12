@@ -55,8 +55,7 @@ function check_inplace_clnlbeam(N; σ = 1.0)
 end
 
 function check_inplace_quadratic()
-    # Objective Hessian [[2,1],[1,4]]; constraint x₁²+x₂²-1 has Hessian 2I.
-    objective(x, p) = x[1]^2 + x[1] * x[2] + 2 * x[2]^2 + p[1] * x[1]
+    objective(x, p) = x[1]^2 + x[1] * x[2] + 2 * x[2]^2 + p[1] * x[1] * x[2]
     function constraint!(res, x, p)
         res[1] = x[1]^2 + x[2]^2 - 1
         return nothing
@@ -76,9 +75,14 @@ function check_inplace_quadratic()
             (0.0, [0.0]),
         )
         expected = ref_lag_hess!(objective, constraint!, x, σ, μ, p)
-        dense = zeros(2, 2)
+        dense = fill(NaN, 2, 2)
         instantiated.lag_h(dense, x, σ, μ, p)
         @test dense ≈ expected
+        packed = fill(NaN, 3)
+        instantiated.lag_h(packed, x, σ, μ, p)
+        @test packed ≈ [expected[1, 1], expected[2, 1], expected[2, 2]]
+        p[1] += 0.25
+        x .+= 0.1
     end
     return nothing
 end
@@ -110,10 +114,8 @@ end
 
 @testset "Enzyme Lagrangian Hessian" begin
     enzyme_ext = Base.get_extension(OptimizationBase, :OptimizationEnzymeExt)
-    @test enzyme_ext._lag_hessian_batch_width(4) ==
-        ((v"1.12" <= VERSION < v"1.13") ? 1 : 4)
-    @test enzyme_ext._lag_hessian_batch_width(17) ==
-        ((v"1.12" <= VERSION < v"1.13") ? 1 : 8)
+    @test enzyme_ext._hessian_batch_width(4) == 4
+    @test enzyme_ext._hessian_batch_width(17) == 8
 
     @testset "in-place clnlbeam N = $N" for N in (1:10..., 20, 40, 60)
         check_inplace_clnlbeam(N)
@@ -124,7 +126,7 @@ end
         check_inplace_quadratic()
     end
 
-    @testset "out-of-place quadratic n = $n" for n in (9, 17)
+    @testset "out-of-place quadratic n = $n" for n in (1, 7, 8, 9, 16, 17)
         check_oop_quadratic(n)
     end
 end
