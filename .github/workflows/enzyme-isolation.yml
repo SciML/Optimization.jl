@@ -1,0 +1,63 @@
+name: Enzyme LTS isolation
+on:
+  pull_request:
+    paths:
+      - ".diagnostics/**"
+      - ".github/workflows/enzyme-isolation.yml"
+permissions:
+  contents: read
+jobs:
+  isolate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - julia: '1.10.12'
+            mode: standalone
+          - julia: '1.10.12'
+            mode: fixture
+          - julia: '1.10.12'
+            mode: official
+          - julia: '1.13.0'
+            mode: standalone
+    env:
+      JULIA_NUM_THREADS: '1'
+      JULIA_PKG_PRECOMPILE_AUTO: '1'
+      OPTIMIZATION_SUBJECT: ${{ github.workspace }}/subject
+      TMPDIR: ${{ github.workspace }}/.diagnostics/tmp
+      DIAGNOSTIC_MODE: ${{ matrix.mode }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: SciML/Optimization.jl
+          ref: 9a8a5c75f94b16048cff400bb1eed091f49c937f
+          path: subject
+      - run: mkdir -p "$TMPDIR"
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: ${{ matrix.julia }}
+      - name: Prepare isolated environment
+        if: matrix.mode != 'official'
+        run: |
+          julia --project=.diagnostics/enzyme -e 'using Pkg; Pkg.instantiate()'
+          if [ "$DIAGNOSTIC_MODE" = fixture ]; then
+            julia --project=.diagnostics/enzyme -e 'using Pkg; Pkg.develop(path=joinpath(ENV["OPTIMIZATION_SUBJECT"], "lib/OptimizationBase")); Pkg.add(["ChainRulesCore", "ForwardDiff"])'
+          fi
+      - name: Reproduce
+        run: |
+          lscpu
+          if [ "$DIAGNOSTIC_MODE" = official ]; then
+            OPTIMIZATION_TEST_GROUP=AD julia --project="$OPTIMIZATION_SUBJECT/lib/OptimizationBase" -e 'using Pkg, InteractiveUtils; versioninfo(); Pkg.test(;coverage=true, julia_args=["--check-bounds=auto", "--compiled-modules=yes", "--depwarn=yes"], force_latest_compatible_version=false, allow_reresolve=true)' 2>&1 | tee .diagnostics/result.log
+          else
+            julia --startup-file=no --check-bounds=auto --compiled-modules=yes --depwarn=yes --code-coverage=@"$PWD" --project=.diagnostics/enzyme ".diagnostics/enzyme/$DIAGNOSTIC_MODE.jl" 2>&1 | tee .diagnostics/result.log
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: enzyme-${{ matrix.julia }}-${{ matrix.mode }}
+          path: |
+            .diagnostics/result.log
+            .diagnostics/enzyme/Manifest.toml
