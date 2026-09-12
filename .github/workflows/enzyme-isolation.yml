@@ -17,6 +17,8 @@ jobs:
           - julia: '1.10.12'
             mode: standalone
           - julia: '1.10.12'
+            mode: barrier
+          - julia: '1.10.12'
             mode: fixture
           - julia: '1.10.12'
             mode: official
@@ -47,6 +49,7 @@ jobs:
             julia --project=.diagnostics/enzyme -e 'using Pkg; Pkg.develop(path=joinpath(ENV["OPTIMIZATION_SUBJECT"], "lib/OptimizationBase")); Pkg.add(["ChainRulesCore", "ForwardDiff"])'
           fi
       - name: Reproduce
+        shell: bash
         run: |
           lscpu
           if [ "$DIAGNOSTIC_MODE" = official ]; then
