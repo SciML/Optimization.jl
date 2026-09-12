@@ -61,7 +61,7 @@ sol = solve(prob, Optim.BFGS(); maxiters = 100)
 function solve(
         prob::SciMLBase.OptimizationProblem, args...; sensealg = nothing,
         u0 = nothing, p = nothing, wrap = Val(true), kwargs...
-    )::SciMLBase.AbstractOptimizationSolution
+    )::Union{SciMLBase.AbstractOptimizationSolution, SciMLBase.AbstractPDESolution}
     if sensealg === nothing && haskey(prob.kwargs, :sensealg)
         sensealg = prob.kwargs[:sensealg]
     end
@@ -69,6 +69,8 @@ function solve(
     u0 = u0 !== nothing ? u0 : prob.u0
     p = p !== nothing ? p : prob.p
     return if wrap isa Val{true}
+        # `OptimizationSolution` does not carry its problem, so route the discretization
+        # metadata (see `SciMLBase.problem_type`) explicitly.
         wrap_sol(
             solve_up(
                 prob,
@@ -78,7 +80,8 @@ function solve(
                 args...;
                 originator = SciMLBase.ChainRulesOriginator(),
                 kwargs...
-            )
+            ),
+            SciMLBase.problem_type(prob)
         )
     else
         solve_up(

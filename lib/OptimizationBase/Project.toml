@@ -1,6 +1,6 @@
 name = "OptimizationBase"
 uuid = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-version = "5.5.3"
+version = "5.6.0"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 
 [deps]
@@ -59,7 +59,7 @@ Mooncake = "0.4.138, 0.5"
 PrecompileTools = "1.2.1"
 ReverseDiff = "1.14"
 SafeTestsets = ">= 0.0.1"
-SciMLBase = "3"
+SciMLBase = "3.54"
 SciMLLogging = "2"
 SciMLTesting = "2.8"
 SparseArrays = "1.10"
