@@ -127,6 +127,11 @@ end
     end
 
     @testset "out-of-place quadratic n = $n" for n in (1, 7, 8, 9, 16, 17)
-        check_oop_quadratic(n)
+        @static if VERSION < v"1.11.0-DEV.0"
+            # Enzyme aborts on LTS: https://github.com/EnzymeAD/Enzyme.jl/issues/3574
+            @test_broken false
+        else
+            check_oop_quadratic(n)
+        end
     end
 end
