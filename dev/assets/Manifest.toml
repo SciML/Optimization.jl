@@ -1672,10 +1672,10 @@ version = "2.42.0+0"
 
 [[deps.LineSearch]]
 deps = ["ADTypes", "CommonSolve", "ConcreteStructs", "FastClosures", "LinearAlgebra", "MaybeInplace", "PrecompileTools", "SciMLBase", "SciMLJacobianOperators", "StaticArraysCore"]
-git-tree-sha1 = "c5bb4712cec0438e5d778920ad620e620dd80883"
+git-tree-sha1 = "e8fb8395e72f73cb8432572dbafcd941514fb94d"
 registries = "General"
 uuid = "87fe0de2-c867-4266-b59a-2f0a94fc965b"
-version = "0.1.17"
+version = "0.1.18"
 weakdeps = ["LineSearches"]
 
     [deps.LineSearch.extensions]
@@ -2682,7 +2682,7 @@ version = "0.4.9"
 
 [[deps.Optimization]]
 deps = ["ADTypes", "ArrayInterface", "ConsoleProgressMonitor", "DocStringExtensions", "LinearAlgebra", "Logging", "LoggingExtras", "OptimizationBase", "Printf", "Reexport", "SciMLBase", "SparseArrays", "TerminalLoggers"]
-path = "/home/runner/work/Optimization.jl/Optimization.jl"
+path = "/home/runner/_work/Optimization.jl/Optimization.jl"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 version = "5.9.1"
 
@@ -2703,7 +2703,7 @@ weakdeps = ["LogExpFunctions"]
 deps = ["ADTypes", "ArrayInterface", "DifferentiationInterface", "DocStringExtensions", "FastClosures", "LinearAlgebra", "PrecompileTools", "SciMLBase", "SciMLLogging", "SparseArrays", "SparseConnectivityTracer", "SparseMatrixColorings", "SymbolicIndexingInterface"]
 path = "../lib/OptimizationBase"
 uuid = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-version = "5.6.0"
+version = "5.6.1"
 
     [deps.OptimizationBase.extensions]
     OptimizationChainRulesCoreExt = "ChainRulesCore"
@@ -3639,10 +3639,10 @@ version = "1.1.1"
 
 [[deps.SimpleNonlinearSolve]]
 deps = ["ADTypes", "ArrayInterface", "BracketingNonlinearSolve", "CommonSolve", "ConcreteStructs", "DifferentiationInterface", "FastClosures", "FiniteDiff", "ForwardDiff", "LineSearch", "LinearAlgebra", "MaybeInplace", "NonlinearSolveBase", "PrecompileTools", "Reexport", "SciMLBase", "SciMLLogging", "Setfield", "StaticArraysCore"]
-git-tree-sha1 = "0649e46094c5230f2e821eec5bc5ed5ced97f7e2"
+git-tree-sha1 = "44b2876d0f7fbb0606e986301cb96aa27de2a9dc"
 registries = "General"
 uuid = "727e6d20-b764-4bd8-a329-72de5adea6c7"
-version = "2.14.3"
+version = "2.14.4"
 weakdeps = ["ChainRulesCore", "ReverseDiff", "Tracker"]
 
     [deps.SimpleNonlinearSolve.extensions]
