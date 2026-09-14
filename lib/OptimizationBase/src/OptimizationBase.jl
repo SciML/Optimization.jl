@@ -112,8 +112,8 @@ export init, solve!, remake, ReturnCode, successful_retcode, NoAD
 # Multistart optimization through the SciML ensemble interface; see the
 # "Multistart optimization with EnsembleProblem" tutorial.
 export EnsembleProblem, EnsembleSerial, EnsembleThreads, EnsembleDistributed
-export AutoEnzyme, AutoFiniteDiff, AutoForwardDiff, AutoMooncake, AutoReverseDiff,
-    AutoSparse, AutoSymbolics, AutoTracker, AutoZygote
+export AutoEnzyme, AutoFiniteDiff, AutoForwardDiff, AutoMooncake, AutoReactant,
+    AutoReverseDiff, AutoSparse, AutoSymbolics, AutoTracker, AutoZygote
 
 include("precompilation.jl")
 
