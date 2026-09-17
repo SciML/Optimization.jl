@@ -181,6 +181,38 @@ Hessian is not defined via Zygote.
 """
 AutoZygote
 
+"""
+    AutoReactant <: AbstractADType
+
+An AbstractADType choice for use in OptimizationFunction for automatically
+generating the unspecified derivative functions. Usage:
+```julia
+OptimizationFunction(f, AutoReactant(); kwargs...)
+```
+
+This uses the OptimizationReactant.jl sublibrary, which compiles the
+objective with [Reactant.jl](https://github.com/EnzymeAD/Reactant.jl) to
+StableHLO and differentiates it with Enzyme inside the compiled program.
+Because differentiation happens on the traced program rather than on Julia
+code, compiled objectives run on any XLA backend (CPU, GPU, TPU) selected
+through `Reactant.XLA.set_default_backend`, and they do not require Julia-side
+activity analysis of the objective.
+
+  - Compatible with GPUs (via the Reactant XLA client)
+  - Hessians, Hessian-vector products and constraint derivatives are not
+    generated; pass them explicitly to `OptimizationFunction` or choose a
+    different `adtype`
+  - Not compatible with `AutoSparse` or `SecondOrder`
+
+`AutoReactant(; mode)` accepts an `AutoEnzyme` selecting the Enzyme
+differentiation mode used inside the compiled program (default `Reverse`).
+
+Note that only the unspecified derivative functions are defined. For example,
+if a `grad` function is supplied to the `OptimizationFunction`, then the
+gradient is not defined via Reactant.
+"""
+AutoReactant
+
 function generate_adtype(adtype)
     if adtype isa AutoSymbolics || adtype isa AutoSparse{<:AutoSymbolics}
         soadtype = adtype

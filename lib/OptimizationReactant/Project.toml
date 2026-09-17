@@ -1,0 +1,52 @@
+name = "OptimizationReactant"
+uuid = "b4ab1876-06ab-4488-8836-d3361eb886f2"
+authors = ["Chris Rackauckas <accounts@chrisrackauckas.com> and contributors"]
+version = "0.1.0"
+
+[deps]
+ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
+DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
+EnzymeCore = "f151be2c-9106-41f4-ab19-57ee4f262869"
+GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
+Reactant = "3c362404-f566-11ee-1572-e11a4b42c853"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+
+[sources]
+OptimizationBase = {path = "../OptimizationBase"}
+OptimizationOptimJL = {path = "../OptimizationOptimJL"}
+
+[compat]
+ADTypes = "1.19"
+CommonSolve = "0.2"
+DifferentiationInterface = "0.7"
+Enzyme = "0.13"
+EnzymeCore = "0.8"
+ForwardDiff = "1"
+GPUArraysCore = "0.2"
+Optimisers = "0.4.2"
+OptimizationBase = "5.5.0"
+OptimizationOptimJL = "0.4"
+OptimizationOptimisers = "0.3"
+Pkg = "1"
+Reactant = "0.2"
+SafeTestsets = "0.1"
+SciMLBase = "3"
+SciMLTesting = "2.8"
+Test = "1.10"
+julia = "1.10"
+
+[extras]
+CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+OptimizationOptimJL = "36348300-93cb-4f02-beb5-3c3902f8871e"
+OptimizationOptimisers = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
+Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["CommonSolve", "ForwardDiff", "OptimizationOptimJL", "OptimizationOptimisers", "Optimisers", "Pkg", "SafeTestsets", "SciMLTesting", "Test"]

@@ -52,6 +52,7 @@ pages = [
         "PRIMA.jl" => "optimization_packages/prima.md",
         "PyCMA.jl" => "optimization_packages/pycma.md",
         "QuadDIRECT.jl" => "optimization_packages/quaddirect.md",
+        "Reactant.jl" => "optimization_packages/reactant.md",
         "Sophia.jl" => "optimization_packages/sophia.md",
         "SpeedMapping.jl" => "optimization_packages/speedmapping.md",
         "SciPy.jl" => "optimization_packages/scipy.md",

@@ -1,0 +1,24 @@
+[deps]
+ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
+OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
+OptimizationReactant = "b4ab1876-06ab-4488-8836-d3361eb886f2"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[sources]
+OptimizationBase = {path = "../../../OptimizationBase"}
+OptimizationReactant = {path = "../.."}
+
+[compat]
+ADTypes = "1.19"
+Aqua = "0.8"
+JET = "0.9, 0.10, 0.11"
+julia = "1.10"
+OptimizationBase = "5"
+OptimizationReactant = "0.1"
+SciMLBase = "3"
+SciMLTesting = "2.13"
+Test = "1"
