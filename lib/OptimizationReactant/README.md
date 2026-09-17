@@ -3,9 +3,11 @@
 [Reactant.jl](https://github.com/EnzymeAD/Reactant.jl) backend for
 [Optimization.jl](https://github.com/SciML/Optimization.jl). Loading this
 package makes `adtype = AutoReactant()` available on
-`OptimizationFunction`s/`OptimizationProblem`s: the objective, its gradient
-and the combined value-and-gradient evaluation are compiled to StableHLO and
-differentiated by Enzyme inside the compiled program.
+`OptimizationFunction`s/`OptimizationProblem`s: the objective and every
+requested derivative — gradient, `fg`, Hessian, Hessian-vector product,
+`fgh`, and the constraint Jacobian/VJP/JVP/Hessians and Lagrangian Hessian —
+are compiled to StableHLO and differentiated by Enzyme inside the compiled
+program.
 
 ```julia
 using OptimizationBase, OptimizationReactant, OptimizationOptimisers
@@ -26,9 +28,10 @@ Host `Array` arguments work as well — each argument signature compiles its
 own program on first use — but placing `u0`/`p` on the device avoids the
 per-iteration transfers.
 
-Hessians, Hessian-vector products, constraint derivatives and sparse
-differentiation are not generated yet; solvers that require them throw an
-`ArgumentError` at `init`. Array-generic first-order solvers
+Hessians are dense and assembled from `length(θ)` compiled Hessian-vector
+products — second-order solvers are practical for moderate parameter counts.
+Sparse differentiation (`AutoSparse{AutoReactant}`) and
+`SecondOrder{<:AutoReactant}` are rejected. Array-generic solvers
 (`OptimizationOptimisers`, `SimpleOptimization`) are the intended consumers;
 solvers with non-generic inner loops (e.g. the Fortran-backed LBFGSB) are not
 compatible.

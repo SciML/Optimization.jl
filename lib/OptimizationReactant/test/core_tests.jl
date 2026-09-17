@@ -3,6 +3,7 @@ using CommonSolve: solve
 using DifferentiationInterface: SecondOrder
 using ForwardDiff: ForwardDiff
 using OptimizationBase: OptimizationBase
+using OptimizationOptimJL
 using OptimizationOptimisers
 using OptimizationReactant
 using Optimisers
@@ -98,20 +99,115 @@ using Test
         @test Array(Gr) ≈ ForwardDiff.gradient(x -> obj_struct(x, p_struct), x0)
     end
 
-    @testset "unsupported derivative requests error clearly" begin
-        @test_throws ArgumentError OptimizationBase.instantiate_function(
-            optf, x0, AutoReactant(), p, 0; h = true
+    @testset "second-order objective derivatives" begin
+        Href = ForwardDiff.hessian(x -> rosenbrock(x, p), x0)
+        v = [0.3, -0.7]
+
+        f = OptimizationBase.instantiate_function(
+            optf, x0, AutoReactant(), p, 0; h = true, hv = true, fgh = true
         )
-        @test_throws ArgumentError OptimizationBase.instantiate_function(
-            optf, x0, AutoReactant(), p, 0; hv = true
+        H = zeros(2, 2)
+        f.hess(H, x0, p)
+        @test H ≈ Href
+        res = zeros(2)
+        f.hv(res, x0, v, p)
+        @test res ≈ Href * v
+        G = zeros(2)
+        H2 = zeros(2, 2)
+        y = f.fgh(G, H2, x0, p)
+        @test y ≈ rosenbrock(x0, p)
+        @test G ≈ ref
+        @test H2 ≈ Href
+        # `p` is a runtime argument for second derivatives too.
+        p2 = [2.0, 50.0]
+        f.hess(H, x0, p2)
+        @test H ≈ ForwardDiff.hessian(x -> rosenbrock(x, p2), x0)
+
+        optf_oop = OptimizationFunction{false}(rosenbrock, AutoReactant())
+        f_oop = OptimizationBase.instantiate_function(
+            optf_oop, x0, AutoReactant(), p, 0; h = true, hv = true, fgh = true
         )
-        optf_cons = OptimizationFunction(
-            rosenbrock, AutoReactant();
-            cons = (res, x, p) -> (res .= x)
+        @test f_oop.hess(x0, p) ≈ Href
+        @test f_oop.hv(x0, v, p) ≈ Href * v
+        y2, G2, H3 = f_oop.fgh(x0, p)
+        @test y2 ≈ rosenbrock(x0, p)
+        @test G2 ≈ ref
+        @test H3 ≈ Href
+    end
+
+    @testset "constraint derivatives" begin
+        # `sin(x[1]) * x[2]` keeps a nonzero constraint Hessian while avoiding
+        # a bare `x[i] * x[j]` product, which Reactant canonicalizes into a
+        # `stablehlo.reduce` that Enzyme cannot differentiate.
+        xc = [0.5, 0.3]
+        cons_iip(res, x, p) = (
+            res[1] = x[1]^2 + x[2]^2; res[2] = sin(x[1]) * x[2] - p[1]; nothing
         )
-        @test_throws ArgumentError OptimizationBase.instantiate_function(
-            optf_cons, x0, AutoReactant(), p, 1; cons_j = true
+        cons_oop(x, p) = vcat(x[1]^2 + x[2]^2, sin(x[1]) * x[2] - p[1])
+        Jref = ForwardDiff.jacobian(x -> cons_oop(x, p), xc)
+        Hc = [ForwardDiff.hessian(x -> cons_oop(x, p)[i], xc) for i in 1:2]
+        σ, λ, v, w = 1.7, [0.4, -0.9], [0.3, -0.7], [0.6, 0.2]
+
+        optf_c = OptimizationFunction(rosenbrock, AutoReactant(); cons = cons_iip)
+        f = OptimizationBase.instantiate_function(
+            optf_c, x0, AutoReactant(), p, 2;
+            cons_j = true, cons_vjp = true, cons_jvp = true,
+            cons_h = true, lag_h = true
         )
+        J = zeros(2, 2)
+        f.cons_j(J, xc, p)
+        @test J ≈ Jref
+        vjp = zeros(2)
+        f.cons_vjp(vjp, xc, w)
+        @test vjp ≈ Jref' * w
+        jvp = zeros(2)
+        f.cons_jvp(jvp, xc, v)
+        @test jvp ≈ Jref * v
+        Hs = [zeros(2, 2), zeros(2, 2)]
+        f.cons_h(Hs, xc)
+        @test Hs[1] ≈ Hc[1]
+        @test Hs[2] ≈ Hc[2]
+        Lref = σ * ForwardDiff.hessian(x -> rosenbrock(x, p), xc) +
+            λ[1] * Hc[1] + λ[2] * Hc[2]
+        L = zeros(2, 2)
+        f.lag_h(L, xc, σ, λ, p)
+        @test L ≈ Lref
+        Lv = zeros(3)
+        f.lag_h(Lv, xc, σ, λ, p)
+        @test Lv ≈ [Lref[1, 1], Lref[2, 1], Lref[2, 2]]
+
+        optf_co = OptimizationFunction{false}(
+            rosenbrock, AutoReactant(); cons = cons_oop
+        )
+        f_oop = OptimizationBase.instantiate_function(
+            optf_co, x0, AutoReactant(), p, 2;
+            cons_j = true, cons_vjp = true, cons_jvp = true,
+            cons_h = true, lag_h = true
+        )
+        @test f_oop.cons_j(xc, p) ≈ Jref
+        @test f_oop.cons_vjp(xc, w) ≈ Jref' * w
+        @test f_oop.cons_jvp(xc, v) ≈ Jref * v
+        Hso = f_oop.cons_h(xc)
+        @test Hso[1] ≈ Hc[1]
+        @test Hso[2] ≈ Hc[2]
+        @test f_oop.lag_h(xc, σ, λ, p) ≈ Lref
+    end
+
+    @testset "user-supplied derivatives are preserved" begin
+        mygrad(res, x, p) = (res .= 42 .* ones(2))
+        optf_g = OptimizationFunction(rosenbrock, AutoReactant(); grad = mygrad)
+        f = OptimizationBase.instantiate_function(
+            optf_g, x0, AutoReactant(), p, 0; g = true, h = true
+        )
+        G = zeros(2)
+        f.grad(G, x0, p)
+        @test G == fill(42.0, 2)
+        H = zeros(2, 2)
+        f.hess(H, x0, p)
+        @test H ≈ ForwardDiff.hessian(x -> rosenbrock(x, p), x0)
+    end
+
+    @testset "unsupported derivative schemes error clearly" begin
         @test_throws ArgumentError OptimizationBase.instantiate_function(
             optf, x0, AutoSparse(AutoReactant()), p, 0
         )
@@ -131,5 +227,24 @@ using Test
         prob_r = remake(prob; u0 = Reactant.to_rarray(prob.u0), p = Reactant.to_rarray(prob.p))
         sol_r = solve(prob_r, Optimisers.Adam(0.1); maxiters = 300)
         @test Array(sol_r.u) ≈ [1.0, 2.0, 3.0] atol = 1.0e-1
+    end
+
+    @testset "second-order solver paths" begin
+        quadratic(x, p) = sum(abs2, x .- p)
+        optf_q = OptimizationFunction(quadratic, AutoReactant())
+        prob = OptimizationProblem(optf_q, [1.0, 2.0], [3.0, 4.0])
+        sol = solve(prob, OptimizationOptimJL.Optim.Newton())
+        @test sol.u ≈ [3.0, 4.0] atol = 1.0e-6
+
+        cons(res, x, p) = (res[1] = x[1]^2 + x[2]^2)
+        optf_c = OptimizationFunction(quadratic, AutoReactant(); cons = cons)
+        prob_c = OptimizationProblem(
+            optf_c, [1.0, 2.0], [3.0, 4.0]; lcons = [-Inf], ucons = [4.0]
+        )
+        sol_c = solve(prob_c, OptimizationOptimJL.Optim.IPNewton())
+        res = zeros(1)
+        cons(res, sol_c.u, nothing)
+        @test res[1] ≈ 4.0 rtol = 1.0e-3
+        @test sol_c.objective ≈ 9.0 rtol = 1.0e-3
     end
 end

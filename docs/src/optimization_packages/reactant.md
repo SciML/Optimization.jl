@@ -11,11 +11,14 @@ Pkg.add("OptimizationReactant");
 
 OptimizationReactant is an AD-backend sublibrary, not an optimizer: loading it
 makes `adtype = AutoReactant()` available on `OptimizationFunction`s and
-`OptimizationProblem`s. The objective, its gradient and the combined
-value-and-gradient evaluation are compiled by
+`OptimizationProblem`s. The objective and every requested derivative —
+gradient, `fg`, Hessian, Hessian-vector product, `fgh`, and the constraint
+Jacobian/VJP/JVP/Hessians and Lagrangian Hessian — are compiled by
 [Reactant.jl](https://github.com/EnzymeAD/Reactant.jl) to StableHLO and
 differentiated by [Enzyme](https://github.com/EnzymeAD/Enzyme.jl) inside the
 compiled program — no Julia-level activity analysis runs on the objective.
+User-supplied derivative functions passed to `OptimizationFunction` are used
+as-is.
 
 ```julia
 using OptimizationBase, OptimizationReactant, OptimizationOptimisers
@@ -48,11 +51,16 @@ is observed by the compiled objective and gradient; nothing is baked in.
 
 ## Caveats
 
-  - First-order derivatives only: Hessians, Hessian-vector products, and
-    constraint derivatives are not generated. Solvers that require them throw
-    an `ArgumentError` at `init`; pass the functions explicitly to
-    `OptimizationFunction` or choose a different `adtype`.
-  - `AutoSparse{AutoReactant}` and `SecondOrder{<:AutoReactant}` are rejected.
+  - `AutoSparse{AutoReactant}` and `SecondOrder{<:AutoReactant}` are rejected:
+    `AutoReactant` already generates both derivative orders densely, and
+    sparse detection cannot run through the compiled program.
+  - Hessians are dense and assembled from `length(θ)` compiled
+    Hessian-vector products, so second-order solvers are only practical for
+    moderate parameter counts.
+  - A bare `x[i] * x[j]` product inside the objective or constraints can be
+    canonicalized into a `stablehlo.reduce` that Enzyme cannot
+    differentiate; the program then fails to compile at `init`. Rewriting
+    the product (e.g. a broadcast/vectorized expression) avoids it.
   - The solver loop must be array-generic over the problem's array type:
     `OptimizationOptimisers` and `SimpleOptimization` work, including on
     `ConcreteRArray` state; solvers with non-generic inner loops (e.g. the
