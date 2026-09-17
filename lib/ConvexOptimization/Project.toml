@@ -1,7 +1,7 @@
 name = "ConvexOptimization"
 uuid = "e7fa4f8d-d505-4694-8553-7bab99efa7d1"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com> and contributors"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 Clarabel = "61c947e1-3e6d-4ee4-985a-eec8c727bd6e"
