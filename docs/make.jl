@@ -30,6 +30,11 @@ makedocs(
         OptimizationSpeedMapping, SimpleOptimization,
     ],
     clean = true, linkcheck = true,
+    linkcheck_ignore = [
+        # Artelys rate-limits/blocks GitHub Actions runner IPs, so the KNITRO
+        # reference manual link times out from CI while working from a browser.
+        r"^https://www\.artelys\.com/",
+    ],
     format = Documenter.HTML(
         assets = ["assets/favicon.ico"],
         canonical = "https://docs.sciml.ai/Optimization/stable/"
