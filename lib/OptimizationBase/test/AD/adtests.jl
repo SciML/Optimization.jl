@@ -1565,3 +1565,89 @@ end
     _, hessian_oop = optf_oop.fgh(x)
     @test hessian_oop ≈ expected_hessian
 end
+
+@testset "forward-mode cons_vjp routes through the Jacobian" begin
+    # DI synthesizes a pullback for forward-mode backends from `length(x)` single-column
+    # pushforwards. OptimizationBase instead computes the generated `cons_vjp` as `Jᵀv` from
+    # one chunked (and, for `AutoSparse`, colored) Jacobian, so a vjp costs one constraint
+    # evaluation for `n ≤ chunk`. Reverse-mode backends keep DI's native pullback.
+    di_ext = OptimizationBase
+    @test di_ext._vjp_via_jacobian(AutoForwardDiff())
+    @test di_ext._vjp_via_jacobian(AutoFiniteDiff())
+    @test di_ext._vjp_via_jacobian(AutoSparse(AutoForwardDiff()))
+    @test !di_ext._vjp_via_jacobian(AutoReverseDiff())
+    @test !di_ext._vjp_via_jacobian(AutoZygote())
+
+    n, m = 8, 4
+    calls = Ref(0)
+    # banded: c_i depends on θ_{2i-1}, θ_{2i}; two colors
+    function cons_ip!(res, θ, p)
+        calls[] += 1
+        for i in 1:m
+            res[i] = θ[2i - 1]^2 * p[1] + sin(θ[2i])
+        end
+        return nothing
+    end
+    cons_oop(θ, p) = (calls[] += 1; [θ[2i - 1]^2 * p[1] + sin(θ[2i]) for i in 1:m])
+    x = collect(range(0.1, 1.0, length = n))
+    p = [2.0]
+    v = randn(Xoshiro(1), m)
+    proto = spzeros(Bool, m, n)
+    for i in 1:m
+        proto[i, 2i - 1] = true
+        proto[i, 2i] = true
+    end
+    known = AutoSparse(
+        AutoForwardDiff(); sparsity_detector = ADTypes.KnownJacobianSparsityDetector(proto)
+    )
+
+    for ad in (AutoForwardDiff(), AutoSparse(AutoForwardDiff()), known)
+        # in-place
+        f = OptimizationFunction(sum, ad; cons = cons_ip!)
+        fi = OptimizationBase.instantiate_function(
+            f, x, ad, p, m; cons_j = true, cons_vjp = true
+        )
+        J = zeros(m, n)
+        fi.cons_j(J, x)
+        res = zeros(n)
+        calls[] = 0
+        fi.cons_vjp(res, x, v)
+        @test calls[] == 1
+        @test res ≈ J' * v
+        # a wider `θ` must not write into the `eltype(x)` buffer
+        xd = ForwardDiff.Dual.(x, 1.0)
+        resd = similar(xd)
+        fi.cons_vjp(resd, xd, v)
+        @test ForwardDiff.value.(resd) ≈ res
+        # the buffer must not be corrupted by the dual call
+        fi.cons_vjp(res, x, v)
+        @test res ≈ J' * v
+
+        # out-of-place
+        fo = OptimizationFunction{false}((θ, p) -> sum(θ), ad; cons = cons_oop)
+        fio = OptimizationBase.instantiate_function(
+            fo, x, ad, p, m; cons_j = true, cons_vjp = true
+        )
+        Jo = fio.cons_j(x)
+        calls[] = 0
+        ro = fio.cons_vjp(x, v)
+        @test calls[] == 1
+        @test ro ≈ Jo' * v
+        @test ForwardDiff.value.(fio.cons_vjp(xd, v)) ≈ ro
+    end
+
+    # cons_vjp requested without cons_j still works (prep is built for the vjp alone)
+    f = OptimizationFunction(sum, AutoSparse(AutoForwardDiff()); cons = cons_ip!)
+    fi = OptimizationBase.instantiate_function(f, x, f.adtype, p, m; cons_vjp = true)
+    @test fi.cons_j === nothing
+    res = zeros(n)
+    fi.cons_vjp(res, x, v)
+    Jref = ForwardDiff.jacobian(θ -> cons_oop(θ, p), x)
+    @test res ≈ Jref' * v
+
+    # reverse mode: native pullback, unchanged
+    f = OptimizationFunction(sum, AutoReverseDiff(); cons = cons_ip!)
+    fi = OptimizationBase.instantiate_function(f, x, f.adtype, p, m; cons_vjp = true)
+    fi.cons_vjp(res, x, v)
+    @test res ≈ Jref' * v
+end

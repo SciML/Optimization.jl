@@ -1,7 +1,7 @@
 using OptimizationBase
 import OptimizationBase.ArrayInterface
 import SciMLBase: OptimizationFunction
-import OptimizationBase.LinearAlgebra: I
+import OptimizationBase.LinearAlgebra: I, mul!
 import DifferentiationInterface
 import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,
     prepare_pullback, prepare_pushforward, pullback!,
@@ -21,6 +21,14 @@ using OptimizationBase.FastClosures
 # and fall back to a prep-free call otherwise. `T` is a constant, so on the solve path this folds
 # away.
 @inline _prep_valid(::Type{T}, v) where {T} = typeof(v) === T
+
+# Whether the generated `cons_vjp` should be computed as `Jᵀv` from a (chunked / colored)
+# Jacobian instead of DI's native `pullback`. DI has no reverse pass for forward-mode
+# backends and synthesizes the pullback from `length(x)` single-column pushforwards plus a
+# primal call (see DI `src/first_order/pullback.jl`), which is strictly more constraint
+# evaluations than one chunked Jacobian. Reverse-mode backends keep the true pullback.
+# `ADTypes.mode` sees through `AutoSparse`.
+_vjp_via_jacobian(adtype::ADTypes.AbstractADType) = ADTypes.mode(adtype) isa ADTypes.ForwardMode
 
 # Output-buffer eltype for the `p`-accepting constraint wrapper: the type `f.cons` produces,
 # including the *nested* dual when both `x` (DI's seeds) and `p` (the sensitivity layer) carry
@@ -282,9 +290,40 @@ function instantiate_function(
     end
 
     cons_vjp! = if f.cons_vjp === nothing && cons_vjp == true && f.cons !== nothing
-        _prep_pullback = prepare_pullback(cons_oop, adtype, x, (ones(eltype(x), num_cons),))
-        let cons_oop = cons_oop, _prep_pullback = _prep_pullback, adtype = adtype
-            (J, θ, v) -> only(pullback!(cons_oop, (J,), _prep_pullback, adtype, θ, (v,)))
+        if _vjp_via_jacobian(adtype)
+            # Forward-mode backend: route the vjp through a Jacobian (see `_vjp_via_jacobian`).
+            # Reuses the same `p`-accepting wrapper shape as `cons_j!` above. The Jacobian prep
+            # is rebuilt here rather than shared with `cons_j!` because a solver may ask for
+            # `cons_vjp` without `cons_j`, so `_prep_jac` is not guaranteed to exist.
+            _vjp_cons_oop_p = let f = f, num_cons = num_cons
+                function (x, p)
+                    res = Vector{_cons_out_eltype(x, p)}(undef, num_cons)
+                    f.cons(res, x, p)
+                    return res
+                end
+            end
+            _vjp_prep_jac = prepare_jacobian(_vjp_cons_oop_p, adtype, x, Constant(p))
+            _vjp_J = zeros(eltype(x), num_cons, length(x))
+            let _vjp_cons_oop_p = _vjp_cons_oop_p, _vjp_prep_jac = _vjp_prep_jac,
+                    _vjp_J = _vjp_J, adtype = adtype, p = p, Tx0 = Tx0
+
+                function (res, θ, v)
+                    TJ = promote_type(eltype(θ), eltype(_vjp_J))
+                    θ_fits_buffer = TJ === eltype(_vjp_J)
+                    J = θ_fits_buffer ? _vjp_J : similar(_vjp_J, TJ)
+                    if _prep_valid(Tx0, θ)
+                        jacobian!(_vjp_cons_oop_p, J, _vjp_prep_jac, adtype, θ, Constant(p))
+                    else
+                        jacobian!(_vjp_cons_oop_p, J, adtype, θ, Constant(p))
+                    end
+                    return mul!(res, transpose(J), v)
+                end
+            end
+        else
+            _prep_pullback = prepare_pullback(cons_oop, adtype, x, (ones(eltype(x), num_cons),))
+            let cons_oop = cons_oop, _prep_pullback = _prep_pullback, adtype = adtype
+                (J, θ, v) -> only(pullback!(cons_oop, (J,), _prep_pullback, adtype, θ, (v,)))
+            end
         end
     elseif cons_vjp == true && f.cons !== nothing
         let f = f, p = p
@@ -672,11 +711,26 @@ function instantiate_function(
     end
 
     cons_vjp! = if f.cons_vjp === nothing && cons_vjp == true && f.cons !== nothing
-        _prep_pullback = prepare_pullback(
-            f.cons, adtype, x, (ones(eltype(x), num_cons),), Constant(p)
-        )
-        let f = f, _prep_pullback = _prep_pullback, adtype = adtype, p = p
-            (θ, v) -> only(pullback(f.cons, _prep_pullback, adtype, θ, (v,), Constant(p)))
+        if _vjp_via_jacobian(adtype)
+            # Forward-mode backend: `Jᵀv` from a chunked Jacobian (see `_vjp_via_jacobian`).
+            # Out-of-place, so `jacobian` allocates a `J` of the right eltype per call and no
+            # persistent buffer / widening logic is needed.
+            _vjp_prep_jac = prepare_jacobian(f.cons, adtype, x, Constant(p))
+            let f = f, _vjp_prep_jac = _vjp_prep_jac, adtype = adtype, p = p, Tx0 = Tx0
+                function (θ, v)
+                    J = _prep_valid(Tx0, θ) ?
+                        jacobian(f.cons, _vjp_prep_jac, adtype, θ, Constant(p)) :
+                        jacobian(f.cons, adtype, θ, Constant(p))
+                    return transpose(J) * v
+                end
+            end
+        else
+            _prep_pullback = prepare_pullback(
+                f.cons, adtype, x, (ones(eltype(x), num_cons),), Constant(p)
+            )
+            let f = f, _prep_pullback = _prep_pullback, adtype = adtype, p = p
+                (θ, v) -> only(pullback(f.cons, _prep_pullback, adtype, θ, (v,), Constant(p)))
+            end
         end
     elseif cons_vjp == true && f.cons !== nothing
         let f = f, p = p

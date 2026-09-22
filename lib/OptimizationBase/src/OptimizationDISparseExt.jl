@@ -1,7 +1,7 @@
 using OptimizationBase
 import OptimizationBase.ArrayInterface
 import SciMLBase: OptimizationFunction
-import OptimizationBase.LinearAlgebra: I
+import OptimizationBase.LinearAlgebra: I, mul!
 import DifferentiationInterface
 import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,
     prepare_jacobian, value_and_gradient!,
@@ -168,15 +168,30 @@ function instantiate_function(
 
     cons_jac_prototype = f.cons_jac_prototype
     cons_jac_colorvec = f.cons_jac_colorvec
-    if f.cons !== nothing && cons_j == true && f.cons_j === nothing
-        cons_oop_p = let f = f, num_cons = num_cons
+    # The sparse Jacobian prep (sparsity detection + coloring) is the expensive part of this
+    # function, so it is built once here and shared between `cons_j!` and, for forward-mode
+    # backends, `cons_vjp!` (see `_vjp_via_jacobian`). Both consumers need the `p`-accepting
+    # out-of-place wrapper.
+    _need_vjp_jac = f.cons_vjp === nothing && cons_vjp == true && f.cons !== nothing &&
+        _vjp_via_jacobian(adtype)
+    _need_cons_jac = f.cons !== nothing && cons_j == true && f.cons_j === nothing
+    cons_oop_p = if _need_cons_jac || _need_vjp_jac
+        let f = f, num_cons = num_cons
             function (x, p)
                 res = Vector{_cons_out_eltype(x, p)}(undef, num_cons)
                 f.cons(res, x, p)
                 return res
             end
         end
-        prep_jac = prepare_jacobian(cons_oop_p, adtype, x, Constant(p))
+    else
+        nothing
+    end
+    prep_jac = if _need_cons_jac || _need_vjp_jac
+        prepare_jacobian(cons_oop_p, adtype, x, Constant(p))
+    else
+        nothing
+    end
+    if _need_cons_jac
         cons_j! = let cons_oop_p = cons_oop_p, prep_jac = prep_jac,
                 adtype = adtype, p = p, Tx0 = Tx0, Tp0 = Tp0
             function (J, θ, p = p)
@@ -198,7 +213,29 @@ function instantiate_function(
         cons_j! = nothing
     end
 
-    if f.cons_vjp === nothing && cons_vjp == true && f.cons !== nothing
+    if _need_vjp_jac
+        # Forward-mode backend: `Jᵀv` through the shared *sparse* Jacobian prep. This keeps
+        # the coloring (the pullback path below has to drop to `adtype.dense_ad` and pays
+        # `length(x)` pushforwards). The buffer carries the detected pattern
+        # (`coloring_result.A` is the colored `SparseMatrixCSC`), so `jacobian!` can decompress
+        # into it; `similar` keeps that structure, also when widening for a dual `θ`.
+        _vjp_J = similar(prep_jac.coloring_result.A, eltype(x))
+        cons_vjp! = let cons_oop_p = cons_oop_p, prep_jac = prep_jac, _vjp_J = _vjp_J,
+                adtype = adtype, p = p, Tx0 = Tx0
+            function (res, θ, v)
+                TJ = promote_type(eltype(θ), eltype(_vjp_J))
+                θ_fits_buffer = TJ === eltype(_vjp_J)
+                J = θ_fits_buffer ? _vjp_J : similar(_vjp_J, TJ)
+
+                if _prep_valid(Tx0, θ)
+                    jacobian!(cons_oop_p, J, prep_jac, adtype, θ, Constant(p))
+                else
+                    jacobian!(cons_oop_p, J, adtype, θ, Constant(p))
+                end
+                return mul!(res, transpose(J), v)
+            end
+        end
+    elseif f.cons_vjp === nothing && cons_vjp == true && f.cons !== nothing
         prep_pullback = prepare_pullback(
             cons_oop, adtype.dense_ad, x, (ones(eltype(x), num_cons),)
         )
@@ -478,8 +515,17 @@ function instantiate_function(
 
     cons_jac_prototype = f.cons_jac_prototype
     cons_jac_colorvec = f.cons_jac_colorvec
-    if f.cons !== nothing && cons_j == true && f.cons_j === nothing
-        prep_jac = prepare_jacobian(f.cons, adtype, x, Constant(p))
+    # Share the (expensive) sparse Jacobian prep between `cons_j!` and the forward-mode
+    # `cons_vjp!`; see the in-place method above.
+    _need_vjp_jac = f.cons_vjp === nothing && cons_vjp == true && f.cons !== nothing &&
+        _vjp_via_jacobian(adtype)
+    _need_cons_jac = f.cons !== nothing && cons_j == true && f.cons_j === nothing
+    prep_jac = if _need_cons_jac || _need_vjp_jac
+        prepare_jacobian(f.cons, adtype, x, Constant(p))
+    else
+        nothing
+    end
+    if _need_cons_jac
         cons_j! = let f = f, prep_jac = prep_jac, adtype = adtype,
                 p = p, Tx0 = Tx0, Tp0 = Tp0
             function (θ, p = p)
@@ -501,7 +547,18 @@ function instantiate_function(
         cons_j! = nothing
     end
 
-    if f.cons_vjp === nothing && cons_vjp == true && f.cons !== nothing
+    if _need_vjp_jac
+        # Forward-mode backend: `Jᵀv` through the shared sparse Jacobian prep, keeping the
+        # coloring. Out-of-place, so `jacobian` allocates a `J` of the right eltype per call.
+        cons_vjp! = let f = f, prep_jac = prep_jac, adtype = adtype, p = p, Tx0 = Tx0
+            function (θ, v)
+                J = _prep_valid(Tx0, θ) ?
+                    jacobian(f.cons, prep_jac, adtype, θ, Constant(p)) :
+                    jacobian(f.cons, adtype, θ, Constant(p))
+                return transpose(J) * v
+            end
+        end
+    elseif f.cons_vjp === nothing && cons_vjp == true && f.cons !== nothing
         prep_pullback = prepare_pullback(
             f.cons, adtype.dense_ad, x, (ones(eltype(x), num_cons),), Constant(p)
         )
