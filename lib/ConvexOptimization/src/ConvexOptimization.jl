@@ -310,12 +310,10 @@ _curvature_admits(res, sense) =
     res.curvature in (SymbolicAnalysis.Convex, SymbolicAnalysis.Affine)
 
 # An atom feeding another atom's argument changes where the certificate must
-# run. The flat argument (atom convex by construction + argument affine +
-# objective pushes the epigraph variable onto its bound) no longer suffices:
-# whether an outer atom pulls an inner τ to its bound is exactly DCP's
-# sign-dependent monotonicity, so the *original* unlowered expression must pass
-# `analyze` as a whole. Every rewrite `_dcp_reassociate` performs is an exact
-# identity — norm → elementwise abs/max/hypot, sum(abs.(·)) → Σ|·|,
+# run: whether the outer atom pulls the inner epigraph variable to its bound
+# is DCP's sign-dependent monotonicity, so the *original* unlowered expression
+# must pass `analyze` as a whole. Every rewrite `_dcp_reassociate` performs is
+# an exact identity — norm → elementwise abs/max/hypot, sum(abs.(·)) → Σ|·|,
 # sum-of-squares → Σ·², u'Pv → ‖Lv‖² — so a certificate of the reassociated
 # form is a certificate of the original expression.
 function _certify_nested(prob, tr)
@@ -1340,17 +1338,15 @@ _has_inner_atom(t) =
     any(a -> !isempty(_collect_atoms!([], unwrap(a))), Symbolics.arguments(t))
 
 # Each lowerable atom becomes a fresh epigraph variable τ plus a cone. An atom
-# sitting inside another atom's argument is lowered the same way, innermost
-# first: its own τ replaces it in the outer atom's arguments (and therefore in
-# the cone rows), so every row ends up affine in `z = [u; τ]`. Substituting
-# before the argument is scalarized also keeps `scalarize` from rewriting a
-# `norm` call into `sqrt(sum(abs2))`, which would destroy the atom; atoms that
-# only materialize under `scalarize` (broadcast elements such as `u[i]^2`
-# inside `sum(abs.(u .^ 2))`) cannot appear in the argument term, so they are
-# collected from the finished rows instead and their τs substituted at the end.
-# `nested` flags that an atom fed another atom: the objective's certificate
-# must then run on the original expression (see `_certify_nested`), not on the
-# lowered affine one.
+# inside another atom's argument is lowered the same way, innermost first:
+# its τ is substituted into the enclosing atom's arguments, so every row ends
+# up affine in `z = [u; τ]`. Substituting before scalarize also keeps
+# `scalarize` from rewriting a `norm` call into `sqrt(sum(abs2))`, which would
+# destroy the atom; atoms that only materialize under `scalarize` (broadcast
+# elements such as `u[i]^2`) cannot appear in the argument term, so they are
+# collected from the finished rows instead. `nested` flags that an atom fed
+# another atom: the certificate then runs on the original expression (see
+# `_certify_nested`), not on the lowered affine one.
 function _epigraph_lower(obj)
     queue = _collect_atoms_deep!([], unwrap(obj))
     isempty(queue) && return Symbolics.scalarize(_expand_scalar_products(unwrap(obj))),
