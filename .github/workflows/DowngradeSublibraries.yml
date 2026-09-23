@@ -23,9 +23,7 @@ jobs:
       # ModelingToolkit 11). Stdlibs and in-repo sublibraries are auto-populated by
       # the centralized workflow.
       skip: "SymbolicAnalysis"
-      # OptimizationReactant requires Julia >= 1.11 (Reactant does not support 1.10),
-      # so it cannot be downgrade-tested on the LTS.
-      exclude: "OptimizationQuadDIRECT OptimizationReactant"
+      exclude: "OptimizationQuadDIRECT"
       group-env-name: "OPTIMIZATION_TEST_GROUP"
       group-env-value: "Core"
       # OptimizationQuadDIRECT has an unregistered URL source and is tested below
