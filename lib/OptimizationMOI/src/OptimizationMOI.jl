@@ -388,8 +388,12 @@ function generate_exprs(prob::OptimizationProblem)
 end
 
 function process_system_exprs(prob::OptimizationProblem, f::OptimizationFunction)
+    return process_system_exprs(f, prob.lcons, prob.ucons)
+end
+
+function process_system_exprs(f::OptimizationFunction, lcons, ucons)
     @assert f.sys !== nothing
-    expr_map = get_expr_map(prob.f.sys)
+    expr_map = get_expr_map(f.sys)
     expr = convert_to_expr(f.expr, expr_map; expand_expr = false)
     expr = repl_getindex!(expr)
     # One entry per row of the constraint function: an array-valued constraint of
@@ -397,7 +401,7 @@ function process_system_exprs(prob::OptimizationProblem, f::OptimizationFunction
     ncons = f.cons_expr === nothing ? 0 : length(f.cons_expr)
     cons_expr = Vector{Expr}(undef, ncons)
     Threads.@sync for i in 1:ncons
-        Threads.@spawn if prob.lcons[i] == prob.ucons[i] == 0
+        Threads.@spawn if lcons[i] == ucons[i] == 0
             cons_expr[i] = Expr(
                 :call, :(==),
                 repl_getindex!(
