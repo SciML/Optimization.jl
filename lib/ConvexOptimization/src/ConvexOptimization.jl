@@ -494,7 +494,8 @@ end
 function _try_scalarize(a)
     s = try
         Symbolics.scalarize(Symbolics.wrap(a))
-    catch
+    catch e
+        e isa InterruptException && rethrow()
         return nothing
     end
     s isa AbstractArray || return Any[unwrap(s)]
@@ -1068,7 +1069,8 @@ function _quad_form_parts(ex)
     try
         isequal(_materialize_array(v), _materialize_array(foldl(*, rest))) &&
             return (; v, mid = scale == 1.0 ? nothing : Any[scale])
-    catch
+    catch e
+        e isa InterruptException && rethrow()
     end
     return nothing
 end
