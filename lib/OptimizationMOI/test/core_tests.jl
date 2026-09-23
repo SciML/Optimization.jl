@@ -324,6 +324,36 @@ end
     sol.u
 end
 
+@testset "expression graph with array unknowns and parameters" begin
+    @variables z[1:2] u v
+    @parameters M[1:2, 1:2] c
+    sys = complete(
+        System(
+            Equation[], [z], []; costs = [z[1]^2 + z[2]^2],
+            constraints = [z[1] ~ 1.0, z[2] ~ 2.0], name = :sys
+        )
+    )
+    prob = OptimizationProblem(sys, [z => [0.0, 0.0]])
+    sol = solve(prob, AmplNLWriter.Optimizer(Ipopt_jll.amplexe))
+    @test sol.retcode == ReturnCode.Success
+    @test sol.u ≈ [1.0, 2.0] atol = 1.0e-6
+
+    # the array parameter `M` precedes `c`, so neither may be read by its position in
+    # `parameters(sys)`
+    sys = complete(
+        System(
+            Equation[], [u, v], [M, c]; costs = [(u - 1.0)^2 + (v - 1.0)^2],
+            constraints = [v ≲ M[1, 2], u ≲ c], name = :sys
+        )
+    )
+    prob = OptimizationProblem(
+        sys, [u => 0.0, v => 0.0, M => [0.1 0.5; 0.9 0.7], c => 0.25]
+    )
+    sol = solve(prob, AmplNLWriter.Optimizer(Ipopt_jll.amplexe))
+    @test sol.retcode == ReturnCode.Success
+    @test sol.u ≈ [0.25, 0.5] atol = 1.0e-6
+end
+
 @testset "tutorial" begin
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = zeros(2)
