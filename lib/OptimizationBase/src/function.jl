@@ -10,6 +10,20 @@ function symbolify(e)
     return e
 end
 
+# A lazily built `cons_expr` (e.g. ModelingToolkit's) is only read when an
+# expression-graph consumer indexes it, so symbolify its elements on access instead of
+# forcing every row while instantiating the function.
+struct SymbolifiedExprs{T, V <: AbstractVector{T}} <: AbstractVector{T}
+    exprs::V
+end
+Base.size(s::SymbolifiedExprs) = size(s.exprs)
+Base.IndexStyle(::Type{<:SymbolifiedExprs}) = IndexLinear()
+Base.getindex(s::SymbolifiedExprs, i::Int) = symbolify(s.exprs[i])
+
+symbolify_exprs(exprs::Vector) = symbolify.(exprs)
+symbolify_exprs(exprs::AbstractVector) = SymbolifiedExprs(exprs)
+symbolify_exprs(exprs) = symbolify.(exprs)
+
 function rep_pars_vals!(e::Expr, p)
     rep_pars_vals!.(e.args, Ref(p))
     return replace!(e.args, p...)
@@ -70,7 +84,7 @@ function OptimizationBase.instantiate_function(
             for i in 1:num_cons
         ]
     expr = symbolify(f.expr)
-    cons_expr = symbolify.(f.cons_expr)
+    cons_expr = symbolify_exprs(f.cons_expr)
 
     return MultiObjectiveOptimizationFunction{true}(
         f.f, SciMLBase.NoAD(); jac = jac, hess = hess,
@@ -113,7 +127,7 @@ function OptimizationBase.instantiate_function(
             for i in 1:num_cons
         ]
     expr = symbolify(f.expr)
-    cons_expr = symbolify.(f.cons_expr)
+    cons_expr = symbolify_exprs(f.cons_expr)
 
     return MultiObjectiveOptimizationFunction{true}(
         f.f, SciMLBase.NoAD(); jac = jac, hess = hess,
@@ -228,7 +242,7 @@ function OptimizationBase.instantiate_function(
             for i in 1:num_cons
         ]
     expr = symbolify(f.expr)
-    cons_expr = symbolify.(f.cons_expr)
+    cons_expr = symbolify_exprs(f.cons_expr)
 
     return OptimizationFunction{true}(
         f.f, SciMLBase.NoAD();
