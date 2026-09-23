@@ -762,7 +762,7 @@ function _quad_form_parts(ex)
     end
     try
         isequal(_materialize_array(v), _materialize_array(foldl(*, rest))) &&
-            return (; v, mid = nothing)
+            return (; v, mid = scale == 1.0 ? nothing : Any[scale])
     catch
     end
     return nothing
@@ -788,12 +788,12 @@ function _strip_scalar_mul(t)
     t = unwrap(t)
     if Symbolics.iscall(t) && Symbolics.operation(t) === (*)
         a = Symbolics.arguments(t)
-        if length(a) == 2
-            v1 = Symbolics.value(unwrap(a[1]))
-            v1 isa Number && return (Float64(v1), unwrap(a[2]))
-            v2 = Symbolics.value(unwrap(a[2]))
-            v2 isa Number && return (Float64(v2), unwrap(a[1]))
-        end
+        v1 = Symbolics.value(unwrap(a[1]))
+        v1 isa Number && length(a) >= 2 &&
+            return (Float64(v1), foldl(*, Any[unwrap(x) for x in a[2:end]]))
+        v2 = Symbolics.value(unwrap(a[end]))
+        v2 isa Number && length(a) >= 2 &&
+            return (Float64(v2), foldl(*, Any[unwrap(x) for x in a[1:(end - 1)]]))
     end
     return (1.0, t)
 end
