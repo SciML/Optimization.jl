@@ -95,7 +95,13 @@ or a literal `[e1, e2, …]` whose elements may be atoms); a `norm` computed by
 hand as `sqrt(sum(w .^ 2))` is a different, unsupported expression.
 
 Parameters are first-class: see [`SciMLBase.reinit!`](@ref) for re-solving at a new
-`p` without re-running the symbolic canonicalization.
+`p` without re-running the symbolic canonicalization. Because that certificate
+is built once and reused at every `p`, a nested composition containing
+parameters is accepted only when it is convex for *every* `p` — e.g.
+`norm(A*u - p)^2` is accepted but `(exp(u[1]) + p[1])^2` is refused, since its
+curvature depends on the sign of `exp(u[1]) + p[1]`. An objective that is only
+convex at some parameter values can be solved by re-canonicalizing with
+`solve(remake(prob; p = θ), alg)` at each `θ`.
 """
 struct ConvexMOI{O} <: AbstractConvexOptAlgorithm
     optimizer_constructor::O
@@ -292,14 +298,11 @@ function certify_convex(prob::ConvexOptimizationProblem, tr)
     return (; objective = obj_res, constraints = cons_res)
 end
 
-function _check_obj_curvature(prob, res, tr)
-    ok = prob.sense === SciMLBase.MaxSense ?
-        res.curvature in (SymbolicAnalysis.Concave, SymbolicAnalysis.Affine) :
-        res.curvature in (SymbolicAnalysis.Convex, SymbolicAnalysis.Affine)
-    ok || error(
+function _check_obj_curvature(prob, res, tr; suffix = "")
+    _curvature_admits(res, prob.sense) || error(
         "Objective is not certified convex for $(prob.sense): curvature = " *
-            "$(res.curvature). Route to a general OptimizationProblem/NLP solver." *
-            _norm_hint(tr.obj)
+            "$(res.curvature)." * suffix *
+            " Route to a general OptimizationProblem/NLP solver." * _norm_hint(tr.obj)
     )
     return nothing
 end
@@ -316,9 +319,21 @@ _curvature_admits(res, sense) =
 # an exact identity — norm → elementwise abs/max/hypot, sum(abs.(·)) → Σ|·|,
 # sum-of-squares → Σ·², u'Pv → ‖Lv‖² — so a certificate of the reassociated
 # form is a certificate of the original expression.
+#
+# Parameters stay symbolic in the certificate: `analyze` then treats them as
+# sign-unknown, so the result holds for every θ. A certificate that holds only
+# at the initial θ would silently certify a different problem after `reinit!`
+# (e.g. `(exp(u) + p)^2` is DCP at p = 0 and nonconvex at p = -2), and DPP
+# re-solves from cached data without redoing symbolic work.
 function _certify_nested(prob, tr)
     res = _nested_curvature(prob, tr)
-    _check_obj_curvature(prob, res, tr)
+    _check_obj_curvature(
+        prob, res, tr;
+        suffix = isempty(tr.params) ? "" :
+            " Parameters are kept symbolic in the certificate, so the curvature " *
+            "may also depend on `p`; if it is only convex at some parameter " *
+            "values, re-canonicalize with `solve(remake(prob; p = …), alg)`."
+    )
     cons_res = isempty(tr.params) ? _certify_constraints(prob, tr) : nothing
     return (; objective = res, constraints = cons_res)
 end
@@ -334,6 +349,11 @@ end
 
 function _nested_curvature(prob, tr)
     ex = unwrap(tr.obj)
+    # Lifted `##psq` variables stand for `arg^2`; restoring the expression lets
+    # `analyze` see that the term is nonnegative for every θ.
+    for (s, a) in zip(tr.psqvars, tr.psqargs)
+        ex = Symbolics.substitute(ex, Dict{Any, Any}(unwrap(s) => unwrap(a)^2))
+    end
     res = _try_analyze(ex)
     _curvature_admits(res, prob.sense) && return res
     # `analyze` reads a vector argument's sign wholesale, but the monotonicity
@@ -349,19 +369,7 @@ function _nested_curvature(prob, tr)
     # `c' * x`-style products carry a `1×1` symtype; expanding them to scalar
     # sums is exact and keeps `propagate_sign` from tripping on mixed shapes.
     ex = _expand_scalar_products(ex)
-    res = _try_analyze(ex)
-    _curvature_admits(res, prob.sense) && return res
-    isempty(tr.params) && return res
-    # Parameter symbols make affine products look bilinear. Certifying at the
-    # initial θ is still sound here: θ may only enter the model through affine
-    # constants and (sign-guarded) objective coefficients — `_dpp_extract`
-    # rejects everything else — so curvature at one θ implies it at all θ.
-    θ = _theta(prob.p)
-    vals = Dict{Any, Any}(unwrap.(tr.params) .=> θ)
-    for (s, f) in zip(tr.psqvars, tr.psqfns)
-        vals[unwrap(s)] = f(θ...)
-    end
-    return _try_analyze(Symbolics.substitute(ex, vals))
+    return _try_analyze(ex)
 end
 
 function _dcp_reassociate(ex)

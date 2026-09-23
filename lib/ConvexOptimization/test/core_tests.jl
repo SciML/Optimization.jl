@@ -1352,18 +1352,59 @@ end
         @test isapprox(sol.objective, 1.0; atol = 1.0e-6)
     end
 
-    # a parameter in a cone row's coefficient position is refused, nested or not.
-    @test_throws "parameter-dependent coefficient" solve_checked(
-        ConvexOptimizationProblem(
-            OptimizationFunction((u, p) -> abs2(p[1] * norm(u))), [0.5, 0.5], [2.0]
-        ), ALG
+    # (exp(u1) + p)^2 is DCP at p = 0 but nonconvex at p = -2; certifying it
+    # at the initial θ would certify a different problem at every later
+    # reinit!. Parameters stay symbolic in the certificate, so this refuses at
+    # init for every p.
+    pprob = (f, p; kw...) -> ConvexOptimizationProblem(
+        OptimizationFunction(f), [0.0, 0.0], p;
+        constraints = [ConeConstraint((u, p) -> [u[1], u[2]], MOI.Zeros(2))],
+        kw...
+    )
+    @test_throws "not certified convex" solve_checked(
+        pprob((u, p) -> (exp(u[1]) + p[1])^2, [0.0]), ALG
+    )
+    # (exp(u1) + p^2)^2 is convex for every θ — the certificate must see p^2 ≥ 0.
+    sol = solve_checked(pprob((u, p) -> (exp(u[1]) + p[1]^2)^2, [0.0]), ALG)
+    @test isapprox(sol.objective, 1.0; atol = 1.0e-5)
+end
+
+@testset "nested certification holds for every p" begin
+    # The inner atom's argument changes sign with p, so the composition is only
+    # convex for some θ — refused at init rather than wrong after reinit!.
+    pprob1 = (f, p; kw...) -> ConvexOptimizationProblem(
+        OptimizationFunction(f), [0.5], p; kw...
+    )
+    pprob2 = (f, p; kw...) -> ConvexOptimizationProblem(
+        OptimizationFunction(f), [0.5, 0.5], p; kw...
+    )
+    @test_throws "not certified convex" solve_checked(
+        pprob1((u, p) -> abs2(abs(u[1]) + p[1]), [0.0]), ALG
+    )
+    @test_throws "not certified convex" solve_checked(
+        pprob2((u, p) -> abs2(norm(u) + p[1]), [0.0]), ALG
+    )
+    @test_throws "not certified convex" solve_checked(
+        pprob2((u, p) -> abs2(p[1] * norm(u)), [2.0]), ALG
+    )
+    @test_throws "not certified convex" solve_checked(
+        pprob2((u, p) -> p[1] * norm(u .- 1.0)^2, [2.0]), ALG
+    )
+    # SymbolicAnalysis cannot prove max(·, 0) is nonnegative, so this is a
+    # conservative refusal even though it is convex for every θ.
+    @test_throws "not certified convex" solve_checked(
+        pprob2((u, p) -> max(norm(u) + p[1], 0.0)^2, [2.0]), ALG
     )
 
-    # a parameter multiplying the lowered objective is a coefficient, re-checked
-    # at every θ: solves while positive, refused once it flips sign.
-    optf3 = OptimizationFunction((u, p) -> p[1] * norm(u .- 1.0)^2)
-    prob3 = ConvexOptimizationProblem(optf3, [0.5, 0.5], [2.0])
-    sol3 = solve_checked(prob3, ALG)
-    @test isapprox(sol3.objective, 0.0; atol = 1.0e-6)
-    @test_throws "epigraph" reinit!(init(prob3, ALG); p = [-1.0])
+    # θ-independent compositions still solve and reinit to every θ.
+    optf = OptimizationFunction((u, p) -> abs(u[1] - p[1])^2 + abs(u[2] - p[2])^2)
+    prob = ConvexOptimizationProblem(optf, [0.0, 0.0], [1.0, -1.0])
+    cache = init(prob, ALG)
+    for θ in ([1.0, -1.0], [-2.0, 0.5], [0.0, 0.0])
+        cache = reinit!(cache; p = θ)
+        sol = solve!_checked(cache)
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.u, θ; atol = 1.0e-5)
+        @test isapprox(sol.objective, 0.0; atol = 1.0e-5)
+    end
 end
