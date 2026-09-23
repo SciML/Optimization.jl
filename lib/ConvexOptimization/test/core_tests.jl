@@ -462,7 +462,9 @@ end
     @test_throws "not affine in the variables" solve_checked(
         pprob(lin, [1.0]; constraints = [ConeConstraint((u, p) -> [u[1]^2 + p[1] * u[2] - 1.0], Z1)]), ALG
     )
-    @test_throws "must be affine in the optimization variables" solve_checked(
+    # `u[i]^2` inside the norm argument is a nested atom now; the composition
+    # is still not DCP (the element can change sign), so certification rejects it.
+    @test_throws "not certified convex" solve_checked(
         pprob((u, p) -> norm(u .^ 2 .- p[1], 2), [1.0]), ALG
     )
 
@@ -683,11 +685,7 @@ end
             "not affine in the optimization variables",
             (u, p) -> abs2(u[1] * u[2]), [0.5, 0.5], nothing, (;),
         ),
-        # norm(w)^2 is an atom nested in an atom: out of scope, must error.
-        (
-            "must be affine in the optimization variables",
-            (u, p) -> norm(u .- 1.0, 2)^2, [0.5, 0.5], nothing, (;),
-        ),
+
         # indefinite P makes the quadratic form non-convex
         (
             "positive semidefinite",
@@ -1126,12 +1124,6 @@ end
         ("only over all elements", (u, p) -> maximum(u; dims = 1), [0.0, 0.0], SciMLBase.MinSense),
         ("only over all elements", (u, p) -> sum(abs.(u); dims = 1), [0.0, 0.0], SciMLBase.MinSense),
         ("only over all elements", (u, p) -> sum(abs.(u); init = 1.0), [0.0, 0.0], SciMLBase.MinSense),
-        ("must be affine in the optimization variables", (u, p) -> abs(u[1]^2), [0.5], SciMLBase.MinSense),
-        ("must be affine in the optimization variables", (u, p) -> max(u[1], u[1]^2), [0.5], SciMLBase.MinSense),
-        ("must be affine in the optimization variables", (u, p) -> maximum(u .^ 2), [0.5, 0.5], SciMLBase.MinSense),
-        ("must be affine in the optimization variables", (u, p) -> sum(abs.(u .^ 2)), [0.5, 0.5], SciMLBase.MinSense),
-        ("must be affine in the optimization variables", (u, p) -> max(u[1], abs(u[2])), [0.0, 0.0], SciMLBase.MinSense),
-        ("must be affine in the optimization variables", (u, p) -> abs(norm(u .- 1.0)), [0.0, 0.0], SciMLBase.MinSense),
     ]
     for (msg, f, u0, sense) in cases
         prob = ConvexOptimizationProblem(OptimizationFunction(f), u0; sense)
@@ -1214,4 +1206,164 @@ end
     )
     @test isapprox(sol.u, [0.5, -0.25]; atol = 1.0e-6)
     @test isapprox(sol.objective, -0.125; atol = 1.0e-6)
+end
+
+# An atom inside another atom's argument gets its own epigraph variable,
+# innermost first: `norm(w)^2` is `norm(w) -> τ1` then `τ1^2 -> τ2`. Convexity
+# is certified on the *original* expression by `analyze`, so only compositions
+# DCP proves convex are accepted — a lowered-but-nonconvex graph still errors.
+@testset "nested atoms lower innermost-first and certify the original expression" begin
+    # ||A u - b||^2 spelled through a norm atom is the same least squares as the
+    # sum-of-squares spelling above; u* and obj* come from the dense solve.
+    u★ = QLS_A \ QLS_B
+    obj★ = norm(QLS_A * u★ - QLS_B)^2
+    for spelling in (
+            (u, p) -> norm(QLS_A * u - QLS_B)^2,
+            (u, p) -> abs2(norm(QLS_A * u - QLS_B)),
+        )
+        sol = solve_checked(
+            ConvexOptimizationProblem(OptimizationFunction(spelling), zeros(3)), ALG
+        )
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.u, u★; atol = 1.0e-6)
+        @test isapprox(sol.objective, obj★; atol = 1.0e-6)
+    end
+
+    # (objective, u0, kwargs, expected objective, expected u or nothing)
+    cases = [
+        # min exp(||u - c||): exp is increasing, so u* = c, obj = e^0 = 1.
+        ((u, p) -> exp(norm(u .- [1.0, 2.0])), [0.0, 0.0], (;), 1.0, [1.0, 2.0]),
+        # max(||u||, 1) on sum(u) = 1: the unconstrained norm min is ||(0.5, 0.5)||
+        # = 0.707 < 1, so the constant branch wins; u* is not unique.
+        (
+            (u, p) -> max(norm(u), 1.0), [0.4, 0.6],
+            (constraints = [ConeConstraint((u, p) -> [u[1] + u[2] - 1.0], MOI.Zeros(1))],),
+            1.0, nothing,
+        ),
+        # (|u1| + |u2|)^2 on sum(u) = 1: |u1| + |u2| >= |u1 + u2| = 1, equality
+        # for u >= 0; u* not unique.
+        (
+            (u, p) -> sum(abs.(u))^2, [0.4, 0.6],
+            (constraints = [ConeConstraint((u, p) -> [u[1] + u[2] - 1.0], MOI.Zeros(1))],),
+            1.0, nothing,
+        ),
+        # |norm(u - 1)| = norm(u - 1): u* = 1, obj = 0.
+        ((u, p) -> abs(norm(u .- 1.0)), [0.0, 0.0], (;), 0.0, [1.0, 1.0]),
+        # max(u1, |u2|) on the box: any u1 <= 0 with u2 = 0 gives obj 0, so u*
+        # is not unique and only the objective is pinned.
+        (
+            (u, p) -> max(u[1], abs(u[2])), [0.3, -0.4],
+            (lb = [-1.0, -1.0], ub = [1.0, 1.0]), 0.0, nothing,
+        ),
+        # ||u|| + exp(||u||) on [1, 2]^2 is increasing in u: u* = (1, 1).
+        (
+            (u, p) -> norm(u) + exp(norm(u)), [1.5, 1.5],
+            (lb = [1.0, 1.0], ub = [2.0, 2.0]), sqrt(2.0) + exp(sqrt(2.0)), [1.0, 1.0],
+        ),
+        # -log(u1) + ||u[2:3]|| with u1 <= 1: -log pushes u1 up, u* = (1, 0, 0).
+        (
+            (u, p) -> -log(u[1]) + norm(u[2:3]), [0.5, 0.5, 0.5],
+            (constraints = [ConeConstraint((u, p) -> [u[1] - 1.0], MOI.Nonpositives(1))],),
+            0.0, [1.0, 0.0, 0.0],
+        ),
+        # max(u1, -log(u2)) with u1 pinned and u2 <= 2: the -log branch
+        # dominates, u2* = 2, obj = -log(2).
+        (
+            (u, p) -> max(u[1], -log(u[2])), [-5.0, 1.0],
+            (lb = [-5.0, 0.0], ub = [-5.0, 2.0]), -log(2.0), [-5.0, 2.0],
+        ),
+        # pinned compositions: the objective is f evaluated at the pin.
+        ((u, p) -> abs(u[1]^2), [1.0], (lb = [2.0], ub = [2.0]), 4.0, [2.0]),
+        ((u, p) -> max(u[1], u[1]^2), [1.0], (lb = [2.0], ub = [2.0]), 4.0, [2.0]),
+        ((u, p) -> maximum(u .^ 2), [1.0, 0.5], (lb = [2.0, 1.0], ub = [2.0, 1.0]), 4.0, [2.0, 1.0]),
+        ((u, p) -> sum(abs.(u .^ 2)), [1.0, 0.5], (lb = [2.0, 1.0], ub = [2.0, 1.0]), 5.0, [2.0, 1.0]),
+        ((u, p) -> norm(u .^ 2), [1.0, 0.5], (lb = [2.0, 1.0], ub = [2.0, 1.0]), sqrt(17.0), [2.0, 1.0]),
+        (
+            (u, p) -> norm([exp(u[1]), u[2]]), [0.4, 0.9],
+            (lb = [0.5, 1.0], ub = [0.5, 1.0]), sqrt(exp(1.0) + 1.0), [0.5, 1.0],
+        ),
+        ((u, p) -> exp(exp(u[1])), [0.4], (lb = [0.5], ub = [0.5]), exp(exp(0.5)), [0.5]),
+    ]
+    for (f, u0, kw, obj★, u★) in cases
+        sol = solve_checked(
+            ConvexOptimizationProblem(OptimizationFunction(f), u0; kw...), ALG
+        )
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.objective, obj★; atol = 1.0e-6)
+        u★ === nothing || @test isapprox(sol.u, u★; atol = 1.0e-6)
+    end
+
+    # nested concave under MaxSense: max_u min(u1, log(u2)), pinned so the
+    # maximum is finite.
+    solm = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> min(u[1], log(u[2]))), [1.0, 2.0];
+            sense = SciMLBase.MaxSense, lb = [log(4.0), 4.0], ub = [log(4.0), 4.0]
+        ), ALG
+    )
+    @test SciMLBase.successful_retcode(solm.retcode)
+    @test isapprox(solm.objective, log(4.0); atol = 1.0e-6)
+
+    # These lower fine but the *original* composition is not DCP for the sense:
+    # certification must refuse them rather than solve the wrong problem.
+    bad = [
+        ((u, p) -> abs2(max(u[1], u[2])), [0.5, 0.5], (;)),
+        ((u, p) -> abs(max(u[1], u[2])), [0.5, 0.5], (;)),
+        ((u, p) -> max(u[1], min(u[2], 0.0)), [0.5, 0.5], (;)),
+        ((u, p) -> max(u[1], log(u[2])), [0.5, 0.5], (;)),
+        ((u, p) -> exp(-norm(u)), [0.5, 0.5], (;)),
+        ((u, p) -> -log(norm(u) + 1.0), [0.5, 0.5], (;)),
+        ((u, p) -> norm(u .^ 2 .- 1.0), [0.5, 0.5], (;)),
+        ((u, p) -> norm([max(u[1], u[2]), u[3]]), [0.5, 0.5, 0.5], (;)),
+        # nested concave under MinSense / nested convex under MaxSense
+        ((u, p) -> min(u[1], log(u[2])), [0.5, 0.5], (;)),
+        ((u, p) -> norm(u)^2, [0.5, 0.5], (sense = SciMLBase.MaxSense,)),
+    ]
+    for (f, u0, kw) in bad
+        prob = ConvexOptimizationProblem(OptimizationFunction(f), u0; kw...)
+        @test_throws "not certified convex" solve(prob, ALG)
+    end
+end
+
+@testset "nested atoms with parameters re-solve through reinit!" begin
+    # min ||A u - p||^2: the parameter stays an affine constant in the rotated
+    # cone through both lowerings.
+    optf = OptimizationFunction((u, p) -> norm(QLS_A * u .- p)^2)
+    prob = ConvexOptimizationProblem(optf, zeros(3), QLS_B)
+    cache = init(prob, ALG)
+    for θ in (QLS_B, [2.0, 1.0, 0.0, -1.0], zeros(4))
+        cache = reinit!(cache; p = θ)
+        sol = solve!_checked(cache)
+        cold = solve_checked(SciMLBase.remake(prob; p = θ), ALG)
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.u, cold.u; atol = 1.0e-8)
+        @test isapprox(sol.objective, cold.objective; atol = 1.0e-8)
+    end
+
+    # exp(||u - p||): u* = θ, obj = 1 at every θ.
+    optf2 = OptimizationFunction((u, p) -> exp(norm(u .- p)))
+    prob2 = ConvexOptimizationProblem(optf2, [0.0, 0.0], [1.0, 2.0])
+    cache2 = init(prob2, ALG)
+    for θ in ([1.0, 2.0], [-1.0, 0.5], [0.0, 0.0])
+        cache2 = reinit!(cache2; p = θ)
+        sol = solve!_checked(cache2)
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.u, θ; atol = 1.0e-6)
+        @test isapprox(sol.objective, 1.0; atol = 1.0e-6)
+    end
+
+    # a parameter in a cone row's coefficient position is refused, nested or not.
+    @test_throws "parameter-dependent coefficient" solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> abs2(p[1] * norm(u))), [0.5, 0.5], [2.0]
+        ), ALG
+    )
+
+    # a parameter multiplying the lowered objective is a coefficient, re-checked
+    # at every θ: solves while positive, refused once it flips sign.
+    optf3 = OptimizationFunction((u, p) -> p[1] * norm(u .- 1.0)^2)
+    prob3 = ConvexOptimizationProblem(optf3, [0.5, 0.5], [2.0])
+    sol3 = solve_checked(prob3, ALG)
+    @test isapprox(sol3.objective, 0.0; atol = 1.0e-6)
+    @test_throws "epigraph" reinit!(init(prob3, ALG); p = [-1.0])
 end
