@@ -10,6 +10,7 @@ import Symbolics
 using Symbolics: variable, unwrap, linear_expansion
 import SymbolicAnalysis
 using SymbolicAnalysis: analyze
+import SymbolicUtils
 using LinearAlgebra
 
 """
@@ -52,6 +53,13 @@ epigraph: `minimize norm(A*u - b, 2)` introduces an epigraph variable `τ` with
 
   - `norm(w, p)` for `p = 1, 2, Inf` (`NormOneCone`, `SecondOrderCone`,
     `NormInfinityCone`), with `w` an array expression in `u`;
+  - `abs(w)` for scalar affine `w` (`NormOneCone`);
+  - `max(w1, w2, …)`/`maximum(w)` of affine scalars or a vector affine `w`
+    (`Nonnegatives` epigraph), and their concave mirrors `min`/`minimum`
+    (hypograph: valid under `MaxSense`, or entering negatively under
+    `MinSense` as `-min(…)`);
+  - `sum(abs.(w))` and `maximum(abs.(w))` for vector affine `w` — the l1 and
+    linf norms (`NormOneCone`, `NormInfinityCone`);
   - `exp(w)` and `log(w)` for scalar affine `w` (`ExponentialCone`); `log` is
     concave, so it is bounded below and must enter the objective negatively
     (e.g. a `-log` barrier);
@@ -606,7 +614,13 @@ end
 function _trace_problem(prob)
     vars, cols, params = _symbolic_vars(prob)
     obj = try
-        _scalar(prob.f.f(vars, params))
+        prob.f.f(vars, params)
+    catch e
+        _trace_shape_error(e, "objective")
+    end
+    _check_no_unsupported_reducer(obj)
+    obj = try
+        _scalar(obj)
     catch e
         _trace_shape_error(e, "objective")
     end
@@ -618,6 +632,7 @@ function _trace_problem(prob)
                 _trace_shape_error(e, "constraint")
         end for con in prob.constraints
         ]
+    consvals === nothing || foreach(_check_no_unsupported_reducer, consvals)
     psqvars, psqargs, psqfns = empty(params), Any[], Any[]
     if !isempty(params)
         acc = Tuple{Any, Any}[]
@@ -680,16 +695,74 @@ function _norm_cone(p, dim)
     )
 end
 
-const LOWERABLE_ATOMS = (LinearAlgebra.norm, exp, log, abs2, SymbolicAnalysis.quad_form)
+const LOWERABLE_ATOMS = (
+    LinearAlgebra.norm, exp, log, abs, max, min, abs2,
+    SymbolicAnalysis.quad_form,
+)
 
 function _is_lowerable_atom(ex)
     Symbolics.iscall(ex) || return false
     op = Symbolics.operation(ex)
+    op isa Symbolics.SymbolicUtils.Mapreducer &&
+        return _is_lowerable_reducer(op, ex) || _is_sumsq_term(op, ex)
     any(f -> op === f, LOWERABLE_ATOMS) && return true
     op === (^) && return _is_square_power(ex)
     op === (*) && return _is_quad_form_term(ex)
-    op isa Symbolics.SymbolicUtils.Mapreducer && return _is_sumsq_term(op, ex)
     return false
+end
+
+# Reductions over a symbolic array trace to a `SymbolicUtils.Mapreducer`; a
+# `sum` over anything but `abs.(w)` is affine and needs no cone.
+function _is_lowerable_reducer(op::SymbolicUtils.Mapreducer, ex)
+    op.f === identity && op.dims isa Colon && op.init === nothing || return false
+    args = Symbolics.arguments(ex)
+    length(args) == 1 || return false
+    op.reduce === max && return true
+    op.reduce === min && return !_is_abs_broadcast(args[1])
+    # `Base.add_sum` is not public API, but it is what SymbolicUtils stores as
+    # the `reduce` of a traced `sum` (see `Mapreducer`'s docstring).
+    return op.reduce === Base.add_sum && _is_abs_broadcast(args[1])
+end
+
+# `abs.(w)` traces to `broadcast(abs, w)`; the function is a constant symbolic.
+function _is_abs_broadcast(a)
+    Symbolics.iscall(a) && Symbolics.operation(a) === broadcast || return false
+    bargs = Symbolics.arguments(a)
+    return length(bargs) == 2 && Symbolics.value(bargs[1]) === abs
+end
+
+# `init` is silently dropped by `scalarize`/`linear_expansion`, so a `Mapreducer`
+# that is not the plain scalar atom form must error here — including inside a
+# lowerable atom's argument, which `_collect_atoms!` never descends into.
+function _check_no_unsupported_reducer(ex)
+    (ex isa Symbolics.Num || ex isa Symbolics.Arr) &&
+        return _check_no_unsupported_reducer(Symbolics.unwrap(ex))
+    ex isa AbstractArray && return foreach(_check_no_unsupported_reducer, ex)
+    Symbolics.iscall(ex) || return nothing
+    op = Symbolics.operation(ex)
+    op isa SymbolicUtils.Mapreducer && _unsupported_reducer_error(op, ex)
+    return foreach(_check_no_unsupported_reducer, Symbolics.arguments(ex))
+end
+
+function _unsupported_reducer_error(op::SymbolicUtils.Mapreducer, ex)
+    op.dims isa Colon && op.init === nothing || error(
+        "a `$(op.reduce)` reduction in the problem is supported only over all " *
+            "elements (`dims` unspecified) and without `init`; got dims = " *
+            "$(op.dims), init = $(op.init). Route to a general " *
+            "OptimizationProblem/NLP solver."
+    )
+    op.f === abs && error(
+        "a reduction with `abs` as the mapped function is not lowered; write " *
+            "the broadcast form `sum(abs.(w))` or `maximum(abs.(w))`, or route " *
+            "to a general OptimizationProblem/NLP solver."
+    )
+    args = Symbolics.arguments(ex)
+    length(args) == 1 && op.reduce === min && _is_abs_broadcast(args[1]) &&
+        error(
+        "`minimum(abs.(w))` is neither convex nor concave and cannot be " *
+            "lowered. Route to a general OptimizationProblem/NLP solver."
+    )
+    return nothing
 end
 
 # `‖w‖² <= τ` is `(τ, 1/2, w) ∈ RotatedSecondOrderCone` because `2·τ·(1/2) = τ`.
@@ -819,8 +892,9 @@ function _atom_lowering(t, tau)
         return Symbolics.Num[tau; w...], _norm_cone(_norm_order(t), length(w) + 1), 1
     end
     (f === abs2 || f === (^)) && return _rsoc_lowering(_scalar_atom_arg(t, f), tau)
-    if f isa Symbolics.SymbolicUtils.Mapreducer
-        return _rsoc_lowering(_sumsq_arg(t), tau)
+    if f isa SymbolicUtils.Mapreducer
+        _is_sumsq_term(f, t) && return _rsoc_lowering(_sumsq_arg(t), tau)
+        return _reducer_lowering(t, f, tau)
     end
     if f === SymbolicAnalysis.quad_form
         v, P = Symbolics.arguments(t)
@@ -831,9 +905,52 @@ function _atom_lowering(t, tau)
         parts.mid === nothing && return _rsoc_lowering(_atom_arg_vec(parts.v), tau)
         return _quad_form_lowering(parts.v, parts.mid, tau)
     end
+    if f === max || f === min
+        ws = _flatten_atom_args(t, f)
+        rows = f === max ? Symbolics.Num[tau - Symbolics.wrap(w) for w in ws] :
+            Symbolics.Num[Symbolics.wrap(w) - tau for w in ws]
+        return rows, MOI.Nonnegatives(length(ws)), f === max ? 1 : -1
+    end
     w = _scalar_atom_arg(t, f)
+    f === abs && return Symbolics.Num[tau, w], MOI.NormOneCone(2), 1
     f === exp && return Symbolics.Num[w, 1, tau], MOI.ExponentialCone(), 1
     return Symbolics.Num[tau, 1, w], MOI.ExponentialCone(), -1
+end
+
+# `max(a, b, c)` traces as nested binary calls.
+function _flatten_atom_args(t, f, ws = [])
+    if Symbolics.iscall(t) && Symbolics.operation(t) === f
+        for a in Symbolics.arguments(t)
+            _flatten_atom_args(a, f, ws)
+        end
+    else
+        Symbolics.symtype(t) <: Number || error(
+            "`$f` in the objective is lowered only for scalar affine " *
+                "arguments; got the non-scalar argument `$t`. Route to a " *
+                "general OptimizationProblem/NLP solver."
+        )
+        push!(ws, t)
+    end
+    return ws
+end
+
+function _reducer_lowering(t, op::SymbolicUtils.Mapreducer, tau)
+    arg = only(Symbolics.arguments(t))
+    if _is_abs_broadcast(arg) && op.reduce !== min
+        w = _flatvec(Symbolics.wrap(Symbolics.arguments(arg)[2]))
+        cone = op.reduce === max ? MOI.NormInfinityCone(length(w) + 1) :
+            MOI.NormOneCone(length(w) + 1)
+        return Symbolics.Num[tau; w...], cone, 1
+    end
+    w = _flatvec(Symbolics.wrap(arg))
+    rows = op.reduce === max ? Symbolics.Num[tau - wi for wi in w] :
+        Symbolics.Num[wi - tau for wi in w]
+    return rows, MOI.Nonnegatives(length(w)), op.reduce === max ? 1 : -1
+end
+
+function _flatvec(v)
+    s = Symbolics.scalarize(v)
+    return s isa AbstractArray ? vec(collect(s)) : [s]
 end
 
 function _scalar_atom_arg(t, f)
@@ -1051,6 +1168,10 @@ function _asvec(v)
     return s isa AbstractVector ? collect(s) : [s]
 end
 _scalar(v::AbstractVector) = only(v)
+_scalar(v::AbstractArray) = error(
+    "The objective of a ConvexOptimizationProblem must be a scalar; got a " *
+        "$(size(v)) array. Route to a general OptimizationProblem/NLP solver."
+)
 _scalar(v) = v
 
 _tofloat(x) = Float64(Symbolics.value(x))

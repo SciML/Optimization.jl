@@ -1031,3 +1031,187 @@ end
         ), ALG
     )
 end
+
+# Shared 5x2 regression data. Reference values are Convex.jl with Clarabel on
+# the same problems, not this backend's output; the LAD optimum is also exact
+# by hand (it interpolates rows 1 and 5, and |r| sums to 1.495):
+#   min maximum(abs.(PWL_A*u - PWL_b)) -> u* = (1.0270270232, -0.0926640934), obj = 0.5806949812
+#   min sum(abs.(PWL_A*u - PWL_b))     -> u* = (0.55, -0.3), obj = 1.495
+const PWL_A = [1.0 0.5; -0.3 1.2; 0.7 -0.4; 0.1 0.9; -0.8 0.2]
+const PWL_b = [0.4, -1.0, 0.3, 0.6, -0.5]
+
+@testset "scalar abs atoms lower through the 1-norm cone" begin
+    # min |u1 - 2| + |u2 + 1|  s.t.  u1 + u2 == 1  ->  u* = (2, -1), obj = 0
+    optf = OptimizationFunction((u, p) -> abs(u[1] - 2.0) + abs(u[2] + 1.0))
+    cons = [ConeConstraint((u, p) -> [u[1] + u[2] - 1.0], MOI.Zeros(1))]
+    sol = solve_checked(ConvexOptimizationProblem(optf, [0.0, 0.0]; constraints = cons), ALG)
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [2.0, -1.0]; atol = 1.0e-6)
+    @test isapprox(sol.objective, 0.0; atol = 1.0e-6)
+    @test length(sol.dual) == 1        # epigraph cones stay out of the user duals
+end
+
+@testset "Chebyshev fit: min maximum(abs.(A*u - b)) lowers to NormInfinityCone" begin
+    optf = OptimizationFunction((u, p) -> maximum(abs.(PWL_A * u - PWL_b)))
+    cons = [ConeConstraint((u, p) -> [u[1] + u[2] - 3.0], MOI.Nonpositives(1))]
+    sol = solve_checked(ConvexOptimizationProblem(optf, [0.0, 0.0]; constraints = cons), ALG)
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [1.0270270232, -0.0926640934]; atol = 1.0e-6)
+    @test isapprox(sol.objective, 0.5806949812; atol = 1.0e-6)
+    @test length(sol.u) == 2           # epigraph variable is internal
+    @test length(sol.dual) == length(cons)
+end
+
+@testset "LAD fit: min sum(abs.(A*u - b)) lowers to NormOneCone" begin
+    optf = OptimizationFunction((u, p) -> sum(abs.(PWL_A * u - PWL_b)))
+    sol = solve_checked(ConvexOptimizationProblem(optf, [0.0, 0.0]), ALG)
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [0.55, -0.3]; atol = 1.0e-6)
+    @test isapprox(sol.objective, 1.495; atol = 1.0e-6)
+    @test length(sol.dual) == 0        # no user constraints, no duals
+end
+
+@testset "max/min of three affine scalars" begin
+    # min_u max(u1, u2, 1 - u1 - u2): balanced at u* = (1/3, 1/3), obj = 1/3.
+    # The variadic spelling traces to nested binary `max` calls.
+    optf = OptimizationFunction((u, p) -> max(u[1], u[2], 1.0 - u[1] - u[2]))
+    sol = solve_checked(ConvexOptimizationProblem(optf, [0.0, 0.0]), ALG)
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [1 / 3, 1 / 3]; atol = 1.0e-6)
+    @test isapprox(sol.objective, 1 / 3; atol = 1.0e-6)
+
+    # `min` is concave: max_u min(u1, u2, 2 - u1 - u2) -> u* = (2/3, 2/3), obj = 2/3.
+    optfm = OptimizationFunction((u, p) -> min(u[1], u[2], 2.0 - u[1] - u[2]))
+    solm = solve_checked(
+        ConvexOptimizationProblem(optfm, [0.0, 0.0]; sense = SciMLBase.MaxSense), ALG
+    )
+    @test SciMLBase.successful_retcode(solm.retcode)
+    @test isapprox(solm.u, [2 / 3, 2 / 3]; atol = 1.0e-6)
+    @test isapprox(solm.objective, 2 / 3; atol = 1.0e-6)
+end
+
+@testset "minimum solves under MaxSense and is rejected under MinSense" begin
+    # max min(u)  s.t.  sum(u) == 1, u >= 0: u* = (1/3, 1/3, 1/3), obj = 1/3.
+    cons = [
+        ConeConstraint((u, p) -> [u[1] + u[2] + u[3] - 1.0], MOI.Zeros(1)),
+        ConeConstraint((u, p) -> [u[1], u[2], u[3]], MOI.Nonnegatives(3)),
+    ]
+    optf = OptimizationFunction((u, p) -> minimum(u))
+    sol = solve_checked(
+        ConvexOptimizationProblem(
+            optf, [0.3, 0.3, 0.3]; sense = SciMLBase.MaxSense, constraints = cons
+        ), ALG
+    )
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, fill(1 / 3, 3); atol = 1.0e-6)
+    @test isapprox(sol.objective, 1 / 3; atol = 1.0e-6)
+    @test length(sol.dual) == 2
+
+    @test_throws "Lowering an atom through its hypograph" solve(
+        ConvexOptimizationProblem(optf, [0.3, 0.3, 0.3]; constraints = cons), ALG
+    )
+end
+
+@testset "piecewise-linear atoms reject what cannot be lowered soundly" begin
+    cases = [
+        ("nondecreasing in it for MinSense", (u, p) -> -abs2(u[1]), [0.5], SciMLBase.MinSense),
+        ("Lowering an atom through its epigraph", (u, p) -> -abs(u[1]), [0.5], SciMLBase.MinSense),
+        ("Lowering an atom through its epigraph", (u, p) -> max(u[1], u[2]), [0.0, 0.0], SciMLBase.MaxSense),
+        ("Lowering an atom through its hypograph", (u, p) -> min(u[1], u[2]), [0.0, 0.0], SciMLBase.MinSense),
+        ("Lowering an atom through its hypograph", (u, p) -> minimum(u .- 1.0), [0.0, 0.0], SciMLBase.MinSense),
+        ("neither convex nor concave", (u, p) -> minimum(abs.(PWL_A * u - PWL_b)), [0.0, 0.0], SciMLBase.MinSense),
+        # `sum(abs, w)` is the mapreduce spelling, out of scope.
+        ("broadcast form", (u, p) -> sum(abs, u .- 1.0), [0.0, 0.0], SciMLBase.MinSense),
+        ("only over all elements", (u, p) -> maximum(u; init = 0.0), [0.0, 0.0], SciMLBase.MinSense),
+        ("only over all elements", (u, p) -> maximum(u; dims = 1), [0.0, 0.0], SciMLBase.MinSense),
+        ("only over all elements", (u, p) -> sum(abs.(u); dims = 1), [0.0, 0.0], SciMLBase.MinSense),
+        ("only over all elements", (u, p) -> sum(abs.(u); init = 1.0), [0.0, 0.0], SciMLBase.MinSense),
+        ("must be affine in the optimization variables", (u, p) -> abs(u[1]^2), [0.5], SciMLBase.MinSense),
+        ("must be affine in the optimization variables", (u, p) -> max(u[1], u[1]^2), [0.5], SciMLBase.MinSense),
+        ("must be affine in the optimization variables", (u, p) -> maximum(u .^ 2), [0.5, 0.5], SciMLBase.MinSense),
+        ("must be affine in the optimization variables", (u, p) -> sum(abs.(u .^ 2)), [0.5, 0.5], SciMLBase.MinSense),
+        ("must be affine in the optimization variables", (u, p) -> max(u[1], abs(u[2])), [0.0, 0.0], SciMLBase.MinSense),
+        ("must be affine in the optimization variables", (u, p) -> abs(norm(u .- 1.0)), [0.0, 0.0], SciMLBase.MinSense),
+    ]
+    for (msg, f, u0, sense) in cases
+        prob = ConvexOptimizationProblem(OptimizationFunction(f), u0; sense)
+        @test_throws msg solve(prob, ALG)
+    end
+
+    # the parametric path has no `analyze` gate; this must be refused deliberately.
+    pprob = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> minimum(abs.(u .- p))), [0.0, 0.0], [1.0, 2.0]
+    )
+    @test_throws "neither convex nor concave" solve(pprob, ALG)
+end
+
+@testset "atoms with parameters inside the argument re-solve through reinit!" begin
+    # a parameter inside the abs broadcast is a theta-affine cone constant.
+    optf = OptimizationFunction((u, p) -> sum(abs.(u .- p)))
+    prob = ConvexOptimizationProblem(optf, [0.0, 0.0], [1.0, 1.0])
+    cache = init(prob, ALG)
+    for θ in ([1.0, 1.0], [3.0, -1.0], [-2.0, 0.5], [0.0, 0.0])
+        cache = reinit!(cache; p = θ)
+        sol = solve!_checked(cache)
+        cold = solve_checked(SciMLBase.remake(prob; p = θ), ALG)
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.u, cold.u; atol = 1.0e-8)
+        @test isapprox(sol.objective, cold.objective; atol = 1.0e-8)
+        @test isapprox(sol.u, θ; atol = 1.0e-6)   # min sum|u - θ| is attained at u = θ
+    end
+
+    # the scalar `max` optimum is not unique at p = [1, -1] (any u1 <= -3 with
+    # u2 = -5 attains obj = -4), so only the objective value is compared.
+    optf2 = OptimizationFunction((u, p) -> max(u[1] - p[1], u[2] - p[2]))
+    prob2 = ConvexOptimizationProblem(
+        optf2, [0.0, 0.0], [0.0, 0.0];
+        lb = [-5.0, -5.0], ub = [5.0, 5.0]
+    )
+    cache2 = init(prob2, ALG)
+    for θ in ([0.0, 0.0], [1.0, -1.0], [-2.0, 3.0])
+        cache2 = reinit!(cache2; p = θ)
+        sol = solve!_checked(cache2)
+        cold = solve_checked(SciMLBase.remake(prob2; p = θ), ALG)
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.objective, cold.objective; atol = 1.0e-8)
+    end
+end
+
+@testset "quadratic and piecewise-linear atoms mix in one objective" begin
+    # (u1-2)^2 + u2^2 + |u1| + |u2| is separable: u* = (1.5, 0), obj = 1.75.
+    sol = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction(
+                (u, p) -> sum(abs2.(u .- [2.0, 0.0])) + sum(abs.(u))
+            ), [0.0, 0.0]; lb = [-5.0, -5.0], ub = [5.0, 5.0]
+        ), ALG_TIGHT
+    )
+    @test isapprox(sol.u, [1.5, 0.0]; atol = 1.0e-5)
+    @test isapprox(sol.objective, 1.75; atol = 1.0e-6)
+
+    # max(u) + (u1-1)^2 on [-1,1]^2: the objective depends on u2 only through
+    # max(u), so any u2 <= u1 is optimal; u1 + (u1-1)^2 is minimized at
+    # u1 = 1/2 -> obj = 0.75.
+    sol = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction(
+                (u, p) -> maximum(u) + abs2(u[1] - 1.0)
+            ), [0.0, 0.0]; lb = [-1.0, -1.0], ub = [1.0, 1.0]
+        ), ALG_TIGHT
+    )
+    @test isapprox(sol.u[1], 0.5; atol = 1.0e-6)
+    @test isapprox(sol.objective, 0.75; atol = 1.0e-6)
+
+    # u'P2u + |u1 - 0.5| - u1: optimum sits at the |u1 - 0.5| kink, u* = (0.5, -0.25),
+    # obj = -0.125 (0.5 offset direction balances the kink's subgradient).
+    P2m = Float64[2 1; 1 2]
+    sol = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction(
+                (u, p) -> u' * P2m * u + abs(u[1] - 0.5) - u[1]
+            ), [0.0, 0.0]; lb = [-5.0, -5.0], ub = [5.0, 5.0]
+        ), ALG_TIGHT
+    )
+    @test isapprox(sol.u, [0.5, -0.25]; atol = 1.0e-6)
+    @test isapprox(sol.objective, -0.125; atol = 1.0e-6)
+end

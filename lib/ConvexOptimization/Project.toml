@@ -1,7 +1,7 @@
 name = "ConvexOptimization"
 uuid = "e7fa4f8d-d505-4694-8553-7bab99efa7d1"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com> and contributors"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 Clarabel = "61c947e1-3e6d-4ee4-985a-eec8c727bd6e"
@@ -11,6 +11,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SymbolicAnalysis = "4297ee4d-0239-47d8-ba5d-195ecdf594fe"
+SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
@@ -21,6 +22,7 @@ Reexport = "1.2"
 SciMLBase = "3.36"
 SparseArrays = "1.10"
 SymbolicAnalysis = "0.3, 0.5"
+SymbolicUtils = "4.46"
 Symbolics = "7"
 julia = "1.10"
 
