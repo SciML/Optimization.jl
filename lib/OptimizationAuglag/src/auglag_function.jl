@@ -32,8 +32,9 @@ end
 
 # `Jᵀv` for the augmented-Lagrangian gradient. Prefer the vjp; fall back to an explicit
 # Jacobian only when no `cons_vjp` exists (user-supplied `cons_j` under `NoAD`).
+# Dispatch on the `J` buffer alone: it is allocated exactly when `cons_vjp` is missing.
 _jtv!(cons_vjp, cons_j, ::Nothing, Jᵀv, θ, v) = cons_vjp(Jᵀv, θ, v)
-function _jtv!(::Nothing, cons_j, J, Jᵀv, θ, v)
+function _jtv!(cons_vjp, cons_j, J::AbstractMatrix, Jᵀv, θ, v)
     cons_j(J, θ)
     return mul!(Jᵀv, transpose(J), v)
 end

@@ -6,7 +6,7 @@ using SciMLBase
 # which the user loads directly. This package's public surface is its own solvers.
 using OptimizationBase
 using SciMLBase: OptimizationProblem, OptimizationFunction, OptimizationStats
-using LinearAlgebra: norm, mul!, transpose
+using LinearAlgebra: norm, mul!
 
 export AugLag
 
