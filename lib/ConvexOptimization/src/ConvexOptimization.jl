@@ -99,9 +99,12 @@ Parameters are first-class: see [`SciMLBase.reinit!`](@ref) for re-solving at a 
 is built once and reused at every `p`, a nested composition containing
 parameters is accepted only when it is convex for *every* `p` — e.g.
 `norm(A*u - p)^2` is accepted but `(exp(u[1]) + p[1])^2` is refused, since its
-curvature depends on the sign of `exp(u[1]) + p[1]`. An objective that is only
-convex at some parameter values can be solved by re-canonicalizing with
-`solve(remake(prob; p = θ), alg)` at each `θ`.
+curvature depends on the sign of `exp(u[1]) + p[1]`. A subexpression involving
+`p` alone is certified as a constant of unknown sign (a literal square such as
+`p[1]^2` keeps its nonnegative sign), so `norm(u)^2 - p[1]^2` and
+`p[1]^2 * norm(u)^2` are accepted without requiring joint convexity in
+`(u, p)`. An objective that is only convex at some parameter values can be
+solved by re-canonicalizing with `solve(remake(prob; p = θ), alg)` at each `θ`.
 """
 struct ConvexMOI{O} <: AbstractConvexOptAlgorithm
     optimizer_constructor::O
@@ -283,12 +286,9 @@ certify_convex(prob::ConvexOptimizationProblem) = certify_convex(prob, _trace_pr
 # epigraph variables). Each atom's argument is proven affine separately, by
 # `linear_expansion` in `_dpp_extract`, which is a stronger check than DCP.
 #
-# With symbolic parameters `analyze` sees `p[1]*u[2]` as a product of two
-# non-constant symbols and reports UnknownCurvature, and substituting a numeric
-# `p` first would certify one `p` only — so a flat parametric objective skips
-# `analyze` entirely: the structural predicate in `_dpp_extract` is the
-# certificate instead, and it is strictly stronger than DCP (the lowered
-# problem *is* a cone program with fixed cones).
+# `analyze` cannot certify a flat parametric objective (it has no constant-vs-
+# variable distinction, and substituting one θ would not cover `reinit!`), so
+# the structural predicate in `_dpp_extract` is the certificate instead.
 function certify_convex(prob::ConvexOptimizationProblem, tr)
     tr.nested && return _certify_nested(prob, tr)
     isempty(tr.params) || return nothing
@@ -312,19 +312,9 @@ _curvature_admits(res, sense) =
     res.curvature in (SymbolicAnalysis.Concave, SymbolicAnalysis.Affine) :
     res.curvature in (SymbolicAnalysis.Convex, SymbolicAnalysis.Affine)
 
-# An atom feeding another atom's argument changes where the certificate must
-# run: whether the outer atom pulls the inner epigraph variable to its bound
-# is DCP's sign-dependent monotonicity, so the *original* unlowered expression
-# must pass `analyze` as a whole. Every rewrite `_dcp_reassociate` performs is
-# an exact identity — norm → elementwise abs/max/hypot, sum(abs.(·)) → Σ|·|,
-# sum-of-squares → Σ·², u'Pv → ‖Lv‖² — so a certificate of the reassociated
-# form is a certificate of the original expression.
-#
-# Parameters stay symbolic in the certificate: `analyze` then treats them as
-# sign-unknown, so the result holds for every θ. A certificate that holds only
-# at the initial θ would silently certify a different problem after `reinit!`
-# (e.g. `(exp(u) + p)^2` is DCP at p = 0 and nonconvex at p = -2), and DPP
-# re-solves from cached data without redoing symbolic work.
+# The outer atom's pull on an inner epigraph variable is DCP's sign-dependent
+# monotonicity, so `analyze` runs on the original expression — via exact
+# rewrites — with parameters symbolic so the certificate holds at every θ.
 function _certify_nested(prob, tr)
     res = _nested_curvature(prob, tr)
     _check_obj_curvature(
@@ -343,9 +333,59 @@ end
 # same thing as `UnknownCurvature` — try the next equivalent form.
 _try_analyze(ex) = try
     analyze(ex)
-catch
-    (; curvature = SymbolicAnalysis.UnknownCurvature)
+catch e
+    e isa InterruptException && rethrow()
+    (;
+        curvature = SymbolicAnalysis.UnknownCurvature,
+        sign = SymbolicAnalysis.AnySign,
+    )
 end
+
+const THC_BASE = Symbol("##θc")
+
+# `analyze` has no constants: a θ-only subterm as a fresh symbol is affine
+# (unknown sign); a second form keeps subterms provably positive for every θ
+# so enclosing monotonicity rules can use their sign.
+function _theta_constant_forms(ex, optset)
+    i = Ref(0)
+    subst(keep) = SymbolicUtils.Rewriters.Prewalk() do t
+        _is_theta_subterm(t, optset) || return nothing
+        keep(t) && return t
+        return variable(THC_BASE, (i[] += 1))
+    end(ex)
+    return subst(_ -> false),
+        subst(t -> _try_analyze(t).sign === SymbolicAnalysis.Positive)
+end
+
+# A θ-only factor of provable sign (for every θ) drops out of a product —
+# positive scales the curvature, negative flips it — while an unknown-sign
+# factor stays and the multiplication rule refuses the product.
+function _strip_theta_products(ex, optset)
+    return SymbolicUtils.Rewriters.Postwalk() do t
+        (Symbolics.iscall(t) && Symbolics.operation(t) === (*)) || return t
+        kept = Any[]
+        neg = false
+        for a in Symbolics.arguments(t)
+            if _is_theta_subterm(a, optset)
+                s = _try_analyze(a).sign
+                s === SymbolicAnalysis.Positive && continue
+                s === SymbolicAnalysis.Negative && (neg = !neg; continue)
+            end
+            push!(kept, a)
+        end
+        r = isempty(kept) ? 1 :
+            length(kept) == 1 ? kept[1] :
+            Symbolics.SymbolicUtils.maketerm(typeof(t), (*), kept, Symbolics.metadata(t))
+        return neg ?
+            Symbolics.SymbolicUtils.maketerm(typeof(t), (*), Any[-1, r], Symbolics.metadata(t)) :
+            r
+    end(ex)
+end
+
+_is_theta_subterm(t, optset) =
+    t isa Symbolics.SymbolicUtils.BasicSymbolic &&
+    !isempty(Symbolics.get_variables(t)) &&
+    !_has_optvar(t, optset)
 
 function _nested_curvature(prob, tr)
     ex = unwrap(tr.obj)
@@ -354,20 +394,33 @@ function _nested_curvature(prob, tr)
     for (s, a) in zip(tr.psqvars, tr.psqargs)
         ex = Symbolics.substitute(ex, Dict{Any, Any}(unwrap(s) => unwrap(a)^2))
     end
+    forms = if isempty(tr.params)
+        (ex,)
+    else
+        optset = Set(unwrap.(tr.cols))
+        map(f -> _strip_theta_products(f, optset), _theta_constant_forms(ex, optset))
+    end
+    res = nothing
+    for e in forms
+        res = _analyze_stages(e, prob.sense)
+        _curvature_admits(res, prob.sense) && return res
+    end
+    return res
+end
+
+function _analyze_stages(ex, sense)
     res = _try_analyze(ex)
-    _curvature_admits(res, prob.sense) && return res
-    # `analyze` reads a vector argument's sign wholesale, but the monotonicity
-    # it needs is elementwise; the `Mapreducer` forms have no curvature rule at
-    # all. Reassociate to the equivalent scalar composition and retry.
+    _curvature_admits(res, sense) && return res
+    # `analyze` misses elementwise monotonicity in vector atom arguments.
     ex = try
         _dcp_reassociate(ex)
-    catch
+    catch e
+        e isa InterruptException && rethrow()
         ex
     end
     res = _try_analyze(ex)
-    _curvature_admits(res, prob.sense) && return res
-    # `c' * x`-style products carry a `1×1` symtype; expanding them to scalar
-    # sums is exact and keeps `propagate_sign` from tripping on mixed shapes.
+    _curvature_admits(res, sense) && return res
+    # `c' * x` terms carry a `1×1` symtype that trips `propagate_sign`.
     ex = _expand_scalar_products(ex)
     return _try_analyze(ex)
 end
@@ -1345,16 +1398,10 @@ end
 _has_inner_atom(t) =
     any(a -> !isempty(_collect_atoms!([], unwrap(a))), Symbolics.arguments(t))
 
-# Each lowerable atom becomes a fresh epigraph variable τ plus a cone. An atom
-# inside another atom's argument is lowered the same way, innermost first:
-# its τ is substituted into the enclosing atom's arguments, so every row ends
-# up affine in `z = [u; τ]`. Substituting before scalarize also keeps
-# `scalarize` from rewriting a `norm` call into `sqrt(sum(abs2))`, which would
-# destroy the atom; atoms that only materialize under `scalarize` (broadcast
-# elements such as `u[i]^2`) cannot appear in the argument term, so they are
-# collected from the finished rows instead. `nested` flags that an atom fed
-# another atom: the certificate then runs on the original expression (see
-# `_certify_nested`), not on the lowered affine one.
+# Inner atoms lower first and their τ substitutes into enclosing arguments
+# before `scalarize` (which would rewrite `norm` into `sqrt(sum(abs2))` and
+# destroy it); atoms materialized by `scalarize` are collected from the
+# finished rows. `nested` routes the certificate to `_certify_nested`.
 function _epigraph_lower(obj)
     queue = _collect_atoms_deep!([], unwrap(obj))
     isempty(queue) && return Symbolics.scalarize(_expand_scalar_products(unwrap(obj))),
