@@ -1469,3 +1469,13 @@ end
         @test isapprox(sol.objective, cold.objective; atol = 1.0e-8)
     end
 end
+
+@testset "an empty AbstractVector p behaves like NullParameters" begin
+    sol = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> norm(u .- 1.0)^2 + norm(u)^2),
+            [1.0, 2.0], Float64[]
+        ), ALG
+    )
+    @test isapprox(sol.objective, 1.0; atol = 1.0e-5)
+end
