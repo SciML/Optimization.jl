@@ -816,7 +816,7 @@ function _symbolic_vars(prob)
                 "`NullParameters`; got a `$(typeof(prob.p))`. Wrap a scalar as `[p]` and " *
                 "flatten any other container."
         )
-        [variable(PARAM_BASE, i) for i in eachindex(prob.p)]
+        Symbolics.Num[variable(PARAM_BASE, i) for i in eachindex(prob.p)]
     end
     return x, collect(Symbolics.scalarize(x)), params
 end
