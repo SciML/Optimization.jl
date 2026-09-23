@@ -225,8 +225,10 @@ using Test
         @test sol.objective < 1.0e-2
 
         prob_r = remake(prob; u0 = Reactant.to_rarray(prob.u0), p = Reactant.to_rarray(prob.p))
-        sol_r = solve(prob_r, Optimisers.Adam(0.1); maxiters = 300)
-        @test Array(sol_r.u) ≈ [1.0, 2.0, 3.0] atol = 1.0e-1
+        # On Julia 1.10, Reactant's broadcast `copy` infers a non-concrete eltype for
+        # Adam's nested update after `Broadcast.flatten` and throws.
+        @test Array(solve(prob_r, Optimisers.Adam(0.1); maxiters = 300).u) ≈
+            [1.0, 2.0, 3.0] atol = 1.0e-1 broken = VERSION < v"1.11"
     end
 
     @testset "second-order solver paths" begin
