@@ -544,19 +544,11 @@ end
     @test_logs (:warn, r"do not depend on it") init(prob, ALG)
 end
 
-# ---------------------------------------------------------------------------
-# Piecewise-linear atoms: abs, max/min of affine scalars, maximum/minimum of a
-# vector-affine argument, sum(abs.()) and maximum(abs.()) — the l1/linf norms.
-# ---------------------------------------------------------------------------
-
-# Shared 5x2 regression data. Reference values are Convex.jl with
-# Clarabel.Optimizer on the same problems, not this backend's own output:
-#   min maximum(abs.(PWL_A*u - PWL_b))  ->  u* = (1.0270270232, -0.0926640934),
-#                                           obj = 0.5806949812
-#   min sum(abs.(PWL_A*u - PWL_b))      ->  u* = (0.55, -0.3), obj = 1.495
-# The LAD optimum is also exact by hand: it interpolates rows 1 and 5
-# ([1 0.5; -0.8 0.2]*u = [0.4; -0.5]), and |r| sums to 0 + 0.475 + 0.205 +
-# 0.815 + 0 = 1.495.
+# Shared 5x2 regression data. Reference values are Convex.jl with Clarabel on
+# the same problems, not this backend's output; the LAD optimum is also exact
+# by hand (it interpolates rows 1 and 5, and |r| sums to 1.495):
+#   min maximum(abs.(PWL_A*u - PWL_b)) -> u* = (1.0270270232, -0.0926640934), obj = 0.5806949812
+#   min sum(abs.(PWL_A*u - PWL_b))     -> u* = (0.55, -0.3), obj = 1.495
 const PWL_A = [1.0 0.5; -0.3 1.2; 0.7 -0.4; 0.1 0.9; -0.8 0.2]
 const PWL_b = [0.4, -1.0, 0.3, 0.6, -0.5]
 
@@ -592,8 +584,7 @@ end
 end
 
 @testset "max/min of three affine scalars" begin
-    # min_u max(u1, u2, 1 - u1 - u2): the max is minimized when all three
-    # arguments agree, u1 = u2 = 1 - u1 - u2 = 1/3 -> u* = (1/3, 1/3), obj = 1/3.
+    # min_u max(u1, u2, 1 - u1 - u2): balanced at u* = (1/3, 1/3), obj = 1/3.
     # The variadic spelling traces to nested binary `max` calls.
     optf = OptimizationFunction((u, p) -> max(u[1], u[2], 1.0 - u[1] - u[2]))
     sol = solve(ConvexOptimizationProblem(optf, [0.0, 0.0]), ALG)
@@ -601,9 +592,7 @@ end
     @test isapprox(sol.u, [1 / 3, 1 / 3]; atol = 1.0e-6)
     @test isapprox(sol.objective, 1 / 3; atol = 1.0e-6)
 
-    # `min` is concave, so it solves only through its hypograph: maximizing
-    # min(u1, u2, 2 - u1 - u2) balances the three at u1 = u2 = 2 - u1 - u2,
-    # u* = (2/3, 2/3), obj = 2/3.
+    # `min` is concave: max_u min(u1, u2, 2 - u1 - u2) -> u* = (2/3, 2/3), obj = 2/3.
     optfm = OptimizationFunction((u, p) -> min(u[1], u[2], 2.0 - u[1] - u[2]))
     solm = solve(
         ConvexOptimizationProblem(optfm, [0.0, 0.0]; sense = SciMLBase.MaxSense), ALG
@@ -614,8 +603,7 @@ end
 end
 
 @testset "minimum solves under MaxSense and is rejected under MinSense" begin
-    # max min(u)  s.t.  sum(u) == 1, u >= 0: the maximin allocates the total
-    # evenly, u* = (1/3, 1/3, 1/3), obj = 1/3.
+    # max min(u)  s.t.  sum(u) == 1, u >= 0: u* = (1/3, 1/3, 1/3), obj = 1/3.
     cons = [
         ConeConstraint((u, p) -> [u[1] + u[2] + u[3] - 1.0], MOI.Zeros(1)),
         ConeConstraint((u, p) -> [u[1], u[2], u[3]], MOI.Nonnegatives(3)),
@@ -631,74 +619,46 @@ end
     @test isapprox(sol.objective, 1 / 3; atol = 1.0e-6)
     @test length(sol.dual) == 2
 
-    # minimizing a minimum is not a convex program: the hypograph bound would
-    # have to be pushed away from its bound, which the sign guard rejects.
     @test_throws "Lowering an atom through its hypograph" solve(
         ConvexOptimizationProblem(optf, [0.3, 0.3, 0.3]; constraints = cons), ALG
     )
 end
 
 @testset "piecewise-linear atoms reject what cannot be lowered soundly" begin
-    # -abs2 is concave: certification rejects it before any lowering happens.
-    @test_throws "not certified convex" solve(
-        ConvexOptimizationProblem(OptimizationFunction((u, p) -> -abs2(u[1])), [0.5]), ALG
-    )
-    # -abs is concave too, but abs IS lowered; the epigraph sign guard rejects it.
-    @test_throws "Lowering an atom through its epigraph" solve(
-        ConvexOptimizationProblem(OptimizationFunction((u, p) -> -abs(u[1])), [0.5]), ALG
-    )
-    # maximizing a max is not concave.
-    @test_throws "Lowering an atom through its epigraph" solve(
-        ConvexOptimizationProblem(
-            OptimizationFunction((u, p) -> max(u[1], u[2])), [0.0, 0.0];
-            sense = SciMLBase.MaxSense
-        ), ALG
-    )
-    # minimizing a min is not convex (scalar and vector spellings).
-    @test_throws "Lowering an atom through its hypograph" solve(
-        ConvexOptimizationProblem(OptimizationFunction((u, p) -> min(u[1], u[2])), [0.0, 0.0]), ALG
-    )
-    @test_throws "Lowering an atom through its hypograph" solve(
-        ConvexOptimizationProblem(OptimizationFunction((u, p) -> minimum(u .- 1.0)), [0.0, 0.0]), ALG
-    )
-    # minimum(abs.(w)) is neither convex nor concave: not lowerable, and
-    # certification must not pass it either.
-    @test_throws Exception solve(
-        ConvexOptimizationProblem(
-            OptimizationFunction((u, p) -> minimum(abs.(PWL_A * u - PWL_b))), [0.0, 0.0]
-        ), ALG
-    )
-    # `sum(abs, w)` (mapreduce spelling) is out of scope and must be refused.
-    @test_throws Exception solve(
-        ConvexOptimizationProblem(OptimizationFunction((u, p) -> sum(abs, u .- 1.0)), [0.0, 0.0]), ALG
-    )
-    # a `dims`/`init` reduce is not the plain atom and must be refused.
-    @test_throws Exception solve(
-        ConvexOptimizationProblem(OptimizationFunction((u, p) -> maximum(u; init = 0.0)), [0.0, 0.0]), ALG
-    )
+    cases = [
+        ("not certified convex", (u, p) -> -abs2(u[1]), [0.5], SciMLBase.MinSense),
+        ("Lowering an atom through its epigraph", (u, p) -> -abs(u[1]), [0.5], SciMLBase.MinSense),
+        ("Lowering an atom through its epigraph", (u, p) -> max(u[1], u[2]), [0.0, 0.0], SciMLBase.MaxSense),
+        ("Lowering an atom through its hypograph", (u, p) -> min(u[1], u[2]), [0.0, 0.0], SciMLBase.MinSense),
+        ("Lowering an atom through its hypograph", (u, p) -> minimum(u .- 1.0), [0.0, 0.0], SciMLBase.MinSense),
+        ("neither convex nor concave", (u, p) -> minimum(abs.(PWL_A * u - PWL_b)), [0.0, 0.0], SciMLBase.MinSense),
+        # `sum(abs, w)` is the mapreduce spelling, out of scope.
+        ("broadcast form", (u, p) -> sum(abs, u .- 1.0), [0.0, 0.0], SciMLBase.MinSense),
+        ("only over all elements", (u, p) -> maximum(u; init = 0.0), [0.0, 0.0], SciMLBase.MinSense),
+        ("only over all elements", (u, p) -> maximum(u; dims = 1), [0.0, 0.0], SciMLBase.MinSense),
+        ("only over all elements", (u, p) -> sum(abs.(u); dims = 1), [0.0, 0.0], SciMLBase.MinSense),
+        ("only over all elements", (u, p) -> sum(abs.(u); init = 1.0), [0.0, 0.0], SciMLBase.MinSense),
+        ("must be affine in the optimization variables", (u, p) -> abs(u[1]^2), [0.5], SciMLBase.MinSense),
+        ("must be affine in the optimization variables", (u, p) -> max(u[1], u[1]^2), [0.5], SciMLBase.MinSense),
+        ("must be affine in the optimization variables", (u, p) -> maximum(u .^ 2), [0.5, 0.5], SciMLBase.MinSense),
+        ("must be affine in the optimization variables", (u, p) -> sum(abs.(u .^ 2)), [0.5, 0.5], SciMLBase.MinSense),
+        ("must be affine in the optimization variables", (u, p) -> max(u[1], abs(u[2])), [0.0, 0.0], SciMLBase.MinSense),
+        ("must be affine in the optimization variables", (u, p) -> abs(norm(u .- 1.0)), [0.0, 0.0], SciMLBase.MinSense),
+    ]
+    for (msg, f, u0, sense) in cases
+        prob = ConvexOptimizationProblem(OptimizationFunction(f), u0; sense)
+        @test_throws msg solve(prob, ALG)
+    end
 
-    # atom arguments must be affine in u.
-    @test_throws "must be affine in the optimization variables" solve(
-        ConvexOptimizationProblem(OptimizationFunction((u, p) -> abs(u[1]^2)), [0.5]), ALG
+    # the parametric path has no `analyze` gate; this must be refused deliberately.
+    pprob = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> minimum(abs.(u .- p))), [0.0, 0.0], [1.0, 2.0]
     )
-    @test_throws "must be affine in the optimization variables" solve(
-        ConvexOptimizationProblem(OptimizationFunction((u, p) -> max(u[1], u[1]^2)), [0.5]), ALG
-    )
-    @test_throws "must be affine in the optimization variables" solve(
-        ConvexOptimizationProblem(OptimizationFunction((u, p) -> maximum(u .^ 2)), [0.5, 0.5]), ALG
-    )
-    @test_throws "must be affine in the optimization variables" solve(
-        ConvexOptimizationProblem(OptimizationFunction((u, p) -> sum(abs.(u .^ 2))), [0.5, 0.5]), ALG
-    )
-    # nested atoms are out of scope: abs(u2) inside max is a non-affine row.
-    @test_throws "must be affine in the optimization variables" solve(
-        ConvexOptimizationProblem(OptimizationFunction((u, p) -> max(u[1], abs(u[2]))), [0.0, 0.0]), ALG
-    )
+    @test_throws "neither convex nor concave" solve(pprob, ALG)
 end
 
 @testset "atoms with parameters inside the argument re-solve through reinit!" begin
-    # min sum(abs.(u - p)): a parameter inside the abs broadcast is a theta-affine
-    # cone constant, so reinit! must match a cold solve(remake(prob; p = ...)).
+    # a parameter inside the abs broadcast is a theta-affine cone constant.
     optf = OptimizationFunction((u, p) -> sum(abs.(u .- p)))
     prob = ConvexOptimizationProblem(optf, [0.0, 0.0], [1.0, 1.0])
     cache = init(prob, ALG)
@@ -712,7 +672,8 @@ end
         @test isapprox(sol.u, θ; atol = 1.0e-6)   # min sum|u - θ| is attained at u = θ
     end
 
-    # same for a scalar `max` with a parametric argument
+    # the scalar `max` optimum is not unique at p = [1, -1] (any u1 <= -3 with
+    # u2 = -5 attains obj = -4), so only the objective value is compared.
     optf2 = OptimizationFunction((u, p) -> max(u[1] - p[1], u[2] - p[2]))
     prob2 = ConvexOptimizationProblem(
         optf2, [0.0, 0.0], [0.0, 0.0];
@@ -724,7 +685,6 @@ end
         sol = solve!(cache2)
         cold = solve(SciMLBase.remake(prob2; p = θ), ALG)
         @test SciMLBase.successful_retcode(sol.retcode)
-        @test isapprox(sol.u, cold.u; atol = 1.0e-8)
         @test isapprox(sol.objective, cold.objective; atol = 1.0e-8)
     end
 end
