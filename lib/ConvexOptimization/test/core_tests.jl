@@ -644,52 +644,50 @@ const QP_C = Float64[1, -2, 0.5]
 end
 
 @testset "invalid quadratic atoms are rejected, not silently solved" begin
-    # -abs2 under MinSense is concave: the epigraph bound goes the wrong way.
-    @test_throws "Lowering an atom through its epigraph" solve(
-        ConvexOptimizationProblem(
-            OptimizationFunction((u, p) -> -abs2(u[1])), [0.5]
-        ), ALG
-    )
-    # ...and a convex atom under MaxSense cannot be bounded below.
-    @test_throws "Lowering an atom through its epigraph" solve(
-        ConvexOptimizationProblem(
-            OptimizationFunction((u, p) -> abs2(u[1])), [0.5];
-            sense = SciMLBase.MaxSense
-        ), ALG
-    )
-    # atom arguments must be affine in u
-    @test_throws "not affine in the optimization variables" solve(
-        ConvexOptimizationProblem(
-            OptimizationFunction((u, p) -> abs2(u[1] * u[2])), [0.5, 0.5]
-        ), ALG
-    )
-    # norm(w)^2 is an atom nested in an atom: out of scope, must error.
-    @test_throws "must be affine in the optimization variables" solve(
-        ConvexOptimizationProblem(
-            OptimizationFunction((u, p) -> norm(u .- 1.0, 2)^2), [0.5, 0.5]
-        ), ALG
-    )
-    # indefinite P makes the quadratic form non-convex
     Pbad = Float64[1 0; 0 -1]
-    @test_throws "positive semidefinite" solve(
-        ConvexOptimizationProblem(
-            OptimizationFunction((u, p) -> u' * Pbad * u), [0.5, 0.5]
-        ), ALG
+    cases = (
+        # -abs2 under MinSense is concave: the epigraph bound goes the wrong
+        # way; a convex atom under MaxSense cannot be bounded below either.
+        (
+            "Lowering an atom through its epigraph",
+            (u, p) -> -abs2(u[1]), [0.5], nothing, (;),
+        ),
+        (
+            "Lowering an atom through its epigraph",
+            (u, p) -> abs2(u[1]), [0.5], nothing, (sense = SciMLBase.MaxSense,),
+        ),
+        # atom arguments must be affine in u
+        (
+            "not affine in the optimization variables",
+            (u, p) -> abs2(u[1] * u[2]), [0.5, 0.5], nothing, (;),
+        ),
+        # norm(w)^2 is an atom nested in an atom: out of scope, must error.
+        (
+            "must be affine in the optimization variables",
+            (u, p) -> norm(u .- 1.0, 2)^2, [0.5, 0.5], nothing, (;),
+        ),
+        # indefinite P makes the quadratic form non-convex
+        (
+            "positive semidefinite",
+            (u, p) -> u' * Pbad * u, [0.5, 0.5], nothing, (;),
+        ),
+        # a P built from p moves the cone matrix with θ
+        (
+            "constant numeric matrix",
+            (u, p) -> SymbolicAnalysis.quad_form(u, p[1] * QP_P), zeros(3), [1.0], (;),
+        ),
+        # w^3 is not a square and stays for the affinity check to reject
+        (
+            "requires an objective that is affine",
+            (u, p) -> u[1]^3 + u[2], [0.5, 0.5], nothing, (;),
+        ),
     )
-    # a P built from p moves the cone matrix with θ
-    @test_throws "constant numeric matrix" solve(
-        ConvexOptimizationProblem(
-            OptimizationFunction(
-                (u, p) -> SymbolicAnalysis.quad_form(u, p[1] * QP_P)
-            ), zeros(3), [1.0]
-        ), ALG
-    )
-    # w^3 is not a square and stays for certification to reject
-    @test_throws Exception solve(
-        ConvexOptimizationProblem(
-            OptimizationFunction((u, p) -> u[1]^3 + u[2]), [0.5, 0.5]
-        ), ALG
-    )
+    for (msg, f, u0, p, kw) in cases
+        prob = p === nothing ?
+            ConvexOptimizationProblem(OptimizationFunction(f), u0; kw...) :
+            ConvexOptimizationProblem(OptimizationFunction(f), u0, p; kw...)
+        @test_throws msg solve(prob, ALG)
+    end
 end
 
 @testset "sum-of-squares atom: reinit! with a parameter in the argument" begin
@@ -707,4 +705,161 @@ end
         @test isapprox(sol.objective, cold.objective; atol = 1.0e-8)
         @test isempty(sol.dual)
     end
+end
+
+# Scalar `*` products over array arguments (`c'*u`, `(M*u)'*c`) are evaluated
+# to affine expressions, so pure LPs solve. The box makes them bounded.
+@testset "scalar products over arrays lower pure LPs" begin
+    c = [1.0, -2.0]
+    M = [1.0 2.0; 3.0 4.0]
+    box = (lb = [-1.0, -1.0], ub = [1.0, 1.0])
+    for (f, obj★) in (
+            ((u, p) -> c' * u, -3.0),
+            ((u, p) -> LinearAlgebra.dot(c, u), -3.0),
+            ((u, p) -> c' * M * u, -11.0),
+            ((u, p) -> (M * u)' * c, -11.0),
+            ((u, p) -> sum(c .* u), -3.0),
+            ((u, p) -> c' * (u .- 1.0), -2.0),
+        )
+        prob = ConvexOptimizationProblem(OptimizationFunction(f), [0.0, 0.0]; box...)
+        sol = solve(prob, ALG)
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.objective, obj★; atol = 1.0e-6)
+    end
+end
+
+@testset "self-products v' * v lower as sums of squares" begin
+    sol = solve(ConvexOptimizationProblem(OptimizationFunction((u, p) -> u' * u), [0.5, 0.5]), ALG)
+    @test isapprox(sol.objective, 0.0; atol = 1.0e-6)
+    # (A*u)'*(A*u) flattens to adjoint(A*u)*A*u: still ||A*u||²
+    sol = solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> (QLS_A * u)' * (QLS_A * u)), zeros(3)
+        ), ALG
+    )
+    @test isapprox(sol.u, zeros(3); atol = 1.0e-6)
+    # (A*u - b)'*(A*u - b) is the least-squares problem in self-product form
+    sol = solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> (QLS_A * u .- QLS_B)' * (QLS_A * u .- QLS_B)),
+            zeros(3)
+        ), ALG_TIGHT
+    )
+    @test isapprox(sol.u, QLS_A \ QLS_B; atol = 1.0e-6)
+    # v' * P * v with a precomputed P = A'A (mildly ill-conditioned: needs 1e-12 tolerances)
+    M2 = QLS_A' * QLS_A
+    sol = solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction(
+                (u, p) -> u' * M2 * u + QP_C' * u
+            ), zeros(3)
+        ), ConvexMOI(
+            MOI.OptimizerWithAttributes(
+                Clarabel.Optimizer, "tol_gap_abs" => 1.0e-12, "tol_gap_rel" => 1.0e-12,
+                "tol_feas" => 1.0e-12, "tol_ktratio" => 1.0e-12, "max_iter" => 200
+            )
+        )
+    )
+    @test isapprox(sol.u, -(M2 \ QP_C) / 2; atol = 1.0e-6)
+end
+
+@testset "squares of parameters are p-dependent constants, not atoms" begin
+    # min u1 + p1² over [-10, 10] at p = 2 is -10 + 4
+    sol = solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u[1] + p[1]^2), [0.0], [2.0];
+            lb = [-10.0], ub = [10.0]
+        ), ALG
+    )
+    @test isapprox(sol.u, [-10.0]; atol = 1.0e-6)
+    @test isapprox(sol.objective, -6.0; atol = 1.0e-6)
+    # -p1² is the same constant with the opposite sign: -4, not an epigraph
+    # sign error.
+    optf = OptimizationFunction((u, p) -> u[1]^2 + u[2]^2 - p[1]^2)
+    prob = ConvexOptimizationProblem(optf, [0.5, 0.5], [2.0])
+    sol = solve(prob, ALG)
+    @test isapprox(sol.u, [0.0, 0.0]; atol = 1.0e-6)
+    @test isapprox(sol.objective, -4.0; atol = 1.0e-6)
+    cache = init(prob, ALG)
+    cache = reinit!(cache; p = [3.0])
+    sol3 = solve!(cache)
+    cold = solve(SciMLBase.remake(prob; p = [3.0]), ALG)
+    @test isapprox(sol3.objective, -9.0; atol = 1.0e-6)
+    @test isapprox(sol3.objective, cold.objective; atol = 1.0e-8)
+    # inside an atom argument the lifted square stays θ-affine
+    sol = solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> abs2(u[1] - p[1]^2)), [0.0], [2.0]
+        ), ALG
+    )
+    @test isapprox(sol.u, [4.0]; atol = 1.0e-6)
+    # …and inside a cone constraint (u1 >= p1²)
+    sol = solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u[1]), [0.0], [2.0];
+            constraints = [ConeConstraint((u, p) -> [p[1]^2 - u[1]], MOI.Nonpositives(1))]
+        ), ALG
+    )
+    @test isapprox(sol.u, [4.0]; atol = 1.0e-6)
+end
+
+@testset "quadratic-form edge cases: asymmetric, singular, near-PSD P" begin
+    # asymmetric P contributes only sym(P) = 2I: min 2‖u‖² + c'u, u★ = -c/4.
+    # Needs tighter tolerances than ALG_TIGHT to hit 1e-6 in u here.
+    alg = ConvexMOI(
+        MOI.OptimizerWithAttributes(
+            Clarabel.Optimizer, "tol_gap_abs" => 1.0e-12, "tol_gap_rel" => 1.0e-12,
+            "tol_feas" => 1.0e-12, "tol_ktratio" => 1.0e-12, "max_iter" => 200
+        )
+    )
+    Pa = Float64[2 1; -1 2]
+    c = [1.0, -2.0]
+    sol = solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u' * Pa * u + c' * u), [0.5, 0.5]
+        ), alg
+    )
+    @test isapprox(sol.u, -c / 4; atol = 1.0e-6)
+    @test isapprox(sol.objective, -5 / 8; atol = 1.0e-6)
+    # singular PSD P = ones(2,2): min (u1+u2)² + u1+u2 -> s = -1/2
+    sol = @test_logs match_mode = :any solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u' * ones(2, 2) * u + ones(2)' * u),
+            [0.5, 0.5]
+        ), ALG_TIGHT
+    )
+    @test isapprox(sum(sol.u), -0.5; atol = 1.0e-6)
+    @test isapprox(sol.objective, -0.25; atol = 1.0e-6)
+    # λmin ≈ -5e-16 sits inside the n·eps·λmax tolerance: clamped with a warning
+    Ptol = Float64[1 1; 1 1 - 1.0e-15]
+    @test_logs (:warn, r"clamp") solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u' * Ptol * u + ones(2)' * u), [0.5, 0.5]
+        ), ALG
+    )
+    # a materially negative eigenvalue is rejected even at large scale
+    @test_throws "positive semidefinite" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u' * [1.0e6 0.0; 0.0 -1.0e-6] * u - u[2]),
+            [0.5, 0.5]; lb = [-10.0, -10.0], ub = [10.0, 10.0]
+        ), ALG
+    )
+end
+
+@testset "reinit! rechecks the epigraph sign of a θ-scaled atom" begin
+    # min p1·u1² + u2² + u2: valid for p1 > 0, unbounded (rejected) at p1 = -1
+    optf = OptimizationFunction((u, p) -> abs2(u[1]) * p[1] + u[2]^2 + u[2])
+    prob = ConvexOptimizationProblem(
+        optf, [0.5, 0.5], [1.0]; lb = [-10.0, -10.0], ub = [10.0, 10.0]
+    )
+    cache = init(prob, ALG)
+    sol = solve!(cache)
+    @test isapprox(sol.u, [0.0, -0.5]; atol = 1.0e-6)
+    @test isapprox(sol.objective, -0.25; atol = 1.0e-6)
+    @test_throws "epigraph" reinit!(cache; p = [-1.0])
+    @test cache.p == [1.0]                     # rejected p leaves the cache intact
+    cache = reinit!(cache; p = [3.0])
+    sol3 = solve!(cache)
+    @test isapprox(sol3.u, [0.0, -0.5]; atol = 1.0e-6)
+    @test isapprox(sol3.objective, -0.25; atol = 1.0e-6)
 end
