@@ -174,8 +174,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
                 break
             end
         end
-        # Skip update if gradient contains NaN or Inf values
-        if all(isfinite, G)
+        # Skip update if gradient contains NaN or Inf values. `mapreduce` keeps the check
+        # on-device for GPU arrays, where `all(isfinite, G)` would scalar-index.
+        if Bool(mapreduce(isfinite, &, G; init = true))
             state, θ = Optimisers.update(state, θ, G)
         else
             @SciMLMessage(
