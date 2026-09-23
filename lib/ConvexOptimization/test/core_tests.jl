@@ -438,9 +438,10 @@ end
     )
     lin = (u, p) -> u[1] + u[2]
 
-    # not affine in the optimization variables at all
+    # not affine in the optimization variables at all (`u[1]^2` would now be a
+    # lowerable quadratic atom; `u[1]^3` still is not)
     @test_throws "affine in the optimization variables" solve(
-        pprob((u, p) -> p[1] * u[1]^2, [1.0]), ALG
+        pprob((u, p) -> p[1] * u[1]^3, [1.0]), ALG
     )
     @test_throws "not affine in the variables" solve(
         pprob(lin, [1.0]; constraints = [ConeConstraint((u, p) -> [u[1]^2 + p[1] * u[2] - 1.0], Z1)]), ALG
@@ -472,7 +473,7 @@ end
         pprob((u, p) -> p[1] * p[2] * u[1] + u[2], [1.0, 2.0]), ALG
     )
     @test_throws "not affine in the parameters" solve(
-        pprob((u, p) -> u[1] + p[1]^2, [2.0]), ALG
+        pprob((u, p) -> u[1] + p[1]^3, [2.0]), ALG
     )
     @test_throws "not affine in the parameters" solve(
         pprob(lin, [2.0]; constraints = [ConeConstraint((u, p) -> [u[1] + u[2] - 1 / p[1]], Z1)]), ALG
@@ -542,4 +543,168 @@ end
         lb = [-10.0, -10.0], ub = [10.0, 10.0]
     )
     @test_logs (:warn, r"do not depend on it") init(prob, ALG)
+end
+
+import SymbolicAnalysis
+
+# Tighter solver tolerances for the quadratic tests: the objective is flat at
+# the optimum, so the primal error scales like sqrt(objective error); default
+# Clarabel settings leave ~1e-4 in u.
+const ALG_TIGHT = ConvexMOI(
+    MOI.OptimizerWithAttributes(
+        Clarabel.Optimizer, "tol_gap_abs" => 1.0e-10, "tol_gap_rel" => 1.0e-10,
+        "tol_feas" => 1.0e-10, "tol_ktratio" => 1.0e-10
+    )
+)
+
+# min ||A u - b||^2 with a 4x3 A lowers to one rotated second-order cone. The
+# oracle is the direct solve `A \ b`, not this backend's own output.
+const QLS_A = Float64[1 0 2; 0 1 1; 1 1 0; 2 0 1]
+const QLS_B = Float64[1, 2, 3, 4]
+
+@testset "sum of squares lowers least squares through the rotated SOC" begin
+    u★ = QLS_A \ QLS_B
+    obj★ = sum(abs2.(QLS_A * u★ .- QLS_B))
+    for spelling in (
+            (u, p) -> sum(abs2.(QLS_A * u .- QLS_B)),
+            (u, p) -> sum((QLS_A * u .- QLS_B) .^ 2),
+            (u, p) -> sum(abs2, QLS_A * u .- QLS_B),
+        )
+        prob = ConvexOptimizationProblem(OptimizationFunction(spelling), zeros(3))
+        sol = solve(prob, ALG)
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test length(sol.u) == 3                     # epigraph variable is internal
+        @test isapprox(sol.u, u★; atol = 1.0e-6)
+        @test isapprox(sol.objective, obj★; atol = 1.0e-6)
+        @test isempty(sol.dual)                      # the RSOC is not a user dual
+    end
+
+    # scalar spellings: abs2(w) and w^2 for affine scalar w
+    optf = OptimizationFunction((u, p) -> abs2(u[1] - 1.0) + (u[2] + 2.0)^2)
+    sol = solve(ConvexOptimizationProblem(optf, [0.0, 0.0]), ALG)
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [1.0, -2.0]; atol = 1.0e-6)
+    @test isapprox(sol.objective, 0.0; atol = 1.0e-6)
+end
+
+@testset "least squares with an equality constraint matches the KKT solution" begin
+    # min ||A u - b||^2  s.t.  C u = d.  KKT:  [AᵀA Cᵀ; C 0] [u; λ] = [Aᵀb; d]
+    C = Float64[1 -1 0; 0 0 1]
+    d = [0.25, 1.0]
+    u★ = ([QLS_A' * QLS_A C'; C zeros(2, 2)] \ [QLS_A' * QLS_B; d])[1:3]
+    obj★ = sum(abs2.(QLS_A * u★ .- QLS_B))
+
+    cons = [ConeConstraint((u, p) -> C * u .- d, MOI.Zeros(2))]
+    optf = OptimizationFunction((u, p) -> sum(abs2.(QLS_A * u .- QLS_B)))
+    prob = ConvexOptimizationProblem(optf, zeros(3); constraints = cons)
+    sol = solve(prob, ALG_TIGHT)
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, u★; atol = 1.0e-6)
+    @test isapprox(sol.objective, obj★; atol = 1.0e-6)
+    @test length(sol.dual) == 1                      # only the user constraint
+end
+
+# min u'P u + c'u, P symmetric PSD: u'Pu sees only sym(P) = LᵀL and lowers to
+# ||L u||² <= τ in the same rotated cone.
+const QP_P = Float64[2 0 0; 0 3 1; 0 1 1]
+const QP_C = Float64[1, -2, 0.5]
+
+@testset "quadratic forms (u'Pu, quad_form) lower to the rotated SOC" begin
+    # unconstrained: ∇ = 2 P u + c = 0  ->  u★ = -P \ c / 2
+    u★ = -(QP_P \ QP_C) / 2
+    obj★ = u★' * QP_P * u★ + QP_C' * u★
+    optf = OptimizationFunction((u, p) -> u' * QP_P * u + QP_C' * u)
+    sol = solve(ConvexOptimizationProblem(optf, zeros(3)), ALG_TIGHT)
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, u★; atol = 1.0e-6)
+    @test isapprox(sol.objective, obj★; atol = 1.0e-6)
+    @test isempty(sol.dual)
+
+    # equality-constrained QP through the SymbolicAnalysis atom, against the
+    # KKT oracle  [2P Cᵀ; C 0] [u; λ] = [-c; d]
+    C2 = Float64[1 1 1]
+    d2 = [1.0]
+    u★2 = ([2QP_P C2'; C2 0] \ [-QP_C; d2])[1:3]
+    obj★2 = u★2' * QP_P * u★2 + QP_C' * u★2
+    cons = [ConeConstraint((u, p) -> C2 * u .- d2, MOI.Zeros(1))]
+    optf2 = OptimizationFunction(
+        (u, p) -> SymbolicAnalysis.quad_form(u, QP_P) + QP_C' * u
+    )
+    sol2 = solve(ConvexOptimizationProblem(optf2, zeros(3); constraints = cons), ALG_TIGHT)
+    @test SciMLBase.successful_retcode(sol2.retcode)
+    @test isapprox(sol2.u, u★2; atol = 1.0e-6)
+    @test isapprox(sol2.objective, obj★2; atol = 1.0e-6)
+    @test length(sol2.dual) == 1
+
+    # a scalar multiple of the form composes through the objective coefficients
+    optf3 = OptimizationFunction((u, p) -> 2 * (u' * QP_P * u) + QP_C' * u)
+    sol3 = solve(ConvexOptimizationProblem(optf3, zeros(3)), ALG_TIGHT)
+    u★3 = -(QP_P \ QP_C) / 4
+    @test isapprox(sol3.u, u★3; atol = 1.0e-6)
+end
+
+@testset "invalid quadratic atoms are rejected, not silently solved" begin
+    # -abs2 under MinSense is concave: the epigraph bound goes the wrong way.
+    @test_throws "Lowering an atom through its epigraph" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> -abs2(u[1])), [0.5]
+        ), ALG
+    )
+    # ...and a convex atom under MaxSense cannot be bounded below.
+    @test_throws "Lowering an atom through its epigraph" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> abs2(u[1])), [0.5];
+            sense = SciMLBase.MaxSense
+        ), ALG
+    )
+    # atom arguments must be affine in u
+    @test_throws "not affine in the optimization variables" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> abs2(u[1] * u[2])), [0.5, 0.5]
+        ), ALG
+    )
+    # norm(w)^2 is an atom nested in an atom: out of scope, must error.
+    @test_throws "must be affine in the optimization variables" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> norm(u .- 1.0, 2)^2), [0.5, 0.5]
+        ), ALG
+    )
+    # indefinite P makes the quadratic form non-convex
+    Pbad = Float64[1 0; 0 -1]
+    @test_throws "positive semidefinite" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u' * Pbad * u), [0.5, 0.5]
+        ), ALG
+    )
+    # a P built from p moves the cone matrix with θ
+    @test_throws "constant numeric matrix" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction(
+                (u, p) -> SymbolicAnalysis.quad_form(u, p[1] * QP_P)
+            ), zeros(3), [1.0]
+        ), ALG
+    )
+    # w^3 is not a square and stays for certification to reject
+    @test_throws Exception solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u[1]^3 + u[2]), [0.5, 0.5]
+        ), ALG
+    )
+end
+
+@testset "sum-of-squares atom: reinit! with a parameter in the argument" begin
+    # min ||A u - p||^2: b = p enters the RSOC constant, affine in θ.
+    optf = OptimizationFunction((u, p) -> sum(abs2.(QLS_A * u .- p)))
+    prob = ConvexOptimizationProblem(optf, zeros(3), [1.0, 2.0, 3.0, 4.0])
+    cache = init(prob, ALG)
+    for θ in ([1.0, 2.0, 3.0, 4.0], [0.5, -1.0, 2.0, 0.0], [4.0, 3.0, 2.0, 1.0])
+        cache = reinit!(cache; p = θ)
+        sol = solve!(cache)
+        cold = solve(SciMLBase.remake(prob; p = θ), ALG)
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.u, QLS_A \ θ; atol = 1.0e-6)     # analytic oracle
+        @test isapprox(sol.u, cold.u; atol = 1.0e-8)
+        @test isapprox(sol.objective, cold.objective; atol = 1.0e-8)
+        @test isempty(sol.dual)
+    end
 end
