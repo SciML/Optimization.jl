@@ -556,6 +556,12 @@ const ALG_TIGHT = ConvexMOI(
         "tol_feas" => 1.0e-10, "tol_ktratio" => 1.0e-10
     )
 )
+const ALG_TIGHTEST = ConvexMOI(
+    MOI.OptimizerWithAttributes(
+        Clarabel.Optimizer, "tol_gap_abs" => 1.0e-12, "tol_gap_rel" => 1.0e-12,
+        "tol_feas" => 1.0e-12, "tol_ktratio" => 1.0e-12, "max_iter" => 200
+    )
+)
 
 # min ||A u - b||^2 with a 4x3 A lowers to one rotated second-order cone. The
 # oracle is the direct solve `A \ b`, not this backend's own output.
@@ -746,21 +752,20 @@ end
         ), ALG_TIGHT
     )
     @test isapprox(sol.u, QLS_A \ QLS_B; atol = 1.0e-6)
-    # v' * P * v with a precomputed P = A'A (mildly ill-conditioned: needs 1e-12 tolerances)
+    # v' * P * v with a precomputed P = A'A; the RSOC primal error scales as
+    # sqrt(dobj/λmin), so u gets that bound and the objective is pinned.
     M2 = QLS_A' * QLS_A
     sol = solve(
         ConvexOptimizationProblem(
             OptimizationFunction(
                 (u, p) -> u' * M2 * u + QP_C' * u
             ), zeros(3)
-        ), ConvexMOI(
-            MOI.OptimizerWithAttributes(
-                Clarabel.Optimizer, "tol_gap_abs" => 1.0e-12, "tol_gap_rel" => 1.0e-12,
-                "tol_feas" => 1.0e-12, "tol_ktratio" => 1.0e-12, "max_iter" => 200
-            )
-        )
+        ), ALG_TIGHTEST
     )
-    @test isapprox(sol.u, -(M2 \ QP_C) / 2; atol = 1.0e-6)
+    us = -(M2 \ QP_C) / 2
+    @test isapprox(sol.objective, us' * M2 * us + QP_C' * us; atol = 1.0e-9)
+    λmin = minimum(eigvals(Symmetric(M2)))
+    @test norm(sol.u - us, Inf) <= 2 * sqrt(1.0e-9 / λmin)
 end
 
 @testset "squares of parameters are p-dependent constants, not atoms" begin
@@ -801,23 +806,48 @@ end
         ), ALG
     )
     @test isapprox(sol.u, [4.0]; atol = 1.0e-6)
+    # lifted squares evaluate through a compiled function, so non-polynomial
+    # p-only arguments work: min e^{2p1}·u1 + u1² + u2², u★ = -e^{2p1}/2,
+    # u within the sqrt(dobj/λmin) bound (λmin = 2).
+    prob = ConvexOptimizationProblem(
+        OptimizationFunction(
+            (u, p) -> exp(p[1])^2 * u[1] + u[1]^2 + u[2]^2
+        ), [0.5, 0.5], [1.0, 2.0]
+    )
+    sol = solve(prob, ALG_TIGHTEST)
+    us = [-exp(2.0) / 2, 0.0]
+    @test isapprox(sol.objective, -exp(4.0) / 4; atol = 1.0e-9)
+    @test norm(sol.u - us, Inf) <= 2 * sqrt(1.0e-9 / 2)
+    cache = reinit!(init(prob, ALG_TIGHTEST); p = [2.0, 3.0])
+    sol2 = solve!(cache)
+    cold2 = solve(SciMLBase.remake(prob; p = [2.0, 3.0]), ALG_TIGHTEST)
+    @test isapprox(sol2.objective, -exp(8.0) / 4; rtol = 1.0e-8)
+    @test isapprox(sol2.u, cold2.u; atol = 1.0e-8)
+    @test isapprox(sol2.objective, cold2.objective; rtol = 1.0e-10)
+    sol = solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> abs2(sin(p[1])) + sum(abs2, u)),
+            [0.5, 0.5], [1.0, 2.0]
+        ), ALG
+    )
+    @test isapprox(sol.objective, sin(1.0)^2; atol = 1.0e-6)
+    sol = solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> (p[1] / p[2])^2 + sum(abs2, u)),
+            [0.5, 0.5], [1.0, 2.0]
+        ), ALG
+    )
+    @test isapprox(sol.objective, 0.25; atol = 1.0e-6)
 end
 
 @testset "quadratic-form edge cases: asymmetric, singular, near-PSD P" begin
-    # asymmetric P contributes only sym(P) = 2I: min 2‖u‖² + c'u, u★ = -c/4.
-    # Needs tighter tolerances than ALG_TIGHT to hit 1e-6 in u here.
-    alg = ConvexMOI(
-        MOI.OptimizerWithAttributes(
-            Clarabel.Optimizer, "tol_gap_abs" => 1.0e-12, "tol_gap_rel" => 1.0e-12,
-            "tol_feas" => 1.0e-12, "tol_ktratio" => 1.0e-12, "max_iter" => 200
-        )
-    )
+    # asymmetric P contributes only sym(P) = 2I: min 2‖u‖² + c'u, u★ = -c/4
     Pa = Float64[2 1; -1 2]
     c = [1.0, -2.0]
     sol = solve(
         ConvexOptimizationProblem(
             OptimizationFunction((u, p) -> u' * Pa * u + c' * u), [0.5, 0.5]
-        ), alg
+        ), ALG_TIGHTEST
     )
     @test isapprox(sol.u, -c / 4; atol = 1.0e-6)
     @test isapprox(sol.objective, -5 / 8; atol = 1.0e-6)
@@ -830,13 +860,16 @@ end
     )
     @test isapprox(sum(sol.u), -0.5; atol = 1.0e-6)
     @test isapprox(sol.objective, -0.25; atol = 1.0e-6)
-    # λmin ≈ -5e-16 sits inside the n·eps·λmax tolerance: clamped with a warning
-    Ptol = Float64[1 1; 1 1 - 1.0e-15]
-    @test_logs (:warn, r"clamp") solve(
+    # λmin = -1e-16 is inside the n·eps·λmax tolerance: clamped with a debug
+    # log (routine on rank-deficient BᵀB, so no warn). Diagonal P makes the
+    # eigenvalue deterministic; u2 is free, so only the objective is asserted.
+    Ptol = diagm([1.0, -1.0e-16])
+    sol = @test_logs (:debug, r"clamp") min_level = Base.CoreLogging.Debug solve(
         ConvexOptimizationProblem(
-            OptimizationFunction((u, p) -> u' * Ptol * u + ones(2)' * u), [0.5, 0.5]
+            OptimizationFunction((u, p) -> u' * Ptol * u + [1.0, 0.0]' * u), [0.5, 0.5]
         ), ALG
     )
+    @test isapprox(sol.objective, -0.25; atol = 1.0e-6)
     # a materially negative eigenvalue is rejected even at large scale
     @test_throws "positive semidefinite" solve(
         ConvexOptimizationProblem(
@@ -862,4 +895,68 @@ end
     sol3 = solve!(cache)
     @test isapprox(sol3.u, [0.0, -0.5]; atol = 1.0e-6)
     @test isapprox(sol3.objective, -0.25; atol = 1.0e-6)
+end
+
+@testset "scalar-scaled and multi-matrix quadratic products" begin
+    # all flatten to *(2, adjoint(u), u) = 2‖u‖²: u★ = (1/4, 0), obj = -1/8
+    for f in (
+            (u, p) -> u' * (2 * u) - u[1],
+            (u, p) -> (2 * u)' * u - u[1],
+            (u, p) -> u' * u * 2 - u[1],
+        )
+        sol = solve(
+            ConvexOptimizationProblem(OptimizationFunction(f), [0.5, 0.5]), ALG_TIGHT
+        )
+        @test isapprox(sol.u, [0.25, 0.0]; atol = 1.0e-6)
+        @test isapprox(sol.objective, -0.125; atol = 1.0e-6)
+    end
+    # the scale folds into P: min 2u'Pu - u1 -> 4Pu★ = e1, obj = -u★1/2
+    P2 = Float64[2 1; 1 2]
+    sol = solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> (2 * u)' * P2 * u - u[1]), [0.5, 0.5]
+        ), ALG_TIGHT
+    )
+    us = (P2 \ [1.0, 0.0]) / 4
+    @test isapprox(sol.u, us; atol = 1.0e-6)
+    @test isapprox(sol.objective, -us[1] / 2; atol = 1.0e-6)
+    # a negative scale is concave, not a quadratic atom to lower
+    @test_throws "positive semidefinite" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u' * (-2 * u) - u[1]), [0.5, 0.5];
+            lb = [-10.0, -10.0], ub = [10.0, 10.0]
+        ), ALG
+    )
+    # un-parenthesized u'*A'*A*u is a (1,)-shaped term that still lowers
+    sol = solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u' * QLS_A' * QLS_A * u), zeros(3)
+        ), ALG
+    )
+    @test isapprox(sol.u, zeros(3); atol = 1.0e-6)
+    # u'*A*B*u with indefinite sym(A*B) reaches the PSD check, not a shape error
+    Bi = Float64[1 0; 0 -1]
+    @test_throws "positive semidefinite" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction(
+                (u, p) -> u' * Matrix{Float64}(I, 2, 2) * Bi * u
+            ), [0.5, 0.5]; lb = [-10.0, -10.0], ub = [10.0, 10.0]
+        ), ALG
+    )
+end
+
+@testset "uncanonicalizable products get clear errors, not internal ones" begin
+    A2 = Float64[1 0; 0 1]
+    B2 = Float64[2 0; 1 1]
+    @test_throws "could not be traced" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u' * A2 * B2 * u - u[1]), [0.5, 0.5]
+        ), ALG
+    )
+    P2 = Float64[2 1; 1 2]
+    @test_throws "constant numeric matrix" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u' * (p[1] * P2) * u), [0.5, 0.5], [1.0]
+        ), ALG
+    )
 end

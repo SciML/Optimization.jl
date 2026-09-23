@@ -317,7 +317,7 @@ struct DPPData{CS, AS, SE}
     C::Matrix{Float64}              # (n + ntau) × (m + length(psqs))
     d0::Float64
     dP::Vector{Float64}             # length m + length(psqs)
-    psyms::Vector                   # the m user parameter symbols
+    psqfns::Vector                  # compiled evaluators θ -> lifted square values
     psqs::Vector                    # arguments of lifted parameter-only squares
     conA::Vector{Matrix{Float64}}
     conb0::Vector{Vector{Float64}}
@@ -457,7 +457,7 @@ function _dpp_extract(prob::ConvexOptimizationProblem, tr)
     lb = prob.lb === nothing ? fill(-Inf, n) : Float64.(collect(prob.lb))
     ub = prob.ub === nothing ? fill(Inf, n) : Float64.(collect(prob.ub))
     dpp = DPPData(
-        n, m, c0, C, only(d0v), vec(dPm), tr.params, tr.psqargs,
+        n, m, c0, C, only(d0v), vec(dPm), tr.psqfns, tr.psqargs,
         conA, conb0, conB, consets,
         atomA, atomb0, atomB, [at.set for at in tr.atoms], [at.dir for at in tr.atoms],
         lb, ub, prob.sense
@@ -559,15 +559,8 @@ function _build_moi!(model, dpp::DPPData, θ::Vector{Float64})
 end
 
 function _extend_theta(dpp::DPPData, θ::Vector{Float64})
-    isempty(dpp.psqs) && return θ
-    s = Dict(unwrap.(dpp.psyms) .=> θ)
-    return vcat(
-        θ, [
-            let a = _tofloat(Symbolics.substitute(e, s))
-                    a * a
-            end for e in dpp.psqs
-        ]
-    )
+    isempty(dpp.psqfns) && return θ
+    return vcat(θ, [f(θ...) for f in dpp.psqfns])
 end
 
 # The backend's own symbolic parameters and epigraph variables. `##`-prefixed so
@@ -612,10 +605,20 @@ end
 
 function _trace_problem(prob)
     vars, cols, params = _symbolic_vars(prob)
-    obj = _scalar(prob.f.f(vars, params))
+    obj = try
+        _scalar(prob.f.f(vars, params))
+    catch e
+        _trace_shape_error(e, "objective")
+    end
     consvals = prob.constraints === nothing ? nothing :
-        [_asvec(con.g(vars, params)) for con in prob.constraints]
-    psqvars, psqargs = empty(params), Any[]
+        [
+            try
+                _asvec(con.g(vars, params))
+        catch e
+                _trace_shape_error(e, "constraint")
+        end for con in prob.constraints
+        ]
+    psqvars, psqargs, psqfns = empty(params), Any[], Any[]
     if !isempty(params)
         acc = Tuple{Any, Any}[]
         optset = Set(unwrap.(cols))
@@ -628,13 +631,31 @@ function _trace_problem(prob)
         )
         for (s, a) in acc
             push!(psqvars, s); push!(psqargs, a)
+            push!(
+                psqfns, Symbolics.build_function(
+                    Symbolics.wrap(unwrap(a) * unwrap(a)), params...;
+                    expression = Val(false)
+                )
+            )
         end
     end
     objl, taus, atoms = _epigraph_lower(obj)
     return (;
-        vars, cols, params, psqvars, psqargs, obj,
+        vars, cols, params, psqvars, psqargs, psqfns, obj,
         objl, taus, atoms, consvals,
         allcols = vcat(cols, taus),
+    )
+end
+
+function _trace_shape_error(e, what)
+    e isa ArgumentError &&
+        occursin("different sizes", sprint(showerror, e)) || rethrow()
+    return error(
+        "The $what could not be traced: a product like `u' * A * B * u` " *
+            "produces a `(1,)`-shaped term that cannot be combined with " *
+            "scalar terms ($(sprint(showerror, e))). Write the product as " *
+            "`u' * (A * B) * u` with a single matrix factor, or as the " *
+            "self-product `(A * u)' * (B * u)`."
     )
 end
 
@@ -704,25 +725,77 @@ function _is_sumsq_term(op, ex)
     return length(bargs) == 3 && _is_square_exp(bargs[3]) && _is_array_arg(bargs[2])
 end
 
-# `u' * P * u` traces to `*(adjoint(u), P, u)` and `v' * v` flattens to
-# `*(adjoint(v), f…)`: `(A*u)'*(A*u)` is `adjoint(A*u) * A * u`, so the factors
-# after the adjoint either end in `v` itself (with only numeric matrices in
-# between) or multiply back to `v`. A scalar multiple wraps the term instead
-# (`2*u'Pu` is `*(2, u'Pu)`).
-function _is_quad_form_term(ex)
-    Symbolics.symtype(unwrap(ex)) <: Number || return false
-    args = Symbolics.arguments(ex)
-    length(args) >= 2 || return false
-    v = _adjoint_arg(args[1])
-    v === nothing && return false
-    rest = args[2:end]
-    isequal(unwrap(rest[end]), v) &&
-        return all(_is_numeric_matrix, rest[1:(end - 1)])
-    try
-        return isequal(_materialize_array(v), _materialize_array(foldl(*, rest)))
-    catch
-        return false
+# `v' * v` flattens to `*(adjoint(v), f…)` — `(A*u)'*(A*u)` is
+# `adjoint(A*u) * A * u` — so factors after the adjoint end in `v` or multiply
+# back to `v`; numeric scalars on either side fold into `P`. Returns `(v, mid)`
+# (`mid` = factors between `v'` and `v`), `(v, nothing)` for a self-product.
+function _quad_form_parts(ex)
+    _is_scalarish(ex) || return nothing
+    args = Any[unwrap(a) for a in Symbolics.arguments(ex)]
+    scale = 1.0
+    while !isempty(args)   # `2*u'Pu` may flatten to *(2, adjoint(u), P, u)
+        s, q = _strip_scalar_mul(args[1])
+        q === nothing || break
+        scale *= s
+        popfirst!(args)
     end
+    length(args) >= 2 || return nothing
+    v0 = _adjoint_arg(args[1])
+    v0 === nothing && return nothing
+    cL, v = _strip_scalar_mul(v0)
+    v === nothing && return nothing
+    scale *= cL
+    rest = args[2:end]
+    while !isempty(rest)
+        s, q = _strip_scalar_mul(rest[end])
+        q === nothing || break
+        scale *= s
+        pop!(rest)
+    end
+    isempty(rest) && return nothing
+    s, vlast = _strip_scalar_mul(rest[end])
+    scale *= s
+    if isequal(vlast, v)
+        mid = Any[rest[1:(end - 1)]...]
+        scale == 1.0 || push!(mid, scale)
+        return (; v, mid)
+    end
+    try
+        isequal(_materialize_array(v), _materialize_array(foldl(*, rest))) &&
+            return (; v, mid = nothing)
+    catch
+    end
+    return nothing
+end
+
+_is_quad_form_term(ex) = _quad_form_parts(ex) !== nothing
+
+# `u' * A * B * u` traces to `Vector{Real}` of size `(1,)` — count that as a
+# scalar term; larger arrays are not scalar objectives.
+function _is_scalarish(ex)
+    st = Symbolics.symtype(unwrap(ex))
+    st <: Number && return true
+    st <: AbstractArray || return false
+    sh = Symbolics.shape(unwrap(ex))
+    return isempty(sh) || prod(length, sh) == 1
+end
+
+# `(c, t)` if `t` is `*(c, …)` or a bare numeric `c`, else `(1.0, t)`;
+# `p`-dependent factors are not numeric and stay put.
+function _strip_scalar_mul(t)
+    v = Symbolics.value(unwrap(t))
+    v isa Number && return (Float64(v), nothing)
+    t = unwrap(t)
+    if Symbolics.iscall(t) && Symbolics.operation(t) === (*)
+        a = Symbolics.arguments(t)
+        if length(a) == 2
+            v1 = Symbolics.value(unwrap(a[1]))
+            v1 isa Number && return (Float64(v1), unwrap(a[2]))
+            v2 = Symbolics.value(unwrap(a[2]))
+            v2 isa Number && return (Float64(v2), unwrap(a[1]))
+        end
+    end
+    return (1.0, t)
 end
 
 _adjoint_arg(a) = (
@@ -731,10 +804,6 @@ _adjoint_arg(a) = (
         (Symbolics.operation(a) === adjoint || Symbolics.operation(a) === transpose) &&
         length(Symbolics.arguments(a)) == 1 || return nothing;
     unwrap(Symbolics.arguments(a)[1])
-)
-_is_numeric_matrix(a) = (
-    v = Symbolics.value(unwrap(a));
-    v isa AbstractMatrix && all(x -> x isa Number, v)
 )
 
 # Each atom becomes `(rows, set, dir)`: `rows ∈ set` ties the epigraph variable
@@ -758,12 +827,9 @@ function _atom_lowering(t, tau)
         return _quad_form_lowering(v, [P], tau)
     end
     if f === (*)
-        a = Symbolics.arguments(t)
-        v = Symbolics.arguments(unwrap(a[1]))[1]
-        rest = a[2:end]
-        length(rest) > 1 && isequal(unwrap(rest[end]), unwrap(v)) &&
-            return _quad_form_lowering(v, rest[1:(end - 1)], tau)
-        return _rsoc_lowering(_atom_arg_vec(v), tau)
+        parts = _quad_form_parts(t)
+        parts.mid === nothing && return _rsoc_lowering(_atom_arg_vec(parts.v), tau)
+        return _quad_form_lowering(parts.v, parts.mid, tau)
     end
     w = _scalar_atom_arg(t, f)
     f === exp && return Symbolics.Num[w, 1, tau], MOI.ExponentialCone(), 1
@@ -803,17 +869,27 @@ function _atom_arg_vec(v)
 end
 
 # `u' * P * u <= τ` for constant `P` is `‖L u‖² <= τ` — the same rotated-SOC
-# shape as a sum of squares. `mid` is the factor(s) between `v'` and `v`.
+# shape as a sum of squares. `mid` is the factor(s) between `v'` and `v`:
+# numeric matrices, with scalar numbers folding into `P` as a scale.
 function _quad_form_lowering(v, mid, tau)
     w = _atom_arg_vec(v)
-    P = foldl(*, Any[Symbolics.value(unwrap(a)) for a in mid])
-    P isa AbstractMatrix && all(x -> x isa Number, P) || error(
+    scale = 1.0
+    mats = Any[]
+    for a in mid
+        val = Symbolics.value(unwrap(a))
+        val isa Number && (scale *= Float64(val); continue)
+        push!(mats, val)
+    end
+    all(m -> m isa AbstractMatrix && all(x -> x isa Number, m), mats) || error(
         "`u' * P * u` / `quad_form(u, P)` is lowered only for a constant numeric " *
             "matrix `P`; got `$mid`. A `P` built from `p` moves the " *
             "cone matrix with θ and cannot be canonicalized: pass the quadratic " *
             "form differently, or use `solve(remake(prob; p = …), alg)`."
     )
-    P = Matrix{Float64}(P)
+    P = scale * (
+        isempty(mats) ? Matrix{Float64}(I, length(w), length(w)) :
+            Matrix{Float64}(foldl(*, mats))
+    )
     size(P, 1) == size(P, 2) || error(
         "`u' * P * u` / `quad_form(u, P)` needs a square `P`; got size $(size(P))."
     )
@@ -826,8 +902,9 @@ end
 
 # `sym(P) = LᵀL` through the eigendecomposition: `u' * P * u ≡ u' * sym(P) * u`
 # exactly. Eigenvalues in `[-n·eps·λmax, 0)` are factorization noise on a
-# genuinely semidefinite `P` and are clamped with a warning; anything more
-# negative is an indefinite form and is rejected.
+# genuinely semidefinite `P` and are clamped — routine on rank-deficient
+# inputs, so `@debug` rather than `@warn`; anything more negative is an
+# indefinite form and is rejected.
 function _psd_factor(P)
     F = eigen(Symmetric((P + P') / 2))
     λlo, λhi = extrema(F.values)
@@ -836,7 +913,7 @@ function _psd_factor(P)
             "but `sym(P)` has eigenvalue $λlo: the quadratic form is not convex. " *
             "Route to a general OptimizationProblem/NLP solver."
     )
-    λlo < 0 && @warn "`u' * P * u` / `quad_form(u, P)`: `sym(P)` has a small " *
+    λlo < 0 && @debug "`u' * P * u` / `quad_form(u, P)`: `sym(P)` has a small " *
         "negative eigenvalue ($λlo) within the PSD tolerance; clamping it to 0."
     return Diagonal(sqrt.(max.(F.values, 0.0))) * F.vectors'
 end
@@ -870,8 +947,14 @@ function _expand_scalar_products(ex)
     args = Symbolics.arguments(ex)
     if op === (*) && any(a -> _is_array_arg(a), args)
         r = _materialize_array(ex)
-        r isa AbstractArray || return r
-        return length(r) == 1 ? only(r) : ex
+        r isa AbstractArray && return length(r) == 1 ? only(r) : ex
+        st = Symbolics.symtype(r)
+        st <: Number && return r
+        if st <: AbstractArray && _is_scalarish(r)
+            sr = Symbolics.scalarize(r)
+            return sr isa AbstractArray ? only(sr) : sr
+        end
+        return ex
     end
     newargs = map(_expand_scalar_products, args)
     all(newargs .=== args) && return ex
