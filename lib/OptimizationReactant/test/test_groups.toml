@@ -1,5 +1,7 @@
+# Reactant hooks into compiler internals and is not usable on Julia 1.10, so the
+# LTS is left out (see the `julia` compat in Project.toml).
 [Core]
-versions = ["lts", "1", "pre"]
+versions = ["1", "pre"]
 
 [QA]
-versions = ["lts", "1"]
+versions = ["1"]

@@ -23,8 +23,19 @@ jobs:
       # ModelingToolkit 11). Stdlibs and in-repo sublibraries are auto-populated by
       # the centralized workflow.
       skip: "SymbolicAnalysis"
-      exclude: "OptimizationQuadDIRECT"
+      # OptimizationReactant needs Julia >= 1.11 and runs in its own job below.
+      exclude: "OptimizationQuadDIRECT OptimizationReactant"
       group-env-name: "OPTIMIZATION_TEST_GROUP"
       group-env-value: "Core"
       # OptimizationQuadDIRECT has an unregistered URL source and is tested below
       # with a manifest repair step after downgrade-compat.
+  # Reactant hooks into compiler internals and does not support Julia 1.10, so
+  # OptimizationReactant (julia = "1.11") is downgrade-tested on the current release.
+  downgrade-reactant:
+    uses: "SciML/.github/.github/workflows/sublibrary-downgrade.yml@v1"
+    secrets: "inherit"
+    with:
+      julia-version: "1"
+      projects: "lib/OptimizationReactant"
+      group-env-name: "OPTIMIZATION_TEST_GROUP"
+      group-env-value: "Core"
