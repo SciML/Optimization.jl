@@ -35,8 +35,8 @@ Reactant = "0.2.287"
 SafeTestsets = "0.1"
 SciMLBase = "3"
 SciMLTesting = "2.8"
-Test = "1.11"
-julia = "1.11"
+Test = "1.10"
+julia = "1.10"
 
 [extras]
 CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
