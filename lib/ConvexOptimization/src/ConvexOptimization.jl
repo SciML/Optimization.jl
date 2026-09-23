@@ -10,6 +10,7 @@ import Symbolics
 using Symbolics: variable, unwrap, linear_expansion
 import SymbolicAnalysis
 using SymbolicAnalysis: analyze
+import SymbolicUtils
 using LinearAlgebra
 
 """
@@ -52,6 +53,13 @@ epigraph: `minimize norm(A*u - b, 2)` introduces an epigraph variable `τ` with
 
   - `norm(w, p)` for `p = 1, 2, Inf` (`NormOneCone`, `SecondOrderCone`,
     `NormInfinityCone`), with `w` an array expression in `u`;
+  - `abs(w)` for scalar affine `w` (`NormOneCone`);
+  - `max(w1, w2, …)`/`maximum(w)` of affine scalars or a vector affine `w`
+    (`Nonnegatives` epigraph), and their concave mirrors `min`/`minimum`
+    (hypograph: valid under `MaxSense`, or entering negatively under
+    `MinSense` as `-min(…)`);
+  - `sum(abs.(w))` and `maximum(abs.(w))` for vector affine `w` — the l1 and
+    linf norms (`NormOneCone`, `NormInfinityCone`);
   - `exp(w)` and `log(w)` for scalar affine `w` (`ExponentialCone`); `log` is
     concave, so it is bounded below and must enter the objective negatively
     (e.g. a `-log` barrier).
@@ -417,7 +425,7 @@ function _dpp_extract(prob::ConvexOptimizationProblem, tr)
         A, b0, Bp = _dpp_block(
             at.rows, allcols, params, paramset, tauset,
             "The argument of atom $j ($(at.set))",
-            "The argument of a `norm` atom in the objective must be affine in the " *
+            "The argument of an atom in the objective must be affine in the " *
                 "optimization variables."
         )
         push!(atomA, A); push!(atomb0, b0); push!(atomB, Bp)
@@ -579,10 +587,13 @@ end
 
 function _trace_problem(prob)
     vars, cols, params = _symbolic_vars(prob)
-    obj = _scalar(prob.f.f(vars, params))
+    obj = prob.f.f(vars, params)
+    _check_no_unsupported_reducer(obj)
+    obj = _scalar(obj)
     objl, taus, atoms = _epigraph_lower(obj)
     consvals = prob.constraints === nothing ? nothing :
         [_asvec(con.g(vars, params)) for con in prob.constraints]
+    consvals === nothing || foreach(_check_no_unsupported_reducer, consvals)
     return (;
         vars, cols, params, obj,
         objl, taus, atoms, consvals,
@@ -611,11 +622,67 @@ function _norm_cone(p, dim)
     )
 end
 
-const LOWERABLE_ATOMS = (LinearAlgebra.norm, exp, log)
+const LOWERABLE_ATOMS = (LinearAlgebra.norm, exp, log, abs, max, min)
 
 function _is_lowerable_atom(ex)
     Symbolics.iscall(ex) || return false
-    return any(f -> Symbolics.operation(ex) === f, LOWERABLE_ATOMS)
+    op = Symbolics.operation(ex)
+    op isa SymbolicUtils.Mapreducer && return _is_lowerable_reducer(op, ex)
+    return any(f -> op === f, LOWERABLE_ATOMS)
+end
+
+# Reductions over a symbolic array trace to a `SymbolicUtils.Mapreducer`; a
+# `sum` over anything but `abs.(w)` is affine and needs no cone.
+function _is_lowerable_reducer(op::SymbolicUtils.Mapreducer, ex)
+    op.f === identity && op.dims isa Colon && op.init === nothing || return false
+    args = Symbolics.arguments(ex)
+    length(args) == 1 || return false
+    op.reduce === max && return true
+    op.reduce === min && return !_is_abs_broadcast(args[1])
+    # `Base.add_sum` is not public API, but it is what SymbolicUtils stores as
+    # the `reduce` of a traced `sum` (see `Mapreducer`'s docstring).
+    return op.reduce === Base.add_sum && _is_abs_broadcast(args[1])
+end
+
+# `abs.(w)` traces to `broadcast(abs, w)`; the function is a constant symbolic.
+function _is_abs_broadcast(a)
+    Symbolics.iscall(a) && Symbolics.operation(a) === broadcast || return false
+    bargs = Symbolics.arguments(a)
+    return length(bargs) == 2 && Symbolics.value(bargs[1]) === abs
+end
+
+# `init` is silently dropped by `scalarize`/`linear_expansion`, so a `Mapreducer`
+# that is not the plain scalar atom form must error here — including inside a
+# lowerable atom's argument, which `_collect_atoms!` never descends into.
+function _check_no_unsupported_reducer(ex)
+    (ex isa Symbolics.Num || ex isa Symbolics.Arr) &&
+        return _check_no_unsupported_reducer(Symbolics.unwrap(ex))
+    ex isa AbstractArray && return foreach(_check_no_unsupported_reducer, ex)
+    Symbolics.iscall(ex) || return nothing
+    op = Symbolics.operation(ex)
+    op isa SymbolicUtils.Mapreducer && _unsupported_reducer_error(op, ex)
+    return foreach(_check_no_unsupported_reducer, Symbolics.arguments(ex))
+end
+
+function _unsupported_reducer_error(op::SymbolicUtils.Mapreducer, ex)
+    op.dims isa Colon && op.init === nothing || error(
+        "a `$(op.reduce)` reduction in the problem is supported only over all " *
+            "elements (`dims` unspecified) and without `init`; got dims = " *
+            "$(op.dims), init = $(op.init). Route to a general " *
+            "OptimizationProblem/NLP solver."
+    )
+    op.f === abs && error(
+        "a reduction with `abs` as the mapped function is not lowered; write " *
+            "the broadcast form `sum(abs.(w))` or `maximum(abs.(w))`, or route " *
+            "to a general OptimizationProblem/NLP solver."
+    )
+    args = Symbolics.arguments(ex)
+    length(args) == 1 && op.reduce === min && _is_abs_broadcast(args[1]) &&
+        error(
+        "`minimum(abs.(w))` is neither convex nor concave and cannot be " *
+            "lowered. Route to a general OptimizationProblem/NLP solver."
+    )
+    return nothing
 end
 
 # Each atom becomes `(rows, set, dir)`: `rows ∈ set` ties the epigraph variable
@@ -630,9 +697,53 @@ function _atom_lowering(t, tau)
         w = _asvec(Symbolics.wrap(Symbolics.arguments(t)[1]))
         return Symbolics.Num[tau; w...], _norm_cone(_norm_order(t), length(w) + 1), 1
     end
+    f isa SymbolicUtils.Mapreducer && return _reducer_lowering(t, f, tau)
+    if f === max || f === min
+        ws = _flatten_atom_args(t, f)
+        rows = f === max ? Symbolics.Num[tau - Symbolics.wrap(w) for w in ws] :
+            Symbolics.Num[Symbolics.wrap(w) - tau for w in ws]
+        return rows, MOI.Nonnegatives(length(ws)), f === max ? 1 : -1
+    end
     w = _scalar_atom_arg(t, f)
+    f === abs && return Symbolics.Num[tau, w], MOI.NormOneCone(2), 1
     f === exp && return Symbolics.Num[w, 1, tau], MOI.ExponentialCone(), 1
     return Symbolics.Num[tau, 1, w], MOI.ExponentialCone(), -1
+end
+
+# `max(a, b, c)` traces as nested binary calls.
+function _flatten_atom_args(t, f, ws = [])
+    if Symbolics.iscall(t) && Symbolics.operation(t) === f
+        for a in Symbolics.arguments(t)
+            _flatten_atom_args(a, f, ws)
+        end
+    else
+        Symbolics.symtype(t) <: Number || error(
+            "`$f` in the objective is lowered only for scalar affine " *
+                "arguments; got the non-scalar argument `$t`. Route to a " *
+                "general OptimizationProblem/NLP solver."
+        )
+        push!(ws, t)
+    end
+    return ws
+end
+
+function _reducer_lowering(t, op::SymbolicUtils.Mapreducer, tau)
+    arg = only(Symbolics.arguments(t))
+    if _is_abs_broadcast(arg) && op.reduce !== min
+        w = _flatvec(Symbolics.wrap(Symbolics.arguments(arg)[2]))
+        cone = op.reduce === max ? MOI.NormInfinityCone(length(w) + 1) :
+            MOI.NormOneCone(length(w) + 1)
+        return Symbolics.Num[tau; w...], cone, 1
+    end
+    w = _flatvec(Symbolics.wrap(arg))
+    rows = op.reduce === max ? Symbolics.Num[tau - wi for wi in w] :
+        Symbolics.Num[wi - tau for wi in w]
+    return rows, MOI.Nonnegatives(length(w)), op.reduce === max ? 1 : -1
+end
+
+function _flatvec(v)
+    s = Symbolics.scalarize(v)
+    return s isa AbstractArray ? vec(collect(s)) : [s]
 end
 
 function _scalar_atom_arg(t, f)
@@ -705,6 +816,10 @@ function _asvec(v)
     return s isa AbstractVector ? collect(s) : [s]
 end
 _scalar(v::AbstractVector) = only(v)
+_scalar(v::AbstractArray) = error(
+    "The objective of a ConvexOptimizationProblem must be a scalar; got a " *
+        "$(size(v)) array. Route to a general OptimizationProblem/NLP solver."
+)
 _scalar(v) = v
 
 _tofloat(x) = Float64(Symbolics.value(x))
