@@ -16,6 +16,7 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 [sources]
 OptimizationBase = {path = "../OptimizationBase"}
 OptimizationOptimJL = {path = "../OptimizationOptimJL"}
+OptimizationOptimisers = {path = "../OptimizationOptimisers"}
 
 [compat]
 ADTypes = "1.19"
@@ -28,7 +29,7 @@ GPUArraysCore = "0.2"
 Optimisers = "0.4.2"
 OptimizationBase = "5.7.0"
 OptimizationOptimJL = "0.4"
-OptimizationOptimisers = "0.3"
+OptimizationOptimisers = "0.3.23"
 Pkg = "1"
 Reactant = "0.2"
 SafeTestsets = "0.1"
