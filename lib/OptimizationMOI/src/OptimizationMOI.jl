@@ -216,7 +216,7 @@ function rep_pars_vals!(expr::Symbol, expr_map)
     return expr
 end
 function rep_pars_vals!(expr::Expr, expr_map)
-    if (expr.head == :call && expr.args[1] == getindex) || (expr.head == :ref)
+    if (expr.head == :call && expr.args[1] in (getindex, :getindex)) || (expr.head == :ref)
         for (f, n) in expr_map
             isequal(f, expr) && return n
         end
@@ -270,18 +270,33 @@ function convert_to_expr(eq, expr_map; expand_expr = false)
 end
 
 function get_expr_map(sys)
-    dvs = ModelingToolkitBase.unknowns(sys)
-    ps = ModelingToolkitBase.parameters(sys)
-    return vcat(
-        [
-            ModelingToolkitBase.toexpr(_s) => Expr(:ref, :x, i)
-                for (i, _s) in enumerate(dvs)
-        ],
-        [
-            ModelingToolkitBase.toexpr(_p) => Expr(:ref, :p, i)
-                for (i, _p) in enumerate(ps)
-        ]
-    )
+    expr_map = Pair{Any, Expr}[]
+    for var in ModelingToolkitBase.unknowns(sys), v in _scalar_elements(var)
+        _push_expr_map!(expr_map, v, Expr(:ref, :x, variable_index(sys, v)))
+    end
+    # `p[idx]` holds a `parameter_index` of `sys`, resolved against the parameter object by
+    # `_replace_parameter_indices!`; the position in `parameters(sys)` is not an index into
+    # the parameter object once array parameters are present.
+    for par in ModelingToolkitBase.parameters(sys), v in _scalar_elements(par)
+        idx = parameter_index(sys, v)
+        idx === nothing && continue
+        _push_expr_map!(expr_map, v, Expr(:ref, :p, idx))
+    end
+    return expr_map
+end
+
+# `OptimizationBase` may already have `symbolify`d the expressions in place, turning the
+# `getindex` of an array element into `:getindex`, so both forms of the key are mapped.
+function _push_expr_map!(expr_map, v, target)
+    key = ModelingToolkitBase.toexpr(v)
+    push!(expr_map, key => target)
+    key isa Expr && push!(expr_map, symbolify!(deepcopy(key)) => target)
+    return expr_map
+end
+
+function _scalar_elements(var)
+    elements = Symbolics.scalarize(var)
+    return elements isa AbstractArray ? vec(elements) : [elements]
 end
 
 """
@@ -304,8 +319,7 @@ Replaces every expression `:p[i]` with its numeric value from `p`
 _replace_parameter_indices!(expr, p) = expr
 function _replace_parameter_indices!(expr::Expr, p)
     if expr.head == :ref && expr.args[1] == :p
-        tunable, _, _ = SciMLStructures.canonicalize(SciMLStructures.Tunable(), p)
-        p_ = tunable[expr.args[2]]
+        p_ = parameter_values(p, expr.args[2])
         (!isa(p_, Real) || isnan(p_) || isinf(p_)) &&
             throw(ArgumentError("Expected parameters to be real valued: $(expr.args[2]) => $p_"))
         return p_
@@ -322,7 +336,7 @@ Replaces calls like `:(getindex, 1, :x)` with `:(x[1])`
 repl_getindex!(expr::T) where {T} = expr
 function repl_getindex!(expr::Expr)
     if expr.head == :call && expr.args[1] == :getindex
-        return Expr(:ref, expr.args[2], expr.args[3])
+        return Expr(:ref, expr.args[2:end]...)
     end
     for i in 1:length(expr.args)
         expr.args[i] = repl_getindex!(expr.args[i])
@@ -374,14 +388,20 @@ function generate_exprs(prob::OptimizationProblem)
 end
 
 function process_system_exprs(prob::OptimizationProblem, f::OptimizationFunction)
+    return process_system_exprs(f, prob.lcons, prob.ucons)
+end
+
+function process_system_exprs(f::OptimizationFunction, lcons, ucons)
     @assert f.sys !== nothing
-    expr_map = get_expr_map(prob.f.sys)
+    expr_map = get_expr_map(f.sys)
     expr = convert_to_expr(f.expr, expr_map; expand_expr = false)
     expr = repl_getindex!(expr)
-    cons = MTK.constraints(f.sys)
-    cons_expr = Vector{Expr}(undef, length(cons))
-    Threads.@sync for i in eachindex(cons)
-        Threads.@spawn if prob.lcons[i] == prob.ucons[i] == 0
+    # One entry per row of the constraint function: an array-valued constraint of
+    # `f.sys` contributes one row per element, so `constraints(f.sys)` can be shorter.
+    ncons = f.cons_expr === nothing ? 0 : length(f.cons_expr)
+    cons_expr = Vector{Expr}(undef, ncons)
+    Threads.@sync for i in 1:ncons
+        Threads.@spawn if lcons[i] == ucons[i] == 0
             cons_expr[i] = Expr(
                 :call, :(==),
                 repl_getindex!(
