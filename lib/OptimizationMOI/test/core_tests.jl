@@ -395,7 +395,13 @@ struct MockOptimizer <: MathOptInterface.AbstractOptimizer end
 
     # Test that unknown solver fallback works gracefully
     @testset "Generic fallback" begin
-        # Should not error, but may show a message for unknown solver
-        @test_nowarn OptimizationMOI._set_maxiters!(MockOptimizer(), 10)
+        # Unmapped solver emits an unsupported_kwargs message but does not throw
+        @test_logs (:info, r"could not be mapped") OptimizationMOI._set_maxiters!(
+            MockOptimizer(), 10
+        )
+        # and the message is silenced by a None verbosity
+        @test_nowarn OptimizationMOI._set_maxiters!(
+            MockOptimizer(), 10, OptimizationBase._process_verbose_param(false)
+        )
     end
 end
