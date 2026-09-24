@@ -50,11 +50,16 @@ function OptimizationBase.instantiate_function(
     hess = f.hess === nothing ? nothing :
         [(H, x, args...) -> h(H, x, p, args...) for h in f.hess]
     hv = f.hv === nothing ? nothing : (H, x, v, args...) -> f.hv(H, x, v, p, args...)
-    cons = f.cons === nothing ? nothing : (res, x) -> f.cons(res, x, p)
-    cons_j = f.cons_j === nothing ? nothing : (res, x) -> f.cons_j(res, x, p)
-    cons_jvp = f.cons_jvp === nothing ? nothing : (res, x) -> f.cons_jvp(res, x, p)
-    cons_vjp = f.cons_vjp === nothing ? nothing : (res, x) -> f.cons_vjp(res, x, p)
-    cons_h = f.cons_h === nothing ? nothing : (res, x) -> f.cons_h(res, x, p)
+    cons = f.cons === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons(res, x, p_call)
+    cons_j = f.cons_j === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_j(res, x, p_call)
+    cons_jvp = f.cons_jvp === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_jvp(res, x, p_call)
+    cons_vjp = f.cons_vjp === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_vjp(res, x, p_call)
+    cons_h = f.cons_h === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_h(res, x, p_call)
     hess_prototype = f.hess_prototype === nothing ? nothing :
         similar(f.hess_prototype, eltype(x))
     cons_jac_prototype = f.cons_jac_prototype === nothing ? nothing :
@@ -88,11 +93,16 @@ function OptimizationBase.instantiate_function(
     hess = f.hess === nothing ? nothing :
         [(H, x, args...) -> h(H, x, cache.p, args...) for h in f.hess]
     hv = f.hv === nothing ? nothing : (H, x, v, args...) -> f.hv(H, x, v, cache.p, args...)
-    cons = f.cons === nothing ? nothing : (res, x) -> f.cons(res, x, cache.p)
-    cons_j = f.cons_j === nothing ? nothing : (res, x) -> f.cons_j(res, x, cache.p)
-    cons_jvp = f.cons_jvp === nothing ? nothing : (res, x) -> f.cons_jvp(res, x, cache.p)
-    cons_vjp = f.cons_vjp === nothing ? nothing : (res, x) -> f.cons_vjp(res, x, cache.p)
-    cons_h = f.cons_h === nothing ? nothing : (res, x) -> f.cons_h(res, x, cache.p)
+    cons = f.cons === nothing ? nothing :
+        (res, x, p_call = cache.p) -> f.cons(res, x, p_call)
+    cons_j = f.cons_j === nothing ? nothing :
+        (res, x, p_call = cache.p) -> f.cons_j(res, x, p_call)
+    cons_jvp = f.cons_jvp === nothing ? nothing :
+        (res, x, p_call = cache.p) -> f.cons_jvp(res, x, p_call)
+    cons_vjp = f.cons_vjp === nothing ? nothing :
+        (res, x, p_call = cache.p) -> f.cons_vjp(res, x, p_call)
+    cons_h = f.cons_h === nothing ? nothing :
+        (res, x, p_call = cache.p) -> f.cons_h(res, x, p_call)
     hess_prototype = f.hess_prototype === nothing ? nothing :
         similar(f.hess_prototype, eltype(cache.u0))
     cons_jac_prototype = f.cons_jac_prototype === nothing ? nothing :
@@ -185,11 +195,16 @@ function OptimizationBase.instantiate_function(
         end
     end
 
-    cons = f.cons === nothing ? nothing : (res, x) -> f.cons(res, x, p)
-    cons_j = f.cons_j === nothing ? nothing : (res, x) -> f.cons_j(res, x, p)
-    cons_vjp = f.cons_vjp === nothing ? nothing : (res, x) -> f.cons_vjp(res, x, p)
-    cons_jvp = f.cons_jvp === nothing ? nothing : (res, x) -> f.cons_jvp(res, x, p)
-    cons_h = f.cons_h === nothing ? nothing : (res, x) -> f.cons_h(res, x, p)
+    cons = f.cons === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons(res, x, p_call)
+    cons_j = f.cons_j === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_j(res, x, p_call)
+    cons_vjp = f.cons_vjp === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_vjp(res, x, p_call)
+    cons_jvp = f.cons_jvp === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_jvp(res, x, p_call)
+    cons_h = f.cons_h === nothing ? nothing :
+        (res, x, p_call = p) -> f.cons_h(res, x, p_call)
 
     if f.lag_h === nothing
         lag_h = nothing
@@ -258,6 +273,35 @@ function instantiate_function(
     else
         min(open_nrmlbrkt_ind, open_squigllybrkt_ind)
     end
-    adpkg = adtypestr[strtind:(open_brkt_ind - 1)]
+    lastidx = isnothing(open_brkt_ind) ? lastindex(adtypestr) : (open_brkt_ind - 1)
+    adpkg = adtypestr[strtind:lastidx]
+    # `AutoReactant` is not an AD package itself: the `instantiate_function`
+    # methods live in the OptimizationReactant sublibrary.
+    adpkg == "Reactant" && (adpkg = "OptimizationReactant")
     throw(ArgumentError("The passed automatic differentiation backend choice is not available. Please load the corresponding AD package $adpkg."))
+end
+
+"""
+    lag_hess_structure(prototype::SparseMatrixCSC) -> (rows, cols)
+
+The canonical coordinates of the entries that the vector-form Lagrangian
+Hessian callback `lag_h(h, θ, σ, λ[, p])` writes, in the exact order it
+writes them. Solver wrappers that declare a sparse Hessian structure and
+fill it from the vector `lag_h` MUST derive their structure with this
+function — entry `k` of the value buffer corresponds to
+`(rows[k], cols[k])`. Wrappers whose convention requires lower-triangle
+coordinates (e.g. NLPModels) mirror each `(i, j)` to `(j, i)`; the
+mirrored sequence is still in `lag_h`'s value order.
+
+The write order is: the upper-triangle entries (`i ≤ j`) of the sparse
+Lagrangian Hessian prototype, enumerated in `findnz` (CSC, column-major)
+order. This order is part of the public API contract of `lag_h` and is
+frozen: changing it silently breaks every consumer that declared a
+structure against it.
+"""
+function lag_hess_structure(prototype::SparseMatrixCSC)
+    rows, cols, _ = findnz(prototype)
+    mask = rows .<= cols
+
+    return rows[mask], cols[mask]
 end

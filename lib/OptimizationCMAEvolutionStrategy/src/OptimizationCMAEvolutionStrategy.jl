@@ -1,12 +1,20 @@
 module OptimizationCMAEvolutionStrategy
 
 using Reexport
-@reexport using OptimizationBase
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
+using SciMLLogging: @SciMLMessage
 using CMAEvolutionStrategy
-using OptimizationBase: SciMLBase
+using SciMLBase
 
 export CMAEvolutionStrategyOpt
 
+"""
+    CMAEvolutionStrategyOpt()
+
+Optimizer wrapper for CMAEvolutionStrategy.jl covariance matrix adaptation.
+"""
 struct CMAEvolutionStrategyOpt end
 
 SciMLBase.allowscallback(opt::CMAEvolutionStrategyOpt) = true
@@ -17,6 +25,24 @@ SciMLBase.requireshessian(::CMAEvolutionStrategyOpt) = false
 SciMLBase.requiresconsjac(::CMAEvolutionStrategyOpt) = false
 SciMLBase.requiresconshess(::CMAEvolutionStrategyOpt) = false
 
+# Map `CMAEvolutionStrategy.Stop.reason` to a `SciMLBase.ReturnCode.T`. The
+# reasons come from `CMAEvolutionStrategy/src/stop.jl` — the full set is
+# `:maxiter`, `:maxtime`, `:maxfevals`, `:ftarget`, `:xtol`, `:ftol`, `:stagnation`
+# (plus `:none` for the pre-termination state).
+function _cma_retcode(reason::Symbol)
+    if reason === :ftarget || reason === :xtol || reason === :ftol
+        return SciMLBase.ReturnCode.Success
+    elseif reason === :maxiter || reason === :maxfevals
+        return SciMLBase.ReturnCode.MaxIters
+    elseif reason === :maxtime
+        return SciMLBase.ReturnCode.MaxTime
+    elseif reason === :stagnation
+        return SciMLBase.ReturnCode.Stalled
+    else
+        return SciMLBase.ReturnCode.Default
+    end
+end
+
 function __map_optimizer_args(
         prob::OptimizationBase.OptimizationCache, opt::CMAEvolutionStrategyOpt;
         callback = nothing,
@@ -24,13 +50,23 @@ function __map_optimizer_args(
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
-        verbose::Bool = false
+        verbose::Bool = false,
+        # `sigma0` is the initial step size; it is the positional `s0` argument of
+        # `CMAEvolutionStrategy.minimize`, so it is handled in `__solve` and only
+        # captured here to keep it out of the forwarded `kwargs`.
+        sigma0 = nothing,
+        kwargs...
     )
     if !isnothing(reltol)
-        @warn "common reltol is currently not used by $(opt)"
+        @SciMLMessage(
+            lazy"common reltol is currently not used by $(opt)",
+            prob.verbose, :unsupported_kwargs
+        )
     end
 
+    mapped_args = (; kwargs...)
     mapped_args = (;
+        mapped_args...,
         lower = prob.lb,
         upper = prob.ub,
         logger = CMAEvolutionStrategy.BasicLogger(
@@ -89,11 +125,13 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: CMAEvolution
         maxtime = maxtime
     )
 
+    sigma0 = get(cache.solver_args, :sigma0, 0.1)
+
     t0 = time()
-    opt_res = CMAEvolutionStrategy.minimize(_loss, cache.u0, 0.1; opt_args...)
+    opt_res = CMAEvolutionStrategy.minimize(_loss, cache.u0, sigma0; opt_args...)
     t1 = time()
 
-    opt_ret = opt_res.stop.reason
+    opt_ret = _cma_retcode(opt_res.stop.reason)
     stats = OptimizationBase.OptimizationStats(;
         iterations = length(opt_res.logger.fmedian),
         time = t1 - t0,

@@ -1,25 +1,38 @@
 name = "OptimizationQuadDIRECT"
 uuid = "842ac81e-713d-465f-80f7-84eddaced298"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.3"
+version = "0.3.7"
+
 [deps]
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 QuadDIRECT = "dae52e8d-d666-5120-a592-9e15c33b8d7a"
-SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+SciMLLogging = "a6db7da4-7206-11f0-1eab-35f2a5dbe1d1"
 
 [extras]
+SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 
 [compat]
 julia = "1.10"
-OptimizationBase = "3, 4"
-SciMLBase = "2.58"
+OptimizationBase = "5"
+Pkg = "1"
+QuadDIRECT = "0.1.2"
 Reexport = "1.2"
-
-[sources]
-OptimizationBase = {path = "../OptimizationBase"}
+SafeTestsets = "0.1"
+SciMLBase = "3"
+SciMLLogging = "2"
+SciMLTesting = "2.8"
+Test = "1.10"
 
 [targets]
-test = ["Pkg", "Test"]
+test = ["SciMLTesting", "Pkg", "Test", "SafeTestsets"]
+
+[sources.OptimizationBase]
+path = "../OptimizationBase"
+
+[sources.QuadDIRECT]
+url = "https://github.com/timholy/QuadDIRECT.jl.git"

@@ -1,13 +1,16 @@
 module OptimizationMOI
 
 using Reexport
-@reexport using OptimizationBase
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
 using MathOptInterface
 using SciMLBase
+import ADTypes
+using SciMLLogging: @SciMLMessage
 using SciMLStructures
 using SymbolicIndexingInterface
 using SparseArrays
-import ModelingToolkitBase: parameters, unknowns, varmap_to_vars, mergedefaults, toexpr
 import ModelingToolkitBase
 const MTK = ModelingToolkitBase
 using Symbolics
@@ -44,6 +47,9 @@ function SciMLBase.requiresconshess(
     )
     return true
 end
+OptimizationBase.supports_sense(
+    ::Union{MOI.AbstractOptimizer, MOI.OptimizerWithAttributes}
+) = true
 
 function SciMLBase.allowsbounds(
         opt::Union{
@@ -90,7 +96,10 @@ end
 Sets the maximum number of iterations for the optimizer using solver-specific parameter names.
 Supports common MOI solvers including Ipopt, Gurobi, CPLEX, and SCIP.
 """
-function _set_maxiters!(optimizer, maxiters::Number)
+function _set_maxiters!(
+        optimizer, maxiters::Number,
+        opt_verbose = OptimizationBase.DEFAULT_VERBOSE
+    )
     optimizer_name = string(typeof(optimizer))
 
     # Try to set maxiters based on common solver patterns
@@ -124,18 +133,21 @@ function _set_maxiters!(optimizer, maxiters::Number)
                 end
             end
             # If all attempts fail, show warning with guidance
-            @warn "common maxiters argument could not be mapped for $(typeof(optimizer)). " *
-                  "Set number of iterations via optimizer specific keyword arguments."
+            @SciMLMessage(
+                lazy"common maxiters argument could not be mapped for $(typeof(optimizer)). Set number of iterations via optimizer specific keyword arguments.",
+                opt_verbose, :unsupported_kwargs
+            )
         end
     catch e
         # Catch any errors during parameter setting and show informative warning
-        @warn "Failed to set maxiters parameter for $(typeof(optimizer)): $(e). " *
-              "Set number of iterations via optimizer specific keyword arguments."
+        @SciMLMessage(
+            lazy"Failed to set maxiters parameter for $(typeof(optimizer)): $(e). Set number of iterations via optimizer specific keyword arguments.",
+            opt_verbose, :unsupported_kwargs
+        )
     end
 end
 
 function __map_optimizer_args(
-        cache,
         opt::Union{
             MOI.AbstractOptimizer, MOI.OptimizerWithAttributes,
         };
@@ -143,8 +155,12 @@ function __map_optimizer_args(
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
+        verbose = OptimizationBase.DEFAULT_VERBOSE,
         kwargs...
     )
+    # `verbose` is consumed here as a named keyword so it isn't forwarded into the
+    # `kwargs` loop below, which would otherwise try to set it as a raw solver attribute.
+    opt_verbose = OptimizationBase._process_verbose_param(verbose)
     optimizer = _create_new_optimizer(opt)
     for (key, value) in kwargs
         MOI.set(optimizer, MOI.RawOptimizerAttribute("$(key)"), value)
@@ -153,13 +169,19 @@ function __map_optimizer_args(
         MOI.set(optimizer, MOI.TimeLimitSec(), maxtime)
     end
     if !isnothing(reltol)
-        @warn "common reltol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword arguments."
+        @SciMLMessage(
+            lazy"common reltol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword arguments.",
+            opt_verbose, :unsupported_kwargs
+        )
     end
     if !isnothing(abstol)
-        @warn "common abstol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword arguments."
+        @SciMLMessage(
+            lazy"common abstol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword arguments.",
+            opt_verbose, :unsupported_kwargs
+        )
     end
     if !isnothing(maxiters)
-        _set_maxiters!(optimizer, maxiters)
+        _set_maxiters!(optimizer, maxiters, opt_verbose)
     end
     return optimizer
 end

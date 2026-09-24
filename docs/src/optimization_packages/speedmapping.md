@@ -22,10 +22,14 @@ constraint equations. Lower and upper constraints set by `lb` and `ub` in the `O
 
 If no AD backend is defined via `OptimizationFunction` the gradient is calculated via `SpeedMapping`'s ForwardDiff AD backend.
 
+```@docs
+OptimizationSpeedMapping.SpeedMappingOpt
+```
+
 The Rosenbrock function can be optimized using the `SpeedMappingOpt()` with and without bound as follows:
 
 ```@example SpeedMapping
-using Optimization, OptimizationSpeedMapping, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationSpeedMapping, ADTypes, ForwardDiff
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]

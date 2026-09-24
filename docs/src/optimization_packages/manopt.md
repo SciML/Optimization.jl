@@ -1,4 +1,4 @@
-# Manopt.jl
+# [Manopt.jl](@id manopt)
 
 [Manopt.jl](https://github.com/JuliaManifolds/Manopt.jl) is a package providing solvers
 for optimization problems defined on Riemannian manifolds.
@@ -26,20 +26,68 @@ The following methods are available for the `OptimizationManopt` package:
   - `CMAESOptimizer`: Corresponds to the [`cma_es`](https://manoptjl.org/stable/solvers/cma_es/) method in Manopt.
   - `ConvexBundleOptimizer`: Corresponds to the [`convex_bundle_method`](https://manoptjl.org/stable/solvers/convex_bundle_method/) method in Manopt.
   - `FrankWolfeOptimizer`: Corresponds to the [`FrankWolfe`](https://manoptjl.org/stable/solvers/FrankWolfe/) method in Manopt.
+  - `AdaptiveRegularizationCubicOptimizer`: Corresponds to the [`adaptive_regularization_with_cubics`](https://manoptjl.org/stable/solvers/adaptive_regularization_with_cubics/) method in Manopt.
+  - `TrustRegionsOptimizer`: Corresponds to the [`trust_regions`](https://manoptjl.org/stable/solvers/trust_regions/) method in Manopt.
+
+```@docs
+OptimizationManopt.AbstractManoptOptimizer
+OptimizationManopt.GradientDescentOptimizer
+OptimizationManopt.NelderMeadOptimizer
+OptimizationManopt.ConjugateGradientDescentOptimizer
+OptimizationManopt.ParticleSwarmOptimizer
+OptimizationManopt.QuasiNewtonOptimizer
+OptimizationManopt.CMAESOptimizer
+OptimizationManopt.ConvexBundleOptimizer
+OptimizationManopt.FrankWolfeOptimizer
+OptimizationManopt.AdaptiveRegularizationCubicOptimizer
+OptimizationManopt.TrustRegionsOptimizer
+```
 
 The common kwargs `maxiters`, `maxtime` and `abstol` are supported by all the optimizers. Solver specific kwargs from Manopt can be passed to the `solve`
 function or `OptimizationProblem`.
 
+Passing `maxiters`/`maxtime` bounds the run while keeping the convergence part of the
+solver's own Manopt default stopping criterion active, so a run that converges before
+hitting the bound reports `retcode = Success` rather than `MaxIters`/`MaxTime`. For the
+derivative-free solvers (`NelderMeadOptimizer`, `ParticleSwarmOptimizer`, `CMAESOptimizer`)
+and `ConvexBundleOptimizer`, Manopt's own stopping criteria never indicate convergence, so
+a run bounded only by `maxiters`/`maxtime` reports `MaxIters`/`MaxTime`. A Manopt
+`stopping_criterion` passed as a solver kwarg is combined with the requested
+`maxiters`/`maxtime` bounds and replaces the default convergence criterion.
+
 !!! note
 
     The `OptimizationProblem` has to be passed the manifold as the `manifold` keyword argument.
+
+## Reexported Manopt.jl API
+
+The optimizers listed above are defined by OptimizationManopt itself; they are thin
+wrappers whose names this package owns. From
+[Manopt.jl](https://manoptjl.org/stable/) only the `Manopt` module binding is
+re-exported, so that `using OptimizationManopt` is enough to write
+`Manopt.ArmijoLinesearch(M)` as the examples below do.
+
+Manopt's solver options are passed to `solve` and keep that qualified spelling:
+
+  - Stepsizes, e.g. `Manopt.ArmijoLinesearch`, `Manopt.WolfePowellLinesearch`
+  - Stopping criteria, e.g. `Manopt.StopAfterIteration`,
+    `Manopt.StopWhenGradientNormLess`
+  - Quasi-Newton update rules, e.g. `Manopt.InverseBFGS`, `Manopt.SR1`
+  - Debug and record actions, e.g. `Manopt.DebugCost`, `Manopt.RecordIterate`
+
+Manopt's own surface is roughly 480 names and includes `solve!`, `BFGS`, `NelderMead`
+and `getindex`, so it is deliberately *not* blanket-reexported: doing so shadowed the
+SciML `solve!` and collided with [Optim.jl](@ref optim)'s optimizer names.
+
+Anything else from Manopt.jl must be reached through the `Manopt` module or imported
+from Manopt directly.
 
 ## Examples
 
 The Rosenbrock function on the Euclidean manifold can be optimized using the `GradientDescentOptimizer` as follows:
 
 ```@example Manopt
-using Optimization, OptimizationManopt, Manifolds, LinearAlgebra, ADTypes, Zygote
+using OptimizationBase, OptimizationManopt, Manifolds, Manopt, LinearAlgebra, ADTypes, Zygote
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
@@ -52,10 +100,16 @@ opt = OptimizationManopt.GradientDescentOptimizer()
 optf = OptimizationFunction(rosenbrock, ADTypes.AutoZygote())
 
 prob = OptimizationProblem(
-    optf, x0, p; manifold = R2, stepsize = stepsize)
+    optf, x0, p; manifold = R2, stepsize = stepsize, maxiters = 25000)
 
-sol = Optimization.solve(prob, opt)
+sol = OptimizationBase.solve(prob, opt)
 ```
+
+!!! note
+
+    Plain gradient descent zig-zags slowly down Rosenbrock's narrow curved valley, so it
+    needs tens of thousands of iterations (a few seconds here) to bring the gradient norm
+    below the default tolerance and report `retcode = Success`.
 
 The box-constrained Karcher mean problem on the SPD manifold with the Frank-Wolfe algorithm can be solved as follows:
 
@@ -67,8 +121,6 @@ q = Matrix{Float64}(I, 5, 5) .+ 2.0
 data2 = [exp(M, q, σ * rand(M; vector_at = q)) for i in 1:m]
 
 f(x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
-optf = OptimizationFunction(f, ADTypes.AutoZygote())
-prob = OptimizationProblem(optf, data2[1]; manifold = M, maxiters = 1000)
 
 function closed_form_solution!(M::SymmetricPositiveDefinite, q, L, U, p, X)
     # extract p^1/2 and p^{-1/2}
@@ -90,10 +142,12 @@ U = mean(data2)
 L = inv(sum(1 / N * inv(matrix) for matrix in data2))
 
 optf = OptimizationFunction(f, ADTypes.AutoZygote())
-prob = OptimizationProblem(optf, U; manifold = M, maxiters = 1000)
+prob = OptimizationProblem(optf, U; manifold = M, maxiters = 5000)
 
-sol = Optimization.solve(
-    prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X))
+opt = OptimizationManopt.FrankWolfeOptimizer()
+sol = OptimizationBase.solve(
+    prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X),
+    evaluation = Manopt.InplaceEvaluation())
 ```
 
 This example is based on the [example](https://juliamanifolds.github.io/ManoptExamples.jl/stable/examples/Riemannian-mean/) in the Manopt and [Weber and Sra'22](https://doi.org/10.1007/s10107-022-01840-5).
@@ -102,7 +156,7 @@ The following example is adapted from the Rayleigh Quotient example in ManoptExa
 We solve the Rayleigh quotient problem on the Sphere manifold:
 
 ```@example Manopt
-using Optimization, OptimizationManopt
+using OptimizationBase, OptimizationManopt
 using Manifolds, LinearAlgebra
 using Manopt
 
@@ -115,7 +169,7 @@ egrad(G, x, p = nothing) = (G .= -2 * A * x)
 
 optf = OptimizationFunction(cost, grad = egrad)
 x0 = rand(manifold)
-prob = OptimizationProblem(optf, x0, manifold = manifold)
+prob = OptimizationProblem(optf, x0, manifold = manifold, maxiters = 5000)
 
 sol = solve(prob, GradientDescentOptimizer())
 ```

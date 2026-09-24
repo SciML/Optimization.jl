@@ -1,11 +1,19 @@
 module OptimizationGCMAES
 
 using Reexport
-@reexport using OptimizationBase
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
+using SciMLLogging: @SciMLMessage
 using GCMAES, SciMLBase
 
 export GCMAESOpt
 
+"""
+    GCMAESOpt()
+
+Optimizer wrapper for GCMAES.jl gradient-based covariance matrix adaptation.
+"""
 struct GCMAESOpt end
 
 SciMLBase.requiresbounds(::GCMAESOpt) = true
@@ -16,6 +24,7 @@ SciMLBase.requiresgradient(::GCMAESOpt) = true
 SciMLBase.requireshessian(::GCMAESOpt) = false
 SciMLBase.requiresconsjac(::GCMAESOpt) = false
 SciMLBase.requiresconshess(::GCMAESOpt) = false
+OptimizationBase.supports_sense(::GCMAESOpt) = true
 
 function __map_optimizer_args(
         cache::OptimizationBase.OptimizationCache, opt::GCMAESOpt;
@@ -39,11 +48,17 @@ function __map_optimizer_args(
     end
 
     if !isnothing(abstol)
-        @warn "common abstol is currently not used by $(opt)"
+        @SciMLMessage(
+            lazy"common abstol is currently not used by $(opt)",
+            cache.verbose, :unsupported_kwargs
+        )
     end
 
     if !isnothing(reltol)
-        @warn "common reltol is currently not used by $(opt)"
+        @SciMLMessage(
+            lazy"common reltol is currently not used by $(opt)",
+            cache.verbose, :unsupported_kwargs
+        )
     end
 
     return mapped_args
@@ -65,11 +80,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: GCMAESOpt}
         return x[1]
     end
 
-    if !isnothing(cache.f.grad)
-        g = function (θ)
-            cache.f.grad(G, θ)
-            return G
-        end
+    g = function (θ)
+        cache.f.grad(G, θ)
+        return G
     end
 
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
@@ -106,7 +119,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: GCMAESOpt}
     )
     return SciMLBase.build_solution(
         cache, cache.opt,
-        opt_xmin, opt_fmin; retcode = Symbol(Bool(opt_ret)),
+        opt_xmin, opt_fmin;
+        retcode = Bool(opt_ret) ? SciMLBase.ReturnCode.Success :
+            SciMLBase.ReturnCode.Failure,
         stats = stats
     )
 end

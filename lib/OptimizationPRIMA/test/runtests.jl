@@ -1,50 +1,21 @@
-using OptimizationPRIMA, OptimizationBase, ForwardDiff, ModelingToolkit, ReverseDiff
-using Test
+using Pkg
+using SafeTestsets
+using SciMLTesting
 
-@testset "OptimizationPRIMA.jl" begin
-    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
-    x0 = zeros(2)
-    _p = [1.0, 100.0]
-    l1 = rosenbrock(x0, _p)
+const TEST_GROUP = get(ENV, "OPTIMIZATION_TEST_GROUP", "All")
 
-    prob = OptimizationProblem(rosenbrock, x0, _p)
-    sol = OptimizationBase.solve(prob, UOBYQA(), maxiters = 1000)
-    @test 10 * sol.objective < l1
-    sol = OptimizationBase.solve(prob, NEWUOA(), maxiters = 1000)
-    @test 10 * sol.objective < l1
-    sol = OptimizationBase.solve(prob, BOBYQA(), maxiters = 1000)
-    @test 10 * sol.objective < l1
-    sol = OptimizationBase.solve(prob, LINCOA(), maxiters = 1000)
-    @test 10 * sol.objective < l1
-    @test_throws OptimizationBase.IncompatibleOptimizerError OptimizationBase.solve(
-        prob, COBYLA(), maxiters = 1000
-    )
+# QA (Aqua + JET) runs in an isolated environment (test/qa). activate_group_env
+# develops the package under test (via `parent`) plus its in-repo `[sources]` siblings
+# by path — native `[sources]` on Julia >= 1.11, the develop_sources! backport on 1.10.
+function activate_qa_env()
+    return activate_group_env(joinpath(@__DIR__, "qa"))
+end
 
-    function con2_c(res, x, p)
-        res .= [x[1] + x[2], x[2] * sin(x[1]) - x[1]]
-    end
-    optprob = OptimizationFunction(rosenbrock, AutoForwardDiff(), cons = con2_c)
-    prob = OptimizationProblem(optprob, x0, _p, lcons = [1, -100], ucons = [1, 100])
-    sol = OptimizationBase.solve(prob, COBYLA(), maxiters = 1000)
-    @test sol.objective < l1
+if TEST_GROUP == "Core" || TEST_GROUP == "All"
+    @time @safetestset "Core" include("core_tests.jl")
+end
 
-    function con2_c(res, x, p)
-        res .= [x[1] + x[2]]
-    end
-    optprob = OptimizationFunction(rosenbrock, AutoForwardDiff(), cons = con2_c)
-    prob = OptimizationProblem(optprob, x0, _p, lcons = [1], ucons = [1])
-    sol = OptimizationBase.solve(prob, COBYLA(), maxiters = 1000)
-    @test sol.objective < l1
-
-    prob = OptimizationProblem(optprob, x0, _p, lcons = [1], ucons = [5])
-    sol = OptimizationBase.solve(prob, COBYLA(), maxiters = 1000)
-    @test sol.objective < l1
-
-    function con2_c(res, x, p)
-        res .= [x[2] * sin(x[1]) - x[1]]
-    end
-    optprob = OptimizationFunction(rosenbrock, AutoSymbolics(), cons = con2_c)
-    prob = OptimizationProblem(optprob, x0, _p, lcons = [10], ucons = [50])
-    sol = OptimizationBase.solve(prob, COBYLA(), maxiters = 1000)
-    @test 10 * sol.objective < l1
+if TEST_GROUP == "QA"
+    activate_qa_env()
+    @safetestset "Quality Assurance" include("qa/qa.jl")
 end

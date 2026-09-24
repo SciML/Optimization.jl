@@ -3,7 +3,7 @@
 [![Join the chat at https://julialang.zulipchat.com #sciml-bridged](https://img.shields.io/static/v1?label=Zulip&message=chat&color=9558b2&labelColor=389826)](https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged)
 [![Global Docs](https://img.shields.io/badge/docs-SciML-blue.svg)](https://docs.sciml.ai/Optimization/stable/)
 
-[![codecov](https://codecov.io/gh/SciML/Optimization.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/SciML/Optimization.jl)
+[![codecov](https://codecov.io/gh/SciML/Optimization.jl/branch/master/graph/badge.svg)](https://app.codecov.io/gh/SciML/Optimization.jl)
 [![Build Status](https://github.com/SciML/Optimization.jl/workflows/CI/badge.svg)](https://github.com/SciML/Optimization.jl/actions?query=workflow%3ACI)
 
 [![ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor%27s%20Guide-blueviolet)](https://github.com/SciML/ColPrac)
@@ -22,11 +22,11 @@ unified interface.
 ## Installation
 
 Assuming that you already have Julia correctly installed, it suffices to import
-Optimization.jl in the standard way:
+OptimizationBase in the standard way:
 
 ```julia
 using Pkg
-Pkg.add("Optimization")
+Pkg.add("OptimizationBase")
 ```
 
 The packages relevant to the core functionality of Optimization.jl will be imported
@@ -38,7 +38,7 @@ offered by them:
   - OptimizationAuglag for augmented Lagrangian methods
   - OptimizationBBO for [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl)
   - OptimizationCMAEvolutionStrategy for [CMAEvolutionStrategy.jl](https://github.com/jbrea/CMAEvolutionStrategy.jl)
-  - OptimizationEvolutionary for [Evolutionary.jl](https://github.com/wildart/Evolutionary.jl) (see also [this documentation](https://wildart.github.io/Evolutionary.jl/dev/))
+  - OptimizationEvolutionary for [Evolutionary.jl](https://github.com/SciML/Evolutionary.jl) (see also [this documentation](https://sciml.github.io/Evolutionary.jl/stable/))
   - OptimizationGCMAES for [GCMAES.jl](https://github.com/AStupidBear/GCMAES.jl)
   - OptimizationIpopt for [Ipopt.jl](https://github.com/jump-dev/Ipopt.jl)
   - OptimizationLBFGSB for [LBFGSB.jl](https://github.com/Gnimuc/LBFGSB.jl)
@@ -47,7 +47,7 @@ offered by them:
   - OptimizationMetaheuristics for [Metaheuristics.jl](https://github.com/jmejia8/Metaheuristics.jl) (see also [this documentation](https://jmejia8.github.io/Metaheuristics.jl/stable/))
   - OptimizationMOI for [MathOptInterface.jl](https://github.com/jump-dev/MathOptInterface.jl) (usage of algorithm via MathOptInterface API; see also the API [documentation](https://jump.dev/MathOptInterface.jl/stable/))
   - OptimizationMultistartOptimization for [MultistartOptimization.jl](https://github.com/tpapp/MultistartOptimization.jl) (see also [this documentation](https://juliahub.com/docs/MultistartOptimization/cVZvi/0.1.0/))
-  - OptimizationNLopt for [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) (usage via the NLopt API; see also the available [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/))
+  - OptimizationNLopt for [NLopt.jl](https://github.com/jump-dev/NLopt.jl) (usage via the NLopt API; see also the available [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/))
   - OptimizationNLPModels for [NLPModels.jl](https://github.com/JuliaSmoothOptimizers/NLPModels.jl)
   - OptimizationNOMAD for [NOMAD.jl](https://github.com/bbopt/NOMAD.jl) (see also [this documentation](https://bbopt.github.io/NOMAD.jl/stable/))
   - OptimizationODE for optimization of steady-state and time-dependent ODE problems
@@ -71,7 +71,7 @@ the documentation, which contains the unreleased features.
 ## Examples
 
 ```julia
-using Optimization
+using OptimizationBase
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]

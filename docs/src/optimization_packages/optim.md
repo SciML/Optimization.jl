@@ -49,6 +49,35 @@ The following special keyword arguments which are not covered by the common `sol
 For a more extensive documentation of all the algorithms and options, please consult the
 [`Documentation`](https://julianlsolvers.github.io/Optim.jl/stable/#)
 
+## Reexported Optim.jl API
+
+`using OptimizationOptimJL` brings Optim.jl's optimizer names into scope, so that
+`solve(prob, BFGS())` works without a separate `using Optim`. These names are owned and
+documented by [Optim.jl](https://julianlsolvers.github.io/Optim.jl/stable/); this
+package only re-exports them.
+
+  - Zeroth order: `NelderMead`, `SimulatedAnnealing`, `ParticleSwarm`
+  - First order: `GradientDescent`, `ConjugateGradient`, `BFGS`, `LBFGS`,
+    `AcceleratedGradientDescent`, `MomentumGradientDescent`, `NGMRES`, `OACCEL`
+  - Second order: `Newton`, `NewtonTrustRegion`
+  - Box constrained: `Fminbox`, `SAMIN`
+  - Nonlinearly constrained: `IPNewton`
+  - The `Optim` module itself, for everything below
+
+Deliberately not re-exported, and reached through the `Optim` module instead:
+
+  - `Optim.Adam` and `Optim.AdaMax` — the `Adam` this documentation uses is
+    [Optimisers.jl](@ref optimisers)', and exporting both would make the bare name
+    ambiguous whenever `OptimizationOptimisers` is loaded too.
+  - `Optim.LBFGSB` — `LBFGSB` here is [OptimizationLBFGSB](@ref lbfgsb)'s.
+  - `Optim.KrylovTrustRegion`, `Optim.AffineSimplexer` and friends — Optim does not
+    export them either.
+  - The univariate `Optim.Brent`/`Optim.GoldenSection`, Optim's objective wrappers
+    (`Optim.TwiceDifferentiable` and friends) and its own `Optim.optimize`/`Optim.maximize`
+    entry points, which `solve` replaces.
+
+Anything else from Optim.jl must be imported from Optim directly.
+
 ## Local Optimizer
 
 ### Local Constraint
@@ -69,14 +98,14 @@ For a more extensive documentation of all the algorithms and options, please con
 The Rosenbrock function with constraints can be optimized using the `Optim.IPNewton()` as follows:
 
 ```@example Optim1
-using Optimization, OptimizationOptimJL, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationOptimJL, ADTypes, ForwardDiff
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
 x0 = zeros(2)
 p = [1.0, 100.0]
 prob = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff(); cons = cons)
-prob = SciMLBase.OptimizationProblem(prob, x0, p, lcons = [-5.0], ucons = [10.0])
-sol = solve(prob, IPNewton())
+prob = OptimizationProblem(prob, x0, p, lcons = [-5.0], ucons = [10.0])
+sol = solve(prob, Optim.IPNewton())
 ```
 
 See also in the `Optim.jl` documentation the [Nonlinear constrained optimization](https://julianlsolvers.github.io/Optim.jl/stable/#examples/generated/ipnewton_basics/) example using `IPNewton`.
@@ -115,11 +144,11 @@ Derivative-free optimizers are optimizers that can be used even in cases where n
 The Rosenbrock function can be optimized using the `Optim.NelderMead()` as follows:
 
 ```@example Optim2
-using Optimization, OptimizationOptimJL
+using OptimizationBase, OptimizationOptimJL
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
-prob = SciMLBase.OptimizationProblem(rosenbrock, x0, p)
+prob = OptimizationProblem(rosenbrock, x0, p)
 sol = solve(prob, Optim.NelderMead())
 ```
 
@@ -275,12 +304,12 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
 The Rosenbrock function can be optimized using the `Optim.LBFGS()` as follows:
 
 ```@example Optim3
-using Optimization, OptimizationOptimJL, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationOptimJL, ADTypes, ForwardDiff
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 optprob = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
-prob = SciMLBase.OptimizationProblem(optprob, x0, p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
+prob = OptimizationProblem(optprob, x0, p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
 sol = solve(prob, Optim.LBFGS())
 ```
 
@@ -336,12 +365,12 @@ the Hessian in order to be appropriate.
 The Rosenbrock function can be optimized using the `Optim.Newton()` as follows:
 
 ```@example Optim4
-using Optimization, OptimizationOptimJL, ADTypes, ModelingToolkit, Symbolics
+using OptimizationBase, OptimizationOptimJL, ADTypes, ModelingToolkit, Symbolics
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, ADTypes.AutoSymbolics())
-prob = SciMLBase.OptimizationProblem(f, x0, p)
+prob = OptimizationProblem(f, x0, p)
 sol = solve(prob, Optim.Newton())
 ```
 
@@ -374,12 +403,12 @@ special case when considering conditioning of the Hessian.
 The Rosenbrock function can be optimized using the `Optim.KrylovTrustRegion()` as follows:
 
 ```@example Optim5
-using Optimization, OptimizationOptimJL, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationOptimJL, ADTypes, ForwardDiff
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 optprob = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
-prob = SciMLBase.OptimizationProblem(optprob, x0, p)
+prob = OptimizationProblem(optprob, x0, p)
 sol = solve(prob, Optim.KrylovTrustRegion())
 ```
 
@@ -400,12 +429,12 @@ box constraints. It works both with and without lower and upper bounds set by `l
 The Rosenbrock function can be optimized using the `Optim.ParticleSwarm()` as follows:
 
 ```@example Optim6
-using Optimization, OptimizationOptimJL
+using OptimizationBase, OptimizationOptimJL
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, Optim.ParticleSwarm(lower = prob.lb, upper = prob.ub, n_particles = 100))
 ```
 
@@ -432,11 +461,11 @@ box constraints.
 The Rosenbrock function can be optimized using the `Optim.SAMIN()` as follows:
 
 ```@example Optim7
-using Optimization, OptimizationOptimJL, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationOptimJL, ADTypes, ForwardDiff
 rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
-prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, Optim.SAMIN())
 ```

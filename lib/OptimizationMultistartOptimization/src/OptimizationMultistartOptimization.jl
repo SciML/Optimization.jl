@@ -1,7 +1,10 @@
 module OptimizationMultistartOptimization
 
 using Reexport
-@reexport using MultistartOptimization, OptimizationBase
+@reexport using MultistartOptimization
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
 using SciMLBase
 
 SciMLBase.requiresbounds(opt::MultistartOptimization.TikTak) = true

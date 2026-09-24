@@ -1,0 +1,43 @@
+using SciMLTesting, OptimizationEvolutionary, JET, SciMLBase
+using Test
+
+include(normpath(joinpath(@__DIR__, "..", "..", "..", "..", "test", "qa", "rendered_docs.jl")))
+
+using Evolutionary
+
+# ExplicitImports findings, all tracked against SciML/Optimization.jl:
+#  * no_implicit_imports broken: the module relies on `@reexport`/`using`
+#    module names (SciMLBase/OptimizationBase/Reexport/...) that cannot be made
+#    explicit without restructuring.
+#  * the ignored *_are_public / *_via_owners names are owned by SciMLBase,
+#    OptimizationBase, the backend, or Base and are not (yet) declared public;
+#    the proper fix is upstream `public` declarations, not a local change.
+# SciML trait/interface methods are our own, not piracy — mark them as such.
+# The Evolutionary.trace! override IS genuine piracy (changes Evolutionary's
+# tracing globally); mark the piracy test broken until it's replaced.
+run_qa(
+    OptimizationEvolutionary;
+    explicit_imports = true,
+    aqua_kwargs = (;
+        piracies = (;
+            broken = true,
+            treat_as_own = [
+                SciMLBase.__solve,
+                SciMLBase.allowsbounds,
+                SciMLBase.allowscallback,
+                SciMLBase.allowsconstraints,
+                SciMLBase.has_init,
+                SciMLBase.requiresconshess,
+                SciMLBase.requiresconsjac,
+                SciMLBase.requiresgradient,
+                SciMLBase.requireshessian,
+            ],
+        ),
+    ),
+    ei_kwargs = (;
+        all_qualified_accesses_via_owners = (; ignore = (:OptimizationStats, :minimum)),
+        all_qualified_accesses_are_public = (; ignore = (:AbstractOptimizer, :OptimizationState, :OptimizationStats, :OptimizationTrace, :OptimizationTraceRecord, :Options, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback, :converged, :minimizer, :minimum, :optimize, :requiresconshess, :requiresconsjac, :requiresgradient, :requireshessian, :trace!, :update!)),
+    ),
+    ei_broken = (:no_implicit_imports,),
+    reexports_allow = optimization_reexports_allow(OptimizationEvolutionary.Evolutionary),
+)

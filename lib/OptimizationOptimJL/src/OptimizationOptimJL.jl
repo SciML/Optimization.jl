@@ -1,16 +1,89 @@
 module OptimizationOptimJL
 
-using Reexport
-@reexport using Optim, OptimizationBase
+using Optim
+# The Optim algorithm names are this package's whole point: `using Optimization,
+# OptimizationOptimJL` has to be enough to write `solve(prob, BFGS())`, exactly as the
+# docs show. They are re-surfaced by name below rather than by blanket `@reexport`,
+# which also dragged in Optim's objective wrappers and its own `optimize`/`maximize`
+# driver interface. Everything stays owned and documented upstream in Optim.jl.
+using Optim: AcceleratedGradientDescent, BFGS, ConjugateGradient, Fminbox,
+    GradientDescent, IPNewton, LBFGS, MomentumGradientDescent, NGMRES, NelderMead,
+    Newton, NewtonTrustRegion, OACCEL, ParticleSwarm, SAMIN, SimulatedAnnealing
+
+@doc """
+    AcceleratedGradientDescent(; alphaguess, linesearch, manifold)
+
+Construct Optim's Nesterov-style accelerated gradient-descent method. The keyword
+arguments configure Optim's initial step estimate, line search, and manifold.
+""" AcceleratedGradientDescent
+
+@doc """
+    MomentumGradientDescent(; mu = 0.01, alphaguess, linesearch, manifold)
+
+Construct Optim's momentum gradient-descent method with momentum coefficient `mu`. The
+remaining keyword arguments configure Optim's initial step estimate, line search, and
+manifold.
+""" MomentumGradientDescent
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
 using SciMLBase, SparseArrays
-decompose_trace(trace::Optim.OptimizationTrace) = last(trace)
-decompose_trace(trace::Optim.OptimizationState) = trace
+
+export Optim
+
+# Optim's optimizers; approved via `reexports_allow` in test/qa/qa.jl. Deliberately
+# excluded: `Optim.Adam`/`Optim.AdaMax` (the documented `Adam` is Optimisers'; exporting
+# both makes the name ambiguous wherever OptimizationOptimisers is also loaded),
+# `Optim.LBFGSB` (OptimizationLBFGSB owns `LBFGSB` here), the univariate `Brent`/
+# `GoldenSection` (no `OptimizationProblem` dispatches to them), and Optim's objective
+# wrappers and `optimize`/`maximize` entry points, which Optimization.jl replaces.
+export AcceleratedGradientDescent, BFGS, ConjugateGradient, Fminbox,
+    GradientDescent, IPNewton, LBFGS, MomentumGradientDescent, NGMRES, NelderMead,
+    Newton, NewtonTrustRegion, OACCEL, ParticleSwarm, SAMIN, SimulatedAnnealing
+
+# Construct a TwiceDifferentiable with Hessian-vector product support for KrylovTrustRegion.
+function _make_hv_objective(f, fg!, hv!, x0)
+    NLB = Optim.NLSolversBase
+    u0_type = eltype(x0)
+    F = real(zero(u0_type))
+    G = NLB.alloc_DF(x0, F)
+    H = NLB.alloc_H(x0, F)
+    g! = let fg! = fg!
+        function (_g, _x)
+            fg!(_g, _x)
+            return nothing
+        end
+    end
+    x_f = fill!(similar(x0, u0_type), NaN)
+    x_df = fill!(similar(x0, u0_type), NaN)
+    x_jvp = fill!(similar(x0, u0_type), NaN)
+    v_jvp = fill!(similar(x0, u0_type), NaN)
+    x_h = fill!(similar(x0, u0_type), NaN)
+    x_hvp = fill!(similar(x0, u0_type), NaN)
+    v_hvp = fill!(similar(x0, u0_type), NaN)
+    return NLB.TwiceDifferentiable(
+        f, g!, fg!, nothing, nothing, nothing, nothing, nothing, hv!,
+        F, copy(G), F, copy(H), copy(G),
+        x_f, x_df, x_jvp, v_jvp, x_h, x_hvp, v_hvp,
+        0, 0, 0, 0, 0
+    )
+end
 
 SciMLBase.allowsconstraints(::IPNewton) = true
 SciMLBase.allowsbounds(opt::Optim.AbstractOptimizer) = true
 SciMLBase.allowsbounds(opt::Optim.SimulatedAnnealing) = false
 SciMLBase.requiresbounds(opt::Optim.Fminbox) = true
 SciMLBase.requiresbounds(opt::Optim.SAMIN) = true
+
+function _optim_retcode(opt_res)
+    if Optim.converged(opt_res)
+        return SciMLBase.ReturnCode.Success
+    elseif Optim.iteration_limit_reached(opt_res)
+        return SciMLBase.ReturnCode.MaxIters
+    else
+        return SciMLBase.ReturnCode.Failure
+    end
+end
 
 SciMLBase.has_init(opt::Optim.AbstractOptimizer) = true
 SciMLBase.has_init(opt::Union{Optim.Fminbox, Optim.SAMIN}) = true
@@ -19,6 +92,9 @@ SciMLBase.has_init(opt::Optim.ConstrainedOptimizer) = true
 SciMLBase.allowscallback(opt::Optim.AbstractOptimizer) = true
 SciMLBase.allowscallback(opt::Union{Optim.Fminbox, Optim.SAMIN}) = true
 SciMLBase.allowscallback(opt::Optim.ConstrainedOptimizer) = true
+OptimizationBase.supports_sense(
+    ::Union{Optim.AbstractOptimizer, Optim.Fminbox, Optim.SAMIN, Optim.ConstrainedOptimizer}
+) = true
 
 function SciMLBase.requiresgradient(opt::Optim.AbstractOptimizer)
     return !(opt isa Optim.ZerothOrderOptimizer)
@@ -35,7 +111,7 @@ function SciMLBase.requireshessian(
     return true
 end
 SciMLBase.requiresgradient(opt::Optim.Fminbox) = true
-# SciMLBase.allowsfg(opt::Union{Optim.AbstractOptimizer, Optim.ConstrainedOptimizer, Optim.Fminbox, Optim.SAMIN}) = true
+SciMLBase.allowsfg(opt::Union{Optim.AbstractOptimizer, Optim.ConstrainedOptimizer, Optim.Fminbox, Optim.SAMIN}) = true
 
 function __map_optimizer_args(
         cache::OptimizationBase.OptimizationCache,
@@ -139,21 +215,19 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
     !(cache.opt isa Optim.ZerothOrderOptimizer) && cache.f.grad === nothing &&
         error("Use OptimizationFunction to pass the derivatives or automatically generate them with one of the autodiff backends")
 
-    function _cb(trace)
-        trace_state = decompose_trace(trace)
-        metadata = trace_state.metadata
-        θ = metadata[cache.opt isa Optim.NelderMead ? "centroid" : "x"]
-        # Extract scalar value from potentially Dual-valued trace (issue #1073)
-        # Using SciMLBase.value to handle ForwardDiff.Dual numbers from Fminbox
-        loss_val = SciMLBase.value(trace_state.value)
+    iter_counter = Ref(0)
+    function _cb(optim_state)
+        iter_counter[] += 1
+        θ = cache.opt isa Optim.NelderMead ? optim_state.x_centroid : optim_state.x
+        loss_val = SciMLBase.value(optim_state.f_x)
         opt_state = OptimizationBase.OptimizationState(
-            iter = trace_state.iteration,
+            iter = iter_counter[],
             u = θ,
             p = cache.p,
             objective = loss_val,
-            grad = get(metadata, "g(x)", nothing),
-            hess = get(metadata, "h(x)", nothing),
-            original = trace
+            grad = hasproperty(optim_state, :g_x) ? optim_state.g_x : nothing,
+            hess = hasproperty(optim_state, :H_x) ? optim_state.H_x : nothing,
+            original = optim_state
         )
         cb_call = cache.callback(opt_state, loss_val)
         if !(cb_call isa Bool)
@@ -168,8 +242,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
         return cache.sense === OptimizationBase.MaxSense ? -__x : __x
     end
 
-    if cache.f.fg === nothing
-        fg! = function (G, θ)
+    fg! = if cache.f.fg === nothing
+        function (G, θ)
             if G !== nothing
                 cache.f.grad(G, θ)
                 if cache.sense === OptimizationBase.MaxSense
@@ -178,8 +252,14 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
             end
             return _loss(θ)
         end
+    elseif cache.sense === OptimizationBase.MaxSense
+        function (G, θ)
+            y = cache.f.fg(G, θ)
+            G .*= -one(eltype(G))
+            return -y
+        end
     else
-        fg! = cache.f.fg
+        cache.f.fg
     end
 
     if cache.opt isa Optim.KrylovTrustRegion
@@ -189,7 +269,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
                 H .*= -one(eltype(H))
             end
         end
-        optim_f = Optim.TwiceDifferentiableHV(_loss, fg!, hv, cache.u0)
+        optim_f = _make_hv_objective(_loss, fg!, hv, cache.u0)
     else
         gg = function (G, θ)
             cache.f.grad(G, θ)
@@ -233,7 +313,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
     t0 = time()
     opt_res = Optim.optimize(optim_f, cache.u0, cache.opt, opt_args)
     t1 = time()
-    opt_ret = Symbol(Optim.converged(opt_res))
+    opt_ret = _optim_retcode(opt_res)
     stats = OptimizationBase.OptimizationStats(;
         iterations = opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls,
@@ -255,23 +335,20 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     }
     local x, cur, state
 
-    function _cb(trace)
-        trace_state = decompose_trace(trace)
-        metadata = trace_state.metadata
-        θ = !(cache.opt isa Optim.SAMIN) && cache.opt.method == Optim.NelderMead() ?
-            metadata["centroid"] :
-            metadata["x"]
-        # Extract scalar value from potentially Dual-valued trace (issue #1073)
-        # Using SciMLBase.value to handle ForwardDiff.Dual numbers from Fminbox
-        loss_val = SciMLBase.value(trace_state.value)
+    iter_counter = Ref(0)
+    inner_opt = cache.opt isa Optim.SAMIN ? cache.opt : cache.opt.method
+    function _cb(optim_state)
+        iter_counter[] += 1
+        θ = inner_opt isa Optim.NelderMead ? optim_state.x_centroid : optim_state.x
+        loss_val = SciMLBase.value(optim_state.f_x)
         opt_state = OptimizationBase.OptimizationState(
-            iter = trace_state.iteration,
+            iter = iter_counter[],
             u = θ,
             p = cache.p,
             objective = loss_val,
-            grad = get(metadata, "g(x)", nothing),
-            hess = get(metadata, "h(x)", nothing),
-            original = trace
+            grad = hasproperty(optim_state, :g_x) ? optim_state.g_x : nothing,
+            hess = hasproperty(optim_state, :H_x) ? optim_state.H_x : nothing,
+            original = optim_state
         )
         cb_call = cache.callback(opt_state, loss_val)
         if !(cb_call isa Bool)
@@ -286,8 +363,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         return cache.sense === OptimizationBase.MaxSense ? -__x : __x
     end
 
-    if cache.f.fg === nothing
-        fg! = function (G, θ)
+    fg! = if cache.f.fg === nothing
+        function (G, θ)
             if G !== nothing
                 cache.f.grad(G, θ)
                 if cache.sense === OptimizationBase.MaxSense
@@ -296,8 +373,14 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
             end
             return _loss(θ)
         end
+    elseif cache.sense === OptimizationBase.MaxSense
+        function (G, θ)
+            y = cache.f.fg(G, θ)
+            G .*= -one(eltype(G))
+            return -y
+        end
     else
-        fg! = cache.f.fg
+        cache.f.fg
     end
 
     gg = function (G, θ)
@@ -320,7 +403,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     t0 = time()
     opt_res = Optim.optimize(optim_f, cache.lb, cache.ub, cache.u0, cache.opt, opt_args)
     t1 = time()
-    opt_ret = Symbol(Optim.converged(opt_res))
+    opt_ret = _optim_retcode(opt_res)
     stats = OptimizationBase.OptimizationStats(;
         iterations = opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls,
@@ -328,7 +411,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     )
     return SciMLBase.build_solution(
         cache, cache.opt,
-        opt_res.minimizer, opt_res.minimum;
+        opt_res.minimizer,
+        cache.sense === OptimizationBase.MaxSense ? -opt_res.minimum :
+            opt_res.minimum;
         original = opt_res, retcode = opt_ret, stats = stats
     )
 end
@@ -339,19 +424,18 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     }
     local x, cur, state
 
-    function _cb(trace)
-        metadata = decompose_trace(trace).metadata
-        # Extract scalar value from potentially Dual-valued trace (issue #1073)
-        # Using SciMLBase.value to handle ForwardDiff.Dual numbers from Fminbox
-        loss_val = SciMLBase.value(trace.value)
+    iter_counter = Ref(0)
+    function _cb(optim_state)
+        iter_counter[] += 1
+        loss_val = SciMLBase.value(optim_state.f_x)
         opt_state = OptimizationBase.OptimizationState(
-            iter = trace.iteration,
-            u = metadata["x"],
+            iter = iter_counter[],
+            u = optim_state.x,
             p = cache.p,
-            grad = get(metadata, "g(x)", nothing),
-            hess = get(metadata, "h(x)", nothing),
             objective = loss_val,
-            original = trace
+            grad = hasproperty(optim_state, :g_x) ? optim_state.g_x : nothing,
+            hess = hasproperty(optim_state, :H_x) ? optim_state.H_x : nothing,
+            original = optim_state
         )
         cb_call = cache.callback(opt_state, loss_val)
         if !(cb_call isa Bool)
@@ -366,8 +450,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         return cache.sense === OptimizationBase.MaxSense ? -__x : __x
     end
 
-    if cache.f.fg === nothing
-        fg! = function (G, θ)
+    fg! = if cache.f.fg === nothing
+        function (G, θ)
             if G !== nothing
                 cache.f.grad(G, θ)
                 if cache.sense === OptimizationBase.MaxSense
@@ -376,8 +460,14 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
             end
             return _loss(θ)
         end
+    elseif cache.sense === OptimizationBase.MaxSense
+        function (G, θ)
+            y = cache.f.fg(G, θ)
+            G .*= -one(eltype(G))
+            return -y
+        end
     else
-        fg! = cache.f.fg
+        cache.f.fg
     end
 
     gg = function (G, θ)
@@ -472,7 +562,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         opt_res = Optim.optimize(optim_f, optim_fc, cache.u0, cache.opt, opt_args)
     end
     t1 = time()
-    opt_ret = Symbol(Optim.converged(opt_res))
+    opt_ret = _optim_retcode(opt_res)
     stats = OptimizationBase.OptimizationStats(;
         iterations = opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls,
@@ -480,45 +570,12 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     )
     return SciMLBase.build_solution(
         cache, cache.opt,
-        opt_res.minimizer, opt_res.minimum;
+        opt_res.minimizer,
+        cache.sense === OptimizationBase.MaxSense ? -opt_res.minimum :
+            opt_res.minimum;
         original = opt_res, retcode = opt_ret,
         stats = stats
     )
-end
-
-using PrecompileTools
-PrecompileTools.@compile_workload begin
-    function obj_f(x, p)
-        A = p[1]
-        b = p[2]
-        return sum((A * x .- b) .^ 2)
-    end
-
-    function solve_nonnegative_least_squares(A, b, solver)
-        optf = OptimizationBase.OptimizationFunction(
-            obj_f, OptimizationBase.AutoForwardDiff()
-        )
-        prob = OptimizationBase.OptimizationProblem(
-            optf, ones(size(A, 2)), (A, b),
-            lb = zeros(size(A, 2)), ub = Inf * ones(size(A, 2))
-        )
-        x = OptimizationOptimJL.solve(prob, solver, maxiters = 5000, maxtime = 100)
-
-        return x
-    end
-
-    solver_list = [
-        OptimizationOptimJL.LBFGS(),
-        OptimizationOptimJL.ConjugateGradient(),
-        OptimizationOptimJL.GradientDescent(),
-        OptimizationOptimJL.BFGS(),
-    ]
-
-    for solver in solver_list
-        x = solve_nonnegative_least_squares(rand(4, 4), rand(4), solver)
-        x = solve_nonnegative_least_squares(rand(35, 35), rand(35), solver)
-        x = solve_nonnegative_least_squares(rand(35, 10), rand(35), solver)
-    end
 end
 
 end

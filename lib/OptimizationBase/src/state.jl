@@ -1,18 +1,25 @@
 """
-$(TYPEDEF)
+    OptimizationState(; iter=0, u=nothing, objective=nothing, grad=nothing,
+        hess=nothing, original=nothing, p=nothing)
 
-Stores the optimization run's state at the current iteration
-and is passed to the callback function as the first argument.
+State passed to an optimization callback after a solver step.
 
-## Fields
+# Fields
 
-  - `iter`: current iteration
-  - `u`: current solution
-  - `objective`: current objective value
-  - `gradient`: current gradient
-  - `hessian`: current hessian
-  - `original`: if the solver has its own state object then it is stored here
-  - `p`: optimization parameters
+- `iter`: current iteration.
+- `u`: current optimization variables.
+- `objective`: current objective value.
+- `grad`: current gradient, when available.
+- `hess`: current Hessian, when available.
+- `original`: solver-specific state object, when available.
+- `p`: current optimization parameters.
+
+# Examples
+
+```julia
+state = OptimizationState(; iter = 2, u = [1.0], objective = 0.5)
+state.iter == 2
+```
 """
 struct OptimizationState{X, O, G, H, S, P}
     iter::Int

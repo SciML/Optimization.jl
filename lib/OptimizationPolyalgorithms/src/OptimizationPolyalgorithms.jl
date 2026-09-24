@@ -1,12 +1,20 @@
 module OptimizationPolyalgorithms
 
-using Reexport
-@reexport using OptimizationBase
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
 using SciMLBase, OptimizationOptimJL, OptimizationOptimisers
 
+"""
+    PolyOpt()
+
+Polyalgorithm that selects or sequences first-order and quasi-Newton optimizers
+for Optimization.jl problems.
+"""
 struct PolyOpt end
 
-SciMLBase.allowscallback(::PolyOpt) = SciMLBase.allowscallback(Optimisers.Adam) && SciMLBase.allowscallback(OptimizationOptimJL.BFGS)
+SciMLBase.allowscallback(::PolyOpt) = SciMLBase.allowscallback(Optimisers.Adam) &&
+    SciMLBase.allowscallback(OptimizationOptimJL.Optim.BFGS)
 SciMLBase.requiresgradient(opt::PolyOpt) = true
 
 function SciMLBase.__solve(
@@ -24,31 +32,31 @@ function SciMLBase.__solve(
     end
 
     return if isempty(args) && deterministic && prob.lb === nothing && prob.ub === nothing
-        # If deterministic then ADAM -> finish with BFGS
+        # If deterministic then Adam -> finish with BFGS
         if maxiters === nothing
             res1 = OptimizationBase.solve(
-                prob, Optimisers.ADAM(0.01), args...; maxiters = 300,
+                prob, Optimisers.Adam(0.01), args...; maxiters = 300,
                 kwargs...
             )
         else
             res1 = OptimizationBase.solve(
-                prob, Optimisers.ADAM(0.01), args...; maxiters,
+                prob, Optimisers.Adam(0.01), args...; maxiters,
                 kwargs...
             )
         end
 
         optprob2 = remake(prob, u0 = res1.u)
         res1 = OptimizationBase.solve(
-            optprob2, BFGS(initial_stepnorm = 0.01), args...;
+            optprob2, OptimizationOptimJL.Optim.BFGS(initial_stepnorm = 0.01), args...;
             maxiters, kwargs...
         )
     elseif isempty(args) && deterministic
         res1 = OptimizationBase.solve(
-            prob, BFGS(initial_stepnorm = 0.01), args...; maxiters,
+            prob, OptimizationOptimJL.Optim.BFGS(initial_stepnorm = 0.01), args...; maxiters,
             kwargs...
         )
     else
-        res1 = OptimizationBase.solve(prob, Optimisers.ADAM(0.1), args...; maxiters, kwargs...)
+        res1 = OptimizationBase.solve(prob, Optimisers.Adam(0.1), args...; maxiters, kwargs...)
     end
 end
 

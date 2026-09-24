@@ -105,7 +105,7 @@ prob = Optimization.OptimizationProblem(optprob, pp)
 
 result_neuralode = Optimization.solve(
     prob,
-    OptimizationOptimisers.ADAM(), callback = callback,
+    OptimizationOptimisers.Adam(), callback = callback,
     maxiters = 1000
 )
 @test result_neuralode.objective ≈ loss_neuralode(result_neuralode.u)[1] rtol = 1.0e-2

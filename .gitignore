@@ -4,3 +4,4 @@ Manifest-v*.toml
 /dev/
 /docs/build/
 .vscode
+.agent/*

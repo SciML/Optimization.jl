@@ -1,4 +1,5 @@
 using DiffEqFlux, OrdinaryDiffEqTsit5, Flux, CUDA
+using OptimizationBase
 CUDA.allowscalar(false) # Makes sure no slow operations are occurring
 
 # Generate Data
@@ -52,6 +53,6 @@ callback = function (p, l, pred; doplot = false)
 end
 result_neuralode = DiffEqFlux.sciml_train(
     loss_neuralode, p,
-    ADAM(0.05), callback = callback,
+    Adam(0.05), callback = callback,
     maxiters = 300
 )

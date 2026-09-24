@@ -18,7 +18,7 @@ Pkg.add("OptimizationMultistartOptimization");
 !!! note
     
 
-You also need to load the relevant subpackage for the local method of your choice, for example if you plan to use one of the NLopt.jl's optimizers, you'd install and load OptimizationNLopt as described in the [NLopt.jl](@ref)'s section.
+You also need to load the relevant subpackage for the local method of your choice, for example if you plan to use one of the NLopt.jl's optimizers, you'd install and load OptimizationNLopt as described in the [NLopt.jl](@ref nlopt)'s section.
 
 ## Global Optimizer
 
@@ -32,12 +32,12 @@ constraint equations. However, lower and upper constraints set by `lb` and `ub` 
 The Rosenbrock function can be optimized using `MultistartOptimization.TikTak()` with 100 initial points and the local method `NLopt.LD_LBFGS()` as follows:
 
 ```julia
-using Optimization, OptimizationMultistartOptimization, OptimizationNLopt, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationMultistartOptimization, OptimizationNLopt, ADTypes, ForwardDiff
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
-prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, MultistartOptimization.TikTak(100), NLopt.LD_LBFGS())
 ```
 
@@ -46,6 +46,6 @@ You can use any `Optimization` optimizers you like. The global method of the `Mu
 ```julia
 using OptimizationOptimJL
 f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
-prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, MultistartOptimization.TikTak(100), LBFGS(), maxiters = 5)
 ```

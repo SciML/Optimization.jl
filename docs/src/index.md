@@ -17,26 +17,47 @@ familiar with the SciML ecosystem. It is also very easy to extend to new
 solvers and new problem types. The package is actively maintained and new
 features are added regularly.
 
-## Installation
-
-Assuming that you already have Julia correctly installed, it suffices to import
-Optimization.jl in the standard way:
-
-```julia
-import Pkg
-Pkg.add("Optimization")
+```@docs
+Optimization
 ```
 
-The packages relevant to the core functionality of Optimization.jl will be imported
-accordingly and, in most cases, you do not have to worry about the manual
-installation of dependencies. [Optimization.jl](@ref) natively offers a LBFGS solver
-but for more solver choices (discussed below in Optimization Packages), you will need
-to add the specific wrapper packages.
+## Installation
+
+In most instances you'll want to use some solver directly. For example, to use
+the Optim set of solvers, you'd do:
+
+```julia
+Pkg.add("OptimizationOptimJL")
+```
+
+See the solver lists for more details. In many scenarios it's recommended to
+have some automatic differentiation (AD) package installed, most tutorials will 
+use some form AD and thus require installing the associated AD package.
+AD choices are made with ADTypes, and thus it's recommended you also add the
+`ADTypes.jl` package for most use cases.
+
+Optimization.jl is simply a bundle/interface over many of these dependencies.
+It may add some optional higher level behavior in the future but at this time
+the top level package does not add any extra behavior.
+
+### `Optimization` or `OptimizationBase`?
+
+`OptimizationBase` defines the interface — `OptimizationProblem`,
+`OptimizationFunction`, `solve` — and is what every solver package depends on,
+so it is what the examples throughout this documentation load:
+
+```julia
+Pkg.add("OptimizationBase")
+```
+
+`Optimization` re-exports that same interface and nothing else, so the two are
+interchangeable for everything shown here. Install whichever you prefer; you
+need only one of them, alongside a solver package.
 
 ## Contributing
 
   - Please refer to the
-    [SciML ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://github.com/SciML/ColPrac/blob/master/README.md)
+    [SciML ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://sciml.github.io/ColPrac/)
     for guidance on PRs, issues, and other matters relating to contributing to SciML.
 
   - See the [SciML Style Guide](https://github.com/SciML/SciMLStyle) for common coding practices and other style decisions.

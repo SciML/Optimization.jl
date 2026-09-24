@@ -69,13 +69,13 @@ sol = solve(prob, Ipopt.Optimizer(); option_name = option_value, ...)
     detail.
 
 ```@example MOI
-using Optimization, OptimizationMOI, Juniper, Ipopt, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationMOI, Juniper, Ipopt, ADTypes, ForwardDiff
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 _p = [1.0, 100.0]
 
 f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
-prob = SciMLBase.OptimizationProblem(f, x0, _p)
+prob = OptimizationProblem(f, x0, _p)
 
 opt = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer,
     "nl_solver" => OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,

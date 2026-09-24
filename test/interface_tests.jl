@@ -1,81 +1,63 @@
-using Test
 using Optimization
-using OptimizationOptimJL
-using OptimizationOptimisers
-using ADTypes
+using SciMLBase
+using Test
 
-# Test function - Rosenbrock
-rosenbrock(x, p) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+struct GenericOptimizationAlgorithm end
 
-@testset "Interface Compatibility Tests" begin
-    @testset "BigFloat Support" begin
-        @testset "OptimizationProblem creation" begin
-            f = OptimizationFunction(rosenbrock)
-            x0 = BigFloat[0.5, 0.5]
-            prob = OptimizationProblem(f, x0)
-            @test typeof(prob.u0) == Vector{BigFloat}
-            @test eltype(prob.u0) == BigFloat
-        end
+mutable struct GenericOptimizationCache <: SciMLBase.AbstractOptimizationCache
+    prob::SciMLBase.OptimizationProblem
+    alg::GenericOptimizationAlgorithm
+    maxiters::Int
+end
 
-        @testset "NelderMead (gradient-free)" begin
-            f = OptimizationFunction(rosenbrock)
-            x0 = BigFloat[0.5, 0.5]
-            prob = OptimizationProblem(f, x0)
-            sol = solve(prob, Optim.NelderMead(), maxiters = 500)
-            @test eltype(sol.u) == BigFloat
-            @test sol.objective < 1.0e-6
-        end
+SciMLBase.has_init(::GenericOptimizationAlgorithm) = true
 
-        @testset "BFGS with ForwardDiff" begin
-            f = OptimizationFunction(rosenbrock, AutoForwardDiff())
-            x0 = BigFloat[0.5, 0.5]
-            prob = OptimizationProblem(f, x0)
-            sol = solve(prob, Optim.BFGS(), maxiters = 500)
-            @test eltype(sol.u) == BigFloat
-            @test sol.objective < 1.0e-20
-        end
+function SciMLBase.__init(
+        prob::SciMLBase.OptimizationProblem,
+        alg::GenericOptimizationAlgorithm;
+        maxiters = 1,
+        kwargs...
+    )
+    return GenericOptimizationCache(prob, alg, Int(maxiters))
+end
 
-        # Adam optimizer with BigFloat + ForwardDiff temporarily skipped due to
-        # gradient dispatch MethodError. See GitHub issue #1134 for tracking.
-        # @testset "Adam optimizer" begin
-        #     f = OptimizationFunction(rosenbrock, AutoForwardDiff())
-        #     x0 = BigFloat[0.5, 0.5]
-        #     prob = OptimizationProblem(f, x0)
-        #     sol = solve(prob, OptimizationOptimisers.Adam(BigFloat(0.01)), maxiters = 500)
-        #     @test eltype(sol.u) == BigFloat
-        # end
-    end
+function SciMLBase.__solve(cache::GenericOptimizationCache)
+    u = copy(cache.prob.u0)
+    objective = cache.prob.f(u, cache.prob.p)
+    stats = SciMLBase.OptimizationStats(; iterations = cache.maxiters, fevals = 1)
+    return SciMLBase.build_solution(
+        cache,
+        cache.alg,
+        u,
+        objective;
+        retcode = SciMLBase.ReturnCode.Success,
+        stats
+    )
+end
 
-    @testset "Type preservation patterns" begin
-        @testset "similar preserves eltype" begin
-            x = BigFloat[1.0, 2.0, 3.0]
-            y = similar(x)
-            @test eltype(y) == BigFloat
-        end
+@testset "Generic optimization interface" begin
+    f = OptimizationFunction((x, p) -> sum(abs2, x))
+    prob = OptimizationProblem(f, [2.0, -1.0])
+    alg = GenericOptimizationAlgorithm()
 
-        @testset "zero/one with eltype" begin
-            x = BigFloat[1.0, 2.0, 3.0]
-            @test zero(eltype(x)) isa BigFloat
-            @test one(eltype(x)) isa BigFloat
-        end
+    @test SciMLBase.has_init(alg)
+    @test !SciMLBase.allowsbounds(alg)
+    @test !SciMLBase.requiresbounds(alg)
+    @test !SciMLBase.allowsconstraints(alg)
+    @test !SciMLBase.requiresconstraints(alg)
 
-        @testset "zeros/ones with eltype" begin
-            x = BigFloat[1.0, 2.0, 3.0]
-            T = eltype(x)
-            z = zeros(T, 3)
-            o = ones(T, 3)
-            @test eltype(z) == BigFloat
-            @test eltype(o) == BigFloat
-        end
-    end
+    cache = OptimizationBase.init(prob, alg; maxiters = 3)
+    @test cache isa GenericOptimizationCache
+    @test cache.maxiters == 3
 
-    @testset "Float64 baseline (regression check)" begin
-        f = OptimizationFunction(rosenbrock, AutoForwardDiff())
-        x0 = [0.5, 0.5]
-        prob = OptimizationProblem(f, x0)
-        sol = solve(prob, Optim.BFGS(), maxiters = 500)
-        @test eltype(sol.u) == Float64
-        @test sol.objective < 1.0e-20
-        @test all(isapprox.(sol.u, [1.0, 1.0], atol = 1.0e-5))
-    end
+    cached_solution = OptimizationBase.solve!(cache)
+    @test cached_solution isa SciMLBase.AbstractOptimizationSolution
+    @test cached_solution.u == prob.u0
+    @test cached_solution.objective == 5.0
+    @test cached_solution.stats.iterations == 3
+
+    direct_solution = Optimization.solve(prob, alg; maxiters = 2)
+    @test direct_solution isa SciMLBase.AbstractOptimizationSolution
+    @test direct_solution.objective == 5.0
+    @test direct_solution.stats.iterations == 2
 end

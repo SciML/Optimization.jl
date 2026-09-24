@@ -49,7 +49,12 @@ function OptimizationBase.instantiate_function(
         grad = nothing
     end
 
-    if fg == true && f.fg === nothing
+    if fg == true && f.fg === nothing && f.grad !== nothing
+        # A user-supplied gradient is authoritative; building an AD `fg!` off `f.f` would
+        # silently discard it for every value+gradient evaluation.
+        fg! = (res, θ, p = p) -> (f.grad(res, θ, p); f.f(θ, p))
+    elseif fg == true && f.fg === nothing
+        # `f.grad === nothing` here, so `g == true` means the branch above already built the prep.
         if g == false
             prep_grad = prepare_gradient(f.f, adtype, x, Constant(p), strict = Val(false))
         end
@@ -203,8 +208,8 @@ function OptimizationBase.instantiate_function(
     if cons !== nothing && f.cons_h === nothing && (cons_h == true || lag_h == true)
         prep_cons_hess = [
             prepare_hessian(
-                    cons_oop, soadtype, x, Constant(i), strict = Val(false)
-                )
+                cons_oop, soadtype, x, Constant(i), strict = Val(false)
+            )
                 for i in 1:num_cons
         ]
     else
@@ -403,7 +408,10 @@ function OptimizationBase.instantiate_function(
         grad = nothing
     end
 
-    if fg == true && f.fg === nothing
+    if fg == true && f.fg === nothing && f.grad !== nothing
+        # A user-supplied gradient is authoritative; see the dense path above.
+        fg! = (res, θ, p = p) -> (f.grad(res, θ, p); f.f(θ, p))
+    elseif fg == true && f.fg === nothing
         if g == false
             extras_grad = prepare_gradient(
                 f.f, adtype.dense_ad, x, Constant(p), strict = Val(false)
@@ -579,8 +587,8 @@ function OptimizationBase.instantiate_function(
     if cons !== nothing && f.cons_h === nothing && cons_h == true
         prep_cons_hess = [
             prepare_hessian(
-                    cons_oop, soadtype, x, Constant(i), strict = Val(false)
-                )
+                cons_oop, soadtype, x, Constant(i), strict = Val(false)
+            )
                 for i in 1:num_cons
         ]
         colores = getfield.(prep_cons_hess, :coloring_result)

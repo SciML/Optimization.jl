@@ -77,3 +77,4 @@ TikTak = "TikTak"  # Legitimate algorithm name in MultistartOptimization
 Tak = "Tak"  # Part of TikTak algorithm name
 opf = "opf"  # Optimal Power Flow abbreviation
 AGS = "AGS"  # Legitimate NLopt algorithm name
+clos = "clos"  # Short for closure (Enzyme AD)

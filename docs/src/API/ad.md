@@ -10,18 +10,23 @@ The choices for the auto-AD fill-ins with quick descriptions are:
   - `AutoSymbolics()`: The fastest choice for large scalar optimizations
   - `AutoEnzyme()`: Highly performant AD choice for type stable and optimized code
   - `AutoMooncake()`: Like Zygote and ReverseDiff, but supports GPU and mutating code
+  - `AutoReactant()`: Compiles the objective with Reactant.jl and differentiates the
+    compiled program with Enzyme; runs on any XLA backend (CPU, GPU, TPU). Requires
+    the OptimizationReactant sublibrary; first-order derivatives only.
 
 ## Automatic Differentiation Choice API
 
-The following sections describe the Auto-AD choices in detail. These types are defined in the [ADTypes.jl](https://github.com/SciML/ADTypes.jl) package.
+The Auto-AD choices are defined and documented in
+[ADTypes.jl](https://docs.sciml.ai/ADTypes/stable/). Optimization.jl accepts
+these choices when constructing optimization functions, but does not own their
+API.
 
 ```@docs
-ADTypes.AutoForwardDiff
-ADTypes.AutoFiniteDiff
-ADTypes.AutoReverseDiff
-ADTypes.AutoZygote
-ADTypes.AutoTracker
-ADTypes.AutoSymbolics
 ADTypes.AutoEnzyme
-ADTypes.AutoMooncake
+ADTypes.AutoFiniteDiff
+ADTypes.AutoForwardDiff
+ADTypes.AutoReactant
+ADTypes.AutoReverseDiff
+ADTypes.AutoTracker
+ADTypes.AutoZygote
 ```

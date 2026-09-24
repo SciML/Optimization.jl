@@ -1,11 +1,19 @@
 module OptimizationPyCMA
 
 using Reexport
-@reexport using OptimizationBase
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
+using SciMLLogging: @SciMLMessage
 using PythonCall, SciMLBase
 
 export PyCMAOpt
 
+"""
+    PyCMAOpt()
+
+Optimizer wrapper for Python's `cma` package through PythonCall.
+"""
 struct PyCMAOpt end
 
 # importing PyCMA
@@ -36,7 +44,10 @@ function __map_optimizer_args(
         PyCMAargs...
     )
     if !isnothing(reltol)
-        @warn "common reltol is currently not used by $(opt)"
+        @SciMLMessage(
+            lazy"common reltol is currently not used by $(opt)",
+            prob.verbose, :unsupported_kwargs
+        )
     end
 
     # Converting OptimizationBase.jl args to PyCMA opts

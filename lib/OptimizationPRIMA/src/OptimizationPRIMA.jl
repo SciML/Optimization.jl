@@ -5,10 +5,43 @@ using OptimizationBase, SciMLBase, Reexport
 
 abstract type PRIMASolvers end
 
+"""
+    UOBYQA()
+
+Derivative-free PRIMA optimizer for unconstrained problems using quadratic
+approximations.
+"""
 struct UOBYQA <: PRIMASolvers end
+
+"""
+    NEWUOA()
+
+Derivative-free PRIMA optimizer for unconstrained problems using Powell's NEWUOA
+algorithm.
+"""
 struct NEWUOA <: PRIMASolvers end
+
+"""
+    BOBYQA()
+
+Derivative-free PRIMA optimizer for bound-constrained problems.
+"""
 struct BOBYQA <: PRIMASolvers end
+
+"""
+    LINCOA()
+
+Derivative-free PRIMA optimizer for bound-constrained problems with linear
+constraints.
+"""
 struct LINCOA <: PRIMASolvers end
+
+"""
+    COBYLA()
+
+Derivative-free PRIMA optimizer for constrained problems using linear
+approximations.
+"""
 struct COBYLA <: PRIMASolvers end
 
 export UOBYQA, NEWUOA, BOBYQA, LINCOA, COBYLA
@@ -30,32 +63,42 @@ function OptimizationBase.OptimizationCache(
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         progress = false,
+        verbose = OptimizationBase.OptimizationVerbosity(),
         kwargs...
     )
     reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p)
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
-    if prob.f.adtype isa SciMLBase.NoAD && opt isa COBYLA
+    f_base = if prob.sense === OptimizationBase.MaxSense && !OptimizationBase.supports_sense(opt)
+        OptimizationBase.apply_sense(prob.f, prob.sense)
+    else
+        prob.f
+    end
+
+    if f_base.adtype isa SciMLBase.NoAD && opt isa COBYLA
         throw("We evaluate the jacobian and hessian of the constraints once to automatically detect
         linear and nonlinear constraints, please provide a valid AD backend for using COBYLA.")
     else
         if opt isa COBYLA
             f = OptimizationBase.instantiate_function(
-                prob.f, reinit_cache.u0, prob.f.adtype, reinit_cache.p, num_cons,
+                f_base, reinit_cache.u0, f_base.adtype, reinit_cache.p, num_cons,
                 cons_j = true, cons_h = true
             )
         else
             f = OptimizationBase.instantiate_function(
-                prob.f, reinit_cache.u0, prob.f.adtype, reinit_cache.p, num_cons
+                f_base, reinit_cache.u0, f_base.adtype, reinit_cache.p, num_cons
             )
         end
     end
+
+    processed_verbose = OptimizationBase._process_verbose_param(verbose)
 
     return OptimizationBase.OptimizationCache(
         opt, f, reinit_cache, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
         progress, callback, nothing,
         OptimizationBase.OptimizationBase.AnalysisResults(nothing, nothing),
-        merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs))
+        merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs)),
+        processed_verbose
     )
 end
 
@@ -70,6 +113,8 @@ function get_solve_func(opt::PRIMASolvers)
         return PRIMA.lincoa
     elseif opt isa COBYLA
         return PRIMA.cobyla
+    else
+        error("Unknown PRIMA solver type: $(typeof(opt))")
     end
 end
 
@@ -99,21 +144,25 @@ function __map_optimizer_args!(
     return kws
 end
 
-function sciml_prima_retcode(rc::AbstractString)
-    if rc in [
-            "SMALL_TR_RADIUS", "TRSUBP_FAILED", "NAN_INF_X", "NAN_INF_F", "NAN_INF_MODEL",
-            "DAMAGING_ROUNDING", "ZERO_LINEAR_CONSTRAINT", "INVALID_INPUT", "ASSERTION_FAILS",
-            "VALIDATION_FAILS", "MEMORY_ALLOCATION_FAILS",
-        ]
-        return ReturnCode.Failure
-    else
-        rc in [
-            "FTARGET_ACHIEVED"
-            "MAXFUN_REACHED"
-            "MAXTR_REACHED"
-            "NO_SPACE_BETWEEN_BOUNDS"
-        ]
+function sciml_prima_retcode(status::PRIMA.Status)
+    # PRIMA's own success predicate (PRIMA/src/PRIMA.jl):
+    #     issuccess(status) = status == SMALL_TR_RADIUS || status == FTARGET_ACHIEVED
+    if status == PRIMA.FTARGET_ACHIEVED || status == PRIMA.SMALL_TR_RADIUS
         return ReturnCode.Success
+    elseif status == PRIMA.MAXFUN_REACHED || status == PRIMA.MAXTR_REACHED
+        return ReturnCode.MaxIters
+    elseif status == PRIMA.NO_SPACE_BETWEEN_BOUNDS ||
+            status == PRIMA.ZERO_LINEAR_CONSTRAINT ||
+            status == PRIMA.INVALID_INPUT
+        return ReturnCode.InitialFailure
+    elseif status == PRIMA.NAN_INF_X || status == PRIMA.NAN_INF_F ||
+            status == PRIMA.NAN_INF_MODEL
+        return ReturnCode.Unstable
+    elseif status == PRIMA.DAMAGING_ROUNDING
+        return ReturnCode.ConvergenceFailure
+    else
+        # TRSUBP_FAILED, ASSERTION_FAILS, VALIDATION_FAILS, MEMORY_ALLOCATION_FAILS
+        return ReturnCode.Failure
     end
 end
 
@@ -191,7 +240,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: PRIMASolvers
     end
     t1 = time()
 
-    retcode = sciml_prima_retcode(PRIMA.reason(inf))
+    retcode = sciml_prima_retcode(inf.status)
     stats = OptimizationBase.OptimizationStats(; time = t1 - t0, fevals = inf.nf)
     return SciMLBase.build_solution(
         cache, cache.opt, minx,

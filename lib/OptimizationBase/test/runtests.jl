@@ -1,10 +1,14 @@
-using OptimizationBase
-using Test
+using SciMLTesting
 
-@testset "OptimizationBase.jl" begin
-    include("adtests.jl")
-    include("cvxtest.jl")
-    include("matrixvalued.jl")
-    include("solver_missing_error_messages.jl")
-    include("lag_h_sigma_zero_test.jl")
-end
+run_tests(;
+    env = "OPTIMIZATION_TEST_GROUP",
+    core = joinpath(@__DIR__, "core_tests.jl"),
+    groups = Dict(
+        "AD" => (;
+            env = joinpath(@__DIR__, "AD"),
+            body = joinpath(@__DIR__, "AD", "tests.jl"),
+        ),
+    ),
+    qa = (; env = joinpath(@__DIR__, "qa"), body = joinpath(@__DIR__, "qa", "qa.jl")),
+    all = ["Core"],
+)

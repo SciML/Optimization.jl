@@ -1,6 +1,6 @@
 # Data Iterators and Minibatching
 
-It is possible to solve an optimization problem with batches using a `MLUtils.DataLoader`, which is passed to `Optimization.solve` with `ncycles`. All data for the batches need to be passed as a tuple of vectors.
+It is possible to solve an optimization problem with batches using a `MLUtils.DataLoader`, which is passed to `OptimizationBase.solve` with `ncycles`. All data for the batches need to be passed as a tuple of vectors.
 
 !!! note
     
@@ -70,5 +70,5 @@ optfun = OptimizationFunction(
 optprob = OptimizationProblem(optfun, ps_ca, train_loader)
 using IterTools: ncycle
 res1 = solve(
-    optprob, Optimisers.ADAM(0.05); callback = callback, epochs = 1000)
+    optprob, Optimisers.Adam(0.05); callback = callback, epochs = 1000)
 ```

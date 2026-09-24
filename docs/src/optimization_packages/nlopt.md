@@ -1,6 +1,6 @@
-# NLopt.jl
+# [NLopt.jl](@id nlopt)
 
-[`NLopt`](https://github.com/jump-dev/NLopt.jl) is Julia package interfacing to the free/open-source [`NLopt library`](http://ab-initio.mit.edu/nlopt/) which implements many optimization methods both global and local [`NLopt Documentation`](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/).
+[`NLopt`](https://github.com/jump-dev/NLopt.jl) is Julia package interfacing to the free/open-source [`NLopt library`](https://nlopt.readthedocs.io/en/latest/) which implements many optimization methods both global and local [`NLopt Documentation`](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/).
 
 ## Installation: OptimizationNLopt.jl
 
@@ -72,6 +72,26 @@ Beyond the common arguments, the following optimizer parameters can be set as `k
   - `population`
   - `vector_storage`
 
+## Reexported NLopt.jl API
+
+`using OptimizationNLopt` brings the following names into scope. They are owned and
+documented by [NLopt.jl](https://github.com/jump-dev/NLopt.jl) and the
+[NLopt library](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/); this package
+only re-exports them.
+
+  - The `NLopt` module itself. NLopt does not export its algorithm constants, so the
+    documented spelling for every algorithm above is qualified — `NLopt.LD_LBFGS()`,
+    `NLopt.GN_DIRECT()` — and the module binding is what makes that work.
+  - `Opt`, the algorithm-and-dimension constructor, so `solve(prob, Opt(:LD_LBFGS, 2))`
+    works unqualified.
+  - `Algorithm`, the type of those algorithm constants.
+
+NLopt's own solver-driving interface (`optimize`, `lower_bounds!`, `ftol_rel!`, …) is
+deliberately *not* re-exported: `solve` configures the `Opt` object for you from the
+common keyword arguments listed above.
+
+Anything else from NLopt.jl must be imported from NLopt directly.
+
 ## Local Optimizer
 
 ### Derivative-Free
@@ -93,13 +113,13 @@ Derivative-free optimizers are optimizers that can be used even in cases where n
 The Rosenbrock function can be optimized using the `NLopt.LN_NELDERMEAD()` as follows:
 
 ```@example NLopt1
-using Optimization
+using OptimizationBase
 using OptimizationNLopt
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, NLopt.LN_NELDERMEAD())
 ```
 
@@ -126,12 +146,12 @@ Gradient-based optimizers are optimizers which utilize the gradient information 
 The Rosenbrock function can be optimized using `NLopt.LD_LBFGS()` as follows:
 
 ```@example NLopt2
-using Optimization, OptimizationNLopt, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationNLopt, ADTypes, ForwardDiff
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
-prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, NLopt.LD_LBFGS())
 ```
 
@@ -164,12 +184,12 @@ constraint equations. However, lower and upper constraints set by `lb` and `ub` 
 The Rosenbrock function can be optimized using `NLopt.GN_DIRECT()` as follows:
 
 ```@example NLopt3
-using Optimization, OptimizationNLopt
+using OptimizationBase, OptimizationNLopt
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, NLopt.GN_DIRECT(), maxtime = 10.0)
 ```
 
@@ -180,12 +200,12 @@ The Rosenbrock function can be optimized using `NLopt.G_MLSL_LDS()` with `NLopt.
 The local optimizer maximum iterations are set via `local_maxiters`:
 
 ```@example NLopt4
-using Optimization, OptimizationNLopt, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationNLopt, ADTypes, ForwardDiff
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
-prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, NLopt.G_MLSL_LDS(), local_method = NLopt.LD_LBFGS(), maxtime = 10.0,
     local_maxiters = 10)
 ```

@@ -17,13 +17,17 @@ Right now we support the following polyalgorithms.
 
 `PolyOpt`: Runs Adam followed by BFGS for an equal number of iterations. This is useful in scientific machine learning use cases, by exploring the loss surface with the stochastic optimizer and converging to the minima faster with BFGS.
 
+```@docs
+OptimizationPolyalgorithms.PolyOpt
+```
+
 ```@example polyopt
-using Optimization, OptimizationPolyalgorithms, ADTypes, ForwardDiff
+using OptimizationBase, OptimizationPolyalgorithms, ADTypes, ForwardDiff
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 _p = [1.0, 100.0]
 
 optprob = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
 prob = OptimizationProblem(optprob, x0, _p)
-sol = Optimization.solve(prob, PolyOpt(), maxiters = 1000)
+sol = OptimizationBase.solve(prob, PolyOpt(), maxiters = 1000)
 ```

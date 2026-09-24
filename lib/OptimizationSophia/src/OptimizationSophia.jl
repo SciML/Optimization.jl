@@ -3,8 +3,12 @@ module OptimizationSophia
 using Reexport
 using SciMLBase
 using OptimizationBase: OptimizationCache
-@reexport using OptimizationBase
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
 using Random
+
+export Sophia
 
 """
     Sophia(; η = 1e-3, βs = (0.9, 0.999), ϵ = 1e-8, λ = 1e-1, k = 10, ρ = 0.04)
@@ -112,6 +116,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Sophia}
     gₜ = zero(θ)
     mₜ = zero(θ)
     hₜ = zero(θ)
+    x = cache.f(θ, first(data))
     for epoch in 1:maxiters
         for (i, d) in enumerate(data)
             if cache.f.fg !== nothing && dataiterate

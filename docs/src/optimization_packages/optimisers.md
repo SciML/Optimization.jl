@@ -12,6 +12,29 @@ Pkg.add("OptimizationOptimisers");
 In addition to the optimisation algorithms provided by the Optimisers.jl package this subpackage
 also provides the Sophia optimisation algorithm.
 
+## Reexported Optimisers.jl API
+
+`using OptimizationOptimisers` brings Optimisers.jl's rules into scope, so that
+`solve(prob, Adam(0.05))` works without a separate `using Optimisers`. These names are
+owned and documented by [Optimisers.jl](https://fluxml.ai/Optimisers.jl/dev/api/); this
+package only re-exports them.
+
+  - Gradient descent rules: `Descent`, `Momentum`, `Nesterov`, `Rprop`
+  - Adaptive rules: `RMSProp`, `Adam`, `RAdam`, `AdaMax`, `OAdam`, `AdaGrad`,
+    `AdaDelta`, `AMSGrad`, `NAdam`, `AdamW`, `AdaBelief`, `Lion`
+  - Legacy all-caps spellings kept for compatibility: `ADAM`, `ADAMW`, `RADAM`,
+    `OADAM`, `NADAM`, `ADAGrad`, `ADADelta`
+  - Gradient modifiers and combinators: `ClipGrad`, `ClipNorm`, `WeightDecay`,
+    `SignDecay`, `AccumGrad`, `OptimiserChain`
+  - The `Optimisers` module itself; the rule supertype is `Optimisers.AbstractRule`
+
+Optimisers' own optimiser-driving interface — `Optimisers.setup`, `Optimisers.update`,
+`Optimisers.update!`, `Optimisers.apply!`, `Optimisers.destructure`,
+`Optimisers.trainables` — is deliberately *not* re-exported: `solve` drives the rule for
+you, and `Optimisers.init` would collide with the SciML `init`.
+
+Anything else from Optimisers.jl must be imported from Optimisers directly.
+
 ## List of optimizers
 
   - [`Optimisers.Descent`](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisers.Descent): **Classic gradient descent optimizer with learning rate**

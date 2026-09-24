@@ -1,28 +1,45 @@
 name = "OptimizationOptimisers"
 uuid = "42dfb2eb-d2b4-4451-abcd-913932933ac1"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.15"
+version = "0.3.24"
 
 [deps]
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+SciMLLogging = "a6db7da4-7206-11f0-1eab-35f2a5dbe1d1"
 
 [sources]
 OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
-Logging = "1.10"
-Optimisers = "0.4.2"
-OptimizationBase = "4.0.2"
-Reexport = "1.2.2"
-SciMLBase = "2.122.1"
+CommonSolve = "0.2"
+ComponentArrays = "0.15"
+ForwardDiff = "1"
 julia = "1.10"
+Logging = "1.10"
+Lux = "1.16.0"
+MLDataDevices = "1"
+MLUtils = "0.4"
+Optimisers = "0.4.2"
+OptimizationBase = "5.5.0"
+Pkg = "1"
+Printf = "1.10"
+Random = "1.10"
+SafeTestsets = "0.1"
+SciMLBase = "3"
+SciMLLogging = "2"
+SciMLTesting = "2.8"
+Test = "1.10"
+Zygote = "0.6, 0.7"
 
 [extras]
+SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 ComponentArrays = "b0b7db55-cfe3-40fc-9ded-d10e2dbeff66"
+CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Lux = "b2108857-7c20-44ae-9111-449ecde12c47"
 MLDataDevices = "7e8f7934-dd98-4c1a-8fe8-92b47a384d40"
@@ -33,4 +50,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["ComponentArrays", "ForwardDiff", "Lux", "MLDataDevices", "MLUtils", "Random", "Test", "Zygote", "Printf"]
+test = ["SciMLTesting", "ComponentArrays", "CommonSolve", "ForwardDiff", "Lux", "MLDataDevices", "MLUtils", "Random", "Test", "Zygote", "Printf", "SafeTestsets", "Pkg"]

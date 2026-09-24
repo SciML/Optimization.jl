@@ -1,30 +1,82 @@
 module OptimizationODE
 
 using Reexport
-@reexport using OptimizationBase, SciMLBase
+using SciMLBase
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
 using LinearAlgebra, ForwardDiff
 using DiffEqBase
+using ADTypes: AutoFiniteDiff
 
 using NonlinearSolve
-using OrdinaryDiffEq, SteadyStateDiffEq
+using OrdinaryDiffEqLowOrderRK: Euler
+using OrdinaryDiffEqStabilizedRK: ROCK2
+using OrdinaryDiffEqTsit5: Tsit5
+using OrdinaryDiffEqVerner: Vern7
+using OrdinaryDiffEqRosenbrock: Rodas5P
+using OrdinaryDiffEqNonlinearSolve: BrownFullBasicInit
+using SteadyStateDiffEq
 
 export ODEOptimizer, ODEGradientDescent, RKChebyshevDescent, RKAccelerated, HighOrderDescent
 export DAEOptimizer, DAEMassMatrix
 
+"""
+    ODEOptimizer(solver)
+
+Optimization algorithm that solves the gradient flow steady-state problem with
+the supplied ODE solver.
+"""
 struct ODEOptimizer{T}
     solver::T
 end
 
+"""
+    ODEGradientDescent()
+
+ODE-based gradient descent optimizer using the explicit Euler method.
+"""
 ODEGradientDescent() = ODEOptimizer(Euler())
+
+"""
+    RKChebyshevDescent()
+
+ODE-based gradient descent optimizer using the stabilized ROCK2 Runge-Kutta
+method.
+"""
 RKChebyshevDescent() = ODEOptimizer(ROCK2())
+
+"""
+    RKAccelerated()
+
+ODE-based optimizer using the Tsit5 Runge-Kutta method for accelerated gradient
+flow integration.
+"""
 RKAccelerated() = ODEOptimizer(Tsit5())
+
+"""
+    HighOrderDescent()
+
+ODE-based optimizer using the high-order Vern7 Runge-Kutta method.
+"""
 HighOrderDescent() = ODEOptimizer(Vern7())
 
+"""
+    DAEOptimizer(solver)
+
+Optimization algorithm for constrained problems represented as differential
+algebraic equation steady-state systems.
+"""
 struct DAEOptimizer{T}
     solver::T
 end
 
-DAEMassMatrix() = DAEOptimizer(Rodas5P(autodiff = false))
+"""
+    DAEMassMatrix()
+
+DAE-based optimizer using a Rodas5P mass-matrix formulation.
+"""
+DAEMassMatrix() = DAEOptimizer(Rodas5P(autodiff = AutoFiniteDiff()))
 
 SciMLBase.requiresbounds(::ODEOptimizer) = false
 SciMLBase.allowsbounds(::ODEOptimizer) = false
@@ -126,15 +178,15 @@ function solve_ode(cache, dt, maxit, u0, p)
     solve_kwargs[:progress] = cache.progress
 
     sol = solve(ss_prob, algorithm; solve_kwargs...)
-    has_destats = hasproperty(sol, :destats)
+    has_stats = hasproperty(sol, :stats) && sol.stats !== nothing
     has_t = hasproperty(sol, :t) && !isempty(sol.t)
 
     stats = OptimizationBase.OptimizationStats(
-        iterations = has_destats ? get(sol.destats, :iters, 10) :
+        iterations = has_stats ? sol.stats.naccept :
             (has_t ? length(sol.t) - 1 : 10),
         time = has_t ? sol.t[end] : 0.0,
-        fevals = has_destats ? get(sol.destats, :f_calls, 0) : 0,
-        gevals = has_destats ? get(sol.destats, :iters, 0) : 0,
+        fevals = has_stats ? sol.stats.nf : 0,
+        gevals = has_stats ? sol.stats.naccept : 0,
         hevals = 0
     )
 
@@ -186,6 +238,7 @@ function solve_dae_mass_matrix(cache, dt, maxit, u0, p)
     if dt !== nothing
         solve_kwargs[:dt] = dt
     end
+    solve_kwargs[:initializealg] = BrownFullBasicInit()
 
     sol = solve(ss_prob, DynamicSS(cache.opt.solver); solve_kwargs...)
     # if sol.retcode ≠ ReturnCode.Success

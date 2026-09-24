@@ -1,22 +1,21 @@
-using OptimizationCMAEvolutionStrategy, OptimizationBase
-using Test
+using Pkg
+using SafeTestsets
+using SciMLTesting
 
-@testset "OptimizationCMAEvolutionStrategy.jl" begin
-    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
-    x0 = zeros(2)
-    _p = [1.0, 100.0]
-    l1 = rosenbrock(x0, _p)
-    f = OptimizationFunction(rosenbrock)
-    prob = OptimizationProblem(f, x0, _p, lb = [-1.0, -1.0], ub = [0.8, 0.8])
-    sol = solve(prob, CMAEvolutionStrategyOpt())
-    @test 10 * sol.objective < l1
+const TEST_GROUP = get(ENV, "OPTIMIZATION_TEST_GROUP", "All")
 
-    function cb(state, args...)
-        if state.iter % 10 == 0
-            println(state.u)
-        end
-        return false
-    end
-    sol = solve(prob, CMAEvolutionStrategyOpt(), callback = cb, maxiters = 100)
-    @test sol.u == OptimizationCMAEvolutionStrategy.CMAEvolutionStrategy.xbest(sol.original)
+# QA (Aqua + JET) runs in an isolated environment (test/qa). activate_group_env
+# develops the package under test (via `parent`) plus its in-repo `[sources]` siblings
+# by path — native `[sources]` on Julia >= 1.11, the develop_sources! backport on 1.10.
+function activate_qa_env()
+    return activate_group_env(joinpath(@__DIR__, "qa"))
+end
+
+if TEST_GROUP == "Core" || TEST_GROUP == "All"
+    @time @safetestset "Core" include("core_tests.jl")
+end
+
+if TEST_GROUP == "QA"
+    activate_qa_env()
+    @safetestset "Quality Assurance" include("qa/qa.jl")
 end

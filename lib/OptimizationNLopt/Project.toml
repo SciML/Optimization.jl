@@ -1,16 +1,20 @@
 name = "OptimizationNLopt"
 uuid = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
-version = "0.3.8"
+version = "0.3.18"
 
 [deps]
+NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
 OptimizationBase = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+SciMLLogging = "a6db7da4-7206-11f0-1eab-35f2a5dbe1d1"
 
 [extras]
+SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
@@ -20,10 +24,18 @@ OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
 julia = "1.10"
-OptimizationBase = "4"
 NLopt = "1.1"
-SciMLBase = "2.122.1"
-Reexport = "1.2"
+OptimizationBase = "5.5.0"
+Pkg = "1"
+Random = "1.10"
+ForwardDiff = "1"
+ReverseDiff = "1"
+SafeTestsets = "0.1"
+SciMLBase = "3"
+SciMLLogging = "2.1"
+SciMLTesting = "2.8"
+Test = "1.10"
+Zygote = "0.7"
 
 [targets]
-test = ["ReverseDiff", "Test", "Zygote"]
+test = ["SciMLTesting", "ForwardDiff", "ReverseDiff", "Test", "Zygote", "SafeTestsets", "Pkg"]

@@ -1,15 +1,45 @@
 module OptimizationNLopt
 
-using Reexport
-@reexport using NLopt, OptimizationBase
+using NLopt
+# NLopt names its algorithms `NLopt.LD_LBFGS()` etc. — those constants are not exported
+# by NLopt itself, so the documented spelling has always been qualified and the exported
+# `NLopt` module binding is what makes it work. `Opt` and `Algorithm` are the two names
+# the docs do use bare (`solve(prob, Opt(:LD_LBFGS, 2))`), so they are re-surfaced here.
+# NLopt's own solver-driving API (`optimize`, `lower_bounds!`, …) is not: Optimization.jl
+# drives the solver, and `optimize` collides with the other wrapped backends.
+using NLopt: Algorithm, Opt
+
+@doc """
+    Algorithm
+
+Enumeration of NLopt algorithm identifiers. Access the identifiers through the `NLopt`
+module, for example `NLopt.LD_LBFGS`.
+""" Algorithm
+
+@doc """
+    Opt(algorithm, n)
+
+Construct an NLopt optimizer for `n` variables using `algorithm`. The algorithm may be
+an [`Algorithm`](@ref) value or its symbol, such as `:LD_LBFGS`.
+""" Opt
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
+using SciMLLogging: @SciMLMessage
 using SciMLBase
 using OptimizationBase: deduce_retcode
+
+export NLopt
+
+# Approved via `reexports_allow` in test/qa/qa.jl.
+export Algorithm, Opt
 
 (f::NLopt.Algorithm)() = f
 
 SciMLBase.allowsbounds(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 SciMLBase.has_init(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
 SciMLBase.allowscallback(opt::Union{NLopt.Algorithm, NLopt.Opt}) = true
+OptimizationBase.supports_sense(::Union{NLopt.Algorithm, NLopt.Opt}) = true
 
 function SciMLBase.requiresgradient(opt::Union{NLopt.Algorithm, NLopt.Opt})
     # https://github.com/JuliaOpt/NLopt.jl/blob/master/src/NLopt.jl#L18C7-L18C16
@@ -195,14 +225,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         eqinds = map((y) -> y[1] == y[2], zip(cache.lcons, cache.ucons))
         ineqinds = map((y) -> y[1] != y[2], zip(cache.lcons, cache.ucons))
         cons_cache = zeros(eltype(cache.u0), sum(eqinds) + sum(ineqinds))
-        thetacache = rand(size(cache.u0))
-        Jthetacache = rand(size(cache.u0))
         Jcache = zeros(eltype(cache.u0), sum(ineqinds) + sum(eqinds), length(cache.u0))
         evalcons = function (θ, ineqoreq)
-            if thetacache != θ
-                cache.f.cons(cons_cache, θ)
-                thetacache = copy(θ)
-            end
+            cache.f.cons(cons_cache, θ)
             if ineqoreq == :eq
                 return @view(cons_cache[eqinds])
             else
@@ -211,11 +236,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         end
 
         evalconj = function (θ, ineqoreq)
-            if Jthetacache != θ
-                cache.f.cons_j(Jcache, θ)
-                Jthetacache = copy(θ)
-            end
-
+            cache.f.cons_j(Jcache, θ)
             if ineqoreq == :eq
                 return @view(Jcache[eqinds, :])'
             else
@@ -262,7 +283,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     retcode = deduce_retcode(ret)
 
     if retcode == ReturnCode.Failure
-        @warn "NLopt failed to converge: $(ret)"
+        @SciMLMessage(lazy"NLopt failed to converge: $(ret)", cache.verbose, :convergence_failure)
     end
     stats = OptimizationBase.OptimizationStats(; time = t1 - t0)
     return SciMLBase.build_solution(

@@ -1,8 +1,27 @@
 module OptimizationMetaheuristics
 
-using Reexport
-@reexport using Metaheuristics, OptimizationBase
+using Metaheuristics
+# The Metaheuristics algorithm names are this package's whole point: `using
+# Optimization, OptimizationMetaheuristics` has to be enough to write
+# `solve(prob, ECA())`, exactly as the docs list them. They are re-surfaced by name
+# below rather than by blanket `@reexport`, which also exported `optimize!`/`minimizer`
+# /`Options` and the MCDM decision-making surface. Everything stays owned and
+# documented upstream in Metaheuristics.jl.
+using Metaheuristics: ABC, BRKGA, CCMO, CGSA, CSO, DE, ECA, GA, GRASP, MCCGA,
+    MOEAD_DE, NSGA2, NSGA3, PSO, RDEx, SA, SHADE, SMS_EMOA, SPEA2, VND, VNS, WOA, εDE
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
+using SciMLLogging: @SciMLMessage
 using SciMLBase
+
+export Metaheuristics
+
+# Metaheuristics' algorithms; approved via `reexports_allow` in test/qa/qa.jl. The
+# configuration objects stay qualified as the docs spell them (`Metaheuristics.Options`,
+# `Metaheuristics.Information`) — `Options` is far too generic a name to export.
+export ABC, BRKGA, CCMO, CGSA, CSO, DE, ECA, GA, GRASP, MCCGA,
+    MOEAD_DE, NSGA2, NSGA3, PSO, RDEx, SA, SHADE, SMS_EMOA, SPEA2, VND, VNS, WOA, εDE
 
 SciMLBase.requiresbounds(opt::Metaheuristics.AbstractAlgorithm) = true
 SciMLBase.allowsbounds(opt::Metaheuristics.AbstractAlgorithm) = true
@@ -66,7 +85,10 @@ function __map_optimizer_args!(
     end
 
     if !isnothing(reltol)
-        @warn "common reltol is currently not used by $(typeof(opt).super)"
+        @SciMLMessage(
+            lazy"common reltol is currently not used by $(typeof(opt).super)",
+            cache.verbose, :unsupported_kwargs
+        )
     end
     return nothing
 end
@@ -104,20 +126,30 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         end
     end
 
+    opt_bounds = nothing
     if !isnothing(cache.lb) & !isnothing(cache.ub)
         opt_bounds = [cache.lb cache.ub]'
     end
 
     if !isnothing(cache.f.cons)
-        @warn "Equality constraints are current not passed on by Optimization"
+        @SciMLMessage(
+            "Equality constraints are current not passed on by Optimization",
+            cache.verbose, :equality_constraints_ignored
+        )
     end
 
     if !isnothing(cache.lcons)
-        @warn "Inequality constraints are current not passed on by Optimization"
+        @SciMLMessage(
+            "Inequality constraints are current not passed on by Optimization",
+            cache.verbose, :inequality_constraints_ignored
+        )
     end
 
     if !isnothing(cache.ucons)
-        @warn "Inequality constraints are current not passed on by Optimization"
+        @SciMLMessage(
+            "Inequality constraints are current not passed on by Optimization",
+            cache.verbose, :inequality_constraints_ignored
+        )
     end
 
     __map_optimizer_args!(

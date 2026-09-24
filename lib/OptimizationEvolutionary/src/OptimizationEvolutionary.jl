@@ -1,7 +1,10 @@
 module OptimizationEvolutionary
 
 using Reexport
-@reexport using Evolutionary, OptimizationBase
+@reexport using Evolutionary
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
 using SciMLBase
 
 SciMLBase.allowscallback(opt::Evolutionary.AbstractOptimizer) = true
@@ -152,16 +155,19 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         else
             cons = BoxConstraints(cache.lb, cache.ub)
         end
+        # When bounds are provided, don't pass the initial point to allow
+        # Evolutionary.jl to generate a random initial population within the bounds.
+        # Passing the initial point causes the population to be copies of that point,
+        # which prevents proper exploration of the search space.
         if isa(f, MultiObjectiveOptimizationFunction)
-            opt_res = Evolutionary.optimize(
-                _loss, _loss(cache.u0), cons, cache.u0, cache.opt, opt_args
-            )
+            opt_res = Evolutionary.optimize(_loss, cons, cache.opt, opt_args)
         else
-            opt_res = Evolutionary.optimize(_loss, cons, cache.u0, cache.opt, opt_args)
+            opt_res = Evolutionary.optimize(_loss, cons, cache.opt, opt_args)
         end
     end
     t1 = time()
-    opt_ret = Symbol(Evolutionary.converged(opt_res))
+    opt_ret = Evolutionary.converged(opt_res) ? SciMLBase.ReturnCode.Success :
+        SciMLBase.ReturnCode.Failure
     stats = OptimizationBase.OptimizationStats(;
         iterations = opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls

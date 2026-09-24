@@ -5,7 +5,7 @@ of optimization, this is useful for performing multistart optimization.
 
 This can be useful for complex, low dimensional problems. We demonstrate this, again, on the rosenbrock function.
 
-We first execute a single local optimization with `OptimizationOptimJL.BFGS` and `maxiters=5`:
+We first execute a single local optimization with `BFGS` and `maxiters=5`:
 
 ```@example ensemble
 using OptimizationBase, OptimizationOptimJL, Random
@@ -18,7 +18,7 @@ x0 = zeros(2)
 
 optf = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
 prob = OptimizationProblem(optf, x0, [1.0, 100.0])
-@time sol1 = solve(prob, OptimizationOptimJL.BFGS(), maxiters = 5)
+@time sol1 = solve(prob, BFGS(), maxiters = 5)
 
 @show sol1.objective
 ```
@@ -27,14 +27,14 @@ This results is compared to a multistart approach with 4 random initial points:
 
 ```@example ensemble
 x0s = [x0, x0 .+ rand(2), x0 .+ rand(2), x0 .+ rand(2)]
-function prob_func(prob, i, repeat)
-    remake(prob, u0 = x0s[i])
+function prob_func(prob, ctx)
+    remake(prob, u0 = x0s[ctx.sim_id])
 end
 
 ensembleprob = EnsembleProblem(prob; prob_func)
-@time sol = solve(ensembleprob, OptimizationOptimJL.BFGS(),
+@time sol = solve(ensembleprob, BFGS(),
     EnsembleThreads(), trajectories = 4, maxiters = 5)
-@show findmin(i -> sol[i].objective, 1:4)[1]
+@show minimum(s.objective for s in sol.u)
 ```
 
 With the same number of iterations (5) we get a much lower (1/100th) objective value by using multiple initial points. The initialization strategy used here was a pretty trivial one but approaches based on Quasi-Monte Carlo sampling should be typically more effective.

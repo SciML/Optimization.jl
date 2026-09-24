@@ -1,11 +1,15 @@
 module OptimizationLBFGSB
 
 using Reexport
-@reexport using OptimizationBase
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
+import SciMLBase
+using SciMLLogging: @SciMLMessage
 using DocStringExtensions
 import LBFGSB as LBFGSBJL
-using SciMLBase: OptimizationStats, OptimizationFunction
-using OptimizationBase: ReturnCode
+using SciMLBase: OptimizationStats
+using SciMLBase: ReturnCode
 using OptimizationBase.LinearAlgebra: norm
 using OptimizationBase: deduce_retcode
 
@@ -54,10 +58,16 @@ function __map_optimizer_args(
         kwargs...
     )
     if !isnothing(abstol)
-        @warn "common abstol is currently not used by $(opt)"
+        @SciMLMessage(
+            lazy"common abstol is currently not used by $(opt)",
+            cache.verbose, :unsupported_kwargs
+        )
     end
     if !isnothing(maxtime)
-        @warn "common maxtime is currently not used by $(opt)"
+        @SciMLMessage(
+            lazy"common maxtime is currently not used by $(opt)",
+            cache.verbose, :unsupported_kwargs
+        )
     end
 
     mapped_args = (;)
@@ -154,6 +164,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
         end
 
         opt_ret = ReturnCode.MaxIters
+        res = (cache.u0, nothing)
         n = length(cache.u0)
 
         if cache.lb === nothing
@@ -263,14 +274,18 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
         stop_reason = task_message_to_string(optimizer.task)
 
         # Deduce the return code from the stop reason
-        opt_ret = deduce_retcode(stop_reason)
+        opt_ret = deduce_retcode(stop_reason, cache.verbose)
 
         # Detect false convergence due to Inf/NaN values
         # If we encountered Inf/NaN and the optimizer claims success but the solution
         # is essentially unchanged from the starting point, this is a false convergence
         if encountered_inf_nan[] && opt_ret == ReturnCode.Success
             if isapprox(res[2], cache.u0; rtol = 1.0e-8, atol = 1.0e-12)
-                @warn "LBFGSB encountered Inf/NaN values during optimization (likely due to function singularity at bounds). The solution has not moved from the initial point. Consider using bounds that exclude singularities."
+                @SciMLMessage(
+                    "LBFGSB encountered Inf/NaN values during optimization (likely due to function singularity at bounds). " *
+                        "The solution has not moved from the initial point. Consider using bounds that exclude singularities.",
+                    cache.verbose, :singularity_at_bounds
+                )
                 opt_ret = ReturnCode.Failure
             end
         end

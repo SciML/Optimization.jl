@@ -1,6 +1,6 @@
 # BlackBoxOptim.jl
 
-[`BlackBoxOptim`](https://github.com/robertfeldt/BlackBoxOptim.jl) is a Julia package implementing **(Meta-)heuristic/stochastic algorithms** that do not require differentiability.
+[`BlackBoxOptim`](https://github.com/SciML/BlackBoxOptim.jl) is a Julia package implementing **(Meta-)heuristic/stochastic algorithms** that do not require differentiability.
 
 ## Installation: OptimizationBBO.jl
 
@@ -15,7 +15,7 @@ Pkg.add("OptimizationBBO");
 
 ### Without Constraint Equations
 
-The algorithms in [`BlackBoxOptim`](https://github.com/robertfeldt/BlackBoxOptim.jl) are performing global optimization on problems without
+The algorithms in [`BlackBoxOptim`](https://github.com/SciML/BlackBoxOptim.jl) are performing global optimization on problems without
 constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
 
 A `BlackBoxOptim` algorithm is called by `BBO_` prefix followed by the algorithm name:
@@ -51,19 +51,38 @@ A `BlackBoxOptim` algorithm is called by `BBO_` prefix followed by the algorithm
 
 The recommended optimizer is `BBO_adaptive_de_rand_1_bin_radiuslimited()`
 
-The currently available algorithms are listed [here](https://github.com/robertfeldt/BlackBoxOptim.jl#state-of-the-library)
+The currently available algorithms are listed [here](https://github.com/SciML/BlackBoxOptim.jl#state-of-the-library)
+
+```@docs
+OptimizationBBO.BBO_separable_nes
+OptimizationBBO.BBO_xnes
+OptimizationBBO.BBO_dxnes
+OptimizationBBO.BBO_adaptive_de_rand_1_bin
+OptimizationBBO.BBO_adaptive_de_rand_1_bin_radiuslimited
+OptimizationBBO.BBO_de_rand_1_bin
+OptimizationBBO.BBO_de_rand_1_bin_radiuslimited
+OptimizationBBO.BBO_de_rand_2_bin
+OptimizationBBO.BBO_de_rand_2_bin_radiuslimited
+OptimizationBBO.BBO_generating_set_search
+OptimizationBBO.BBO_probabilistic_descent
+OptimizationBBO.BBO_resampling_memetic_search
+OptimizationBBO.BBO_resampling_inheritance_memetic_search
+OptimizationBBO.BBO_simultaneous_perturbation_stochastic_approximation
+OptimizationBBO.BBO_random_search
+OptimizationBBO.BBO_borg_moea
+```
 
 ## Example
 
 The Rosenbrock function can be optimized using the `BBO_adaptive_de_rand_1_bin_radiuslimited()` as follows:
 
 ```@example BBO
-using Optimization, OptimizationBBO
+using OptimizationBase, OptimizationBBO
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock)
-prob = SciMLBase.OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
+prob = OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
 sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(), maxiters = 100000,
     maxtime = 1000.0)
 ```

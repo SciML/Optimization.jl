@@ -1,0 +1,190 @@
+using OptimizationEvolutionary, OptimizationBase, Random
+using SciMLBase: MultiObjectiveOptimizationFunction
+using Test
+
+Random.seed!(1234)
+@testset "OptimizationEvolutionary.jl" begin
+    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+    x0 = zeros(2)
+    _p = [1.0, 100.0]
+    l1 = rosenbrock(x0, _p)
+    optprob = OptimizationFunction(rosenbrock)
+    prob = OptimizationBase.OptimizationProblem(optprob, x0, _p)
+    sol = solve(prob, CMAES(μ = 40, λ = 100), abstol = 1.0e-15)
+    @test 10 * sol.objective < l1
+
+    # Test with bounds - initial point is outside bounds, but algorithm should
+    # generate a random initial population within the bounds and find a good solution
+    x0 = [-0.7, 0.3]
+    prob = OptimizationBase.OptimizationProblem(
+        optprob, x0, _p, lb = [0.0, 0.0],
+        ub = [0.5, 0.5]
+    )
+    sol = solve(prob, CMAES(μ = 50, λ = 60))
+    # Within bounds [0,0.5]x[0,0.5], the minimum of Rosenbrock is at approximately
+    # [0.5, 0.25] with f ≈ 0.25, which is much better than f([0,0]) = 1.0
+    @test sol.objective < 1.0
+    @test all(sol.u .>= 0.0) && all(sol.u .<= 0.5)
+
+    x0 = zeros(2)
+    cons_circ = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
+    optprob = OptimizationFunction(rosenbrock; cons = cons_circ)
+    prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [0.25^2])
+    sol = solve(prob, CMAES(μ = 40, λ = 100))
+    res = zeros(1)
+    cons_circ(res, sol.u, nothing)
+    @test res[1] ≈ 0.0625 atol = 1.0e-5
+    @test sol.objective < l1
+
+    prob = OptimizationProblem(
+        optprob, x0, _p, lcons = [-Inf], ucons = [5.0],
+        lb = [0.0, 1.0], ub = [Inf, Inf]
+    )
+    sol = solve(prob, CMAES(μ = 40, λ = 100))
+    res = zeros(1)
+    cons_circ(res, sol.u, nothing)
+    @test sol.objective < l1
+
+    function cb(state, args...)
+        if state.iter % 10 == 0
+            println(state.u)
+        end
+        return false
+    end
+    solve(prob, CMAES(μ = 40, λ = 100), callback = cb, maxiters = 100)
+
+    # Test compatibility of user overload of trace!
+    function Evolutionary.trace!(
+            record::Dict{String, Any}, objfun, state, population, method::CMAES, options
+        )
+        # record fittest individual
+        record["TESTVAL"] = state.fittest
+    end
+
+    # Test that `store_trace=true` works now. Threw ""type Array has no field value" before.
+    sol = solve(prob, CMAES(μ = 40, λ = 100), store_trace = true)
+
+    # Make sure that both the user's trace record value, as well as `curr_u` are stored in the trace.
+    @test haskey(sol.original.trace[end].metadata, "TESTVAL") &&
+        haskey(sol.original.trace[end].metadata, "curr_u")
+
+    # NSGA2 returns stochastic Pareto candidates; assert wrapper invariants instead of
+    # exact population indices, which can change across Evolutionary releases.
+    function test_multi_objective(func, initial_guess; seed, lb = nothing, ub = nothing)
+        Random.seed!(seed)
+        obj_func = MultiObjectiveOptimizationFunction(func)
+        algorithm = OptimizationEvolutionary.NSGA2()
+        problem = if lb === nothing && ub === nothing
+            OptimizationProblem(obj_func, initial_guess)
+        else
+            OptimizationProblem(obj_func, initial_guess; lb = lb, ub = ub)
+        end
+        return solve(problem, algorithm)
+    end
+
+    function check_multi_objective_result(
+            result, func, initial_guess; lb = nothing, ub = nothing, min_population = 1
+        )
+        @test result !== nothing
+        @test result.u isa AbstractVector
+        @test !isempty(result.u)
+        @test length(result.u) >= min_population
+        @test length(unique(result.u)) >= min_population
+        @test all(u -> u isa AbstractVector && length(u) == length(initial_guess), result.u)
+
+        objective_values = [func(u, nothing) for u in result.u]
+        @test result.objective == objective_values[1]
+        @test all(obj -> length(obj) == length(result.objective), objective_values)
+        @test all(obj -> all(isfinite, obj), objective_values)
+
+        if lb !== nothing && ub !== nothing
+            @test all(u -> all((lb .<= u) .& (u .<= ub)), result.u)
+        end
+    end
+
+    @testset "Multi-Objective Optimization Tests" begin
+
+        # Test 1: Sphere and Rastrigin Functions
+        @testset "Sphere and Rastrigin Functions" begin
+            function multi_objective_1(x, p = nothing)::Vector{Float64}
+                f1 = sum(x .^ 2)  # Sphere function
+                f2 = sum(x .^ 2 .- 10 .* cos.(2π .* x) .+ 10)  # Rastrigin function
+                return [f1, f2]
+            end
+            result = test_multi_objective(multi_objective_1, [0.0, 1.0]; seed = 1101)
+            check_multi_objective_result(result, multi_objective_1, [0.0, 1.0])
+        end
+
+        # Test 2: Rosenbrock and Ackley Functions
+        @testset "Rosenbrock and Ackley Functions" begin
+            function multi_objective_2(x, p = nothing)::Vector{Float64}
+                f1 = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2  # Rosenbrock function
+                f2 = -20.0 * exp(-0.2 * sqrt(0.5 * (x[1]^2 + x[2]^2))) -
+                    exp(0.5 * (cos(2π * x[1]) + cos(2π * x[2]))) + exp(1) + 20.0  # Ackley function
+                return [f1, f2]
+            end
+            result = test_multi_objective(multi_objective_2, [0.1, 1.0]; seed = 1102)
+            check_multi_objective_result(
+                result, multi_objective_2, [0.1, 1.0]; min_population = 2
+            )
+        end
+
+        # Test 3: ZDT1 Function
+        @testset "ZDT1 Function" begin
+            function multi_objective_3(x, p = nothing)::Vector{Float64}
+                f1 = x[1]
+                g = 1 + 9 * sum(x[2:end]) / (length(x) - 1)
+                f2 = g * (1 - sqrt(f1 / g))
+                return [f1, f2]
+            end
+            lb = zeros(2)
+            ub = ones(2)
+            initial_guess = [0.25, 0.75]
+            result = test_multi_objective(
+                multi_objective_3, initial_guess; seed = 1103, lb = lb, ub = ub
+            )
+            check_multi_objective_result(
+                result, multi_objective_3, initial_guess; lb = lb, ub = ub,
+                min_population = 2
+            )
+        end
+
+        # Test 4: DTLZ2 Function
+        @testset "DTLZ2 Function" begin
+            function multi_objective_4(x, p = nothing)::Vector{Float64}
+                f1 = (1 + sum(x[2:end] .^ 2)) * cos(x[1] * π / 2)
+                f2 = (1 + sum(x[2:end] .^ 2)) * sin(x[1] * π / 2)
+                return [f1, f2]
+            end
+            lb = zeros(2)
+            ub = ones(2)
+            initial_guess = [0.25, 0.75]
+            result = test_multi_objective(
+                multi_objective_4, initial_guess; seed = 1104, lb = lb, ub = ub
+            )
+            check_multi_objective_result(
+                result, multi_objective_4, initial_guess; lb = lb, ub = ub,
+                min_population = 2
+            )
+        end
+
+        # Test 5: Schaffer Function N.2
+        @testset "Schaffer Function N.2" begin
+            function multi_objective_5(x, p = nothing)::Vector{Float64}
+                f1 = x[1]^2
+                f2 = (x[1] - 2)^2
+                return [f1, f2]
+            end
+            lb = [0.0]
+            ub = [2.0]
+            initial_guess = [1.0]
+            result = test_multi_objective(
+                multi_objective_5, initial_guess; seed = 1105, lb = lb, ub = ub
+            )
+            check_multi_objective_result(
+                result, multi_objective_5, initial_guess; lb = lb, ub = ub,
+                min_population = 2
+            )
+        end
+    end
+end

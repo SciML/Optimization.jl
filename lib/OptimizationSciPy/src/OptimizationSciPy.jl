@@ -2,7 +2,10 @@
 module OptimizationSciPy
 
 using Reexport
-@reexport using OptimizationBase
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
+using SciMLLogging: @SciMLMessage
 using SciMLBase
 using PythonCall
 
@@ -29,7 +32,7 @@ function safe_get_message(result)
     if pyisinstance(msg, pybuiltins.list) || pyisinstance(msg, pybuiltins.tuple)
         return join(pyconvert(Vector{String}, msg), ", ")
     end
-    return string(pytypeof(msg))
+    return string(pytype(msg))
 end
 
 # Squash any kind of numeric object down to a Julia Float64.
@@ -99,7 +102,14 @@ end
 
 # Tiny structs that tag which SciPy algorithm the user picked.
 abstract type ScipyOptimizer end
+OptimizationBase.supports_sense(::ScipyOptimizer) = true
 
+"""
+    ScipyMinimize(method::String = "BFGS")
+
+Optimizer wrapper for `scipy.optimize.minimize` using the selected SciPy
+`method`.
+"""
 struct ScipyMinimize <: ScipyOptimizer
     method::String
     function ScipyMinimize(method::String)
@@ -117,22 +127,117 @@ struct ScipyMinimize <: ScipyOptimizer
 end
 ScipyMinimize() = ScipyMinimize("BFGS")
 
+"""
+    ScipyNelderMead()
+
+Convenience constructor for `ScipyMinimize("Nelder-Mead")`.
+"""
 ScipyNelderMead() = ScipyMinimize("Nelder-Mead")
+
+"""
+    ScipyPowell()
+
+Convenience constructor for `ScipyMinimize("Powell")`.
+"""
 ScipyPowell() = ScipyMinimize("Powell")
+
+"""
+    ScipyCG()
+
+Convenience constructor for `ScipyMinimize("CG")`.
+"""
 ScipyCG() = ScipyMinimize("CG")
+
+"""
+    ScipyBFGS()
+
+Convenience constructor for `ScipyMinimize("BFGS")`.
+"""
 ScipyBFGS() = ScipyMinimize("BFGS")
+
+"""
+    ScipyNewtonCG()
+
+Convenience constructor for `ScipyMinimize("Newton-CG")`.
+"""
 ScipyNewtonCG() = ScipyMinimize("Newton-CG")
+
+"""
+    ScipyLBFGSB()
+
+Convenience constructor for `ScipyMinimize("L-BFGS-B")`.
+"""
 ScipyLBFGSB() = ScipyMinimize("L-BFGS-B")
+
+"""
+    ScipyTNC()
+
+Convenience constructor for `ScipyMinimize("TNC")`.
+"""
 ScipyTNC() = ScipyMinimize("TNC")
+
+"""
+    ScipyCOBYLA()
+
+Convenience constructor for `ScipyMinimize("COBYLA")`.
+"""
 ScipyCOBYLA() = ScipyMinimize("COBYLA")
+
+"""
+    ScipyCOBYQA()
+
+Convenience constructor for `ScipyMinimize("COBYQA")`.
+"""
 ScipyCOBYQA() = ScipyMinimize("COBYQA")
+
+"""
+    ScipySLSQP()
+
+Convenience constructor for `ScipyMinimize("SLSQP")`.
+"""
 ScipySLSQP() = ScipyMinimize("SLSQP")
+
+"""
+    ScipyTrustConstr()
+
+Convenience constructor for `ScipyMinimize("trust-constr")`.
+"""
 ScipyTrustConstr() = ScipyMinimize("trust-constr")
+
+"""
+    ScipyDogleg()
+
+Convenience constructor for `ScipyMinimize("dogleg")`.
+"""
 ScipyDogleg() = ScipyMinimize("dogleg")
+
+"""
+    ScipyTrustNCG()
+
+Convenience constructor for `ScipyMinimize("trust-ncg")`.
+"""
 ScipyTrustNCG() = ScipyMinimize("trust-ncg")
+
+"""
+    ScipyTrustKrylov()
+
+Convenience constructor for `ScipyMinimize("trust-krylov")`.
+"""
 ScipyTrustKrylov() = ScipyMinimize("trust-krylov")
+
+"""
+    ScipyTrustExact()
+
+Convenience constructor for `ScipyMinimize("trust-exact")`.
+"""
 ScipyTrustExact() = ScipyMinimize("trust-exact")
 
+"""
+    ScipyMinimizeScalar(method::String = "brent")
+
+Optimizer wrapper for `scipy.optimize.minimize_scalar` using the selected
+SciPy `method`.
+"""
 struct ScipyMinimizeScalar <: ScipyOptimizer
     method::String
     function ScipyMinimizeScalar(method::String = "brent")
@@ -144,10 +249,32 @@ struct ScipyMinimizeScalar <: ScipyOptimizer
     end
 end
 
+"""
+    ScipyBrent()
+
+Convenience constructor for `ScipyMinimizeScalar("brent")`.
+"""
 ScipyBrent() = ScipyMinimizeScalar("brent")
+
+"""
+    ScipyBounded()
+
+Convenience constructor for `ScipyMinimizeScalar("bounded")`.
+"""
 ScipyBounded() = ScipyMinimizeScalar("bounded")
+
+"""
+    ScipyGolden()
+
+Convenience constructor for `ScipyMinimizeScalar("golden")`.
+"""
 ScipyGolden() = ScipyMinimizeScalar("golden")
 
+"""
+    ScipyLeastSquares(; method::String = "trf", loss::String = "linear")
+
+Optimizer wrapper for `scipy.optimize.least_squares`.
+"""
 struct ScipyLeastSquares <: ScipyOptimizer
     method::String
     loss::String
@@ -164,10 +291,32 @@ struct ScipyLeastSquares <: ScipyOptimizer
     end
 end
 
+"""
+    ScipyLeastSquaresTRF()
+
+Convenience constructor for `ScipyLeastSquares(method = "trf")`.
+"""
 ScipyLeastSquaresTRF() = ScipyLeastSquares(method = "trf")
+
+"""
+    ScipyLeastSquaresDogbox()
+
+Convenience constructor for `ScipyLeastSquares(method = "dogbox")`.
+"""
 ScipyLeastSquaresDogbox() = ScipyLeastSquares(method = "dogbox")
+
+"""
+    ScipyLeastSquaresLM()
+
+Convenience constructor for `ScipyLeastSquares(method = "lm")`.
+"""
 ScipyLeastSquaresLM() = ScipyLeastSquares(method = "lm")
 
+"""
+    ScipyRootScalar(method::String = "brentq")
+
+Optimizer wrapper for `scipy.optimize.root_scalar`.
+"""
 struct ScipyRootScalar <: ScipyOptimizer
     method::String
     function ScipyRootScalar(method::String = "brentq")
@@ -181,6 +330,11 @@ struct ScipyRootScalar <: ScipyOptimizer
     end
 end
 
+"""
+    ScipyRoot(method::String = "hybr")
+
+Optimizer wrapper for `scipy.optimize.root`.
+"""
 struct ScipyRoot <: ScipyOptimizer
     method::String
     function ScipyRoot(method::String = "hybr")
@@ -196,6 +350,11 @@ struct ScipyRoot <: ScipyOptimizer
     end
 end
 
+"""
+    ScipyLinprog(method::String = "highs")
+
+Optimizer wrapper for `scipy.optimize.linprog`.
+"""
 struct ScipyLinprog <: ScipyOptimizer
     method::String
     function ScipyLinprog(method::String = "highs")
@@ -210,12 +369,53 @@ struct ScipyLinprog <: ScipyOptimizer
     end
 end
 
+"""
+    ScipyMilp()
+
+Optimizer wrapper for `scipy.optimize.milp`.
+"""
 struct ScipyMilp <: ScipyOptimizer end
+
+"""
+    ScipyDifferentialEvolution()
+
+Optimizer wrapper for `scipy.optimize.differential_evolution`.
+"""
 struct ScipyDifferentialEvolution <: ScipyOptimizer end
+
+"""
+    ScipyBasinhopping()
+
+Optimizer wrapper for `scipy.optimize.basinhopping`.
+"""
 struct ScipyBasinhopping <: ScipyOptimizer end
+
+"""
+    ScipyDualAnnealing()
+
+Optimizer wrapper for `scipy.optimize.dual_annealing`.
+"""
 struct ScipyDualAnnealing <: ScipyOptimizer end
+
+"""
+    ScipyShgo()
+
+Optimizer wrapper for `scipy.optimize.shgo`.
+"""
 struct ScipyShgo <: ScipyOptimizer end
+
+"""
+    ScipyDirect()
+
+Optimizer wrapper for `scipy.optimize.direct`.
+"""
 struct ScipyDirect <: ScipyOptimizer end
+
+"""
+    ScipyBrute()
+
+Optimizer wrapper for `scipy.optimize.brute`.
+"""
 struct ScipyBrute <: ScipyOptimizer end
 
 for opt_type in [
@@ -616,7 +816,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyLeastSq
     if !isnothing(cache.lb) && !isnothing(cache.ub) && cache.opt.method in ["trf", "dogbox"]
         kwargs[:bounds] = (cache.lb, cache.ub)
     elseif cache.opt.method == "lm" && (!isnothing(cache.lb) || !isnothing(cache.ub))
-        @warn "Method 'lm' does not support bounds. Ignoring bounds."
+        @SciMLMessage(
+            "Method 'lm' does not support bounds. Ignoring bounds.",
+            cache.verbose, :unsupported_bounds
+        )
     end
     kwargs[:jac] = "2-point"
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)

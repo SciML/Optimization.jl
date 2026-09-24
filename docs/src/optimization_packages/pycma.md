@@ -15,10 +15,14 @@ Pkg.add("OptimizationPyCMA")
 
 `PyCMAOpt` supports the usual keyword arguments `maxiters`, `maxtime`, `abstol`, `reltol`, `callback` in addition to any PyCMA-specific options (passed verbatim via keyword arguments to `solve`).
 
+```@docs
+OptimizationPyCMA.PyCMAOpt
+```
+
 ## Example
 
 ```@example PyCMA
-using OptimizationPyCMA
+using OptimizationBase, OptimizationPyCMA
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 x0 = zeros(2)

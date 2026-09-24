@@ -1,10 +1,19 @@
 module OptimizationNOMAD
 
 using Reexport
-@reexport using OptimizationBase
+# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
+# which the user loads directly. This package's public surface is its own solvers.
+using OptimizationBase
+using SciMLLogging: @SciMLMessage
 using NOMAD, SciMLBase
 
 export NOMADOpt
+
+"""
+    NOMADOpt()
+
+Optimizer wrapper for NOMAD.jl mesh adaptive direct search.
+"""
 struct NOMADOpt end
 
 @enum ConstraintBarrierType ExtremeBarrierMethod ProgressiveBarrierMethod
@@ -20,6 +29,7 @@ function __map_optimizer_args!(
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
+        verbose = OptimizationBase.OptimizationVerbosity(),
         kwargs...
     )
     for j in kwargs
@@ -35,11 +45,17 @@ function __map_optimizer_args!(
     end
 
     if !isnothing(reltol)
-        @warn "common reltol is currently not used by $(opt)"
+        @SciMLMessage(
+            lazy"common reltol is currently not used by $(opt)",
+            verbose, :unsupported_kwargs
+        )
     end
 
     if !isnothing(abstol)
-        @warn "common abstol is currently not used by $(opt)"
+        @SciMLMessage(
+            lazy"common abstol is currently not used by $(opt)",
+            verbose, :unsupported_kwargs
+        )
     end
 
     return nothing
@@ -54,6 +70,7 @@ function SciMLBase.__solve(
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         cons_method = ExtremeBarrierMethod,
+        verbose = OptimizationBase.OptimizationVerbosity(),
         kwargs...
     )
     local x
@@ -66,16 +83,27 @@ function SciMLBase.__solve(
         return first(x)
     end
 
+    bb = nothing
+    bounds = (;)
+    if !isnothing(prob.lb)
+        bounds = (; bounds..., lower_bound = prob.lb)
+    end
+
+    if !isnothing(prob.ub)
+        bounds = (; bounds..., upper_bound = prob.ub)
+    end
+
     if prob.f.cons === nothing
-        function bb(x)
+        bb = function (x)
             l = _loss(x)
             success = !isnan(l) && !isinf(l)
             count_eval = true
             return (success, count_eval, [l])
         end
+        opt_setup = NOMAD.NomadProblem(length(prob.u0), 1, ["OBJ"], bb; bounds...)
     else
         eqinds = findall(i -> prob.lcons[i] == prob.ucons[i], 1:length(prob.ucons))
-        function bbcons(x)
+        bbcons = function (x)
             l = _loss(x)
             c = zeros(eltype(x), length(prob.ucons))
             prob.f.cons(c, x, prob.p)
@@ -87,20 +115,6 @@ function SciMLBase.__solve(
             count_eval = true
             return (success, count_eval, vcat(l, c))
         end
-    end
-
-    bounds = (;)
-    if !isnothing(prob.lb)
-        bounds = (; bounds..., lower_bound = prob.lb)
-    end
-
-    if !isnothing(prob.ub)
-        bounds = (; bounds..., upper_bound = prob.ub)
-    end
-
-    if prob.f.cons === nothing
-        opt_setup = NOMAD.NomadProblem(length(prob.u0), 1, ["OBJ"], bb; bounds...)
-    else
         opt_setup = NOMAD.NomadProblem(
             length(prob.u0), 1 + length(prob.ucons),
             vcat("OBJ", fill(strcnsmethod(cons_method), length(prob.ucons))),
@@ -110,7 +124,7 @@ function SciMLBase.__solve(
 
     __map_optimizer_args!(
         prob, opt_setup, maxiters = maxiters, maxtime = maxtime,
-        abstol = abstol, reltol = reltol; kwargs...
+        abstol = abstol, reltol = reltol, verbose = verbose; kwargs...
     )
 
     t0 = time()

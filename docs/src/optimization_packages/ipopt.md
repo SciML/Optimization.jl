@@ -30,6 +30,11 @@ OptimizationIpopt.jl provides the `IpoptOptimizer` algorithm, which wraps the Ip
 - Problems with nonlinear constraints
 - Problems requiring high accuracy solutions
 
+```@docs
+OptimizationIpopt.IpoptOptimizer
+OptimizationIpopt.IpoptEvaluator
+```
+
 ### Algorithm Requirements
 
 `IpoptOptimizer` requires:
@@ -176,7 +181,7 @@ sol = solve(prob, opt;
 The Rosenbrock function can be minimized using `IpoptOptimizer`:
 
 ```@example Ipopt1
-using Optimization, OptimizationIpopt
+using OptimizationBase, OptimizationIpopt
 using Zygote
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
@@ -194,7 +199,7 @@ sol = solve(prob, IpoptOptimizer())
 Adding box constraints to limit the search space:
 
 ```@example Ipopt2
-using Optimization, OptimizationIpopt
+using OptimizationBase, OptimizationIpopt
 using Zygote
 
 rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
@@ -213,7 +218,7 @@ sol = solve(prob, IpoptOptimizer())
 Solving problems with nonlinear equality and inequality constraints:
 
 ```@example Ipopt3
-using Optimization, OptimizationIpopt
+using OptimizationBase, OptimizationIpopt
 using Zygote
 
 # Objective: minimize x[1]^2 + x[2]^2
@@ -243,7 +248,7 @@ sol = solve(prob, IpoptOptimizer())
 For large-scale problems where computing the exact Hessian is expensive:
 
 ```@example Ipopt4
-using Optimization, OptimizationIpopt
+using OptimizationBase, OptimizationIpopt
 using Zygote
 
 # Large-scale problem
@@ -269,7 +274,7 @@ sol = solve(prob, IpoptOptimizer(
 A practical example of portfolio optimization with constraints:
 
 ```@example Ipopt5
-using Optimization, OptimizationIpopt
+using OptimizationBase, OptimizationIpopt
 using Zygote
 using LinearAlgebra
 

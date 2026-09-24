@@ -46,7 +46,7 @@ res1 = solve(prob, BBO_adaptive_de_rand_1_bin(), maxiters = 4000)
 This is a good start can we converge to the global optimum?
 
 ```@example polyalg
-prob = remake(prob, u0 = res1.minimizer)
+prob = remake(prob, u0 = res1.u)
 res2 = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 100)
 
 @show res2.objective

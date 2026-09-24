@@ -10,55 +10,21 @@ on:
       - master
     paths-ignore:
       - 'docs/**'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
-  test:
-    # Temporarily disabled due to multiple upstream compatibility issues:
-    # - OptimizationSciPy: PythonCall initialization error with Julia 1.10
-    # - OptimizationOptimJL: LineSearches compatibility issue
-    # - OptimizationQuadDIRECT: QuadDIRECT algorithm assertion error
-    # See GitHub issue for tracking re-enablement.
-    if: false
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        downgrade_mode: ['alldeps']
-        julia-version: ['1.10']
-        project:
-          - 'lib/OptimizationBBO'
-          - 'lib/OptimizationCMAEvolutionStrategy'
-          - 'lib/OptimizationEvolutionary'
-          - 'lib/OptimizationGCMAES'
-          - 'lib/OptimizationMOI'
-          - 'lib/OptimizationManopt'
-          - 'lib/OptimizationMetaheuristics'
-          - 'lib/OptimizationMultistartOptimization'
-          - 'lib/OptimizationNLPModels'
-          - 'lib/OptimizationNLopt'
-          - 'lib/OptimizationNOMAD'
-          - 'lib/OptimizationODE'
-          - 'lib/OptimizationOptimJL'
-          - 'lib/OptimizationOptimisers'
-          - 'lib/OptimizationPRIMA'
-          - 'lib/OptimizationPolyalgorithms'
-          - 'lib/OptimizationPyCMA'
-          - 'lib/OptimizationQuadDIRECT'
-          - 'lib/OptimizationSciPy'
-          - 'lib/OptimizationSpeedMapping'
-    steps:
-      - uses: actions/checkout@v6
-      - uses: julia-actions/setup-julia@v2
-        with:
-          version: ${{ matrix.julia-version }}
-      - uses: julia-actions/julia-downgrade-compat@v2
-        with:
-          projects: ${{ matrix.project }}
-          # SymbolicAnalysis skipped: 0.3.x doesn't support Symbolics 7 (required by ModelingToolkit 11)
-          skip: Pkg,TOML,LinearAlgebra,Logging,Printf,Random,SparseArrays,Test,SymbolicAnalysis
-      - uses: julia-actions/julia-buildpkg@v1
-        with:
-          project: ${{ matrix.project }}
-      - uses: julia-actions/julia-runtest@v1
-        with:
-          project: ${{ matrix.project }}
-          ALLOW_RERESOLVE: false
+  downgrade-sublibraries:
+    uses: "SciML/.github/.github/workflows/sublibrary-downgrade.yml@v1"
+    secrets: "inherit"
+    with:
+      julia-version: "lts"
+      # SymbolicAnalysis skipped: 0.3.x doesn't support Symbolics 7 (required by
+      # ModelingToolkit 11). Stdlibs and in-repo sublibraries are auto-populated by
+      # the centralized workflow.
+      skip: "SymbolicAnalysis"
+      exclude: "OptimizationQuadDIRECT"
+      group-env-name: "OPTIMIZATION_TEST_GROUP"
+      group-env-value: "Core"
+      # OptimizationQuadDIRECT has an unregistered URL source and is tested below
+      # with a manifest repair step after downgrade-compat.
