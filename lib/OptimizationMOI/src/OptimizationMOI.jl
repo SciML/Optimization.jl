@@ -103,7 +103,7 @@ function _set_maxiters!(
     optimizer_name = string(typeof(optimizer))
 
     # Try to set maxiters based on common solver patterns
-    try
+    return try
         if contains(optimizer_name, "Ipopt")
             MOI.set(optimizer, MOI.RawOptimizerAttribute("max_iter"), Int(maxiters))
         elseif contains(optimizer_name, "Gurobi")
