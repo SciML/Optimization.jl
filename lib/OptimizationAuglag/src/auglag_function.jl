@@ -30,6 +30,15 @@ function classify_constraints(lcons, ucons)
     return eq_inds, ineq_upper_inds, ineq_lower_inds
 end
 
+# `Jᵀv` for the augmented-Lagrangian gradient. Prefer the vjp; fall back to an explicit
+# Jacobian only when no `cons_vjp` exists (user-supplied `cons_j` under `NoAD`).
+# Dispatch on the `J` buffer alone: it is allocated exactly when `cons_vjp` is missing.
+_jtv!(cons_vjp, cons_j, ::Nothing, Jᵀv, θ, v) = cons_vjp(Jᵀv, θ, v)
+function _jtv!(cons_vjp, cons_j, J::AbstractMatrix, Jᵀv, θ, v)
+    cons_j(J, θ)
+    return mul!(Jᵀv, transpose(J), v)
+end
+
 """
     generate_auglag(cache, eq_inds, ineq_upper_inds, ineq_lower_inds,
                     λ, μ_upper, μ_lower, ρ_ref)
@@ -57,10 +66,19 @@ so its gradient (used closed-form, not by AD'ing through `L`) is
 time, so the outer AugLag loop can update multipliers and the penalty in
 place between inner solves without rebuilding the function.
 
-`cons_tmp` and `J` are preallocated once with element type `eltype(cache.u0)`.
-This is safe because the analytical gradient does not AD through this
-function — `cache.f.grad` and `cache.f.cons_j` (which the inner solver
-ultimately calls) handle their own AD internally.
+The constraint term of `∇L` is a single vector-Jacobian product `Jᵀv`, where
+`v` collects the (active) multiplier weights per constraint row. It is computed
+with `cache.f.cons_vjp` when available — OptimizationBase always synthesizes one
+when the AD backend can, and for forward-mode backends routes it through a
+chunked/colored Jacobian, so it is never more expensive than `cons_j`. Only a
+user-supplied `cons_j` under `NoAD` falls back to an explicit dense `J` buffer
+and `mul!`.
+
+`cons_tmp`, `v`, `Jᵀv` (and `J` in the fallback) are preallocated once with
+element type `eltype(cache.u0)`. This is safe because the analytical gradient
+does not AD through this function — `cache.f.grad`, `cache.f.cons_vjp` and
+`cache.f.cons_j` (which the inner solver ultimately calls) handle their own AD
+internally.
 
 # Constraints and the data-iterator `p`
 
@@ -88,57 +106,66 @@ function generate_auglag(
     m = length(cache.lcons)
     T = eltype(cache.u0)
 
+    # OptimizationBase always synthesizes a `cons_vjp` when the AD backend can (and, for
+    # forward-mode backends, routes it through a chunked Jacobian so it is never more
+    # expensive than `cons_j` + `mul!`). The only case without one is a user-supplied
+    # `cons_j` under `NoAD`, which the `J`-buffer fallback below covers.
+    has_cons_vjp = !isnothing(cache.f.cons_vjp)
+
     cons_tmp = zeros(T, m)
-    J = zeros(T, m, n)
+    Jᵀv = zeros(T, n)
+    v = zeros(T, m)
+    # Single assignment so the closure capture stays concretely typed.
+    J = has_cons_vjp ? nothing : zeros(T, m, n)
+
     lcons = cache.lcons
     ucons = cache.ucons
 
-    auglag_value = function (θ, p)
-        f_val = first(cache.f(θ, p))
-        cache.f.cons(cons_tmp, θ, cache.p)
-        ρ = ρ_ref[]
+    multipliers! = function (v, cons_tmp, ρ, f_val)
+        fill!(v, zero(T))
         L = f_val
+
         @inbounds for (i, idx) in enumerate(eq_inds)
             ce = cons_tmp[idx] - lcons[idx]
+            v[idx] += λ[i] + ρ * ce
             L += λ[i] * ce + (ρ / 2) * ce^2
         end
         @inbounds for (i, idx) in enumerate(ineq_upper_inds)
             cu = cons_tmp[idx] - ucons[idx]
             m_act = max(zero(T), μ_upper[i] + ρ * cu)
+            v[idx] += m_act
             L += m_act^2 / (2 * ρ)
         end
         @inbounds for (i, idx) in enumerate(ineq_lower_inds)
             cl = lcons[idx] - cons_tmp[idx]
             m_act = max(zero(T), μ_lower[i] + ρ * cl)
+            v[idx] -= m_act
             L += m_act^2 / (2 * ρ)
         end
+
         return L
     end
+
+    auglag_value = function (θ, p)
+        f_val = first(cache.f(θ, p))
+        cache.f.cons(cons_tmp, θ, cache.p)
+        ρ = ρ_ref[]
+        L = multipliers!(v, cons_tmp, ρ, f_val)
+        return L
+    end
+
+    jtv! = (Jᵀv, θ, v) -> _jtv!(cache.f.cons_vjp, cache.f.cons_j, J, Jᵀv, θ, v)
 
     auglag_grad! = function (G, θ, p)
         cache.f.grad(G, θ, p)
         cache.f.cons(cons_tmp, θ, cache.p)
-        cache.f.cons_j(J, θ)
+
         ρ = ρ_ref[]
-        @inbounds for (i, idx) in enumerate(eq_inds)
-            ce = cons_tmp[idx] - lcons[idx]
-            a = λ[i] + ρ * ce
-            @views @. G += a * J[idx, :]
-        end
-        @inbounds for (i, idx) in enumerate(ineq_upper_inds)
-            cu = cons_tmp[idx] - ucons[idx]
-            m_act = max(zero(T), μ_upper[i] + ρ * cu)
-            if m_act > zero(T)
-                @views @. G += m_act * J[idx, :]
-            end
-        end
-        @inbounds for (i, idx) in enumerate(ineq_lower_inds)
-            cl = lcons[idx] - cons_tmp[idx]
-            m_act = max(zero(T), μ_lower[i] + ρ * cl)
-            if m_act > zero(T)
-                @views @. G -= m_act * J[idx, :]
-            end
-        end
+        multipliers!(v, cons_tmp, ρ, zero(T))
+        jtv!(Jᵀv, θ, v)
+
+        G .+= Jᵀv
+
         return G
     end
 
@@ -150,31 +177,13 @@ function generate_auglag(
             first(cache.f(θ, p))
         end
         cache.f.cons(cons_tmp, θ, cache.p)
-        cache.f.cons_j(J, θ)
+
         ρ = ρ_ref[]
-        L = f_val
-        @inbounds for (i, idx) in enumerate(eq_inds)
-            ce = cons_tmp[idx] - lcons[idx]
-            a = λ[i] + ρ * ce
-            L += λ[i] * ce + (ρ / 2) * ce^2
-            @views @. G += a * J[idx, :]
-        end
-        @inbounds for (i, idx) in enumerate(ineq_upper_inds)
-            cu = cons_tmp[idx] - ucons[idx]
-            m_act = max(zero(T), μ_upper[i] + ρ * cu)
-            if m_act > zero(T)
-                L += m_act^2 / (2 * ρ)
-                @views @. G += m_act * J[idx, :]
-            end
-        end
-        @inbounds for (i, idx) in enumerate(ineq_lower_inds)
-            cl = lcons[idx] - cons_tmp[idx]
-            m_act = max(zero(T), μ_lower[i] + ρ * cl)
-            if m_act > zero(T)
-                L += m_act^2 / (2 * ρ)
-                @views @. G -= m_act * J[idx, :]
-            end
-        end
+        L = multipliers!(v, cons_tmp, ρ, f_val)
+        jtv!(Jᵀv, θ, v)
+
+        G .+= Jᵀv
+
         return L
     end
 

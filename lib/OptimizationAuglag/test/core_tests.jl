@@ -333,13 +333,13 @@ end
         )
 
         @test !isempty(seen_ps)
-        n_dl = count(p -> p === dl, seen_ps)
-        n_other = count(p -> p !== dl, seen_ps)
-        # The DI cons_j preparation calls cons once or twice with the
-        # closed-over first batch — those are the only legal non-DL
-        # entries. Every call from `__solve` onward must be the iterator.
-        @test n_dl ≥ 1
-        @test n_dl > n_other
+        @test count(p -> p === dl, seen_ps) ≥ 1
+        # The only legal non-iterator `p` is the first batch that OptimizationBase closed
+        # over at AD-preparation time (used by `cons_j`/`cons_vjp`, whose call count
+        # depends on the AD backend and is not asserted here). Anything else would mean a
+        # per-batch `p` was routed into `cons!`.
+        first_batch = iterate(dl)[1]
+        @test all(p -> p === dl || p == first_batch, seen_ps)
     end
 
     @testset "degenerate pure-penalty (γ=1, λ=μ=0)" begin

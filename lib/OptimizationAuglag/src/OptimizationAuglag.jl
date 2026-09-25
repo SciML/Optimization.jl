@@ -6,7 +6,7 @@ using SciMLBase
 # which the user loads directly. This package's public surface is its own solvers.
 using OptimizationBase
 using SciMLBase: OptimizationProblem, OptimizationFunction, OptimizationStats
-using LinearAlgebra: norm
+using LinearAlgebra: norm, mul!
 
 export AugLag
 
@@ -65,6 +65,7 @@ SciMLBase.requiresgradient(::AugLag) = true
 SciMLBase.allowsfg(::AugLag) = true
 SciMLBase.allowsconstraints(::AugLag) = true
 SciMLBase.requiresconsjac(::AugLag) = true
+SciMLBase.allowsconsvjp(::AugLag) = true
 
 function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
