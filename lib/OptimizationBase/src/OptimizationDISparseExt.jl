@@ -39,7 +39,17 @@ function instantiate_function(
         grad = nothing
     end
 
-    if fg == true && f.fg === nothing
+    # A user-supplied `f.grad` is authoritative: building an AD `fg!` off `f.f` would silently
+    # discard it (and any tuned preparation behind it) for every value+gradient evaluation.
+    # Same rule as the dense `instantiate_function` (OptimizationDIExt.jl).
+    if fg == true && f.fg === nothing && f.grad !== nothing
+        fg! = let f = f, p = p
+            function (res, θ, p = p)
+                f.grad(res, θ, p)
+                return f.f(θ, p)
+            end
+        end
+    elseif fg == true && f.fg === nothing
         if g == false
             prep_grad = prepare_gradient(f.f, adtype.dense_ad, x, Constant(p))
         end
@@ -411,7 +421,12 @@ function instantiate_function(
         grad = nothing
     end
 
-    if fg == true && f.fg === nothing
+    # A user-supplied `f.grad` is authoritative (see the in-place method above).
+    if fg == true && f.fg === nothing && f.grad !== nothing
+        fg! = let f = f, p = p
+            (θ, p = p) -> (f.f(θ, p), f.grad(θ, p))
+        end
+    elseif fg == true && f.fg === nothing
         if g == false
             prep_grad = prepare_gradient(f.f, adtype.dense_ad, x, Constant(p))
         end
