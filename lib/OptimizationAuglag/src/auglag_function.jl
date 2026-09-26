@@ -30,15 +30,6 @@ function classify_constraints(lcons, ucons)
     return eq_inds, ineq_upper_inds, ineq_lower_inds
 end
 
-# `Jᵀv` for the augmented-Lagrangian gradient. Prefer the vjp; fall back to an explicit
-# Jacobian only when no `cons_vjp` exists (user-supplied `cons_j` under `NoAD`).
-# Dispatch on the `J` buffer alone: it is allocated exactly when `cons_vjp` is missing.
-_jtv!(cons_vjp, cons_j, ::Nothing, Jᵀv, θ, v) = cons_vjp(Jᵀv, θ, v)
-function _jtv!(cons_vjp, cons_j, J::AbstractMatrix, Jᵀv, θ, v)
-    cons_j(J, θ)
-    return mul!(Jᵀv, transpose(J), v)
-end
-
 """
     generate_auglag(cache, eq_inds, ineq_upper_inds, ineq_lower_inds,
                     λ, μ_upper, μ_lower, ρ_ref)
@@ -66,19 +57,19 @@ so its gradient (used closed-form, not by AD'ing through `L`) is
 time, so the outer AugLag loop can update multipliers and the penalty in
 place between inner solves without rebuilding the function.
 
-The constraint term of `∇L` is a single vector-Jacobian product `Jᵀv`, where
-`v` collects the (active) multiplier weights per constraint row. It is computed
-with `cache.f.cons_vjp` when available — OptimizationBase always synthesizes one
-when the AD backend can, and for forward-mode backends routes it through a
-chunked/colored Jacobian, so it is never more expensive than `cons_j`. Only a
-user-supplied `cons_j` under `NoAD` falls back to an explicit dense `J` buffer
-and `mul!`.
+The constraint term of `∇L` is a single vector-Jacobian product `Jᵀv` with
+`cache.f.cons_vjp`, where `v` holds the multiplier weight of every constraint
+row (zero for inactive inequalities). `AugLag` declares `requiresconsvjp`, so
+OptimizationBase always provides one: the user's, one built from the user's
+`cons_j`, the AD backend's pullback, or a chunked/colored AD Jacobian for
+forward-mode backends. Because inactive rows enter with a zero weight rather
+than being skipped, a non-finite derivative in an inactive row propagates to
+the gradient.
 
-`cons_tmp`, `v`, `Jᵀv` (and `J` in the fallback) are preallocated once with
-element type `eltype(cache.u0)`. This is safe because the analytical gradient
-does not AD through this function — `cache.f.grad`, `cache.f.cons_vjp` and
-`cache.f.cons_j` (which the inner solver ultimately calls) handle their own AD
-internally.
+`cons_tmp`, `v` and `Jᵀv` are preallocated once with element type
+`eltype(cache.u0)`. This is safe because the analytical gradient does not AD
+through this function — `cache.f.grad` and `cache.f.cons_vjp` handle their own
+AD internally.
 
 # Constraints and the data-iterator `p`
 
@@ -91,11 +82,10 @@ constraint body may pull the underlying full data from it (e.g. via
 `p.data` for an `MLUtils.DataLoader`) — but the constraint is still a
 deterministic function of `θ` and the full data, never of a single batch.
 
-Consistent with this, the constraint Jacobian `cache.f.cons_j` is invoked
-without `p` and uses the `p` that was closed over at AD-preparation time
-(the first batch for a data iterator). Since the constraint is by
-contract batch-independent, that closed-over `p` is irrelevant to the
-Jacobian's value.
+Consistent with this, `cache.f.cons_vjp` is invoked without `p` and uses
+the `p` that was closed over at instantiation (the first batch for a data
+iterator). Since the constraint is by contract batch-independent, that
+closed-over `p` is irrelevant to its value.
 """
 function generate_auglag(
         cache,
@@ -106,17 +96,9 @@ function generate_auglag(
     m = length(cache.lcons)
     T = eltype(cache.u0)
 
-    # OptimizationBase always synthesizes a `cons_vjp` when the AD backend can (and, for
-    # forward-mode backends, routes it through a chunked Jacobian so it is never more
-    # expensive than `cons_j` + `mul!`). The only case without one is a user-supplied
-    # `cons_j` under `NoAD`, which the `J`-buffer fallback below covers.
-    has_cons_vjp = !isnothing(cache.f.cons_vjp)
-
     cons_tmp = zeros(T, m)
     Jᵀv = zeros(T, n)
     v = zeros(T, m)
-    # Single assignment so the closure capture stays concretely typed.
-    J = has_cons_vjp ? nothing : zeros(T, m, n)
 
     lcons = cache.lcons
     ucons = cache.ucons
@@ -154,15 +136,13 @@ function generate_auglag(
         return L
     end
 
-    jtv! = (Jᵀv, θ, v) -> _jtv!(cache.f.cons_vjp, cache.f.cons_j, J, Jᵀv, θ, v)
-
     auglag_grad! = function (G, θ, p)
         cache.f.grad(G, θ, p)
         cache.f.cons(cons_tmp, θ, cache.p)
 
         ρ = ρ_ref[]
         multipliers!(v, cons_tmp, ρ, zero(T))
-        jtv!(Jᵀv, θ, v)
+        cache.f.cons_vjp(Jᵀv, θ, v)
 
         G .+= Jᵀv
 
@@ -180,7 +160,7 @@ function generate_auglag(
 
         ρ = ρ_ref[]
         L = multipliers!(v, cons_tmp, ρ, f_val)
-        jtv!(Jᵀv, θ, v)
+        cache.f.cons_vjp(Jᵀv, θ, v)
 
         G .+= Jᵀv
 
