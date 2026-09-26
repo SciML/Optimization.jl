@@ -49,7 +49,14 @@ each `ConeConstraint` to a MathOptInterface cone, and solve with
 
 The objective may be affine or contain atoms that are lowered through their
 epigraph: `minimize norm(A*u - b, 2)` introduces an epigraph variable `τ` with
-`(τ, A*u - b) ∈ SecondOrderCone` and minimizes `τ`. Supported atoms are
+`(τ, A*u - b) ∈ SecondOrderCone` and minimizes `τ`. Atoms may also nest inside
+one another — `norm(A*u - b)^2`, `exp(norm(u))`, `max(norm(u), 1)`,
+`sum(abs.(u))^2`, `norm([exp(u[1]), u[2]])` — in which case each inner atom
+gets its own epigraph variable and the outer atom's argument becomes affine in
+it. A nested composition is accepted only when the *original* expression is
+DCP-certified by `SymbolicAnalysis.analyze`; sign-dependent monotonicity is
+what makes e.g. `norm([exp(u[1]), u[2]])` convex but `abs2(max(u[1], u[2]))`
+not, so the latter is rejected. Supported atoms are
 
   - `norm(w, p)` for `p = 1, 2, Inf` (`NormOneCone`, `SecondOrderCone`,
     `NormInfinityCone`), with `w` an array expression in `u`;
@@ -74,11 +81,35 @@ epigraph: `minimize norm(A*u - b, 2)` introduces an epigraph variable `τ` with
     is a `p`-dependent constant — not an atom — and may enter the objective
     with either sign.
 
-Keep a `norm` argument an array expression built from `u` (`A*u - b`, `u .- c`);
-a `Vector` literal of scalars scalarizes the atom away before it can be lowered.
+Every "affine `w`" above means affine in `u` *and* in the epigraph variables
+of nested atoms: an argument element that is itself a supported atom (or an
+affine combination of atoms) is lowered recursively, innermost first.
+Compositions are only accepted when the composed expression is convex under
+DCP monotonicity — `exp` of a convex atom, `max`/`maximum`/`norm`/`abs` of
+convex nonnegative atoms, `abs2`/`^2` of a convex nonnegative atom, `min`/
+`minimum`/`log` of concave atoms under `MaxSense`, and affine combinations of
+all of those.
+
+Keep a `norm` argument an array expression built from `u` (`A*u - b`, `u .- c`,
+or a literal `[e1, e2, …]` whose elements may be atoms); a `norm` computed by
+hand as `sqrt(sum(w .^ 2))` is a different, unsupported expression.
 
 Parameters are first-class: see [`SciMLBase.reinit!`](@ref) for re-solving at a new
-`p` without re-running the symbolic canonicalization.
+`p` without re-running the symbolic canonicalization. Nested compositions containing
+parameters treat `p` as sign-unknown constants and are accepted only when convex for
+*every* `p` — e.g. `norm(A*u - p)^2` is accepted but `(exp(u[1]) + p[1])^2` is
+refused, since its curvature depends on the sign of `exp(u[1]) + p[1]`. On the flat
+(non-nested) path a parameter-scaled atom such as `(abs(p[1]) - 1) * abs(u[1] - 1)`
+is accepted at `init` and refused loudly at `reinit!` when the coefficient's sign
+becomes invalid; the cache stays intact. Parameter-only *lowerable* atoms (`norm`,
+`abs`, `exp`, `log`, `max`/`min`, `maximum`/`minimum`, sums of squares, …) are
+evaluated as exact θ-data at `init` and every `reinit!` (a literal square such as
+`p[1]^2` keeps its nonnegative sign, so `norm(u)^2 - p[1]^2` and
+`p[1]^2 * norm(u)^2` are accepted). Other parameter-only expressions (`p[1]^4`,
+`inv(p[1])`, `sqrt`, `hypot`, products of parameter atoms like `abs(p[1])*abs(p[2])`)
+are refused as "not affine in the parameters". An objective that is only convex at
+some parameter values can be solved by re-canonicalizing with
+`solve(remake(prob; p = θ), alg)` at each `θ`.
 """
 struct ConvexMOI{O} <: AbstractConvexOptAlgorithm
     optimizer_constructor::O
@@ -126,12 +157,7 @@ function SciMLBase.__init(
     # the lowering: the epigraph variables minted here must be the same ones the
     # numeric tensors and the MOI model are built from.
     tr = _trace_problem(prob)
-    # With symbolic parameters `analyze` sees `p[1]*u[2]` as a product of two
-    # non-constant symbols and reports UnknownCurvature, and substituting a numeric
-    # `p` first would certify one `p` only. On the parametric path the structural
-    # predicate in `_dpp_extract` is the certificate instead: it is strictly stronger
-    # than DCP (the lowered problem *is* a cone program with fixed cones).
-    analysis = isempty(tr.params) ? certify_convex(prob, tr) : nothing
+    analysis = certify_convex(prob, tr)
     dpp = _dpp_extract(prob, tr)
     model = MOI.instantiate(alg.optimizer_constructor; with_bridge_type = Float64)
     xvars, conrefs, atomrefs = _build_moi!(model, dpp, _theta(prob.p))
@@ -221,7 +247,7 @@ function SciMLBase.reinit!(
     end
     p === missing && return cache
     _validate_p(cache, p)
-    θ = Float64.(p)
+    θ = _numeric_p(p)
     # Build first, assign second: a rejected `p` (a sign flip that invalidates an
     # epigraph lowering) must leave the cache exactly as it was.
     xvars, conrefs, atomrefs = _build_moi!(cache.model, cache.dpp, θ)
@@ -256,26 +282,235 @@ function _validate_p(cache::ConvexOptimizationCache, p)
     return nothing
 end
 
-_theta(p) = p isa NullParameters ? Float64[] : Float64.(p)
-_cachep(p) = p isa NullParameters ? p : Float64.(p)
+function _numeric_p(p)
+    θ = Vector{Float64}(undef, length(p))
+    for (i, x) in enumerate(p)
+        θ[i] = Float64(x)
+    end
+    return θ
+end
+_theta(p) = p isa NullParameters ? Float64[] : _numeric_p(p)
+_cachep(p) = p isa NullParameters ? p : _numeric_p(p)
 
 certify_convex(prob::ConvexOptimizationProblem) = certify_convex(prob, _trace_problem(prob))
 
 # Certification runs on the *lowered* objective (atoms already replaced by their
 # epigraph variables). Each atom's argument is proven affine separately, by
 # `linear_expansion` in `_dpp_extract`, which is a stronger check than DCP.
+#
+# `analyze` cannot certify a flat parametric objective (it has no constant-vs-
+# variable distinction, and substituting one θ would not cover `reinit!`), so
+# the structural predicate in `_dpp_extract` is the certificate instead.
 function certify_convex(prob::ConvexOptimizationProblem, tr)
+    tr.nested && return _certify_nested(prob, tr)
+    isempty(tr.params) || return nothing
     obj_res = analyze(unwrap(tr.objl))
-    ok = prob.sense === SciMLBase.MaxSense ?
-        obj_res.curvature in (SymbolicAnalysis.Concave, SymbolicAnalysis.Affine) :
-        obj_res.curvature in (SymbolicAnalysis.Convex, SymbolicAnalysis.Affine)
-    ok || error(
-        "Objective is not certified convex for $(prob.sense): curvature = " *
-            "$(obj_res.curvature). Route to a general OptimizationProblem/NLP solver." *
-            _norm_hint(tr.obj)
-    )
+    _check_obj_curvature(prob, obj_res, tr)
     cons_res = _certify_constraints(prob, tr)
     return (; objective = obj_res, constraints = cons_res)
+end
+
+function _check_obj_curvature(prob, res, tr; suffix = "")
+    _curvature_admits(res, prob.sense) || error(
+        "Objective is not certified convex for $(prob.sense): curvature = " *
+            "$(res.curvature)." * suffix *
+            " Route to a general OptimizationProblem/NLP solver." * _norm_hint(tr.obj)
+    )
+    return nothing
+end
+
+_curvature_admits(res, sense) =
+    sense === SciMLBase.MaxSense ?
+    res.curvature in (SymbolicAnalysis.Concave, SymbolicAnalysis.Affine) :
+    res.curvature in (SymbolicAnalysis.Convex, SymbolicAnalysis.Affine)
+
+# The outer atom's pull on an inner epigraph variable is DCP's sign-dependent
+# monotonicity, so `analyze` runs on the original expression — via exact
+# rewrites — with parameters symbolic so the certificate holds at every θ.
+function _certify_nested(prob, tr)
+    res = _nested_curvature(prob, tr)
+    _check_obj_curvature(
+        prob, res, tr;
+        suffix = isempty(tr.params) ? "" :
+            " Parameters are kept symbolic in the certificate, so the curvature " *
+            "may also depend on `p`; if it is only convex at some parameter " *
+            "values, re-canonicalize with `solve(remake(prob; p = …), alg)`."
+    )
+    cons_res = isempty(tr.params) ? _certify_constraints(prob, tr) : nothing
+    return (; objective = res, constraints = cons_res)
+end
+
+# `analyze` can throw instead of reporting `UnknownCurvature` (e.g. a `c' * x`
+# term carries a `1×1` shape that trips `propagate_sign`); a throw means the
+# same thing as `UnknownCurvature` — try the next equivalent form.
+_try_analyze(ex) = try
+    analyze(ex)
+catch e
+    e isa InterruptException && rethrow()
+    (;
+        curvature = SymbolicAnalysis.UnknownCurvature,
+        sign = SymbolicAnalysis.AnySign,
+    )
+end
+
+const THC_BASE = Symbol("##θc")
+
+# `analyze` has no constants: a θ-only subterm as a fresh symbol is affine
+# (unknown sign); a second form keeps subterms provably positive for every θ
+# so enclosing monotonicity rules can use their sign.
+function _theta_constant_forms(ex, optset)
+    i = Ref(0)
+    subst(keep) = SymbolicUtils.Rewriters.Prewalk() do t
+        _is_theta_subterm(t, optset) || return nothing
+        keep(t) && return t
+        return variable(THC_BASE, (i[] += 1))
+    end(ex)
+    return subst(_ -> false),
+        subst(t -> _try_analyze(t).sign === SymbolicAnalysis.Positive)
+end
+
+# A θ-only factor of provable sign (for every θ) drops out of a product —
+# positive scales the curvature, negative flips it — while an unknown-sign
+# factor stays and the multiplication rule refuses the product.
+function _strip_theta_products(ex, optset)
+    return SymbolicUtils.Rewriters.Postwalk() do t
+        (Symbolics.iscall(t) && Symbolics.operation(t) === (*)) || return t
+        kept = Any[]
+        neg = false
+        for a in Symbolics.arguments(t)
+            if _is_theta_subterm(a, optset)
+                s = _try_analyze(a).sign
+                s === SymbolicAnalysis.Positive && continue
+                s === SymbolicAnalysis.Negative && (neg = !neg; continue)
+            end
+            push!(kept, a)
+        end
+        r = isempty(kept) ? 1 :
+            length(kept) == 1 ? kept[1] :
+            Symbolics.SymbolicUtils.maketerm(typeof(t), (*), kept, Symbolics.metadata(t))
+        return neg ?
+            Symbolics.SymbolicUtils.maketerm(typeof(t), (*), Any[-1, r], Symbolics.metadata(t)) :
+            r
+    end(ex)
+end
+
+_is_theta_subterm(t, optset) =
+    t isa Symbolics.SymbolicUtils.BasicSymbolic &&
+    !isempty(Symbolics.get_variables(t)) &&
+    !_has_optvar(t, optset)
+
+function _nested_curvature(prob, tr)
+    ex = unwrap(tr.obj)
+    # Restore exact θ-only expressions so analysis can use their signs.
+    for (s, a) in zip(tr.pdatavars, tr.pdataexprs)
+        ex = Symbolics.substitute(ex, Dict{Any, Any}(unwrap(s) => unwrap(a)))
+    end
+    forms = if isempty(tr.params)
+        (ex,)
+    else
+        optset = Set(unwrap.(tr.cols))
+        map(f -> _strip_theta_products(f, optset), _theta_constant_forms(ex, optset))
+    end
+    res = nothing
+    for e in forms
+        res = _analyze_stages(e, prob.sense)
+        _curvature_admits(res, prob.sense) && return res
+    end
+    return res
+end
+
+function _analyze_stages(ex, sense)
+    res = _try_analyze(ex)
+    _curvature_admits(res, sense) && return res
+    # `analyze` misses elementwise monotonicity in vector atom arguments.
+    ex = try
+        _dcp_reassociate(ex)
+    catch e
+        e isa InterruptException && rethrow()
+        ex
+    end
+    res = _try_analyze(ex)
+    _curvature_admits(res, sense) && return res
+    # `c' * x` terms carry a `1×1` symtype that trips `propagate_sign`.
+    ex = _expand_scalar_products(ex)
+    return _try_analyze(ex)
+end
+
+function _dcp_reassociate(ex)
+    return SymbolicUtils.Rewriters.Postwalk(_reassoc_node)(ex)
+end
+
+function _reassoc_node(x)
+    Symbolics.iscall(x) || return x
+    op = Symbolics.operation(x)
+    args = Symbolics.arguments(x)
+    if op === LinearAlgebra.norm
+        length(args) in (1, 2) || return x
+        p = length(args) == 1 ? 2 : Symbolics.value(args[2])
+        p isa Number || return x
+        es = _try_scalarize(args[1])
+        es === nothing && return x
+        p == 1 && return foldl(+, Any[abs(e) for e in es]; init = 0.0)
+        p == 2 && return length(es) == 1 ? abs(only(es)) : foldl(hypot, es)
+        isinf(p) && p > 0 && return foldl(max, Any[abs(e) for e in es])
+        return x
+    elseif op isa SymbolicUtils.Mapreducer
+        r = _mapreducer_reassoc(op, args)
+        return r === nothing ? x : r
+    elseif op === (*)
+        parts = _quad_form_parts(x)
+        parts === nothing && return x
+        lv = _quad_form_Lv(parts.v, parts.mid)
+        return foldl(+, Any[abs2(e) for e in lv]; init = 0.0)
+    end
+    return x
+end
+
+function _mapreducer_reassoc(op::SymbolicUtils.Mapreducer, args)
+    length(args) == 1 || return nothing
+    arg = args[1]
+    if op.f === abs2 && op.reduce === Base.add_sum
+        es = _try_scalarize(arg)
+        es === nothing && return nothing
+        return foldl(+, Any[abs2(e) for e in es]; init = 0.0)
+    end
+    op.f === identity || return nothing
+    if !(Symbolics.iscall(arg) && Symbolics.operation(arg) === broadcast)
+        (op.reduce === max || op.reduce === min) || return nothing
+        es = _try_scalarize(arg)
+        es === nothing && return nothing
+        return op.reduce === max ? foldl(max, es) : foldl(min, es)
+    end
+    bargs = Symbolics.arguments(arg)
+    bf = Symbolics.value(unwrap(bargs[1]))
+    if bf === abs && length(bargs) == 2
+        es = _try_scalarize(bargs[2])
+        es === nothing && return nothing
+        op.reduce === Base.add_sum &&
+            return foldl(+, Any[abs(e) for e in es]; init = 0.0)
+        op.reduce === max && return foldl(max, Any[abs(e) for e in es])
+        return nothing
+    end
+    op.reduce === Base.add_sum || return nothing
+    sq = bf === abs2 && length(bargs) == 2
+    if !sq && bf === (^) && length(bargs) == 3 && _is_square_exp(bargs[3])
+        sq = true
+    end
+    sq || return nothing
+    es = _try_scalarize(bargs[2])
+    es === nothing && return nothing
+    return foldl(+, Any[abs2(e) for e in es]; init = 0.0)
+end
+
+function _try_scalarize(a)
+    s = try
+        Symbolics.scalarize(Symbolics.wrap(a))
+    catch e
+        e isa InterruptException && rethrow()
+        return nothing
+    end
+    s isa AbstractArray || return Any[unwrap(s)]
+    return Any[unwrap(e) for e in vec(collect(s))]
 end
 
 # MVP: constraints are affine-in-cone, so every output component must be Affine.
@@ -312,21 +547,19 @@ rebuilt at any θ has identical variable and constraint numbering — which is w
 lets `conrefs` stay 1:1 with `prob.constraints` across a `reinit!`. Do not
 introduce θ-dependent emission of any variable or cone.
 
-Parameter-only squares (`p[1]^2`, `abs2(p[1])`) are lifted to `length(psqs)`
-implicit extra columns appended after the `m` user parameters and evaluated
-numerically from `psyms`/`psqs` at every θ, so a `-p[1]^2` term can stay a
-θ-dependent constant instead of forcing an epigraph whose sign guard would
-reject it. `m` counts only the user parameters.
+Parameter-only scalar expressions are lifted to implicit extra columns appended
+after the `m` user parameters and evaluated exactly at every θ. `m` counts only
+the user parameters.
 """
 struct DPPData{CS, AS, SE}
     n::Int                          # user variables
     m::Int                          # user parameters (reinit! validates against this)
     c0::Vector{Float64}             # length n + ntau
-    C::Matrix{Float64}              # (n + ntau) × (m + length(psqs))
+    C::Matrix{Float64}              # (n + ntau) × (m + length(pdataexprs))
     d0::Float64
-    dP::Vector{Float64}             # length m + length(psqs)
-    psqfns::Vector                  # compiled evaluators θ -> lifted square values
-    psqs::Vector                    # arguments of lifted parameter-only squares
+    dP::Vector{Float64}             # length m + length(pdataexprs)
+    pdatafns::Vector               # compiled evaluators θ -> lifted values
+    pdataexprs::Vector             # lifted parameter-only expressions
     conA::Vector{Matrix{Float64}}
     conb0::Vector{Vector{Float64}}
     conB::Vector{Matrix{Float64}}
@@ -420,7 +653,7 @@ end
 function _dpp_extract(prob::ConvexOptimizationProblem, tr)
     n = length(prob.u0)
     cols, allcols = tr.cols, tr.allcols
-    params = vcat(tr.params, tr.psqvars)
+    params = vcat(tr.params, tr.pdatavars)
     paramset = Set(unwrap.(params))
     tauset = Set(unwrap.(tr.taus))
     m = length(tr.params)
@@ -465,7 +698,7 @@ function _dpp_extract(prob::ConvexOptimizationProblem, tr)
     lb = prob.lb === nothing ? fill(-Inf, n) : Float64.(collect(prob.lb))
     ub = prob.ub === nothing ? fill(Inf, n) : Float64.(collect(prob.ub))
     dpp = DPPData(
-        n, m, c0, C, only(d0v), vec(dPm), tr.psqfns, tr.psqargs,
+        n, m, c0, C, only(d0v), vec(dPm), tr.pdatafns, tr.pdataexprs,
         conA, conb0, conB, consets,
         atomA, atomb0, atomB, [at.set for at in tr.atoms], [at.dir for at in tr.atoms],
         lb, ub, prob.sense
@@ -567,8 +800,19 @@ function _build_moi!(model, dpp::DPPData, θ::Vector{Float64})
 end
 
 function _extend_theta(dpp::DPPData, θ::Vector{Float64})
-    isempty(dpp.psqfns) && return θ
-    return vcat(θ, [f(θ...) for f in dpp.psqfns])
+    isempty(dpp.pdatafns) && return θ
+    values = Float64[]
+    for (f, ex) in zip(dpp.pdatafns, dpp.pdataexprs)
+        value = try
+            Float64(f(θ...))
+        catch e
+            e isa InterruptException && rethrow()
+            error("Could not evaluate parameter-only expression `$ex` at p = $θ: $(sprint(showerror, e))")
+        end
+        isfinite(value) || error("Parameter-only expression `$ex` is non-finite at p = $θ.")
+        push!(values, value)
+    end
+    return vcat(θ, values)
 end
 
 # The backend's own symbolic parameters and epigraph variables. `##`-prefixed so
@@ -576,7 +820,7 @@ end
 # keyed on the name, so a collision would silently fuse the user's symbol with ours.
 const PARAM_BASE = Symbol("##p")
 const TAU_BASE = Symbol("##τ")
-const PSQ_BASE = Symbol("##psq")
+const PDATA_BASE = Symbol("##pdata")
 
 # `u` is traced as a symbolic array rather than a vector of scalars: `norm` stays
 # an inspectable atom only while its argument is an array expression.
@@ -592,7 +836,7 @@ function _symbolic_vars(prob)
                 "`NullParameters`; got a `$(typeof(prob.p))`. Wrap a scalar as `[p]` and " *
                 "flatten any other container."
         )
-        [variable(PARAM_BASE, i) for i in eachindex(prob.p)]
+        Symbolics.Num[variable(PARAM_BASE, i) for i in eachindex(prob.p)]
     end
     return x, collect(Symbolics.scalarize(x)), params
 end
@@ -613,6 +857,7 @@ end
 
 function _trace_problem(prob)
     vars, cols, params = _symbolic_vars(prob)
+    optset = Set(unwrap.(cols))
     obj = try
         prob.f.f(vars, params)
     catch e
@@ -633,31 +878,31 @@ function _trace_problem(prob)
         end for con in prob.constraints
         ]
     consvals === nothing || foreach(_check_no_unsupported_reducer, consvals)
-    psqvars, psqargs, psqfns = empty(params), Any[], Any[]
+    pdatavars, pdataexprs, pdatafns = empty(params), Any[], Any[]
     if !isempty(params)
         acc = Tuple{Any, Any}[]
-        optset = Set(unwrap.(cols))
-        obj = Symbolics.wrap(_lift_param_squares(obj, optset, acc))
+        obj = Symbolics.wrap(_lift_param_data(obj, optset, acc))
         consvals === nothing || (
             consvals = [
-                Symbolics.wrap.(_lift_param_squares.(cv, Ref(optset), Ref(acc)))
+                Symbolics.wrap.(_lift_param_data.(cv, Ref(optset), Ref(acc)))
                     for cv in consvals
             ]
         )
         for (s, a) in acc
-            push!(psqvars, s); push!(psqargs, a)
-            push!(
-                psqfns, Symbolics.build_function(
-                    Symbolics.wrap(unwrap(a) * unwrap(a)), params...;
-                    expression = Val(false)
-                )
-            )
+            push!(pdatavars, s); push!(pdataexprs, a)
+            evaluator = try
+                Symbolics.build_function(Symbolics.wrap(a), params...; expression = Val(false))
+            catch e
+                e isa InterruptException && rethrow()
+                error("Could not lift parameter-only expression `$a` into numeric data: $(sprint(showerror, e))")
+            end
+            push!(pdatafns, evaluator)
         end
     end
-    objl, taus, atoms = _epigraph_lower(obj)
+    objl, taus, atoms, nested = _epigraph_lower(obj, optset)
     return (;
-        vars, cols, params, psqvars, psqargs, psqfns, obj,
-        objl, taus, atoms, consvals,
+        vars, cols, params, pdatavars, pdataexprs, pdatafns, obj,
+        objl, taus, atoms, nested, consvals,
         allcols = vcat(cols, taus),
     )
 end
@@ -769,8 +1014,17 @@ end
 
 _is_square_exp(e) = (v = Symbolics.value(e); v isa Number && v == 2)
 _is_array_arg(a) = Symbolics.symtype(unwrap(a)) <: AbstractArray
-_has_optvar(ex, optset) =
-    any(v -> unwrap(v) in optset, Symbolics.get_variables(ex))
+
+# `get_variables` reports the *array* symbol `x` for `norm(x)`, which is not in
+# the scalarized `optset`; normalize through `scalarize` so optvars are found
+# however they appear (whole array, `x[i]` getindex, or scalarized `x_i`).
+function _has_optvar(ex, optset)
+    return any(Symbolics.get_variables(ex)) do v
+        s = Symbolics.scalarize(Symbolics.wrap(v))
+        s isa AbstractArray ? any(e -> unwrap(e) in optset, vec(collect(s))) :
+            unwrap(s) in optset
+    end
+end
 
 function _is_square_power(ex)
     args = Symbolics.arguments(ex)
@@ -836,7 +1090,8 @@ function _quad_form_parts(ex)
     try
         isequal(_materialize_array(v), _materialize_array(foldl(*, rest))) &&
             return (; v, mid = scale == 1.0 ? nothing : Any[scale])
-    catch
+    catch e
+        e isa InterruptException && rethrow()
     end
     return nothing
 end
@@ -987,9 +1242,15 @@ end
 
 # `u' * P * u <= τ` for constant `P` is `‖L u‖² <= τ` — the same rotated-SOC
 # shape as a sum of squares. `mid` is the factor(s) between `v'` and `v`:
-# numeric matrices, with scalar numbers folding into `P` as a scale.
+# numeric matrices, with scalar numbers folding into `P` as a scale. `Lv` is
+# also what `_reassoc_node` rewrites the form to for the DCP certificate.
 function _quad_form_lowering(v, mid, tau)
+    return _rsoc_lowering(_quad_form_Lv(v, mid), tau)
+end
+
+function _quad_form_Lv(v, mid)
     w = _atom_arg_vec(v)
+    mid === nothing && return w
     scale = 1.0
     mats = Any[]
     for a in mid
@@ -1014,7 +1275,7 @@ function _quad_form_lowering(v, mid, tau)
         "`u' * P * u` / `quad_form(u, P)` dimension mismatch: `P` is " *
             "$(size(P, 2))×$(size(P, 2)) but `u` has length $(length(w))."
     )
-    return _rsoc_lowering(_psd_factor(P) * w, tau)
+    return _psd_factor(P) * w
 end
 
 # `sym(P) = LᵀL` through the eigendecomposition: `u' * P * u ≡ u' * sym(P) * u`
@@ -1080,31 +1341,25 @@ function _expand_scalar_products(ex)
     )
 end
 
-# `p[i]^2` / `abs2(p[i])` is a θ-dependent constant, not an epigraph atom — as
-# `τ ≥ p[i]²` a `-p[i]^2` term would fail the epigraph-sign guard with a
-# misleading error. Each distinct one becomes an implicit parameter column.
-function _lift_param_squares(ex, optset, acc)
-    ex isa Symbolics.Num && return _lift_param_squares(unwrap(ex), optset, acc)
-    ex isa AbstractArray && return map(e -> _lift_param_squares(e, optset, acc), ex)
+# A θ-only atom must be exact data: its epigraph could otherwise move freely
+# inside an enclosing atom and change the optimization problem.
+function _lift_param_data(ex, optset, acc)
+    ex isa Symbolics.Num && return _lift_param_data(unwrap(ex), optset, acc)
+    ex isa AbstractArray && return map(e -> _lift_param_data(e, optset, acc), ex)
     Symbolics.iscall(ex) || return ex
-    op = Symbolics.operation(ex)
-    arg = if op === abs2 && !_has_optvar(ex, optset)
-        Symbolics.arguments(ex)[1]
-    elseif op === (^) && _is_square_power(ex) && !_has_optvar(ex, optset)
-        Symbolics.arguments(ex)[1]
-    end
-    if arg !== nothing
-        i = findfirst(t -> isequal(t[2], arg), acc)
+    if _is_lowerable_atom(ex) && Symbolics.symtype(ex) <: Number &&
+            _is_theta_subterm(ex, optset)
+        i = findfirst(t -> isequal(t[2], ex), acc)
         i === nothing || return acc[i][1]
-        s = variable(PSQ_BASE, length(acc) + 1)
-        push!(acc, (s, arg))
+        s = variable(PDATA_BASE, length(acc) + 1)
+        push!(acc, (s, ex))
         return s
     end
     args = Symbolics.arguments(ex)
-    newargs = map(a -> _lift_param_squares(a, optset, acc), args)
+    newargs = map(a -> _lift_param_data(a, optset, acc), args)
     all(newargs .=== args) && return ex
     return Symbolics.SymbolicUtils.maketerm(
-        typeof(ex), op, newargs, Symbolics.metadata(ex)
+        typeof(ex), Symbolics.operation(ex), newargs, Symbolics.metadata(ex)
     )
 end
 
@@ -1137,30 +1392,91 @@ function _has_op(ex, op)
     return any(a -> _has_op(a, op), Symbolics.arguments(ex))
 end
 
-# A `sqrt` in the traced objective usually means a `norm` was scalarized away
-# before we could see it, so point at the spelling that preserves the atom.
+# A `sqrt` in the traced objective usually means a `norm` was spelled out by
+# hand, so point at the spelling that keeps the atom.
 _norm_hint(obj) = _has_op(obj, sqrt) ?
-    " If this objective uses `norm`, keep its argument an array expression built " *
-    "from `u` (e.g. `A*u - b`, `u .- c`, `u[1:2] .- c`); a `Vector` literal such as " *
-    "`[u[1]-1, u[2]-2]` destroys the `norm` atom and cannot be lowered." : ""
+    " If this objective uses `norm`, spell it `norm(w)` with `w` an array " *
+    "expression built from `u` (e.g. `A*u - b`, `u .- c`, `u[1:2] .- c`, or a " *
+    "literal `[e1, e2, …]`); `sqrt(sum(w .^ 2))` is a different, unsupported " *
+    "expression." : ""
 
-# Each lowerable atom becomes a fresh epigraph variable τ plus a cone.
-function _epigraph_lower(obj)
-    nodes = _collect_atoms!([], unwrap(obj))
-    isempty(nodes) && return Symbolics.scalarize(_expand_scalar_products(unwrap(obj))),
-        Symbolics.Num[], AtomCone[]
+function _collect_atoms_deep!(acc, ex)
+    ex isa Symbolics.Num && return _collect_atoms_deep!(acc, unwrap(ex))
+    ex isa AbstractArray &&
+        return (foreach(e -> _collect_atoms_deep!(acc, e), ex); acc)
+    Symbolics.iscall(ex) || return acc
+    for a in Symbolics.arguments(ex)
+        _collect_atoms_deep!(acc, a)
+    end
+    _is_lowerable_atom(ex) && (any(isequal(ex), acc) || push!(acc, ex))
+    return acc
+end
+
+_has_inner_atom(t) =
+    any(a -> !isempty(_collect_atoms!([], unwrap(a))), Symbolics.arguments(t))
+
+# Inner atoms lower first and their τ substitutes into enclosing arguments
+# before `scalarize` (which would rewrite `norm` into `sqrt(sum(abs2))` and
+# destroy it); atoms materialized by `scalarize` are collected from the
+# finished rows. `nested` routes the certificate to `_certify_nested`.
+function _epigraph_lower(obj, optset)
+    queue = _collect_atoms_deep!([], unwrap(obj))
+    isempty(queue) && return Symbolics.scalarize(_expand_scalar_products(unwrap(obj))),
+        Symbolics.Num[], AtomCone[], false
     taus = Symbolics.Num[]
     atoms = AtomCone[]
     subs = Dict{Any, Symbolics.Num}()
-    for (k, t) in enumerate(nodes)
-        tau = variable(TAU_BASE, k)
-        rows, set, dir = _atom_lowering(t, tau)
+    seen = Any[]
+    decision_set = copy(optset)
+    nested = false
+    while !isempty(queue)
+        t = popfirst!(queue)
+        any(isequal(t), seen) && continue
+        _is_theta_subterm(t, decision_set) && error(
+            "Parameter-only atom `$t` could not be lifted to exact parameter data; " *
+                "refusing epigraph or hypograph lowering."
+        )
+        push!(seen, t)
+        nested |= _has_inner_atom(t)
+        tsub = _subst_atom_args(t, subs)
+        tau = variable(TAU_BASE, length(taus) + 1)
+        push!(decision_set, unwrap(tau))
+        rows, set, dir = _atom_lowering(tsub, tau)
         push!(taus, tau)
         push!(atoms, AtomCone(rows, set, dir))
         subs[Symbolics.wrap(t)] = tau
+        for r in rows
+            found = _collect_atoms!([], unwrap(r))
+            isempty(found) && continue
+            nested = true
+            for f in found
+                any(isequal(f), seen) || any(isequal(f), queue) ||
+                    push!(queue, f)
+            end
+        end
     end
     lowered = _expand_scalar_products(Symbolics.substitute(obj, subs))
-    return Symbolics.scalarize(lowered), taus, atoms
+    if nested
+        atoms = map(atoms) do at
+            AtomCone(
+                Symbolics.Num[Symbolics.substitute(r, subs) for r in at.rows],
+                at.set, at.dir
+            )
+        end
+    end
+    return Symbolics.scalarize(lowered), taus, atoms, nested
+end
+
+function _subst_atom_args(t, subs)
+    isempty(subs) && return t
+    args = Symbolics.arguments(t)
+    new = Any[
+        Symbolics.unwrap(Symbolics.substitute(Symbolics.wrap(a), subs))
+            for a in args
+    ]
+    return Symbolics.SymbolicUtils.maketerm(
+        typeof(t), Symbolics.operation(t), new, Symbolics.metadata(t)
+    )
 end
 
 function _asvec(v)
