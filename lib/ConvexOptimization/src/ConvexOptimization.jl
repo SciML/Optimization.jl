@@ -95,17 +95,21 @@ or a literal `[e1, e2, …]` whose elements may be atoms); a `norm` computed by
 hand as `sqrt(sum(w .^ 2))` is a different, unsupported expression.
 
 Parameters are first-class: see [`SciMLBase.reinit!`](@ref) for re-solving at a new
-`p` without re-running the symbolic canonicalization. Because that certificate
-is built once and reused at every `p`, a nested composition containing
-parameters is accepted only when it is convex for *every* `p` — e.g.
-`norm(A*u - p)^2` is accepted but `(exp(u[1]) + p[1])^2` is refused, since its
-curvature depends on the sign of `exp(u[1]) + p[1]`. A subexpression involving
-`p` alone is certified as a constant of unknown sign (a literal square such as
-`p[1]^2` keeps its nonnegative sign), so `norm(u)^2 - p[1]^2` and
-`p[1]^2 * norm(u)^2` are accepted without requiring joint convexity in
-`(u, p)`. Supported parameter-only atoms are evaluated as numeric data at
-`init` and every `reinit!`. An objective that is only convex at some parameter values can be
-solved by re-canonicalizing with `solve(remake(prob; p = θ), alg)` at each `θ`.
+`p` without re-running the symbolic canonicalization. Nested compositions containing
+parameters treat `p` as sign-unknown constants and are accepted only when convex for
+*every* `p` — e.g. `norm(A*u - p)^2` is accepted but `(exp(u[1]) + p[1])^2` is
+refused, since its curvature depends on the sign of `exp(u[1]) + p[1]`. On the flat
+(non-nested) path a parameter-scaled atom such as `(abs(p[1]) - 1) * abs(u[1] - 1)`
+is accepted at `init` and refused loudly at `reinit!` when the coefficient's sign
+becomes invalid; the cache stays intact. Parameter-only *lowerable* atoms (`norm`,
+`abs`, `exp`, `log`, `max`/`min`, `maximum`/`minimum`, sums of squares, …) are
+evaluated as exact θ-data at `init` and every `reinit!` (a literal square such as
+`p[1]^2` keeps its nonnegative sign, so `norm(u)^2 - p[1]^2` and
+`p[1]^2 * norm(u)^2` are accepted). Other parameter-only expressions (`p[1]^4`,
+`inv(p[1])`, `sqrt`, `hypot`, products of parameter atoms like `abs(p[1])*abs(p[2])`)
+are refused as "not affine in the parameters". An objective that is only convex at
+some parameter values can be solved by re-canonicalizing with
+`solve(remake(prob; p = θ), alg)` at each `θ`.
 """
 struct ConvexMOI{O} <: AbstractConvexOptAlgorithm
     optimizer_constructor::O
