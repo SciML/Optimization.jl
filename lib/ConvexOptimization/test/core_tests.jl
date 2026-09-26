@@ -1264,7 +1264,7 @@ end
     sol = solve_checked(
         ConvexOptimizationProblem(
             OptimizationFunction((u, p) -> -u[1] + u[2]), [0.0, 0.0]; constraints = cons
-        ), ALG_TIGHT
+        ), ALG_TIGHTEST
     )
     @test SciMLBase.successful_retcode(sol.retcode)
     @test isapprox(sol.u, [log(2), -1.0]; atol = 1.0e-6)
@@ -1280,7 +1280,7 @@ end
     sol2 = solve_checked(
         ConvexOptimizationProblem(
             OptimizationFunction((u, p) -> u[1] + u[2]), [1.0, 2.0]; constraints = cons2
-        ), ALG_TIGHT
+        ), ALG_TIGHTEST
     )
     @test isapprox(sol2.u, [-5.0, exp(0.5)]; atol = 1.0e-6)
     @test isapprox(sol2.objective, -5.0 + exp(0.5); atol = 1.0e-6)
@@ -1476,9 +1476,11 @@ end
         # each case: (our constraint list, linear objective, Convex constraints)
         cases = [
             (
-                [ConeConstraint(
-                    (u, p) -> [norm(u .- [1.0, 2.0]) - 0.5], MOI.Nonpositives(1)
-                )],
+                [
+                    ConeConstraint(
+                        (u, p) -> [norm(u .- [1.0, 2.0]) - 0.5], MOI.Nonpositives(1)
+                    ),
+                ],
                 (u, p) -> u[1] + u[2],
                 x -> [norm(x - [1.0, 2.0], 2) <= 0.5],
             ),
@@ -1488,9 +1490,11 @@ end
                 x -> [sum(abs.(x)) <= 1.0],
             ),
             (
-                [ConeConstraint(
-                    (u, p) -> [exp(u[1]) + u[2]^2 - 3.0], MOI.Nonpositives(1)
-                )],
+                [
+                    ConeConstraint(
+                        (u, p) -> [exp(u[1]) + u[2]^2 - 3.0], MOI.Nonpositives(1)
+                    ),
+                ],
                 (u, p) -> -u[1] + u[2],
                 x -> [exp(x[1]) + Convex.square(x[2]) <= 3.0],
             ),

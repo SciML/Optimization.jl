@@ -318,8 +318,10 @@ function _certify_constraints(prob, tr)
         all(r -> r.curvature in allowed, cres) || error(
             "Constraint $k in $(con.set) requires $desc components; got " *
                 "curvatures $(getproperty.(cres, :curvature))." *
-                (con.set isa MOI.Zeros ?
-                    " A convex equality is not a convex set." : "") *
+                (
+                con.set isa MOI.Zeros ?
+                    " A convex equality is not a convex set." : ""
+            ) *
                 " Route to a general OptimizationProblem/NLP solver."
         )
         push!(res, cres)
@@ -1265,8 +1267,10 @@ function _check_constraint_signs(A, set, n, dirs, k)
         iszero(a) && continue
         sgn * a * dirs[j] >= 0 || return error(
             "Component $i of constraint $k in $(set) has coefficient $a on the " *
-                (dirs[j] > 0 ? "epigraph variable of a convex" :
-                    "hypograph variable of a concave") * " atom, which relaxes " *
+                (
+                dirs[j] > 0 ? "epigraph variable of a convex" :
+                    "hypograph variable of a concave"
+            ) * " atom, which relaxes " *
                 (set isa MOI.Nonpositives ? "`g(u) <= 0`" : "`g(u) >= 0`") *
                 " instead of reformulating it: a convex atom may enter `<=` " *
                 "only nonnegatively and `>=` only nonpositively (`norm(u) - t " *
