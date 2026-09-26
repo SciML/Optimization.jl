@@ -43,7 +43,7 @@ OptimizationChainRulesCoreExt = "ChainRulesCore"
 OptimizationMooncakeExt = "Mooncake"
 
 [compat]
-ADTypes = "1.18"
+ADTypes = "1.19"
 ArrayInterface = "7.6"
 ChainRulesCore = "1"
 DifferentiationInterface = "0.7.13"
