@@ -81,3 +81,16 @@ prob_sophia = OptimizationProblem(optf_sophia, x0_comp)
 res_sophia = solve(prob_sophia, OptimizationSophia.Sophia(η = 0.01, k = 5), maxiters = 50)
 @test res_sophia.objective < rosenbrock_comp(x0_comp)  # Test optimization progress
 @test res_sophia.retcode == SciMLBase.ReturnCode.Success
+
+@testset "User-supplied derivatives without AD" begin
+    # With no AD backend and no `fg`, the solver evaluates the objective itself and must
+    # pass the parameters to it.
+    loss(u, p) = sum(abs2, u .- p)
+    grad!(G, u, p) = (G .= 2 .* (u .- p))
+    hv!(H, u, v, p) = (H .= 2 .* v)
+    x0, p = zeros(2), [1.0, 2.0]
+    optf = OptimizationFunction(loss; grad = grad!, hv = hv!)
+    sol = solve(OptimizationProblem(optf, x0, p), OptimizationSophia.Sophia(η = 0.1), maxiters = 100)
+    @test sol.retcode == SciMLBase.ReturnCode.Success
+    @test sol.objective < loss(x0, p)
+end
