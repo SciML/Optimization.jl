@@ -22,14 +22,6 @@ using OptimizationBase.FastClosures
 # away.
 @inline _prep_valid(::Type{T}, v) where {T} = typeof(v) === T
 
-# Whether the generated `cons_vjp` should be computed as `Jᵀv` from a (chunked / colored)
-# Jacobian instead of DI's native `pullback`. DI has no reverse pass for forward-mode
-# backends and synthesizes the pullback from `length(x)` single-column pushforwards plus a
-# primal call (see DI `src/first_order/pullback.jl`), which is strictly more constraint
-# evaluations than one chunked Jacobian. Reverse-mode backends keep the true pullback.
-# `ADTypes.mode` sees through `AutoSparse`.
-_vjp_via_jacobian(adtype::ADTypes.AbstractADType) = ADTypes.mode(adtype) isa ADTypes.ForwardMode
-
 # Output-buffer eltype for the `p`-accepting constraint wrapper: the type `f.cons` produces,
 # including the *nested* dual when both `x` (DI's seeds) and `p` (the sensitivity layer) carry
 # duals with different tags (`promote_type` nests them). Deliberately uses plain `eltype(p)`
@@ -252,21 +244,52 @@ function instantiate_function(
     cons_jac_prototype = f.cons_jac_prototype
     cons_jac_colorvec = f.cons_jac_colorvec
 
-    cons_j! = if f.cons !== nothing && cons_j == true && f.cons_j === nothing
-        # A `p`-accepting out-of-place constraint wrapper, so the Jacobian can be evaluated
-        # at parameters other than the construction `p` — including duals pushed in by a
-        # sensitivity layer differentiating the constraint Jacobian w.r.t. `p` (the mixed
-        # ∂²cᵢ/∂x∂p term of the KKT residual). The prepared `cons_oop` bakes `p` in and
-        # exposes no parameter slot, so we cannot reuse it here. `_cons_out_eltype` picks the
-        # output eltype so duals propagate without poisoning it to `Union{}`.
-        _cons_oop_p = let f = f, num_cons = num_cons
+    # An AD Jacobian of `f.cons` is needed for `cons_j` and, when the backend has no native
+    # mode for them, for the requested `cons_vjp`/`cons_jvp` (see cons_products.jl). A
+    # user-supplied `cons_j` takes precedence over differentiating `f.cons` for all three.
+    _need_cons_jac = f.cons !== nothing && cons_j == true && f.cons_j === nothing
+    _ad_jac_vjp = cons_vjp == true && f.cons !== nothing && f.cons_vjp === nothing &&
+        f.cons_j === nothing && !_native_vjp(adtype)
+    _ad_jac_jvp = cons_jvp == true && f.cons !== nothing && f.cons_jvp === nothing &&
+        f.cons_j === nothing && !_native_jvp(adtype)
+    _any_ad_jac = _need_cons_jac || _ad_jac_vjp || _ad_jac_jvp
+
+    # A `p`-accepting out-of-place constraint wrapper, so the Jacobian can be evaluated
+    # at parameters other than the construction `p` — including duals pushed in by a
+    # sensitivity layer differentiating the constraint Jacobian w.r.t. `p` (the mixed
+    # ∂²cᵢ/∂x∂p term of the KKT residual). The prepared `cons_oop` bakes `p` in and
+    # exposes no parameter slot, so we cannot reuse it here. `_cons_out_eltype` picks the
+    # output eltype so duals propagate without poisoning it to `Union{}`.
+    _cons_oop_p = if _any_ad_jac
+        let f = f, num_cons = num_cons
             function (x, p)
                 res = Vector{_cons_out_eltype(x, p)}(undef, num_cons)
                 f.cons(res, x, p)
                 return res
             end
         end
-        _prep_jac = prepare_jacobian(_cons_oop_p, adtype, x, Constant(p))
+    else
+        nothing
+    end
+    _prep_jac = _any_ad_jac ? prepare_jacobian(_cons_oop_p, adtype, x, Constant(p)) : nothing
+    # Fills `J` at `θ` and the construction `p`, for the products built through the Jacobian.
+    _ad_cons_jac! = if _ad_jac_vjp || _ad_jac_jvp
+        let _cons_oop_p = _cons_oop_p, _prep_jac = _prep_jac, adtype = adtype, p = p,
+                Tx0 = Tx0
+
+            function (J, θ)
+                return if _prep_valid(Tx0, θ)
+                    jacobian!(_cons_oop_p, J, _prep_jac, adtype, θ, Constant(p))
+                else
+                    jacobian!(_cons_oop_p, J, adtype, θ, Constant(p))
+                end
+            end
+        end
+    else
+        nothing
+    end
+
+    cons_j! = if _need_cons_jac
         let _cons_oop_p = _cons_oop_p, _prep_jac = _prep_jac, adtype = adtype, p = p, Tx0 = Tx0, Tp0 = Tp0
             function (J, θ, p = p)
                 # Prepared fast path when the call types match construction; prep-free fallback
@@ -289,65 +312,41 @@ function instantiate_function(
         nothing
     end
 
-    cons_vjp! = if f.cons_vjp === nothing && cons_vjp == true && f.cons !== nothing
-        if _vjp_via_jacobian(adtype)
-            # Forward-mode backend: route the vjp through a Jacobian (see `_vjp_via_jacobian`).
-            # Reuses the same `p`-accepting wrapper shape as `cons_j!` above. The Jacobian prep
-            # is rebuilt here rather than shared with `cons_j!` because a solver may ask for
-            # `cons_vjp` without `cons_j`, so `_prep_jac` is not guaranteed to exist.
-            _vjp_cons_oop_p = let f = f, num_cons = num_cons
-                function (x, p)
-                    res = Vector{_cons_out_eltype(x, p)}(undef, num_cons)
-                    f.cons(res, x, p)
-                    return res
-                end
-            end
-            _vjp_prep_jac = prepare_jacobian(_vjp_cons_oop_p, adtype, x, Constant(p))
-            _vjp_J = zeros(eltype(x), num_cons, length(x))
-            let _vjp_cons_oop_p = _vjp_cons_oop_p, _vjp_prep_jac = _vjp_prep_jac,
-                    _vjp_J = _vjp_J, adtype = adtype, p = p, Tx0 = Tx0
-
-                function (res, θ, v)
-                    TJ = promote_type(eltype(θ), eltype(_vjp_J))
-                    θ_fits_buffer = TJ === eltype(_vjp_J)
-                    J = θ_fits_buffer ? _vjp_J : similar(_vjp_J, TJ)
-                    if _prep_valid(Tx0, θ)
-                        jacobian!(_vjp_cons_oop_p, J, _vjp_prep_jac, adtype, θ, Constant(p))
-                    else
-                        jacobian!(_vjp_cons_oop_p, J, adtype, θ, Constant(p))
-                    end
-                    return mul!(res, transpose(J), v)
-                end
-            end
-        else
-            _prep_pullback = prepare_pullback(cons_oop, adtype, x, (ones(eltype(x), num_cons),))
-            let cons_oop = cons_oop, _prep_pullback = _prep_pullback, adtype = adtype
-                (J, θ, v) -> only(pullback!(cons_oop, (J,), _prep_pullback, adtype, θ, (v,)))
-            end
-        end
-    elseif cons_vjp == true && f.cons !== nothing
+    cons_vjp! = if cons_vjp != true || f.cons === nothing
+        nothing
+    elseif f.cons_vjp !== nothing
         let f = f, p = p
             (J, θ, v) -> f.cons_vjp(J, θ, v, p)
         end
+    elseif f.cons_j !== nothing
+        _user_cons_vjp(f, x, p, num_cons)
+    elseif _ad_jac_vjp
+        _cons_vjp_through_jacobian(_ad_cons_jac!, zeros(eltype(x), num_cons, length(x)))
     else
-        nothing
+        _prep_pullback = prepare_pullback(cons_oop, adtype, x, (ones(eltype(x), num_cons),))
+        let cons_oop = cons_oop, _prep_pullback = _prep_pullback, adtype = adtype
+            (J, θ, v) -> only(pullback!(cons_oop, (J,), _prep_pullback, adtype, θ, (v,)))
+        end
     end
 
-    cons_jvp! = if f.cons_jvp === nothing && cons_jvp == true && f.cons !== nothing
+    cons_jvp! = if cons_jvp != true || f.cons === nothing
+        nothing
+    elseif f.cons_jvp !== nothing
+        let f = f, p = p
+            (J, θ, v) -> f.cons_jvp(J, θ, v, p)
+        end
+    elseif f.cons_j !== nothing
+        _user_cons_jvp(f, x, p, num_cons)
+    elseif _ad_jac_jvp
+        _cons_jvp_through_jacobian(_ad_cons_jac!, zeros(eltype(x), num_cons, length(x)))
+    else
         _prep_pushforward = prepare_pushforward(
             cons_oop, adtype, x, (ones(eltype(x), length(x)),)
         )
         let cons_oop = cons_oop, _prep_pushforward = _prep_pushforward, adtype = adtype
             (J, θ, v) -> only(pushforward!(cons_oop, (J,), _prep_pushforward, adtype, θ, (v,)))
         end
-    elseif cons_jvp == true && f.cons !== nothing
-        let f = f, p = p
-            (J, θ, v) -> f.cons_jvp(J, θ, v, p)
-        end
-    else
-        nothing
     end
-
     conshess_sparsity = f.cons_hess_prototype
     conshess_colors = f.cons_hess_colorvec
 
@@ -685,12 +684,28 @@ function instantiate_function(
     cons_jac_prototype = f.cons_jac_prototype
     cons_jac_colorvec = f.cons_jac_colorvec
 
-    cons_j! = if f.cons !== nothing && cons_j == true && f.cons_j === nothing
+    # AD Jacobian of `f.cons`, shared between `cons_j` and the products the backend has no
+    # native mode for; a user-supplied `cons_j` takes precedence (see the in-place method).
+    _need_cons_jac = f.cons !== nothing && cons_j == true && f.cons_j === nothing
+    _ad_jac_vjp = cons_vjp == true && f.cons !== nothing && f.cons_vjp === nothing &&
+        f.cons_j === nothing && !_native_vjp(adtype)
+    _ad_jac_jvp = cons_jvp == true && f.cons !== nothing && f.cons_jvp === nothing &&
+        f.cons_j === nothing && !_native_jvp(adtype)
+    _prep_jac = _need_cons_jac || _ad_jac_vjp || _ad_jac_jvp ?
+        prepare_jacobian(f.cons, adtype, x, Constant(p)) : nothing
+    # `J` at `θ` and the construction `p`. Out-of-place, so `jacobian` allocates a `J` of the
+    # right eltype per call and the products need no persistent buffer.
+    _ad_cons_jac = let f = f, _prep_jac = _prep_jac, adtype = adtype, p = p, Tx0 = Tx0
+        θ -> _prep_valid(Tx0, θ) ?
+            jacobian(f.cons, _prep_jac, adtype, θ, Constant(p)) :
+            jacobian(f.cons, adtype, θ, Constant(p))
+    end
+
+    cons_j! = if _need_cons_jac
         # `f.cons` is out-of-place here and the prep already takes `Constant(p)`, so this
         # only needs to expose the parameter argument and add the prep-validity fallback
         # (see the `_prep_valid` note above the imports) — unlike the in-place method,
         # whose prepared wrapper bakes `p` in.
-        _prep_jac = prepare_jacobian(f.cons, adtype, x, Constant(p))
         let f = f, _prep_jac = _prep_jac, adtype = adtype, p = p, Tx0 = Tx0, Tp0 = Tp0
             function (θ, p = p)
                 J = _prep_valid(Tx0, θ) && _prep_valid(Tp0, p) ?
@@ -710,51 +725,47 @@ function instantiate_function(
         nothing
     end
 
-    cons_vjp! = if f.cons_vjp === nothing && cons_vjp == true && f.cons !== nothing
-        if _vjp_via_jacobian(adtype)
-            # Forward-mode backend: `Jᵀv` from a chunked Jacobian (see `_vjp_via_jacobian`).
-            # Out-of-place, so `jacobian` allocates a `J` of the right eltype per call and no
-            # persistent buffer / widening logic is needed.
-            _vjp_prep_jac = prepare_jacobian(f.cons, adtype, x, Constant(p))
-            let f = f, _vjp_prep_jac = _vjp_prep_jac, adtype = adtype, p = p, Tx0 = Tx0
-                function (θ, v)
-                    J = _prep_valid(Tx0, θ) ?
-                        jacobian(f.cons, _vjp_prep_jac, adtype, θ, Constant(p)) :
-                        jacobian(f.cons, adtype, θ, Constant(p))
-                    return transpose(J) * v
-                end
-            end
-        else
-            _prep_pullback = prepare_pullback(
-                f.cons, adtype, x, (ones(eltype(x), num_cons),), Constant(p)
-            )
-            let f = f, _prep_pullback = _prep_pullback, adtype = adtype, p = p
-                (θ, v) -> only(pullback(f.cons, _prep_pullback, adtype, θ, (v,), Constant(p)))
-            end
-        end
-    elseif cons_vjp == true && f.cons !== nothing
+    cons_vjp! = if cons_vjp != true || f.cons === nothing
+        nothing
+    elseif f.cons_vjp !== nothing
         let f = f, p = p
             (θ, v) -> f.cons_vjp(θ, v, p)
         end
+    elseif f.cons_j !== nothing
+        _user_cons_vjp(f, x, p, num_cons)
+    elseif _ad_jac_vjp
+        let _ad_cons_jac = _ad_cons_jac
+            (θ, v) -> transpose(_ad_cons_jac(θ)) * v
+        end
     else
-        nothing
+        _prep_pullback = prepare_pullback(
+            f.cons, adtype, x, (ones(eltype(x), num_cons),), Constant(p)
+        )
+        let f = f, _prep_pullback = _prep_pullback, adtype = adtype, p = p
+            (θ, v) -> only(pullback(f.cons, _prep_pullback, adtype, θ, (v,), Constant(p)))
+        end
     end
 
-    cons_jvp! = if f.cons_jvp === nothing && cons_jvp == true && f.cons !== nothing
+    cons_jvp! = if cons_jvp != true || f.cons === nothing
+        nothing
+    elseif f.cons_jvp !== nothing
+        let f = f, p = p
+            (θ, v) -> f.cons_jvp(θ, v, p)
+        end
+    elseif f.cons_j !== nothing
+        _user_cons_jvp(f, x, p, num_cons)
+    elseif _ad_jac_jvp
+        let _ad_cons_jac = _ad_cons_jac
+            (θ, v) -> _ad_cons_jac(θ) * v
+        end
+    else
         _prep_pushforward = prepare_pushforward(
             f.cons, adtype, x, (ones(eltype(x), length(x)),), Constant(p)
         )
         let f = f, _prep_pushforward = _prep_pushforward, adtype = adtype, p = p
             (θ, v) -> only(pushforward(f.cons, _prep_pushforward, adtype, θ, (v,), Constant(p)))
         end
-    elseif cons_jvp == true && f.cons !== nothing
-        let f = f, p = p
-            (θ, v) -> f.cons_jvp(θ, v, p)
-        end
-    else
-        nothing
     end
-
     conshess_sparsity = f.cons_hess_prototype
     conshess_colors = f.cons_hess_colorvec
 
