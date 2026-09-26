@@ -263,3 +263,14 @@ end
     @test all(!isnan, sol_inf.u)
     @test all(isfinite, sol_inf.u)
 end
+
+@testset "User-supplied gradient without AD" begin
+    # With no AD backend and no `fg`, the solver evaluates the objective itself and must
+    # pass the parameters to it.
+    loss(u, p) = sum(abs2, u .- p)
+    grad!(G, u, p) = (G .= 2 .* (u .- p))
+    optf = OptimizationFunction(loss; grad = grad!)
+    prob = OptimizationProblem(optf, zeros(2), [1.0, 2.0])
+    sol = solve(prob, Optimisers.Adam(0.1), maxiters = 1000)
+    @test sol.u ≈ [1.0, 2.0] atol = 1.0e-3
+end
