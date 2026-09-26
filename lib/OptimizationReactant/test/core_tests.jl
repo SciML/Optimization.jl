@@ -191,6 +191,22 @@ using Test
         @test Hso[1] ≈ Hc[1]
         @test Hso[2] ≈ Hc[2]
         @test f_oop.lag_h(xc, σ, λ, p) ≈ Lref
+
+        # A user-supplied `cons_j` takes precedence over differentiating `cons` for the
+        # products as well.
+        jcalls = Ref(0)
+        my_cons_j(J, x, p) = (jcalls[] += 1; J .= ForwardDiff.jacobian(x -> cons_oop(x, p), x))
+        optf_cj = OptimizationFunction(
+            rosenbrock, AutoReactant(); cons = cons_iip, cons_j = my_cons_j
+        )
+        f_cj = OptimizationBase.instantiate_function(
+            optf_cj, x0, AutoReactant(), p, 2; cons_vjp = true, cons_jvp = true
+        )
+        f_cj.cons_vjp(vjp, xc, w)
+        @test vjp ≈ Jref' * w
+        f_cj.cons_jvp(jvp, xc, v)
+        @test jvp ≈ Jref * v
+        @test jcalls[] == 2
     end
 
     @testset "user-supplied derivatives are preserved" begin

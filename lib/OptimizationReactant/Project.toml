@@ -1,7 +1,7 @@
 name = "OptimizationReactant"
 uuid = "b4ab1876-06ab-4488-8836-d3361eb886f2"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com> and contributors"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
@@ -27,7 +27,7 @@ EnzymeCore = "0.8"
 ForwardDiff = "1"
 GPUArraysCore = "0.2"
 Optimisers = "0.4.2"
-OptimizationBase = "5.7.0"
+OptimizationBase = "5.8.0"
 OptimizationOptimJL = "0.4"
 OptimizationOptimisers = "0.3.23"
 Pkg = "1"

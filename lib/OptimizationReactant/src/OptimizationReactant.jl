@@ -17,6 +17,7 @@ and sparse detection cannot run through the compiled program.
 """
 module OptimizationReactant
 
+import OptimizationBase
 import OptimizationBase: ReInitCache, instantiate_function
 using ADTypes: ADTypes, AutoEnzyme, AutoReactant, AutoSparse
 using DifferentiationInterface: SecondOrder
@@ -266,9 +267,11 @@ function instantiate_function(
         CompiledCall(_value_grad_hess_objective(f.f, mode, annot)) : nothing
     cc_cj = cons_j == true && co !== nothing && f.cons_j === nothing ?
         CompiledCall(_cons_j_objective(co)) : nothing
-    cc_cvjp = cons_vjp == true && co !== nothing && f.cons_vjp === nothing ?
+    cc_cvjp = cons_vjp == true && co !== nothing && f.cons_vjp === nothing &&
+        f.cons_j === nothing ?
         CompiledCall(_cons_vjp_objective(co, mode)) : nothing
-    cc_cjvp = cons_jvp == true && co !== nothing && f.cons_jvp === nothing ?
+    cc_cjvp = cons_jvp == true && co !== nothing && f.cons_jvp === nothing &&
+        f.cons_j === nothing ?
         CompiledCall(_cons_jvp_objective(co)) : nothing
     cc_ch = cons_h == true && co !== nothing && f.cons_h === nothing ?
         CompiledCall(_cons_h_objective(co, mode, num_cons)) : nothing
@@ -375,10 +378,14 @@ function instantiate_function(
         nothing
     end
 
-    cons_vjp! = if cons_vjp == true && f.cons !== nothing && f.cons_vjp === nothing
+    cons_vjp! = if cons_vjp == true && f.cons !== nothing && f.cons_vjp === nothing &&
+            f.cons_j === nothing
         let cc_cvjp = cc_cvjp, p = p
             (J, θ, v) -> _copyinto!(J, cc_cvjp(θ, v, p))
         end
+    elseif cons_vjp == true && f.cons !== nothing && f.cons_vjp === nothing
+        # A user-supplied `cons_j` takes precedence over differentiating `f.cons`.
+        OptimizationBase._user_cons_vjp(f, x, p, num_cons)
     elseif cons_vjp == true && f.cons !== nothing
         let f = f, p = p
             (J, θ, v) -> f.cons_vjp(J, θ, v, p)
@@ -387,10 +394,14 @@ function instantiate_function(
         nothing
     end
 
-    cons_jvp! = if cons_jvp == true && f.cons !== nothing && f.cons_jvp === nothing
+    cons_jvp! = if cons_jvp == true && f.cons !== nothing && f.cons_jvp === nothing &&
+            f.cons_j === nothing
         let cc_cjvp = cc_cjvp, p = p
             (J, θ, v) -> _copyinto!(J, cc_cjvp(θ, v, p))
         end
+    elseif cons_jvp == true && f.cons !== nothing && f.cons_jvp === nothing
+        # A user-supplied `cons_j` takes precedence over differentiating `f.cons`.
+        OptimizationBase._user_cons_jvp(f, x, p, num_cons)
     elseif cons_jvp == true && f.cons !== nothing
         let f = f, p = p
             (J, θ, v) -> f.cons_jvp(J, θ, v, p)
@@ -506,9 +517,11 @@ function instantiate_function(
         CompiledCall(_value_grad_hess_objective(f.f, mode, annot)) : nothing
     cc_cj = cons_j == true && f.cons !== nothing && f.cons_j === nothing ?
         CompiledCall(_cons_j_objective(f.cons)) : nothing
-    cc_cvjp = cons_vjp == true && f.cons !== nothing && f.cons_vjp === nothing ?
+    cc_cvjp = cons_vjp == true && f.cons !== nothing && f.cons_vjp === nothing &&
+        f.cons_j === nothing ?
         CompiledCall(_cons_vjp_objective(f.cons, mode)) : nothing
-    cc_cjvp = cons_jvp == true && f.cons !== nothing && f.cons_jvp === nothing ?
+    cc_cjvp = cons_jvp == true && f.cons !== nothing && f.cons_jvp === nothing &&
+        f.cons_j === nothing ?
         CompiledCall(_cons_jvp_objective(f.cons)) : nothing
     cc_ch = cons_h == true && f.cons !== nothing && f.cons_h === nothing ?
         CompiledCall(_cons_h_objective(f.cons, mode, num_cons)) : nothing
@@ -609,10 +622,14 @@ function instantiate_function(
         nothing
     end
 
-    cons_vjp! = if cons_vjp == true && f.cons !== nothing && f.cons_vjp === nothing
+    cons_vjp! = if cons_vjp == true && f.cons !== nothing && f.cons_vjp === nothing &&
+            f.cons_j === nothing
         let cc_cvjp = cc_cvjp, p = p
             (θ, v) -> _out(cc_cvjp(θ, v, p), θ)
         end
+    elseif cons_vjp == true && f.cons !== nothing && f.cons_vjp === nothing
+        # A user-supplied `cons_j` takes precedence over differentiating `f.cons`.
+        OptimizationBase._user_cons_vjp(f, x, p, num_cons)
     elseif cons_vjp == true && f.cons !== nothing
         let f = f, p = p
             (θ, v) -> f.cons_vjp(θ, v, p)
@@ -621,10 +638,14 @@ function instantiate_function(
         nothing
     end
 
-    cons_jvp! = if cons_jvp == true && f.cons !== nothing && f.cons_jvp === nothing
+    cons_jvp! = if cons_jvp == true && f.cons !== nothing && f.cons_jvp === nothing &&
+            f.cons_j === nothing
         let cc_cjvp = cc_cjvp, p = p
             (θ, v) -> _out(cc_cjvp(θ, v, p), θ)
         end
+    elseif cons_jvp == true && f.cons !== nothing && f.cons_jvp === nothing
+        # A user-supplied `cons_j` takes precedence over differentiating `f.cons`.
+        OptimizationBase._user_cons_jvp(f, x, p, num_cons)
     elseif cons_jvp == true && f.cons !== nothing
         let f = f, p = p
             (θ, v) -> f.cons_jvp(θ, v, p)
