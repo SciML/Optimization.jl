@@ -4,6 +4,7 @@ using SciMLBase: ConvexOptimizationProblem, OptimizationSolution
 import MathOptInterface as MOI
 import Clarabel
 using LinearAlgebra
+using StaticArrays: SVector
 using Test
 
 # A successful solve must be self-consistent: the reported objective equals
@@ -496,9 +497,14 @@ end
     @test_throws "not affine in the parameters" solve_checked(
         pprob(lin, [2.0]; constraints = [ConeConstraint((u, p) -> [u[1] + u[2] - 1 / p[1]], Z1)]), ALG
     )
-    @test_throws "scales a lowered atom" solve_checked(
-        pprob((u, p) -> exp(p[1]) * u[1] + u[2], [1.0]), ALG
-    )
+    prob = pprob((u, p) -> exp(p[1]) * u[1] + u[2], [1.0])
+    cache = init(prob, ALG)
+    for p in ([1.0], [-1.0])
+        cache = reinit!(cache; p)
+        sol = solve!_checked(cache)
+        @test isapprox(sol.u, [-10.0, -10.0]; atol = 1.0e-5)
+        @test isapprox(sol.objective, -10 * (exp(p[1]) + 1); atol = 1.0e-5)
+    end
 
     # the epigraph-sign guard, already at the initial p
     @test_throws "Lowering an atom through its epigraph" solve_checked(
@@ -1423,14 +1429,70 @@ end
         end
     end
 
-    # abs(p) ≥ 0 for every θ, but lowering it leaves a τ·τ product coefficient.
-    @test_throws "scales a lowered atom" solve_checked(
-        pprob((u, p) -> abs(p[1]) * norm(u)^2, [1.0]), ALG
-    )
+    prob = pprob((u, p) -> abs(p[1]) * norm(u)^2, [1.0])
+    cache = init(prob, ALG)
+    for p in ([1.0], [-2.0], [0.0])
+        cache = reinit!(cache; p)
+        sol = solve!_checked(cache)
+        @test isapprox(sol.objective, 0.0; atol = 1.0e-6)
+    end
     # A bare parameter of unknown sign still decides curvature: refused.
     @test_throws "not certified convex" solve_checked(
         pprob((u, p) -> p[1] * norm(u)^2, [1.0]), ALG
     )
+end
+
+@testset "parameter-only atoms use exact data" begin
+    cases = (
+        (
+            (u, p) -> abs(u[1] + abs(p[1]) - 1) + u[1]^2,
+            [2.0], ([2.0], [-0.25], [0.0], [-1.0]),
+            p -> [clamp(1 - abs(p[1]), -0.5, 0.5)],
+        ),
+        (
+            (u, p) -> abs(u[1] + exp(p[1]) - 2) + u[1]^2,
+            [0.0], ([0.0], [log(2.25)], [log(1.5)]),
+            p -> [clamp(2 - exp(p[1]), -0.5, 0.5)],
+        ),
+        (
+            (u, p) -> u[1]^2 + norm(p),
+            [1.0], ([1.0], [-2.0], [0.0]),
+            p -> [0.0],
+        ),
+        (
+            (u, p) -> max(p[1], p[2]) * 1 + norm(u .- p),
+            [1.0, -2.0], ([1.0, -2.0], [-2.0, 3.0], [0.0, 0.0]),
+            p -> p,
+        ),
+    )
+    for (f, p0, thetas, expected_u) in cases
+        prob = ConvexOptimizationProblem(OptimizationFunction(f), zeros(length(expected_u(p0))), p0)
+        cache = init(prob, ALG_TIGHT)
+        for p in thetas
+            cache = reinit!(cache; p)
+            sol = solve!_checked(cache)
+            @test SciMLBase.successful_retcode(sol.retcode)
+            @test isapprox(sol.u, expected_u(p); atol = 1.0e-5)
+            @test isapprox(sol.objective, f(expected_u(p), p); atol = 1.0e-5)
+        end
+    end
+end
+
+@testset "parameter vectors are converted to Float64 vectors" begin
+    for p in (SVector{0, Float64}(), Any[])
+        prob = ConvexOptimizationProblem(OptimizationFunction((u, p) -> abs(u[1] - 1)), [0.0], p)
+        sol = solve_checked(prob, ALG)
+        @test isapprox(sol.u, [1.0]; atol = 1.0e-5)
+    end
+    prob = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> abs(u[1] - p[1])), [0.0], SVector(2.0)
+    )
+    cache = init(prob, ALG)
+    for p in (SVector(2.0), SVector(-1.0))
+        cache = reinit!(cache; p)
+        sol = solve!_checked(cache)
+        @test isapprox(sol.u, collect(p); atol = 1.0e-5)
+    end
 end
 
 @testset "nested atoms in open boxes hit the analytic minimizer" begin

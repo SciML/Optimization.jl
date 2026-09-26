@@ -21,6 +21,7 @@ MathOptInterface = "1.45"
 Reexport = "1.2"
 SciMLBase = "3.36"
 SparseArrays = "1.10"
+StaticArrays = "1"
 SymbolicAnalysis = "0.3, 0.5"
 SymbolicUtils = "4.46"
 Symbolics = "7"
@@ -28,7 +29,8 @@ julia = "1.10"
 
 [extras]
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "SafeTestsets"]
+test = ["Test", "SafeTestsets", "StaticArrays"]
