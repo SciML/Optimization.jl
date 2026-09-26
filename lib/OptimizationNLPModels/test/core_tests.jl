@@ -209,3 +209,57 @@ end
         @test vals[k] ≈ Href[srows[k], scols[k]] atol = 1.0e-10
     end
 end
+
+@testset "jtprod!/jprod! fall back to cons_j without a matrix-free product" begin
+    using SparseArrays
+    import ADTypes
+    import ForwardDiff
+
+    obj(x, p) = sum(abs2, x)
+    cons(res, x, p) = (res .= [x[1]^2 + x[2], x[2] * x[3]])
+    x0 = [0.4, -0.7, 1.3]
+    v = [1.3, -2.1]
+    w = [0.5, 0.25, -1.0]
+    Jref = ForwardDiff.jacobian(x -> (r = similar(x, 2); cons(r, x, nothing); r), x0)
+    meta = NLPModels.NLPModelMeta(
+        3; ncon = 2, x0 = x0, y0 = zeros(2), lcon = zeros(2), ucon = zeros(2),
+        nnzj = 6, minimize = true
+    )
+    adaptor(inst) = OptimizationNLPModels.NLPModelsAdaptor(
+        (f = inst, p = nothing, lcons = zeros(2), ucons = zeros(2)), meta,
+        NLPModels.Counters()
+    )
+
+    @testset "$ad" for ad in (
+            ADTypes.AutoForwardDiff(), ADTypes.AutoSparse(ADTypes.AutoForwardDiff()),
+        )
+        f = OptimizationBase.OptimizationFunction(obj, ad; cons = cons)
+        # what `OptimizationCache` requests for a solver that only allows the products
+        inst = OptimizationBase.instantiate_function(
+            f, x0, ad, nothing, 2; cons_j = true,
+            cons_vjp = OptimizationBase._matrixfree_cons_vjp(f, ad),
+            cons_jvp = OptimizationBase._matrixfree_cons_jvp(f, ad)
+        )
+        @test inst.cons_vjp === nothing
+        nlp = adaptor(inst)
+        @test NLPModels.jtprod!(nlp, x0, v, zeros(3)) ≈ Jref' * v
+        @test NLPModels.jprod!(nlp, x0, w, zeros(2)) ≈ Jref * w
+    end
+
+    @testset "no cons_j" begin
+        f = OptimizationBase.OptimizationFunction(obj, ADTypes.AutoForwardDiff(); cons = cons)
+        inst = OptimizationBase.instantiate_function(f, x0, f.adtype, nothing, 2)
+        @test_throws ArgumentError NLPModels.jtprod!(adaptor(inst), x0, v, zeros(3))
+    end
+
+    @testset "no constraints" begin
+        f = OptimizationBase.OptimizationFunction(obj, ADTypes.AutoForwardDiff())
+        inst = OptimizationBase.instantiate_function(f, x0, f.adtype, nothing, 0; g = true)
+        meta0 = NLPModels.NLPModelMeta(3; x0 = x0, minimize = true)
+        nlp = OptimizationNLPModels.NLPModelsAdaptor(
+            (f = inst, p = nothing, lcons = nothing, ucons = nothing), meta0,
+            NLPModels.Counters()
+        )
+        @test NLPModels.jtprod!(nlp, x0, Float64[], fill(NaN, 3)) == zeros(3)
+    end
+end
