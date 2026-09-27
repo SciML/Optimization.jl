@@ -263,3 +263,68 @@ end
     @test all(!isnan, sol_inf.u)
     @test all(isfinite, sol_inf.u)
 end
+
+# A vector that errors on scalar indexing but supports `mapreduce` and broadcasting, like
+# device arrays such as Reactant's. Unlike GPUArrays types it does not overload
+# `all(f, x)`, so that falls back to iterating element by element.
+struct NoScalarVector{T} <: AbstractVector{T}
+    data::Vector{T}
+end
+Base.size(x::NoScalarVector) = size(x.data)
+Base.getindex(::NoScalarVector, ::Int) = error("Scalar indexing is disallowed")
+Base.setindex!(::NoScalarVector, _, ::Int) = error("Scalar indexing is disallowed")
+function Base.similar(x::NoScalarVector, ::Type{T}, dims::Dims{1}) where {T}
+    return NoScalarVector(similar(x.data, T, dims))
+end
+Base.copy(x::NoScalarVector) = NoScalarVector(copy(x.data))
+Base.copyto!(y::NoScalarVector, x::NoScalarVector) = (copyto!(y.data, x.data); y)
+Base.fill!(x::NoScalarVector, v) = (fill!(x.data, v); x)
+Base.mapreduce(f, op, x::NoScalarVector; kw...) = mapreduce(f, op, x.data; kw...)
+
+struct NoScalarStyle <: Broadcast.AbstractArrayStyle{1} end
+NoScalarStyle(::Val{1}) = NoScalarStyle()
+Base.BroadcastStyle(::Type{<:NoScalarVector}) = NoScalarStyle()
+unwrap(x::NoScalarVector) = x.data
+unwrap(bc::Broadcast.Broadcasted) = Broadcast.broadcasted(bc.f, map(unwrap, bc.args)...)
+unwrap(x) = x
+function Base.similar(bc::Broadcast.Broadcasted{NoScalarStyle}, ::Type{T}) where {T}
+    return NoScalarVector(similar(Vector{T}, axes(bc)))
+end
+function Base.copyto!(y::NoScalarVector, bc::Broadcast.Broadcasted{NoScalarStyle})
+    copyto!(y.data, Broadcast.instantiate(unwrap(bc)))
+    return y
+end
+
+@testset "NaN/Inf gradient check without scalar indexing" begin
+    loss(u, p) = sum(abs2, u .- p)
+    x0 = NoScalarVector([0.0, 0.0])
+    p = NoScalarVector([1.0, 2.0])
+
+    # Hand-written gradient `g(u, p)`, so that no AD backend is involved. `save_best`
+    # is off so that `sol.u` is the last iterate, not the best one seen.
+    function solve_with_grad(g, opt; maxiters)
+        fg!(G, u, p) = (G .= g(u, p); loss(u, p))
+        prob = OptimizationProblem(OptimizationFunction(loss; fg = fg!), x0, p)
+        return solve(prob, opt; maxiters, save_best = false, verbose = false)
+    end
+
+    sol = solve_with_grad((u, p) -> 2 .* (u .- p), Optimisers.Adam(0.1), maxiters = 1000)
+    @test sol.u isa NoScalarVector
+    @test sol.u.data ≈ [1.0, 2.0] atol = 1.0e-3
+
+    # Non-finite gradients are rejected, so the parameters never move.
+    for bad in (NaN, Inf, -Inf)
+        sol = solve_with_grad(
+            (u, p) -> NoScalarVector([bad, 1.0]), Optimisers.Adam(0.1), maxiters = 10
+        )
+        @test sol.stats.iterations == 10
+        @test sol.u.data == [0.0, 0.0]
+    end
+
+    # A finite gradient is accepted even if its sum overflows: each step moves by 1e8.
+    sol = solve_with_grad(
+        (u, p) -> NoScalarVector([1.0e308, 1.0e308]), Optimisers.Descent(1.0e-300),
+        maxiters = 10
+    )
+    @test sol.u.data ≈ [-1.0e9, -1.0e9]
+end
