@@ -275,6 +275,9 @@ function instantiate_function(
     end
     lastidx = isnothing(open_brkt_ind) ? lastindex(adtypestr) : (open_brkt_ind - 1)
     adpkg = adtypestr[strtind:lastidx]
+    # `AutoReactant` is not an AD package itself: the `instantiate_function`
+    # methods live in the OptimizationReactant sublibrary.
+    adpkg == "Reactant" && (adpkg = "OptimizationReactant")
     throw(ArgumentError("The passed automatic differentiation backend choice is not available. Please load the corresponding AD package $adpkg."))
 end
 

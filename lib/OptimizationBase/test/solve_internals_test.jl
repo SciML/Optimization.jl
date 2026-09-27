@@ -329,3 +329,30 @@ end
     @test SciMLBase.successful_retcode(sol)
     @test _mock_ncalls[] == 1
 end
+
+# ============================================================
+# Solution wrapping through `problem_type`
+# ============================================================
+
+struct MockDiscretizationMetadata <: SciMLBase.AbstractDiscretizationMetadata{Val(false)} end
+struct MockPDESolution{S} <:
+    SciMLBase.AbstractPDENoTimeSolution{Float64, 1, S, MockDiscretizationMetadata}
+    original_sol::S
+    disc_data::MockDiscretizationMetadata
+end
+function SciMLBase.PDENoTimeSolution(sol, metadata::MockDiscretizationMetadata)
+    return MockPDESolution(sol, metadata)
+end
+
+@testset "solve wraps the solution through the problem's problem_type" begin
+    f = OptimizationFunction((u, p) -> sum(abs2, u))
+    metadata = MockDiscretizationMetadata()
+    prob = OptimizationProblem(f, [1.0, 2.0]; problem_type = metadata)
+    wrapped = solve(prob, MockSolver())
+    @test wrapped isa MockPDESolution
+    @test wrapped.original_sol isa SciMLBase.OptimizationSolution
+    @test wrapped.disc_data === metadata
+    @test solve(prob, MockSolver(); wrap = Val(false)) isa SciMLBase.OptimizationSolution
+    @test solve(OptimizationProblem(f, [1.0, 2.0]), MockSolver()) isa
+        SciMLBase.OptimizationSolution
+end

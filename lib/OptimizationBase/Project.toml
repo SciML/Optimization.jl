@@ -1,6 +1,6 @@
 name = "OptimizationBase"
 uuid = "bca83a33-5cc9-4baa-983d-23429ab6bcbb"
-version = "5.5.3"
+version = "5.7.0"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 
 [deps]
@@ -43,7 +43,7 @@ OptimizationChainRulesCoreExt = "ChainRulesCore"
 OptimizationMooncakeExt = "Mooncake"
 
 [compat]
-ADTypes = "1.18"
+ADTypes = "1.19"
 ArrayInterface = "7.6"
 ChainRulesCore = "1"
 DifferentiationInterface = "0.7.13"
@@ -59,7 +59,7 @@ Mooncake = "0.4.138, 0.5"
 PrecompileTools = "1.2.1"
 ReverseDiff = "1.14"
 SafeTestsets = ">= 0.0.1"
-SciMLBase = "3"
+SciMLBase = "3.54"
 SciMLLogging = "2"
 SciMLTesting = "2.8"
 SparseArrays = "1.10"

@@ -17,5 +17,5 @@ jobs:
   tests:
     uses: "SciML/.github/.github/workflows/grouped-tests.yml@v1"
     with:
-      coverage-directories: "src,lib/OptimizationBase/src,lib/OptimizationBBO/src,lib/OptimizationCMAEvolutionStrategy/src,lib/OptimizationEvolutionary/src,lib/OptimizationGCMAES/src,lib/OptimizationIpopt/src,lib/OptimizationMadNLP/src,lib/OptimizationManopt/src,lib/OptimizationMOI/src,lib/OptimizationMetaheuristics/src,lib/OptimizationMultistartOptimization/src,lib/OptimizationNLopt/src,lib/OptimizationNOMAD/src,lib/OptimizationOptimJL/src,lib/OptimizationOptimisers/src,lib/OptimizationPolyalgorithms/src,lib/OptimizationQuadDIRECT/src,lib/OptimizationSpeedMapping/src"
+      coverage-directories: "src,lib/OptimizationBase/src,lib/OptimizationBBO/src,lib/OptimizationCMAEvolutionStrategy/src,lib/OptimizationEvolutionary/src,lib/OptimizationGCMAES/src,lib/OptimizationIpopt/src,lib/OptimizationMadNLP/src,lib/OptimizationManopt/src,lib/OptimizationMOI/src,lib/OptimizationMetaheuristics/src,lib/OptimizationMultistartOptimization/src,lib/OptimizationNLopt/src,lib/OptimizationNOMAD/src,lib/OptimizationOptimJL/src,lib/OptimizationOptimisers/src,lib/OptimizationPolyalgorithms/src,lib/OptimizationReactant/src,lib/OptimizationQuadDIRECT/src,lib/OptimizationSpeedMapping/src"
     secrets: "inherit"

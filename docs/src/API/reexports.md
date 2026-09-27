@@ -39,7 +39,8 @@ The automatic differentiation selectors are owned and documented by
 [the AD choice recommendations](@ref ad):
 
   - `AutoEnzyme`, `AutoFiniteDiff`, `AutoForwardDiff`, `AutoMooncake`,
-    `AutoReverseDiff`, `AutoSparse`, `AutoSymbolics`, `AutoTracker`, `AutoZygote`
+    `AutoReactant`, `AutoReverseDiff`, `AutoSparse`, `AutoSymbolics`,
+    `AutoTracker`, `AutoZygote`
 
 Anything else from ADTypes — the less common backends, the sparsity detectors and the
 coloring algorithms — must be imported from ADTypes directly.
