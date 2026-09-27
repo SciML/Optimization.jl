@@ -6,6 +6,7 @@ using SciMLBase: ConvexOptimizationProblem, OptimizationSolution,
     OptimizationFunction, AbstractOptimizationCache, AbstractOptimizationAlgorithm,
     NullParameters, ReturnCode
 import MathOptInterface as MOI
+import Clarabel
 import Symbolics
 using Symbolics: variable, unwrap, linear_expansion
 import SymbolicAnalysis
@@ -19,7 +20,11 @@ using LinearAlgebra
 One convex cone constraint of a [`ConvexOptimizationProblem`](@ref). `g(u, p)`
 returns the map whose image must lie in the MathOptInterface vector cone
 `set` (`MOI.Zeros`, `MOI.Nonnegatives`, `MOI.Nonpositives`, `MOI.SecondOrderCone`,
-…). The output length of `g` must equal `MOI.dimension(set)`.
+`MOI.PositiveSemidefiniteConeTriangle`, …). The output length of `g` must equal
+`MOI.dimension(set)`. For `MOI.PositiveSemidefiniteConeTriangle(n)`, return the
+upper triangle of an `n×n` symmetric affine matrix in column order:
+`[X[1,1], X[1,2], X[2,2], X[1,3], X[2,3], X[3,3], …]`. The corresponding
+entry of `sol.dual` uses the same triangle order.
 
 Components must be affine in `u` for every cone except `MOI.Nonpositives` and
 `MOI.Nonnegatives`, which also accept the same atoms as the objective: a `<=`
@@ -89,6 +94,18 @@ not, so the latter is rejected. Supported atoms are
     square whose argument contains no optimization variable, e.g. `p[1]^2`,
     is a `p`-dependent constant — not an atom — and may enter the objective
     with either sign.
+  - `eigmax(X)` and `eigmin(X)` for a symmetric affine matrix `X`, through
+    positive semidefinite triangle cones;
+  - `opnorm(X)` for a real affine matrix of any shape, through a symmetric
+    block positive semidefinite cone;
+  - `logdet(X)` for a symmetric affine matrix `X`, through a log-determinant
+    triangle cone (bridged to exponential and positive semidefinite cones for
+    Clarabel). `logdet` is concave and must enter a maximization objective or
+    a compatible hypograph constraint.
+
+Clarabel runs containing positive semidefinite cones use its native PSD solver
+with chordal decomposition disabled so the primal and dual solutions remain
+available for sparse PSD blocks.
 
 Every "affine `w`" above means affine in `u` *and* in the epigraph variables
 of nested atoms: an argument element that is itself a supported atom (or an
@@ -183,6 +200,16 @@ function SciMLBase.__init(
     analysis = certify_convex(prob, tr)
     dpp = _dpp_extract(prob, tr)
     model = MOI.instantiate(alg.optimizer_constructor; with_bridge_type = Float64)
+    constructor = alg.optimizer_constructor
+    base_constructor = constructor isa MOI.OptimizerWithAttributes ?
+        constructor.optimizer_constructor : constructor
+    has_psd_set = any(
+        s -> s isa MOI.PositiveSemidefiniteConeTriangle || s isa MOI.LogDetConeTriangle,
+        Iterators.flatten((dpp.consets, dpp.atomsets))
+    )
+    if base_constructor === Clarabel.Optimizer && has_psd_set
+        MOI.set(model, MOI.RawOptimizerAttribute("chordal_decomposition_enable"), false)
+    end
     xvars, conrefs, atomrefs = _build_moi!(model, dpp, _theta(prob.p))
     return ConvexOptimizationCache(
         prob.f, prob.u0, _cachep(prob.p), alg, analysis, dpp,
@@ -735,9 +762,19 @@ function _dpp_extract(prob::ConvexOptimizationProblem, tr)
     )
     _check_no_optvars(Ao, paramset, tauset, "The objective")
     _check_no_optvars(bo, paramset, tauset, "The objective")
-    # The objective's coefficients are the one place a parameter may multiply a
-    # column: `c(θ)` is linear data, and a linear objective is convex at every θ.
+    # A parameter may multiply a decision variable in the linear objective,
+    # but a varying coefficient on a PSD atom's τ can reverse its curvature.
     c0, C = _theta_affine(vec(Ao), params, "An objective coefficient")
+    for j in eachindex(tr.atoms)
+        set = tr.atoms[j].set
+        if (set isa MOI.PositiveSemidefiniteConeTriangle || set isa MOI.LogDetConeTriangle) &&
+                any(!iszero, view(C, n + j, :))
+            error(
+                "A parameter may not scale a PSD or log-determinant atom's epigraph " *
+                    "variable: its sign can change across reinit! calls."
+            )
+        end
+    end
     d0v, dPm = _theta_affine(bo, params, "The objective's constant term")
 
     lb = prob.lb === nothing ? fill(-Inf, n) : Float64.(collect(prob.lb))
@@ -1001,7 +1038,8 @@ end
 
 const LOWERABLE_ATOMS = (
     LinearAlgebra.norm, exp, log, abs, max, min, abs2,
-    SymbolicAnalysis.quad_form,
+    SymbolicAnalysis.quad_form, LinearAlgebra.eigmax, LinearAlgebra.eigmin,
+    LinearAlgebra.opnorm, LinearAlgebra.logdet,
 )
 
 function _is_lowerable_atom(ex)
@@ -1201,6 +1239,10 @@ _adjoint_arg(a) = (
 # `exp(w) <= tau` is `(w, 1, tau)` and `log(w) >= tau` is `(tau, 1, w)`.
 function _atom_lowering(t, tau)
     f = Symbolics.operation(t)
+    f in (
+        LinearAlgebra.eigmax, LinearAlgebra.eigmin, LinearAlgebra.opnorm,
+        LinearAlgebra.logdet,
+    ) && return _matrix_atom_lowering(t, tau)
     if f === LinearAlgebra.norm
         w = _asvec(Symbolics.wrap(Symbolics.arguments(t)[1]))
         return Symbolics.Num[tau; w...], _norm_cone(_norm_order(t), length(w) + 1), 1
@@ -1229,6 +1271,68 @@ function _atom_lowering(t, tau)
     f === abs && return Symbolics.Num[tau, w], MOI.NormOneCone(2), 1
     f === exp && return Symbolics.Num[w, 1, tau], MOI.ExponentialCone(), 1
     return Symbolics.Num[tau, 1, w], MOI.ExponentialCone(), -1
+end
+
+_structural_zero(x) = iszero(Symbolics.simplify(Symbolics.wrap(x)))
+
+function _check_symmetric_affine(X, name)
+    n = size(X, 1)
+    size(X, 2) == n || error("`$name` requires a square symmetric matrix; got size $(size(X)).")
+    for j in 2:n, i in 1:(j - 1)
+        difference = Symbolics.wrap(X[i, j]) - Symbolics.wrap(X[j, i])
+        vars = Symbolics.get_variables(difference)
+        symmetric = if isempty(vars)
+            _structural_zero(difference)
+        else
+            A, b, islin = linear_expansion([difference], Symbolics.wrap.(collect(vars)))
+            islin && all(_structural_zero, A) && all(_structural_zero, b)
+        end
+        symmetric || error(
+            "`$name` requires a symmetric affine matrix: entries ($i, $j) and " *
+                "($j, $i) have different coefficients in `u` or `p`."
+        )
+    end
+    return n
+end
+
+function _matrix_atom_lowering(t, tau)
+    f = Symbolics.operation(t)
+    name = string(f)
+    args = Symbolics.arguments(t)
+    length(args) == 1 || error("`$name` supports only its default matrix argument.")
+    X = _materialize_array(Symbolics.wrap(only(args)))
+    X isa AbstractMatrix || error("`$name` requires a matrix argument.")
+    m, n = size(X)
+    m > 0 && n > 0 || error("`$name` requires a nonempty matrix.")
+    if f === LinearAlgebra.opnorm
+        rows = Symbolics.Num[]
+        for j in 1:(m + n), i in 1:j
+            entry = if j <= m
+                i == j ? tau : 0
+            elseif i <= m
+                X[i, j - m]
+            else
+                i == j ? tau : 0
+            end
+            push!(rows, Symbolics.wrap(entry))
+        end
+        return rows, MOI.PositiveSemidefiniteConeTriangle(m + n), 1
+    end
+    _check_symmetric_affine(X, name)
+    rows = Symbolics.Num[]
+    for j in 1:n, i in 1:j
+        entry = Symbolics.wrap(X[i, j])
+        if f === LinearAlgebra.eigmax
+            push!(rows, (i == j ? tau : 0) - entry)
+        elseif f === LinearAlgebra.eigmin
+            push!(rows, entry - (i == j ? tau : 0))
+        else
+            push!(rows, entry)
+        end
+    end
+    f === LinearAlgebra.eigmax && return rows, MOI.PositiveSemidefiniteConeTriangle(n), 1
+    f === LinearAlgebra.eigmin && return rows, MOI.PositiveSemidefiniteConeTriangle(n), -1
+    return Symbolics.Num[tau, 1, rows...], MOI.LogDetConeTriangle(n), -1
 end
 
 # `max(a, b, c)` traces as nested binary calls.

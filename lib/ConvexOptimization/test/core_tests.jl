@@ -1876,3 +1876,168 @@ end
         end
     end
 end
+
+@testset "symmetric matrix atoms and PSD triangle constraints" begin
+    X(u) = [u[1] 0.0; 0.0 1.0 - u[1]]
+    for (f, sense) in ((eigmax, SciMLBase.MinSense), (eigmin, SciMLBase.MaxSense))
+        prob = ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> f(X(u))), [0.0]; sense
+        )
+        sol = solve_checked(prob, ALG_TIGHT)
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.u, [0.5]; atol = 1.0e-5)
+        @test isapprox(sol.objective, 0.5; atol = 1.0e-5)
+    end
+
+    rectangular = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> opnorm([u[1] - 1.0 0.0 0.0; 0.0 u[2] + 2.0 0.0])),
+        [0.0, 0.0]
+    )
+    sol = solve_checked(rectangular, ALG_TIGHT)
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [1.0, -2.0]; atol = 1.0e-5)
+    @test isapprox(sol.objective, 0.0; atol = 1.0e-5)
+
+    maxdet = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> logdet([u[1] 0.0; 0.0 u[2]])),
+        [1.0, 1.0]; sense = SciMLBase.MaxSense,
+        constraints = [ConeConstraint((u, p) -> [2.0 - u[1] - u[2]], MOI.Nonnegatives(1))]
+    )
+    sol = solve_checked(maxdet, ALG_TIGHT)
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [1.0, 1.0]; atol = 1.0e-5)
+    @test isapprox(sol.objective, 0.0; atol = 1.0e-5)
+    @test length(sol.dual) == 1 && length(sol.dual[1]) == 1
+end
+
+@testset "five-node cycle SDP uses upper-triangle column order" begin
+    function gram5(u)
+        X = Matrix{Any}(undef, 5, 5)
+        for j in 1:5, i in 1:5
+            X[i, j] = i == j ? 1.0 : 0.0
+        end
+        k = 1
+        for j in 2:5, i in 1:(j - 1)
+            X[i, j] = X[j, i] = u[k]
+            k += 1
+        end
+        return X
+    end
+    triangle(X) = [X[i, j] for j in 1:size(X, 2) for i in 1:j]
+    con = ConeConstraint((u, p) -> triangle(gram5(u)), MOI.PositiveSemidefiniteConeTriangle(5))
+    prob = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> u[1] + u[3] + u[6] + u[7] + u[10]),
+        zeros(10); constraints = [con]
+    )
+    sol = solve_checked(prob, ALG_TIGHT)
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.objective, 5cos(4π / 5); atol = 1.0e-5)
+    @test length(sol.dual) == 1 && length(sol.dual[1]) == 15
+end
+
+@testset "PSD atom symmetry and direction guards" begin
+    asymmetric(u, p) = [u[1] p[1]; 0.0 1.0]
+    for (f, sense) in (
+            (eigmax, SciMLBase.MinSense),
+            (eigmin, SciMLBase.MaxSense), (logdet, SciMLBase.MaxSense),
+        )
+        prob = ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> f(asymmetric(u, p))), [0.0], [1.0]; sense
+        )
+        @test_throws "symmetric affine matrix" solve(prob, ALG)
+    end
+    symmetric_p(u, p) = [u[1] p[1]; p[2] 1.0]
+    prob = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> eigmax(symmetric_p(u, p))), [0.0], [0.0, 0.0]
+    )
+    @test_throws "symmetric affine matrix" solve(prob, ALG)
+    asymmetric_u = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> eigmax([u[1] u[1]; 0.0 1.0])), [0.0]
+    )
+    @test_throws "symmetric affine matrix" solve(asymmetric_u, ALG)
+
+    @test_throws "epigraph" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> eigmax([u[1] 0.0; 0.0 1.0 - u[1]])),
+            [0.0]; sense = SciMLBase.MaxSense
+        ), ALG
+    )
+    @test_throws "hypograph" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> logdet([u[1] 0.0; 0.0 1.0])),
+            [1.0]
+        ), ALG
+    )
+    @test_throws "may not scale a PSD" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> p[1] * eigmax([u[1] 0.0; 0.0 1.0 - u[1]])),
+            [0.0], [1.0]
+        ), ALG
+    )
+    @test_throws "not certified convex" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction(
+                (u, p) -> exp(p[1] * eigmax([u[1] 0.0; 0.0 1.0 - u[1]]))
+            ), [0.0], [1.0]
+        ), ALG
+    )
+end
+
+@testset "PSD atoms compose and reinit with affine parameter data" begin
+    X(u) = [u[1] 0.0; 0.0 1.0 - u[1]]
+    nested = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> exp(eigmax(X(u)))), [0.0]
+    )
+    sol = solve_checked(nested, ALG_TIGHT)
+    @test isapprox(sol.u, [0.5]; atol = 1.0e-5)
+    @test isapprox(sol.objective, exp(0.5); atol = 1.0e-5)
+
+    nested_max = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> max(eigmax(X(u)), 1.0)), [0.0]
+    )
+    sol = solve_checked(nested_max, ALG_TIGHT)
+    @test isapprox(sol.objective, 1.0; atol = 1.0e-5)
+
+    parameter_data = ConvexOptimizationProblem(
+        OptimizationFunction(
+            (u, p) -> eigmax(X(u)) + eigmax([p[1] 0.0; 0.0 -p[1]])
+        ), [0.0], [-3.0]
+    )
+    sol = solve_checked(parameter_data, ALG_TIGHT)
+    @test isapprox(sol.u, [0.5]; atol = 1.0e-5)
+    @test isapprox(sol.objective, 3.5; atol = 1.0e-5)
+
+    logdet_con = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> u[1] + u[2]), [1.0, 1.0];
+        constraints = [
+            ConeConstraint(
+                (u, p) -> [logdet([u[1] 0.0; 0.0 u[2]])], MOI.Nonnegatives(1)
+            ),
+        ]
+    )
+    logdet_alg = ConvexMOI(
+        MOI.OptimizerWithAttributes(
+            Clarabel.Optimizer,
+            "tol_gap_abs" => 1.0e-12, "tol_gap_rel" => 1.0e-12,
+            "tol_feas" => 1.0e-12, "tol_ktratio" => 1.0e-12
+        )
+    )
+    sol = solve_checked(logdet_con, logdet_alg)
+    @test isapprox(sol.u, [1.0, 1.0]; atol = 1.0e-5)
+    @test isapprox(sol.objective, 2.0; atol = 1.0e-5)
+    @test length(sol.dual) == 1 && length(sol.dual[1]) == 1
+
+    parametric = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> eigmax([u[1] + p[1] 0.0; 0.0 1.0 - u[1] + p[2]])),
+        [0.0], [0.0, 0.0]
+    )
+    cache = init(parametric, ALG_TIGHT)
+    for θ in ([0.0, 0.0], [1.0, -0.5], [-2.0, 3.0])
+        reinit!(cache; p = θ)
+        sol = solve!_checked(cache)
+        cold = solve_checked(SciMLBase.remake(parametric; p = θ), ALG_TIGHT)
+        @test isapprox(sol.u[1], (1 + θ[2] - θ[1]) / 2; atol = 1.0e-5)
+        @test isapprox(sol.objective, (1 + θ[1] + θ[2]) / 2; atol = 1.0e-5)
+        @test isapprox(sol.u, cold.u; atol = 1.0e-5)
+    end
+end
