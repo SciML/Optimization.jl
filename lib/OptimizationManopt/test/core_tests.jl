@@ -232,9 +232,7 @@ R2 = Euclidean(2)
         @test SciMLBase.successful_retcode(sol)
     end
 
-    # Second-order solvers on a manifold with matrix-valued points. The Euclidean Hessian
-    # buffers used to be allocated as flat `length(θ)` vectors, which broke the
-    # `riemannian_Hessian!` projection for anything but vector-shaped points (#1036).
+    # Second-order solvers on a manifold with matrix-valued points (#1036).
     @testset "Hessian on matrix manifolds" begin
         A = [
             4.0 1.0 0.0 0.0 0.0
@@ -292,7 +290,7 @@ R2 = Euclidean(2)
             OptimizationProblem(optf, X0, A; manifold = St),
             OptimizationManopt.TrustRegionsOptimizer()
         )
-        hessF = OptimizationManopt.build_hessF(cache.f)
+        hessF = OptimizationManopt.build_hessF(cache.f, X0)
         Xt = project(St, X0, [1.0 0.0; 0.0 -1.0; 0.5 0.5; 0.0 0.0; -1.0 1.0])
         Y = hessF(St, X0, Xt)
         Yref = ManifoldDiff.riemannian_Hessian(St, X0, 2 * A * X0, 2 * A * Xt, Xt)
@@ -308,7 +306,7 @@ R2 = Euclidean(2)
             OptimizationProblem(optf_g, X0, A; manifold = St),
             OptimizationManopt.TrustRegionsOptimizer()
         )
-        @test OptimizationManopt.build_hessF(cache_g.f) === nothing
+        @test OptimizationManopt.build_hessF(cache_g.f, X0) === nothing
     end
 
     @testset "Custom constraints" begin

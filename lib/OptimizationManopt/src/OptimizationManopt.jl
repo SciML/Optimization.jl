@@ -7,6 +7,7 @@ using ManifoldsBase, ManifoldDiff
 import SciMLBase
 using SciMLBase: ReturnCode
 using Dates: Millisecond
+using LinearAlgebra: mul!
 
 """
     abstract type AbstractManoptOptimizer end
@@ -422,30 +423,21 @@ function build_gradF(f::OptimizationBase.OptimizationFunction{true})
     return g
 end
 
-"""
-    build_hessF(f::OptimizationFunction)
-
-Build the Riemannian Hessian `hessF(M, [Y,] p, X)` Manopt expects from the Euclidean
-second-order information in `f`, or return `nothing` when `f` carries none so that Manopt
-falls back to its own approximate Hessian.
-
-The Euclidean Hessian-vector product `∇²f(p)[X]` is taken from `f.hv` when available,
-otherwise assembled from the dense `f.hess`. Together with the Euclidean gradient it is
-converted with `ManifoldDiff.riemannian_Hessian`, which projects onto the tangent space
-and adds the Weingarten-map correction for the curvature of the embedding.
-
-All buffers are allocated with `zero(p)` so that matrix-valued points (`Stiefel`,
-`SymmetricPositiveDefinite`, ...) keep their shape; a flat `length(p)` vector would break
-the projection in `riemannian_Hessian!`.
-"""
-function build_hessF(f::OptimizationBase.OptimizationFunction{true})
+# Riemannian Hessian from `f.hv`, else from the dense `f.hess`; `nothing` lets Manopt use
+# its own approximation. Buffers use `zero(θ)` so matrix-valued points keep their shape.
+function build_hessF(f::OptimizationBase.OptimizationFunction{true}, u0)
     euclidean_hvp! = if f.hv !== nothing
         (H, θ, X) -> f.hv(H, θ, X)
     elseif f.hess !== nothing
+        # tCG takes many products at one point, so only reassemble when θ moves
+        Hmat = zeros(eltype(u0), length(u0), length(u0))
+        θH = fill!(similar(u0), NaN)
         function (H, θ, X)
-            Hmat = zeros(eltype(θ), length(θ), length(θ))
-            f.hess(Hmat, θ)
-            return vec(H) .= Hmat * vec(X)
+            if θ != θH
+                f.hess(Hmat, θ)
+                copyto!(θH, θ)
+            end
+            return mul!(vec(H), Hmat, vec(X))
         end
     else
         return nothing
@@ -505,7 +497,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{O}) where {
     end
 
     if hessF === nothing
-        hessF = build_hessF(cache.f)
+        hessF = build_hessF(cache.f, cache.u0)
     end
 
     stopping_kwarg = if haskey(solver_kwarg, :stopping_criterion)
