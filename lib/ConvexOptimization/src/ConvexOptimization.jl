@@ -17,9 +17,18 @@ using LinearAlgebra
     ConeConstraint(g, set)
 
 One convex cone constraint of a [`ConvexOptimizationProblem`](@ref). `g(u, p)`
-returns the affine map whose image must lie in the MathOptInterface vector cone
+returns the map whose image must lie in the MathOptInterface vector cone
 `set` (`MOI.Zeros`, `MOI.Nonnegatives`, `MOI.Nonpositives`, `MOI.SecondOrderCone`,
 …). The output length of `g` must equal `MOI.dimension(set)`.
+
+Components must be affine in `u` for every cone except `MOI.Nonpositives` and
+`MOI.Nonnegatives`, which also accept the same atoms as the objective: a `<=`
+row may contain convex atoms (`norm(A*u - b) - t <= 0`), a `>=` row concave
+ones (`log(u[1]) - c >= 0`). Each atom is lowered through its
+epigraph/hypograph exactly as in the objective, so the component must keep the
+sign its curvature allows: `t - norm(u) <= 0` is refused, because relaxing the
+epigraph variable would admit `norm(u) < t` points the original constraint
+forbids.
 
 The backend traces `g` on its own symbolic variables, so each `ConeConstraint`
 maps to exactly one MOI constraint and therefore one entry of the returned
@@ -93,6 +102,19 @@ all of those.
 Keep a `norm` argument an array expression built from `u` (`A*u - b`, `u .- c`,
 or a literal `[e1, e2, …]` whose elements may be atoms); a `norm` computed by
 hand as `sqrt(sum(w .^ 2))` is a different, unsupported expression.
+
+The same atoms may appear inside the components of a [`ConeConstraint`](@ref)
+whose set is `MOI.Nonpositives` (`g(u) <= 0` with `g` convex or affine) or
+`MOI.Nonnegatives` (`g(u) >= 0` with `g` concave or affine): `norm(A*u - b)
+- t <= 0`, `sum(abs.(u)) - 1 <= 0`, `log(u[1]) - 0.5 >= 0`, `u' * P * u - 1
+<= 0`. Every other cone (`MOI.Zeros`, `MOI.SecondOrderCone`, …) still requires
+affine components — a convex equality is not a convex set. Each atom inside a
+constraint component is lowered through its epigraph/hypograph exactly as in
+the objective, so the component must keep the sign its curvature allows: a
+convex atom may enter `<=` only nonnegatively (`norm(u) - t <= 0`, not `t -
+norm(u) <= 0`) and a concave atom may enter `>=` only nonnegatively (`log(u)
+- c >= 0`, not `c - log(u) >= 0`).
+
 
 Parameters are first-class: see [`SciMLBase.reinit!`](@ref) for re-solving at a new
 `p` without re-running the symbolic canonicalization. Nested compositions containing
@@ -302,6 +324,8 @@ certify_convex(prob::ConvexOptimizationProblem) = certify_convex(prob, _trace_pr
 # `analyze` cannot certify a flat parametric objective (it has no constant-vs-
 # variable distinction, and substituting one θ would not cover `reinit!`), so
 # the structural predicate in `_dpp_extract` is the certificate instead.
+# Constraints are certified on their *original* components: the curvature of
+# `g(u)` decides whether `g(u) ∈ S` is a convex constraint at all.
 function certify_convex(prob::ConvexOptimizationProblem, tr)
     tr.nested && return _certify_nested(prob, tr)
     isempty(tr.params) || return nothing
@@ -515,14 +539,28 @@ function _try_scalarize(a)
 end
 
 # MVP: constraints are affine-in-cone, so every output component must be Affine.
+# `g(u) <= 0` is a convex sublevel set only for a convex `g`, `g(u) >= 0` only
+# for a concave `g`; every other cone keeps requiring affine components.
+_cone_curvature(::MOI.Nonpositives) =
+    ((SymbolicAnalysis.Convex, SymbolicAnalysis.Affine), "convex or affine")
+_cone_curvature(::MOI.Nonnegatives) =
+    ((SymbolicAnalysis.Concave, SymbolicAnalysis.Affine), "concave or affine")
+_cone_curvature(::MOI.AbstractVectorSet) = ((SymbolicAnalysis.Affine,), "affine")
+
 function _certify_constraints(prob, tr)
     tr.consvals === nothing && return nothing
     res = []
-    for (con, gvals) in zip(prob.constraints, tr.consvals)
+    for (k, (con, gvals)) in enumerate(zip(prob.constraints, tr.consvals))
         cres = analyze.(unwrap.(gvals))
-        all(r -> r.curvature == SymbolicAnalysis.Affine, cres) || error(
-            "This backend supports affine-in-cone constraints only; got " *
-                "curvatures $(getproperty.(cres, :curvature)) for cone $(con.set)."
+        allowed, desc = _cone_curvature(con.set)
+        all(r -> r.curvature in allowed, cres) || error(
+            "Constraint $k in $(con.set) requires $desc components; got " *
+                "curvatures $(getproperty.(cres, :curvature))." *
+                (
+                con.set isa MOI.Zeros ?
+                    " A convex equality is not a convex set." : ""
+            ) *
+                " Route to a general OptimizationProblem/NLP solver."
         )
         push!(res, cres)
     end
@@ -543,7 +581,9 @@ the parameter vector `θ = p`:
     constraint k A_k z + b_k(θ),   b_k(θ) = conb0[k]  + conB[k]*θ    ∈ consets[k]
     atom cone j M_j z + e_j(θ),    e_j(θ) = atomb0[j] + atomB[j]*θ   ∈ atomsets[j]
 
-`A_k`, `M_j`, every cone set, `lb`/`ub` and `sense` are θ-free, so the MOI model
+`τ` covers the epigraph/hypograph variables of atoms lowered out of the
+objective *and* out of `<=`/`>=` constraint components, so `A_k` spans the τ
+columns too. `A_k`, `M_j`, every cone set, `lb`/`ub` and `sense` are θ-free, so the MOI model
 rebuilt at any θ has identical variable and constraint numbering — which is what
 lets `conrefs` stay 1:1 with `prob.constraints` across a `reinit!`. Do not
 introduce θ-dependent emission of any variable or cone.
@@ -663,11 +703,15 @@ function _dpp_extract(prob::ConvexOptimizationProblem, tr)
     consets = prob.constraints === nothing ? MOI.AbstractVectorSet[] :
         [con.set for con in prob.constraints]
     if prob.constraints !== nothing
-        for (k, (con, gvals)) in enumerate(zip(prob.constraints, tr.consvals))
+        # Lowered components are affine in `[u; τ]`, so blocks expand over
+        # `allcols`; the τ columns carry the constraint's own atom variables.
+        dirs = [at.dir for at in tr.atoms]
+        for (k, (con, gvals)) in enumerate(zip(prob.constraints, tr.consl))
             A, b0, Bp = _dpp_block(
-                gvals, cols, params, paramset, tauset, "Constraint $k ($(con.set))",
+                gvals, allcols, params, paramset, tauset, "Constraint $k ($(con.set))",
                 "Constraint $(con.set) is not affine in the variables."
             )
+            _check_constraint_signs(A, con.set, n, dirs, k)
             push!(conA, A); push!(conb0, b0); push!(conB, Bp)
         end
     end
@@ -678,8 +722,8 @@ function _dpp_extract(prob::ConvexOptimizationProblem, tr)
         A, b0, Bp = _dpp_block(
             at.rows, allcols, params, paramset, tauset,
             "The argument of atom $j ($(at.set))",
-            "The argument of an atom in the objective must be affine in the " *
-                "optimization variables."
+            "The argument of an atom must be affine in the optimization " *
+                "variables."
         )
         push!(atomA, A); push!(atomb0, b0); push!(atomB, Bp)
     end
@@ -765,14 +809,17 @@ function _build_moi!(model, dpp::DPPData, θ::Vector{Float64})
         dpp.ub[i] < Inf && MOI.add_constraint(model, x[i], MOI.LessThan(dpp.ub[i]))
     end
 
-    # User constraints are emitted over the user columns only and in problem order,
-    # so `conrefs` stays 1:1 with `prob.constraints` and therefore with `sol.dual`.
+    # User constraints are emitted in problem order over all columns (their τ
+    # columns are zero unless a component holds a lowered atom), so `conrefs`
+    # stays 1:1 with `prob.constraints` and therefore with `sol.dual`.
     conrefs = MOI.ConstraintIndex[]
     for k in eachindex(dpp.consets)
         b = dpp.conb0[k] + dpp.conB[k] * θe
         push!(
             conrefs,
-            MOI.add_constraint(model, _affine_to_vaf(dpp.conA[k], b, x), dpp.consets[k])
+            MOI.add_constraint(
+                model, _affine_to_vaf(dpp.conA[k], b, allx), dpp.consets[k]
+            )
         )
     end
     @assert length(conrefs) == length(dpp.consets)
@@ -843,9 +890,10 @@ function _symbolic_vars(prob)
 end
 
 """
-    AtomCone(rows, set)
+    AtomCone(rows, set, dir)
 
-Internal: one MOI cone introduced by lowering a nonlinear atom in the objective.
+Internal: one MOI cone introduced by lowering a nonlinear atom in the
+objective or in a `<=`/`>=` constraint component.
 `rows` is the symbolic vector whose image must lie in `set`. These cones are an
 implementation detail of the lowering and are deliberately kept out of
 `OptimizationSolution.dual`, which stays 1:1 with the user's `ConeConstraint`s.
@@ -870,10 +918,13 @@ function _trace_problem(prob)
     catch e
         _trace_shape_error(e, "objective")
     end
+    # `con.g` is split into raw scalar components *without* `scalarize`, which
+    # rewrites `norm` into `sqrt` and would destroy the atom before it is
+    # collected; `consl` lowers atoms, `consvals` keeps originals for `analyze`.
     consvals = prob.constraints === nothing ? nothing :
         [
             try
-                _asvec(con.g(vars, params))
+                _raw_components(con.g(vars, params))
         catch e
                 _trace_shape_error(e, "constraint")
         end for con in prob.constraints
@@ -900,10 +951,17 @@ function _trace_problem(prob)
             push!(pdatafns, evaluator)
         end
     end
-    objl, taus, atoms, nested = _epigraph_lower(obj, optset)
+    taus = Symbolics.Num[]
+    atoms = AtomCone[]
+    objl, nested = _epigraph_lower!(obj, optset, taus, atoms)
+    consl = consvals === nothing ? nothing : [
+            _lower_constraint_components(gvals, prob.constraints[k].set, optset, taus, atoms)
+            for (k, gvals) in enumerate(consvals)
+        ]
+    nested |= any(_has_nested_constraint, consvals === nothing ? [] : consvals)
     return (;
         vars, cols, params, pdatavars, pdataexprs, pdatafns, obj,
-        objl, taus, atoms, nested, consvals,
+        objl, taus, atoms, nested, consvals, consl,
         allcols = vcat(cols, taus),
     )
 end
@@ -927,7 +985,7 @@ _norm_order(t) = (a = Symbolics.arguments(t); length(a) == 1 ? 2 : Symbolics.val
 # corresponding MOI cone.
 function _norm_cone(p, dim)
     p isa Number || error(
-        "The order `p` of a `norm(w, p)` atom in the objective must be a constant " *
+        "The order `p` of a `norm(w, p)` atom must be a constant " *
             "1, 2 or Inf; got a non-constant expression. Route to a general " *
             "OptimizationProblem/NLP solver."
     )
@@ -935,7 +993,7 @@ function _norm_cone(p, dim)
     p == 1 && return MOI.NormOneCone(dim)
     isinf(p) && p > 0 && return MOI.NormInfinityCone(dim)
     return error(
-        "This backend lowers `norm(w, p)` in the objective only for p = 1, 2 or " *
+        "This backend lowers `norm(w, p)` only for p = 1, 2 or " *
             "Inf; got p = $p, which has no corresponding MathOptInterface cone. " *
             "Reformulate or route to a general OptimizationProblem/NLP solver."
     )
@@ -1181,7 +1239,7 @@ function _flatten_atom_args(t, f, ws = [])
         end
     else
         Symbolics.symtype(t) <: Number || error(
-            "`$f` in the objective is lowered only for scalar affine " *
+            "`$f` is lowered only for scalar affine " *
                 "arguments; got the non-scalar argument `$t`. Route to a " *
                 "general OptimizationProblem/NLP solver."
         )
@@ -1435,12 +1493,10 @@ end
 # before `scalarize` (which would rewrite `norm` into `sqrt(sum(abs2))` and
 # destroy it); atoms materialized by `scalarize` are collected from the
 # finished rows. `nested` routes the certificate to `_certify_nested`.
-function _epigraph_lower(obj, optset)
+function _epigraph_lower!(obj, optset, taus, atoms)
     queue = _collect_atoms_deep!([], unwrap(obj))
-    isempty(queue) && return Symbolics.scalarize(_expand_scalar_products(unwrap(obj))),
-        Symbolics.Num[], AtomCone[], false
-    taus = Symbolics.Num[]
-    atoms = AtomCone[]
+    isempty(queue) && return Symbolics.scalarize(_expand_scalar_products(unwrap(obj))), false
+    first_atom = length(atoms) + 1
     subs = Dict{Any, Symbolics.Num}()
     seen = Any[]
     decision_set = copy(optset)
@@ -1473,14 +1529,15 @@ function _epigraph_lower(obj, optset)
     end
     lowered = _expand_scalar_products(Symbolics.substitute(obj, subs))
     if nested
-        atoms = map(atoms) do at
-            AtomCone(
+        for j in first_atom:length(atoms)
+            at = atoms[j]
+            atoms[j] = AtomCone(
                 Symbolics.Num[Symbolics.substitute(r, subs) for r in at.rows],
                 at.set, at.dir
             )
         end
     end
-    return Symbolics.scalarize(lowered), taus, atoms, nested
+    return Symbolics.scalarize(lowered), nested
 end
 
 function _subst_atom_args(t, subs)
@@ -1494,6 +1551,66 @@ function _subst_atom_args(t, subs)
         typeof(t), Symbolics.operation(t), new, Symbolics.metadata(t)
     )
 end
+
+# An `Arr` (e.g. `A*u - b`) is scalarized into components — safe because array
+# elements never contain a scalar atom. Anything else is a single component.
+function _raw_components(graw)
+    graw isa AbstractVector && return _scalar_components(vec(collect(graw)))
+    SymbolicUtils.symtype(unwrap(graw)) <: AbstractArray &&
+        return _scalar_components(vec(collect(Symbolics.scalarize(graw))))
+    return _scalar_components([graw])
+end
+
+function _scalar_components(v)
+    for e in v
+        SymbolicUtils.symtype(unwrap(e)) <: Number || error(
+            "Each component of a `ConeConstraint`'s `g(u, p)` must be a scalar " *
+                "expression; got the non-scalar component `$e`."
+        )
+    end
+    return v
+end
+
+# Only `<=`/`>=` components are atom-lowered; every other cone keeps its raw
+# components, so a nonlinear row fails the usual affine check.
+function _lower_constraint_components(gvals, set, optset, taus, atoms)
+    set isa MOI.Nonpositives || set isa MOI.Nonnegatives ||
+        return Symbolics.wrap.(gvals)
+    return map(gi -> Symbolics.wrap(first(_epigraph_lower!(gi, optset, taus, atoms))), gvals)
+end
+
+# A lowered row `g(u, τ) <= 0` recovers `g(u, a(u)) <= 0` only when each τ is
+# pushed against its atom bound: a convex atom's epigraph variable (dir = +1)
+# may enter only nonnegatively, a concave atom's hypograph variable (dir = -1)
+# only nonpositively — both flip for `>= 0` rows. Without this guard
+# `t - norm(u) <= 0` would relax the nonconvex set `norm(u) >= t` to "always
+# feasible" and solve to the wrong answer. The coefficient is θ-free
+# (`_dpp_block` rejects a `p`-dependent one), so this covers every `reinit!`.
+function _check_constraint_signs(A, set, n, dirs, k)
+    sgn = set isa MOI.Nonpositives ? 1 :
+        set isa MOI.Nonnegatives ? -1 : return nothing
+    for j in eachindex(dirs), i in axes(A, 1)
+        a = A[i, n + j]
+        iszero(a) && continue
+        sgn * a * dirs[j] >= 0 || return error(
+            "Component $i of constraint $k in $(set) has coefficient $a on the " *
+                (
+                dirs[j] > 0 ? "epigraph variable of a convex" :
+                    "hypograph variable of a concave"
+            ) * " atom, which relaxes " *
+                (set isa MOI.Nonpositives ? "`g(u) <= 0`" : "`g(u) >= 0`") *
+                " instead of reformulating it: a convex atom may enter `<=` " *
+                "only nonnegatively and `>=` only nonpositively (`norm(u) - t " *
+                "<= 0`, `t - norm(u) >= 0`), a concave atom exactly the other " *
+                "way (`c - log(u) <= 0`, `log(u) - c >= 0`). Route to a " *
+                "general OptimizationProblem/NLP solver."
+        )
+    end
+    return nothing
+end
+
+_has_nested_constraint(gvals) = any(gi -> _has_nested_atom(gi), gvals)
+_has_nested_atom(ex) = any(t -> _has_inner_atom(t), _collect_atoms_deep!([], unwrap(ex)))
 
 function _asvec(v)
     s = Symbolics.scalarize(v)
