@@ -378,7 +378,7 @@ end
     Base.getindex(r::MyExprs, i::Int) = r.exprs[i]
 
     f = OptimizationFunction(
-        (x, p) -> sum(abs2, x), SciMLBase.NoAD();
+        (x, p) -> sum(abs2, x), NoAD();
         grad = (G, x, p) -> (G .= 2 .* x),
         hess = (H, x, p) -> (H[1, 1] = 2; H[2, 2] = 2; H[1, 2] = H[2, 1] = 0),
         cons = (res, x, p) -> (res[1] = x[1] + x[2] - 1),
