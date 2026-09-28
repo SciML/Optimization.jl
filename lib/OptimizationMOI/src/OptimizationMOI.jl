@@ -8,7 +8,6 @@ using MathOptInterface
 using SciMLBase
 import ADTypes
 using SciMLLogging: @SciMLMessage
-using SciMLStructures
 using SymbolicIndexingInterface
 using SparseArrays
 import ModelingToolkitBase
