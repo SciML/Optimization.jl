@@ -9,7 +9,7 @@ during the solve so that objectives of very different scales stay balanced.
 ## Scalarize the problem
 
 ```@example adaptive_weights
-using Optimization, OptimizationOptimisers, Random
+using Optimization, OptimizationOptimisers, Random, ForwardDiff
 
 mof = MultiObjectiveOptimizationFunction(
     (u, p) -> [(u[1] - 1)^2, 3 * (u[1] + 1)^2], AutoForwardDiff()
