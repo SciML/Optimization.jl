@@ -369,7 +369,7 @@ end
 
 @testset "non-Vector AbstractVector cons_expr through MOI NLP" begin
     # Round-2 review minrepro: SymbolifiedExprs must be storable in the NLP evaluator.
-    # AmplNLWriter reads cons_expr as bound-baked `:call`/` :comparison` forms (same as
+    # AmplNLWriter reads cons_expr as bound-baked `:call`/`:comparison` forms (same as
     # process_system_exprs); Ipopt uses the numeric hess/grad/cons path.
     struct MyExprs <: AbstractVector{Expr}
         exprs::Vector{Expr}
