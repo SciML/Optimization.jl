@@ -368,7 +368,9 @@ end
 end
 
 @testset "non-Vector AbstractVector cons_expr through MOI NLP" begin
-    # Round-2 review minrepro: SymbolifiedExprs must be storable in the NLP evaluator
+    # Round-2 review minrepro: SymbolifiedExprs must be storable in the NLP evaluator.
+    # AmplNLWriter reads cons_expr as bound-baked `:call`/` :comparison` forms (same as
+    # process_system_exprs); Ipopt uses the numeric hess/grad/cons path.
     struct MyExprs <: AbstractVector{Expr}
         exprs::Vector{Expr}
     end
@@ -378,12 +380,14 @@ end
     f = OptimizationFunction(
         (x, p) -> sum(abs2, x), SciMLBase.NoAD();
         grad = (G, x, p) -> (G .= 2 .* x),
-        cons = (res, x, p) -> (res[1] = x[1] + x[2]),
-        cons_j = (J, x, p) -> (J .= 1.0),
+        hess = (H, x, p) -> (H[1, 1] = 2; H[2, 2] = 2; H[1, 2] = H[2, 1] = 0),
+        cons = (res, x, p) -> (res[1] = x[1] + x[2] - 1),
+        cons_j = (J, x, p) -> (J .= 1),
+        cons_h = [(H, x, p) -> fill!(H, 0)],
         expr = :(x[1]^2 + x[2]^2),
-        cons_expr = MyExprs([:(x[1] + x[2])])
+        cons_expr = MyExprs([Expr(:call, :(==), :(x[1] + x[2] - 1.0), 0)])
     )
-    prob = OptimizationProblem(f, [0.0, 0.0]; lcons = [1.0], ucons = [1.0])
+    prob = OptimizationProblem(f, [0.0, 0.0]; lcons = [0.0], ucons = [0.0])
 
     sol = solve(prob, Ipopt.Optimizer())
     @test sol.retcode == ReturnCode.Success
