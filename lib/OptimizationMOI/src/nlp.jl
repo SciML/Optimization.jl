@@ -17,7 +17,7 @@ mutable struct MOIOptimizationNLPEvaluator{
     callback::CB
     iteration::Int
     obj_expr::Union{Expr, Nothing}
-    cons_expr::Union{Vector{Expr}, Nothing}
+    cons_expr::Union{AbstractVector{Expr}, Nothing}
     # For a system-based problem `obj_expr`/`cons_expr` are only built by `MOI.initialize`
     # when the solver requests `:ExprGraph`; numeric-only solvers never pay for them.
     system_exprs_pending::Bool
