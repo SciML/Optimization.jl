@@ -352,6 +352,46 @@ end
     sol = solve(prob, AmplNLWriter.Optimizer(Ipopt_jll.amplexe))
     @test sol.retcode == ReturnCode.Success
     @test sol.u ≈ [0.25, 0.5] atol = 1.0e-6
+
+    # array-valued constraint: one constraint equation expands to two cons_expr rows
+    @variables u2 v2
+    sys = complete(
+        System(
+            Equation[], [u2, v2], []; costs = [u2^2 + v2^2],
+            constraints = [[u2, v2] ~ [1.0, 2.0]], name = :sys
+        )
+    )
+    prob = OptimizationProblem(sys, [u2 => 0.0, v2 => 0.0])
+    sol = solve(prob, AmplNLWriter.Optimizer(Ipopt_jll.amplexe))
+    @test sol.retcode == ReturnCode.Success
+    @test sol.u ≈ [1.0, 2.0] atol = 1.0e-6
+end
+
+@testset "non-Vector AbstractVector cons_expr through MOI NLP" begin
+    # Round-2 review minrepro: SymbolifiedExprs must be storable in the NLP evaluator
+    struct MyExprs <: AbstractVector{Expr}
+        exprs::Vector{Expr}
+    end
+    Base.size(r::MyExprs) = size(r.exprs)
+    Base.getindex(r::MyExprs, i::Int) = r.exprs[i]
+
+    f = OptimizationFunction(
+        (x, p) -> sum(abs2, x), SciMLBase.NoAD();
+        grad = (G, x, p) -> (G .= 2 .* x),
+        cons = (res, x, p) -> (res[1] = x[1] + x[2]),
+        cons_j = (J, x, p) -> (J .= 1.0),
+        expr = :(x[1]^2 + x[2]^2),
+        cons_expr = MyExprs([:(x[1] + x[2])])
+    )
+    prob = OptimizationProblem(f, [0.0, 0.0]; lcons = [1.0], ucons = [1.0])
+
+    sol = solve(prob, Ipopt.Optimizer())
+    @test sol.retcode == ReturnCode.Success
+    @test sol.u ≈ [0.5, 0.5] atol = 1.0e-6
+
+    sol = solve(prob, AmplNLWriter.Optimizer(Ipopt_jll.amplexe))
+    @test sol.retcode == ReturnCode.Success
+    @test sol.u ≈ [0.5, 0.5] atol = 1.0e-6
 end
 
 @testset "tutorial" begin
