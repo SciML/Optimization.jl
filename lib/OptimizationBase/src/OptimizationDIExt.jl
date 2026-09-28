@@ -12,7 +12,8 @@ import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,
     value_derivative_and_second_derivative,
     gradient!, hessian!, hvp!, jacobian!, gradient, hessian,
     hvp, jacobian, Constant
-using ADTypes, SciMLBase
+using ADTypes: ADTypes
+using SciMLBase: SciMLBase
 using OptimizationBase.FastClosures
 
 # A DI preparation is built for the exact construction types (`x` and `Constant(p)`) and only

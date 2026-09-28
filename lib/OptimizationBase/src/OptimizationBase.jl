@@ -6,15 +6,23 @@ Optimization.jl solver packages.
 """
 module OptimizationBase
 
-using DocStringExtensions
+using DocStringExtensions: DocStringExtensions
 # Deliberately NOT `@reexport`: blanket-reexporting these put 256 names into every
 # downstream namespace — `DynamicalSDEFunction`, `BlockDiagonalOperator`, `AddVector` and
 # the rest of SciMLOperators — of which the whole monorepo referenced 65. The public
 # surface is the explicit `export` lists below; anything else is reached through its
 # owner (`SciMLBase.x`, `ADTypes.x`, `SciMLLogging.x`).
-using SciMLBase, ADTypes, SciMLLogging
+using SciMLBase: SciMLBase, MultiObjectiveOptimizationFunction, remake
+using ADTypes: ADTypes, AbstractADType, AutoEnzyme, AutoFiniteDiff,
+    AutoForwardDiff, AutoMooncake, AutoReactant, AutoReverseDiff, AutoSparse,
+    AutoSymbolics, AutoTracker, AutoZygote
+using SciMLLogging: SciMLLogging, @SciMLMessage, @verbosity_specifier,
+    InfoLevel, MessageLevel, Silent, WarnLevel
 
-using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
+using ArrayInterface: ArrayInterface
+using Base: Iterators
+using SparseArrays: SparseArrays, SparseMatrixCSC, findnz
+using LinearAlgebra: LinearAlgebra, dot
 import SciMLBase: solve, init, solve!, __init, __solve,
     OptimizationProblem, OptimizationFunction,
     OptimizationSolution, OptimizationStats,
@@ -29,7 +37,8 @@ import SciMLBase: solve, init, solve!, __init, __solve,
 # Re-surfaced below but not referenced inside this module, so they need an explicit
 # import to become bindings here — `export`ing a name that is only visible through
 # `using SciMLBase` does not chain through to `using OptimizationBase`.
-using SciMLBase: NoAD, successful_retcode
+using SciMLBase: EnsembleDistributed, EnsembleProblem, EnsembleSerial,
+    EnsembleThreads, NoAD, successful_retcode
 
 using SymbolicIndexingInterface: SymbolicIndexingInterface
 
@@ -64,7 +73,7 @@ export allowsbounds, requiresbounds, allowsconstraints, requiresconstraints,
 # solver wrappers must derive their declared Hessian structure from this.
 export lag_hess_structure
 
-using FastClosures
+using FastClosures: FastClosures
 
 struct NullCallback end
 (x::NullCallback)(args...) = false

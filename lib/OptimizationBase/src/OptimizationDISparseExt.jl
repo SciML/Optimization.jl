@@ -9,8 +9,9 @@ import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,
     value_and_gradient, value_derivative_and_second_derivative,
     gradient!, hessian!, hvp!, jacobian!, gradient, hessian,
     hvp, jacobian
-using ADTypes
-using SparseConnectivityTracer, SparseMatrixColorings
+using ADTypes: ADTypes, AbstractADType
+using SparseConnectivityTracer: SparseConnectivityTracer, TracerSparsityDetector
+using SparseMatrixColorings: SparseMatrixColorings, GreedyColoringAlgorithm
 
 function instantiate_function(
         f::OptimizationFunction{true}, x, adtype::ADTypes.AutoSparse{<:AbstractADType},
