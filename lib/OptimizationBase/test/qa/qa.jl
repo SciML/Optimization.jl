@@ -28,10 +28,11 @@ run_qa(
         ),
     ),
     ei_kwargs = (;
-        # `NoAD`/`successful_retcode` are imported so they can be re-exported, not
-        # because the module calls them; see the `export` block in src.
+        # `NoAD`/`successful_retcode` are imported so they can be re-exported, and
+        # `reinit!` so `OptimizationBase.reinit!` resolves for downstream qualified
+        # access, not because the module calls them; see the `export` block in src.
         no_stale_explicit_imports = (;
-            ignore = (:I, :NoAD, :OptimizationStats, :extract_alg, :successful_retcode),
+            ignore = (:I, :NoAD, :OptimizationStats, :extract_alg, :reinit!, :successful_retcode),
         ),
         all_qualified_accesses_via_owners = (; ignore = (:IsInfinite, :IteratorSize, :SizeUnknown)),
         # Names imported/accessed from SciMLBase (plus Base.Iterators and
