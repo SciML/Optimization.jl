@@ -17,7 +17,7 @@ end
 # ADTypes so that `using Optimization` is enough to state and solve a problem. Adding to
 # this list is a deliberate widening of the public API, not an accident of `@reexport`.
 const OPTIMIZATION_CURATED_REEXPORTS = (
-    :AutoEnzyme, :AutoFiniteDiff, :AutoForwardDiff, :AutoMooncake, :AutoReverseDiff,
+    :AutoEnzyme, :AutoFiniteDiff, :AutoForwardDiff, :AutoMooncake, :AutoReactant, :AutoReverseDiff,
     :AutoSparse, :AutoSymbolics, :AutoTracker, :AutoZygote,
     :EnsembleDistributed, :EnsembleProblem, :EnsembleSerial, :EnsembleThreads,
     :MaxSense, :MinSense, :NoAD, :ObjSense,
