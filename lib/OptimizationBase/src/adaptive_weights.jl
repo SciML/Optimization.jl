@@ -63,7 +63,9 @@ Pass the returned problem to an adaptive-weight rule ([`GradientScale`](@ref),
 # Example
 
 ```julia
-mof = MultiObjectiveOptimizationFunction((u, p) -> [u[1]^2, (u[1] - 2)^2])
+mof = MultiObjectiveOptimizationFunction(
+    (u, p) -> [u[1]^2, (u[1] - 2)^2], AutoForwardDiff()
+)
 prob = OptimizationProblem(mof, [1.0])
 sprob = weighted_sum(prob)
 cb = ReLoBRaLo(sprob; every = 10)

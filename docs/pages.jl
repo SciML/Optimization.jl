@@ -3,6 +3,7 @@ pages = [
     "getting_started.md",
     "Tutorials" => [
         # "tutorials/certification.md",  # Temporarily disabled - SymbolicAnalysis.jl doesn't support Symbolics 7 yet
+        "tutorials/adaptive_weights.md",
         "tutorials/constraints.md",
         "tutorials/ensemble.md",
         "tutorials/linearandinteger.md",
@@ -21,6 +22,7 @@ pages = [
         "API/optimization_problem.md",
         "API/optimization_function.md",
         "API/ad.md",
+        "API/adaptive_weights.md",
         "API/solve.md",
         "API/optimization_solution.md",
         "API/optimization_state.md",
