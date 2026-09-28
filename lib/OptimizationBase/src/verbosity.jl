@@ -1,3 +1,5 @@
+# SciMLLogging's `@verbosity_specifier` emits these names unqualified into the
+# calling module, so they must stay.
 const None = SciMLLogging.None
 const Minimal = SciMLLogging.Minimal
 const Standard = SciMLLogging.Standard

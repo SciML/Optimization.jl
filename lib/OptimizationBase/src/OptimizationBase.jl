@@ -20,7 +20,6 @@ using SciMLLogging: SciMLLogging, @SciMLMessage, @verbosity_specifier,
     InfoLevel, MessageLevel, Silent, WarnLevel
 
 using ArrayInterface: ArrayInterface
-using Base: Iterators
 using SparseArrays: SparseArrays, SparseMatrixCSC, findnz
 using LinearAlgebra: LinearAlgebra, dot
 import SciMLBase: solve, init, solve!, __init, __solve,
@@ -38,7 +37,7 @@ import SciMLBase: solve, init, solve!, __init, __solve,
 # import to become bindings here — `export`ing a name that is only visible through
 # `using SciMLBase` does not chain through to `using OptimizationBase`.
 using SciMLBase: EnsembleDistributed, EnsembleProblem, EnsembleSerial,
-    EnsembleThreads, NoAD, successful_retcode
+    EnsembleThreads, NoAD, reinit!, successful_retcode
 
 using SymbolicIndexingInterface: SymbolicIndexingInterface
 
