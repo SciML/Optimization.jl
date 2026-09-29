@@ -86,6 +86,10 @@ struct DespecializedDataIterator
     data::Any
 end
 
+# Lets `reinit!(cache; p)` assign a new iterator to the despecialized `p` of a cache.
+Base.convert(::Type{DespecializedDataIterator}, data) = DespecializedDataIterator(data)
+Base.convert(::Type{DespecializedDataIterator}, data::DespecializedDataIterator) = data
+
 isa_dataiterator(::DespecializedDataIterator) = true
 SciMLBase.unwrap_parameters(d::DespecializedDataIterator) = d.data
 Base.length(d::DespecializedDataIterator) = length(d.data)

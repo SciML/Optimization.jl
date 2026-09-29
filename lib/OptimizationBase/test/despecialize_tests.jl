@@ -95,6 +95,28 @@ SciMLBase.allowsfg(::GradientSolver) = true
         @test G ≈ reference_derivatives().grad
     end
 
+    @testset "reinit!" begin
+        of = OptimizationFunction{true, AutoDespecialize}(rosenbrock, AutoForwardDiff())
+        cache = OptimizationBase.OptimizationCache(
+            OptimizationProblem(of, copy(X0), P0), GradientSolver()
+        )
+        # a new parameter object, also of another type
+        for newp in (RosenbrockParams(2.0, 10.0), OtherParams(3.0, 1.0, 0))
+            SciMLBase.reinit!(cache; p = newp)
+            @test cache.p isa DespecializedParameters
+            @test SciMLBase.unwrap_parameters(cache.p) === newp
+            @test cache.f.f(X0, cache.p) == rosenbrock(X0, newp)
+        end
+        data = BatchIterator([P0])
+        cache = OptimizationBase.OptimizationCache(
+            OptimizationProblem(of, copy(X0), data), GradientSolver()
+        )
+        newdata = BatchIterator([RosenbrockParams(2.0, 10.0)])
+        SciMLBase.reinit!(cache; p = newdata)
+        @test cache.p isa DespecializedDataIterator
+        @test SciMLBase.unwrap_parameters(cache.p) === newdata
+    end
+
     @testset "derivatives: $name" for (name, ad, kw) in (
             ("ForwardDiff", AutoForwardDiff(), (;)),
             ("ReverseDiff", AutoReverseDiff(), (;)),
