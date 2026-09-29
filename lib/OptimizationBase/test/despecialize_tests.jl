@@ -95,6 +95,25 @@ SciMLBase.allowsfg(::GradientSolver) = true
         @test G ≈ reference_derivatives().grad
     end
 
+    @testset "callbacks see the unwrapped parameters" begin
+        data = BatchIterator([P0, RosenbrockParams(2.0, 10.0)])
+        for (spec, p) in ((AutoDespecialize, P0), (AutoDespecialize, data), (AutoSpecialize, P0))
+            of = OptimizationFunction{true, spec}(rosenbrock, AutoForwardDiff())
+            prob = OptimizationProblem(of, copy(X0), p)
+            @test OptimizationBase.OptimizationCache(prob, GradientSolver()).callback ===
+                OptimizationBase.DEFAULT_CALLBACK
+            seen = []
+            callback = (state, loss) -> (push!(seen, state.p); false)
+            cache = OptimizationBase.OptimizationCache(prob, GradientSolver(); callback)
+            @test (cache.callback isa OptimizationBase.DespecializedCallback) ==
+                (spec === AutoDespecialize)
+            step_p = OptimizationBase.isa_dataiterator(cache.p) ? first(cache.p) : cache.p
+            state = OptimizationBase.OptimizationState(; iter = 1, u = X0, p = step_p)
+            @test cache.callback(state, 1.0) === false
+            @test only(seen) === (p isa BatchIterator ? first(p.batches) : P0)
+        end
+    end
+
     @testset "reinit!" begin
         of = OptimizationFunction{true, AutoDespecialize}(rosenbrock, AutoForwardDiff())
         cache = OptimizationBase.OptimizationCache(

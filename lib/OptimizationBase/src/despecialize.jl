@@ -102,6 +102,46 @@ function Base.iterate(d::DespecializedDataIterator, state...)
 end
 
 """
+    DespecializedCallback(callback)
+
+The user callback of a problem with [`SciMLBase.AutoDespecialize`](@ref). The solvers
+pass the callback an [`OptimizationState`](@ref) holding the despecialized `p`; this
+wrapper replaces it by the parameters the problem was given (or the current batch of a
+data iterator) before calling `callback`. The call dispatches at runtime on the type of
+the unwrapped parameters.
+"""
+struct DespecializedCallback{C}
+    callback::C
+end
+
+function (c::DespecializedCallback)(state::OptimizationState, args...)
+    unwrapped = OptimizationState(
+        state.iter, state.u, state.objective, state.grad, state.hess, state.original,
+        SciMLBase.unwrap_parameters(state.p)
+    )
+    return c.callback(unwrapped, args...)
+end
+(c::DespecializedCallback)(args...) = c.callback(args...)
+
+"""
+    despecialize_callback(f, callback)
+
+`callback` wrapped in a [`DespecializedCallback`](@ref) when `f` has the
+[`SciMLBase.AutoDespecialize`](@ref) marker and is despecialized (see
+[`despecializes`](@ref)), otherwise `callback` itself. The default callback and `nothing`
+are never wrapped, since solvers compare against them.
+"""
+function despecialize_callback(f::OptimizationFunction, callback)
+    despecializes(f) && SciMLBase.specialization(f) === SciMLBase.AutoDespecialize ||
+        return callback
+    return DespecializedCallback(callback)
+end
+despecialize_callback(f, callback) = callback
+despecialize_callback(f::OptimizationFunction, callback::NullCallback) = callback
+despecialize_callback(f::OptimizationFunction, callback::Nothing) = callback
+despecialize_callback(f::OptimizationFunction, callback::DespecializedCallback) = callback
+
+"""
     despecializes(f::OptimizationFunction) -> Bool
 
 Whether solving with `f` hides the types of its functions (and, for

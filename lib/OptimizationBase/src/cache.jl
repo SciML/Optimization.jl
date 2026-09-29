@@ -154,7 +154,8 @@ function OptimizationCache(
     return OptimizationCache(
         opt, f, reinit_cache_passedon, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
-        progress, callback, manifold, AnalysisResults(obj_res, cons_res),
+        progress, despecialize_callback(prob.f, callback), manifold,
+        AnalysisResults(obj_res, cons_res),
         merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs)),
         processed_verbose
     )
