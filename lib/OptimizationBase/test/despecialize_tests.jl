@@ -1,5 +1,6 @@
 include("despecialize_common.jl")
 using FiniteDiff, ReverseDiff, Zygote
+using DifferentiationInterface: SecondOrder
 
 const DespecializedDataIterator = OptimizationBase.DespecializedDataIterator
 
@@ -53,6 +54,28 @@ SciMLBase.allowsfg(::GradientSolver) = true
             SciMLBase.NullParameters()
         )
         @test p === SciMLBase.NullParameters()
+    end
+
+    @testset "AD choices that keep the full specialization" begin
+        erased(ad) = OptimizationBase.despecializes(
+            OptimizationFunction{true, AutoDespecialize}(rosenbrock, ad)
+        )
+        @test erased(AutoForwardDiff())
+        @test erased(AutoEnzyme())
+        @test erased(AutoSparse(AutoForwardDiff()))
+        @test erased(SecondOrder(AutoForwardDiff(), AutoZygote()))
+        @test erased(AutoSparse(SecondOrder(AutoForwardDiff(), AutoReverseDiff())))
+        @test !erased(AutoSymbolics())
+        @test !erased(AutoSparse(AutoSymbolics()))
+        @test !erased(AutoSparse(AutoEnzyme()))
+        @test !erased(SecondOrder(AutoForwardDiff(), AutoEnzyme()))
+        @test !erased(SecondOrder(AutoEnzyme(), AutoZygote()))
+        @test !erased(AutoSparse(SecondOrder(AutoForwardDiff(), AutoEnzyme())))
+        f, p = OptimizationBase.despecialize(
+            OptimizationFunction{true, AutoDespecialize}(rosenbrock, AutoSparse(AutoEnzyme())), P0
+        )
+        @test f.f === rosenbrock
+        @test p === P0
     end
 
     @testset "data iterators" begin

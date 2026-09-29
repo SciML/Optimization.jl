@@ -149,12 +149,33 @@ Whether solving with `f` hides the types of its functions (and, for
 case for in-place functions with an `AutoSpecialize` or `AutoDespecialize` marker. Most AD
 backends differentiate through the dynamic dispatch of the [`DespecializedFunction`](@ref)s;
 the Enzyme extension instead unwraps them behind a function barrier and differentiates the
-concrete functions.
+concrete functions. Symbolic backends (`AutoSymbolics`) and Enzyme inside a `SecondOrder`
+or an `AutoSparse` need the concrete functions to instantiate, so problems using them keep
+their full specialization.
 """
 function despecializes(f::OptimizationFunction)
     spec = SciMLBase.specialization(f)
     spec === SciMLBase.AutoSpecialize || spec === SciMLBase.AutoDespecialize || return false
-    return SciMLBase.isinplace(f)
+    return SciMLBase.isinplace(f) && _despecializes_with(f.adtype)
+end
+
+# AD choices whose instantiation needs the concrete functions or `p` instead of calling
+# them, so the problem keeps its full specialization:
+#   - symbolic backends trace the functions with the structure of `p` and replace them by
+#     generated code, so there is nothing left to despecialize;
+#   - Enzyme reached through DifferentiationInterface (inside `SecondOrder` or
+#     `AutoSparse`) differentiates the dynamic dispatch of the wrappers, which it cannot
+#     prove readonly. A plain `AutoEnzyme` goes through the Enzyme extension, which
+#     unwraps them first.
+_despecializes_with(::ADTypes.AbstractADType) = true
+_despecializes_with(::AutoSymbolics) = false
+function _despecializes_with(ad::AutoSparse)
+    dense = ADTypes.dense_ad(ad)
+    return !(dense isa AutoEnzyme) && _despecializes_with(dense)
+end
+function _despecializes_with(ad::DifferentiationInterface.SecondOrder)
+    return !(ad.inner isa AutoEnzyme || ad.outer isa AutoEnzyme) &&
+        _despecializes_with(ad.inner) && _despecializes_with(ad.outer)
 end
 despecializes(f) = false
 
