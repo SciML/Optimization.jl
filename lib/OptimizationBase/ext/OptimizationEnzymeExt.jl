@@ -43,10 +43,7 @@ function hv_f2_alloc(mode::Mode, xdup, f, p) where {Mode}
     return xdup
 end
 
-function inner_cons(
-        x, fcons::Function, p::Union{SciMLBase.NullParameters, Nothing},
-        num_cons::Int, i::Int
-    )
+function inner_cons(x, fcons, p, num_cons::Int, i::Int)
     res = zeros(eltype(x), num_cons)
     fcons(res, x, p)
     return res[i]
@@ -60,10 +57,7 @@ function cons_f2(mode, x, dx, fcons, p, num_cons, i)
     return nothing
 end
 
-function inner_cons_oop(
-        x::Vector{T}, fcons::Function, p::Union{SciMLBase.NullParameters, Nothing},
-        i::Int
-    ) where {T}
+function inner_cons_oop(x::Vector{T}, fcons, p, i::Int) where {T}
     return fcons(x, p)[i]
 end
 

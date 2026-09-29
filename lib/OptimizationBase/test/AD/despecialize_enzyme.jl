@@ -16,8 +16,16 @@ end
     @test Base.get_extension(OptimizationBase, :OptimizationEnzymeExt) !== nothing
 
     @testset "derivatives" begin
-        # `inner_cons` only accepts `NullParameters`/`nothing` for `p`
-        test_derivatives(AutoEnzyme(); broken = (:cons_h,))
+        test_derivatives(AutoEnzyme())
+    end
+
+    @testset "out-of-place constraint Hessians with parameters" begin
+        cons(x, p) = [x[1]^2 + x[2]^2, p.a * x[1] * x[2]]
+        of = OptimizationFunction{false}(rosenbrock, AutoEnzyme(); cons)
+        fi = OptimizationBase.instantiate_function(
+            of, OptimizationBase.ReInitCache(copy(X0), P0), AutoEnzyme(), 2; cons_h = true
+        )
+        @test all(fi.cons_h(X0) .≈ reference_derivatives().cons_h)
     end
 
     @testset "closure types do not depend on the problem" begin
