@@ -264,3 +264,60 @@ using Test
         @test sol_c.objective ≈ 9.0 rtol = 1.0e-3
     end
 end
+
+@testset "despecialized problems" begin
+    using SciMLBase: AutoDespecialize, AutoSpecialize, DespecializedParameters
+    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+    quadratic(x, p) = sum(abs2, x .- p)
+    struct DespecializedTestParams{F, A}
+        apply::F
+        tunable::A
+    end
+    obj_struct(x, p) = sum(abs2, x .- p.apply(p.tunable))
+    x0 = zeros(2)
+    p = [1.0, 100.0]
+    p_struct = DespecializedTestParams(v -> v .^ 2, [1.0, 2.0])
+    for spec in (AutoSpecialize, AutoDespecialize)
+        @testset "$spec" begin
+            for (obj, q) in ((rosenbrock, p), (obj_struct, p_struct))
+                f, fp = OptimizationBase.despecialize(
+                    OptimizationFunction{true, spec}(obj, AutoReactant()), q
+                )
+                @test f.f isa OptimizationBase.DespecializedFunction
+                @test (fp isa DespecializedParameters) == (spec === AutoDespecialize)
+                fi = OptimizationBase.instantiate_function(
+                    f, OptimizationBase.ReInitCache(copy(x0), fp), AutoReactant(), 0;
+                    g = true, fg = true, h = true
+                )
+                ref = ForwardDiff.gradient(x -> obj(x, q), x0)
+                G = zeros(2)
+                fi.grad(G, x0)
+                @test G ≈ ref
+                G .= 0
+                @test fi.fg(G, x0) ≈ obj(x0, q)
+                @test G ≈ ref
+                H = zeros(2, 2)
+                fi.hess(H, x0)
+                @test H ≈ ForwardDiff.hessian(x -> obj(x, q), x0)
+            end
+
+            prob = OptimizationProblem(
+                OptimizationFunction{true, spec}(quadratic, AutoReactant()),
+                zeros(3), [1.0, 2.0, 3.0]
+            )
+            sol = solve(prob, Optimisers.Adam(0.1); maxiters = 300)
+            @test sol.objective < 1.0e-2
+            @test (sol.cache.p isa DespecializedParameters) == (spec === AutoDespecialize)
+            prob_r = remake(
+                prob; u0 = Reactant.to_rarray(prob.u0), p = Reactant.to_rarray(prob.p)
+            )
+            sol_r = solve(prob_r, Optimisers.Adam(0.1); maxiters = 300)
+            @test Array(sol_r.u) ≈ [1.0, 2.0, 3.0] atol = 1.0e-1
+
+            prob_l = OptimizationProblem(
+                OptimizationFunction{true, spec}(rosenbrock, AutoReactant()), copy(x0), p
+            )
+            @test solve(prob_l, LBFGS()).u ≈ [1.0, 1.0] atol = 1.0e-4
+        end
+    end
+end
