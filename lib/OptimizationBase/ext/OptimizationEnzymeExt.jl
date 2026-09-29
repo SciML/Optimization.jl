@@ -467,14 +467,18 @@ function OptimizationBase.instantiate_function(
     end
 
     if cons !== nothing && cons_vjp == true && f.cons_vjp === nothing
-        cons_res = zeros(eltype(x), num_cons)
+        cons_vjp_res = zeros(eltype(x), num_cons)
+        # The reverse pass consumes the seed of the output, so `v` is copied first.
+        cons_vjp_seed = zeros(eltype(x), num_cons)
 
         function cons_vjp!(res, θ, v)
             Enzyme.make_zero!(res)
-            Enzyme.make_zero!(cons_res)
+            Enzyme.make_zero!(cons_vjp_res)
+            copyto!(cons_vjp_seed, v)
 
             cons_pullback!(
-                rmode, unwrapped_f(f.cons), cons_res, v, θ, res, unwrap_parameters(p)
+                rmode, unwrapped_f(f.cons), cons_vjp_res, cons_vjp_seed, θ, res,
+                unwrap_parameters(p)
             )
             return
         end
@@ -485,14 +489,14 @@ function OptimizationBase.instantiate_function(
     end
 
     if cons !== nothing && cons_jvp == true && f.cons_jvp === nothing
-        cons_res = zeros(eltype(x), num_cons)
+        cons_jvp_res = zeros(eltype(x), num_cons)
 
         function cons_jvp!(res, θ, v)
             Enzyme.make_zero!(res)
-            Enzyme.make_zero!(cons_res)
+            Enzyme.make_zero!(cons_jvp_res)
 
             cons_pushforward!(
-                fmode, unwrapped_f(f.cons), cons_res, res, θ, v, unwrap_parameters(p)
+                fmode, unwrapped_f(f.cons), cons_jvp_res, res, θ, v, unwrap_parameters(p)
             )
             return
         end

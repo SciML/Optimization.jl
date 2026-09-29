@@ -19,6 +19,24 @@ end
         test_derivatives(AutoEnzyme())
     end
 
+    @testset "constraint products keep their inputs" begin
+        for spec in (FullSpecialize, AutoDespecialize)
+            fi = despecialized_instance(spec, AutoEnzyme(); cons_vjp = true, cons_jvp = true)
+            ref = reference_derivatives()
+            for (op, expected) in ((:cons_vjp, ref.cons_vjp), (:cons_jvp, ref.cons_jvp))
+                product = getfield(fi, op)
+                @test !any(T -> T <: Core.Box, fieldtypes(typeof(product)))
+                v = copy(V)
+                for _ in 1:2
+                    out = zeros(2)
+                    product(out, X0, v)
+                    @test out ≈ expected
+                    @test v == V
+                end
+            end
+        end
+    end
+
     @testset "out-of-place constraint Hessians with parameters" begin
         cons(x, p) = [x[1]^2 + x[2]^2, p.a * x[1] * x[2]]
         of = OptimizationFunction{false}(rosenbrock, AutoEnzyme(); cons)
