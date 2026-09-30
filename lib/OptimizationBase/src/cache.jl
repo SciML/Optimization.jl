@@ -139,7 +139,8 @@ function OptimizationCache(
         g = SciMLBase.requiresgradient(opt), h = SciMLBase.requireshessian(opt),
         hv = SciMLBase.requireshessian(opt), fg = SciMLBase.allowsfg(opt),
         fgh = SciMLBase.allowsfgh(opt), cons_j = SciMLBase.requiresconsjac(opt), cons_h = SciMLBase.requiresconshess(opt),
-        cons_vjp = SciMLBase.allowsconsvjp(opt), cons_jvp = SciMLBase.allowsconsjvp(opt), lag_h = SciMLBase.requireslagh(opt)
+        cons_vjp = _request_cons_vjp(opt, f_base), cons_jvp = _request_cons_jvp(opt, f_base),
+        lag_h = SciMLBase.requireslagh(opt)
     )
 
     if structural_analysis
