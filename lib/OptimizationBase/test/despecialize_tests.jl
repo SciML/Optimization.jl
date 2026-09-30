@@ -89,6 +89,15 @@ SciMLBase.allowsfg(::GradientSolver) = true
         batches = collect(p)
         @test all(b -> b isa DespecializedParameters, batches)
         @test SciMLBase.unwrap_parameters.(batches) == data.batches
+        # functions called with the whole iterator (AugLag's constraints) get the original
+        seen = []
+        cons!(res, x, it) = (push!(seen, it); res .= 0; nothing)
+        f, p = OptimizationBase.despecialize(
+            OptimizationFunction{true, AutoDespecialize}(rosenbrock, AutoForwardDiff(); cons = cons!),
+            data
+        )
+        f.cons(zeros(1), X0, p)
+        @test only(seen) === data
     end
 
     @testset "value type" begin

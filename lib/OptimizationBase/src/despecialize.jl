@@ -37,7 +37,7 @@ end
 SciMLBase.unwrapped_f(w::DespecializedFunction) = SciMLBase.unwrapped_f(w.f)
 
 @inline function _call_despecialized(f, args...)
-    return SciMLBase.invoke_with_despecialized_parameters(f, args)
+    return SciMLBase.invoke_with_despecialized_parameters(f, map(_unwrap_iterator, args))
 end
 
 # The value an objective-like call returns, given the optimization variables `x` it was
@@ -91,6 +91,11 @@ Base.convert(::Type{DespecializedDataIterator}, data) = DespecializedDataIterato
 Base.convert(::Type{DespecializedDataIterator}, data::DespecializedDataIterator) = data
 
 isa_dataiterator(::DespecializedDataIterator) = true
+
+# Some solvers pass the whole iterator to a function (AugLag gives it to the constraints),
+# so the wrappers unwrap it like the batches.
+_unwrap_iterator(d::DespecializedDataIterator) = d.data
+_unwrap_iterator(x) = x
 SciMLBase.unwrap_parameters(d::DespecializedDataIterator) = d.data
 Base.length(d::DespecializedDataIterator) = length(d.data)
 
