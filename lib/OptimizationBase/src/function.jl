@@ -20,8 +20,12 @@ Base.size(s::SymbolifiedExprs) = size(s.exprs)
 Base.IndexStyle(::Type{<:SymbolifiedExprs}) = IndexLinear()
 Base.getindex(s::SymbolifiedExprs, i::Int) = symbolify(s.exprs[i])
 
+# Only `AbstractVector{Expr}` can be wrapped lazily: `SymbolifiedExprs` inherits the
+# input eltype, and MOI's NLP evaluator stores `AbstractVector{Expr}`. Other containers
+# (e.g. `AbstractVector{Any}` holding `Expr`s) must be eagerly symbolified to
+# `Vector{Expr}`, matching the pre-lazy behavior.
 symbolify_exprs(exprs::Vector) = symbolify.(exprs)
-symbolify_exprs(exprs::AbstractVector) = SymbolifiedExprs(exprs)
+symbolify_exprs(exprs::AbstractVector{Expr}) = SymbolifiedExprs(exprs)
 symbolify_exprs(exprs) = symbolify.(exprs)
 
 function rep_pars_vals!(e::Expr, p)
