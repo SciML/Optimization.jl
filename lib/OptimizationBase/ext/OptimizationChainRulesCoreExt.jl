@@ -5,7 +5,7 @@ using SciMLBase
 using SciMLBase: AbstractSensitivityAlgorithm, AbstractOptimizationProblem
 
 import ChainRulesCore
-import ChainRulesCore: Tangent
+import ChainRulesCore: NoTangent, Tangent
 
 function ChainRulesCore.frule(
         ::typeof(OptimizationBase.solve_up), prob,
