@@ -15,7 +15,6 @@ using DocStringExtensions
 using SciMLBase, ADTypes, SciMLLogging
 
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
-import Optimisers
 import Random
 import SciMLBase: solve, init, solve!, __init, __solve,
     OptimizationProblem, OptimizationFunction,

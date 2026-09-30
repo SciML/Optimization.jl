@@ -26,8 +26,10 @@ rules below. `weights` defaults to one entry of `1.0` per objective.
 
 Each rule is built from the scalarized problem and passed as the `callback` of
 `solve`; it reads `state.iter`, `state.u`, and `state.p`, and updates the
-weights every `every` iterations. Any first-order optimizer that supports
-callbacks can drive the solve:
+weights every `every` iterations. Prefer optimizers that advance `state.iter`
+on each callback (for example `OptimizationOptimisers` algorithms): solvers
+that leave `iter` at its default `0` update once and then skip later calls as
+same-iteration repeats.
 
 ```@example adaptive_weights
 callback = ReLoBRaLo(sprob; every = 25, rng = Random.Xoshiro(0))
@@ -47,8 +49,8 @@ same iteration — an update the rules skip on purpose.
   Wang, Teng, and Perdikaris (2020). It needs per-objective gradients: pass
   `jac` to the `MultiObjectiveOptimizationFunction` or scalarize with a
   non-`NoAD` `adtype`.
-- [`MiniMax`](@ref) ascends the weights with an `Optimisers.jl` rule, following
-  McClenny and Braga-Neto (2020).
+- [`MiniMax`](@ref) ascends the weights by a plain gradient-ascent step
+  `w ← w + η L(u)`, following McClenny and Braga-Neto (2020).
 - [`SoftAdapt`](@ref) weights objectives by a softmax of their relative loss
   changes, following Heydari, Thompson, and Mehmood (2019).
 - [`ReLoBRaLo`](@ref) combines random lookbacks to earlier losses with a moving

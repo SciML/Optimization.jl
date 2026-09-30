@@ -1,11 +1,7 @@
-"""
-    WeightedSumObjective
-
-Objective functor produced by [`weighted_sum`](@ref): evaluates
-`dot(weights, mof.f(u, p))` where `mof` is the source
-`MultiObjectiveOptimizationFunction`. The `weights` vector is shared with the
-adaptive-weight rules, which mutate it in place during a solve.
-"""
+# Objective functor produced by `weighted_sum`: evaluates
+# `dot(weights, mof.f(u, p))` where `mof` is the source
+# `MultiObjectiveOptimizationFunction`. The `weights` vector is shared with the
+# adaptive-weight rules, which mutate it in place during a solve.
 struct WeightedSumObjective{F, W}
     mof::F
     weights::W
@@ -14,7 +10,7 @@ end
 (o::WeightedSumObjective)(u, p) = dot(o.weights, o.mof.f(u, p))
 
 _jac_buffer(u::Number, n) = Matrix{typeof(u)}(undef, n, 1)
-_jac_buffer(u::AbstractVecOrMat, n) = similar(u, n, length(u))
+_jac_buffer(u::AbstractVector, n) = similar(u, n, length(u))
 function _jac_buffer(u, n)
     throw(
         ArgumentError(
@@ -56,6 +52,10 @@ return a new `OptimizationProblem` of the same shape (`u0`, `p`, bounds,
 constraint limits, and sense are preserved). `weights` defaults to `ones` with
 one entry per objective, counted by evaluating `prob.f.f(prob.u0, prob.p)`.
 
+The adaptive-weight rules assume minimization of the weighted sum (they ascend
+weights against objective values); `sense = MaxSense` is preserved on the
+problem but is not handled specially by the rules.
+
 Pass the returned problem to an adaptive-weight rule ([`GradientScale`](@ref),
 [`MiniMax`](@ref), [`SoftAdapt`](@ref), [`ReLoBRaLo`](@ref)) to build the
 `solve` callback that updates the weights during the solve.
@@ -90,12 +90,6 @@ function weighted_sum(
         cons_hess_colorvec = f.cons_hess_colorvec,
         observed = f.observed
     )
-end
-
-function weighted_sum(
-        prob::SciMLBase.OptimizationProblem, weights; adtype = prob.f.adtype
-    )
-    return _weighted_sum_prob(prob, weights; adtype)
 end
 
 function weighted_sum(
@@ -139,11 +133,23 @@ Every rule is constructed from the scalarized problem returned by `weighted_sum`
 and passed as the `callback` keyword of `solve`. Rules read `state.iter`,
 `state.u`, and `state.p` and always return `false`.
 
+Weight updates fire when `state.iter` is a multiple of `every`. Solvers that
+never advance `state.iter` (it stays at the default `0`) therefore update once
+at the first callback and then skip later calls as same-iteration repeats. Prefer
+optimizers that set a strictly increasing `state.iter` each callback — for
+example `OptimizationOptimisers` algorithms. Separately, some solver callback
+states leave `p` as `nothing`; the rules then evaluate `objectives(u, nothing)`.
+
 Prefer `save_best = false` with `OptimizationOptimisers` algorithms: the default
 `save_best = true` stores the iterate with the lowest *weighted* objective, but
 objective values under changing weights are not comparable, and on the final
 iteration `save_best` reverts `θ` and re-invokes the callback at the same
 `state.iter` (an update the rules skip).
+
+Reusing a rule across solves resets the same-iteration guard when `state.iter`
+goes strictly backwards relative to the previous call. A second solve that
+starts at exactly the same iteration the previous solve ended on does not
+trigger that reset; construct a fresh rule for that edge case.
 """
 abstract type AbstractAdaptiveWeightRule end
 
@@ -167,12 +173,11 @@ function _adaptive_context(prob)
     )
 end
 
-"""
-Return `true` when `state.iter` is due for a weight update. Skips a second call at the
-same iteration (the OptimizationOptimisers `save_best` finalization path), and resets
-the guard when `state.iter` goes backwards (the callback object was reused for a new
-solve).
-"""
+# Return `true` when `state.iter` is due for a weight update. Skips a second call
+# at the same iteration (the OptimizationOptimisers `save_best` finalization
+# path), and resets the guard when `state.iter` goes backwards (the callback
+# object was reused for a new solve). A new solve that starts at exactly the
+# previous solve's last iteration does not reset; build a fresh rule then.
 function _due(rule, state)
     iter = state.iter
     if iter < rule.last_seen
@@ -272,41 +277,43 @@ function (rule::GradientScale)(state, loss)
 end
 
 """
-    MiniMax(prob; every = 1, optimizer = Optimisers.Adam(0.5))
+    MiniMax(prob; every = 1, η = 0.5)
 
 Return a `solve` callback that ascends the [`weighted_sum`](@ref) weights of `prob`
-with an `Optimisers.jl` rule, porting the self-adaptive weight update of McClenny and
+by a plain gradient-ascent step on the objective values, following McClenny and
 Braga-Neto (2020), [Self-Adaptive PINNs](https://arxiv.org/abs/2009.04544). The
-weighted-sum objective `Σ wᵢ Lᵢ` is linear in the weights, so the weights ascend the
-objective values `Lᵢ(u)` through `optimizer`. Prefer `save_best = false` when solving
-(see [`AbstractAdaptiveWeightRule`](@ref)).
+weighted-sum objective `Σ wᵢ Lᵢ` is linear in the weights, so
+
+```math
+w ← w + η \\, L(u)
+```
+
+where `L(u)` is the vector of objective values at the current iterate and `η` is
+the learning rate. Prefer `save_best = false` when solving (see
+[`AbstractAdaptiveWeightRule`](@ref)).
 """
-mutable struct MiniMax{F, W, O} <: AbstractAdaptiveWeightRule
+mutable struct MiniMax{F, W, T} <: AbstractAdaptiveWeightRule
     objectives::F
     weights::W
     every::Int
-    optimizer::O
-    opt_state::Any
+    η::T
     last_updated::Int
     last_seen::Int
 end
 
-function MiniMax(prob; every = 1, optimizer = Optimisers.Adam(0.5))
+function MiniMax(prob; every = 1, η = 0.5)
+    η > 0 || throw(ArgumentError("`η` must be positive."))
     ctx = _adaptive_context(prob)
     return MiniMax(
-        ctx.objectives, ctx.weights, _check_update_period(every), optimizer,
-        nothing, -1, -1
+        ctx.objectives, ctx.weights, _check_update_period(every), η, -1, -1
     )
 end
 
 function (rule::MiniMax)(state, loss)
     _due(rule, state) || return false
     state.u === nothing && return false
-    values = rule.objectives(state.u, state.p)
-    rule.opt_state === nothing &&
-        (rule.opt_state = Optimisers.setup(rule.optimizer, rule.weights))
-    _, w = Optimisers.update!(rule.opt_state, rule.weights, -values)
-    rule.weights .= w
+    values = collect(rule.objectives(state.u, state.p))
+    @. rule.weights = rule.weights + rule.η * values
     return false
 end
 
@@ -404,7 +411,7 @@ end
 function (rule::ReLoBRaLo)(state, loss)
     _due(rule, state) || return false
     state.u === nothing && return false
-    values = rule.objectives(state.u, state.p)
+    values = collect(rule.objectives(state.u, state.p))
     if rule.initial_losses === nothing
         rule.initial_losses = values
         rule.previous_losses = values
@@ -423,7 +430,7 @@ function (rule::ReLoBRaLo)(state, loss)
         ) .+ (1 - rule.α) .* previous_balance
         rule.weights .= updated
         rule.previous_losses = values
-        rule.previous_weights = updated
+        rule.previous_weights = copy(updated)
     end
     return false
 end
