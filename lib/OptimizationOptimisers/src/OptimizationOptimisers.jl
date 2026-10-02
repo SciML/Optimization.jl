@@ -1,7 +1,7 @@
 module OptimizationOptimisers
 
-using Logging
-using Optimisers
+using Logging: Logging, @logmsg, LogLevel
+using Optimisers: Optimisers
 # The Optimisers rules are this package's whole point: `using Optimization,
 # OptimizationOptimisers` has to be enough to write `solve(prob, Adam(0.05))`, exactly
 # as the docs show. They are re-surfaced by name below rather than by blanket
@@ -22,9 +22,9 @@ using Optimisers: ADADelta, ADAGrad, ADAM, ADAMW, AMSGrad, AbstractRule, AccumGr
 @doc "Deprecated alias for [`RAdam`](@ref)." RADAM
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
-using OptimizationBase
+using OptimizationBase: OptimizationBase, OptimizationCache
 using SciMLLogging: @SciMLMessage
-using SciMLBase
+using SciMLBase: SciMLBase
 
 export Optimisers
 
