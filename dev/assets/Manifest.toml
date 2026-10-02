@@ -2,7 +2,7 @@
 
 julia_version = "1.13.1"
 manifest_format = "2.1"
-project_hash = "dd496f75e15c5f9c3402f6e79b27fe2b2e4a87f5"
+project_hash = "2fb5b931ad0730c087264edbf25a565fe69be16c"
 
 [[deps.ADTypes]]
 deps = ["PrecompileTools"]
@@ -2701,7 +2701,7 @@ version = "0.4.9"
 
 [[deps.Optimization]]
 deps = ["ADTypes", "ArrayInterface", "ConsoleProgressMonitor", "DocStringExtensions", "LinearAlgebra", "Logging", "LoggingExtras", "OptimizationBase", "Printf", "Reexport", "SciMLBase", "SparseArrays", "TerminalLoggers"]
-path = "/home/runner/_work/Optimization.jl/Optimization.jl"
+path = "/home/runner/work/Optimization.jl/Optimization.jl"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 version = "5.9.1"
 
