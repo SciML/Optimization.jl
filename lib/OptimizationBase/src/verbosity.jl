@@ -153,7 +153,7 @@ Create an `OptimizationVerbosity` using a preset configuration:
 - `SciMLLogging.Detailed()`: Comprehensive information
 - `SciMLLogging.All()`: Maximum verbosity
 
-    OptimizationVerbosity(; preset=nothing, convergence_numerical=nothing, constraints_bounds=nothing, automatic_differentiation=nothing, feature_support=nothing, kwargs...)
+    OptimizationVerbosity(; preset = nothing, convergence_numerical = nothing, constraints_bounds = nothing, automatic_differentiation = nothing, feature_support = nothing, kwargs...)
 
 Create an `OptimizationVerbosity` with group level or individual toggle level control.
 

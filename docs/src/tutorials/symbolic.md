@@ -33,10 +33,14 @@ To turn it into a problem for numerical solutions, we need to specify what
 our parameter values are and the initial conditions. This looks like:
 
 ```@example modelingtoolkit
-u0 = [x => 1.0
-      y => 2.0]
-p = [a => 6.0
-     b => 7.0]
+u0 = [
+    x => 1.0
+    y => 2.0
+]
+p = [
+    a => 6.0
+    b => 7.0
+]
 ```
 
 And now we solve.

@@ -264,16 +264,16 @@ Re-solve the cached problem at a new parameter vector `p` without re-running any
 symbolic work. The trace, the convexity certificate and the parameter-affine
 extraction all happened once in `init`; this only evaluates
 
-    c(p) = c0 + C*p,  d(p) = d0 + dP⋅p,  b_k(p) = b0_k + B_k*p
+    c(p) = c0 + C * p, d(p) = d0 + dP ⋅ p, b_k(p) = b0_k + B_k * p
 
 and rebuilds the MOI model from those numbers. Returns the cache, which callers
 must reassign:
 
 ```julia
 cache = init(prob, ConvexMOI(Clarabel.Optimizer))
-sol1  = solve!(cache)
+sol1 = solve!(cache)
 cache = reinit!(cache; p = [2.0, 0.5])
-sol2  = solve!(cache)
+sol2 = solve!(cache)
 ```
 
 `u0` is accepted and stored for API uniformity but does not affect the answer: a
