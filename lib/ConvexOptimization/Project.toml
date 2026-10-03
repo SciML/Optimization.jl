@@ -22,9 +22,9 @@ Reexport = "1.2"
 SciMLBase = "3.36"
 SparseArrays = "1.10"
 StaticArrays = "1.9.8"
-SymbolicAnalysis = "0.3, 0.5"
-SymbolicUtils = "4.46"
-Symbolics = "7.39"
+SymbolicAnalysis = "0.5.3"
+SymbolicUtils = "4.46.6"
+Symbolics = "7.40.0"
 julia = "1.10"
 
 [extras]

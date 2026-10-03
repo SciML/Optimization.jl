@@ -35,6 +35,15 @@ sign its curvature allows: `t - norm(u) <= 0` is refused, because relaxing the
 epigraph variable would admit `norm(u) < t` points the original constraint
 forbids.
 
+Components must be affine in `u` for every cone except `MOI.Nonpositives` and
+`MOI.Nonnegatives`, which also accept the same atoms as the objective: a `<=`
+row may contain convex atoms (`norm(A*u - b) - t <= 0`), a `>=` row concave
+ones (`log(u[1]) - c >= 0`). Each atom is lowered through its
+epigraph/hypograph exactly as in the objective, so the component must keep the
+sign its curvature allows: `t - norm(u) <= 0` is refused, because relaxing the
+epigraph variable would admit `norm(u) < t` points the original constraint
+forbids.
+
 The backend traces `g` on its own symbolic variables, so each `ConeConstraint`
 maps to exactly one MOI constraint and therefore one entry of the returned
 `OptimizationSolution.dual`, in the order the constraints are given.
