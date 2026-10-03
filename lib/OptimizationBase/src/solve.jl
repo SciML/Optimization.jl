@@ -267,7 +267,7 @@ function solve_up(
         kwargs...
     )
     alg = extract_opt_alg(args, kwargs, has_kwargs(prob) ? prob.kwargs : kwargs)
-    _prob = get_concrete_problem(prob; u0 = u0, p = p, kwargs...)
+    _prob = get_concrete_problem(prob; u0, p, kwargs...)
     return if length(args) > 1
         solve_call(_prob, alg, Base.tail(args)...; kwargs...)
     else
@@ -307,7 +307,7 @@ function get_concrete_problem(prob::OptimizationProblem; kwargs...)
     p = get_concrete_p(prob, kwargs)
     u0 = get_concrete_u0(prob, false, nothing, kwargs)
     u0 = promote_u0(u0, p, nothing)
-    return remake(prob; u0 = u0, p = p)
+    return remake(prob; u0, p)
 
 end
 
@@ -332,7 +332,7 @@ function _solve_forward(
         kwargs...
     )
     alg = extract_opt_alg(args, kwargs, prob.kwargs)
-    _prob = get_concrete_problem(prob; u0 = u0, p = p, kwargs...)
+    _prob = get_concrete_problem(prob; u0, p, kwargs...)
 
     if has_kwargs(_prob)
         kwargs = isempty(_prob.kwargs) ? kwargs : merge(values(_prob.kwargs), kwargs)
@@ -354,7 +354,7 @@ function _solve_adjoint(
     )
     alg = extract_opt_alg(args, kwargs, _prob.kwargs)
 
-    _prob = get_concrete_problem(_prob; u0 = u0, p = p, kwargs...)
+    _prob = get_concrete_problem(_prob; u0, p, kwargs...)
 
     if has_kwargs(_prob)
         kwargs = isempty(_prob.kwargs) ? kwargs : merge(values(_prob.kwargs), kwargs)

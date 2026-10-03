@@ -99,7 +99,7 @@ function OptimizationCache(
                 verbose isa SciMLLogging.AbstractVerbosityPreset
         )
         # Solver-specific verbosity type (e.g., MadNLP.LogLevels)
-        kwargs = merge(NamedTuple(kwargs), (; verbose = verbose))
+        kwargs = merge(NamedTuple(kwargs), (; verbose))
         processed_verbose = OptimizationVerbosity()
     else
         processed_verbose = _process_verbose_param(verbose)

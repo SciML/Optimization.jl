@@ -136,7 +136,7 @@ function __map_optimizer_args(
     end
 
     if !isnothing(callback)
-        mapped_args = (; mapped_args..., callback = callback)
+        mapped_args = (; mapped_args..., callback)
     end
 
     if !isnothing(maxiters)
@@ -189,7 +189,7 @@ function SciMLBase.__init(
             if opt isa Optim.ParticleSwarm
                 opt = Optim.ParticleSwarm(;
                     lower = prob.lb, upper = prob.ub,
-                    n_particles = opt.n_particles
+                    opt.n_particles
                 )
             else
                 if prob.f isa OptimizationFunction &&
@@ -221,10 +221,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
         iter_counter[] += 1
         θ = cache.opt isa Optim.NelderMead ? optim_state.x_centroid : optim_state.x
         loss_val = SciMLBase.value(optim_state.f_x)
-        opt_state = OptimizationBase.OptimizationState(
+        opt_state = OptimizationBase.OptimizationState(;
             iter = iter_counter[],
             u = θ,
-            p = cache.p,
+            cache.p,
             objective = loss_val,
             grad = hasproperty(optim_state, :g_x) ? optim_state.g_x : nothing,
             hess = hasproperty(optim_state, :H_x) ? optim_state.H_x : nothing,
@@ -303,11 +303,11 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
     end
 
     opt_args = __map_optimizer_args(
-        cache, cache.opt, callback = _cb,
-        maxiters = cache.solver_args.maxiters,
-        maxtime = cache.solver_args.maxtime,
-        abstol = cache.solver_args.abstol,
-        reltol = cache.solver_args.reltol;
+        cache, cache.opt; callback = _cb,
+        cache.solver_args.maxiters,
+        cache.solver_args.maxtime,
+        cache.solver_args.abstol,
+        cache.solver_args.reltol,
         cache.solver_args...
     )
 
@@ -316,7 +316,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
     t1 = time()
     opt_ret = _optim_retcode(opt_res)
     stats = OptimizationBase.OptimizationStats(;
-        iterations = opt_res.iterations,
+        opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls,
         hevals = opt_res.h_calls
     )
@@ -325,7 +325,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
         opt_res.minimizer,
         cache.sense === OptimizationBase.MaxSense ? -opt_res.minimum :
             opt_res.minimum; original = opt_res, retcode = opt_ret,
-        stats = stats
+        stats
     )
 end
 
@@ -342,10 +342,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         iter_counter[] += 1
         θ = inner_opt isa Optim.NelderMead ? optim_state.x_centroid : optim_state.x
         loss_val = SciMLBase.value(optim_state.f_x)
-        opt_state = OptimizationBase.OptimizationState(
+        opt_state = OptimizationBase.OptimizationState(;
             iter = iter_counter[],
             u = θ,
-            p = cache.p,
+            cache.p,
             objective = loss_val,
             grad = hasproperty(optim_state, :g_x) ? optim_state.g_x : nothing,
             hess = hasproperty(optim_state, :H_x) ? optim_state.H_x : nothing,
@@ -393,11 +393,11 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     optim_f = Optim.OnceDifferentiable(_loss, gg, fg!, cache.u0)
 
     opt_args = __map_optimizer_args(
-        cache, cache.opt, callback = _cb,
-        maxiters = cache.solver_args.maxiters,
-        maxtime = cache.solver_args.maxtime,
-        abstol = cache.solver_args.abstol,
-        reltol = cache.solver_args.reltol;
+        cache, cache.opt; callback = _cb,
+        cache.solver_args.maxiters,
+        cache.solver_args.maxtime,
+        cache.solver_args.abstol,
+        cache.solver_args.reltol,
         cache.solver_args...
     )
 
@@ -406,7 +406,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     t1 = time()
     opt_ret = _optim_retcode(opt_res)
     stats = OptimizationBase.OptimizationStats(;
-        iterations = opt_res.iterations,
+        opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls,
         hevals = opt_res.h_calls
     )
@@ -415,7 +415,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         opt_res.minimizer,
         cache.sense === OptimizationBase.MaxSense ? -opt_res.minimum :
             opt_res.minimum;
-        original = opt_res, retcode = opt_ret, stats = stats
+        original = opt_res, retcode = opt_ret, stats
     )
 end
 
@@ -429,10 +429,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     function _cb(optim_state)
         iter_counter[] += 1
         loss_val = SciMLBase.value(optim_state.f_x)
-        opt_state = OptimizationBase.OptimizationState(
+        opt_state = OptimizationBase.OptimizationState(;
             iter = iter_counter[],
             u = optim_state.x,
-            p = cache.p,
+            cache.p,
             objective = loss_val,
             grad = hasproperty(optim_state, :g_x) ? optim_state.g_x : nothing,
             hess = hasproperty(optim_state, :H_x) ? optim_state.H_x : nothing,
@@ -548,11 +548,11 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     end
 
     opt_args = __map_optimizer_args(
-        cache, cache.opt, callback = _cb,
-        maxiters = cache.solver_args.maxiters,
-        maxtime = cache.solver_args.maxtime,
-        abstol = cache.solver_args.abstol,
-        reltol = cache.solver_args.reltol;
+        cache, cache.opt; callback = _cb,
+        cache.solver_args.maxiters,
+        cache.solver_args.maxtime,
+        cache.solver_args.abstol,
+        cache.solver_args.reltol,
         cache.solver_args...
     )
 
@@ -565,7 +565,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     t1 = time()
     opt_ret = _optim_retcode(opt_res)
     stats = OptimizationBase.OptimizationStats(;
-        iterations = opt_res.iterations,
+        opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls, gevals = opt_res.g_calls,
         hevals = opt_res.h_calls
     )
@@ -575,7 +575,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         cache.sense === OptimizationBase.MaxSense ? -opt_res.minimum :
             opt_res.minimum;
         original = opt_res, retcode = opt_ret,
-        stats = stats
+        stats
     )
 end
 

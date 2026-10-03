@@ -103,8 +103,8 @@ function SciMLBase.__init(
         maxiters = nothing, kwargs...
     )
     return OptimizationCache(
-        prob, opt; callback = callback, progress = progress, dt = dt,
-        maxiters = maxiters, kwargs...
+        prob, opt; callback, progress, dt,
+        maxiters, kwargs...
     )
 end
 
@@ -114,8 +114,8 @@ function SciMLBase.__init(
         maxiters = nothing, kwargs...
     )
     return OptimizationCache(
-        prob, opt; callback = callback, progress = progress, dt = dt,
-        maxiters = maxiters, kwargs...
+        prob, opt; callback, progress, dt,
+        maxiters, kwargs...
     )
 end
 
@@ -193,7 +193,7 @@ function solve_ode(cache, dt, maxit, u0, p)
     return SciMLBase.build_solution(
         cache, cache.opt, sol.u, cache.f(sol.u, p);
         retcode = ReturnCode.Success,
-        stats = stats
+        stats
     )
 end
 
@@ -248,7 +248,7 @@ function solve_dae_mass_matrix(cache, dt, maxit, u0, p)
     u_final = u_ext[1:n]
     return SciMLBase.build_solution(
         cache, cache.opt, u_final, cache.f(u_final, p);
-        retcode = sol.retcode
+        sol.retcode
     )
 end
 
@@ -305,7 +305,7 @@ function solve_dae_implicit(cache, dt, maxit, u0, p)
 
     return SciMLBase.build_solution(
         cache, cache.opt, u_final, cache.f(u_final, p);
-        retcode = sol.retcode
+        sol.retcode
     )
 end
 

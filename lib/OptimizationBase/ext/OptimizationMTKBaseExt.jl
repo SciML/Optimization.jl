@@ -34,7 +34,7 @@ function OptimizationBase.instantiate_function(
     # don't need to pass `x` or `p` since they're defaults now
     mtkprob = OptimizationProblem(
         sys, nothing; grad = g, hess = h,
-        sparse = true, cons_j = cons_j, cons_h = cons_h,
+        sparse = true, cons_j, cons_h,
         cons_sparse = true
     )
     f = mtkprob.f
@@ -60,15 +60,15 @@ function OptimizationBase.instantiate_function(
     end
 
     return OptimizationFunction{true}(
-        f.f, adtype; grad = grad, hess = hess, hv = hv,
-        cons = cons, cons_j = cons_j, cons_h = cons_h,
-        hess_prototype = f.hess_prototype,
-        cons_jac_prototype = f.cons_jac_prototype,
-        cons_hess_prototype = f.cons_hess_prototype,
+        f.f, adtype; grad, hess, hv,
+        cons, cons_j, cons_h,
+        f.hess_prototype,
+        f.cons_jac_prototype,
+        f.cons_hess_prototype,
         expr = OptimizationBase.symbolify(f.expr),
         cons_expr = OptimizationBase.symbolify_exprs(f.cons_expr),
-        sys = sys,
-        observed = f.observed
+        sys,
+        f.observed
     )
 end
 
@@ -101,7 +101,7 @@ function OptimizationBase.instantiate_function(
     # don't need to pass `x` or `p` since they're defaults now
     mtkprob = OptimizationProblem(
         sys, nothing; grad = g, hess = h,
-        sparse = true, cons_j = cons_j, cons_h = cons_h,
+        sparse = true, cons_j, cons_h,
         cons_sparse = true
     )
     f = mtkprob.f
@@ -126,15 +126,15 @@ function OptimizationBase.instantiate_function(
     end
 
     return OptimizationFunction{true}(
-        f.f, adtype; grad = grad, hess = hess, hv = hv,
-        cons = cons, cons_j = cons_j, cons_h = cons_h,
-        hess_prototype = f.hess_prototype,
-        cons_jac_prototype = f.cons_jac_prototype,
-        cons_hess_prototype = f.cons_hess_prototype,
+        f.f, adtype; grad, hess, hv,
+        cons, cons_j, cons_h,
+        f.hess_prototype,
+        f.cons_jac_prototype,
+        f.cons_hess_prototype,
         expr = OptimizationBase.symbolify(f.expr),
         cons_expr = OptimizationBase.symbolify_exprs(f.cons_expr),
-        sys = sys,
-        observed = f.observed
+        sys,
+        f.observed
     )
 end
 
@@ -165,7 +165,7 @@ function OptimizationBase.instantiate_function(
     # don't need to pass `x` or `p` since they're defaults now
     mtkprob = OptimizationProblem(
         sys, nothing; grad = g, hess = h,
-        sparse = false, cons_j = cons_j, cons_h = cons_h,
+        sparse = false, cons_j, cons_h,
         cons_sparse = false
     )
     f = mtkprob.f
@@ -191,15 +191,15 @@ function OptimizationBase.instantiate_function(
     end
 
     return OptimizationFunction{true}(
-        f.f, adtype; grad = grad, hess = hess, hv = hv,
-        cons = cons, cons_j = cons_j, cons_h = cons_h,
-        hess_prototype = f.hess_prototype,
-        cons_jac_prototype = f.cons_jac_prototype,
-        cons_hess_prototype = f.cons_hess_prototype,
+        f.f, adtype; grad, hess, hv,
+        cons, cons_j, cons_h,
+        f.hess_prototype,
+        f.cons_jac_prototype,
+        f.cons_hess_prototype,
         expr = OptimizationBase.symbolify(f.expr),
         cons_expr = OptimizationBase.symbolify_exprs(f.cons_expr),
-        sys = sys,
-        observed = f.observed
+        sys,
+        f.observed
     )
 end
 
@@ -232,7 +232,7 @@ function OptimizationBase.instantiate_function(
     # don't need to pass `x` or `p` since they're defaults now
     mtkprob = OptimizationProblem(
         sys, nothing; grad = g, hess = h,
-        sparse = false, cons_j = cons_j, cons_h = cons_h,
+        sparse = false, cons_j, cons_h,
         cons_sparse = false
     )
     f = mtkprob.f
@@ -258,15 +258,15 @@ function OptimizationBase.instantiate_function(
     end
 
     return OptimizationFunction{true}(
-        f.f, adtype; grad = grad, hess = hess, hv = hv,
-        cons = cons, cons_j = cons_j, cons_h = cons_h,
-        hess_prototype = f.hess_prototype,
-        cons_jac_prototype = f.cons_jac_prototype,
-        cons_hess_prototype = f.cons_hess_prototype,
+        f.f, adtype; grad, hess, hv,
+        cons, cons_j, cons_h,
+        f.hess_prototype,
+        f.cons_jac_prototype,
+        f.cons_hess_prototype,
         expr = OptimizationBase.symbolify(f.expr),
         cons_expr = OptimizationBase.symbolify_exprs(f.cons_expr),
-        sys = sys,
-        observed = f.observed
+        sys,
+        f.observed
     )
 end
 

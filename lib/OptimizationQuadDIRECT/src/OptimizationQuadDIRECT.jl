@@ -78,8 +78,8 @@ function SciMLBase.__solve(
     end
 
     opt_arg = __map_optimizer_args(
-        prob, opt; maxiters = maxiters, maxtime = maxtime,
-        abstol = abstol, reltol = reltol, verbose = verbose, kwargs...
+        prob, opt; maxiters, maxtime,
+        abstol, reltol, verbose, kwargs...
     )
     t0 = time()
     # root, x0 = !(isnothing(maxiters)) ? QuadDIRECT.analyze(_loss, splits, prob.lb, prob.ub; maxevals = maxiters, kwargs...) : QuadDIRECT.analyze(_loss, splits, prob.lb, prob.ub; kwargs...)
@@ -90,7 +90,7 @@ function SciMLBase.__solve(
     return SciMLBase.build_solution(
         SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
         QuadDIRECT.position(box, x0), QuadDIRECT.value(box);
-        original = root, stats = stats
+        original = root, stats
     )
 end
 

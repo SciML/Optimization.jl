@@ -25,7 +25,7 @@ function OptimizationBase.__solve(
     return SciMLBase.build_solution(
         cache, MockSolver(), prob.u0, prob.f.f(prob.u0, prob.p);
         retcode = ReturnCode.Success,
-        stats = stats
+        stats
     )
 end
 
@@ -183,7 +183,7 @@ function OptimizationBase.__solve(
     return SciMLBase.build_solution(
         cache, cache.opt, u, cache.f.f(u, cache.reinit_cache.p);
         retcode = ReturnCode.Success,
-        stats = stats
+        stats
     )
 end
 
@@ -199,7 +199,7 @@ function OptimizationBase.__solve(
     return SciMLBase.build_solution(
         cache, MockAlgWithCons(), prob.u0, prob.f.f(prob.u0, prob.p);
         retcode = ReturnCode.Success,
-        stats = stats
+        stats
     )
 end
 

@@ -20,6 +20,6 @@ using OptimizationBase
     end
 
     sol = solve(
-        prob, PyCMAOpt(), callback = callback, maxiters = 25, verbose = -1, seed = 42
+        prob, PyCMAOpt(); callback, maxiters = 25, verbose = -1, seed = 42
     )
 end
