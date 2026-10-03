@@ -12,7 +12,9 @@ import Reexport: Reexport, @reexport
     EnsembleThreads, IncompatibleOptimizerError, MaxSense, MinSense,
     MultiObjectiveOptimizationFunction, NoAD, ObjSense, OptimizationCache,
     OptimizationFunction, OptimizationProblem, OptimizationSolution, OptimizationStats,
-    OptimizationVerbosity, OptimizerMissingError, ReturnCode, allowsbounds, allowscallback,
+    OptimizationVerbosity, OptimizerMissingError, ReturnCode,
+    AbstractAdaptiveWeightRule, GradientScale, MiniMax, ReLoBRaLo, SoftAdapt,
+    weighted_sum, allowsbounds, allowscallback,
     allowsconstraints, init, lag_hess_structure, remake, requiresbounds, requiresconshess,
     requiresconsjac, requiresconstraints, requiresgradient, requireshessian, solve, solve!,
     successful_retcode
