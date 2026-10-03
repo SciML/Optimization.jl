@@ -135,7 +135,7 @@ using Test, Random
         x0 = zeros(2)
         optprob = OptimizationFunction(
             rosenbrock, OptimizationBase.AutoZygote();
-            cons = cons
+            cons
         )
         prob = OptimizationProblem(optprob, x0, _p, lcons = [0.0], ucons = [0.0])
         sol = solve(prob, NLopt.LN_COBYLA())

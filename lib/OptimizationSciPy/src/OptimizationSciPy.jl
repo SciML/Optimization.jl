@@ -671,12 +671,12 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyMinimiz
     try
         result = scipy.optimize.minimize(
             _loss,
-            cache.u0,
-            method = cache.opt.method,
-            jac = jac,
-            hess = hess,
-            bounds = bounds,
-            constraints = constraints,
+            cache.u0;
+            cache.opt.method,
+            jac,
+            hess,
+            bounds,
+            constraints,
             options = pydict(options)
         )
     catch e
@@ -723,8 +723,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyMinimiz
     return SciMLBase.build_solution(
         cache, cache.opt, minimizer, minimum;
         original = result,
-        retcode = retcode,
-        stats = stats
+        retcode,
+        stats
     )
 end
 
@@ -738,8 +738,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyMinimiz
         θ_vec = [θ]
         x = cache.f(θ_vec, cache.p)
         x = isa(x, Tuple) ? x : (x,)
-        opt_state = OptimizationBase.OptimizationState(
-            u = θ_vec, p = cache.p, objective = x[1]
+        opt_state = OptimizationBase.OptimizationState(;
+            u = θ_vec, cache.p, objective = x[1]
         )
         if cache.callback(opt_state, x...)
             error("Optimization halted by callback")
@@ -759,8 +759,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyMinimiz
     result = nothing
     try
         result = scipy.optimize.minimize_scalar(
-            _loss,
-            method = cache.opt.method;
+            _loss;
+            cache.opt.method,
             kwargs...
         )
     catch e
@@ -794,8 +794,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyMinimiz
     return SciMLBase.build_solution(
         cache, cache.opt, minimizer, minimum;
         original = result,
-        retcode = retcode,
-        stats = stats
+        retcode,
+        stats
     )
 end
 
@@ -882,8 +882,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyLeastSq
     return SciMLBase.build_solution(
         cache, cache.opt, minimizer, minimum;
         original = result,
-        retcode = retcode,
-        stats = stats
+        retcode,
+        stats
     )
 end
 
@@ -898,8 +898,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyRootSca
         θ_vec = [θ]
         x = cache.f(θ_vec, cache.p)
         x = isa(x, Tuple) ? x : (x,)
-        opt_state = OptimizationBase.OptimizationState(
-            u = θ_vec, p = cache.p, objective = x[1]
+        opt_state = OptimizationBase.OptimizationState(;
+            u = θ_vec, cache.p, objective = x[1]
         )
         if cache.callback(opt_state, x...)
             error("Optimization halted by callback")
@@ -949,7 +949,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyRootSca
     try
         result = scipy.optimize.root_scalar(
             _func;
-            method = cache.opt.method,
+            cache.opt.method,
             kwargs...
         )
     catch e
@@ -998,8 +998,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyRootSca
     return SciMLBase.build_solution(
         cache, cache.opt, minimizer, minimum;
         original = result,
-        retcode = retcode,
-        stats = stats
+        retcode,
+        stats
     )
 end
 
@@ -1071,8 +1071,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyRoot}
     return SciMLBase.build_solution(
         cache, cache.opt, minimizer, minimum;
         original = result,
-        retcode = retcode,
-        stats = stats
+        retcode,
+        stats
     )
 end
 
@@ -1127,14 +1127,14 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyLinprog
     result = nothing
     try
         result = scipy.optimize.linprog(
-            c,
-            A_ub = A_ub,
-            b_ub = b_ub,
-            A_eq = A_eq,
-            b_eq = b_eq,
-            bounds = bounds,
-            method = cache.opt.method,
-            options = options
+            c;
+            A_ub,
+            b_ub,
+            A_eq,
+            b_eq,
+            bounds,
+            cache.opt.method,
+            options
         )
     catch e
         if e isa PythonCall.Core.PyException
@@ -1174,8 +1174,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyLinprog
     return SciMLBase.build_solution(
         cache, cache.opt, minimizer, minimum;
         original = result,
-        retcode = retcode,
-        stats = stats
+        retcode,
+        stats
     )
 end
 
@@ -1218,11 +1218,11 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyMilp}
     t0 = time()
     result = nothing
     try
-        result = scipy.optimize.milp(
-            c = c,
-            integrality = integrality,
-            bounds = bounds,
-            constraints = constraints,
+        result = scipy.optimize.milp(;
+            c,
+            integrality,
+            bounds,
+            constraints,
             options = nothing
         )
     catch e
@@ -1256,8 +1256,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyMilp}
     return SciMLBase.build_solution(
         cache, cache.opt, minimizer, minimum;
         original = result,
-        retcode = retcode,
-        stats = stats
+        retcode,
+        stats
     )
 end
 
@@ -1325,8 +1325,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     return SciMLBase.build_solution(
         cache, cache.opt, minimizer, minimum;
         original = result,
-        retcode = retcode,
-        stats = stats
+        retcode,
+        stats
     )
 end
 
@@ -1385,8 +1385,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyBasinho
     return SciMLBase.build_solution(
         cache, cache.opt, minimizer, minimum;
         original = result,
-        retcode = retcode,
-        stats = stats
+        retcode,
+        stats
     )
 end
 
@@ -1450,8 +1450,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyDualAnn
     return SciMLBase.build_solution(
         cache, cache.opt, minimizer, minimum;
         original = result,
-        retcode = retcode,
-        stats = stats
+        retcode,
+        stats
     )
 end
 
@@ -1509,7 +1509,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyShgo}
             _loss,
             bounds;
             args = (),
-            constraints = constraints,
+            constraints,
             shgo_kwargs...
         )
     catch e
@@ -1549,8 +1549,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyShgo}
     return SciMLBase.build_solution(
         cache, cache.opt, minimizer, minimum;
         original = result,
-        retcode = retcode,
-        stats = stats
+        retcode,
+        stats
     )
 end
 
@@ -1610,8 +1610,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyDirect}
     return SciMLBase.build_solution(
         cache, cache.opt, minimizer, minimum;
         original = result,
-        retcode = retcode,
-        stats = stats
+        retcode,
+        stats
     )
 end
 
@@ -1664,8 +1664,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: ScipyBrute}
     return SciMLBase.build_solution(
         cache, cache.opt, minimizer, minimum;
         original = result,
-        retcode = retcode,
-        stats = stats
+        retcode,
+        stats
     )
 end
 
@@ -1695,8 +1695,8 @@ function _create_loss(cache; vector_output::Bool = false)
             elseif isa(x, Number)
                 x = (x,)
             end
-            opt_state = OptimizationBase.OptimizationState(
-                u = θ_julia, p = cache.p, objective = sum(abs2, x)
+            opt_state = OptimizationBase.OptimizationState(;
+                u = θ_julia, cache.p, objective = sum(abs2, x)
             )
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback")
@@ -1717,8 +1717,8 @@ function _create_loss(cache; vector_output::Bool = false)
             elseif isa(x, Number)
                 x = (x,)
             end
-            opt_state = OptimizationBase.OptimizationState(
-                u = θ_julia, p = cache.p, objective = x[1]
+            opt_state = OptimizationBase.OptimizationState(;
+                u = θ_julia, cache.p, objective = x[1]
             )
             if cache.callback(opt_state, x...)
                 error("Optimization halted by callback")

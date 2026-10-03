@@ -200,13 +200,13 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: MadNLPOptimi
     meta, options = __map_optimizer_args(
         cache,
         cache.opt;
-        abstol = cache.solver_args.abstol,
-        reltol = cache.solver_args.reltol,
-        maxiters = maxiters,
-        maxtime = maxtime,
+        cache.solver_args.abstol,
+        cache.solver_args.reltol,
+        maxiters,
+        maxtime,
         verbose = get(cache.solver_args, :verbose, false),
-        progress = cache.progress,
-        callback = cache.callback
+        cache.progress,
+        cache.callback
     )
 
     nlp = NLPModelsAdaptor(cache, meta, NLPModels.Counters())

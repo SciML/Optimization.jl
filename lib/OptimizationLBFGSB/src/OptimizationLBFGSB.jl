@@ -69,7 +69,7 @@ function __map_optimizer_args(
     mapped_args = (;)
 
     if cache.lb !== nothing && cache.ub !== nothing
-        mapped_args = (; mapped_args..., lb = cache.lb, ub = cache.ub)
+        mapped_args = (; mapped_args..., cache.lb, cache.ub)
     end
 
     if !isnothing(maxiters)
@@ -181,7 +181,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
 
             res = optimizer(
                 _loss, aug_grad, θ, bounds; solver_kwargs...,
-                m = cache.opt.m, pgtol = sqrt(ϵ), maxiter = maxiters / 100
+                cache.opt.m, pgtol = sqrt(ϵ), maxiter = maxiters / 100
             )
 
             θ = res[2]
@@ -210,8 +210,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
             time = 0.0, fevals = maxiters, gevals = maxiters
         )
         return SciMLBase.build_solution(
-            cache, cache.opt, res[2], cache.f(res[2], cache.p)[1],
-            stats = stats, retcode = opt_ret
+            cache, cache.opt, res[2], cache.f(res[2], cache.p)[1];
+            stats, retcode = opt_ret
         )
     else
         ub_iter_count = Ref(0)
@@ -261,7 +261,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
         t0 = time()
 
         res = optimizer(
-            ub_loss, _grad!, cache.u0, bounds; m = cache.opt.m, solver_kwargs...
+            ub_loss, _grad!, cache.u0, bounds; cache.opt.m, solver_kwargs...
         )
 
         # Extract the task message from the result
@@ -292,7 +292,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
         )
 
         return SciMLBase.build_solution(
-            cache, cache.opt, res[2], res[1], stats = stats,
+            cache, cache.opt, res[2], res[1]; stats,
             retcode = opt_ret, original = optimizer
         )
     end

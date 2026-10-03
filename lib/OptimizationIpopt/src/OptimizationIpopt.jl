@@ -398,14 +398,14 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: IpoptOptimiz
     opt_setup = __map_optimizer_args(
         evaluator,
         cache.opt;
-        abstol = cache.solver_args.abstol,
-        reltol = cache.solver_args.reltol,
-        maxiters = maxiters,
-        maxtime = maxtime,
+        cache.solver_args.abstol,
+        cache.solver_args.reltol,
+        maxiters,
+        maxtime,
         verbose = get(cache.solver_args, :verbose, cache.verbose),
-        progress = cache.progress,
-        callback = cache.callback,
-        iterations = iterations
+        cache.progress,
+        cache.callback,
+        iterations
     )
 
     opt_setup.x .= cache.reinit_cache.u0
@@ -438,7 +438,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: IpoptOptimiz
         minimum;
         original = opt_setup,
         retcode = opt_ret,
-        stats = stats
+        stats
     )
 end
 

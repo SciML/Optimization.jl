@@ -253,7 +253,7 @@ using Test
         @test sol.u ≈ [3.0, 4.0] atol = 1.0e-6
 
         cons(res, x, p) = (res[1] = x[1]^2 + x[2]^2)
-        optf_c = OptimizationFunction(quadratic, AutoReactant(); cons = cons)
+        optf_c = OptimizationFunction(quadratic, AutoReactant(); cons)
         prob_c = OptimizationProblem(
             optf_c, [1.0, 2.0], [3.0, 4.0]; lcons = [-Inf], ucons = [4.0]
         )

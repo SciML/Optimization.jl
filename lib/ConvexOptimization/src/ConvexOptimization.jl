@@ -252,7 +252,7 @@ function SciMLBase.__solve(cache::ConvexOptimizationCache)
     end
     return SciMLBase.build_convex_solution(
         cache, cache.alg, u, objective;
-        dual = dual, retcode = ret, original = model,
+        dual, retcode = ret, original = model,
         stats = SciMLBase.OptimizationStats()
     )
 end

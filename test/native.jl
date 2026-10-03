@@ -24,5 +24,5 @@ l0 = optf(initpars, (x0, y0))
 
 optf1 = OptimizationFunction(loss, AutoSparse(AutoForwardDiff()))
 prob1 = OptimizationProblem(optf1, rand(5), data)
-sol1 = solve(prob1, OptimizationOptimisers.Adam(), maxiters = 1000, callback = callback)
+sol1 = solve(prob1, OptimizationOptimisers.Adam(); maxiters = 1000, callback)
 @test sol1.objective < l0

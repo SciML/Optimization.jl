@@ -88,23 +88,23 @@ function apply_sense(f::OptimizationFunction{iip}, sense) where {iip}
 
     return OptimizationFunction{iip}(
         objf, f.adtype;
-        grad = grad, fg = fg, hess = hess, hv = hv, fgh = fgh,
-        cons = f.cons, cons_j = f.cons_j, cons_jvp = f.cons_jvp,
-        cons_vjp = f.cons_vjp, cons_h = f.cons_h,
-        hess_prototype = f.hess_prototype,
-        cons_jac_prototype = f.cons_jac_prototype,
-        cons_hess_prototype = f.cons_hess_prototype,
-        observed = f.observed,
-        expr = f.expr,
-        cons_expr = f.cons_expr,
-        sys = f.sys,
-        lag_h = lag_h,
-        lag_hess_prototype = f.lag_hess_prototype,
-        hess_colorvec = f.hess_colorvec,
-        cons_jac_colorvec = f.cons_jac_colorvec,
-        cons_hess_colorvec = f.cons_hess_colorvec,
-        lag_hess_colorvec = f.lag_hess_colorvec,
-        initialization_data = f.initialization_data
+        grad, fg, hess, hv, fgh,
+        f.cons, f.cons_j, f.cons_jvp,
+        f.cons_vjp, f.cons_h,
+        f.hess_prototype,
+        f.cons_jac_prototype,
+        f.cons_hess_prototype,
+        f.observed,
+        f.expr,
+        f.cons_expr,
+        f.sys,
+        lag_h,
+        f.lag_hess_prototype,
+        f.hess_colorvec,
+        f.cons_jac_colorvec,
+        f.cons_hess_colorvec,
+        f.lag_hess_colorvec,
+        f.initialization_data
     )
 end
 

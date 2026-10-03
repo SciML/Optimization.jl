@@ -198,7 +198,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
         iterations,
         time = t1 - t0, fevals, gevals
     )
-    return SciMLBase.build_solution(cache, cache.opt, θ, first(x)[1], stats = stats)
+    return SciMLBase.build_solution(cache, cache.opt, θ, first(x)[1]; stats)
 end
 
 end
