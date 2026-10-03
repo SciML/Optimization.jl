@@ -118,7 +118,7 @@ using Random
             end
 
             mof_1 = MultiObjectiveOptimizationFunction(multi_obj_func_1)
-            prob_1 = OptimizationBase.OptimizationProblem(mof_1, u0; lb = lb, ub = ub)
+            prob_1 = OptimizationBase.OptimizationProblem(mof_1, u0; lb, ub)
             Random.seed!(1234)
             sol_1 = solve(
                 prob_1, opt, NumDimensions = 2,
@@ -150,7 +150,7 @@ using Random
             end
 
             mof_1 = MultiObjectiveOptimizationFunction(multi_obj_func_1)
-            prob_1 = OptimizationBase.OptimizationProblem(mof_1, u0; lb = lb, ub = ub)
+            prob_1 = OptimizationBase.OptimizationProblem(mof_1, u0; lb, ub)
             Random.seed!(1234)
             sol_1 = solve(
                 prob_1, opt, NumDimensions = 2,
@@ -179,7 +179,7 @@ using Random
             end
 
             mof_2 = MultiObjectiveOptimizationFunction(multi_obj_func_2)
-            prob_2 = OptimizationBase.OptimizationProblem(mof_2, u0; lb = lb, ub = ub)
+            prob_2 = OptimizationBase.OptimizationProblem(mof_2, u0; lb, ub)
             Random.seed!(1234)
             sol_2 = solve(
                 prob_2, opt, NumDimensions = 2,
@@ -202,7 +202,7 @@ using Random
             end
 
             mof_3 = MultiObjectiveOptimizationFunction(multi_obj_func_3)
-            prob_3 = OptimizationBase.OptimizationProblem(mof_3, u0; lb = lb, ub = ub)
+            prob_3 = OptimizationBase.OptimizationProblem(mof_3, u0; lb, ub)
             Random.seed!(1234)
             sol_3 = solve(
                 prob_3, opt, NumDimensions = 2,

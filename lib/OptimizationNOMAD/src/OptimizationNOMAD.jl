@@ -123,8 +123,8 @@ function SciMLBase.__solve(
     end
 
     __map_optimizer_args!(
-        prob, opt_setup, maxiters = maxiters, maxtime = maxtime,
-        abstol = abstol, reltol = reltol, verbose = verbose; kwargs...
+        prob, opt_setup; maxiters, maxtime,
+        abstol, reltol, verbose, kwargs...
     )
 
     t0 = time()
@@ -134,7 +134,7 @@ function SciMLBase.__solve(
     return SciMLBase.build_solution(
         SciMLBase.DefaultOptimizationCache(prob.f, prob.p), opt,
         opt_res.x_best_feas, first(opt_res.bbo_best_feas);
-        original = opt_res, stats = stats
+        original = opt_res, stats
     )
 end
 

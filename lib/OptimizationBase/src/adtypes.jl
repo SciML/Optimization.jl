@@ -240,15 +240,15 @@ function spadtype_to_spsoadtype(adtype)
                 adtype.dense_ad isa AutoZygote
         )
         soadtype = AutoSparse(
-            DifferentiationInterface.SecondOrder(adtype.dense_ad, adtype.dense_ad),
-            sparsity_detector = adtype.sparsity_detector,
-            coloring_algorithm = adtype.coloring_algorithm
+            DifferentiationInterface.SecondOrder(adtype.dense_ad, adtype.dense_ad);
+            adtype.sparsity_detector,
+            adtype.coloring_algorithm
         )
     elseif adtype.dense_ad isa AutoZygote
         soadtype = AutoSparse(
-            DifferentiationInterface.SecondOrder(AutoForwardDiff(), adtype.dense_ad),
-            sparsity_detector = adtype.sparsity_detector,
-            coloring_algorithm = adtype.coloring_algorithm
+            DifferentiationInterface.SecondOrder(AutoForwardDiff(), adtype.dense_ad);
+            adtype.sparsity_detector,
+            adtype.coloring_algorithm
         )
     else
         soadtype = adtype
@@ -267,12 +267,12 @@ function filled_spad(adtype)
             !(adtype.coloring_algorithm isa ADTypes.NoColoringAlgorithm)
         AutoSparse(
             adtype.dense_ad; sparsity_detector = TracerSparsityDetector(),
-            coloring_algorithm = adtype.coloring_algorithm
+            adtype.coloring_algorithm
         )
     elseif !(adtype.sparsity_detector isa ADTypes.NoSparsityDetector) &&
             adtype.coloring_algorithm isa ADTypes.NoColoringAlgorithm
         AutoSparse(
-            adtype.dense_ad; sparsity_detector = adtype.sparsity_detector,
+            adtype.dense_ad; adtype.sparsity_detector,
             coloring_algorithm = GreedyColoringAlgorithm()
         )
     else
@@ -289,9 +289,9 @@ function generate_sparse_adtype(adtype)
     else
         soadtype = adtype
         adtype = AutoSparse(
-            adtype.dense_ad.inner,
-            sparsity_detector = soadtype.sparsity_detector,
-            coloring_algorithm = soadtype.coloring_algorithm
+            adtype.dense_ad.inner;
+            soadtype.sparsity_detector,
+            soadtype.coloring_algorithm
         )
         adtype = filled_spad(adtype)
         soadtype = filled_spad(soadtype)

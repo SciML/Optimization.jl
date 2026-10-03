@@ -16,7 +16,7 @@ cp(joinpath(@__DIR__, "Project.toml"), joinpath(@__DIR__, "src/assets/Project.to
 
 include("pages.jl")
 
-makedocs(
+makedocs(;
     sitename = "Optimization.jl",
     authors = "Chris Rackauckas, Vaibhav Kumar Dixit et al.",
     modules = [
@@ -39,7 +39,7 @@ makedocs(
         assets = ["assets/favicon.ico"],
         canonical = "https://docs.sciml.ai/Optimization/stable/"
     ),
-    pages = pages
+    pages
 )
 
 deploydocs(

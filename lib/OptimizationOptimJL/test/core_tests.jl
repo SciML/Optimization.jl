@@ -38,13 +38,13 @@ end
         x0 = [5.0, 5.0]
         optf = OptimizationFunction(obj, OptimizationBase.AutoForwardDiff())
 
-        prob_min = OptimizationProblem(optf, x0, nothing; lb = lb, ub = ub)
+        prob_min = OptimizationProblem(optf, x0, nothing; lb, ub)
         sol_min = solve(prob_min, LBFGS(); x_abstol = 0.1)
         @test isapprox(sol_min.u, [0.0, 0.0]; atol = 1.0e-2)
         @test isapprox(sol_min.objective, 0.0; atol = 1.0e-2)
 
         prob_max = OptimizationProblem(
-            optf, x0, nothing; lb = lb, ub = ub, sense = OptimizationBase.MaxSense
+            optf, x0, nothing; lb, ub, sense = OptimizationBase.MaxSense
         )
         sol_max = solve(prob_max, LBFGS(); x_abstol = 0.1)
         @test isapprox(sol_max.u, [10.0, 10.0]; atol = 1.0e-2)
@@ -59,7 +59,7 @@ end
         optf = OptimizationFunction(obj, OptimizationBase.AutoForwardDiff())
 
         prob_max = OptimizationProblem(
-            optf, x0, nothing; lb = lb, ub = ub, sense = OptimizationBase.MaxSense
+            optf, x0, nothing; lb, ub, sense = OptimizationBase.MaxSense
         )
         sol_max = solve(prob_max, Optim.IPNewton(); x_abstol = 0.1)
         @test isapprox(sol_max.u, [10.0, 10.0]; atol = 1.0e-2)
@@ -196,7 +196,7 @@ end
     cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
     optprob = OptimizationFunction(
         rosenbrock, OptimizationBase.AutoSymbolics();
-        cons = cons
+        cons
     )
 
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-5.0], ucons = [10.0])
@@ -205,7 +205,7 @@ end
 
     optprob = OptimizationFunction(
         rosenbrock, OptimizationBase.AutoForwardDiff();
-        cons = cons
+        cons
     )
 
     prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf], ucons = [Inf])
@@ -441,7 +441,7 @@ end
         # ConstrainedOptimizer path (line ~506 of src): IPNewton with constraints.
         cons(res, x, p) = (res[1] = x[1]^2 + x[2]^2)
         optf_c = OptimizationFunction(
-            rb, OptimizationBase.AutoForwardDiff(); cons = cons
+            rb, OptimizationBase.AutoForwardDiff(); cons
         )
         prob_c = OptimizationProblem(
             optf_c, x0, _p; lcons = [-Inf], ucons = [100.0],

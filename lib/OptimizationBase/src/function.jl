@@ -91,15 +91,15 @@ function OptimizationBase.instantiate_function(
     cons_expr = symbolify_exprs(f.cons_expr)
 
     return MultiObjectiveOptimizationFunction{true}(
-        f.f, SciMLBase.NoAD(); jac = jac, hess = hess,
-        hv = hv,
-        cons = cons, cons_j = cons_j, cons_jvp = cons_jvp, cons_vjp = cons_vjp, cons_h = cons_h,
-        hess_prototype = hess_prototype,
-        cons_jac_prototype = cons_jac_prototype,
-        cons_hess_prototype = cons_hess_prototype,
-        expr = expr, cons_expr = cons_expr,
-        sys = f.sys,
-        observed = f.observed
+        f.f, SciMLBase.NoAD(); jac, hess,
+        hv,
+        cons, cons_j, cons_jvp, cons_vjp, cons_h,
+        hess_prototype,
+        cons_jac_prototype,
+        cons_hess_prototype,
+        expr, cons_expr,
+        f.sys,
+        f.observed
     )
 end
 
@@ -134,15 +134,15 @@ function OptimizationBase.instantiate_function(
     cons_expr = symbolify_exprs(f.cons_expr)
 
     return MultiObjectiveOptimizationFunction{true}(
-        f.f, SciMLBase.NoAD(); jac = jac, hess = hess,
-        hv = hv,
-        cons = cons, cons_j = cons_j, cons_jvp = cons_jvp, cons_vjp = cons_vjp, cons_h = cons_h,
-        hess_prototype = hess_prototype,
-        cons_jac_prototype = cons_jac_prototype,
-        cons_hess_prototype = cons_hess_prototype,
-        expr = expr, cons_expr = cons_expr,
-        sys = f.sys,
-        observed = f.observed
+        f.f, SciMLBase.NoAD(); jac, hess,
+        hv,
+        cons, cons_j, cons_jvp, cons_vjp, cons_h,
+        hess_prototype,
+        cons_jac_prototype,
+        cons_hess_prototype,
+        expr, cons_expr,
+        f.sys,
+        f.observed
     )
 end
 
@@ -262,16 +262,16 @@ function OptimizationBase.instantiate_function(
 
     return OptimizationFunction{true}(
         f.f, SciMLBase.NoAD();
-        grad = grad, fg = fg, hess = hess, fgh = fgh, hv = hv,
-        cons = cons, cons_j = cons_j, cons_h = cons_h,
-        cons_vjp = cons_vjp, cons_jvp = cons_jvp,
-        lag_h = lag_h,
-        hess_prototype = hess_prototype,
-        cons_jac_prototype = cons_jac_prototype,
-        cons_hess_prototype = cons_hess_prototype,
-        expr = expr, cons_expr = cons_expr,
-        sys = f.sys,
-        observed = f.observed
+        grad, fg, hess, fgh, hv,
+        cons, cons_j, cons_h,
+        cons_vjp, cons_jvp,
+        lag_h,
+        hess_prototype,
+        cons_jac_prototype,
+        cons_hess_prototype,
+        expr, cons_expr,
+        f.sys,
+        f.observed
     )
 end
 

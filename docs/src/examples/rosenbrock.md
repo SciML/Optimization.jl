@@ -92,7 +92,7 @@ sol = solve(prob, Optim.KrylovTrustRegion())
 
 ```@example rosenbrock
 cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
-optf = SciMLBase.OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff(); cons = cons)
+optf = SciMLBase.OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff(); cons)
 
 prob = SciMLBase.OptimizationProblem(optf, x0, _p, lcons = [-Inf], ucons = [Inf])
 sol = solve(prob, IPNewton()) # Note that -Inf < x[1]^2 + x[2]^2 < Inf is always true

@@ -30,7 +30,7 @@ g!(G1, x0)
 h!(H1, x0)
 
 cons = (res, x, p) -> (res[1] = x[1]^2 + x[2]^2; return nothing)
-optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoSymbolics(), cons = cons)
+optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoSymbolics(); cons)
 optprob = OptimizationBase.instantiate_function(
     optf, x0,
     OptimizationBase.AutoSymbolics(),
@@ -82,7 +82,7 @@ optprob.cons_h(H3, x0)
 @testset "one constraint tests" begin
     G2 = Array{Float64}(undef, 2)
     H2 = Array{Float64}(undef, 2, 2)
-    optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoEnzyme(), cons = cons)
+    optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoEnzyme(); cons)
     optprob = OptimizationBase.instantiate_function(
         optf, x0, OptimizationBase.AutoEnzyme(),
         nothing, 1, g = true, h = true, hv = true,
@@ -158,7 +158,7 @@ optprob.cons_h(H3, x0)
     G2 = Array{Float64}(undef, 2)
     H2 = Array{Float64}(undef, 2, 2)
 
-    optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff(), cons = cons)
+    optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff(); cons)
     optprob = OptimizationBase.instantiate_function(
         optf, x0, OptimizationBase.AutoForwardDiff(),
         nothing, 1, g = true, h = true, hv = true,
@@ -207,7 +207,7 @@ optprob.cons_h(H3, x0)
     G2 = Array{Float64}(undef, 2)
     H2 = Array{Float64}(undef, 2, 2)
 
-    optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoReverseDiff(), cons = cons)
+    optf = OptimizationFunction(rosenbrock, OptimizationBase.AutoReverseDiff(); cons)
     optprob = OptimizationBase.instantiate_function(
         optf, x0, OptimizationBase.AutoReverseDiff(),
         nothing, 1, g = true, h = true, hv = true,
@@ -246,7 +246,7 @@ optprob.cons_h(H3, x0)
     H2 = Array{Float64}(undef, 2, 2)
 
     optf = OptimizationFunction(
-        rosenbrock, OptimizationBase.AutoReverseDiff(; compile = true), cons = cons
+        rosenbrock, OptimizationBase.AutoReverseDiff(; compile = true); cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0, OptimizationBase.AutoReverseDiff(; compile = true),
@@ -286,7 +286,7 @@ optprob.cons_h(H3, x0)
     H2 = Array{Float64}(undef, 2, 2)
 
     optf = OptimizationFunction(
-        rosenbrock, AutoZygote(), cons = cons
+        rosenbrock, AutoZygote(); cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0, AutoZygote(),
@@ -340,8 +340,8 @@ optprob.cons_h(H3, x0)
         rosenbrock,
         DifferentiationInterface.SecondOrder(
             ADTypes.AutoFiniteDiff(), ADTypes.AutoReverseDiff()
-        ),
-        cons = cons
+        );
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -998,8 +998,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        OptimizationBase.AutoEnzyme(),
-        cons = cons
+        OptimizationBase.AutoEnzyme();
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0, OptimizationBase.AutoEnzyme(),
@@ -1018,8 +1018,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        OptimizationBase.AutoEnzyme(),
-        cons = cons
+        OptimizationBase.AutoEnzyme();
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0, OptimizationBase.AutoEnzyme(),
@@ -1035,8 +1035,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        OptimizationBase.AutoFiniteDiff(),
-        cons = cons
+        OptimizationBase.AutoFiniteDiff();
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1056,8 +1056,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        OptimizationBase.AutoFiniteDiff(),
-        cons = cons
+        OptimizationBase.AutoFiniteDiff();
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1074,8 +1074,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        OptimizationBase.AutoForwardDiff(),
-        cons = cons
+        OptimizationBase.AutoForwardDiff();
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1095,8 +1095,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        OptimizationBase.AutoForwardDiff(),
-        cons = cons
+        OptimizationBase.AutoForwardDiff();
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1113,8 +1113,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        OptimizationBase.AutoReverseDiff(),
-        cons = cons
+        OptimizationBase.AutoReverseDiff();
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1134,8 +1134,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        OptimizationBase.AutoReverseDiff(),
-        cons = cons
+        OptimizationBase.AutoReverseDiff();
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1152,8 +1152,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        OptimizationBase.AutoReverseDiff(; compile = true),
-        cons = cons
+        OptimizationBase.AutoReverseDiff(; compile = true);
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1173,8 +1173,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        OptimizationBase.AutoReverseDiff(; compile = true),
-        cons = cons
+        OptimizationBase.AutoReverseDiff(; compile = true);
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1191,8 +1191,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        AutoSparse(OptimizationBase.AutoForwardDiff()),
-        cons = cons
+        AutoSparse(OptimizationBase.AutoForwardDiff());
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1212,8 +1212,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        AutoSparse(OptimizationBase.AutoForwardDiff()),
-        cons = cons
+        AutoSparse(OptimizationBase.AutoForwardDiff());
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1230,8 +1230,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        AutoSparse(OptimizationBase.AutoFiniteDiff()),
-        cons = cons
+        AutoSparse(OptimizationBase.AutoFiniteDiff());
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1251,8 +1251,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        AutoSparse(OptimizationBase.AutoFiniteDiff()),
-        cons = cons
+        AutoSparse(OptimizationBase.AutoFiniteDiff());
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1269,8 +1269,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        AutoSparse(OptimizationBase.AutoReverseDiff()),
-        cons = cons
+        AutoSparse(OptimizationBase.AutoReverseDiff());
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1290,8 +1290,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        AutoSparse(OptimizationBase.AutoReverseDiff()),
-        cons = cons
+        AutoSparse(OptimizationBase.AutoReverseDiff());
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1308,8 +1308,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        AutoSparse(OptimizationBase.AutoReverseDiff(; compile = true)),
-        cons = cons
+        AutoSparse(OptimizationBase.AutoReverseDiff(; compile = true));
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1328,8 +1328,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        AutoSparse(OptimizationBase.AutoReverseDiff(; compile = true)),
-        cons = cons
+        AutoSparse(OptimizationBase.AutoReverseDiff(; compile = true));
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0,
@@ -1346,8 +1346,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        AutoZygote(),
-        cons = cons
+        AutoZygote();
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0, AutoZygote(),
@@ -1365,8 +1365,8 @@ end
     cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
     optf = OptimizationFunction{false}(
         rosenbrock,
-        AutoZygote(),
-        cons = cons
+        AutoZygote();
+        cons
     )
     optprob = OptimizationBase.instantiate_function(
         optf, x0, AutoZygote(),
@@ -1486,7 +1486,7 @@ end
     for adtype in adtypes, g in (false, true)
         optf = OptimizationBase.instantiate_function(
             OptimizationFunction(rosen, adtype; grad = rosen_grad!),
-            zeros(2), adtype, nothing; g = g, fg = true
+            zeros(2), adtype, nothing; g, fg = true
         )
         optf.fg === nothing && continue
         ncalls[] = 0
@@ -1499,7 +1499,7 @@ end
         # Without a user gradient the AD path still has to build its own preparation,
         # including when `fg` is requested but `g` is not.
         optf_ad = OptimizationBase.instantiate_function(
-            OptimizationFunction(rosen, adtype), zeros(2), adtype, nothing; g = g, fg = true
+            OptimizationFunction(rosen, adtype), zeros(2), adtype, nothing; g, fg = true
         )
         Gad = zeros(2)
         @test optf_ad.fg(Gad, [0.5, 0.7]) ≈ rosen([0.5, 0.7])
@@ -1528,7 +1528,7 @@ end
     # The AD `fg!` must return the buffer it differentiated into, with or without `g`.
     for g in (false, true)
         optf = OptimizationBase.instantiate_function(
-            OptimizationFunction{false}(rosen, ad), zeros(2), ad, nothing; g = g, fg = true
+            OptimizationFunction{false}(rosen, ad), zeros(2), ad, nothing; g, fg = true
         )
         y, G = optf.fg(z)
         @test y ≈ rosen(z)
@@ -1546,7 +1546,7 @@ end
     @test enzyme_ext._hessian_batch_width(4) == 4
     @test enzyme_ext._hessian_batch_width(n) == 8
 
-    θ = ComponentVector(x = x)
+    θ = ComponentVector(; x)
     optf = OptimizationBase.instantiate_function(
         OptimizationFunction(quartic, AutoEnzyme()), θ, AutoEnzyme(), nothing;
         h = true, fgh = true

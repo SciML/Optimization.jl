@@ -59,7 +59,7 @@ function __map_optimizer_args(
     mapped_args = (; kwargs...)
 
     if !isnothing(callback)
-        mapped_args = (; mapped_args..., callback = callback)
+        mapped_args = (; mapped_args..., callback)
     end
 
     if !isnothing(maxiters)
@@ -92,7 +92,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         opt_state = OptimizationBase.OptimizationState(;
             iter = decompose_trace(trace).iteration,
             u = curr_u,
-            p = cache.p,
+            cache.p,
             objective = x[1],
             original = trace
         )
@@ -120,8 +120,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
 
     opt_args = __map_optimizer_args(
         cache, cache.opt; callback = _cb, cache.solver_args...,
-        maxiters = maxiters,
-        maxtime = maxtime
+        maxiters,
+        maxtime
     )
 
     t0 = time()
@@ -169,7 +169,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     opt_ret = Evolutionary.converged(opt_res) ? SciMLBase.ReturnCode.Success :
         SciMLBase.ReturnCode.Failure
     stats = OptimizationBase.OptimizationStats(;
-        iterations = opt_res.iterations,
+        opt_res.iterations,
         time = t1 - t0, fevals = opt_res.f_calls
     )
     return if !isa(f, MultiObjectiveOptimizationFunction)
@@ -178,7 +178,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
             Evolutionary.minimizer(opt_res),
             Evolutionary.minimum(opt_res); original = opt_res,
             retcode = opt_ret,
-            stats = stats
+            stats
         )
     else
         ans = Evolutionary.minimizer(opt_res)
@@ -187,7 +187,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
             ans,
             _loss(ans[1]); original = opt_res,
             retcode = opt_ret,
-            stats = stats
+            stats
         )
     end
 end

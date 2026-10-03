@@ -57,7 +57,7 @@ import SciMLBase
         optf, initpars, (x0, y0), lcons = [-Inf], ucons = [0.5],
         lb = [-10.0, -10.0, -10.0, -10.0, -10.0], ub = [10.0, 10.0, 10.0, 10.0, 10.0]
     )
-    opt1 = solve(prob, OptimizationLBFGSB.LBFGSB(), maxiters = 1000, callback = callback)
+    opt1 = solve(prob, OptimizationLBFGSB.LBFGSB(); maxiters = 1000, callback)
     @test opt1.objective < l0
 
     # Test for issue #1094: LBFGSB should return Failure when encountering Inf/NaN

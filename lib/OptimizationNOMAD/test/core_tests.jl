@@ -18,7 +18,7 @@ using Test
     @test 10 * sol.objective < l1
 
     cons = (res, x, p) -> (res[1] = x[1]^2 + x[2]^2; nothing)
-    f = OptimizationFunction(rosenbrock, cons = cons)
+    f = OptimizationFunction(rosenbrock; cons)
     prob = OptimizationProblem(f, x0, _p; lcons = [-Inf], ucons = [1.0])
     sol = OptimizationBase.solve(prob, NOMADOpt(), maxiters = 5000)
     @test 10 * sol.objective < l1

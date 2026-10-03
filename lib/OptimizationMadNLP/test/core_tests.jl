@@ -55,7 +55,7 @@ end
     ad = SecondOrder(ADTypes.AutoForwardDiff(), ADTypes.AutoZygote())
     optprob = OptimizationFunction(
         rosenbrock3, ad;
-        cons = cons, lag_h = lagh, lag_hess_prototype
+        cons, lag_h = lagh, lag_hess_prototype
     )
     prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, Inf])
 
@@ -64,7 +64,7 @@ end
     # currently errors in OptimizationZygoteExt (closure arity), tracked
     # separately from this ordering fix.
     ad_ref = SecondOrder(ADTypes.AutoForwardDiff(), ADTypes.AutoForwardDiff())
-    optprob_ad = OptimizationFunction(rosenbrock3, ad_ref; cons = cons)
+    optprob_ad = OptimizationFunction(rosenbrock3, ad_ref; cons)
     prob_ad = OptimizationProblem(optprob_ad, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, Inf])
     sol_ad = solve(prob_ad, MadNLPOptimizer())
     @test SciMLBase.successful_retcode(sol_ad)
@@ -330,7 +330,7 @@ end
 
         # Test verbose options (MadNLP supports bool and LogLevels)
         for verbose in [false, true, MadNLP.ERROR, MadNLP.WARN, MadNLP.INFO]
-            sol = solve(prob, MadNLPOptimizer(); verbose = verbose, maxiters = 20)
+            sol = solve(prob, MadNLPOptimizer(); verbose, maxiters = 20)
             @test sol isa SciMLBase.OptimizationSolution
         end
     end
@@ -498,8 +498,8 @@ end
 
             prob = OptimizationProblem(
                 optfunc, x0;
-                lcons = lcons,
-                ucons = ucons
+                lcons,
+                ucons
             )
 
             opt = MadNLPOptimizer(
@@ -574,9 +574,9 @@ end
                 sol = solve(prob, opt; abstol = 1.0e-6, maxiters = 300, verbose = false)
                 push!(
                     results,
-                    name => (
-                        objective = sol.objective,
-                        iterations = sol.stats.iterations,
+                    name => (;
+                        sol.objective,
+                        sol.stats.iterations,
                         success = SciMLBase.successful_retcode(sol),
                         expected = expected_energy,
                     )

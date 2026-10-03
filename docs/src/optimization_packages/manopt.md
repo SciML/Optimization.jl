@@ -171,7 +171,7 @@ egrad(G, x, p = nothing) = (G .= -2 * A * x)
 
 optf = OptimizationFunction(cost, grad = egrad)
 x0 = rand(manifold)
-prob = OptimizationProblem(optf, x0, manifold = manifold, maxiters = 5000)
+prob = OptimizationProblem(optf, x0; manifold, maxiters = 5000)
 
 sol = solve(prob, GradientDescentOptimizer())
 ```

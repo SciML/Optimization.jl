@@ -12,7 +12,7 @@ using Test
     ub = [4.0; 3.0]
     u0 = [0.0; 0.0]
     oprob = OptimizationBase.OptimizationProblem(
-        f, u0, lb = lb, ub = ub, sense = OptimizationBase.MinSense
+        f, u0; lb, ub, sense = OptimizationBase.MinSense
     )
 
     nlpmo = NLPModelsTest.HS5()
@@ -55,7 +55,7 @@ using Test
         hs10, OptimizationBase.AutoForwardDiff(); cons = hs10_cons
     )
     oprob = OptimizationBase.OptimizationProblem(
-        f, u0, lcons = lcons, ucons = ucons, sense = OptimizationBase.MinSense
+        f, u0, lcons, ucons, sense = OptimizationBase.MinSense
     )
 
     nlpmo = NLPModelsTest.HS10()
@@ -83,8 +83,8 @@ using Test
         hs13, OptimizationBase.AutoForwardDiff(); cons = hs13_cons
     )
     oprob = OptimizationBase.OptimizationProblem(
-        f, u0, lb = lb, ub = ub, lcons = lcons,
-        ucons = ucons, sense = OptimizationBase.MinSense
+        f, u0, lb, ub, lcons,
+        ucons, sense = OptimizationBase.MinSense
     )
 
     nlpmo = NLPModelsTest.HS13()
@@ -115,7 +115,7 @@ using Test
         hs14, OptimizationBase.AutoForwardDiff(); cons = hs14_cons
     )
     oprob = OptimizationBase.OptimizationProblem(
-        f, u0, lcons = lcons, ucons = ucons, sense = OptimizationBase.MinSense
+        f, u0, lcons, ucons, sense = OptimizationBase.MinSense
     )
 
     nlpmo = NLPModelsTest.HS14()
@@ -154,12 +154,12 @@ end
     )
     dense_ad = DifferentiationInterface.SecondOrder(ADTypes.AutoForwardDiff(), ADTypes.AutoForwardDiff())
 
-    f = OptimizationBase.OptimizationFunction(obj, sparse_ad; cons = cons)
+    f = OptimizationBase.OptimizationFunction(obj, sparse_ad; cons)
     inst = OptimizationBase.instantiate_function(
         f, x0, sparse_ad, nothing, 2; lag_h = true, cons_j = true
     )
 
-    fd = OptimizationBase.OptimizationFunction(obj, dense_ad; cons = cons)
+    fd = OptimizationBase.OptimizationFunction(obj, dense_ad; cons)
     inst_dense = OptimizationBase.instantiate_function(
         fd, x0, dense_ad, nothing, 2; lag_h = true
     )
@@ -189,7 +189,7 @@ end
     # 3. Adaptor end-to-end: declared structure + coord values agree with the
     # dense reference entry-wise.
     meta = NLPModels.NLPModelMeta(
-        3; ncon = 2, x0 = x0, y0 = zeros(2),
+        3; ncon = 2, x0, y0 = zeros(2),
         lcon = [1.0, 0.5], ucon = [1.0, Inf],
         nnzj = nnz(inst.cons_jac_prototype), nnzh = length(rows), minimize = true
     )

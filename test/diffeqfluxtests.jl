@@ -25,7 +25,7 @@ prob_ode = ODEProblem(lotka_volterra!, u0, tspan, p)
 sol_ode = solve(prob_ode, Tsit5())
 
 function predict_adjoint(p)
-    return Array(solve(prob_ode, Tsit5(), p = p, saveat = tsteps))
+    return Array(solve(prob_ode, Tsit5(); p, saveat = tsteps))
 end
 
 function loss_adjoint(p)
@@ -52,8 +52,8 @@ prob = Optimization.OptimizationProblem(optprob, p)
 
 result_ode = Optimization.solve(
     prob,
-    BFGS(initial_stepnorm = 0.0001),
-    callback = callback
+    BFGS(initial_stepnorm = 0.0001);
+    callback
 )
 
 u0 = Float32[2.0; 0.0]
@@ -105,7 +105,7 @@ prob = Optimization.OptimizationProblem(optprob, pp)
 
 result_neuralode = Optimization.solve(
     prob,
-    OptimizationOptimisers.Adam(), callback = callback,
+    OptimizationOptimisers.Adam(); callback,
     maxiters = 1000
 )
 @test result_neuralode.objective ≈ loss_neuralode(result_neuralode.u)[1] rtol = 1.0e-2
@@ -113,8 +113,8 @@ result_neuralode = Optimization.solve(
 prob2 = remake(prob, u0 = result_neuralode.u)
 result_neuralode2 = Optimization.solve(
     prob2,
-    BFGS(initial_stepnorm = 0.0001),
-    callback = callback,
+    BFGS(initial_stepnorm = 0.0001);
+    callback,
     maxiters = 300, allow_f_increases = true
 )
 @test result_neuralode2.objective ≈ loss_neuralode(result_neuralode2.u)[1] rtol = 1.0e-2

@@ -130,7 +130,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
             SciMLBase.allowsbounds(cache.opt.inner)
         OptimizationProblem(
             auglag_optf, cache.u0, cache.p;
-            lb = cache.lb, ub = cache.ub
+            cache.lb, cache.ub
         )
     else
         OptimizationProblem(auglag_optf, cache.u0, cache.p)
@@ -208,8 +208,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
         r_dual = ρ * r_primal
         ϵ_dual_eff = max(ϵ_dual, ϵ_primal * ρ)
 
-        opt_state = OptimizationBase.OptimizationState(
-            iter = i, u = θ, objective = res.objective,
+        opt_state = OptimizationBase.OptimizationState(;
+            iter = i, u = θ, res.objective,
             original = (;
                 r_primal, r_dual, r_compl,
                 λ, μ_upper, μ_lower, ρ,
@@ -275,8 +275,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AugLag}
     end
 
     return SciMLBase.build_solution(
-        cache, cache.opt, θ, obj,
-        stats = stats, retcode = opt_ret
+        cache, cache.opt, θ, obj;
+        stats, retcode = opt_ret
     )
 end
 

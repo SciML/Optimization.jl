@@ -66,7 +66,7 @@ optprob = OptimizationProblem(optfun, pp, train_loader)
 
 res1 = solve(
     optprob,
-    OptimizationSophia.Sophia(), callback = callback,
+    OptimizationSophia.Sophia(); callback,
     maxiters = 2000
 )
 @test 10res1.objective < l1
