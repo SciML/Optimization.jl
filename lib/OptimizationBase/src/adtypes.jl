@@ -19,7 +19,7 @@ is not defined via Enzyme.
 AutoEnzyme
 
 """
-    AutoFiniteDiff{T1,T2,T3} <: AbstractADType
+    AutoFiniteDiff{T1, T2, T3} <: AbstractADType
 
 An AbstractADType choice for use in OptimizationFunction for automatically
 generating the unspecified derivative functions. Usage:

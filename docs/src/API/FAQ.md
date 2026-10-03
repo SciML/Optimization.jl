@@ -42,6 +42,7 @@ top of the objective function:
 function my_objective(u)
     x = exp(u[1])
     # ... use x
+    return value
 end
 ```
 
