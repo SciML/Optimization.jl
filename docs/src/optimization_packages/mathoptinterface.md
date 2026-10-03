@@ -77,9 +77,13 @@ _p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
 prob = OptimizationProblem(f, x0, _p)
 
-opt = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer,
-    "nl_solver" => OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
-        "print_level" => 0))
+opt = OptimizationMOI.MOI.OptimizerWithAttributes(
+    Juniper.Optimizer,
+    "nl_solver" => OptimizationMOI.MOI.OptimizerWithAttributes(
+        Ipopt.Optimizer,
+        "print_level" => 0
+    )
+)
 sol = solve(prob, opt)
 ```
 
@@ -104,17 +108,25 @@ w = [5.0, 4.0, 3.0, 2.0]
 W = 4.0
 u0 = [0.0, 0.0, 0.0, 1.0]
 
-optfun = OptimizationFunction((u, p) -> -v'u, cons = (res, u, p) -> res .= w'u,
-    ADTypes.AutoForwardDiff())
+optfun = OptimizationFunction(
+    (u, p) -> -v'u, cons = (res, u, p) -> res .= w'u,
+    ADTypes.AutoForwardDiff()
+)
 
-optprob = OptimizationProblem(optfun, u0; lb = zero.(u0), ub = one.(u0),
+optprob = OptimizationProblem(
+    optfun, u0; lb = zero.(u0), ub = one.(u0),
     int = ones(Bool, length(u0)),
-    lcons = [-Inf;], ucons = [W;])
+    lcons = [-Inf;], ucons = [W;]
+)
 
-nl_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
-    "print_level" => 0)
-minlp_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer,
-    "nl_solver" => nl_solver)
+nl_solver = OptimizationMOI.MOI.OptimizerWithAttributes(
+    Ipopt.Optimizer,
+    "print_level" => 0
+)
+minlp_solver = OptimizationMOI.MOI.OptimizerWithAttributes(
+    Juniper.Optimizer,
+    "nl_solver" => nl_solver
+)
 
 res = solve(optprob, minlp_solver)
 ```
