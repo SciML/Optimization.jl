@@ -77,7 +77,7 @@ Random.seed!(1234)
         problem = if lb === nothing && ub === nothing
             OptimizationProblem(obj_func, initial_guess)
         else
-            OptimizationProblem(obj_func, initial_guess; lb = lb, ub = ub)
+            OptimizationProblem(obj_func, initial_guess; lb, ub)
         end
         return solve(problem, algorithm)
     end
@@ -141,10 +141,10 @@ Random.seed!(1234)
             ub = ones(2)
             initial_guess = [0.25, 0.75]
             result = test_multi_objective(
-                multi_objective_3, initial_guess; seed = 1103, lb = lb, ub = ub
+                multi_objective_3, initial_guess; seed = 1103, lb, ub
             )
             check_multi_objective_result(
-                result, multi_objective_3, initial_guess; lb = lb, ub = ub,
+                result, multi_objective_3, initial_guess; lb, ub,
                 min_population = 2
             )
         end
@@ -160,10 +160,10 @@ Random.seed!(1234)
             ub = ones(2)
             initial_guess = [0.25, 0.75]
             result = test_multi_objective(
-                multi_objective_4, initial_guess; seed = 1104, lb = lb, ub = ub
+                multi_objective_4, initial_guess; seed = 1104, lb, ub
             )
             check_multi_objective_result(
-                result, multi_objective_4, initial_guess; lb = lb, ub = ub,
+                result, multi_objective_4, initial_guess; lb, ub,
                 min_population = 2
             )
         end
@@ -179,10 +179,10 @@ Random.seed!(1234)
             ub = [2.0]
             initial_guess = [1.0]
             result = test_multi_objective(
-                multi_objective_5, initial_guess; seed = 1105, lb = lb, ub = ub
+                multi_objective_5, initial_guess; seed = 1105, lb, ub
             )
             check_multi_objective_result(
-                result, multi_objective_5, initial_guess; lb = lb, ub = ub,
+                result, multi_objective_5, initial_guess; lb, ub,
                 min_population = 2
             )
         end
