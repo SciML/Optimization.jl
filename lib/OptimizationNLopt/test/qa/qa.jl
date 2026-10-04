@@ -11,9 +11,6 @@ using NLopt
 const NLOPT_REEXPORTS = (:Algorithm, :NLopt, :Opt)
 
 # ExplicitImports findings, all tracked against SciML/Optimization.jl:
-#  * no_implicit_imports broken: the module relies on `using`
-#    module names (SciMLBase/OptimizationBase/...) that cannot be made
-#    explicit without restructuring.
 #  * the ignored *_are_public / *_via_owners names are owned by SciMLBase,
 #    OptimizationBase, the backend, or Base and are not (yet) declared public;
 #    the proper fix is upstream `public` declarations, not a local change.
@@ -48,7 +45,6 @@ run_qa(
         all_qualified_accesses_are_public = (; ignore = (:AUGLAG, :LD_AUGLAG, :LN_AUGLAG, :OptimizationState, :OptimizationStats, :__init, :__solve, :_check_and_convert_maxiters, :_check_and_convert_maxtime, :allowscallback, :nlopt_set_param, :requiresconsjac, :requiresgradient, :requireshessian, :supports_sense)),
         all_explicit_imports_are_public = (; ignore = (:deduce_retcode,)),
     ),
-    ei_broken = (:no_implicit_imports,),
     reexports_allow = NLOPT_REEXPORTS,
 )
 
