@@ -320,13 +320,9 @@ function NLPModels.jprod!(
     return Jv
 end
 
-"""
-    _jac_product_fallback!(nlp, res, x, v, op)
-
-`res = op(J) * v` for the constraint Jacobian `J` at `x`, used by `jtprod!`
-(`op = transpose`) and `jprod!` (`op = identity`) when the instantiated function
-has no matrix-free product.
-"""
+# `res = op(J) * v` for the constraint Jacobian `J` at `x`, used by `jtprod!`
+# (`op = transpose`) and `jprod!` (`op = identity`) when the instantiated function
+# has no matrix-free product.
 function _jac_product_fallback!(nlp::NLPModelsAdaptor, res, x, v, op)
     # No constraints: `J` is `0 × nvar`, and only `jtprod!` has a nonempty output.
     if nlp.meta.ncon == 0

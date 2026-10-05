@@ -29,17 +29,11 @@ function _native_jvp(adtype)
         Union{ADTypes.ForwardMode, ADTypes.ForwardOrReverseMode, ADTypes.SymbolicMode}
 end
 
-"""
-    _matrixfree_cons_vjp(f, adtype)
-    _matrixfree_cons_jvp(f, adtype)
-
-Whether `instantiate_function(f, x, adtype, ...; cons_vjp = true)` (resp. `cons_jvp`) can
-provide the product without materializing the constraint Jacobian: the user supplied it, or
-the backend has a native mode for it and the user did not supply a `cons_j` (which takes
-precedence over differentiating `f.cons`).
-
-Solvers that only *allow* the product should request it only when this holds.
-"""
+# Whether `instantiate_function(f, x, adtype, ...; cons_vjp = true)` (resp. `cons_jvp`) can
+# provide the product without materializing the constraint Jacobian: the user supplied it, or
+# the backend has a native mode for it and the user did not supply a `cons_j` (which takes
+# precedence over differentiating `f.cons`).
+# Solvers that only *allow* the product should request it only when this holds.
 function _matrixfree_cons_vjp(f, adtype)
     return f.cons_vjp !== nothing ||
         (f.cons !== nothing && f.cons_j === nothing && _native_vjp(adtype))
