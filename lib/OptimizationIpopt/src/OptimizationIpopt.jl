@@ -107,8 +107,9 @@ opt = IpoptOptimizer(
 )
 
 # Solve with common interface arguments
-result = solve(prob, opt;
-    reltol = 1e-8,      # Sets Ipopt's tol
+result = solve(
+    prob, opt;
+    reltol = 1.0e-8,    # Sets Ipopt's tol
     maxiters = 5000,    # Sets Ipopt's max_iter
     maxtime = 300.0,    # Sets Ipopt's max_wall_time (in seconds)
     verbose = 3         # Sets Ipopt's print_level

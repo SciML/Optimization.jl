@@ -15,8 +15,10 @@ using LineSearch: StrongWolfeLineSearch
 abstract type SimpleOptimizationAlgorithm end
 
 """
-    SimpleLBFGS(; threshold::Union{Val, Int} = Val(10),
-                linesearch = StrongWolfeLineSearch(; maxiters = 50, zoom_maxiters = 50))
+    SimpleLBFGS(;
+        threshold::Union{Val, Int} = Val(10),
+        linesearch = StrongWolfeLineSearch(; maxiters = 50, zoom_maxiters = 50)
+    )
 
 A lightweight, loop-unrolled Limited-memory BFGS (L-BFGS) optimization algorithm.
 This algorithm is designed for small-scale optimization problems where low overhead
@@ -511,8 +513,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleNewton
 end
 
 """
-    SimpleSOAP(; eta=3e-3, beta=(0.95, 0.95), shampoo_beta=-1.0, epsilon=1e-8,
-                 freq=10, max_dim=10000, weight_decay=0.01)
+    SimpleSOAP(;
+        eta = 3.0e-3, beta = (0.95, 0.95), shampoo_beta = -1.0, epsilon = 1.0e-8,
+        freq = 10, max_dim = 10000, weight_decay = 0.01
+    )
 
 SOAP optimizer (ShampoO with Adam in the Preconditioner's eigenbasis).
 For matrix-valued parameters, runs AdamW in the eigenbasis of Shampoo's

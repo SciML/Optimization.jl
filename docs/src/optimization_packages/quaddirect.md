@@ -10,8 +10,10 @@ To use this package, install the OptimizationQuadDIRECT package as:
 
 ```julia
 import Pkg;
-Pkg.add(url = "https://github.com/SciML/Optimization.jl",
-    subdir = "lib/OptimizationQuadDIRECT");
+Pkg.add(
+    url = "https://github.com/SciML/Optimization.jl",
+    subdir = "lib/OptimizationQuadDIRECT"
+);
 ```
 
 Also note that `QuadDIRECT` should (for now) be installed by doing:

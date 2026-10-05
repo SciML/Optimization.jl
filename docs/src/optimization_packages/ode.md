@@ -20,6 +20,7 @@ end
 
 function g!(g, x, p)
     @. g = 2 * x
+    return
 end
 
 x0 = [2.0, -3.0]
@@ -28,8 +29,8 @@ p = []
 f_manual = OptimizationFunction(f, SciMLBase.NoAD(); grad = g!)
 prob_manual = OptimizationProblem(f_manual, x0)
 
-opt = ODEGradientDescent(dt=0.01)
-sol = solve(prob_manual, opt; maxiters=50_000)
+opt = ODEGradientDescent(dt = 0.01)
+sol = solve(prob_manual, opt; maxiters = 50_000)
 
 @show sol.u
 @show sol.objective
