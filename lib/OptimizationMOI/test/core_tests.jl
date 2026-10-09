@@ -324,6 +324,98 @@ end
     sol.u
 end
 
+@testset "expression graph with array unknowns and parameters" begin
+    @variables z[1:2] u v
+    @parameters M[1:2, 1:2] c
+    sys = complete(
+        System(
+            Equation[], [z], []; costs = [z[1]^2 + z[2]^2],
+            constraints = [z[1] ~ 1.0, z[2] ~ 2.0], name = :sys
+        )
+    )
+    prob = OptimizationProblem(sys, [z => [0.0, 0.0]])
+    sol = solve(prob, AmplNLWriter.Optimizer(Ipopt_jll.amplexe))
+    @test sol.retcode == ReturnCode.Success
+    @test sol.u ≈ [1.0, 2.0] atol = 1.0e-6
+
+    # the array parameter `M` precedes `c`, so neither may be read by its position in
+    # `parameters(sys)`
+    sys = complete(
+        System(
+            Equation[], [u, v], [M, c]; costs = [(u - 1.0)^2 + (v - 1.0)^2],
+            constraints = [v ≲ M[1, 2], u ≲ c], name = :sys
+        )
+    )
+    prob = OptimizationProblem(
+        sys, [u => 0.0, v => 0.0, M => [0.1 0.5; 0.9 0.7], c => 0.25]
+    )
+    sol = solve(prob, AmplNLWriter.Optimizer(Ipopt_jll.amplexe))
+    @test sol.retcode == ReturnCode.Success
+    @test sol.u ≈ [0.25, 0.5] atol = 1.0e-6
+
+    # array-valued constraint: one constraint equation expands to two cons_expr rows
+    @variables u2 v2
+    sys = complete(
+        System(
+            Equation[], [u2, v2], []; costs = [u2^2 + v2^2],
+            constraints = [[u2, v2] ~ [1.0, 2.0]], name = :sys
+        )
+    )
+    prob = OptimizationProblem(sys, [u2 => 0.0, v2 => 0.0])
+    sol = solve(prob, AmplNLWriter.Optimizer(Ipopt_jll.amplexe))
+    @test sol.retcode == ReturnCode.Success
+    @test sol.u ≈ [1.0, 2.0] atol = 1.0e-6
+end
+
+@testset "non-Vector AbstractVector cons_expr through MOI NLP" begin
+    # A non-Vector AbstractVector{Expr} cons_expr must remain usable through MOI NLP
+    # (lazy SymbolifiedExprs is AbstractVector{Expr}, not Vector{Expr}). AmplNLWriter
+    # reads cons_expr as bound-baked `:call`/`:comparison` forms (same as
+    # process_system_exprs); Ipopt uses the numeric hess/grad/cons path.
+    struct MyExprs <: AbstractVector{Expr}
+        exprs::Vector{Expr}
+    end
+    Base.size(r::MyExprs) = size(r.exprs)
+    Base.getindex(r::MyExprs, i::Int) = r.exprs[i]
+
+    # AbstractVector{Any} holding Exprs must eagerly symbolify to Vector{Expr} so the
+    # NLP evaluator can store them (lazy wrap would yield SymbolifiedExprs{Any,…}).
+    struct AnyExprs <: AbstractVector{Any}
+        exprs::Vector{Any}
+    end
+    Base.size(r::AnyExprs) = size(r.exprs)
+    Base.getindex(r::AnyExprs, i::Int) = r.exprs[i]
+
+    baked = Expr(:call, :(==), :(x[1] + x[2] - 1.0), 0)
+    function mkf(ce)
+        OptimizationFunction(
+            (x, p) -> sum(abs2, x), NoAD();
+            grad = (G, x, p) -> (G .= 2 .* x),
+            hess = (H, x, p) -> (H[1, 1] = 2; H[2, 2] = 2; H[1, 2] = H[2, 1] = 0),
+            cons = (res, x, p) -> (res[1] = x[1] + x[2] - 1),
+            cons_j = (J, x, p) -> (J .= 1),
+            cons_h = [(H, x, p) -> fill!(H, 0)],
+            expr = :(x[1]^2 + x[2]^2),
+            cons_expr = ce
+        )
+    end
+
+    for ce in (MyExprs([baked]), AnyExprs(Any[baked]))
+        f = mkf(ce)
+        f2 = OptimizationBase.instantiate_function(f, [0.0, 0.0], NoAD(), nothing, 1)
+        @test f2.cons_expr isa AbstractVector{Expr}
+        prob = OptimizationProblem(f, [0.0, 0.0]; lcons = [0.0], ucons = [0.0])
+
+        sol = solve(prob, Ipopt.Optimizer())
+        @test sol.retcode == ReturnCode.Success
+        @test sol.u ≈ [0.5, 0.5] atol = 1.0e-6
+
+        sol = solve(prob, AmplNLWriter.Optimizer(Ipopt_jll.amplexe))
+        @test sol.retcode == ReturnCode.Success
+        @test sol.u ≈ [0.5, 0.5] atol = 1.0e-6
+    end
+end
+
 @testset "tutorial" begin
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     x0 = zeros(2)

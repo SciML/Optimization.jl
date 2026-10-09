@@ -67,7 +67,7 @@ using ModelingToolkit
             cons_jac_prototype = f.cons_jac_prototype,
             cons_hess_prototype = f.cons_hess_prototype,
             expr = OptimizationBase.symbolify(f.expr),
-            cons_expr = OptimizationBase.symbolify.(f.cons_expr),
+            cons_expr = OptimizationBase.symbolify_exprs(f.cons_expr),
             sys = sys,
             observed = f.observed
         )
@@ -133,7 +133,7 @@ using ModelingToolkit
             cons_jac_prototype = f.cons_jac_prototype,
             cons_hess_prototype = f.cons_hess_prototype,
             expr = OptimizationBase.symbolify(f.expr),
-            cons_expr = OptimizationBase.symbolify.(f.cons_expr),
+            cons_expr = OptimizationBase.symbolify_exprs(f.cons_expr),
             sys = sys,
             observed = f.observed
         )
@@ -198,7 +198,7 @@ using ModelingToolkit
             cons_jac_prototype = f.cons_jac_prototype,
             cons_hess_prototype = f.cons_hess_prototype,
             expr = OptimizationBase.symbolify(f.expr),
-            cons_expr = OptimizationBase.symbolify.(f.cons_expr),
+            cons_expr = OptimizationBase.symbolify_exprs(f.cons_expr),
             sys = sys,
             observed = f.observed
         )
@@ -265,7 +265,7 @@ using ModelingToolkit
             cons_jac_prototype = f.cons_jac_prototype,
             cons_hess_prototype = f.cons_hess_prototype,
             expr = OptimizationBase.symbolify(f.expr),
-            cons_expr = OptimizationBase.symbolify.(f.cons_expr),
+            cons_expr = OptimizationBase.symbolify_exprs(f.cons_expr),
             sys = sys,
             observed = f.observed
         )
