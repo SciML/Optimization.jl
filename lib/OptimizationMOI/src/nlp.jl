@@ -132,14 +132,14 @@ function MOIOptimizationNLPCache(
                 prob.f.adtype.dense_ad isa ADTypes.AutoSymbolics
         )
         f = generate_exprs(prob)
-        f = OptimizationBase.instantiate_function(
+        f, _ = OptimizationBase.instantiate_live(
             f, reinit_cache, prob.f.adtype, num_cons;
             g = true, h = true, cons_j = true, cons_h = true
         )
     else
         # `eval_constraint_jacobian_transpose_product` falls back to `cons_j`, so only ask
         # for a `cons_vjp` that does not materialize the Jacobian.
-        f = OptimizationBase.instantiate_function(
+        f, _ = OptimizationBase.instantiate_live(
             prob.f, reinit_cache, prob.f.adtype, num_cons;
             g = true, h = true, cons_j = true, lag_h = true,
             cons_vjp = OptimizationBase._matrixfree_cons_vjp(prob.f, prob.f.adtype)

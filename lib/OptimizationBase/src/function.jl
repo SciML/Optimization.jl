@@ -132,68 +132,17 @@ function OptimizationBase.instantiate_function(
         f::OptimizationFunction{true}, x, ::SciMLBase.NoAD,
         p, num_cons = 0; kwargs...
     )
-    if f.grad === nothing
-        grad = nothing
-    else
-        function grad(G, x)
-            return f.grad(G, x, p)
-        end
-        if p != SciMLBase.NullParameters()
-            function grad(G, x, p)
-                return f.grad(G, x, p)
-            end
-        end
-    end
-    if f.fg === nothing
-        fg = nothing
-    else
-        function fg(G, x)
-            return f.fg(G, x, p)
-        end
-        if p != SciMLBase.NullParameters()
-            function fg(G, x, p)
-                return f.fg(G, x, p)
-            end
-        end
-    end
-    if f.hess === nothing
-        hess = nothing
-    else
-        function hess(H, x)
-            return f.hess(H, x, p)
-        end
-        if p != SciMLBase.NullParameters()
-            function hess(H, x, p)
-                return f.hess(H, x, p)
-            end
-        end
-    end
-
-    if f.fgh === nothing
-        fgh = nothing
-    else
-        function fgh(G, H, x)
-            return f.fgh(G, H, x, p)
-        end
-        if p != SciMLBase.NullParameters()
-            function fgh(G, H, x, p)
-                return f.fgh(G, H, x, p)
-            end
-        end
-    end
-
-    if f.hv === nothing
-        hv = nothing
-    else
-        function hv(H, x, v)
-            return f.hv(H, x, v, p)
-        end
-        if p != SciMLBase.NullParameters()
-            function hv(H, x, v, p)
-                return f.hv(H, x, v, p)
-            end
-        end
-    end
+    # Every closure takes the parameters as an optional trailing argument.
+    grad = f.grad === nothing ? nothing :
+        (G, x, p_call = p) -> f.grad(G, x, p_call)
+    fg = f.fg === nothing ? nothing :
+        (G, x, p_call = p) -> f.fg(G, x, p_call)
+    hess = f.hess === nothing ? nothing :
+        (H, x, p_call = p) -> f.hess(H, x, p_call)
+    fgh = f.fgh === nothing ? nothing :
+        (G, H, x, p_call = p) -> f.fgh(G, H, x, p_call)
+    hv = f.hv === nothing ? nothing :
+        (H, x, v, p_call = p) -> f.hv(H, x, v, p_call)
 
     cons = f.cons === nothing ? nothing :
         (res, x, p_call = p) -> f.cons(res, x, p_call)
@@ -217,19 +166,8 @@ function OptimizationBase.instantiate_function(
     end
     cons_h = f.cons_h === nothing ? nothing :
         (res, x, p_call = p) -> f.cons_h(res, x, p_call)
-
-    if f.lag_h === nothing
-        lag_h = nothing
-    else
-        function lag_h(res, x)
-            return f.lag_h(res, x, p)
-        end
-        if p != SciMLBase.NullParameters()
-            function lag_h(res, x, p)
-                return f.lag_h(res, x, p)
-            end
-        end
-    end
+    lag_h = f.lag_h === nothing ? nothing :
+        (res, x, σ, μ, p_call = p) -> f.lag_h(res, x, σ, μ, p_call)
     hess_prototype = f.hess_prototype === nothing ? nothing :
         similar(f.hess_prototype, eltype(x))
     cons_jac_prototype = f.cons_jac_prototype === nothing ? nothing :
