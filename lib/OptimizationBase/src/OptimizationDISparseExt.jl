@@ -12,6 +12,20 @@ import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,
 using ADTypes
 using SparseConnectivityTracer, SparseMatrixColorings
 
+# Write `Hc`, whose sparsity pattern is a subset of `H`'s, into `H`, zeroing the rest.
+function _scatter_sparse!(H, Hc)
+    if H isa SparseMatrixCSC
+        fill!(nonzeros(H), zero(eltype(H)))
+    else
+        fill!(H, zero(eltype(H)))
+    end
+    rows, cols, vals = findnz(Hc)
+    for k in eachindex(vals)
+        H[rows[k], cols[k]] = vals[k]
+    end
+    return H
+end
+
 function instantiate_function(
         f::OptimizationFunction{true}, x, adtype::ADTypes.AutoSparse{<:AbstractADType},
         p = SciMLBase.NullParameters(), num_cons = 0;
@@ -310,61 +324,44 @@ function instantiate_function(
         lag_hess_prototype = lag_prep.coloring_result.A
         lag_hess_colors = lag_prep.coloring_result.color
 
-        function lag_h!(H::AbstractMatrix, θ, σ, λ)
-            return if σ == zero(eltype(θ))
-                cons_h!(H, θ)
-                H *= λ
-            else
-                hessian!(
-                    lagrangian, H, lag_prep, soadtype, θ,
-                    Constant(σ), Constant(λ), Constant(p)
-                )
-            end
+        # At σ = 0, skip the objective term: `0 * Inf` from a singular objective is NaN.
+        cons_lagrangian = let cons_oop = cons_oop
+            (θ, λ, p) -> dot(λ, cons_oop(θ))
         end
-
-        function lag_h!(h, θ, σ, λ)
-            H = hessian(
-                lagrangian, lag_prep, soadtype, θ, Constant(σ), Constant(λ), Constant(p)
-            )
-            k = 0
-            rows, cols, _ = findnz(H)
-            for (i, j) in zip(rows, cols)
-                if i <= j
-                    k += 1
-                    h[k] = H[i, j]
-                end
-            end
-            return
-        end
-
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function lag_h!(H::AbstractMatrix, θ, σ, λ, p)
-                return if σ == zero(eltype(θ))
-                    cons_h(H, θ)
-                    H *= λ
+        cons_lag_prep = prepare_hessian(
+            cons_lagrangian, soadtype, x, Constant(ones(eltype(x), num_cons)), Constant(p)
+        )
+        lag_rows, lag_cols = lag_hess_structure(lag_hess_prototype)
+        lag_h! = let lagrangian = lagrangian, lag_prep = lag_prep, soadtype = soadtype, p = p,
+                cons_lagrangian = cons_lagrangian, cons_lag_prep = cons_lag_prep,
+                lag_rows = lag_rows, lag_cols = lag_cols
+            function _lag_hessian(θ, σ, λ, p)
+                return if iszero(σ)
+                    hessian(cons_lagrangian, cons_lag_prep, soadtype, θ, Constant(λ), Constant(p))
                 else
-                    hessian!(
-                        lagrangian, H, lag_prep, soadtype, θ,
+                    hessian(
+                        lagrangian, lag_prep, soadtype, θ,
                         Constant(σ), Constant(λ), Constant(p)
                     )
                 end
             end
-
-            function lag_h!(h, θ, σ, λ, p)
-                H = hessian(
-                    lagrangian, lag_prep, soadtype, θ,
+            function _lag_h!(H::AbstractMatrix, θ, σ, λ, p = p)
+                if iszero(σ)
+                    return _scatter_sparse!(H, _lag_hessian(θ, σ, λ, p))
+                end
+                return hessian!(
+                    lagrangian, H, lag_prep, soadtype, θ,
                     Constant(σ), Constant(λ), Constant(p)
                 )
-                k = 0
-                rows, cols, _ = findnz(H)
-                for (i, j) in zip(rows, cols)
-                    if i <= j
-                        k += 1
-                        h[k] = H[i, j]
-                    end
+            end
+            function _lag_h!(h::AbstractVector, θ, σ, λ, p = p)
+                H = _lag_hessian(θ, σ, λ, p)
+                for k in eachindex(lag_rows)
+                    h[k] = H[lag_rows[k], lag_cols[k]]
                 end
                 return
             end
+            _lag_h!
         end
     elseif lag_h == true
         lag_h! = (H, θ, σ, λ, p = p) -> f.lag_h(H, θ, σ, λ, p)
@@ -653,30 +650,25 @@ function instantiate_function(
             lagrangian, soadtype, x, Constant(one(eltype(x))),
             Constant(ones(eltype(x), num_cons)), Constant(p)
         )
-        function lag_h!(θ, σ, λ)
-            if σ == zero(eltype(θ))
-                return λ .* cons_h!(θ)
-            else
-                hess = hessian(
-                    lagrangian, lag_prep, soadtype, θ,
-                    Constant(σ), Constant(λ), Constant(p)
-                )
-                return hess
-            end
-        end
         lag_hess_prototype = lag_prep.coloring_result.A
         lag_hess_colors = lag_prep.coloring_result.color
 
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function lag_h!(θ, σ, λ, p)
-                if σ == zero(eltype(θ))
-                    return λ .* cons_h!(θ)
-                else
-                    hess = hessian(
-                        lagrangian, lag_prep, θ, Constant(σ), Constant(λ), Constant(p)
-                    )
-                    return hess
-                end
+        # At σ = 0, skip the objective term: `0 * Inf` from a singular objective is NaN.
+        cons_lagrangian = let f = f
+            (θ, λ, p) -> dot(λ, f.cons(θ, p))
+        end
+        cons_lag_prep = prepare_hessian(
+            cons_lagrangian, soadtype, x, Constant(ones(eltype(x), num_cons)), Constant(p)
+        )
+        lag_h! = let lagrangian = lagrangian, lag_prep = lag_prep, soadtype = soadtype, p = p,
+                cons_lagrangian = cons_lagrangian, cons_lag_prep = cons_lag_prep,
+                lag_hess_prototype = lag_hess_prototype
+            function (θ, σ, λ, p = p)
+                iszero(σ) || return hessian(
+                    lagrangian, lag_prep, soadtype, θ, Constant(σ), Constant(λ), Constant(p)
+                )
+                Hc = hessian(cons_lagrangian, cons_lag_prep, soadtype, θ, Constant(λ), Constant(p))
+                return _scatter_sparse!(similar(lag_hess_prototype, eltype(Hc)), Hc)
             end
         end
     elseif lag_h == true && f.cons !== nothing

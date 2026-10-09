@@ -128,7 +128,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Sophia}
                 x = cache.f.fg(gₜ, θ)
             else
                 cache.f.grad(gₜ, θ)
-                x = cache.f(θ)
+                x = cache.f(θ, d)
             end
             opt_state = OptimizationBase.OptimizationState(;
                 iter = i + (epoch - 1) * length(data),

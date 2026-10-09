@@ -98,7 +98,16 @@ import SciMLBase
 
         cache = OptimizationBase.reinit!(cache; p = [2.0])
         sol = OptimizationBase.solve!(cache)
-        @test_broken sol.u ≈ [2.0] atol = 1.0e-3
+        @test sol.u ≈ [2.0] atol = 1.0e-3
+
+        # No AD, user-supplied gradient: the gradient used to keep the old `p` while the
+        # objective (and so `save_best`) used the new one (#1383).
+        grad!(G, x, p) = (G[1] = -2 * (p[1] - x[1]); nothing)
+        prob = OptimizationProblem(OptimizationFunction(objective; grad = grad!), x0, p)
+        cache = OptimizationBase.init(prob, Optimisers.Adam(0.1), maxiters = 1000)
+        @test OptimizationBase.solve!(cache).u ≈ [1.0] atol = 1.0e-3
+        cache = OptimizationBase.reinit!(cache; p = [2.0])
+        @test OptimizationBase.solve!(cache).u ≈ [2.0] atol = 1.0e-3
     end
 
     @testset "callback" begin
@@ -327,4 +336,15 @@ end
         maxiters = 10
     )
     @test sol.u.data ≈ [-1.0e9, -1.0e9]
+end
+
+@testset "User-supplied gradient without AD" begin
+    # With no AD backend and no `fg`, the solver evaluates the objective itself and must
+    # pass the parameters to it.
+    loss(u, p) = sum(abs2, u .- p)
+    grad!(G, u, p) = (G .= 2 .* (u .- p))
+    optf = OptimizationFunction(loss; grad = grad!)
+    prob = OptimizationProblem(optf, zeros(2), [1.0, 2.0])
+    sol = solve(prob, Optimisers.Adam(0.1), maxiters = 1000)
+    @test sol.u ≈ [1.0, 2.0] atol = 1.0e-3
 end
