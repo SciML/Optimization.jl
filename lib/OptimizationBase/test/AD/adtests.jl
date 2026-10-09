@@ -1,6 +1,7 @@
 using OptimizationBase, Test, DifferentiationInterface, LinearAlgebra, SparseArrays, Symbolics
 using ADTypes, ForwardDiff, Zygote, ReverseDiff, FiniteDiff, Tracker
 using ModelingToolkit, Enzyme, Random, ComponentArrays, JLArrays
+import SciMLBase
 
 x0 = zeros(2)
 rosenbrock(x, p = nothing) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
@@ -1564,4 +1565,242 @@ end
     @test optf_oop.hess(x) ≈ expected_hessian
     _, hessian_oop = optf_oop.fgh(x)
     @test hessian_oop ≈ expected_hessian
+end
+
+# Mock solvers for the `cons_vjp`/`cons_jvp` request logic of `OptimizationCache`.
+struct _AllowsConsProducts end
+SciMLBase.allowsconsvjp(::_AllowsConsProducts) = true
+SciMLBase.allowsconsjvp(::_AllowsConsProducts) = true
+struct _RequiresConsProducts end
+SciMLBase.allowsconsvjp(::_RequiresConsProducts) = true
+SciMLBase.allowsconsjvp(::_RequiresConsProducts) = true
+SciMLBase.requiresconsvjp(::_RequiresConsProducts) = true
+SciMLBase.requiresconsjvp(::_RequiresConsProducts) = true
+
+@testset "constraint Jacobian products" begin
+    OB = OptimizationBase
+
+    # Whether the backend has a native (matrix-free) mode for each product. `SecondOrder`
+    # differentiates first-order quantities with its inner backend.
+    @test !OB._native_vjp(AutoForwardDiff())
+    @test !OB._native_vjp(AutoFiniteDiff())
+    @test !OB._native_vjp(AutoSparse(AutoForwardDiff()))
+    @test OB._native_vjp(AutoReverseDiff())
+    @test OB._native_vjp(AutoZygote())
+    @test OB._native_vjp(DifferentiationInterface.SecondOrder(AutoForwardDiff(), AutoZygote()))
+    @test !OB._native_vjp(SciMLBase.NoAD())
+    @test OB._native_jvp(AutoForwardDiff())
+    @test !OB._native_jvp(AutoZygote())
+
+    n, m = 8, 4
+    calls = Ref(0)
+    # banded: c_i depends on θ_{2i-1}, θ_{2i}; two colors
+    function cons_ip!(res, θ, p)
+        calls[] += 1
+        for i in 1:m
+            res[i] = θ[2i - 1]^2 * p[1] + sin(θ[2i])
+        end
+        return nothing
+    end
+    cons_oop(θ, p) = (calls[] += 1; [θ[2i - 1]^2 * p[1] + sin(θ[2i]) for i in 1:m])
+    function jac_exact(θ, p)
+        J = zeros(eltype(θ), m, n)
+        for i in 1:m
+            J[i, 2i - 1] = 2θ[2i - 1] * p[1]
+            J[i, 2i] = cos(θ[2i])
+        end
+        return J
+    end
+    x = collect(range(0.1, 1.0, length = n))
+    p = [2.0]
+    v = randn(Xoshiro(1), m)
+    w = randn(Xoshiro(2), n)
+    Jref = jac_exact(x, p)
+    proto = spzeros(Bool, m, n)
+    for i in 1:m
+        proto[i, 2i - 1] = true
+        proto[i, 2i] = true
+    end
+    known = AutoSparse(
+        AutoForwardDiff(); sparsity_detector = ADTypes.KnownJacobianSparsityDetector(proto)
+    )
+
+    @testset "forward mode: Jᵀv through one chunked Jacobian ($ad)" for ad in (
+            AutoForwardDiff(), AutoSparse(AutoForwardDiff()), known,
+        )
+        # in-place
+        f = OptimizationFunction(sum, ad; cons = cons_ip!)
+        fi = OptimizationBase.instantiate_function(
+            f, x, ad, p, m; cons_j = true, cons_vjp = true
+        )
+        J = zeros(m, n)
+        fi.cons_j(J, x)
+        res = zeros(n)
+        calls[] = 0
+        fi.cons_vjp(res, x, v)
+        @test calls[] == 1
+        @test res ≈ J' * v
+        # a wider `θ` must not write into the `eltype(x)` buffer
+        xd = ForwardDiff.Dual.(x, 1.0)
+        resd = similar(xd)
+        fi.cons_vjp(resd, xd, v)
+        @test ForwardDiff.value.(resd) ≈ res
+        # the buffer must not be corrupted by the dual call
+        fi.cons_vjp(res, x, v)
+        @test res ≈ J' * v
+
+        # out-of-place
+        f_oop = OptimizationFunction{false}((θ, p) -> sum(θ), ad; cons = cons_oop)
+        fi_oop = OptimizationBase.instantiate_function(
+            f_oop, x, ad, p, m; cons_j = true, cons_vjp = true
+        )
+        J_oop = fi_oop.cons_j(x)
+        calls[] = 0
+        r_oop = fi_oop.cons_vjp(x, v)
+        @test calls[] == 1
+        @test r_oop ≈ J_oop' * v
+        @test ForwardDiff.value.(fi_oop.cons_vjp(xd, v)) ≈ r_oop
+    end
+
+    @testset "cons_vjp requested without cons_j" begin
+        f = OptimizationFunction(sum, AutoSparse(AutoForwardDiff()); cons = cons_ip!)
+        fi = OptimizationBase.instantiate_function(f, x, f.adtype, p, m; cons_vjp = true)
+        @test fi.cons_j === nothing
+        res = zeros(n)
+        fi.cons_vjp(res, x, v)
+        @test res ≈ Jref' * v
+    end
+
+    @testset "native products" begin
+        # reverse mode: native pullback for Jᵀv, the Jacobian for Jv
+        f = OptimizationFunction(sum, AutoReverseDiff(); cons = cons_ip!)
+        fi = OptimizationBase.instantiate_function(
+            f, x, f.adtype, p, m; cons_vjp = true, cons_jvp = true
+        )
+        res = zeros(n)
+        fi.cons_vjp(res, x, v)
+        @test res ≈ Jref' * v
+        resm = zeros(m)
+        fi.cons_jvp(resm, x, w)
+        @test resm ≈ Jref * w
+
+        # forward mode: native pushforward for Jv
+        f = OptimizationFunction(sum, AutoForwardDiff(); cons = cons_ip!)
+        fi = OptimizationBase.instantiate_function(f, x, f.adtype, p, m; cons_jvp = true)
+        fi.cons_jvp(resm, x, w)
+        @test resm ≈ Jref * w
+    end
+
+    @testset "a user cons_j takes precedence over differentiating cons" begin
+        jcalls = Ref(0)
+        function cons_j_ip!(J, θ, p)
+            jcalls[] += 1
+            J .= jac_exact(θ, p)
+            return nothing
+        end
+        # Not differentiable by ForwardDiff/ReverseDiff/SparseConnectivityTracer: any AD of it
+        # (including at instantiation) throws.
+        function cons_float!(res, θ, p)
+            for i in 1:m
+                res[i] = Float64(θ[2i - 1])^2 * p[1] + sin(Float64(θ[2i]))
+            end
+            return nothing
+        end
+        @testset "$ad" for ad in (
+                AutoForwardDiff(), AutoFiniteDiff(), AutoReverseDiff(),
+                AutoSparse(AutoForwardDiff()), SciMLBase.NoAD(),
+            )
+            cons = ad isa AutoFiniteDiff ? cons_ip! : cons_float!
+            f = OptimizationFunction(sum, ad; cons, cons_j = cons_j_ip!)
+            fi = OptimizationBase.instantiate_function(
+                f, x, ad, p, m; cons_j = true, cons_vjp = true, cons_jvp = true
+            )
+            res = zeros(n)
+            jcalls[] = 0
+            fi.cons_vjp(res, x, v)
+            @test jcalls[] == 1
+            @test res ≈ Jref' * v
+            resm = zeros(m)
+            fi.cons_jvp(resm, x, w)
+            @test jcalls[] == 2
+            @test resm ≈ Jref * w
+        end
+
+        # the buffer handed to the user's `cons_j` keeps `cons_jac_prototype`'s structure
+        function cons_j_sparse!(J, θ, p)
+            @assert J isa SparseMatrixCSC && nnz(J) == 2m
+            for i in 1:m
+                J[i, 2i - 1] = 2θ[2i - 1] * p[1]
+                J[i, 2i] = cos(θ[2i])
+            end
+            return nothing
+        end
+        f = OptimizationFunction(
+            sum, AutoForwardDiff(); cons = cons_float!, cons_j = cons_j_sparse!,
+            cons_jac_prototype = proto
+        )
+        fi = OptimizationBase.instantiate_function(f, x, f.adtype, p, m; cons_vjp = true)
+        res = zeros(n)
+        fi.cons_vjp(res, x, v)
+        @test res ≈ Jref' * v
+
+        # out-of-place
+        cons_float_oop(θ, p) = [Float64(θ[2i - 1])^2 * p[1] + sin(Float64(θ[2i])) for i in 1:m]
+        f = OptimizationFunction{false}(
+            (θ, p) -> sum(θ), AutoForwardDiff();
+            cons = cons_float_oop, cons_j = (θ, p) -> (jcalls[] += 1; jac_exact(θ, p))
+        )
+        fi = OptimizationBase.instantiate_function(
+            f, x, f.adtype, p, m; cons_vjp = true, cons_jvp = true
+        )
+        jcalls[] = 0
+        @test fi.cons_vjp(x, v) ≈ Jref' * v
+        @test fi.cons_jvp(x, w) ≈ Jref * w
+        @test jcalls[] == 2
+    end
+
+    @testset "NoAD passes v and p to a user cons_vjp/cons_jvp" begin
+        f = OptimizationFunction(
+            sum; cons = cons_ip!,
+            cons_vjp = (res, θ, v, p) -> mul!(res, transpose(jac_exact(θ, p)), v),
+            cons_jvp = (res, θ, w, p) -> mul!(res, jac_exact(θ, p), w)
+        )
+        fi = OptimizationBase.instantiate_function(f, x, SciMLBase.NoAD(), p, m)
+        res = zeros(n)
+        fi.cons_vjp(res, x, v)
+        @test res ≈ Jref' * v
+        fi.cons_vjp(res, x, v, 2p)
+        @test res ≈ jac_exact(x, 2p)' * v
+        resm = zeros(m)
+        fi.cons_jvp(resm, x, w)
+        @test resm ≈ Jref * w
+    end
+
+    @testset "OptimizationCache requests a product only when it can use it" begin
+        allows = _AllowsConsProducts()
+        requires = _RequiresConsProducts()
+        f_fwd = OptimizationFunction(sum, AutoForwardDiff(); cons = cons_ip!)
+        f_rev = OptimizationFunction(sum, AutoReverseDiff(); cons = cons_ip!)
+        f_rev_j = OptimizationFunction(sum, AutoReverseDiff(); cons = cons_ip!, cons_j = (J, θ, p) -> nothing)
+        f_noad_j = OptimizationFunction(sum; cons = cons_ip!, cons_j = (J, θ, p) -> nothing)
+        f_user = OptimizationFunction(
+            sum, AutoForwardDiff(); cons = cons_ip!, cons_vjp = (res, θ, v, p) -> nothing
+        )
+
+        # A solver that only allows the product gets it only when it is matrix-free.
+        @test !OB._request_cons_vjp(allows, f_fwd)
+        @test OB._request_cons_jvp(allows, f_fwd)
+        @test OB._request_cons_vjp(allows, f_rev)
+        @test !OB._request_cons_jvp(allows, f_rev)
+        @test !OB._request_cons_vjp(allows, f_rev_j)
+        @test !OB._request_cons_vjp(allows, f_noad_j)
+        @test OB._request_cons_vjp(allows, f_user)
+        # A solver that requires it always gets it.
+        for f in (f_fwd, f_rev, f_rev_j, f_noad_j, f_user)
+            @test OB._request_cons_vjp(requires, f)
+            @test OB._request_cons_jvp(requires, f)
+        end
+        # Neither: never.
+        @test !OB._request_cons_vjp(nothing, f_user)
+    end
 end
