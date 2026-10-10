@@ -239,6 +239,28 @@ end
         end
     end
 end
+@inline function _iip_ad_cons_jac_clos(
+        _cons_oop_p, _prep_jac, adtype, p, ::Type{Tx0}
+    ) where {Tx0}
+    return let _cons_oop_p = _cons_oop_p, _prep_jac = _prep_jac, adtype = adtype, p = p
+        function (J, θ)
+            return if _prep_valid(Tx0, θ)
+                jacobian!(_cons_oop_p, J, _prep_jac, adtype, θ, Constant(p))
+            else
+                jacobian!(_cons_oop_p, J, adtype, θ, Constant(p))
+            end
+        end
+    end
+end
+@inline function _oop_ad_cons_jac_clos(f, _prep_jac, adtype, p, ::Type{Tx0}) where {Tx0}
+    return let f = f, _prep_jac = _prep_jac, adtype = adtype, p = p
+        θ -> if _prep_valid(Tx0, θ)
+            jacobian(f.cons, _prep_jac, adtype, θ, Constant(p))
+        else
+            jacobian(f.cons, adtype, θ, Constant(p))
+        end
+    end
+end
 
 # Output-buffer eltype for the `p`-accepting constraint wrapper: the type `f.cons` produces,
 # including the *nested* dual when both `x` (DI's seeds) and `p` (the sensitivity layer) carry
@@ -348,7 +370,7 @@ function instantiate_function(
     end
 
     hv! = if hv == true && f.hv === nothing
-        _v0 = zeros(eltype(x), size(x))
+        _v0 = zero(x)
         _prep_hvp = prepare_hvp(f.f, soadtype, x, (_v0,), Constant(p))
         _iip_hv_clos(_prep_hvp, f, soadtype, p, Tx0, Tp0, typeof(_v0))
     elseif hv == true
@@ -425,21 +447,7 @@ function instantiate_function(
     _prep_jac = _any_ad_jac ? prepare_jacobian(_cons_oop_p, adtype, x, Constant(p)) : nothing
     # Fills `J` at `θ` and the construction `p`, for the products built through the Jacobian.
     _ad_cons_jac! = if _ad_jac_vjp || _ad_jac_jvp
-        (
-            function (::Type{Tx0},) where {Tx0}
-                return let _cons_oop_p = _cons_oop_p, _prep_jac = _prep_jac, adtype = adtype, p = p
-                    function (J, θ)
-                        return if _prep_valid(Tx0, θ)
-                            jacobian!(_cons_oop_p, J, _prep_jac, adtype, θ, Constant(p))
-                        else
-                            jacobian!(_cons_oop_p, J, adtype, θ, Constant(p))
-                        end
-                    end
-                end
-            end
-        )(
-            Tx0
-        )
+        _iip_ad_cons_jac_clos(_cons_oop_p, _prep_jac, adtype, p, Tx0)
     else
         nothing
     end
@@ -677,7 +685,7 @@ function instantiate_function(
     end
 
     hv! = if hv == true && f.hv === nothing
-        _v0 = zeros(eltype(x), size(x))
+        _v0 = zero(x)
         _prep_hvp = prepare_hvp(f.f, soadtype, x, (_v0,), Constant(p))
         _oop_hv_clos(_prep_hvp, f, soadtype, p, Tx0, Tp0, typeof(_v0))
     elseif hv == true
@@ -717,19 +725,7 @@ function instantiate_function(
         prepare_jacobian(f.cons, adtype, x, Constant(p)) : nothing
     # `J` at `θ` and the construction `p`. Out-of-place, so `jacobian` allocates a `J` of the
     # right eltype per call and the products need no persistent buffer.
-    _ad_cons_jac = (
-        function (::Type{Tx0},) where {Tx0}
-            return let f = f, _prep_jac = _prep_jac, adtype = adtype, p = p
-                θ -> if _prep_valid(Tx0, θ)
-                    jacobian(f.cons, _prep_jac, adtype, θ, Constant(p))
-                else
-                    jacobian(f.cons, adtype, θ, Constant(p))
-                end
-            end
-        end
-    )(
-        Tx0
-    )
+    _ad_cons_jac = _oop_ad_cons_jac_clos(f, _prep_jac, adtype, p, Tx0)
 
     cons_j! = if _need_cons_jac
         _oop_cons_j_clos(f, _prep_jac, adtype, p, Tx0, Tp0)

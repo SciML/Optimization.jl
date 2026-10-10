@@ -286,7 +286,7 @@ end
     fi.fg(G32b, Float32.(xt))
     @test Float64.(G32b) ≈ ∇xf(xt, p0) rtol = 1.0e-3
 
-    # --- lag_h! with Float32 θ ---
+    # --- lag_h! with Float32 θ (matrix and packed-vector IIP forms) ---
     Hlag = zeros(Float32, 2, 2)
     fi.lag_h(Hlag, Float32.(xt), Float32(1), Float32[0.5])
     fresh_lag = OptimizationBase.instantiate_function(
@@ -295,4 +295,21 @@ end
     Hlagb = zeros(Float32, 2, 2)
     fresh_lag.lag_h(Hlagb, Float32.(xt), Float32(1), Float32[0.5])
     @test Hlag ≈ Hlagb
+    hlag = zeros(Float32, 3)
+    fi.lag_h(hlag, Float32.(xt), Float32(1), Float32[0.5])
+    hlagb = zeros(Float32, 3)
+    fresh_lag.lag_h(hlagb, Float32.(xt), Float32(1), Float32[0.5])
+    @test hlag ≈ hlagb
+
+    # --- OOP lag_h with Float32 θ ---
+    oop_lag = OptimizationBase.instantiate_function(
+        OptimizationFunction{false}(objp, ad; cons = consp), x0, ad, p0, 1; lag_h = true
+    )
+    Hlag_oop = oop_lag.lag_h(Float32.(xt), Float32(1), Float32[0.5])
+    fresh_oop_lag = OptimizationBase.instantiate_function(
+        OptimizationFunction{false}(objp, ad; cons = consp), Float32.(x0), ad, Float32.(p0), 1;
+        lag_h = true
+    )
+    Hlag_oop_b = fresh_oop_lag.lag_h(Float32.(xt), Float32(1), Float32[0.5])
+    @test Hlag_oop ≈ Hlag_oop_b
 end
