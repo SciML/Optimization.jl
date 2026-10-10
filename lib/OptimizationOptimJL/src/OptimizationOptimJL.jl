@@ -175,7 +175,7 @@ function SciMLBase.__init(
             Optim.AbstractOptimizer, Optim.Fminbox,
             Optim.SAMIN, Optim.ConstrainedOptimizer,
         };
-        callback = (args...) -> (false),
+        callback = DEFAULT_CALLBACK,
         maxiters::Union{Number, Nothing} = nothing,
         maxtime::Union{Number, Nothing} = nothing,
         abstol::Union{Number, Nothing} = nothing,
