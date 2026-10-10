@@ -1536,6 +1536,17 @@ end
     end
 end
 
+@testset "Enzyme short gradient buffer DimensionMismatch" begin
+    rosen(x, p = nothing) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+    ad = AutoEnzyme()
+    optf = OptimizationBase.instantiate_function(
+        OptimizationFunction(rosen, ad), zeros(2), ad, nothing; g = true, fg = true
+    )
+    Gshort = zeros(1)
+    @test_throws DimensionMismatch optf.grad(Gshort, [0.5, 0.7])
+    @test_throws DimensionMismatch optf.fg(Gshort, [0.5, 0.7])
+end
+
 @testset "Enzyme Hessian batch cap" begin
     n = 17
     x = collect(range(0.1, 1.7; length = n))

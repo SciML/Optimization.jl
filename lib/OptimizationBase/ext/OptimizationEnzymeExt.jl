@@ -168,6 +168,15 @@ function _copy_hessian_row!(dest, src, transfer_cache)
     return nothing
 end
 
+@inline function _check_duplicated_size(θ, shadow)
+    size(θ) == size(shadow) || throw(
+        DimensionMismatch(
+            "size of Enzyme shadow buffer ($(size(shadow))) must match size of θ ($(size(θ)))"
+        )
+    )
+    return nothing
+end
+
 function OptimizationBase.instantiate_function(
         f::OptimizationFunction{true}, x,
         adtype::AutoEnzyme, p, num_cons = 0;
@@ -191,6 +200,7 @@ function OptimizationBase.instantiate_function(
 
     if g == true && f.grad === nothing
         function grad(res, θ, p = p)
+            _check_duplicated_size(θ, res)
             Enzyme.make_zero!(res)
             return Enzyme.autodiff(
                 rmode,
@@ -213,6 +223,7 @@ function OptimizationBase.instantiate_function(
         fg! = (res, θ, p = p) -> (f.grad(res, θ, p); f.f(θ, p))
     elseif fg == true && f.fg === nothing
         function fg!(res, θ, p = p)
+            _check_duplicated_size(θ, res)
             Enzyme.make_zero!(res)
             y = Enzyme.autodiff(
                 WithPrimal(rmode),
@@ -303,6 +314,7 @@ function OptimizationBase.instantiate_function(
             }(undef, length(x))
 
         function fgh!(G, H, θ, p = p)
+            _check_duplicated_size(θ, G)
             for first_index in _batch_starts(second_order_vdθ, second_order_batch_width)
                 vdθ_batch = _cache_batch(
                     second_order_vdθ, first_index, second_order_batch_width
@@ -344,6 +356,8 @@ function OptimizationBase.instantiate_function(
 
     if hv == true && f.hv === nothing
         function hv!(H, θ, v, p = p)
+            _check_duplicated_size(θ, H)
+            _check_duplicated_size(θ, v)
             dθ = zero(θ)
             Enzyme.make_zero!(H)
             return Enzyme.autodiff(
@@ -444,6 +458,8 @@ function OptimizationBase.instantiate_function(
     if cons !== nothing && cons_vjp == true && f.cons_vjp === nothing
         cons_res = zeros(eltype(x), num_cons)
         function cons_vjp!(res, θ, v)
+            _check_duplicated_size(θ, res)
+            _check_duplicated_size(cons_res, v)
             Enzyme.make_zero!(res)
             Enzyme.make_zero!(cons_res)
 
@@ -466,6 +482,8 @@ function OptimizationBase.instantiate_function(
         cons_res = zeros(eltype(x), num_cons)
 
         function cons_jvp!(res, θ, v)
+            _check_duplicated_size(cons_res, res)
+            _check_duplicated_size(θ, v)
             Enzyme.make_zero!(res)
             Enzyme.make_zero!(cons_res)
 
@@ -745,6 +763,7 @@ function OptimizationBase.instantiate_function(
     if hv == true && f.hv === nothing
         H = zero(x)
         function hv!(θ, v, p = p)
+            _check_duplicated_size(θ, v)
             dθ = zero(θ)
             Enzyme.make_zero!(H)
             Enzyme.autodiff(
@@ -802,6 +821,7 @@ function OptimizationBase.instantiate_function(
         cons_vjp_res = zeros(eltype(x), num_cons)
 
         function cons_vjp!(θ, v)
+            _check_duplicated_size(cons_vjp_res, v)
             Enzyme.make_zero!(res_vjp)
             Enzyme.make_zero!(cons_vjp_res)
 
@@ -826,6 +846,7 @@ function OptimizationBase.instantiate_function(
         cons_jvp_res = zeros(eltype(x), num_cons)
 
         function cons_jvp!(θ, v)
+            _check_duplicated_size(θ, v)
             Enzyme.make_zero!(res_jvp)
             Enzyme.make_zero!(cons_jvp_res)
 
