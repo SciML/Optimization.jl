@@ -7,4 +7,5 @@ using Test
     include("lag_h_sigma_zero_test.jl")
     include("second_order_warning_test.jl")
     include("solve_internals_test.jl")
+    include("cons_bounds_safety_test.jl")
 end
