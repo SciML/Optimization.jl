@@ -8,8 +8,7 @@ import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,
     pushforward!,
     pullback, pushforward,
     prepare_jacobian, value_and_gradient!, value_and_gradient,
-    value_derivative_and_second_derivative!,
-    value_derivative_and_second_derivative,
+    value_gradient_and_hessian!, value_gradient_and_hessian,
     gradient!, hessian!, hvp!, jacobian!, gradient, hessian,
     hvp, jacobian, Constant
 using ADTypes, SciMLBase
@@ -18,219 +17,225 @@ using OptimizationBase.FastClosures
 # A DI preparation is built for the exact construction types (`x` and `Constant(p)`) and only
 # works for those — otherwise DI throws `PreparationMismatchError`. Reuse it while `θ`/`p` keep
 # those types (e.g. a dual `p` from a sensitivity layer, or a `Float32`/`BigFloat` `θ`, does not),
-# and fall back to a prep-free call otherwise. `T` is a constant, so on the solve path this folds
-# away.
+# and fall back to a prep-free call otherwise. Closures are specialized on `::Type{T…}` so the
+# type check constant-folds on the matching path (no thunk allocation).
 @inline _prep_valid(::Type{T}, v) where {T} = typeof(v) === T
 
-# Build closures specialized on the construction types so `_prep_valid` constant-folds on the
-# matching path (capturing `Tx0`/`Tp0` as `DataType` values would leave a runtime branch).
-@inline function _iip_hess_clos(_prep_hess, f, soadtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
-    if p !== SciMLBase.NullParameters() && p !== nothing
-        return let _prep_hess = _prep_hess, f = f, soadtype = soadtype
-            function (res, θ, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    hessian!(f.f, res, _prep_hess, soadtype, θ, Constant(p))
-                else
-                    hessian!(f.f, res, soadtype, θ, Constant(p))
-                end
+@inline function _iip_grad_clos(_prep_grad, f, adtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
+    return let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p
+        function (res, θ, p = p)
+            return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
+            else
+                gradient!(f.f, res, adtype, θ, Constant(p))
             end
         end
-    else
-        return let _prep_hess = _prep_hess, f = f, soadtype = soadtype, p = p
-            function (res, θ, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    hessian!(f.f, res, _prep_hess, soadtype, θ, Constant(p))
-                else
-                    hessian!(f.f, res, soadtype, θ, Constant(p))
-                end
+    end
+end
+@inline function _oop_grad_clos(_prep_grad, f, adtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
+    return let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p
+        function (θ, p = p)
+            return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                gradient(f.f, _prep_grad, adtype, θ, Constant(p))
+            else
+                gradient(f.f, adtype, θ, Constant(p))
             end
         end
     end
 end
 @inline function _iip_fg_clos(_prep_grad_fg, f, adtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
-    if p !== SciMLBase.NullParameters() && p !== nothing
-        return let _prep_grad_fg = _prep_grad_fg, f = f, adtype = adtype
-            function (res, θ, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    (y, _) = value_and_gradient!(
-                        f.f, res, _prep_grad_fg, adtype, θ, Constant(p)
-                    )
-                    y
-                else
-                    (y, _) = value_and_gradient!(f.f, res, adtype, θ, Constant(p))
-                    y
-                end
-            end
-        end
-    else
-        return let _prep_grad_fg = _prep_grad_fg, f = f, adtype = adtype, p = p
-            function (res, θ, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    (y, _) = value_and_gradient!(
-                        f.f, res, _prep_grad_fg, adtype, θ, Constant(p)
-                    )
-                    y
-                else
-                    (y, _) = value_and_gradient!(f.f, res, adtype, θ, Constant(p))
-                    y
-                end
-            end
-        end
-    end
-end
-@inline function _iip_fgh_clos(_prep_hess, f, adtype, soadtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
-    if p !== SciMLBase.NullParameters() && p !== nothing
-        return let _prep_hess = _prep_hess, f = f, adtype = adtype, soadtype = soadtype
-            function (G, H, θ, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    (y, _, _) = value_derivative_and_second_derivative!(
-                        f.f, G, H, _prep_hess, soadtype, θ, Constant(p)
-                    )
-                    y
-                else
-                    gradient!(f.f, G, adtype, θ, Constant(p))
-                    hessian!(f.f, H, soadtype, θ, Constant(p))
-                    f.f(θ, p)
-                end
-            end
-        end
-    else
-        return let _prep_hess = _prep_hess, f = f, adtype = adtype, soadtype = soadtype, p = p
-            function (G, H, θ, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    (y, _, _) = value_derivative_and_second_derivative!(
-                        f.f, G, H, _prep_hess, soadtype, θ, Constant(p)
-                    )
-                    y
-                else
-                    gradient!(f.f, G, adtype, θ, Constant(p))
-                    hessian!(f.f, H, soadtype, θ, Constant(p))
-                    f.f(θ, p)
-                end
-            end
-        end
-    end
-end
-@inline function _iip_hv_clos(_prep_hvp, f, soadtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
-    if p !== SciMLBase.NullParameters() && p !== nothing
-        return let _prep_hvp = _prep_hvp, f = f, soadtype = soadtype
-            function (H, θ, v, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    only(hvp!(f.f, (H,), _prep_hvp, soadtype, θ, (v,), Constant(p)))
-                else
-                    only(hvp!(f.f, (H,), soadtype, θ, (v,), Constant(p)))
-                end
-            end
-        end
-    else
-        return let _prep_hvp = _prep_hvp, f = f, soadtype = soadtype, p = p
-            function (H, θ, v, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    only(hvp!(f.f, (H,), _prep_hvp, soadtype, θ, (v,), Constant(p)))
-                else
-                    only(hvp!(f.f, (H,), soadtype, θ, (v,), Constant(p)))
-                end
+    return let _prep_grad_fg = _prep_grad_fg, f = f, adtype = adtype, p = p
+        function (res, θ, p = p)
+            return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                (y, _) = value_and_gradient!(
+                    f.f, res, _prep_grad_fg, adtype, θ, Constant(p)
+                )
+                y
+            else
+                (y, _) = value_and_gradient!(f.f, res, adtype, θ, Constant(p))
+                y
             end
         end
     end
 end
 @inline function _oop_fg_clos(_prep_grad_fg, f, adtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
-    if p !== SciMLBase.NullParameters() && p !== nothing
-        return let _prep_grad_fg = _prep_grad_fg, f = f, adtype = adtype
-            function (θ, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    value_and_gradient(f.f, _prep_grad_fg, adtype, θ, Constant(p))
-                else
-                    value_and_gradient(f.f, adtype, θ, Constant(p))
-                end
+    return let _prep_grad_fg = _prep_grad_fg, f = f, adtype = adtype, p = p
+        function (θ, p = p)
+            return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                value_and_gradient(f.f, _prep_grad_fg, adtype, θ, Constant(p))
+            else
+                value_and_gradient(f.f, adtype, θ, Constant(p))
             end
         end
-    else
-        return let _prep_grad_fg = _prep_grad_fg, f = f, adtype = adtype, p = p
-            function (θ, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    value_and_gradient(f.f, _prep_grad_fg, adtype, θ, Constant(p))
-                else
-                    value_and_gradient(f.f, adtype, θ, Constant(p))
-                end
+    end
+end
+@inline function _iip_hess_clos(_prep_hess, f, soadtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
+    return let _prep_hess = _prep_hess, f = f, soadtype = soadtype, p = p
+        function (res, θ, p = p)
+            return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                hessian!(f.f, res, _prep_hess, soadtype, θ, Constant(p))
+            else
+                hessian!(f.f, res, soadtype, θ, Constant(p))
             end
         end
     end
 end
 @inline function _oop_hess_clos(_prep_hess, f, soadtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
-    if p !== SciMLBase.NullParameters() && p !== nothing
-        return let _prep_hess = _prep_hess, f = f, soadtype = soadtype
-            function (θ, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    hessian(f.f, _prep_hess, soadtype, θ, Constant(p))
-                else
-                    hessian(f.f, soadtype, θ, Constant(p))
-                end
-            end
-        end
-    else
-        return let _prep_hess = _prep_hess, f = f, soadtype = soadtype, p = p
-            function (θ, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    hessian(f.f, _prep_hess, soadtype, θ, Constant(p))
-                else
-                    hessian(f.f, soadtype, θ, Constant(p))
-                end
+    return let _prep_hess = _prep_hess, f = f, soadtype = soadtype, p = p
+        function (θ, p = p)
+            return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                hessian(f.f, _prep_hess, soadtype, θ, Constant(p))
+            else
+                hessian(f.f, soadtype, θ, Constant(p))
             end
         end
     end
 end
-@inline function _oop_fgh_clos(_prep_hess, f, adtype, soadtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
-    if p !== SciMLBase.NullParameters() && p !== nothing
-        return let _prep_hess = _prep_hess, f = f, adtype = adtype, soadtype = soadtype
-            function (θ, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    value_derivative_and_second_derivative(
-                        f.f, _prep_hess, adtype, θ, Constant(p)
-                    )
-                else
-                    f.f(θ, p),
-                        gradient(f.f, adtype, θ, Constant(p)),
-                        hessian(f.f, soadtype, θ, Constant(p))
-                end
-            end
-        end
-    else
-        return let _prep_hess = _prep_hess, f = f, adtype = adtype, soadtype = soadtype, p = p
-            function (θ, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    value_derivative_and_second_derivative(
-                        f.f, _prep_hess, adtype, θ, Constant(p)
-                    )
-                else
-                    f.f(θ, p),
-                        gradient(f.f, adtype, θ, Constant(p)),
-                        hessian(f.f, soadtype, θ, Constant(p))
-                end
+@inline function _iip_fgh_clos(_prep_hess, f, soadtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
+    return let _prep_hess = _prep_hess, f = f, soadtype = soadtype, p = p
+        function (G, H, θ, p = p)
+            return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                (y, _, _) = value_gradient_and_hessian!(
+                    f.f, G, H, _prep_hess, soadtype, θ, Constant(p)
+                )
+                y
+            else
+                (y, _, _) = value_gradient_and_hessian!(
+                    f.f, G, H, soadtype, θ, Constant(p)
+                )
+                y
             end
         end
     end
 end
-@inline function _oop_hv_clos(_prep_hvp, f, soadtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
-    if p !== SciMLBase.NullParameters() && p !== nothing
-        return let _prep_hvp = _prep_hvp, f = f, soadtype = soadtype
-            function (θ, v, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    only(hvp(f.f, _prep_hvp, soadtype, θ, (v,), Constant(p)))
-                else
-                    only(hvp(f.f, soadtype, θ, (v,), Constant(p)))
-                end
+@inline function _oop_fgh_clos(_prep_hess, f, soadtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
+    return let _prep_hess = _prep_hess, f = f, soadtype = soadtype, p = p
+        function (θ, p = p)
+            return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                value_gradient_and_hessian(f.f, _prep_hess, soadtype, θ, Constant(p))
+            else
+                value_gradient_and_hessian(f.f, soadtype, θ, Constant(p))
             end
         end
-    else
-        return let _prep_hvp = _prep_hvp, f = f, soadtype = soadtype, p = p
-            function (θ, v, p = p)
-                return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    only(hvp(f.f, _prep_hvp, soadtype, θ, (v,), Constant(p)))
-                else
-                    only(hvp(f.f, soadtype, θ, (v,), Constant(p)))
+    end
+end
+@inline function _iip_hv_clos(
+        _prep_hvp, f, soadtype, p, ::Type{Tx0}, ::Type{Tp0}, ::Type{Tv0}
+    ) where {Tx0, Tp0, Tv0}
+    return let _prep_hvp = _prep_hvp, f = f, soadtype = soadtype, p = p
+        function (H, θ, v, p = p)
+            return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p) && _prep_valid(Tv0, v)
+                only(hvp!(f.f, (H,), _prep_hvp, soadtype, θ, (v,), Constant(p)))
+            else
+                only(hvp!(f.f, (H,), soadtype, θ, (v,), Constant(p)))
+            end
+        end
+    end
+end
+@inline function _oop_hv_clos(
+        _prep_hvp, f, soadtype, p, ::Type{Tx0}, ::Type{Tp0}, ::Type{Tv0}
+    ) where {Tx0, Tp0, Tv0}
+    return let _prep_hvp = _prep_hvp, f = f, soadtype = soadtype, p = p
+        function (θ, v, p = p)
+            return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p) && _prep_valid(Tv0, v)
+                only(hvp(f.f, _prep_hvp, soadtype, θ, (v,), Constant(p)))
+            else
+                only(hvp(f.f, soadtype, θ, (v,), Constant(p)))
+            end
+        end
+    end
+end
+@inline function _iip_lag_h_clos(
+        lagrangian, _lag_prep, soadtype, cons_h_weighted!, p, ::Type{Tx0}, ::Type{Tp0}
+    ) where {Tx0, Tp0}
+    return let lagrangian = lagrangian, _lag_prep = _lag_prep, soadtype = soadtype,
+            cons_h_weighted! = cons_h_weighted!, p = p
+        function _lag_h!(H::AbstractMatrix, θ, σ, λ, p = p)
+            return if σ == zero(eltype(θ))
+                cons_h_weighted!(H, θ, λ)
+            elseif _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                hessian!(
+                    lagrangian, H, _lag_prep, soadtype, θ,
+                    Constant(σ), Constant(λ), Constant(p)
+                )
+            else
+                hessian!(
+                    lagrangian, H, soadtype, θ,
+                    Constant(σ), Constant(λ), Constant(p)
+                )
+            end
+        end
+        function _lag_h!(h::AbstractVector, θ, σ, λ, p = p)
+            H = if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                hessian(
+                    lagrangian, _lag_prep, soadtype, θ,
+                    Constant(σ), Constant(λ), Constant(p)
+                )
+            else
+                hessian(
+                    lagrangian, soadtype, θ, Constant(σ), Constant(λ), Constant(p)
+                )
+            end
+            k = 0
+            for i in 1:length(θ)
+                for j in 1:i
+                    k += 1
+                    h[k] = H[i, j]
                 end
             end
+            return
+        end
+        _lag_h!
+    end
+end
+@inline function _oop_lag_h_clos(
+        lagrangian, _lag_prep, soadtype, cons_h!, p, ::Type{Tx0}, ::Type{Tp0}
+    ) where {Tx0, Tp0}
+    return let lagrangian = lagrangian, _lag_prep = _lag_prep, soadtype = soadtype,
+            cons_h! = cons_h!, p = p
+        function _lag_h!(θ, σ, λ, p = p)
+            return if σ == zero(eltype(θ))
+                λ .* cons_h!(θ)
+            elseif _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                hessian(
+                    lagrangian, _lag_prep, soadtype, θ,
+                    Constant(σ), Constant(λ), Constant(p)
+                )
+            else
+                hessian(
+                    lagrangian, soadtype, θ, Constant(σ), Constant(λ), Constant(p)
+                )
+            end
+        end
+        _lag_h!
+    end
+end
+@inline function _iip_cons_j_clos(
+        _cons_oop_p, _prep_jac, adtype, p, ::Type{Tx0}, ::Type{Tp0}
+    ) where {Tx0, Tp0}
+    return let _cons_oop_p = _cons_oop_p, _prep_jac = _prep_jac, adtype = adtype, p = p
+        function (J, θ, p = p)
+            if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                jacobian!(_cons_oop_p, J, _prep_jac, adtype, θ, Constant(p))
+            else
+                jacobian!(_cons_oop_p, J, adtype, θ, Constant(p))
+            end
+            return size(J, 1) == 1 ? vec(J) : nothing
+        end
+    end
+end
+@inline function _oop_cons_j_clos(f, _prep_jac, adtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
+    return let f = f, _prep_jac = _prep_jac, adtype = adtype, p = p
+        function (θ, p = p)
+            J = if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                jacobian(f.cons, _prep_jac, adtype, θ, Constant(p))
+            else
+                jacobian(f.cons, adtype, θ, Constant(p))
+            end
+            if size(J, 1) == 1
+                J = vec(J)
+            end
+            return J
         end
     end
 end
@@ -289,27 +294,7 @@ function instantiate_function(
     _prep_grad = nothing
     grad = if g == true && f.grad === nothing
         _prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            let _prep_grad = _prep_grad, f = f, adtype = adtype, Tx0 = Tx0, Tp0 = Tp0
-                function (res, θ, p = p)
-                    return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                        gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
-                    else
-                        gradient!(f.f, res, adtype, θ, Constant(p))
-                    end
-                end
-            end
-        else
-            let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p, Tx0 = Tx0, Tp0 = Tp0
-                function (res, θ, p = p)
-                    return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                        gradient!(f.f, res, _prep_grad, adtype, θ, Constant(p))
-                    else
-                        gradient!(f.f, res, adtype, θ, Constant(p))
-                    end
-                end
-            end
-        end
+        _iip_grad_clos(_prep_grad, f, adtype, p, Tx0, Tp0)
     elseif g == true
         (G, θ, p = p) -> f.grad(G, θ, p)
     else
@@ -355,7 +340,7 @@ function instantiate_function(
     end
 
     fgh! = if fgh == true && f.fgh === nothing
-        _iip_fgh_clos(_prep_hess, f, adtype, soadtype, p, Tx0, Tp0)
+        _iip_fgh_clos(_prep_hess, f, soadtype, p, Tx0, Tp0)
     elseif fgh == true
         (G, H, θ, p = p) -> f.fgh(G, H, θ, p)
     else
@@ -363,8 +348,9 @@ function instantiate_function(
     end
 
     hv! = if hv == true && f.hv === nothing
-        _prep_hvp = prepare_hvp(f.f, soadtype, x, (zeros(eltype(x), size(x)),), Constant(p))
-        _iip_hv_clos(_prep_hvp, f, soadtype, p, Tx0, Tp0)
+        _v0 = zeros(eltype(x), size(x))
+        _prep_hvp = prepare_hvp(f.f, soadtype, x, (_v0,), Constant(p))
+        _iip_hv_clos(_prep_hvp, f, soadtype, p, Tx0, Tp0, typeof(_v0))
     elseif hv == true
         (H, θ, v, p = p) -> f.hv(H, θ, v, p)
     else
@@ -439,36 +425,27 @@ function instantiate_function(
     _prep_jac = _any_ad_jac ? prepare_jacobian(_cons_oop_p, adtype, x, Constant(p)) : nothing
     # Fills `J` at `θ` and the construction `p`, for the products built through the Jacobian.
     _ad_cons_jac! = if _ad_jac_vjp || _ad_jac_jvp
-        let _cons_oop_p = _cons_oop_p, _prep_jac = _prep_jac, adtype = adtype, p = p,
-                Tx0 = Tx0
-
-            function (J, θ)
-                return if _prep_valid(Tx0, θ)
-                    jacobian!(_cons_oop_p, J, _prep_jac, adtype, θ, Constant(p))
-                else
-                    jacobian!(_cons_oop_p, J, adtype, θ, Constant(p))
+        (
+            function (::Type{Tx0},) where {Tx0}
+                return let _cons_oop_p = _cons_oop_p, _prep_jac = _prep_jac, adtype = adtype, p = p
+                    function (J, θ)
+                        return if _prep_valid(Tx0, θ)
+                            jacobian!(_cons_oop_p, J, _prep_jac, adtype, θ, Constant(p))
+                        else
+                            jacobian!(_cons_oop_p, J, adtype, θ, Constant(p))
+                        end
+                    end
                 end
             end
-        end
+        )(
+            Tx0
+        )
     else
         nothing
     end
 
     cons_j! = if _need_cons_jac
-        let _cons_oop_p = _cons_oop_p, _prep_jac = _prep_jac, adtype = adtype, p = p, Tx0 = Tx0, Tp0 = Tp0
-            function (J, θ, p = p)
-                # Prepared fast path when the call types match construction; prep-free fallback
-                # otherwise (see the `_prep_valid` note above the imports).
-                if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                    jacobian!(_cons_oop_p, J, _prep_jac, adtype, θ, Constant(p))
-                else
-                    jacobian!(_cons_oop_p, J, adtype, θ, Constant(p))
-                end
-                return if size(J, 1) == 1
-                    J = vec(J)
-                end
-            end
-        end
+        _iip_cons_j_clos(_cons_oop_p, _prep_jac, adtype, p, Tx0, Tp0)
     elseif cons_j == true && f.cons !== nothing
         let f = f, p = p
             (J, θ, p = p) -> f.cons_j(J, θ, p)
@@ -596,98 +573,7 @@ function instantiate_function(
             Constant(ones(eltype(x), num_cons)), Constant(p)
         )
         lag_hess_prototype = zeros(Bool, length(x), length(x))
-
-        (
-            function (::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
-                return if p !== SciMLBase.NullParameters() && p !== nothing
-                    let lagrangian = lagrangian, _lag_prep = _lag_prep, soadtype = soadtype,
-                            cons_h_weighted! = cons_h_weighted!, cons_h! = cons_h!
-                        function _lag_h!(H::AbstractMatrix, θ, σ, λ, p = p)
-                            return if σ == zero(eltype(θ))
-                                # When σ=0, use the weighted sum function
-                                cons_h_weighted!(H, θ, λ)
-                            elseif _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                                hessian!(
-                                    lagrangian, H, _lag_prep, soadtype, θ,
-                                    Constant(σ), Constant(λ), Constant(p)
-                                )
-                            else
-                                hessian!(
-                                    lagrangian, H, soadtype, θ,
-                                    Constant(σ), Constant(λ), Constant(p)
-                                )
-                            end
-                        end
-                        function _lag_h!(h::AbstractVector, θ, σ, λ, p = p)
-                            H = if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                                hessian(
-                                    lagrangian, _lag_prep, soadtype, θ,
-                                    Constant(σ), Constant(λ), Constant(p)
-                                )
-                            else
-                                hessian(
-                                    lagrangian, soadtype, θ,
-                                    Constant(σ), Constant(λ), Constant(p)
-                                )
-                            end
-                            k = 0
-                            for i in 1:length(θ)
-                                for j in 1:i
-                                    k += 1
-                                    h[k] = H[i, j]
-                                end
-                            end
-                            return
-                        end
-                        return _lag_h!
-                    end
-                else
-                    let lagrangian = lagrangian, _lag_prep = _lag_prep, soadtype = soadtype,
-                            cons_h_weighted! = cons_h_weighted!, p = p
-                        function _lag_h!(H::AbstractMatrix, θ, σ, λ, p = p)
-                            return if σ == zero(eltype(θ))
-                                # When σ=0, use the weighted sum function
-                                cons_h_weighted!(H, θ, λ)
-                            elseif _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                                hessian!(
-                                    lagrangian, H, _lag_prep, soadtype, θ,
-                                    Constant(σ), Constant(λ), Constant(p)
-                                )
-                            else
-                                hessian!(
-                                    lagrangian, H, soadtype, θ,
-                                    Constant(σ), Constant(λ), Constant(p)
-                                )
-                            end
-                        end
-                        function _lag_h!(h::AbstractVector, θ, σ, λ, p = p)
-                            H = if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                                hessian(
-                                    lagrangian, _lag_prep, soadtype, θ,
-                                    Constant(σ), Constant(λ), Constant(p)
-                                )
-                            else
-                                hessian(
-                                    lagrangian, soadtype, θ,
-                                    Constant(σ), Constant(λ), Constant(p)
-                                )
-                            end
-                            k = 0
-                            for i in 1:length(θ)
-                                for j in 1:i
-                                    k += 1
-                                    h[k] = H[i, j]
-                                end
-                            end
-                            return
-                        end
-                        return _lag_h!
-                    end
-                end
-            end
-        )(
-            Tx0, Tp0
-        )
+        _iip_lag_h_clos(lagrangian, _lag_prep, soadtype, cons_h_weighted!, p, Tx0, Tp0)
     elseif lag_h == true && f.cons !== nothing
         let f = f, p = p
             (res, θ, σ, μ, p = p) -> f.lag_h(res, θ, σ, μ, p)
@@ -743,23 +629,7 @@ function instantiate_function(
     # Create gradient closures with proper type stability using let blocks.
     grad = if g == true && f.grad === nothing
         _prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            let _prep_grad = _prep_grad, f = f, adtype = adtype, Tx0 = Tx0, Tp0 = Tp0
-                function (θ, p = p)
-                    return _prep_valid(Tx0, θ) && _prep_valid(Tp0, p) ?
-                        gradient(f.f, _prep_grad, adtype, θ, Constant(p)) :
-                        gradient(f.f, adtype, θ, Constant(p))
-                end
-            end
-        else
-            let _prep_grad = _prep_grad, f = f, adtype = adtype, p = p, Tx0 = Tx0, Tp0 = Tp0
-                function (θ, p = p)
-                    return _prep_valid(Tx0, θ) && _prep_valid(Tp0, p) ?
-                        gradient(f.f, _prep_grad, adtype, θ, Constant(p)) :
-                        gradient(f.f, adtype, θ, Constant(p))
-                end
-            end
-        end
+        _oop_grad_clos(_prep_grad, f, adtype, p, Tx0, Tp0)
     elseif g == true
         (θ, p = p) -> f.grad(θ, p)
     else
@@ -799,7 +669,7 @@ function instantiate_function(
     end
 
     fgh! = if fgh == true && f.fgh === nothing
-        _oop_fgh_clos(_prep_hess, f, adtype, soadtype, p, Tx0, Tp0)
+        _oop_fgh_clos(_prep_hess, f, soadtype, p, Tx0, Tp0)
     elseif fgh == true
         (θ, p = p) -> f.fgh(θ, p)
     else
@@ -807,8 +677,9 @@ function instantiate_function(
     end
 
     hv! = if hv == true && f.hv === nothing
-        _prep_hvp = prepare_hvp(f.f, soadtype, x, (zeros(eltype(x), size(x)),), Constant(p))
-        _oop_hv_clos(_prep_hvp, f, soadtype, p, Tx0, Tp0)
+        _v0 = zeros(eltype(x), size(x))
+        _prep_hvp = prepare_hvp(f.f, soadtype, x, (_v0,), Constant(p))
+        _oop_hv_clos(_prep_hvp, f, soadtype, p, Tx0, Tp0, typeof(_v0))
     elseif hv == true
         (θ, v, p = p) -> f.hv(θ, v, p)
     else
@@ -846,28 +717,22 @@ function instantiate_function(
         prepare_jacobian(f.cons, adtype, x, Constant(p)) : nothing
     # `J` at `θ` and the construction `p`. Out-of-place, so `jacobian` allocates a `J` of the
     # right eltype per call and the products need no persistent buffer.
-    _ad_cons_jac = let f = f, _prep_jac = _prep_jac, adtype = adtype, p = p, Tx0 = Tx0
-        θ -> _prep_valid(Tx0, θ) ?
-            jacobian(f.cons, _prep_jac, adtype, θ, Constant(p)) :
-            jacobian(f.cons, adtype, θ, Constant(p))
-    end
-
-    cons_j! = if _need_cons_jac
-        # `f.cons` is out-of-place here and the prep already takes `Constant(p)`, so this
-        # only needs to expose the parameter argument and add the prep-validity fallback
-        # (see the `_prep_valid` note above the imports) — unlike the in-place method,
-        # whose prepared wrapper bakes `p` in.
-        let f = f, _prep_jac = _prep_jac, adtype = adtype, p = p, Tx0 = Tx0, Tp0 = Tp0
-            function (θ, p = p)
-                J = _prep_valid(Tx0, θ) && _prep_valid(Tp0, p) ?
-                    jacobian(f.cons, _prep_jac, adtype, θ, Constant(p)) :
+    _ad_cons_jac = (
+        function (::Type{Tx0},) where {Tx0}
+            return let f = f, _prep_jac = _prep_jac, adtype = adtype, p = p
+                θ -> if _prep_valid(Tx0, θ)
+                    jacobian(f.cons, _prep_jac, adtype, θ, Constant(p))
+                else
                     jacobian(f.cons, adtype, θ, Constant(p))
-                if size(J, 1) == 1
-                    J = vec(J)
                 end
-                return J
             end
         end
+    )(
+        Tx0
+    )
+
+    cons_j! = if _need_cons_jac
+        _oop_cons_j_clos(f, _prep_jac, adtype, p, Tx0, Tp0)
     elseif cons_j == true && f.cons !== nothing
         let f = f, p = p
             (θ, p = p) -> f.cons_j(θ, p)
@@ -952,54 +817,7 @@ function instantiate_function(
             Constant(ones(eltype(x), num_cons)), Constant(p)
         )
         lag_hess_prototype = zeros(Bool, length(x), length(x))
-
-        (
-            function (::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
-                return if p !== SciMLBase.NullParameters() && p !== nothing
-                    let lagrangian = lagrangian, _lag_prep = _lag_prep, soadtype = soadtype,
-                            cons_h! = cons_h!
-                        function _lag_h!(θ, σ, λ, p = p)
-                            return if σ == zero(eltype(θ))
-                                λ .* cons_h!(θ)
-                            elseif _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                                hessian(
-                                    lagrangian, _lag_prep, soadtype, θ,
-                                    Constant(σ), Constant(λ), Constant(p)
-                                )
-                            else
-                                hessian(
-                                    lagrangian, soadtype, θ,
-                                    Constant(σ), Constant(λ), Constant(p)
-                                )
-                            end
-                        end
-                        return _lag_h!
-                    end
-                else
-                    let lagrangian = lagrangian, _lag_prep = _lag_prep, soadtype = soadtype,
-                            cons_h! = cons_h!, p = p
-                        function _lag_h!(θ, σ, λ, p = p)
-                            return if σ == zero(eltype(θ))
-                                λ .* cons_h!(θ)
-                            elseif _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                                hessian(
-                                    lagrangian, _lag_prep, soadtype, θ,
-                                    Constant(σ), Constant(λ), Constant(p)
-                                )
-                            else
-                                hessian(
-                                    lagrangian, soadtype, θ,
-                                    Constant(σ), Constant(λ), Constant(p)
-                                )
-                            end
-                        end
-                        return _lag_h!
-                    end
-                end
-            end
-        )(
-            Tx0, Tp0
-        )
+        _oop_lag_h_clos(lagrangian, _lag_prep, soadtype, cons_h!, p, Tx0, Tp0)
     elseif lag_h == true && f.cons !== nothing
         let f = f, p = p
             (θ, σ, λ, p = p) -> f.lag_h(θ, σ, λ, p)
