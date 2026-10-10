@@ -168,16 +168,16 @@ function _copy_hessian_row!(dest, src, transfer_cache)
     return nothing
 end
 
-@noinline function _throw_dup_size(θ, shadow)
+@noinline function _throw_dup_size(expected, actual)
     throw(
         DimensionMismatch(
-            "size of Enzyme shadow buffer ($(size(shadow))) must match size of θ ($(size(θ)))"
+            "expected size $(size(expected)) for Enzyme Duplicated, got $(size(actual))"
         )
     )
 end
 
-@inline function _check_duplicated_size(θ, shadow)
-    size(θ) == size(shadow) || _throw_dup_size(θ, shadow)
+@inline function _check_duplicated_size(expected, actual)
+    size(expected) == size(actual) || _throw_dup_size(expected, actual)
     return nothing
 end
 
