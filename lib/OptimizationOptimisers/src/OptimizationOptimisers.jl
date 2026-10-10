@@ -44,7 +44,7 @@ SciMLBase.allowscallback(opt::AbstractRule) = true
 
 function SciMLBase.__init(
         prob::SciMLBase.OptimizationProblem, opt::AbstractRule;
-        callback = DEFAULT_CALLBACK,
+        callback = OptimizationBase.DEFAULT_CALLBACK,
         epochs::Union{Number, Nothing} = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         save_best::Bool = true, progress::Bool = false, kwargs...
