@@ -183,11 +183,32 @@ end
     @test J ≈ vec(consjac(xt, p1)) rtol = 1.0e-6
 end
 
-# Second-order / combined DI preps (hess, hv, fgh, fg, lag_h) used to keep only the
-# construction-type prep with no `_prep_valid` gate, so Float32/BigFloat/Dual-p/SVector
-# calls threw `PreparationMismatchError`. Each call must match a fresh-prep result.
+# Second-order / combined DI preps (hess, hv, fgh, fg, lag_h) gate on construction
+# types and fall back to prep-free DI when θ/p/v types differ. Each call must match
+# a fresh-prep result. Matching-type fgh uses value_gradient_and_hessian(!).
 Hess_ref(x, p) = ForwardDiff.hessian(xx -> objp(xx, p), x)
 Hv_ref(x, p, v) = Hess_ref(x, p) * v
+
+@testset "matching-type fgh! (IIP/OOP)" begin
+    ad = ADTypes.AutoForwardDiff()
+    fi = OptimizationBase.instantiate_function(
+        OptimizationFunction(objp, ad), x0, ad, p0, 0; fgh = true
+    )
+    G = zeros(2)
+    H = zeros(2, 2)
+    y = fi.fgh(G, H, xt)
+    @test y ≈ objp(xt, p0) rtol = 1.0e-6
+    @test G ≈ ∇xf(xt, p0) rtol = 1.0e-6
+    @test H ≈ Hess_ref(xt, p0) rtol = 1.0e-6
+
+    oop = OptimizationBase.instantiate_function(
+        OptimizationFunction{false}(objp, ad), x0, ad, p0, 0; fgh = true
+    )
+    yo, Go, Ho = oop.fgh(xt)
+    @test yo ≈ objp(xt, p0) rtol = 1.0e-6
+    @test Go ≈ ∇xf(xt, p0) rtol = 1.0e-6
+    @test Ho ≈ Hess_ref(xt, p0) rtol = 1.0e-6
+end
 
 @testset "foreign types through hess!/hv!/fg!/fgh!/lag_h! (DI prep fallback)" begin
     ad = ADTypes.AutoForwardDiff()
@@ -202,7 +223,7 @@ Hv_ref(x, p, v) = Hess_ref(x, p) * v
 
     # --- hess!(H, x::Float32) ---
     H32 = zeros(Float32, 2, 2)
-    @test_nowarn fi.hess(H32, Float32.(xt))
+    fi.hess(H32, Float32.(xt))
     @test Float64.(H32) ≈ Hess_ref(xt, p0) rtol = 1.0e-3
     fresh_h = OptimizationBase.instantiate_function(
         optf, Float32.(x0), ad, Float32.(p0), 1; h = true
@@ -213,14 +234,13 @@ Hv_ref(x, p, v) = Hess_ref(x, p) * v
 
     # Dual `p` through second-order AutoForwardDiff is a ForwardDiff tag-nesting
     # limitation (fresh prep at Dual `p` throws the same DualMismatchError), so it
-    # is not asserted here. The prep-validity gate still routes Dual `p` off the
-    # Float64 prep (no PreparationMismatchError); see first-order Dual `p` above.
+    # is not asserted here. See first-order Dual `p` above.
 
     # --- hv!(Hv, x::BigFloat, v) ---
     xB = big.(xt)
     vB = BigFloat[1, 0]
     HvB = zeros(BigFloat, 2)
-    @test_nowarn fi.hv(HvB, xB, vB)
+    fi.hv(HvB, xB, vB)
     @test Float64.(HvB) ≈ Hv_ref(xt, p0, Float64.(vB)) rtol = 1.0e-3
     fresh_hv = OptimizationBase.instantiate_function(
         optf, big.(x0), ad, big.(p0), 1; hv = true
@@ -228,6 +248,14 @@ Hv_ref(x, p, v) = Hess_ref(x, p) * v
     HvBb = zeros(BigFloat, 2)
     fresh_hv.hv(HvBb, xB, vB)
     @test HvB ≈ HvBb
+
+    # --- hv! with Float64 x and Float32 v (tangent type in the gate) ---
+    Hv32 = zeros(Float32, 2)
+    fi.hv(Hv32, Float32.(xt), Float32[1, 0])
+    @test Float64.(Hv32) ≈ Hv_ref(xt, p0, [1.0, 0.0]) rtol = 1.0e-3
+    Hv_mix = zeros(2)
+    fi.hv(Hv_mix, xt, Float32[1, 0])
+    @test Hv_mix ≈ Hv_ref(xt, p0, [1.0, 0.0]) rtol = 1.0e-3
 
     # --- OOP fg! / hess / fgh! / hv with SVector (different array type) ---
     xs = SVector{2}(xt)
@@ -255,12 +283,12 @@ Hv_ref(x, p, v) = Hess_ref(x, p) * v
     @test Float64.(G32) ≈ ∇xf(xt, p0) rtol = 1.0e-3
     @test Float64.(H32c) ≈ Hess_ref(xt, p0) rtol = 1.0e-3
     G32b = zeros(Float32, 2)
-    @test_nowarn fi.fg(G32b, Float32.(xt))
+    fi.fg(G32b, Float32.(xt))
     @test Float64.(G32b) ≈ ∇xf(xt, p0) rtol = 1.0e-3
 
     # --- lag_h! with Float32 θ ---
     Hlag = zeros(Float32, 2, 2)
-    @test_nowarn fi.lag_h(Hlag, Float32.(xt), Float32(1), Float32[0.5])
+    fi.lag_h(Hlag, Float32.(xt), Float32(1), Float32[0.5])
     fresh_lag = OptimizationBase.instantiate_function(
         optf, Float32.(x0), ad, Float32.(p0), 1; lag_h = true
     )
