@@ -1,20 +1,26 @@
 module OptimizationNLPModels
 
-using NLPModels
 # The model types are the documented entry point for this package: you hand an
 # `AbstractNLPModel` to `OptimizationProblem`/`OptimizationFunction`, and
 # `build_nlpmodel_meta` hands an `NLPModelMeta` back. Those types are re-surfaced by
 # name below; NLPModels' ~200 evaluation functions (`obj`, `grad`, `hess`, `jprod!`, …)
 # are not — they are reached through the exported `NLPModels` module binding, as the
 # docs spell them. Everything stays owned and documented upstream in NLPModels.jl.
-using NLPModels: AbstractNLPModel, AbstractNLSModel, Counters, NLPModelMeta,
-    NLSCounters, NLSMeta
-using ADTypes
+# `bound_constrained`/`cons`/`grad`/`has_*`/`hess`/`unconstrained` are the NLPModels
+# names this file uses unqualified (including as local kwarg bindings in the
+# `OptimizationFunction` constructor).
+using NLPModels: NLPModels, AbstractNLPModel, AbstractNLSModel, Counters, NLPModelMeta,
+    NLSCounters, NLSMeta, bound_constrained, cons, grad, has_bounds, has_equalities,
+    has_inequalities, hess, unconstrained
+using ADTypes: ADTypes
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
-using OptimizationBase
-import SciMLBase
-using SparseArrays
+# `OptimizationProblem` is imported from its owner so
+# `OptimizationNLPModels.OptimizationProblem` remains available to callers that
+# convert NLPModels that way (see core_tests.jl / docs).
+using OptimizationBase: OptimizationBase, MaxSense, OptimizationFunction
+using SciMLBase: SciMLBase, OptimizationProblem
+using SparseArrays: SparseArrays, SparseMatrixCSC, findnz, nnz
 import OptimizationBase.LinearAlgebra: mul!
 
 export NLPModels, build_nlpmodel_meta, NLPModelsAdaptor
@@ -81,7 +87,7 @@ function SciMLBase.OptimizationProblem(
     # The number of variables, geometry of u0, etc.. are valid and were checked when the
     # nlpmodel was created.
 
-    return OptimizationBase.OptimizationProblem(
+    return OptimizationProblem(
         f, u0; lb = lb, ub = ub, lcons = lcons, ucons = ucons, sense = sense, kwargs...
     )
 end
