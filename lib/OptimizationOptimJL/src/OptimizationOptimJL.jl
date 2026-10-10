@@ -128,7 +128,7 @@ function __map_optimizer_args(
         verbose = false,
         kwargs...
     )
-    mapped_args = (; extended_trace = true, show_trace = verbose, kwargs...)
+    mapped_args = (; extended_trace = false, show_trace = verbose, kwargs...)
 
     if !isnothing(abstol)
         mapped_args = (; mapped_args..., f_abstol = abstol)
