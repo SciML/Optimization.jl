@@ -168,12 +168,16 @@ function _copy_hessian_row!(dest, src, transfer_cache)
     return nothing
 end
 
-@inline function _check_duplicated_size(θ, shadow)
-    size(θ) == size(shadow) || throw(
+@noinline function _throw_dup_size(θ, shadow)
+    throw(
         DimensionMismatch(
             "size of Enzyme shadow buffer ($(size(shadow))) must match size of θ ($(size(θ)))"
         )
     )
+end
+
+@inline function _check_duplicated_size(θ, shadow)
+    size(θ) == size(shadow) || _throw_dup_size(θ, shadow)
     return nothing
 end
 
@@ -271,6 +275,7 @@ function OptimizationBase.instantiate_function(
             }(undef, length(x))
 
         function hess(res, θ, p = p)
+            _check_duplicated_size(x, θ)
             for first_index in _batch_starts(second_order_vdθ, second_order_batch_width)
                 vdθ_batch = _cache_batch(
                     second_order_vdθ, first_index, second_order_batch_width
@@ -314,6 +319,7 @@ function OptimizationBase.instantiate_function(
             }(undef, length(x))
 
         function fgh!(G, H, θ, p = p)
+            _check_duplicated_size(x, θ)
             _check_duplicated_size(θ, G)
             for first_index in _batch_starts(second_order_vdθ, second_order_batch_width)
                 vdθ_batch = _cache_batch(
@@ -424,8 +430,9 @@ function OptimizationBase.instantiate_function(
         # both get boxed — which defeats specialization in the solve hot loop. The same
         # `let`-capture idiom is used for the DI-built closures.
         cons_j! = let basefunc = basefunc, y = y, Jaccache = Jaccache, seeds = seeds,
-                dup_annot = dup_annot, fmode = fmode, p = p
+                dup_annot = dup_annot, fmode = fmode, p = p, x = x
             function (J, θ, p = p)
+                _check_duplicated_size(x, θ)
                 for jc in Jaccache
                     Enzyme.make_zero!(jc)
                 end
@@ -507,6 +514,7 @@ function OptimizationBase.instantiate_function(
         cons_vdbθ = Tuple(zeros(eltype(x), length(x)) for i in eachindex(x))
 
         function cons_h!(res, θ)
+            _check_duplicated_size(x, θ)
             for i in 1:num_cons
                 Enzyme.make_zero!(cons_bθ)
                 Enzyme.make_zero!.(cons_vdbθ)
@@ -551,6 +559,7 @@ function OptimizationBase.instantiate_function(
         end
 
         function fill_lag_hessian!(θ, σ, μ, p)
+            _check_duplicated_size(x, θ)
             lag = x -> lagrangian(x, f.f, f.cons, p, μ, σ)
             lag_hessian!(
                 θ, lag, fmode, rmode, lag_vdθ, lag_bθ, lag_vdbθ, lag_batch_width_value
@@ -639,6 +648,7 @@ function OptimizationBase.instantiate_function(
     if g == true && f.grad === nothing
         res = zeros(eltype(x), size(x))
         function grad(θ, p = p)
+            _check_duplicated_size(x, θ)
             Enzyme.make_zero!(res)
             Enzyme.autodiff(
                 rmode,
@@ -662,6 +672,7 @@ function OptimizationBase.instantiate_function(
     elseif fg == true && f.fg === nothing
         res_fg = zeros(eltype(x), size(x))
         function fg!(θ, p = p)
+            _check_duplicated_size(x, θ)
             Enzyme.make_zero!(res_fg)
             y = Enzyme.autodiff(
                 WithPrimal(rmode),
@@ -687,6 +698,7 @@ function OptimizationBase.instantiate_function(
         batch_width_value = Val(batch_width)
 
         function hess(θ, p = p)
+            _check_duplicated_size(x, θ)
             H = Matrix{eltype(θ)}(undef, length(θ), length(θ))
             for first_index in _batch_starts(vdθ, batch_width_value)
                 vdθ_batch = _cache_batch(vdθ, first_index, batch_width_value)
@@ -727,6 +739,7 @@ function OptimizationBase.instantiate_function(
         batch_width_value_fgh = Val(batch_width_fgh)
 
         function fgh!(θ, p = p)
+            _check_duplicated_size(x, θ)
             Enzyme.make_zero!(H_fgh)
             for first_index in _batch_starts(vdθ_fgh, batch_width_value_fgh)
                 vdθ_batch = _cache_batch(vdθ_fgh, first_index, batch_width_value_fgh)
@@ -763,6 +776,7 @@ function OptimizationBase.instantiate_function(
     if hv == true && f.hv === nothing
         H = zero(x)
         function hv!(θ, v, p = p)
+            _check_duplicated_size(x, θ)
             _check_duplicated_size(θ, v)
             dθ = zero(θ)
             Enzyme.make_zero!(H)
@@ -796,6 +810,7 @@ function OptimizationBase.instantiate_function(
         Jaccache = Tuple(zeros(eltype(x), num_cons) for i in 1:length(x))
 
         function cons_j!(θ)
+            _check_duplicated_size(x, θ)
             for i in eachindex(Jaccache)
                 Enzyme.make_zero!(Jaccache[i])
             end
@@ -821,6 +836,7 @@ function OptimizationBase.instantiate_function(
         cons_vjp_res = zeros(eltype(x), num_cons)
 
         function cons_vjp!(θ, v)
+            _check_duplicated_size(x, θ)
             _check_duplicated_size(cons_vjp_res, v)
             Enzyme.make_zero!(res_vjp)
             Enzyme.make_zero!(cons_vjp_res)
@@ -846,6 +862,7 @@ function OptimizationBase.instantiate_function(
         cons_jvp_res = zeros(eltype(x), num_cons)
 
         function cons_jvp!(θ, v)
+            _check_duplicated_size(x, θ)
             _check_duplicated_size(θ, v)
             Enzyme.make_zero!(res_jvp)
             Enzyme.make_zero!(cons_jvp_res)
@@ -871,6 +888,7 @@ function OptimizationBase.instantiate_function(
         cons_vdbθ = Tuple(zeros(eltype(x), length(x)) for i in eachindex(x))
 
         function cons_h!(θ)
+            _check_duplicated_size(x, θ)
             return map(1:num_cons) do i
                 Enzyme.make_zero!(cons_bθ)
                 Enzyme.make_zero!.(cons_vdbθ)
@@ -909,6 +927,7 @@ function OptimizationBase.instantiate_function(
         end
 
         function lag_h!(θ, σ, μ, p = p)
+            _check_duplicated_size(x, θ)
             lag = x -> lagrangian_oop(x, f.f, f.cons, p, μ, σ)
             lag_hessian!(
                 θ, lag, fmode, rmode, lag_vdθ, lag_bθ, lag_vdbθ, lag_batch_width_value

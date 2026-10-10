@@ -1545,6 +1545,11 @@ end
     Gshort = zeros(1)
     @test_throws DimensionMismatch optf.grad(Gshort, [0.5, 0.7])
     @test_throws DimensionMismatch optf.fg(Gshort, [0.5, 0.7])
+
+    optf_oop = OptimizationBase.instantiate_function(
+        OptimizationFunction{false}(rosen, ad), zeros(2), ad, nothing; g = true
+    )
+    @test_throws DimensionMismatch optf_oop.grad(ones(50))
 end
 
 @testset "Enzyme Hessian batch cap" begin
