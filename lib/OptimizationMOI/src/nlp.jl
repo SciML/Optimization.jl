@@ -3,7 +3,7 @@ mutable struct MOIOptimizationNLPEvaluator{
         I, JT <: AbstractMatrix{T}, HT <: AbstractMatrix{T}, CHT <: AbstractMatrix{T}, S, CB,
     } <:
     MOI.AbstractNLPEvaluator
-    f::F
+    const f::F
     reinit_cache::RC
     lb::LB
     ub::UB
