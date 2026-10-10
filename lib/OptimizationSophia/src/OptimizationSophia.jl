@@ -83,7 +83,7 @@ clip(z, ρ) = max(min(z, ρ), -ρ)
 
 function SciMLBase.__init(
         prob::OptimizationProblem, opt::Sophia;
-        maxiters::Number = 1000, callback = (args...) -> (false),
+        maxiters::Number = 1000, callback = OptimizationBase.DEFAULT_CALLBACK,
         progress = false, save_best = true, kwargs...
     )
     return OptimizationCache(
