@@ -12,9 +12,6 @@ const NLPMODELS_REEXPORTS = (
 )
 
 # ExplicitImports findings, all tracked against SciML/Optimization.jl:
-#  * no_implicit_imports broken: the module relies on `using`
-#    module names (SciMLBase/OptimizationBase/...) that cannot be made
-#    explicit without restructuring.
 #  * the ignored *_are_public / *_via_owners names are owned by SciMLBase,
 #    OptimizationBase, the backend, or Base and are not (yet) declared public;
 #    the proper fix is upstream `public` declarations, not a local change.
@@ -37,7 +34,6 @@ run_qa(
         # release (SciMLBase 3.24.0); fix belongs upstream via a `public` declaration.
         all_qualified_accesses_are_public = (; ignore = (:NoAD,)),
     ),
-    ei_broken = (:no_implicit_imports,),
     reexports_allow = NLPMODELS_REEXPORTS,
 )
 
