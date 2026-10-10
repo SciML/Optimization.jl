@@ -328,3 +328,12 @@ end
     )
     @test sol.u.data ≈ [-1.0e9, -1.0e9]
 end
+
+# Default callback must be a stable const so init with/without kwargs share a cache type.
+@testset "DEFAULT_CALLBACK type stability across kwargs" begin
+    loss(x, p) = (p[1] - x[1])^2 + (p[2] - x[2])^2
+    optf = OptimizationFunction(loss, OptimizationBase.AutoForwardDiff())
+    prob = OptimizationProblem(optf, zeros(2), [1.0, 2.0])
+    @test typeof(OptimizationBase.init(prob, Optimisers.Adam())) ==
+        typeof(OptimizationBase.init(prob, Optimisers.Adam(); maxiters = 100))
+end
