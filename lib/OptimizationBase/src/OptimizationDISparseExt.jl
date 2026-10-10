@@ -191,7 +191,7 @@ function instantiate_function(
     cons_oop_p = if _any_ad_jac
         let f = f, num_cons = num_cons
             function (x, p)
-                res = Vector{_cons_out_eltype(x, p)}(undef, num_cons)
+                res = zeros(_cons_out_eltype(x, p), num_cons)
                 f.cons(res, x, p)
                 return res
             end

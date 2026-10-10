@@ -123,6 +123,15 @@ function _check_opt_alg(prob::SciMLBase.OptimizationProblem, alg; kwargs...)
                 "Example: OptimizationProblem(optf, u0, p; lcons=[-Inf], ucons=[0.0])"
         )
     )
+    # Reject mismatched constraint bound lengths when both are provided
+    if !isnothing(prob.lcons) && !isnothing(prob.ucons) &&
+            length(prob.lcons) != length(prob.ucons)
+        throw(
+            ArgumentError(
+                "`lcons` and `ucons` must have the same length, got length(lcons)=$(length(prob.lcons)) and length(ucons)=$(length(prob.ucons))."
+            )
+        )
+    end
     !allowscallback(alg) && !(get(kwargs, :callback, DEFAULT_CALLBACK) isa NullCallback) &&
         throw(IncompatibleOptimizerError("The algorithm $(typeof(alg)) does not support callbacks, remove the `callback` keyword argument from the `solve` call."))
     requiresgradient(alg) &&
