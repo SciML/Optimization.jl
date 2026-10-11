@@ -2,7 +2,7 @@
 
 julia_version = "1.13.1"
 manifest_format = "2.1"
-project_hash = "2fb5b931ad0730c087264edbf25a565fe69be16c"
+project_hash = "dd496f75e15c5f9c3402f6e79b27fe2b2e4a87f5"
 
 [[deps.ADTypes]]
 deps = ["PrecompileTools"]
@@ -171,10 +171,10 @@ version = "7.30.2"
 
 [[deps.ArrayLayouts]]
 deps = ["FillArrays", "LinearAlgebra", "StaticArrays"]
-git-tree-sha1 = "5fdde08f7c53f5c7c58c44c1926ca876a8500c3e"
+git-tree-sha1 = "4b765d735784a6c6a8e329de9b3170d02f64893c"
 registries = "General"
 uuid = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
-version = "1.14.0"
+version = "1.15.0"
 weakdeps = ["SparseArrays"]
 
     [deps.ArrayLayouts.extensions]
@@ -1479,10 +1479,10 @@ version = "0.9.5"
 
 [[deps.KernelAbstractions]]
 deps = ["Adapt", "Atomix", "InteractiveUtils", "MacroTools", "PrecompileTools", "Requires", "StaticArrays", "UUIDs"]
-git-tree-sha1 = "0d0172d662154a2d8e0150c265e75579029f8baf"
+git-tree-sha1 = "e51d16f9dcff134c4ecf79e7cfa764c59d2d648e"
 registries = "General"
 uuid = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
-version = "0.9.44"
+version = "0.9.45"
 weakdeps = ["EnzymeCore", "LinearAlgebra", "SparseArrays"]
 
     [deps.KernelAbstractions.extensions]
@@ -2467,10 +2467,10 @@ version = "2.11.0+0"
 
 [[deps.NNlib]]
 deps = ["Adapt", "Atomix", "BFloat16s", "ChainRulesCore", "GPUArraysCore", "KernelAbstractions", "LinearAlgebra", "Random", "ScopedValues", "Statistics"]
-git-tree-sha1 = "d450844d195714a2d29b38c231193c0297cf90e8"
+git-tree-sha1 = "50dcc36a5f62b68aec10a28fb13973b7cc4fabf6"
 registries = "General"
 uuid = "872c559c-99b0-510c-b3b7-b6c96a88d5cd"
-version = "0.9.45"
+version = "0.9.46"
 
     [deps.NNlib.extensions]
     NNlibAMDGPUExt = "AMDGPU"
@@ -2728,7 +2728,7 @@ version = "0.4.9"
 
 [[deps.Optimization]]
 deps = ["ADTypes", "ArrayInterface", "ConsoleProgressMonitor", "DocStringExtensions", "LinearAlgebra", "Logging", "LoggingExtras", "OptimizationBase", "Printf", "Reexport", "SciMLBase", "SparseArrays", "TerminalLoggers"]
-path = "/home/runner/work/Optimization.jl/Optimization.jl"
+path = "/home/runner/_work/Optimization.jl/Optimization.jl"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 version = "5.9.1"
 
@@ -3703,7 +3703,7 @@ weakdeps = ["ChainRulesCore", "ReverseDiff", "Tracker"]
     SimpleNonlinearSolveTrackerExt = "Tracker"
 
 [[deps.SimpleOptimization]]
-deps = ["ADTypes", "CommonSolve", "LineSearch", "LinearAlgebra", "OptimizationBase", "Reexport", "SciMLBase", "SimpleNonlinearSolve"]
+deps = ["ADTypes", "CommonSolve", "LineSearch", "LinearAlgebra", "OptimizationBase", "SciMLBase", "SimpleNonlinearSolve"]
 path = "../lib/SimpleOptimization"
 uuid = "510db2f7-4254-4e34-bbda-04240c91ca8f"
 version = "2.0.1"
