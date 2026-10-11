@@ -2,7 +2,7 @@
 
 julia_version = "1.13.1"
 manifest_format = "2.1"
-project_hash = "dd496f75e15c5f9c3402f6e79b27fe2b2e4a87f5"
+project_hash = "2fb5b931ad0730c087264edbf25a565fe69be16c"
 
 [[deps.ADTypes]]
 deps = ["PrecompileTools"]
@@ -1499,10 +1499,10 @@ version = "0.5.5"
 
 [[deps.Krylov]]
 deps = ["LinearAlgebra", "Printf", "SparseArrays"]
-git-tree-sha1 = "909890a0d1486c392128cf4bd6e038ee0c6a7af4"
+git-tree-sha1 = "e0574e7e2cd5c40d9a6ae444511fbadd51afbf30"
 registries = "General"
 uuid = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"
-version = "0.10.10"
+version = "0.10.11"
 
 [[deps.LAME_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -2728,7 +2728,7 @@ version = "0.4.9"
 
 [[deps.Optimization]]
 deps = ["ADTypes", "ArrayInterface", "ConsoleProgressMonitor", "DocStringExtensions", "LinearAlgebra", "Logging", "LoggingExtras", "OptimizationBase", "Printf", "Reexport", "SciMLBase", "SparseArrays", "TerminalLoggers"]
-path = "/home/runner/_work/Optimization.jl/Optimization.jl"
+path = "/home/runner/work/Optimization.jl/Optimization.jl"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 version = "5.9.1"
 
@@ -2801,7 +2801,7 @@ uuid = "43fad042-7963-4b32-ab19-e2a4f9a67124"
 version = "1.4.1"
 
 [[deps.OptimizationLBFGSB]]
-deps = ["DocStringExtensions", "LBFGSB", "OptimizationBase", "Reexport", "SciMLBase", "SciMLLogging"]
+deps = ["DocStringExtensions", "LBFGSB", "OptimizationBase", "SciMLBase", "SciMLLogging"]
 path = "../lib/OptimizationLBFGSB"
 uuid = "22f7324a-a79d-40f2-bebe-3af60c77bd15"
 version = "1.5.1"
@@ -4635,10 +4635,10 @@ version = "1.67.1+0"
 
 [[deps.oneTBB_jll]]
 deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
-git-tree-sha1 = "da8c1f6eee04831f14edcfa5dae611d309807e57"
+git-tree-sha1 = "ed2d8d4ad96c03d3abe3382cdbbdea9489b63636"
 registries = "General"
 uuid = "1317d2d5-d96f-522e-a858-c73665f53c3e"
-version = "2022.3.0+0"
+version = "2023.1.0+0"
 
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
