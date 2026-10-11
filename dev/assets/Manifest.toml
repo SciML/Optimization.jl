@@ -2795,7 +2795,7 @@ uuid = "6f0a0517-dbc2-4a7a-8a20-99ae7f27e911"
 version = "0.3.13"
 
 [[deps.OptimizationIpopt]]
-deps = ["ADTypes", "Ipopt", "LinearAlgebra", "OptimizationBase", "Reexport", "SciMLBase", "SciMLLogging", "SparseArrays", "SymbolicIndexingInterface"]
+deps = ["ADTypes", "Ipopt", "LinearAlgebra", "OptimizationBase", "SciMLBase", "SciMLLogging", "SparseArrays", "SymbolicIndexingInterface"]
 path = "../lib/OptimizationIpopt"
 uuid = "43fad042-7963-4b32-ab19-e2a4f9a67124"
 version = "1.4.1"
