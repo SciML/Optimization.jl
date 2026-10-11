@@ -2,7 +2,7 @@
 
 julia_version = "1.13.1"
 manifest_format = "2.1"
-project_hash = "dd496f75e15c5f9c3402f6e79b27fe2b2e4a87f5"
+project_hash = "2fb5b931ad0730c087264edbf25a565fe69be16c"
 
 [[deps.ADTypes]]
 deps = ["PrecompileTools"]
@@ -2728,7 +2728,7 @@ version = "0.4.9"
 
 [[deps.Optimization]]
 deps = ["ADTypes", "ArrayInterface", "ConsoleProgressMonitor", "DocStringExtensions", "LinearAlgebra", "Logging", "LoggingExtras", "OptimizationBase", "Printf", "Reexport", "SciMLBase", "SparseArrays", "TerminalLoggers"]
-path = "/home/runner/_work/Optimization.jl/Optimization.jl"
+path = "/home/runner/work/Optimization.jl/Optimization.jl"
 uuid = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 version = "5.9.1"
 
@@ -2814,7 +2814,7 @@ version = "1.4.2"
 weakdeps = ["ModelingToolkit"]
 
 [[deps.OptimizationMadNLP]]
-deps = ["LinearAlgebra", "MadNLP", "NLPModels", "OptimizationBase", "OptimizationNLPModels", "Reexport", "SciMLBase", "SciMLLogging", "SymbolicIndexingInterface"]
+deps = ["LinearAlgebra", "MadNLP", "NLPModels", "OptimizationBase", "OptimizationNLPModels", "SciMLBase", "SciMLLogging", "SymbolicIndexingInterface"]
 path = "../lib/OptimizationMadNLP"
 uuid = "5d9c809f-c847-4062-9fba-1793bbfef577"
 version = "2.3.2"
@@ -4475,10 +4475,10 @@ version = "1.4.7+0"
 
 [[deps.Xorg_xkeyboard_config_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xkbcomp_jll"]
-git-tree-sha1 = "2e59214e017a55cb87474a00fa76035c82ac0e17"
+git-tree-sha1 = "df77b22eb77051b3d0ef30aab979684f7482c66f"
 registries = "General"
 uuid = "33bec58e-1273-512f-9401-5d533626f822"
-version = "2.47.0+2"
+version = "2.48.0+0"
 
 [[deps.Xorg_xtrans_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
