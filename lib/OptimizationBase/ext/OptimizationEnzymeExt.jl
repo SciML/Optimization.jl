@@ -441,7 +441,13 @@ function OptimizationBase.instantiate_function(
         cons_j! = nothing
     end
 
-    if cons !== nothing && cons_vjp == true && f.cons_vjp === nothing
+    # A requested product comes from the user's product, then the user's `cons_j`, then Enzyme
+    # (see cons_products.jl in OptimizationBase).
+    if cons_vjp == true && cons !== nothing && f.cons_vjp !== nothing
+        cons_vjp! = (Jv, θ, σ) -> f.cons_vjp(Jv, θ, σ, p)
+    elseif cons_vjp == true && cons !== nothing && f.cons_j !== nothing
+        cons_vjp! = OptimizationBase._user_cons_vjp(f, x, p, num_cons)
+    elseif cons_vjp == true && cons !== nothing
         cons_res = zeros(eltype(x), num_cons)
         function cons_vjp!(res, θ, v)
             Enzyme.make_zero!(res)
@@ -456,13 +462,15 @@ function OptimizationBase.instantiate_function(
                 Const(p)
             )
         end
-    elseif cons_vjp == true && cons !== nothing
-        cons_vjp! = (Jv, θ, σ) -> f.cons_vjp(Jv, θ, σ, p)
     else
         cons_vjp! = nothing
     end
 
-    if cons !== nothing && cons_jvp == true && f.cons_jvp === nothing
+    if cons_jvp == true && cons !== nothing && f.cons_jvp !== nothing
+        cons_jvp! = (Jv, θ, v) -> f.cons_jvp(Jv, θ, v, p)
+    elseif cons_jvp == true && cons !== nothing && f.cons_j !== nothing
+        cons_jvp! = OptimizationBase._user_cons_jvp(f, x, p, num_cons)
+    elseif cons_jvp == true && cons !== nothing
         cons_res = zeros(eltype(x), num_cons)
 
         function cons_jvp!(res, θ, v)
@@ -477,8 +485,6 @@ function OptimizationBase.instantiate_function(
                 Const(p)
             )
         end
-    elseif cons_jvp == true && cons !== nothing
-        cons_jvp! = (Jv, θ, v) -> f.cons_jvp(Jv, θ, v, p)
     else
         cons_jvp! = nothing
     end
@@ -597,6 +603,12 @@ function OptimizationBase.instantiate_function(
     x = cache.u0
 
     return OptimizationBase.instantiate_function(f, x, adtype, p, num_cons; kwargs...)
+end
+
+# In-place form of an out-of-place constraint function, so reverse mode can seed its output.
+function _oop_cons!(res, cons, θ, p)
+    copyto!(res, cons(θ, p))
+    return nothing
 end
 
 function OptimizationBase.instantiate_function(
@@ -797,49 +809,46 @@ function OptimizationBase.instantiate_function(
         cons_j! = nothing
     end
 
-    if cons_vjp == true && cons !== nothing && f.cons_vjp == true
+    # A requested product comes from the user's product, then the user's `cons_j`, then Enzyme
+    # (see cons_products.jl in OptimizationBase).
+    if cons_vjp == true && cons !== nothing && f.cons_vjp !== nothing
+        cons_vjp! = (θ, v) -> f.cons_vjp(θ, v, p)
+    elseif cons_vjp == true && cons !== nothing && f.cons_j !== nothing
+        cons_vjp! = OptimizationBase._user_cons_vjp(f, x, p, num_cons)
+    elseif cons_vjp == true && cons !== nothing
         res_vjp = zeros(eltype(x), size(x))
         cons_vjp_res = zeros(eltype(x), num_cons)
+        # Reverse mode consumes (zeroes) the output seed, so seed a copy of `v`.
+        cons_vjp_seed = zeros(eltype(x), num_cons)
 
         function cons_vjp!(θ, v)
             Enzyme.make_zero!(res_vjp)
             Enzyme.make_zero!(cons_vjp_res)
+            copyto!(cons_vjp_seed, v)
 
             Enzyme.autodiff(
-                WithPrimal(rmode),
-                f.cons,
+                rmode,
+                Const(_oop_cons!),
                 Const,
-                Duplicated(cons_vjp_res, v),
+                Duplicated(cons_vjp_res, cons_vjp_seed),
+                Const(f.cons),
                 Duplicated(θ, res_vjp),
                 Const(p)
             )
             return res_vjp
         end
-    elseif cons_vjp == true && cons !== nothing
-        cons_vjp! = (θ, v) -> f.cons_vjp(θ, v, p)
     else
         cons_vjp! = nothing
     end
 
-    if cons_jvp == true && cons !== nothing && f.cons_jvp == true
-        res_jvp = zeros(eltype(x), size(x))
-        cons_jvp_res = zeros(eltype(x), num_cons)
-
-        function cons_jvp!(θ, v)
-            Enzyme.make_zero!(res_jvp)
-            Enzyme.make_zero!(cons_jvp_res)
-
-            Enzyme.autodiff(
-                fmode,
-                f.cons,
-                Duplicated(cons_jvp_res, res_jvp),
-                Duplicated(θ, v),
-                Const(p)
-            )
-            return res_jvp
-        end
-    elseif cons_jvp == true && cons !== nothing
+    if cons_jvp == true && cons !== nothing && f.cons_jvp !== nothing
         cons_jvp! = (θ, v) -> f.cons_jvp(θ, v, p)
+    elseif cons_jvp == true && cons !== nothing && f.cons_j !== nothing
+        cons_jvp! = OptimizationBase._user_cons_jvp(f, x, p, num_cons)
+    elseif cons_jvp == true && cons !== nothing
+        function cons_jvp!(θ, v)
+            return only(Enzyme.autodiff(fmode, f.cons, Duplicated, Duplicated(θ, v), Const(p)))
+        end
     else
         cons_jvp! = nothing
     end

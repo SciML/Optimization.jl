@@ -994,6 +994,26 @@ end
     end
 end
 
+@testset "AutoEnzyme in-place products use a user cons_j" begin
+    # A user `cons_j` is used for `cons_vjp`/`cons_jvp` instead of differentiating `cons`
+    user_J = [1.0 2.0; 3.0 4.0]
+    cons2! = (res, x, p) -> (res .= [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]])
+    optf = OptimizationFunction(
+        rosenbrock, OptimizationBase.AutoEnzyme(),
+        cons = cons2!, cons_j = (J, x, p) -> copyto!(J, user_J)
+    )
+    optprob = OptimizationBase.instantiate_function(
+        optf, x0, OptimizationBase.AutoEnzyme(),
+        nothing, 2, cons_vjp = true, cons_jvp = true
+    )
+    vJ = zeros(2)
+    optprob.cons_vjp(vJ, [5.0, 3.0], [1.0, 2.0])
+    @test vJ == user_J' * [1.0, 2.0]
+    Jv = zeros(2)
+    optprob.cons_jvp(Jv, [5.0, 3.0], [0.5, 0.5])
+    @test Jv == user_J * [0.5, 0.5]
+end
+
 @testset "OOP" begin
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(
@@ -1031,6 +1051,45 @@ end
     @test optprob.cons(x0) == [0.0, 0.0]
     @test optprob.cons_j([5.0, 3.0]) ≈ [10.0 6.0; -0.149013 -0.958924] rtol = 1.0e-6
     @test optprob.cons_h(x0) == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
+
+    # Enzyme-generated constraint products (#1410)
+    optprob = OptimizationBase.instantiate_function(
+        optf, x0, OptimizationBase.AutoEnzyme(),
+        nothing, 2, cons_j = true, cons_vjp = true, cons_jvp = true
+    )
+    J = optprob.cons_j([5.0, 3.0])
+    v = [1.0, 2.0]
+    @test optprob.cons_vjp([5.0, 3.0], v) ≈ J' * [1.0, 2.0]
+    @test v == [1.0, 2.0]
+    @test optprob.cons_jvp([5.0, 3.0], [0.5, 0.5]) ≈ J * [0.5, 0.5]
+
+    # A user `cons_j` is used for the products instead of differentiating `cons`
+    user_J = [1.0 2.0; 3.0 4.0]
+    optf = OptimizationFunction{false}(
+        rosenbrock,
+        OptimizationBase.AutoEnzyme(),
+        cons = cons, cons_j = (x, p) -> user_J
+    )
+    optprob = OptimizationBase.instantiate_function(
+        optf, x0, OptimizationBase.AutoEnzyme(),
+        nothing, 2, cons_vjp = true, cons_jvp = true
+    )
+    @test optprob.cons_vjp([5.0, 3.0], [1.0, 2.0]) == user_J' * [1.0, 2.0]
+    @test optprob.cons_jvp([5.0, 3.0], [0.5, 0.5]) == user_J * [0.5, 0.5]
+
+    # The user's own products still take precedence
+    optf = OptimizationFunction{false}(
+        rosenbrock,
+        OptimizationBase.AutoEnzyme(),
+        cons = cons, cons_j = (x, p) -> user_J,
+        cons_vjp = (x, v, p) -> [-1.0, -1.0], cons_jvp = (x, v, p) -> [-2.0, -2.0]
+    )
+    optprob = OptimizationBase.instantiate_function(
+        optf, x0, OptimizationBase.AutoEnzyme(),
+        nothing, 2, cons_vjp = true, cons_jvp = true
+    )
+    @test optprob.cons_vjp([5.0, 3.0], [1.0, 2.0]) == [-1.0, -1.0]
+    @test optprob.cons_jvp([5.0, 3.0], [0.5, 0.5]) == [-2.0, -2.0]
 
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(
