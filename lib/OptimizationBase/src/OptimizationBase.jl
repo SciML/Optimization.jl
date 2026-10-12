@@ -15,6 +15,7 @@ using DocStringExtensions
 using SciMLBase, ADTypes, SciMLLogging
 
 using ArrayInterface, Base.Iterators, SparseArrays, LinearAlgebra
+import Random
 import SciMLBase: solve, init, solve!, __init, __solve,
     OptimizationProblem, OptimizationFunction,
     OptimizationSolution, OptimizationStats,
@@ -99,6 +100,7 @@ include("OptimizationDISparseExt.jl")
 include("function.jl")
 include("utils.jl")
 include("state.jl")
+include("adaptive_weights.jl")
 
 export solve, OptimizationCache, DEFAULT_CALLBACK, DEFAULT_DATA
 export IncompatibleOptimizerError, OptimizerMissingError
@@ -115,6 +117,10 @@ export init, solve!, remake, ReturnCode, successful_retcode, NoAD
 export EnsembleProblem, EnsembleSerial, EnsembleThreads, EnsembleDistributed
 export AutoEnzyme, AutoFiniteDiff, AutoForwardDiff, AutoMooncake, AutoReactant,
     AutoReverseDiff, AutoSparse, AutoSymbolics, AutoTracker, AutoZygote
+# Weighted-sum scalarization of multi-objective problems and the adaptive-weight
+# rules that update the scalarization weights during a solve.
+export weighted_sum, AbstractAdaptiveWeightRule, GradientScale, MiniMax,
+    SoftAdapt, ReLoBRaLo
 
 include("precompilation.jl")
 
