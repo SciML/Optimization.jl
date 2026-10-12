@@ -449,15 +449,18 @@ function OptimizationBase.instantiate_function(
         cons_vjp! = OptimizationBase._user_cons_vjp(f, x, p, num_cons)
     elseif cons_vjp == true && cons !== nothing
         cons_res = zeros(eltype(x), num_cons)
+        # Reverse mode consumes (zeroes) the output seed, so seed a copy of `v`.
+        cons_seed = zeros(eltype(x), num_cons)
         function cons_vjp!(res, θ, v)
             Enzyme.make_zero!(res)
             Enzyme.make_zero!(cons_res)
+            copyto!(cons_seed, v)
 
             return Enzyme.autodiff(
                 rmode,
                 f.cons,
                 Const,
-                Duplicated(cons_res, v),
+                Duplicated(cons_res, cons_seed),
                 Duplicated(θ, res),
                 Const(p)
             )
