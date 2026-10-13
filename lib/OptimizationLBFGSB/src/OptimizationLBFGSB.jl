@@ -1,17 +1,13 @@
 module OptimizationLBFGSB
 
-using Reexport
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
-using OptimizationBase
-import SciMLBase
+using OptimizationBase: OptimizationBase, OptimizationCache, deduce_retcode
 using SciMLLogging: @SciMLMessage
-using DocStringExtensions
+using DocStringExtensions: TYPEDEF
 import LBFGSB as LBFGSBJL
-using SciMLBase: OptimizationStats
-using SciMLBase: ReturnCode
+using SciMLBase: SciMLBase, OptimizationStats, ReturnCode
 using OptimizationBase.LinearAlgebra: norm
-using OptimizationBase: deduce_retcode
 
 """
 $(TYPEDEF)

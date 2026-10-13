@@ -3,7 +3,7 @@ module SimpleOptimizationForwardDiffExt
 import SimpleOptimization
 import SimpleOptimization.ADTypes: AutoForwardDiff
 
-using ForwardDiff
+using ForwardDiff: ForwardDiff
 
 #inlining helps GPU compilation
 @inline function SimpleOptimization.instantiate_gradient(f, ::AutoForwardDiff)
