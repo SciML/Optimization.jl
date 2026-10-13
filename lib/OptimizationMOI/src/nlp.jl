@@ -3,7 +3,7 @@ mutable struct MOIOptimizationNLPEvaluator{
         I, JT <: AbstractMatrix{T}, HT <: AbstractMatrix{T}, CHT <: AbstractMatrix{T}, S, CB,
     } <:
     MOI.AbstractNLPEvaluator
-    f::F
+    const f::F
     reinit_cache::RC
     lb::LB
     ub::UB
@@ -140,9 +140,12 @@ function MOIOptimizationNLPCache(
             g = true, h = true, cons_j = true, cons_h = true
         )
     else
+        # `eval_constraint_jacobian_transpose_product` falls back to `cons_j`, so only ask
+        # for a `cons_vjp` that does not materialize the Jacobian.
         f = OptimizationBase.instantiate_function(
             prob.f, reinit_cache, prob.f.adtype, num_cons;
-            g = true, h = true, cons_j = true, cons_vjp = true, lag_h = true
+            g = true, h = true, cons_j = true, lag_h = true,
+            cons_vjp = OptimizationBase._matrixfree_cons_vjp(prob.f, prob.f.adtype)
         )
     end
     T = eltype(prob.u0)

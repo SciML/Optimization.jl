@@ -3,7 +3,7 @@ module SimpleOptimizationEnzymeExt
 import SimpleOptimization
 import SimpleOptimization.ADTypes: AutoEnzyme
 
-using Enzyme
+using Enzyme: autodiff_deferred, Reverse, Active
 
 #inlining helps GPU compilation
 @inline function SimpleOptimization.instantiate_gradient(f, ::AutoEnzyme)

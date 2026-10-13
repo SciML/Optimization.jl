@@ -24,8 +24,8 @@ run_qa(
         ),
         all_qualified_accesses_are_public = (;
             ignore = (
-                :AbstractConcreteArray, :AbstractConcreteNumber,
-                :compile, :to_number, :to_rarray,
+                :AbstractConcreteArray, :AbstractConcreteNumber, :_user_cons_jvp,
+                :_user_cons_vjp, :compile, :to_number, :to_rarray,
             ),
         ),
     ),
