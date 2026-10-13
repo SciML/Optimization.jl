@@ -2,8 +2,10 @@ module OptimizationPolyalgorithms
 
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
-using OptimizationBase
-using SciMLBase, OptimizationOptimJL, OptimizationOptimisers
+using OptimizationBase: OptimizationBase
+using SciMLBase: SciMLBase, OptimizationProblem, remake
+using OptimizationOptimJL: OptimizationOptimJL
+using OptimizationOptimisers: OptimizationOptimisers, Optimisers
 
 """
     PolyOpt()
