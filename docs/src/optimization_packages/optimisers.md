@@ -9,8 +9,7 @@ import Pkg;
 Pkg.add("OptimizationOptimisers");
 ```
 
-In addition to the optimisation algorithms provided by the Optimisers.jl package this subpackage
-also provides the Sophia optimisation algorithm.
+The Sophia optimisation algorithm is provided by the [OptimizationSophia.jl package](@ref sophia).
 
 ## Reexported Optimisers.jl API
 

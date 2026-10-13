@@ -1,20 +1,21 @@
 module OptimizationNLPModels
 
-using NLPModels
 # The model types are the documented entry point for this package: you hand an
 # `AbstractNLPModel` to `OptimizationProblem`/`OptimizationFunction`, and
 # `build_nlpmodel_meta` hands an `NLPModelMeta` back. Those types are re-surfaced by
 # name below; NLPModels' ~200 evaluation functions (`obj`, `grad`, `hess`, `jprod!`, …)
 # are not — they are reached through the exported `NLPModels` module binding, as the
 # docs spell them. Everything stays owned and documented upstream in NLPModels.jl.
-using NLPModels: AbstractNLPModel, AbstractNLSModel, Counters, NLPModelMeta,
-    NLSCounters, NLSMeta
-using ADTypes
+using NLPModels: NLPModels, AbstractNLPModel, AbstractNLSModel, Counters, NLPModelMeta,
+    NLSCounters, NLSMeta, bound_constrained, has_bounds, has_equalities,
+    has_inequalities, unconstrained
+using ADTypes: ADTypes
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
-using OptimizationBase
-import SciMLBase
-using SparseArrays
+using OptimizationBase: OptimizationBase, MaxSense, OptimizationFunction
+using SciMLBase: SciMLBase, OptimizationProblem
+using SparseArrays: SparseArrays, SparseMatrixCSC, findnz, nnz
+import OptimizationBase.LinearAlgebra: mul!
 
 export NLPModels, build_nlpmodel_meta, NLPModelsAdaptor
 
@@ -80,7 +81,7 @@ function SciMLBase.OptimizationProblem(
     # The number of variables, geometry of u0, etc.. are valid and were checked when the
     # nlpmodel was created.
 
-    return OptimizationBase.OptimizationProblem(
+    return OptimizationProblem(
         f, u0; lb = lb, ub = ub, lcons = lcons, ucons = ucons, sense = sense, kwargs...
     )
 end
@@ -97,6 +98,8 @@ struct NLPModelsAdaptor{C, T, HB} <: NLPModels.AbstractNLPModel{T, Vector{T}}
     counters::NLPModels.Counters
     jac_rows::Vector{Int}
     jac_cols::Vector{Int}
+    # Scratch for `cons_j`: overwritten by `jac_coord!` and the `jtprod!`/`jprod!` fallback,
+    # so it must never be handed out or relied on between calls.
     jac_buffer::AbstractMatrix{T}
     hess_rows::Vector{Int}
     hess_cols::Vector{Int}
@@ -291,12 +294,16 @@ function NLPModels.hess_coord!(
     return H
 end
 
+# Solvers only *allow* `cons_vjp`/`cons_jvp` (`allowsconsvjp`), so the instantiated function
+# carries them only when they are matrix-free. Otherwise the products go through `cons_j`.
 function NLPModels.jtprod!(
         nlp::NLPModelsAdaptor, x::AbstractVector, v::AbstractVector, Jtv::AbstractVector
     )
-    # Compute J^T * v using the AD-provided VJP (Vector-Jacobian Product)
-    if !isnothing(nlp.cache.f.cons_vjp) && !isempty(Jtv)
+    isempty(Jtv) && return Jtv
+    if !isnothing(nlp.cache.f.cons_vjp)
         nlp.cache.f.cons_vjp(Jtv, x, v)
+    else
+        _jac_product_fallback!(nlp, Jtv, x, v, transpose)
     end
     return Jtv
 end
@@ -304,11 +311,34 @@ end
 function NLPModels.jprod!(
         nlp::NLPModelsAdaptor, x::AbstractVector, v::AbstractVector, Jv::AbstractVector
     )
-    # Compute J * v using the AD-provided JVP (Jacobian-Vector Product)
-    if !isnothing(nlp.cache.f.cons_jvp) && !isempty(Jv)
+    isempty(Jv) && return Jv
+    if !isnothing(nlp.cache.f.cons_jvp)
         nlp.cache.f.cons_jvp(Jv, x, v)
+    else
+        _jac_product_fallback!(nlp, Jv, x, v, identity)
     end
     return Jv
+end
+
+# `res = op(J) * v` for the constraint Jacobian `J` at `x`, used by `jtprod!`
+# (`op = transpose`) and `jprod!` (`op = identity`) when the instantiated function
+# has no matrix-free product.
+function _jac_product_fallback!(nlp::NLPModelsAdaptor, res, x, v, op)
+    # No constraints: `J` is `0 × nvar`, and only `jtprod!` has a nonempty output.
+    if nlp.meta.ncon == 0
+        return fill!(res, zero(eltype(res)))
+    end
+    if isnothing(nlp.cache.f.cons_j)
+        throw(
+            ArgumentError(
+                "The constraint Jacobian products need `cons_j` when no matrix-free " *
+                    "`cons_vjp`/`cons_jvp` is available. Declare `SciMLBase.requiresconsjac` " *
+                    "(or `requiresconsvjp`/`requiresconsjvp`) for the solver using this adaptor."
+            )
+        )
+    end
+    nlp.cache.f.cons_j(nlp.jac_buffer, x)
+    return mul!(res, op(nlp.jac_buffer), v)
 end
 
 function _get_nnzj(f, ncon, nvar)
