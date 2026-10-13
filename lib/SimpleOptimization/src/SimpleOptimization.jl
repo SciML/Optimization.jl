@@ -1,15 +1,14 @@
 module SimpleOptimization
 
-using Reexport
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
-using OptimizationBase
-using SciMLBase
-using SciMLBase: _unwrap_val
-using SimpleNonlinearSolve
-using ADTypes
-using LinearAlgebra
-using CommonSolve
+using OptimizationBase: OptimizationBase, OptimizationCache, OptimizationFunction,
+    OptimizationProblem
+using SciMLBase: SciMLBase, NonlinearProblem, _unwrap_val
+using SimpleNonlinearSolve: SimpleBroyden, SimpleNewtonRaphson
+using ADTypes: ADTypes
+using LinearAlgebra: I, Symmetric, diag, diagind, dot, eigen, mul!, norm, qr!
+using CommonSolve: CommonSolve, solve
 using LineSearch: StrongWolfeLineSearch
 
 abstract type SimpleOptimizationAlgorithm end
