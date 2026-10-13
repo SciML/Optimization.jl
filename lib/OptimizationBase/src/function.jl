@@ -55,9 +55,9 @@ function OptimizationBase.instantiate_function(
     cons_j = f.cons_j === nothing ? nothing :
         (res, x, p_call = p) -> f.cons_j(res, x, p_call)
     cons_jvp = f.cons_jvp === nothing ? nothing :
-        (res, x, p_call = p) -> f.cons_jvp(res, x, p_call)
+        (res, x, v, p_call = p) -> f.cons_jvp(res, x, v, p_call)
     cons_vjp = f.cons_vjp === nothing ? nothing :
-        (res, x, p_call = p) -> f.cons_vjp(res, x, p_call)
+        (res, x, v, p_call = p) -> f.cons_vjp(res, x, v, p_call)
     cons_h = f.cons_h === nothing ? nothing :
         (res, x, p_call = p) -> f.cons_h(res, x, p_call)
     hess_prototype = f.hess_prototype === nothing ? nothing :
@@ -98,9 +98,9 @@ function OptimizationBase.instantiate_function(
     cons_j = f.cons_j === nothing ? nothing :
         (res, x, p_call = cache.p) -> f.cons_j(res, x, p_call)
     cons_jvp = f.cons_jvp === nothing ? nothing :
-        (res, x, p_call = cache.p) -> f.cons_jvp(res, x, p_call)
+        (res, x, v, p_call = cache.p) -> f.cons_jvp(res, x, v, p_call)
     cons_vjp = f.cons_vjp === nothing ? nothing :
-        (res, x, p_call = cache.p) -> f.cons_vjp(res, x, p_call)
+        (res, x, v, p_call = cache.p) -> f.cons_vjp(res, x, v, p_call)
     cons_h = f.cons_h === nothing ? nothing :
         (res, x, p_call = cache.p) -> f.cons_h(res, x, p_call)
     hess_prototype = f.hess_prototype === nothing ? nothing :
@@ -199,10 +199,22 @@ function OptimizationBase.instantiate_function(
         (res, x, p_call = p) -> f.cons(res, x, p_call)
     cons_j = f.cons_j === nothing ? nothing :
         (res, x, p_call = p) -> f.cons_j(res, x, p_call)
-    cons_vjp = f.cons_vjp === nothing ? nothing :
-        (res, x, p_call = p) -> f.cons_vjp(res, x, p_call)
-    cons_jvp = f.cons_jvp === nothing ? nothing :
-        (res, x, p_call = p) -> f.cons_jvp(res, x, p_call)
+    # A requested product the user did not supply is built from their `cons_j`: only a solver
+    # that requires it asks for one it cannot get matrix-free (see cons_products.jl).
+    cons_vjp = if f.cons_vjp !== nothing
+        (res, x, v, p_call = p) -> f.cons_vjp(res, x, v, p_call)
+    elseif get(kwargs, :cons_vjp, false) == true && f.cons_j !== nothing
+        _user_cons_vjp(f, x, p, num_cons)
+    else
+        nothing
+    end
+    cons_jvp = if f.cons_jvp !== nothing
+        (res, x, v, p_call = p) -> f.cons_jvp(res, x, v, p_call)
+    elseif get(kwargs, :cons_jvp, false) == true && f.cons_j !== nothing
+        _user_cons_jvp(f, x, p, num_cons)
+    else
+        nothing
+    end
     cons_h = f.cons_h === nothing ? nothing :
         (res, x, p_call = p) -> f.cons_h(res, x, p_call)
 

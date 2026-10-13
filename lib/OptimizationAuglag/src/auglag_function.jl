@@ -57,10 +57,19 @@ so its gradient (used closed-form, not by AD'ing through `L`) is
 time, so the outer AugLag loop can update multipliers and the penalty in
 place between inner solves without rebuilding the function.
 
-`cons_tmp` and `J` are preallocated once with element type `eltype(cache.u0)`.
-This is safe because the analytical gradient does not AD through this
-function — `cache.f.grad` and `cache.f.cons_j` (which the inner solver
-ultimately calls) handle their own AD internally.
+The constraint term of `∇L` is a single vector-Jacobian product `Jᵀv` with
+`cache.f.cons_vjp`, where `v` holds the multiplier weight of every constraint
+row (zero for inactive inequalities). `AugLag` declares `requiresconsvjp`, so
+OptimizationBase always provides one: the user's, one built from the user's
+`cons_j`, the AD backend's pullback, or a chunked/colored AD Jacobian for
+forward-mode backends. Because inactive rows enter with a zero weight rather
+than being skipped, a non-finite derivative in an inactive row propagates to
+the gradient.
+
+`cons_tmp`, `v` and `Jᵀv` are preallocated once with element type
+`eltype(cache.u0)`. This is safe because the analytical gradient does not AD
+through this function — `cache.f.grad` and `cache.f.cons_vjp` handle their own
+AD internally.
 
 # Constraints and the data-iterator `p`
 
@@ -73,11 +82,10 @@ constraint body may pull the underlying full data from it (e.g. via
 `p.data` for an `MLUtils.DataLoader`) — but the constraint is still a
 deterministic function of `θ` and the full data, never of a single batch.
 
-Consistent with this, the constraint Jacobian `cache.f.cons_j` is invoked
-without `p` and uses the `p` that was closed over at AD-preparation time
-(the first batch for a data iterator). Since the constraint is by
-contract batch-independent, that closed-over `p` is irrelevant to the
-Jacobian's value.
+Consistent with this, `cache.f.cons_vjp` is invoked without `p` and uses
+the `p` that was closed over at instantiation (the first batch for a data
+iterator). Since the constraint is by contract batch-independent, that
+closed-over `p` is irrelevant to its value.
 """
 function generate_auglag(
         cache,
@@ -89,56 +97,55 @@ function generate_auglag(
     T = eltype(cache.u0)
 
     cons_tmp = zeros(T, m)
-    J = zeros(T, m, n)
+    Jᵀv = zeros(T, n)
+    v = zeros(T, m)
+
     lcons = cache.lcons
     ucons = cache.ucons
 
-    auglag_value = function (θ, p)
-        f_val = first(cache.f(θ, p))
-        cache.f.cons(cons_tmp, θ, cache.p)
-        ρ = ρ_ref[]
+    multipliers! = function (v, cons_tmp, ρ, f_val)
+        fill!(v, zero(T))
         L = f_val
+
         @inbounds for (i, idx) in enumerate(eq_inds)
             ce = cons_tmp[idx] - lcons[idx]
+            v[idx] += λ[i] + ρ * ce
             L += λ[i] * ce + (ρ / 2) * ce^2
         end
         @inbounds for (i, idx) in enumerate(ineq_upper_inds)
             cu = cons_tmp[idx] - ucons[idx]
             m_act = max(zero(T), μ_upper[i] + ρ * cu)
+            v[idx] += m_act
             L += m_act^2 / (2 * ρ)
         end
         @inbounds for (i, idx) in enumerate(ineq_lower_inds)
             cl = lcons[idx] - cons_tmp[idx]
             m_act = max(zero(T), μ_lower[i] + ρ * cl)
+            v[idx] -= m_act
             L += m_act^2 / (2 * ρ)
         end
+
+        return L
+    end
+
+    auglag_value = function (θ, p)
+        f_val = first(cache.f(θ, p))
+        cache.f.cons(cons_tmp, θ, cache.p)
+        ρ = ρ_ref[]
+        L = multipliers!(v, cons_tmp, ρ, f_val)
         return L
     end
 
     auglag_grad! = function (G, θ, p)
         cache.f.grad(G, θ, p)
         cache.f.cons(cons_tmp, θ, cache.p)
-        cache.f.cons_j(J, θ)
+
         ρ = ρ_ref[]
-        @inbounds for (i, idx) in enumerate(eq_inds)
-            ce = cons_tmp[idx] - lcons[idx]
-            a = λ[i] + ρ * ce
-            @views @. G += a * J[idx, :]
-        end
-        @inbounds for (i, idx) in enumerate(ineq_upper_inds)
-            cu = cons_tmp[idx] - ucons[idx]
-            m_act = max(zero(T), μ_upper[i] + ρ * cu)
-            if m_act > zero(T)
-                @views @. G += m_act * J[idx, :]
-            end
-        end
-        @inbounds for (i, idx) in enumerate(ineq_lower_inds)
-            cl = lcons[idx] - cons_tmp[idx]
-            m_act = max(zero(T), μ_lower[i] + ρ * cl)
-            if m_act > zero(T)
-                @views @. G -= m_act * J[idx, :]
-            end
-        end
+        multipliers!(v, cons_tmp, ρ, zero(T))
+        cache.f.cons_vjp(Jᵀv, θ, v)
+
+        G .+= Jᵀv
+
         return G
     end
 
@@ -150,31 +157,13 @@ function generate_auglag(
             first(cache.f(θ, p))
         end
         cache.f.cons(cons_tmp, θ, cache.p)
-        cache.f.cons_j(J, θ)
+
         ρ = ρ_ref[]
-        L = f_val
-        @inbounds for (i, idx) in enumerate(eq_inds)
-            ce = cons_tmp[idx] - lcons[idx]
-            a = λ[i] + ρ * ce
-            L += λ[i] * ce + (ρ / 2) * ce^2
-            @views @. G += a * J[idx, :]
-        end
-        @inbounds for (i, idx) in enumerate(ineq_upper_inds)
-            cu = cons_tmp[idx] - ucons[idx]
-            m_act = max(zero(T), μ_upper[i] + ρ * cu)
-            if m_act > zero(T)
-                L += m_act^2 / (2 * ρ)
-                @views @. G += m_act * J[idx, :]
-            end
-        end
-        @inbounds for (i, idx) in enumerate(ineq_lower_inds)
-            cl = lcons[idx] - cons_tmp[idx]
-            m_act = max(zero(T), μ_lower[i] + ρ * cl)
-            if m_act > zero(T)
-                L += m_act^2 / (2 * ρ)
-                @views @. G -= m_act * J[idx, :]
-            end
-        end
+        L = multipliers!(v, cons_tmp, ρ, f_val)
+        cache.f.cons_vjp(Jᵀv, θ, v)
+
+        G .+= Jᵀv
+
         return L
     end
 

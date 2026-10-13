@@ -335,11 +335,14 @@ end
         @test !isempty(seen_ps)
         n_dl = count(p -> p === dl, seen_ps)
         n_other = count(p -> p !== dl, seen_ps)
-        # The DI cons_j preparation calls cons once or twice with the
-        # closed-over first batch — those are the only legal non-DL
-        # entries. Every call from `__solve` onward must be the iterator.
         @test n_dl ≥ 1
         @test n_dl > n_other
+        # The only legal non-iterator `p` is the first batch that OptimizationBase closed
+        # over at instantiation (used by `cons_vjp`, whose call count depends on the AD
+        # backend and is not asserted here). Anything else would mean a
+        # per-batch `p` was routed into `cons!`.
+        first_batch = iterate(dl)[1]
+        @test all(p -> p === dl || p == first_batch, seen_ps)
     end
 
     @testset "degenerate pure-penalty (γ=1, λ=μ=0)" begin
@@ -363,5 +366,53 @@ end
 
         @test result.retcode === ReturnCode.Success
         @test norm(fx.A * result.u - fx.b, Inf) < ϵ_primal
+    end
+
+    @testset "user-supplied constraint derivatives are used" begin
+        # min (θ₁-1)² + (θ₂-2)²  s.t.  θ₁ + θ₂ = 1   ⇒   θ* = (0, 1)
+        obj(θ, p) = (θ[1] - 1)^2 + (θ[2] - 2)^2
+        obj_grad!(G, θ, p) = (G .= (2(θ[1] - 1), 2(θ[2] - 2)); nothing)
+        cons!(res, θ, p) = (res[1] = θ[1] + θ[2]; nothing)
+        # Not differentiable by ForwardDiff: any AD of it throws.
+        cons_float!(res, θ, p) = (res[1] = Float64(θ[1]) + Float64(θ[2]); nothing)
+        jcalls = Ref(0)
+        cons_j!(J, θ, p) = (jcalls[] += 1; J .= 1; nothing)
+        vjp_calls = Ref(0)
+        cons_vjp!(res, θ, v, p) = (vjp_calls[] += 1; res .= v[1]; nothing)
+
+        solve_eq(optf) = solve(
+            OptimizationProblem(optf, zeros(2); lcons = [1.0], ucons = [1.0]),
+            AugLag(; inner = Optimisers.Adam(0.05), inner_kwargs = (; maxiters = 200));
+            maxiters = 100
+        )
+
+        @testset "NoAD with a user cons_vjp(res, θ, v, p)" begin
+            vjp_calls[] = 0
+            optf = OptimizationFunction(
+                obj; grad = obj_grad!, cons = cons!, cons_j = cons_j!, cons_vjp = cons_vjp!
+            )
+            result = solve_eq(optf)
+            @test vjp_calls[] > 0
+            @test norm(result.u .- [0.0, 1.0], Inf) < 5.0e-2
+        end
+
+        @testset "NoAD with only a user cons_j" begin
+            jcalls[] = 0
+            optf = OptimizationFunction(obj; grad = obj_grad!, cons = cons!, cons_j = cons_j!)
+            result = solve_eq(optf)
+            @test jcalls[] > 0
+            @test norm(result.u .- [0.0, 1.0], Inf) < 5.0e-2
+        end
+
+        # The user's `cons_j` is used instead of differentiating `cons`, also when `cons`
+        # cannot be differentiated at all.
+        @testset "AutoForwardDiff with a user cons_j ($label cons)" for (label, cons) in
+            ("differentiable" => cons!, "non-differentiable" => cons_float!)
+            jcalls[] = 0
+            optf = OptimizationFunction(obj, AutoForwardDiff(); cons, cons_j = cons_j!)
+            result = solve_eq(optf)
+            @test jcalls[] > 0
+            @test norm(result.u .- [0.0, 1.0], Inf) < 5.0e-2
+        end
     end
 end

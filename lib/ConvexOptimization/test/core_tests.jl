@@ -4,6 +4,7 @@ using SciMLBase: ConvexOptimizationProblem, OptimizationSolution
 import MathOptInterface as MOI
 import Clarabel
 using LinearAlgebra
+using StaticArrays: SVector
 using Test
 
 # A successful solve must be self-consistent: the reported objective equals
@@ -462,7 +463,9 @@ end
     @test_throws "not affine in the variables" solve_checked(
         pprob(lin, [1.0]; constraints = [ConeConstraint((u, p) -> [u[1]^2 + p[1] * u[2] - 1.0], Z1)]), ALG
     )
-    @test_throws "must be affine in the optimization variables" solve_checked(
+    # u[i]^2 inside the norm is a nested atom; the element can change sign, so
+    # certification rejects it.
+    @test_throws "not certified convex" solve_checked(
         pprob((u, p) -> norm(u .^ 2 .- p[1], 2), [1.0]), ALG
     )
 
@@ -494,9 +497,14 @@ end
     @test_throws "not affine in the parameters" solve_checked(
         pprob(lin, [2.0]; constraints = [ConeConstraint((u, p) -> [u[1] + u[2] - 1 / p[1]], Z1)]), ALG
     )
-    @test_throws "scales a lowered atom" solve_checked(
-        pprob((u, p) -> exp(p[1]) * u[1] + u[2], [1.0]), ALG
-    )
+    prob = pprob((u, p) -> exp(p[1]) * u[1] + u[2], [1.0])
+    cache = init(prob, ALG)
+    for p in ([1.0], [-1.0])
+        cache = reinit!(cache; p)
+        sol = solve!_checked(cache)
+        @test isapprox(sol.u, [-10.0, -10.0]; atol = 1.0e-5)
+        @test isapprox(sol.objective, -10 * (exp(p[1]) + 1); atol = 1.0e-5)
+    end
 
     # the epigraph-sign guard, already at the initial p
     @test_throws "Lowering an atom through its epigraph" solve_checked(
@@ -683,11 +691,7 @@ end
             "not affine in the optimization variables",
             (u, p) -> abs2(u[1] * u[2]), [0.5, 0.5], nothing, (;),
         ),
-        # norm(w)^2 is an atom nested in an atom: out of scope, must error.
-        (
-            "must be affine in the optimization variables",
-            (u, p) -> norm(u .- 1.0, 2)^2, [0.5, 0.5], nothing, (;),
-        ),
+
         # indefinite P makes the quadratic form non-convex
         (
             "positive semidefinite",
@@ -1126,12 +1130,6 @@ end
         ("only over all elements", (u, p) -> maximum(u; dims = 1), [0.0, 0.0], SciMLBase.MinSense),
         ("only over all elements", (u, p) -> sum(abs.(u); dims = 1), [0.0, 0.0], SciMLBase.MinSense),
         ("only over all elements", (u, p) -> sum(abs.(u); init = 1.0), [0.0, 0.0], SciMLBase.MinSense),
-        ("must be affine in the optimization variables", (u, p) -> abs(u[1]^2), [0.5], SciMLBase.MinSense),
-        ("must be affine in the optimization variables", (u, p) -> max(u[1], u[1]^2), [0.5], SciMLBase.MinSense),
-        ("must be affine in the optimization variables", (u, p) -> maximum(u .^ 2), [0.5, 0.5], SciMLBase.MinSense),
-        ("must be affine in the optimization variables", (u, p) -> sum(abs.(u .^ 2)), [0.5, 0.5], SciMLBase.MinSense),
-        ("must be affine in the optimization variables", (u, p) -> max(u[1], abs(u[2])), [0.0, 0.0], SciMLBase.MinSense),
-        ("must be affine in the optimization variables", (u, p) -> abs(norm(u .- 1.0)), [0.0, 0.0], SciMLBase.MinSense),
     ]
     for (msg, f, u0, sense) in cases
         prob = ConvexOptimizationProblem(OptimizationFunction(f), u0; sense)
@@ -1214,4 +1212,832 @@ end
     )
     @test isapprox(sol.u, [0.5, -0.25]; atol = 1.0e-6)
     @test isapprox(sol.objective, -0.125; atol = 1.0e-6)
+end
+
+# Atoms inside other atoms lower innermost-first; certification runs `analyze`
+# on the original expression, so a lowered-but-nonconvex graph still errors.
+@testset "nested atoms lower innermost-first and certify the original expression" begin
+    # Same least squares as the sum-of-squares spelling above, via a norm atom.
+    u★ = QLS_A \ QLS_B
+    obj★ = norm(QLS_A * u★ - QLS_B)^2
+    for spelling in (
+            (u, p) -> norm(QLS_A * u - QLS_B)^2,
+            (u, p) -> abs2(norm(QLS_A * u - QLS_B)),
+        )
+        sol = solve_checked(
+            ConvexOptimizationProblem(OptimizationFunction(spelling), zeros(3)), ALG
+        )
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.u, u★; atol = 1.0e-6)
+        @test isapprox(sol.objective, obj★; atol = 1.0e-6)
+    end
+
+    # (objective, u0, kwargs, expected objective, expected u or nothing)
+    cases = [
+        # min exp(||u - c||): exp is increasing, so u* = c, obj = e^0 = 1.
+        ((u, p) -> exp(norm(u .- [1.0, 2.0])), [0.0, 0.0], (;), 1.0, [1.0, 2.0]),
+        # max(||u||, 1) on sum(u) = 1: unconstrained norm min is 0.707 < 1; u* not unique.
+        (
+            (u, p) -> max(norm(u), 1.0), [0.4, 0.6],
+            (constraints = [ConeConstraint((u, p) -> [u[1] + u[2] - 1.0], MOI.Zeros(1))],),
+            1.0, nothing,
+        ),
+        # (|u1| + |u2|)^2 on sum(u) = 1: |u1| + |u2| >= |u1 + u2| = 1; u* not unique.
+        (
+            (u, p) -> sum(abs.(u))^2, [0.4, 0.6],
+            (constraints = [ConeConstraint((u, p) -> [u[1] + u[2] - 1.0], MOI.Zeros(1))],),
+            1.0, nothing,
+        ),
+        # |norm(u - 1)| = norm(u - 1): u* = 1, obj = 0.
+        ((u, p) -> abs(norm(u .- 1.0)), [0.0, 0.0], (;), 0.0, [1.0, 1.0]),
+        # max(u1, |u2|) on the box: u* is not unique; only the objective is pinned.
+        (
+            (u, p) -> max(u[1], abs(u[2])), [0.3, -0.4],
+            (lb = [-1.0, -1.0], ub = [1.0, 1.0]), 0.0, nothing,
+        ),
+        # ||u|| + exp(||u||) on [1, 2]^2 is increasing in u: u* = (1, 1).
+        (
+            (u, p) -> norm(u) + exp(norm(u)), [1.5, 1.5],
+            (lb = [1.0, 1.0], ub = [2.0, 2.0]), sqrt(2.0) + exp(sqrt(2.0)), [1.0, 1.0],
+        ),
+        # -log(u1) + ||u[2:3]|| with u1 <= 1: -log pushes u1 up, u* = (1, 0, 0).
+        (
+            (u, p) -> -log(u[1]) + norm(u[2:3]), [0.5, 0.5, 0.5],
+            (constraints = [ConeConstraint((u, p) -> [u[1] - 1.0], MOI.Nonpositives(1))],),
+            0.0, [1.0, 0.0, 0.0],
+        ),
+        # max(u1, -log(u2)) with u1 pinned: the -log branch dominates, u2* = 2.
+        (
+            (u, p) -> max(u[1], -log(u[2])), [-5.0, 1.0],
+            (lb = [-5.0, 0.0], ub = [-5.0, 2.0]), -log(2.0), [-5.0, 2.0],
+        ),
+        # pinned compositions: the objective is f evaluated at the pin.
+        ((u, p) -> abs(u[1]^2), [1.0], (lb = [2.0], ub = [2.0]), 4.0, [2.0]),
+        ((u, p) -> max(u[1], u[1]^2), [1.0], (lb = [2.0], ub = [2.0]), 4.0, [2.0]),
+        ((u, p) -> maximum(u .^ 2), [1.0, 0.5], (lb = [2.0, 1.0], ub = [2.0, 1.0]), 4.0, [2.0, 1.0]),
+        ((u, p) -> sum(abs.(u .^ 2)), [1.0, 0.5], (lb = [2.0, 1.0], ub = [2.0, 1.0]), 5.0, [2.0, 1.0]),
+        ((u, p) -> norm(u .^ 2), [1.0, 0.5], (lb = [2.0, 1.0], ub = [2.0, 1.0]), sqrt(17.0), [2.0, 1.0]),
+        (
+            (u, p) -> norm([exp(u[1]), u[2]]), [0.4, 0.9],
+            (lb = [0.5, 1.0], ub = [0.5, 1.0]), sqrt(exp(1.0) + 1.0), [0.5, 1.0],
+        ),
+        ((u, p) -> exp(exp(u[1])), [0.4], (lb = [0.5], ub = [0.5]), exp(exp(0.5)), [0.5]),
+    ]
+    for (f, u0, kw, obj★, u★) in cases
+        sol = solve_checked(
+            ConvexOptimizationProblem(OptimizationFunction(f), u0; kw...), ALG
+        )
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.objective, obj★; atol = 1.0e-6)
+        u★ === nothing || @test isapprox(sol.u, u★; atol = 1.0e-6)
+    end
+
+    # Nested concave under MaxSense: max_u min(u1, log(u2)), pinned finite.
+    solm = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> min(u[1], log(u[2]))), [1.0, 2.0];
+            sense = SciMLBase.MaxSense, lb = [log(4.0), 4.0], ub = [log(4.0), 4.0]
+        ), ALG
+    )
+    @test SciMLBase.successful_retcode(solm.retcode)
+    @test isapprox(solm.objective, log(4.0); atol = 1.0e-6)
+
+    # These lower fine but the original composition is not DCP for the sense.
+    bad = [
+        ((u, p) -> abs2(max(u[1], u[2])), [0.5, 0.5], (;)),
+        ((u, p) -> abs(max(u[1], u[2])), [0.5, 0.5], (;)),
+        ((u, p) -> max(u[1], min(u[2], 0.0)), [0.5, 0.5], (;)),
+        ((u, p) -> max(u[1], log(u[2])), [0.5, 0.5], (;)),
+        ((u, p) -> exp(-norm(u)), [0.5, 0.5], (;)),
+        ((u, p) -> -log(norm(u) + 1.0), [0.5, 0.5], (;)),
+        ((u, p) -> norm(u .^ 2 .- 1.0), [0.5, 0.5], (;)),
+        ((u, p) -> norm([max(u[1], u[2]), u[3]]), [0.5, 0.5, 0.5], (;)),
+        # nested concave under MinSense / nested convex under MaxSense
+        ((u, p) -> min(u[1], log(u[2])), [0.5, 0.5], (;)),
+        ((u, p) -> norm(u)^2, [0.5, 0.5], (sense = SciMLBase.MaxSense,)),
+    ]
+    for (f, u0, kw) in bad
+        prob = ConvexOptimizationProblem(OptimizationFunction(f), u0; kw...)
+        @test_throws "not certified convex" solve(prob, ALG)
+    end
+end
+
+@testset "nested atoms with parameters re-solve through reinit!" begin
+    # min ||A u - p||^2: the parameter stays an affine constant in the cone.
+    optf = OptimizationFunction((u, p) -> norm(QLS_A * u .- p)^2)
+    prob = ConvexOptimizationProblem(optf, zeros(3), QLS_B)
+    cache = init(prob, ALG)
+    for θ in (QLS_B, [2.0, 1.0, 0.0, -1.0], zeros(4))
+        cache = reinit!(cache; p = θ)
+        sol = solve!_checked(cache)
+        cold = solve_checked(SciMLBase.remake(prob; p = θ), ALG)
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.u, cold.u; atol = 1.0e-8)
+        @test isapprox(sol.objective, cold.objective; atol = 1.0e-8)
+    end
+
+    # exp(||u - p||): u* = θ, obj = 1 at every θ.
+    optf2 = OptimizationFunction((u, p) -> exp(norm(u .- p)))
+    prob2 = ConvexOptimizationProblem(optf2, [0.0, 0.0], [1.0, 2.0])
+    cache2 = init(prob2, ALG)
+    for θ in ([1.0, 2.0], [-1.0, 0.5], [0.0, 0.0])
+        cache2 = reinit!(cache2; p = θ)
+        sol = solve!_checked(cache2)
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.u, θ; atol = 1.0e-6)
+        @test isapprox(sol.objective, 1.0; atol = 1.0e-6)
+    end
+
+    # (exp(u1) + p)^2 is DCP at p = 0 and nonconvex at p = -2; with parameters
+    # symbolic in the certificate it refuses at init for every p.
+    pprob = (f, p; kw...) -> ConvexOptimizationProblem(
+        OptimizationFunction(f), [0.0, 0.0], p;
+        constraints = [ConeConstraint((u, p) -> [u[1], u[2]], MOI.Zeros(2))],
+        kw...
+    )
+    @test_throws "not certified convex" solve_checked(
+        pprob((u, p) -> (exp(u[1]) + p[1])^2, [0.0]), ALG
+    )
+    # (exp(u1) + p^2)^2 is convex for every θ — the certificate must see p^2 ≥ 0.
+    sol = solve_checked(pprob((u, p) -> (exp(u[1]) + p[1]^2)^2, [0.0]), ALG)
+    @test isapprox(sol.objective, 1.0; atol = 1.0e-5)
+end
+
+@testset "nested certification holds for every p" begin
+    # The inner argument changes sign with p: convex at some θ only → refused.
+    pprob1 = (f, p; kw...) -> ConvexOptimizationProblem(
+        OptimizationFunction(f), [0.5], p; kw...
+    )
+    pprob2 = (f, p; kw...) -> ConvexOptimizationProblem(
+        OptimizationFunction(f), [0.5, 0.5], p; kw...
+    )
+    @test_throws "not certified convex" solve_checked(
+        pprob1((u, p) -> abs2(abs(u[1]) + p[1]), [0.0]), ALG
+    )
+    @test_throws "not certified convex" solve_checked(
+        pprob2((u, p) -> abs2(norm(u) + p[1]), [0.0]), ALG
+    )
+    @test_throws "not certified convex" solve_checked(
+        pprob2((u, p) -> abs2(p[1] * norm(u)), [2.0]), ALG
+    )
+    @test_throws "not certified convex" solve_checked(
+        pprob2((u, p) -> p[1] * norm(u .- 1.0)^2, [2.0]), ALG
+    )
+    # max(·, 0) is not provably nonnegative to SymbolicAnalysis: conservative refusal.
+    @test_throws "not certified convex" solve_checked(
+        pprob2((u, p) -> max(norm(u) + p[1], 0.0)^2, [2.0]), ALG
+    )
+
+    optf = OptimizationFunction((u, p) -> abs(u[1] - p[1])^2 + abs(u[2] - p[2])^2)
+    prob = ConvexOptimizationProblem(optf, [0.0, 0.0], [1.0, -1.0])
+    cache = init(prob, ALG)
+    for θ in ([1.0, -1.0], [-2.0, 0.5], [0.0, 0.0])
+        cache = reinit!(cache; p = θ)
+        sol = solve!_checked(cache)
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.u, θ; atol = 1.0e-5)
+        @test isapprox(sol.objective, 0.0; atol = 1.0e-5)
+    end
+end
+
+@testset "θ-only subterms certify as constants" begin
+    # A p-only subterm certifies as an unknown-sign constant; p[i]^2 keeps its sign.
+    pprob = (f, p; kw...) -> ConvexOptimizationProblem(
+        OptimizationFunction(f), [0.0, 0.0], p; kw...
+    )
+    cases = (
+        ((u, p) -> norm(u)^2 - p[1]^2, [1.0], θ -> -θ[1]^2, θ -> [0.0, 0.0]),
+        (
+            (u, p) -> norm(u .- p)^2 - norm(p)^2, [1.0, -1.0],
+            θ -> -sum(abs2, θ), θ -> θ,
+        ),
+        ((u, p) -> p[1]^2 * norm(u .- 1.0)^2, [2.0], θ -> 0.0, θ -> [1.0, 1.0]),
+    )
+    thetas = ([2.0, -1.0], [-1.5, 0.5], [0.0, 0.0])
+    for (f, p0, expected_obj, expected_u) in cases
+        prob = pprob(f, p0)
+        cache = init(prob, ALG)
+        for θ in thetas
+            θp = θ[1:length(p0)]
+            cache = reinit!(cache; p = θp)
+            sol = solve!_checked(cache)
+            cold = solve_checked(SciMLBase.remake(prob; p = θp), ALG)
+            @test isapprox(sol.objective, expected_obj(θp); atol = 1.0e-6)
+            @test isapprox(sol.objective, cold.objective; atol = 1.0e-8)
+            all(==(0.0), θp) && continue
+            @test isapprox(sol.u, expected_u(θp); atol = 1.0e-6)
+        end
+    end
+
+    prob = pprob((u, p) -> abs(p[1]) * norm(u)^2, [1.0])
+    cache = init(prob, ALG)
+    for p in ([1.0], [-2.0], [0.0])
+        cache = reinit!(cache; p)
+        sol = solve!_checked(cache)
+        @test isapprox(sol.objective, 0.0; atol = 1.0e-6)
+    end
+    # A bare parameter of unknown sign still decides curvature: refused.
+    @test_throws "not certified convex" solve_checked(
+        pprob((u, p) -> p[1] * norm(u)^2, [1.0]), ALG
+    )
+end
+
+@testset "parameter-only atoms use exact data" begin
+    cases = (
+        (
+            (u, p) -> abs(u[1] + abs(p[1]) - 1) + u[1]^2,
+            [2.0], ([2.0], [-0.25], [0.0], [-1.0]),
+            p -> [clamp(1 - abs(p[1]), -0.5, 0.5)],
+        ),
+        (
+            (u, p) -> abs(u[1] + exp(p[1]) - 2) + u[1]^2,
+            [0.0], ([0.0], [log(2.25)], [log(1.5)]),
+            p -> [clamp(2 - exp(p[1]), -0.5, 0.5)],
+        ),
+        (
+            (u, p) -> u[1]^2 + norm(p),
+            [1.0], ([1.0], [-2.0], [0.0]),
+            p -> [0.0],
+        ),
+        (
+            (u, p) -> max(p[1], p[2]) * 1 + norm(u .- p),
+            [1.0, -2.0], ([1.0, -2.0], [-2.0, 3.0], [0.0, 0.0]),
+            p -> p,
+        ),
+    )
+    for (f, p0, thetas, expected_u) in cases
+        prob = ConvexOptimizationProblem(OptimizationFunction(f), zeros(length(expected_u(p0))), p0)
+        cache = init(prob, ALG_TIGHT)
+        for p in thetas
+            cache = reinit!(cache; p)
+            sol = solve!_checked(cache)
+            @test SciMLBase.successful_retcode(sol.retcode)
+            @test isapprox(sol.u, expected_u(p); atol = 1.0e-5)
+            @test isapprox(sol.objective, f(expected_u(p), p); atol = 1.0e-5)
+        end
+    end
+end
+
+@testset "parameter vectors are converted to Float64 vectors" begin
+    for p in (SVector{0, Float64}(), Any[])
+        prob = ConvexOptimizationProblem(OptimizationFunction((u, p) -> abs(u[1] - 1)), [0.0], p)
+        sol = solve_checked(prob, ALG)
+        @test isapprox(sol.u, [1.0]; atol = 1.0e-5)
+    end
+    prob = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> abs(u[1] - p[1])), [0.0], SVector(2.0)
+    )
+    cache = init(prob, ALG)
+    for p in (SVector(2.0), SVector(-1.0))
+        cache = reinit!(cache; p)
+        sol = solve!_checked(cache)
+        @test isapprox(sol.u, collect(p); atol = 1.0e-5)
+    end
+end
+
+@testset "nested atoms in open boxes hit the analytic minimizer" begin
+    # min ‖abs.(u)‖ on u ∈ [-3,-2]^2: |u| ∈ [2,3]^2, minimized at u = (-2,-2).
+    sol = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> norm(abs.(u))), [-2.5, -2.5];
+            lb = [-3.0, -3.0], ub = [-2.0, -2.0]
+        ), ALG
+    )
+    @test isapprox(sol.u, [-2.0, -2.0]; atol = 1.0e-6)
+    @test isapprox(sol.objective, 2 * sqrt(2.0); atol = 1.0e-6)
+
+    # exp(‖u‖ - 3) is increasing in ‖u‖: same minimizer.
+    sol = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> exp(norm(u) - 3.0)), [0.0, 0.0];
+            lb = [-3.0, -3.0], ub = [-2.0, -2.0]
+        ), ALG
+    )
+    @test isapprox(sol.u, [-2.0, -2.0]; atol = 1.0e-6)
+    @test isapprox(sol.objective, exp(2 * sqrt(2.0) - 3.0); atol = 1.0e-6)
+
+    # (‖u‖ + p^2)^2: the argument is nonnegative at every θ.
+    optf = OptimizationFunction((u, p) -> (norm(u) + p[1]^2)^2)
+    prob = ConvexOptimizationProblem(
+        optf, [0.0, 0.0], [0.0]; lb = [-3.0, -3.0], ub = [-2.0, -2.0]
+    )
+    cache = init(prob, ALG)
+    for θ in ([0.0], [1.0], [-2.0], [0.5])
+        cache = reinit!(cache; p = θ)
+        sol = solve!_checked(cache)
+        cold = solve_checked(SciMLBase.remake(prob; p = θ), ALG)
+        @test isapprox(sol.u, [-2.0, -2.0]; atol = 1.0e-6)
+        @test isapprox(sol.objective, (2 * sqrt(2.0) + θ[1]^2)^2; atol = 1.0e-5)
+        @test isapprox(sol.objective, cold.objective; atol = 1.0e-8)
+    end
+end
+
+@testset "an empty AbstractVector p behaves like NullParameters" begin
+    sol = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> norm(u .- 1.0)^2 + norm(u)^2),
+            [1.0, 2.0], Float64[]
+        ), ALG
+    )
+    @test isapprox(sol.objective, 1.0; atol = 1.0e-5)
+end
+
+# Atoms inside `<=`/`>=` constraint components are lowered through the atom's
+# epigraph/hypograph like objective atoms; `sol.dual` still has one entry per
+# `ConeConstraint` — the atom's own cones stay internal.
+
+@testset "norm in a <= constraint lowers through its epigraph" begin
+    # min u1+u2 s.t. ||u - [1,2]||_2 <= 1/2: the optimum sits on the ball in the
+    # -(1,1) direction; the KKT multiplier is |(1,1)| = sqrt(2).
+    optf = OptimizationFunction((u, p) -> u[1] + u[2])
+    cons = [ConeConstraint((u, p) -> [norm(u .- [1.0, 2.0]) - 0.5], MOI.Nonpositives(1))]
+    prob = ConvexOptimizationProblem(optf, [1.0, 2.0]; constraints = cons)
+    sol = solve_checked(prob, ALG_TIGHT)
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [1.0, 2.0] .- 0.5 / sqrt(2); atol = 1.0e-7)
+    @test isapprox(sol.objective, 3.0 - 1 / sqrt(2); atol = 1.0e-7)
+    @test length(sol.dual) == 1 && length(sol.dual[1]) == 1
+    @test isapprox(only(sol.dual[1]), -sqrt(2); atol = 1.0e-7)
+end
+
+@testset "l1 constraint: sum(abs.(u)) <= 1 lowers to NormOneCone" begin
+    # inactive: the unconstrained LAD optimum (0.55, -0.3) is inside the ball
+    cons = [ConeConstraint((u, p) -> [sum(abs.(u)) - 1.0], MOI.Nonpositives(1))]
+    optf = OptimizationFunction((u, p) -> sum(abs.(PWL_A * u - PWL_b)))
+    sol = solve_checked(
+        ConvexOptimizationProblem(optf, [0.0, 0.0]; constraints = cons), ALG
+    )
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [0.55, -0.3]; atol = 1.0e-6)
+    @test isapprox(sol.objective, 1.495; atol = 1.0e-6)
+    @test isapprox(only(sol.dual[1]), 0.0; atol = 1.0e-6)
+
+    # active: min 2u1 - u2 over the l1 ball is attained at the vertex (-1, 0)
+    # with multiplier 2.
+    optf2 = OptimizationFunction((u, p) -> 2u[1] - u[2])
+    sol2 = solve_checked(
+        ConvexOptimizationProblem(optf2, [0.0, 0.0]; constraints = cons), ALG
+    )
+    @test isapprox(sol2.u, [-1.0, 0.0]; atol = 1.0e-6)
+    @test isapprox(sol2.objective, -2.0; atol = 1.0e-6)
+    @test isapprox(only(sol2.dual[1]), -2.0; atol = 1.0e-6)
+end
+
+@testset "exp and square atoms in <=, log in >=" begin
+    # exp(u1) + u2^2 <= 3, min -u1 + u2: KKT gives e^u1 = 2, u2 = -1/2·e^u1·2,
+    # so u* = (log 2, -1) and the multiplier is 1/2.
+    cons = [ConeConstraint((u, p) -> [exp(u[1]) + u[2]^2 - 3.0], MOI.Nonpositives(1))]
+    sol = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> -u[1] + u[2]), [0.0, 0.0]; constraints = cons
+        ), ALG_TIGHTEST
+    )
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [log(2), -1.0]; atol = 1.0e-6)
+    @test isapprox(sol.objective, -log(2) - 1; atol = 1.0e-6)
+    @test isapprox(only(sol.dual[1]), -0.5; atol = 1.0e-6)
+
+    # min u1+u2 s.t. log(u2) >= 1/2 and u1 >= -5: both bind, u* = (-5, e^{1/2});
+    # the log multiplier is u2* = e^{1/2} (d/du2 of u2 - λ log(u2)).
+    cons2 = [
+        ConeConstraint((u, p) -> [log(u[2]) - 0.5], MOI.Nonnegatives(1)),
+        ConeConstraint((u, p) -> [u[1] + 5.0], MOI.Nonnegatives(1)),
+    ]
+    sol2 = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u[1] + u[2]), [1.0, 2.0]; constraints = cons2
+        ), ALG_TIGHTEST
+    )
+    @test isapprox(sol2.u, [-5.0, exp(0.5)]; atol = 1.0e-6)
+    @test isapprox(sol2.objective, -5.0 + exp(0.5); atol = 1.0e-6)
+    @test isapprox(sol2.dual[1], [exp(0.5)]; atol = 1.0e-5)
+    @test isapprox(sol2.dual[2], [1.0]; atol = 1.0e-6)
+end
+
+@testset "u' * P * u <= 1 lowers a constraint through the rotated SOC" begin
+    # min u1 s.t. 2 u1^2 + 3 u2^2 <= 1: u* = (-1/sqrt(2), 0); KKT gives
+    # 1 + λ·4·u1 = 0, so the multiplier is sqrt(2)/4.
+    P = diagm([2.0, 3.0])
+    cons = [ConeConstraint((u, p) -> [u' * P * u - 1.0], MOI.Nonpositives(1))]
+    sol = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u[1]), [0.5, 0.5]; constraints = cons
+        ), ALG_TIGHT
+    )
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [-1 / sqrt(2), 0.0]; atol = 1.0e-7)
+    @test isapprox(sol.objective, -1 / sqrt(2); atol = 1.0e-7)
+    @test isapprox(only(sol.dual[1]), -sqrt(2) / 4; atol = 1.0e-6)
+end
+
+@testset "concave atoms in >= constraints: minimum, and <= written as >=" begin
+    # min u1+u2 s.t. min(u1,u2) >= 1: u* = (1,1); stationarity splits the unit
+    # gradient across the two hypograph rows, so the row multiplier is 2.
+    cons = [ConeConstraint((u, p) -> [minimum(u) - 1.0], MOI.Nonnegatives(1))]
+    sol = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u[1] + u[2]), [0.5, 0.5]; constraints = cons
+        ), ALG
+    )
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [1.0, 1.0]; atol = 1.0e-6)
+    @test isapprox(sol.objective, 2.0; atol = 1.0e-6)
+    @test isapprox(only(sol.dual[1]), 2.0; atol = 1.0e-6)
+
+    # the same ball written `t - norm(u) >= 0`: a concave component certified
+    # for `>=`, dual positive mirror of the `<=` spelling.
+    cons2 = [
+        ConeConstraint(
+            (u, p) -> [0.5 - norm(u .- [1.0, 2.0])], MOI.Nonnegatives(1)
+        ),
+    ]
+    sol2 = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u[1] + u[2]), [1.0, 2.0]; constraints = cons2
+        ), ALG_TIGHT
+    )
+    @test isapprox(sol2.u, [1.0, 2.0] .- 0.5 / sqrt(2); atol = 1.0e-7)
+    @test isapprox(only(sol2.dual[1]), sqrt(2); atol = 1.0e-7)
+end
+
+@testset "several atom components in one constraint" begin
+    # min -u1-u2 s.t. |u1| <= 1 and exp(u2) <= 2 in one Nonpositives(2): the
+    # dual has one entry per component, (-1, -1/2).
+    cons = [
+        ConeConstraint(
+            (u, p) -> [abs(u[1]) - 1.0, exp(u[2]) - 2.0], MOI.Nonpositives(2)
+        ),
+    ]
+    sol = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> -u[1] - u[2]), [0.0, 0.0]; constraints = cons
+        ), ALG_TIGHTEST
+    )
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [1.0, log(2)]; atol = 1.0e-6)
+    @test isapprox(sol.objective, -1.0 - log(2); atol = 1.0e-6)
+    @test length(sol.dual) == 1 && length(sol.dual[1]) == 2
+    @test isapprox(sol.dual[1], [-1.0, -0.5]; atol = 1.0e-6)
+end
+
+@testset "atoms of both signs in one component" begin
+    # exp(u1) - log(u2) <= 0 is `exp(u1) <= log(u2)` — convex because `-log` is
+    # convex — and lowers a dir=+1 atom and a dir=-1 atom into the same row.
+    # min u2 s.t. that and u1 >= 0: u* = (0, e) with multipliers -e and e.
+    cons = [
+        ConeConstraint(
+            (u, p) -> [exp(u[1]) - log(u[2])], MOI.Nonpositives(1)
+        ),
+        ConeConstraint((u, p) -> [u[1]], MOI.Nonnegatives(1)),
+    ]
+    sol = solve_checked(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> u[2]), [0.5, 3.0]; constraints = cons
+        ), ALG_TIGHT
+    )
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [0.0, exp(1.0)]; atol = 1.0e-5)
+    @test isapprox(sol.objective, exp(1.0); atol = 1.0e-5)
+    @test isapprox(sol.dual[1], [-exp(1.0)]; atol = 1.0e-4)
+    @test isapprox(sol.dual[2], [exp(1.0)]; atol = 1.0e-4)
+end
+
+@testset "constraint atoms in the wrong direction are rejected" begin
+    mk(g, set; kw...) = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> u[1]), [0.5, 0.5];
+        constraints = [ConeConstraint(g, set)], kw...
+    )
+    P1, N1, Z1 = MOI.Nonpositives(1), MOI.Nonnegatives(1), MOI.Zeros(1)
+
+    # `norm(u) >= 1` is the exterior of a ball: not a convex set.
+    @test_throws "concave or affine" solve(mk((u, p) -> [norm(u) - 1.0], N1), ALG)
+    # `log(u1) <= 0` is a superlevel set of a concave function: not convex.
+    @test_throws "convex or affine" solve(mk((u, p) -> [log(u[1])], P1), ALG)
+    # a convex equality is not a convex set, and other cones stay affine-only.
+    @test_throws "affine" solve(mk((u, p) -> [exp(u[1]) - 2.0], Z1), ALG)
+    @test_throws "affine" solve(
+        mk((u, p) -> [norm(u), u[2]], MOI.SecondOrderCone(2)), ALG
+    )
+    @test_throws "affine" solve(
+        mk((u, p) -> [u[1], exp(u[2])], MOI.ExponentialCone()), ALG
+    )
+    # wrong curvature inside an accepted cone
+    @test_throws "convex or affine" solve(mk((u, p) -> [1.0 - norm(u)], P1), ALG)
+    @test_throws "convex or affine" solve(mk((u, p) -> [min(u[1], u[2])], P1), ALG)
+    @test_throws "concave or affine" solve(mk((u, p) -> [max(u[1], u[2])], N1), ALG)
+    # `1 - u1^2` is concave: `|u1| >= 1` is not a convex set
+    @test_throws "convex or affine" solve(mk((u, p) -> [1.0 - u[1]^2], P1), ALG)
+    # a nonconvex quadratic form in <=
+    Pbad = Float64[1 0; 0 -1]
+    @test_throws "positive semidefinite" solve(
+        mk((u, p) -> [u' * Pbad * u - 1.0], P1), ALG
+    )
+    # The nested convex sublevel is the unit 4-norm ball.
+    nested = mk((u, p) -> [norm(u .^ 2) - 1.0], P1)
+    nested_sol = solve_checked(nested, ALG_TIGHT)
+    @test isapprox(nested_sol.u, [-1.0, 0.0]; atol = 1.0e-5)
+    @test isapprox(nested_sol.objective, -1.0; atol = 1.0e-5)
+    @test isapprox(only(nested_sol.dual[1]), -0.5; atol = 1.0e-5)
+
+    # on the parametric path there is no `analyze` gate: `p[1] - norm(u) <= 0`
+    # (`norm(u) >= p1`, the nonconvex exterior) must be refused by the sign
+    # guard on the lowered row instead.
+    pprob = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> u[1]), [0.5, 0.5], [1.0];
+        constraints = [ConeConstraint((u, p) -> [p[1] - norm(u)], P1)]
+    )
+    @test_throws "relaxes" solve(pprob, ALG)
+    # and `p[1]` may not multiply a lowered atom's variable either
+    pprob2 = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> u[1]), [0.5, 0.5], [1.0];
+        constraints = [ConeConstraint((u, p) -> [p[1] * norm(u) - 1.0], P1)]
+    )
+    @test_throws "parameter-dependent coefficient" solve(pprob2, ALG)
+end
+
+@testset "a parameter in a constraint's affine part re-solves through reinit!" begin
+    # norm(u) <= p1, min u1+u2: u* = -p1·(1,1)/sqrt(2), and the multiplier is
+    # |(1,1)| = sqrt(2) at every radius.
+    optf = OptimizationFunction((u, p) -> u[1] + u[2])
+    cons = [ConeConstraint((u, p) -> [norm(u) - p[1]], MOI.Nonpositives(1))]
+    prob = ConvexOptimizationProblem(optf, [0.5, 0.5], [1.0]; constraints = cons)
+
+    cache = init(prob, ALG)
+    for θ in ([1.0], [0.5], [2.5])
+        cache = reinit!(cache; p = θ)
+        sol = solve!_checked(cache)
+        cold = solve_checked(SciMLBase.remake(prob; p = θ), ALG)
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.u, fill(-θ[1] / sqrt(2), 2); atol = 1.0e-6)
+        @test isapprox(only(sol.dual[1]), -sqrt(2); atol = 1.0e-5)
+        @test isapprox(sol.u, cold.u; atol = 1.0e-7)
+        @test isapprox(sol.objective, cold.objective; atol = 1.0e-7)
+        @test all(isapprox.(sol.dual, cold.dual; atol = 1.0e-7))
+        @test length(sol.dual) == 1
+    end
+
+    # a parameter inside the atom's argument is a θ-affine cone constant
+    cons2 = [ConeConstraint((u, p) -> [norm(u .- p) - 1.0], MOI.Nonpositives(1))]
+    prob2 = ConvexOptimizationProblem(optf, [0.5, 0.5], [1.0, 2.0]; constraints = cons2)
+    cache2 = init(prob2, ALG)
+    for θ in ([1.0, 2.0], [3.0, -1.0])
+        cache2 = reinit!(cache2; p = θ)
+        sol = solve!_checked(cache2)
+        cold = solve_checked(SciMLBase.remake(prob2; p = θ), ALG)
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.u, θ .- 1 / sqrt(2); atol = 1.0e-6)
+        @test isapprox(sol.u, cold.u; atol = 1.0e-7)
+        @test isapprox(sol.objective, cold.objective; atol = 1.0e-7)
+        @test all(isapprox.(sol.dual, cold.dual; atol = 1.0e-7))
+    end
+end
+
+@testset "constraint atoms match Convex.jl primal, objective and dual" begin
+    convex_available = if Base.find_package("Convex") === nothing
+        @info "Convex.jl not available in this environment; skipping cross-check " *
+            "(the analytic assertions above already pin the same values)."
+        false
+    else
+        @eval import Convex
+        true
+    end
+    if convex_available
+        P = diagm([2.0, 3.0])
+        # each case: (our constraint list, linear objective, Convex constraints)
+        cases = [
+            (
+                [
+                    ConeConstraint(
+                        (u, p) -> [norm(u .- [1.0, 2.0]) - 0.5], MOI.Nonpositives(1)
+                    ),
+                ],
+                (u, p) -> u[1] + u[2],
+                x -> [norm(x - [1.0, 2.0], 2) <= 0.5],
+            ),
+            (
+                [ConeConstraint((u, p) -> [sum(abs.(u)) - 1.0], MOI.Nonpositives(1))],
+                (u, p) -> 2u[1] - u[2],
+                x -> [sum(abs.(x)) <= 1.0],
+            ),
+            (
+                [
+                    ConeConstraint(
+                        (u, p) -> [exp(u[1]) + u[2]^2 - 3.0], MOI.Nonpositives(1)
+                    ),
+                ],
+                (u, p) -> -u[1] + u[2],
+                x -> [exp(x[1]) + Convex.square(x[2]) <= 3.0],
+            ),
+            (
+                [ConeConstraint((u, p) -> [u' * P * u - 1.0], MOI.Nonpositives(1))],
+                (u, p) -> u[1],
+                x -> [Convex.quadform(x, P) <= 1.0],
+            ),
+            (
+                [
+                    ConeConstraint((u, p) -> [log(u[2]) - 0.5], MOI.Nonnegatives(1)),
+                    ConeConstraint((u, p) -> [u[1] + 10.0], MOI.Nonnegatives(1)),
+                ],
+                (u, p) -> u[1] + u[2],
+                x -> [log(x[2]) >= 0.5, x[1] >= -10.0],
+            ),
+            (
+                [ConeConstraint((u, p) -> [minimum(u) - 1.0], MOI.Nonnegatives(1))],
+                (u, p) -> u[1] + u[2],
+                x -> [minimum(x) >= 1.0],
+            ),
+            (
+                [ConeConstraint((u, p) -> [maximum(u) - 1.0], MOI.Nonpositives(1))],
+                (u, p) -> -u[1] - u[2],
+                x -> [maximum(x) <= 1.0],
+            ),
+        ]
+        for (cons, f, ccons) in cases
+            u0 = [0.4, 1.0]   # log(u2) >= 0.5 needs a positive starting point
+            prob = ConvexOptimizationProblem(
+                OptimizationFunction(f), u0; constraints = cons
+            )
+            sol = solve_checked(prob, ALG_TIGHT)
+            @test SciMLBase.successful_retcode(sol.retcode)
+
+            xc = Convex.Variable(length(u0))
+            pc = Convex.minimize(f(xc, nothing), ccons(xc))
+            Convex.solve!(pc, Clarabel.Optimizer; silent = true)
+
+            @test isapprox(sol.u, vec(Convex.evaluate(xc)); atol = 1.0e-5)
+            @test isapprox(sol.objective, pc.optval; atol = 1.0e-5)
+            @test length(sol.dual) == length(pc.constraints)
+            for k in eachindex(sol.dual)
+                @test isapprox(
+                    vec(sol.dual[k]), vec(collect(pc.constraints[k].dual));
+                    atol = 1.0e-4
+                )
+            end
+        end
+    end
+end
+
+@testset "symmetric matrix atoms and PSD triangle constraints" begin
+    X(u) = [u[1] 0.0; 0.0 1.0 - u[1]]
+    for (f, sense) in ((eigmax, SciMLBase.MinSense), (eigmin, SciMLBase.MaxSense))
+        prob = ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> f(X(u))), [0.0]; sense
+        )
+        sol = solve_checked(prob, ALG_TIGHT)
+        @test SciMLBase.successful_retcode(sol.retcode)
+        @test isapprox(sol.u, [0.5]; atol = 1.0e-5)
+        @test isapprox(sol.objective, 0.5; atol = 1.0e-5)
+    end
+
+    rectangular = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> opnorm([u[1] - 1.0 0.0 0.0; 0.0 u[2] + 2.0 0.0])),
+        [0.0, 0.0]
+    )
+    sol = solve_checked(rectangular, ALG_TIGHT)
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [1.0, -2.0]; atol = 1.0e-5)
+    @test isapprox(sol.objective, 0.0; atol = 1.0e-5)
+
+    maxdet = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> logdet([u[1] 0.0; 0.0 u[2]])),
+        [1.0, 1.0]; sense = SciMLBase.MaxSense,
+        constraints = [ConeConstraint((u, p) -> [2.0 - u[1] - u[2]], MOI.Nonnegatives(1))]
+    )
+    sol = solve_checked(maxdet, ALG_TIGHT)
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.u, [1.0, 1.0]; atol = 1.0e-5)
+    @test isapprox(sol.objective, 0.0; atol = 1.0e-5)
+    @test length(sol.dual) == 1 && length(sol.dual[1]) == 1
+end
+
+@testset "five-node cycle SDP uses upper-triangle column order" begin
+    function gram5(u)
+        X = Matrix{Any}(undef, 5, 5)
+        for j in 1:5, i in 1:5
+            X[i, j] = i == j ? 1.0 : 0.0
+        end
+        k = 1
+        for j in 2:5, i in 1:(j - 1)
+            X[i, j] = X[j, i] = u[k]
+            k += 1
+        end
+        return X
+    end
+    triangle(X) = [X[i, j] for j in 1:size(X, 2) for i in 1:j]
+    con = ConeConstraint((u, p) -> triangle(gram5(u)), MOI.PositiveSemidefiniteConeTriangle(5))
+    prob = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> u[1] + u[3] + u[6] + u[7] + u[10]),
+        zeros(10); constraints = [con]
+    )
+    sol = solve_checked(prob, ALG_TIGHT)
+    @test SciMLBase.successful_retcode(sol.retcode)
+    @test isapprox(sol.objective, 5cos(4π / 5); atol = 1.0e-5)
+    @test length(sol.dual) == 1 && length(sol.dual[1]) == 15
+end
+
+@testset "PSD atom symmetry and direction guards" begin
+    asymmetric(u, p) = [u[1] p[1]; 0.0 1.0]
+    for (f, sense) in (
+            (eigmax, SciMLBase.MinSense),
+            (eigmin, SciMLBase.MaxSense), (logdet, SciMLBase.MaxSense),
+        )
+        prob = ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> f(asymmetric(u, p))), [0.0], [1.0]; sense
+        )
+        @test_throws "symmetric affine matrix" solve(prob, ALG)
+    end
+    symmetric_p(u, p) = [u[1] p[1]; p[2] 1.0]
+    prob = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> eigmax(symmetric_p(u, p))), [0.0], [0.0, 0.0]
+    )
+    @test_throws "symmetric affine matrix" solve(prob, ALG)
+    asymmetric_u = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> eigmax([u[1] u[1]; 0.0 1.0])), [0.0]
+    )
+    @test_throws "symmetric affine matrix" solve(asymmetric_u, ALG)
+
+    @test_throws "epigraph" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> eigmax([u[1] 0.0; 0.0 1.0 - u[1]])),
+            [0.0]; sense = SciMLBase.MaxSense
+        ), ALG
+    )
+    @test_throws "hypograph" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> logdet([u[1] 0.0; 0.0 1.0])),
+            [1.0]
+        ), ALG
+    )
+    @test_throws "may not scale a PSD" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction((u, p) -> p[1] * eigmax([u[1] 0.0; 0.0 1.0 - u[1]])),
+            [0.0], [1.0]
+        ), ALG
+    )
+    @test_throws "not certified convex" solve(
+        ConvexOptimizationProblem(
+            OptimizationFunction(
+                (u, p) -> exp(p[1] * eigmax([u[1] 0.0; 0.0 1.0 - u[1]]))
+            ), [0.0], [1.0]
+        ), ALG
+    )
+end
+
+@testset "PSD atoms compose and reinit with affine parameter data" begin
+    X(u) = [u[1] 0.0; 0.0 1.0 - u[1]]
+    nested = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> exp(eigmax(X(u)))), [0.0]
+    )
+    sol = solve_checked(nested, ALG_TIGHT)
+    @test isapprox(sol.u, [0.5]; atol = 1.0e-5)
+    @test isapprox(sol.objective, exp(0.5); atol = 1.0e-5)
+
+    nested_max = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> max(eigmax(X(u)), 1.0)), [0.0]
+    )
+    sol = solve_checked(nested_max, ALG_TIGHT)
+    @test isapprox(sol.objective, 1.0; atol = 1.0e-5)
+
+    parameter_data = ConvexOptimizationProblem(
+        OptimizationFunction(
+            (u, p) -> eigmax(X(u)) + eigmax([p[1] 0.0; 0.0 -p[1]])
+        ), [0.0], [-3.0]
+    )
+    sol = solve_checked(parameter_data, ALG_TIGHT)
+    @test isapprox(sol.u, [0.5]; atol = 1.0e-5)
+    @test isapprox(sol.objective, 3.5; atol = 1.0e-5)
+
+    logdet_con = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> u[1] + u[2]), [1.0, 1.0];
+        constraints = [
+            ConeConstraint(
+                (u, p) -> [logdet([u[1] 0.0; 0.0 u[2]])], MOI.Nonnegatives(1)
+            ),
+        ]
+    )
+    logdet_alg = ConvexMOI(
+        MOI.OptimizerWithAttributes(
+            Clarabel.Optimizer,
+            "tol_gap_abs" => 1.0e-12, "tol_gap_rel" => 1.0e-12,
+            "tol_feas" => 1.0e-12, "tol_ktratio" => 1.0e-12
+        )
+    )
+    sol = solve_checked(logdet_con, logdet_alg)
+    @test isapprox(sol.u, [1.0, 1.0]; atol = 1.0e-5)
+    @test isapprox(sol.objective, 2.0; atol = 1.0e-5)
+    @test length(sol.dual) == 1 && length(sol.dual[1]) == 1
+
+    parametric = ConvexOptimizationProblem(
+        OptimizationFunction((u, p) -> eigmax([u[1] + p[1] 0.0; 0.0 1.0 - u[1] + p[2]])),
+        [0.0], [0.0, 0.0]
+    )
+    cache = init(parametric, ALG_TIGHT)
+    for θ in ([0.0, 0.0], [1.0, -0.5], [-2.0, 3.0])
+        reinit!(cache; p = θ)
+        sol = solve!_checked(cache)
+        cold = solve_checked(SciMLBase.remake(parametric; p = θ), ALG_TIGHT)
+        @test isapprox(sol.u[1], (1 + θ[2] - θ[1]) / 2; atol = 1.0e-5)
+        @test isapprox(sol.objective, (1 + θ[1] + θ[2]) / 2; atol = 1.0e-5)
+        @test isapprox(sol.u, cold.u; atol = 1.0e-5)
+    end
 end
