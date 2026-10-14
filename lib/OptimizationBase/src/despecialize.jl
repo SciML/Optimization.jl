@@ -1,19 +1,8 @@
-# Type erasure for `OptimizationFunction{iip, AutoSpecialize}` and
-# `OptimizationFunction{iip, AutoDespecialize}`.
-#
-# The solvers build closures over their caches, and the caches hold the objective, its
-# derivatives, the constraints and `p`. With full specialization each of those types is
-# repeated at every layer and the solver code is compiled anew for every objective. Here
-# the functions are stored behind a field of type `Any` before `instantiate_function`
-# runs, so the AD preparations, the instantiated closures and the solver cache have the
-# same types for every objective. `AutoDespecialize` also stores `p` in a
-# `SciMLBase.DespecializedParameters`. The cost is one dynamic dispatch per call, below
-# which the user's function stays fully specialized.
-#
-# A field of type `Any` is used instead of a `FunctionWrapper` because the latter converts
-# its arguments to the declared signature: an in-place gradient written into a view would
-# be written into a converted copy, and every dual type the AD backends call with (tags
-# included) would have to be enumerated.
+# Type erasure for `AutoSpecialize`/`AutoDespecialize` problems: the functions (and, for
+# `AutoDespecialize`, `p`) are hidden behind a field of type `Any` before
+# `instantiate_function`, so the AD preparations and solver caches have the same types for
+# every objective, at the cost of one dynamic dispatch per call. Not a `FunctionWrapper`,
+# which would convert arguments (breaking in-place writes into views and dual types).
 
 """
     DespecializedFunction{K}(f)
@@ -40,11 +29,8 @@ SciMLBase.unwrapped_f(w::DespecializedFunction) = SciMLBase.unwrapped_f(w.f)
     return SciMLBase.invoke_with_despecialized_parameters(f, map(_unwrap_iterator, args))
 end
 
-# The value an objective-like call returns, given the optimization variables `x` it was
-# called with. The wrapped function is called through a field of type `Any`, so without a
-# type on this value everything the solver computes from it is inferred as `Any` too.
-# AD backends whose values are not `eltype(x)` add methods for their `x` (see
-# OptimizationReverseDiffExt).
+# Type-asserts the value of a dynamic call so that the solver code infers.
+# AD backends whose values are not `eltype(x)` add methods (see OptimizationReverseDiffExt).
 function _despecialized_value(val, x)
     return if val isa eltype(x)
         val
@@ -164,14 +150,9 @@ function despecializes(f::OptimizationFunction)
     return SciMLBase.isinplace(f) && _despecializes_with(f.adtype)
 end
 
-# AD choices whose instantiation needs the concrete functions or `p` instead of calling
-# them, so the problem keeps its full specialization:
-#   - symbolic backends trace the functions with the structure of `p` and replace them by
-#     generated code, so there is nothing left to despecialize;
-#   - Enzyme reached through DifferentiationInterface (inside `SecondOrder` or
-#     `AutoSparse`) differentiates the dynamic dispatch of the wrappers, which it cannot
-#     prove readonly. A plain `AutoEnzyme` goes through the Enzyme extension, which
-#     unwraps them first.
+# AD choices that need the concrete functions keep full specialization: symbolic backends
+# trace them, and Enzyme through DifferentiationInterface cannot see through the dynamic
+# dispatch (a plain `AutoEnzyme` unwraps them in the Enzyme extension).
 _despecializes_with(::ADTypes.AbstractADType) = true
 _despecializes_with(::AutoSymbolics) = false
 function _despecializes_with(ad::AutoSparse)

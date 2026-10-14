@@ -163,13 +163,9 @@ function _copy_hessian_row!(dest, src, transfer_cache)
     return nothing
 end
 
-# Function barriers for despecialized problems (`SciMLBase.AutoSpecialize` and
-# `SciMLBase.AutoDespecialize`): the closures in `instantiate_function` only capture the
-# despecialized `f` and `p`, and pass `unwrapped_f(f.f)`, `unwrapped_f(f.cons)` and
-# `unwrap_parameters(p)` to these functions. Those are inferred as `Any`, so each call
-# dispatches at runtime and Enzyme differentiates the concrete functions and parameters,
-# while the types of the closures (and of the solver caches holding them) do not depend on
-# the problem. Like `inner_grad` and `cons_f2`, they take the mode first.
+# Function barriers: the closures in `instantiate_function` capture only the despecialized
+# `f` and `p` and pass the unwrapped ones here, so Enzyme differentiates the concrete
+# functions while the closure types stay problem-independent.
 
 function grad_with_primal!(mode::Mode, θ, bθ, f, p) where {Mode}
     return Enzyme.autodiff(
@@ -182,9 +178,7 @@ function grad_with_primal!(mode::Mode, θ, bθ, f, p) where {Mode}
     )[2]
 end
 
-# Forward mode over one of the reverse-mode helpers above (`inner_grad`, `cons_f2`), for
-# Hessians and Hessian-vector products. `x` and `dx` are the annotated input and output
-# (`Duplicated` or `BatchDuplicated`); `args` are the helper's trailing constant arguments.
+# Forward over reverse (`inner_grad`, `cons_f2`) for Hessians and Hessian-vector products.
 function forward_over!(fmode, inner, rmode, x, dx, f, p, args...)
     Enzyme.autodiff(
         fmode, inner, Const(rmode), x, dx, Const(f), Const(p), map(Const, args)...
@@ -192,8 +186,7 @@ function forward_over!(fmode, inner, rmode, x, dx, f, p, args...)
     return nothing
 end
 
-# The annotation of the constraint function selected by `AutoEnzyme(; function_annotation)`.
-# It holds the concrete function, so it is built here, behind the barrier.
+# The `function_annotation` of the concrete constraint function, built behind the barrier.
 annotate_cons(::Val{A}, fcons, shadows) where {A <: Enzyme.Const} = Enzyme.Const(fcons)
 function annotate_cons(
         ::Val{A}, fcons, shadows
@@ -228,8 +221,7 @@ function cons_pushforward!(fmode, fcons, y, dy, θ, dθ, p)
     return nothing
 end
 
-# `lag_hessian!` for the Lagrangian of `f` and `cons`, built here so that the closure over
-# the concrete functions exists only behind the barrier.
+# The Lagrangian closure over the concrete functions is built behind the barrier.
 function lagrangian_hessian!(θ, f, cons, p, μ, σ, fmode, rmode, vdθ, bθ, vdbθ, batch_width)
     lag = x -> lagrangian(x, f, cons, p, μ, σ)
     return lag_hessian!(θ, lag, fmode, rmode, vdθ, bθ, vdbθ, batch_width)
@@ -420,9 +412,7 @@ function OptimizationBase.instantiate_function(
         seeds = Enzyme.onehot(x)
         Jaccache = Tuple(zeros(eltype(x), num_cons) for i in 1:length(x))
         y = zeros(eltype(x), num_cons)
-        # A `Val` rather than the type-valued `func_annot::DataType`, which would put a
-        # type-valued field into the closure; Enzyme's shadow-layout pass cannot reconcile
-        # those when an outer Enzyme pass differentiates this closure.
+        # A `Val`, since a type-valued closure field breaks nested Enzyme differentiation.
         annot = Val(func_annot)
 
         dup_annot = func_annot <: Union{
@@ -437,8 +427,7 @@ function OptimizationBase.instantiate_function(
             Ref(ntuple(_ -> make_zero(f.cons), length(x)))
         end
 
-        # `let` so the closure captures stable bindings rather than `Core.Box`es. The same
-        # `let`-capture idiom is used for the DI-built closures.
+        # `let` to avoid capturing `Core.Box`es.
         cons_j! = let y = y, Jaccache = Jaccache, seeds = seeds, annot = annot,
                 fmode = fmode, p = p
             function (J, θ, p = p)

@@ -75,13 +75,12 @@ approx(a::AbstractVector{<:AbstractArray}, b; kw...) = all(approx.(a, b; kw...))
 approx(a, b; rtol) = isapprox(a, b; rtol, atol = rtol)
 
 """
-    test_derivatives(ad; ops, rtol, broken)
+    test_derivatives(ad; ops, rtol)
 
 Check the derivatives `ops` built for `ad` against ForwardDiff, for every specialization,
-and that the despecialized ones are built from the erased functions and `p`. `broken`
-lists the derivatives expected to fail.
+and that the despecialized ones are built from the erased functions and `p`.
 """
-function test_derivatives(ad; ops = keys(DERIVATIVES), rtol = 1.0e-8, broken = ())
+function test_derivatives(ad; ops = keys(DERIVATIVES), rtol = 1.0e-8)
     ref = reference_derivatives()
     for spec in (FullSpecialize, AutoSpecialize, AutoDespecialize)
         @testset "$spec" begin
@@ -89,19 +88,9 @@ function test_derivatives(ad; ops = keys(DERIVATIVES), rtol = 1.0e-8, broken = (
             f, p = OptimizationBase.despecialize(of, P0)
             @test (f.f isa DespecializedFunction) == (spec !== FullSpecialize)
             @test (p isa DespecializedParameters) == (spec === AutoDespecialize)
-            for op in ops
+            @testset "$op" for op in ops
                 flags, evaluate = DERIVATIVES[op]
-                result = try
-                    evaluate(despecialized_instance(spec, ad; flags...))
-                catch e
-                    e
-                end
-                ok = !(result isa Exception) && approx(result, ref[op]; rtol)
-                if op in broken
-                    @test_broken ok
-                else
-                    @test ok
-                end
+                @test approx(evaluate(despecialized_instance(spec, ad; flags...)), ref[op]; rtol)
             end
         end
     end
