@@ -79,13 +79,13 @@ function OptimizationBase.OptimizationCache(
         linear and nonlinear constraints, please provide a valid AD backend for using COBYLA.")
     else
         if opt isa COBYLA
-            f = OptimizationBase.instantiate_function(
-                f_base, reinit_cache.u0, f_base.adtype, reinit_cache.p, num_cons,
+            f, _ = OptimizationBase.instantiate_live(
+                f_base, reinit_cache, f_base.adtype, num_cons;
                 cons_j = true, cons_h = true
             )
         else
-            f = OptimizationBase.instantiate_function(
-                f_base, reinit_cache.u0, f_base.adtype, reinit_cache.p, num_cons
+            f, _ = OptimizationBase.instantiate_live(
+                f_base, reinit_cache, f_base.adtype, num_cons
             )
         end
     end

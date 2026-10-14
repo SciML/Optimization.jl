@@ -184,4 +184,53 @@ using ADTypes, ForwardDiff, ReverseDiff, Zygote
         optprob.lag_h(H_lag, x0, σ, λ)
         @test H_lag ≈ [4.0 0.0; 0.0 4.0]  # Only first constraint contributes
     end
+
+    @testset "Sparse AD with σ = 0" begin
+        adtype = AutoSparse(AutoForwardDiff())
+        optf = OptimizationFunction(rosenbrock, adtype, cons = cons2)
+        λ = [2.0, 0.0]
+        H_cons = [4.0 0.0; 0.0 4.0]
+
+        optprob = OptimizationBase.instantiate_function(
+            optf, x0, adtype, nothing, 2; g = true, cons_j = true, lag_h = true
+        )
+        H = similar(optprob.lag_hess_prototype, Float64)
+        optprob.lag_h(H, x0, 0.0, λ)
+        @test Matrix(H) ≈ H_cons
+        optprob.lag_h(H, x0, 0.0, λ, nothing)
+        @test Matrix(H) ≈ H_cons
+
+        optf_oop = OptimizationFunction{false}(
+            rosenbrock, adtype, cons = (x, p) -> [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
+        )
+        optprob_oop = OptimizationBase.instantiate_function(
+            optf_oop, x0, adtype, nothing, 2; g = true, cons_j = true, lag_h = true
+        )
+        @test Matrix(optprob_oop.lag_h(x0, 0.0, λ)) ≈ H_cons
+        @test Matrix(optprob_oop.lag_h(x0, 0.0, λ, nothing)) ≈ H_cons
+    end
+
+    @testset "Sparse AD with σ = 0 and a singular objective Hessian" begin
+        # ∂²√x₁ is infinite at x₁ = 0; at σ = 0 it must not turn the result into NaN.
+        adtype = AutoSparse(AutoForwardDiff())
+        obj(x, p) = sqrt(x[1]) + x[2]^2
+        x1, x00 = [1.0, 1.0], [0.0, 0.0]
+
+        optf = OptimizationFunction(obj, adtype, cons = (res, x, p) -> (res[1] = sum(abs2, x); nothing))
+        optprob = OptimizationBase.instantiate_function(
+            optf, x1, adtype, nothing, 1; g = true, cons_j = true, lag_h = true
+        )
+        H = similar(optprob.lag_hess_prototype, Float64)
+        optprob.lag_h(H, x00, 0.0, [1.0])
+        @test Matrix(H) ≈ [2.0 0.0; 0.0 2.0]
+        h = zeros(length(first(OptimizationBase.lag_hess_structure(optprob.lag_hess_prototype))))
+        optprob.lag_h(h, x00, 0.0, [1.0])
+        @test all(isfinite, h)
+
+        optf_oop = OptimizationFunction{false}(obj, adtype, cons = (x, p) -> [sum(abs2, x)])
+        optprob_oop = OptimizationBase.instantiate_function(
+            optf_oop, x1, adtype, nothing, 1; g = true, cons_j = true, lag_h = true
+        )
+        @test Matrix(optprob_oop.lag_h(x00, 0.0, [1.0])) ≈ [2.0 0.0; 0.0 2.0]
+    end
 end
