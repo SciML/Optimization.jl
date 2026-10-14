@@ -81,13 +81,9 @@ function OptimizationCache(
         verbose = OptimizationVerbosity(),
         kwargs...
     )
-    if isa_dataiterator(prob.p)
-        reinit_cache = OptimizationBase.ReInitCache(prob.u0, iterate(prob.p)[1])
-        reinit_cache_passedon = OptimizationBase.ReInitCache(prob.u0, prob.p)
-    else
-        reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p)
-        reinit_cache_passedon = reinit_cache
-    end
+    # The single `ReInitCache` that `reinit!` mutates. For a data iterator it holds the
+    # iterator; `instantiate_live` prepares the closures with a prototype batch.
+    reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p)
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
 
@@ -134,7 +130,7 @@ function OptimizationCache(
         prob.f
     end
 
-    f = OptimizationBase.instantiate_function(
+    f, f_inst = OptimizationBase.instantiate_live(
         f_base, reinit_cache, f_base.adtype, num_cons;
         g = SciMLBase.requiresgradient(opt), h = SciMLBase.requireshessian(opt),
         hv = SciMLBase.requireshessian(opt), fg = SciMLBase.allowsfg(opt),
@@ -144,14 +140,14 @@ function OptimizationCache(
     )
 
     if structural_analysis
-        obj_res, cons_res = symify_cache(f, prob, num_cons, manifold)
+        obj_res, cons_res = symify_cache(f_inst, prob, num_cons, manifold)
     else
         obj_res = nothing
         cons_res = nothing
     end
 
     return OptimizationCache(
-        opt, f, reinit_cache_passedon, prob.lb, prob.ub, prob.lcons,
+        opt, f, reinit_cache, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
         progress, callback, manifold, AnalysisResults(obj_res, cons_res),
         merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs)),

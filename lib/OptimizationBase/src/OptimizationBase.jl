@@ -63,6 +63,10 @@ export allowsbounds, requiresbounds, allowsconstraints, requiresconstraints,
 # Canonical (rows, cols) enumeration of the vector-form lag_h write order;
 # solver wrappers must derive their declared Hessian structure from this.
 export lag_hess_structure
+# For solver wrappers that build their own cache. `public` is a syntax error before Julia 1.11.
+@static if VERSION >= v"1.11.0-DEV.469"
+    eval(Meta.parse("public instantiate_live"))
+end
 
 using FastClosures
 
@@ -93,6 +97,7 @@ include("solve.jl")
 include("adtypes.jl")
 include("symify.jl")
 include("cache.jl")
+include("live_params.jl")
 include("OptimizationDIExt.jl")
 include("cons_products.jl")
 include("OptimizationDISparseExt.jl")
