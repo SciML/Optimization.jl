@@ -146,10 +146,10 @@ objective values under changing weights are not comparable, and on the final
 iteration `save_best` reverts `θ` and re-invokes the callback at the same
 `state.iter` (an update the rules skip).
 
-Rules reject problems scalarized with a symbolic `adtype` (`AutoSymbolics`,
-`AutoFastDifferentiation`, or an `AutoSparse` wrapping one): those backends
-compile the initial weights into the prepared derivatives, so weight updates
-would not reach the gradient or Hessian.
+Rules reject problems scalarized with a symbolic `adtype`: `AutoSymbolics` or
+`AutoFastDifferentiation`, directly or as either backend of a `SecondOrder` or
+inside an `AutoSparse`. Those backends compile the initial weights into the
+prepared derivatives, so weight updates would not reach the gradient or Hessian.
 
 Reusing a rule across solves resets the same-iteration guard when `state.iter`
 goes strictly backwards relative to the previous call. A second solve that
@@ -166,7 +166,11 @@ end
 # Symbolic backends compile the weights present at preparation time into the
 # generated derivatives, so later in-place weight updates would not reach them.
 _freezes_weights(::Union{ADTypes.AutoSymbolics, ADTypes.AutoFastDifferentiation}) = true
-_freezes_weights(adtype::ADTypes.AutoSparse) = _freezes_weights(adtype.dense_ad)
+_freezes_weights(adtype::ADTypes.AutoSparse) = _freezes_weights(ADTypes.dense_ad(adtype))
+function _freezes_weights(adtype::DifferentiationInterface.SecondOrder)
+    return _freezes_weights(DifferentiationInterface.outer(adtype)) ||
+        _freezes_weights(DifferentiationInterface.inner(adtype))
+end
 _freezes_weights(adtype) = false
 
 function _adaptive_context(prob)
@@ -181,9 +185,9 @@ function _adaptive_context(prob)
     _freezes_weights(of.adtype) && throw(
         ArgumentError(
             "adaptive-weight rules update the weights during the solve, but " *
-                "$(nameof(typeof(of.adtype))) compiles the initial weights into the " *
-                "prepared derivatives; scalarize with a non-symbolic `adtype` such as " *
-                "`AutoForwardDiff()`, or with `NoAD()` and a `jac`."
+                "`$(of.adtype)` uses a symbolic backend that compiles the initial " *
+                "weights into the prepared derivatives; scalarize with a non-symbolic " *
+                "`adtype` such as `AutoForwardDiff()`, or with `NoAD()` and a `jac`."
         )
     )
     return (

@@ -1,6 +1,7 @@
 using OptimizationBase, Random, SciMLBase, Test
 import ForwardDiff
 using ADTypes: AutoFastDifferentiation
+using DifferentiationInterface: SecondOrder
 
 function adaptive_test_problem(; adtype = NoAD())
     mof = MultiObjectiveOptimizationFunction(
@@ -171,9 +172,11 @@ end
     @test res ≈ J * v
 end
 
-@testset "Weight updates reach AD-prepared derivatives" begin
+@testset "Weight updates reach AD-prepared derivatives ($adtype)" for adtype in (
+        AutoForwardDiff(), SecondOrder(AutoForwardDiff(), AutoForwardDiff()),
+    )
     mof = MultiObjectiveOptimizationFunction(
-        (u, p) -> [(u[1] - 1)^2, 3 * (u[1] + 1)^2], AutoForwardDiff()
+        (u, p) -> [(u[1] - 1)^2, 3 * (u[1] + 1)^2], adtype
     )
     prob = weighted_sum(OptimizationProblem(mof, [0.0]))
     f = OptimizationBase.instantiate_function(
@@ -190,11 +193,24 @@ end
 end
 
 @testset "Symbolic backends are rejected" begin
-    for adtype in (AutoSymbolics(), AutoFastDifferentiation(), AutoSparse(AutoSymbolics()))
-        prob = adaptive_test_problem(; adtype)
-        for rule in (GradientScale, MiniMax, SoftAdapt, ReLoBRaLo)
-            @test_throws ArgumentError rule(prob)
-        end
+    rules = (GradientScale, MiniMax, SoftAdapt, ReLoBRaLo)
+    symbolic = (
+        AutoSymbolics(), AutoFastDifferentiation(), AutoSparse(AutoSymbolics()),
+        AutoSparse(AutoFastDifferentiation()),
+        SecondOrder(AutoForwardDiff(), AutoSymbolics()),
+        SecondOrder(AutoSymbolics(), AutoForwardDiff()),
+        SecondOrder(AutoForwardDiff(), AutoFastDifferentiation()),
+        AutoSparse(SecondOrder(AutoForwardDiff(), AutoSymbolics())),
+    )
+    for adtype in symbolic, rule in rules
+        @test_throws ArgumentError rule(adaptive_test_problem(; adtype))
+    end
+    numeric = (
+        SecondOrder(AutoForwardDiff(), AutoForwardDiff()), AutoSparse(AutoForwardDiff()),
+        AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff())),
+    )
+    for adtype in numeric, rule in rules
+        @test rule(adaptive_test_problem(; adtype)) isa OptimizationBase.AbstractAdaptiveWeightRule
     end
 end
 
