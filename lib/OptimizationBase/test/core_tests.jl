@@ -8,4 +8,5 @@ using Test
     include("second_order_warning_test.jl")
     include("solve_internals_test.jl")
     include("cons_bounds_safety_test.jl")
+    include("lazy_cons_expr_test.jl")
 end

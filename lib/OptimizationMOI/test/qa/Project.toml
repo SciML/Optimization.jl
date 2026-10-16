@@ -12,7 +12,7 @@ OptimizationBase = {path = "../../../OptimizationBase"}
 
 [compat]
 Aqua = "0.8"
-JET = "0.9, 0.10, 0.11"
+JET = "0.9, 0.10, 0.11, 0.12"
 julia = "1.10"
 OptimizationBase = "5"
 OptimizationMOI = "1"
