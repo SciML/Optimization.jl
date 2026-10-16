@@ -123,7 +123,6 @@ function _check_opt_alg(prob::SciMLBase.OptimizationProblem, alg; kwargs...)
                 "Example: OptimizationProblem(optf, u0, p; lcons=[-Inf], ucons=[0.0])"
         )
     )
-    # Reject mismatched constraint bound lengths when both are provided
     if !isnothing(prob.lcons) && !isnothing(prob.ucons) &&
             length(prob.lcons) != length(prob.ucons)
         throw(
