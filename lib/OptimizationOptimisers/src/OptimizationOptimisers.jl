@@ -44,7 +44,7 @@ SciMLBase.allowscallback(opt::AbstractRule) = true
 
 function SciMLBase.__init(
         prob::SciMLBase.OptimizationProblem, opt::AbstractRule;
-        callback = (args...) -> (false),
+        callback = OptimizationBase.DEFAULT_CALLBACK,
         epochs::Union{Number, Nothing} = nothing,
         maxiters::Union{Number, Nothing} = nothing,
         save_best::Bool = true, progress::Bool = false, kwargs...
@@ -174,8 +174,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
                 break
             end
         end
-        # Skip update if gradient contains NaN or Inf values
-        if all(isfinite, G)
+        # Skip update if gradient contains NaN or Inf values. `mapreduce` keeps the check
+        # on-device for GPU arrays, where `all(isfinite, G)` would scalar-index.
+        if Bool(mapreduce(isfinite, &, G; init = true))
             state, θ = Optimisers.update(state, θ, G)
         else
             @SciMLMessage(

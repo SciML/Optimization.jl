@@ -3,7 +3,7 @@ mutable struct MOIOptimizationNLPEvaluator{
         I, JT <: AbstractMatrix{T}, HT <: AbstractMatrix{T}, CHT <: AbstractMatrix{T}, S, CB,
     } <:
     MOI.AbstractNLPEvaluator
-    f::F
+    const f::F
     reinit_cache::RC
     lb::LB
     ub::UB
@@ -17,7 +17,10 @@ mutable struct MOIOptimizationNLPEvaluator{
     callback::CB
     iteration::Int
     obj_expr::Union{Expr, Nothing}
-    cons_expr::Union{Vector{Expr}, Nothing}
+    cons_expr::Union{AbstractVector{Expr}, Nothing}
+    # For a system-based problem `obj_expr`/`cons_expr` are only built by `MOI.initialize`
+    # when the solver requests `:ExprGraph`; numeric-only solvers never pay for them.
+    system_exprs_pending::Bool
 end
 
 function Base.getproperty(evaluator::MOIOptimizationNLPEvaluator, x::Symbol)
@@ -137,9 +140,12 @@ function MOIOptimizationNLPCache(
             g = true, h = true, cons_j = true, cons_h = true
         )
     else
+        # `eval_constraint_jacobian_transpose_product` falls back to `cons_j`, so only ask
+        # for a `cons_vjp` that does not materialize the Jacobian.
         f = OptimizationBase.instantiate_function(
             prob.f, reinit_cache, prob.f.adtype, num_cons;
-            g = true, h = true, cons_j = true, cons_vjp = true, lag_h = true
+            g = true, h = true, cons_j = true, lag_h = true,
+            cons_vjp = OptimizationBase._matrixfree_cons_vjp(prob.f, prob.f.adtype)
         )
     end
     T = eltype(prob.u0)
@@ -200,7 +206,7 @@ function MOIOptimizationNLPCache(
         expr = obj_expr
         _cons_expr = cons_expr
     else
-        expr, _cons_expr = process_system_exprs(prob, f)
+        expr = _cons_expr = nothing
     end
 
     evaluator = MOIOptimizationNLPEvaluator(
@@ -218,7 +224,8 @@ function MOIOptimizationNLPCache(
         callback,
         0,
         expr,
-        _cons_expr
+        _cons_expr,
+        sys !== nothing
     )
     return MOIOptimizationNLPCache(evaluator, opt, NamedTuple(kwargs))
 end
@@ -243,6 +250,12 @@ function MOI.initialize(
             # TODO: implement Jac-vec and Hess-vec products
             # for solvers that need them
         end
+    end
+    if :ExprGraph in requested_features && evaluator.system_exprs_pending
+        expr, cons_expr = process_system_exprs(evaluator.f, evaluator.lcons, evaluator.ucons)
+        setfield!(evaluator, :obj_expr, expr)
+        setfield!(evaluator, :cons_expr, cons_expr)
+        setfield!(evaluator, :system_exprs_pending, false)
     end
     return
 end
