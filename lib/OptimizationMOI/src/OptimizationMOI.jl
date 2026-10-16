@@ -89,61 +89,41 @@ function _create_new_optimizer(opt::MOI.AbstractOptimizer)
     return opt_setup
 end
 
-"""
-    _set_maxiters!(optimizer, maxiters)
+const MAXITERS_ATTRIBUTES = (
+    "Ipopt" => "max_iter",
+    "Gurobi" => "IterationLimit",
+    "CPLEX" => "CPX_PARAM_ITLIM",
+    "Mosek" => "MSK_IPAR_INTPNT_MAX_ITERATIONS",
+    "OSQP" => "max_iter",
+    "ECOS" => "maxit",
+    "SCS" => "max_iters",
+    "COSMO" => "max_iter",
+    "NLopt" => "maxeval",
+)
 
-Sets the maximum number of iterations for the optimizer using solver-specific parameter names.
-Supports common MOI solvers including Ipopt, Gurobi, CPLEX, and SCIP.
 """
-function _set_maxiters!(
-        optimizer, maxiters::Number,
-        opt_verbose = OptimizationBase.DEFAULT_VERBOSE
-    )
+    _set_maxiters!(optimizer, opt, maxiters, opt_verbose)
+
+Set the iteration limit of `optimizer`, created from `opt`, to `maxiters` through the
+solver attribute that `MAXITERS_ATTRIBUTES` lists for the solver's type name. A value for
+that attribute given in a `MOI.OptimizerWithAttributes` takes precedence over `maxiters`.
+Solvers without a listed attribute emit an `:unsupported_kwargs` message instead.
+"""
+function _set_maxiters!(optimizer, opt, maxiters::Number, opt_verbose)
     optimizer_name = string(typeof(optimizer))
-
-    # Try to set maxiters based on common solver patterns
-    return try
-        if contains(optimizer_name, "Ipopt")
-            MOI.set(optimizer, MOI.RawOptimizerAttribute("max_iter"), Int(maxiters))
-        elseif contains(optimizer_name, "Gurobi")
-            MOI.set(optimizer, MOI.RawOptimizerAttribute("IterationLimit"), Int(maxiters))
-        elseif contains(optimizer_name, "CPLEX") || contains(optimizer_name, "Cplex")
-            MOI.set(optimizer, MOI.RawOptimizerAttribute("CPX_PARAM_ITLIM"), Int(maxiters))
-        elseif contains(optimizer_name, "SCIP") || contains(optimizer_name, "Scip")
-            MOI.set(optimizer, MOI.RawOptimizerAttribute("limits/iterations"), Int(maxiters))
-        elseif contains(optimizer_name, "Mosek") || contains(optimizer_name, "MOSEK")
-            MOI.set(optimizer, MOI.RawOptimizerAttribute("MSK_IPAR_INTPNT_MAX_ITERATIONS"), Int(maxiters))
-        elseif contains(optimizer_name, "OSQP")
-            MOI.set(optimizer, MOI.RawOptimizerAttribute("max_iter"), Int(maxiters))
-        elseif contains(optimizer_name, "ECOS")
-            MOI.set(optimizer, MOI.RawOptimizerAttribute("maxit"), Int(maxiters))
-        elseif contains(optimizer_name, "SCS")
-            MOI.set(optimizer, MOI.RawOptimizerAttribute("max_iters"), Int(maxiters))
-        elseif contains(optimizer_name, "COSMO")
-            MOI.set(optimizer, MOI.RawOptimizerAttribute("max_iter"), Int(maxiters))
-        else
-            # Generic fallback - try common parameter names
-            for param_name in ["max_iter", "maxiter", "IterationLimit", "max_iterations"]
-                try
-                    MOI.set(optimizer, MOI.RawOptimizerAttribute(param_name), Int(maxiters))
-                    return # Success, exit early
-                catch
-                    continue # Try next parameter name
-                end
-            end
-            # If all attempts fail, show warning with guidance
-            @SciMLMessage(
-                lazy"common maxiters argument could not be mapped for $(typeof(optimizer)). Set number of iterations via optimizer specific keyword arguments.",
-                opt_verbose, :unsupported_kwargs
-            )
-        end
-    catch e
-        # Catch any errors during parameter setting and show informative warning
+    i = findfirst(p -> contains(optimizer_name, first(p)), MAXITERS_ATTRIBUTES)
+    if isnothing(i)
         @SciMLMessage(
-            lazy"Failed to set maxiters parameter for $(typeof(optimizer)): $(e). Set number of iterations via optimizer specific keyword arguments.",
+            lazy"common maxiters argument is currently not used by $(typeof(optimizer)). Set number of iterations via optimizer specific keyword arguments.",
             opt_verbose, :unsupported_kwargs
         )
+        return nothing
     end
+    attr = MOI.RawOptimizerAttribute(last(MAXITERS_ATTRIBUTES[i]))
+    if !(opt isa MOI.OptimizerWithAttributes && !isnothing(MOI.get(opt, attr)))
+        MOI.set(optimizer, attr, Int(maxiters))
+    end
+    return nothing
 end
 
 function __map_optimizer_args(
@@ -161,6 +141,10 @@ function __map_optimizer_args(
     # `kwargs` loop below, which would otherwise try to set it as a raw solver attribute.
     opt_verbose = OptimizationBase._process_verbose_param(verbose)
     optimizer = _create_new_optimizer(opt)
+    # Set before the solver-specific keywords so that those take precedence.
+    if !isnothing(maxiters)
+        _set_maxiters!(optimizer, opt, maxiters, opt_verbose)
+    end
     for (key, value) in kwargs
         MOI.set(optimizer, MOI.RawOptimizerAttribute("$(key)"), value)
     end
@@ -178,9 +162,6 @@ function __map_optimizer_args(
             lazy"common abstol argument is currently not used by $(optimizer). Set tolerances via optimizer specific keyword arguments.",
             opt_verbose, :unsupported_kwargs
         )
-    end
-    if !isnothing(maxiters)
-        _set_maxiters!(optimizer, maxiters, opt_verbose)
     end
     return optimizer
 end
