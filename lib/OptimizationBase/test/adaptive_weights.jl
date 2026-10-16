@@ -1,4 +1,4 @@
-using OptimizationBase, Random, Test
+using OptimizationBase, Random, SciMLBase, Test
 import ForwardDiff
 
 function adaptive_test_problem(; adtype = NoAD())
@@ -153,4 +153,19 @@ end
     @test_throws ArgumentError GradientScale(
         weighted_sum(OptimizationProblem(mof, [0.0]))
     )
+end
+
+@testset "Constraint products through a user cons_j alongside adaptive weights" begin
+    cons_j! = (J, x, p) -> (J .= [2x[1] 1.0; 0.0 3x[2]^2]; J)
+    optf = OptimizationFunction{true}((x, p) -> sum(abs2, x); cons_j = cons_j!)
+    f = OptimizationBase.instantiate_function(
+        optf, [1.0, 2.0], SciMLBase.NoAD(), nothing, 2; cons_vjp = true, cons_jvp = true
+    )
+    J = [2.0 1.0; 0.0 12.0]
+    v = [0.5, -1.0]
+    res = zeros(2)
+    f.cons_vjp(res, [1.0, 2.0], v)
+    @test res ≈ transpose(J) * v
+    f.cons_jvp(res, [1.0, 2.0], v)
+    @test res ≈ J * v
 end

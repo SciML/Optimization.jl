@@ -9,9 +9,9 @@ end
 
 (o::WeightedSumObjective)(u, p) = dot(o.weights, o.mof.f(u, p))
 
-_jac_buffer(u::Number, n) = Matrix{typeof(u)}(undef, n, 1)
-_jac_buffer(u::AbstractVector, n) = similar(u, n, length(u))
-function _jac_buffer(u, n)
+_objective_jac_buffer(u::Number, n) = Matrix{typeof(u)}(undef, n, 1)
+_objective_jac_buffer(u::AbstractVector, n) = similar(u, n, length(u))
+function _objective_jac_buffer(u, n)
     throw(
         ArgumentError(
             "cannot build a per-objective Jacobian buffer for decision variables " *
@@ -22,7 +22,7 @@ end
 
 function _weighted_grad(mof, w, ::Val{true})
     return function (G, u, p)
-        J = _jac_buffer(u, length(w))
+        J = _objective_jac_buffer(u, length(w))
         mof.jac(J, u, p)
         return mul!(G, transpose(J), w)
     end
@@ -201,7 +201,7 @@ _meanabs(g) = sum(abs, g) / length(g)
 function _objective_jacobian(objectives, jac, iip_jac, adtype, u, p, nobj)
     if jac !== nothing
         if iip_jac
-            J = _jac_buffer(u, nobj)
+            J = _objective_jac_buffer(u, nobj)
             jac(J, u, p)
             return J
         else
