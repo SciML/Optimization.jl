@@ -1,6 +1,6 @@
 module OptimizationOptimJL
 
-using Optim
+using Optim: Optim
 # The Optim algorithm names are this package's whole point: `using Optimization,
 # OptimizationOptimJL` has to be enough to write `solve(prob, BFGS())`, exactly as the
 # docs show. They are re-surfaced by name below rather than by blanket `@reexport`,
@@ -26,8 +26,9 @@ manifold.
 """ MomentumGradientDescent
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
-using OptimizationBase
-using SciMLBase, SparseArrays
+using OptimizationBase: OptimizationBase, OptimizationCache
+using SciMLBase: SciMLBase, OptimizationFunction, OptimizationProblem
+using SparseArrays: SparseArrays
 
 export Optim
 
