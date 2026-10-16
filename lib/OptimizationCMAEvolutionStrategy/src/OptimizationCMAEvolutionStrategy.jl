@@ -1,12 +1,11 @@
 module OptimizationCMAEvolutionStrategy
 
-using Reexport
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
-using OptimizationBase
+using OptimizationBase: OptimizationBase, OptimizationCache
 using SciMLLogging: @SciMLMessage
-using CMAEvolutionStrategy
-using SciMLBase
+using CMAEvolutionStrategy: CMAEvolutionStrategy, xbest, fbest
+using SciMLBase: SciMLBase
 
 export CMAEvolutionStrategyOpt
 
