@@ -146,14 +146,22 @@ end
     end
 end
 @inline function _iip_lag_h_clos(
-        lagrangian, _lag_prep, soadtype, cons_h_weighted!, p, ::Type{Tx0}, ::Type{Tp0}
-    ) where {Tx0, Tp0}
-    return let lagrangian = lagrangian, _lag_prep = _lag_prep, soadtype = soadtype,
-            cons_h_weighted! = cons_h_weighted!, p = p
-        function _lag_h!(H::AbstractMatrix, θ, σ, λ, p = p)
+        lagrangian, cons_lagrangian, _lag_prep, soadtype, cons_h_weighted!, p,
+        ::Type{Tx0}, ::Type{Tp0}, ::Type{Tσ0}, ::Type{Tλ0}
+    ) where {Tx0, Tp0, Tσ0, Tλ0}
+    return let lagrangian = lagrangian, cons_lagrangian = cons_lagrangian,
+            _lag_prep = _lag_prep, soadtype = soadtype,
+            cons_h_weighted! = cons_h_weighted!, p0 = p
+        function _lag_h!(H::AbstractMatrix, θ, σ, λ, p = p0)
             return if σ == zero(eltype(θ))
-                cons_h_weighted!(H, θ, λ)
-            elseif _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                # `cons_h_weighted!` differentiates constraints closed over the construction `p`.
+                if cons_h_weighted! !== nothing && _prep_valid(Tx0, θ) && p === p0
+                    cons_h_weighted!(H, θ, λ)
+                else
+                    hessian!(cons_lagrangian, H, soadtype, θ, Constant(λ), Constant(p))
+                end
+            elseif _prep_valid(Tx0, θ) && _prep_valid(Tσ0, σ) && _prep_valid(Tλ0, λ) &&
+                    _prep_valid(Tp0, p)
                 hessian!(
                     lagrangian, H, _lag_prep, soadtype, θ,
                     Constant(σ), Constant(λ), Constant(p)
@@ -165,8 +173,9 @@ end
                 )
             end
         end
-        function _lag_h!(h::AbstractVector, θ, σ, λ, p = p)
-            H = if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+        function _lag_h!(h::AbstractVector, θ, σ, λ, p = p0)
+            H = if _prep_valid(Tx0, θ) && _prep_valid(Tσ0, σ) && _prep_valid(Tλ0, λ) &&
+                    _prep_valid(Tp0, p)
                 hessian(
                     lagrangian, _lag_prep, soadtype, θ,
                     Constant(σ), Constant(λ), Constant(p)
@@ -189,14 +198,16 @@ end
     end
 end
 @inline function _oop_lag_h_clos(
-        lagrangian, _lag_prep, soadtype, cons_h!, p, ::Type{Tx0}, ::Type{Tp0}
-    ) where {Tx0, Tp0}
-    return let lagrangian = lagrangian, _lag_prep = _lag_prep, soadtype = soadtype,
-            cons_h! = cons_h!, p = p
+        lagrangian, cons_lagrangian, _lag_prep, soadtype, p,
+        ::Type{Tx0}, ::Type{Tp0}, ::Type{Tσ0}, ::Type{Tλ0}
+    ) where {Tx0, Tp0, Tσ0, Tλ0}
+    return let lagrangian = lagrangian, cons_lagrangian = cons_lagrangian,
+            _lag_prep = _lag_prep, soadtype = soadtype, p = p
         function _lag_h!(θ, σ, λ, p = p)
             return if σ == zero(eltype(θ))
-                λ .* cons_h!(θ)
-            elseif _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
+                hessian(cons_lagrangian, soadtype, θ, Constant(λ), Constant(p))
+            elseif _prep_valid(Tx0, θ) && _prep_valid(Tσ0, σ) && _prep_valid(Tλ0, λ) &&
+                    _prep_valid(Tp0, p)
                 hessian(
                     lagrangian, _lag_prep, soadtype, θ,
                     Constant(σ), Constant(λ), Constant(p)
@@ -406,9 +417,35 @@ function instantiate_function(
         nothing
     end
 
+    # A `p`-accepting out-of-place constraint wrapper, so the Lagrangian and the Jacobian can
+    # be evaluated at parameters other than the construction `p` — including duals pushed in
+    # by a sensitivity layer differentiating the constraint Jacobian w.r.t. `p` (the mixed
+    # ∂²cᵢ/∂x∂p term of the KKT residual). The prepared `cons_oop` bakes `p` in and exposes
+    # no parameter slot, so we cannot reuse it here. `_cons_out_eltype` picks the output
+    # eltype so duals propagate without poisoning it to `Union{}`.
+    _cons_oop_p = if f.cons !== nothing
+        let f = f, num_cons = num_cons
+            function (x, p)
+                res = Vector{_cons_out_eltype(x, p)}(undef, num_cons)
+                f.cons(res, x, p)
+                return res
+            end
+        end
+    else
+        nothing
+    end
+
+    cons_lagrangian = if f.cons !== nothing
+        let _cons_oop_p = _cons_oop_p
+            (θ, λ, p) -> dot(λ, _cons_oop_p(θ, p))
+        end
+    else
+        nothing
+    end
+
     lagrangian = if f.cons !== nothing
-        let f = f, cons_oop = cons_oop
-            (θ, σ, λ, p) -> σ * f.f(θ, p) + dot(λ, cons_oop(θ))
+        let f = f, cons_lagrangian = cons_lagrangian
+            (θ, σ, λ, p) -> σ * f.f(θ, p) + cons_lagrangian(θ, λ, p)
         end
     else
         nothing
@@ -427,23 +464,6 @@ function instantiate_function(
         f.cons_j === nothing && !_native_jvp(adtype)
     _any_ad_jac = _need_cons_jac || _ad_jac_vjp || _ad_jac_jvp
 
-    # A `p`-accepting out-of-place constraint wrapper, so the Jacobian can be evaluated
-    # at parameters other than the construction `p` — including duals pushed in by a
-    # sensitivity layer differentiating the constraint Jacobian w.r.t. `p` (the mixed
-    # ∂²cᵢ/∂x∂p term of the KKT residual). The prepared `cons_oop` bakes `p` in and
-    # exposes no parameter slot, so we cannot reuse it here. `_cons_out_eltype` picks the
-    # output eltype so duals propagate without poisoning it to `Union{}`.
-    _cons_oop_p = if _any_ad_jac
-        let f = f, num_cons = num_cons
-            function (x, p)
-                res = Vector{_cons_out_eltype(x, p)}(undef, num_cons)
-                f.cons(res, x, p)
-                return res
-            end
-        end
-    else
-        nothing
-    end
     _prep_jac = _any_ad_jac ? prepare_jacobian(_cons_oop_p, adtype, x, Constant(p)) : nothing
     # Fills `J` at `θ` and the construction `p`, for the products built through the Jacobian.
     _ad_cons_jac! = if _ad_jac_vjp || _ad_jac_jvp
@@ -576,12 +596,16 @@ function instantiate_function(
     lag_hess_prototype = f.lag_hess_prototype
 
     lag_h! = if f.cons !== nothing && lag_h == true && f.lag_h === nothing
+        _σ0 = one(eltype(x))
+        _λ0 = ones(eltype(x), num_cons)
         _lag_prep = prepare_hessian(
-            lagrangian, soadtype, x, Constant(one(eltype(x))),
-            Constant(ones(eltype(x), num_cons)), Constant(p)
+            lagrangian, soadtype, x, Constant(_σ0), Constant(_λ0), Constant(p)
         )
         lag_hess_prototype = zeros(Bool, length(x), length(x))
-        _iip_lag_h_clos(lagrangian, _lag_prep, soadtype, cons_h_weighted!, p, Tx0, Tp0)
+        _iip_lag_h_clos(
+            lagrangian, cons_lagrangian, _lag_prep, soadtype, cons_h_weighted!, p,
+            Tx0, Tp0, typeof(_σ0), typeof(_λ0)
+        )
     elseif lag_h == true && f.cons !== nothing
         let f = f, p = p
             (res, θ, σ, μ, p = p) -> f.lag_h(res, θ, σ, μ, p)
@@ -703,9 +727,17 @@ function instantiate_function(
         nothing
     end
 
-    lagrangian = if f.cons !== nothing
+    cons_lagrangian = if f.cons !== nothing
         let f = f
-            (θ, σ, λ, p) -> σ * f.f(θ, p) + dot(λ, f.cons(θ, p))
+            (θ, λ, p) -> dot(λ, f.cons(θ, p))
+        end
+    else
+        nothing
+    end
+
+    lagrangian = if f.cons !== nothing
+        let f = f, cons_lagrangian = cons_lagrangian
+            (θ, σ, λ, p) -> σ * f.f(θ, p) + cons_lagrangian(θ, λ, p)
         end
     else
         nothing
@@ -808,12 +840,16 @@ function instantiate_function(
     lag_hess_prototype = f.lag_hess_prototype
 
     lag_h! = if f.cons !== nothing && lag_h == true && f.lag_h === nothing
+        _σ0 = one(eltype(x))
+        _λ0 = ones(eltype(x), num_cons)
         _lag_prep = prepare_hessian(
-            lagrangian, soadtype, x, Constant(one(eltype(x))),
-            Constant(ones(eltype(x), num_cons)), Constant(p)
+            lagrangian, soadtype, x, Constant(_σ0), Constant(_λ0), Constant(p)
         )
         lag_hess_prototype = zeros(Bool, length(x), length(x))
-        _oop_lag_h_clos(lagrangian, _lag_prep, soadtype, cons_h!, p, Tx0, Tp0)
+        _oop_lag_h_clos(
+            lagrangian, cons_lagrangian, _lag_prep, soadtype, p,
+            Tx0, Tp0, typeof(_σ0), typeof(_λ0)
+        )
     elseif lag_h == true && f.cons !== nothing
         let f = f, p = p
             (θ, σ, λ, p = p) -> f.lag_h(θ, σ, λ, p)
