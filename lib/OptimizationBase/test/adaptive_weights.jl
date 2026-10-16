@@ -1,5 +1,6 @@
 using OptimizationBase, Random, SciMLBase, Test
 import ForwardDiff
+using ADTypes: AutoFastDifferentiation
 
 function adaptive_test_problem(; adtype = NoAD())
     mof = MultiObjectiveOptimizationFunction(
@@ -168,4 +169,56 @@ end
     @test res ≈ transpose(J) * v
     f.cons_jvp(res, [1.0, 2.0], v)
     @test res ≈ J * v
+end
+
+@testset "Weight updates reach AD-prepared derivatives" begin
+    mof = MultiObjectiveOptimizationFunction(
+        (u, p) -> [(u[1] - 1)^2, 3 * (u[1] + 1)^2], AutoForwardDiff()
+    )
+    prob = weighted_sum(OptimizationProblem(mof, [0.0]))
+    f = OptimizationBase.instantiate_function(
+        prob.f, prob.u0, prob.f.adtype, prob.p; g = true, h = true
+    )
+    callback = MiniMax(prob; η = 0.5)
+    callback(adaptive_state(prob, 1, 0.0), 0.0)
+    @test callback.weights == [1.5, 2.5]
+    G, H = zeros(1), zeros(1, 1)
+    f.grad(G, [0.0])
+    f.hess(H, [0.0])
+    @test G ≈ [1.5 * -2 + 2.5 * 6]
+    @test H ≈ [1.5 * 2 + 2.5 * 6;;]
+end
+
+@testset "Symbolic backends are rejected" begin
+    for adtype in (AutoSymbolics(), AutoFastDifferentiation(), AutoSparse(AutoSymbolics()))
+        prob = adaptive_test_problem(; adtype)
+        for rule in (GradientScale, MiniMax, SoftAdapt, ReLoBRaLo)
+            @test_throws ArgumentError rule(prob)
+        end
+    end
+end
+
+@testset "Integer and mixed-precision rule parameters" begin
+    cases = (
+        (p -> GradientScale(p; inertia = 0), p -> GradientScale(p; inertia = 0.0)),
+        (p -> SoftAdapt(p; α = 1), p -> SoftAdapt(p; α = 1.0)),
+        (
+            p -> ReLoBRaLo(p; β = 0, rng = Xoshiro(1)),
+            p -> ReLoBRaLo(p; β = 0.0, rng = Xoshiro(1)),
+        ),
+        (
+            p -> ReLoBRaLo(p; α = 0.5f0, β = 0, temperature = 2, rng = Xoshiro(1)),
+            p -> ReLoBRaLo(p; α = 0.5, β = 0.0, temperature = 2.0, rng = Xoshiro(1)),
+        ),
+    )
+    for (mixed, reference) in cases
+        pa, pb = adaptive_test_problem(), adaptive_test_problem()
+        a, b = mixed(pa), reference(pb)
+        for (iter, z) in ((1, 0.0), (2, 0.5))
+            a(adaptive_state(pa, iter, z), 0.0)
+            b(adaptive_state(pb, iter, z), 0.0)
+        end
+        @test a.weights != [1.0, 1.0]
+        @test a.weights ≈ b.weights
+    end
 end

@@ -146,6 +146,11 @@ objective values under changing weights are not comparable, and on the final
 iteration `save_best` reverts `θ` and re-invokes the callback at the same
 `state.iter` (an update the rules skip).
 
+Rules reject problems scalarized with a symbolic `adtype` (`AutoSymbolics`,
+`AutoFastDifferentiation`, or an `AutoSparse` wrapping one): those backends
+compile the initial weights into the prepared derivatives, so weight updates
+would not reach the gradient or Hessian.
+
 Reusing a rule across solves resets the same-iteration guard when `state.iter`
 goes strictly backwards relative to the previous call. A second solve that
 starts at exactly the same iteration the previous solve ended on does not
@@ -158,6 +163,12 @@ function _check_update_period(every)
     return Int(every)
 end
 
+# Symbolic backends compile the weights present at preparation time into the
+# generated derivatives, so later in-place weight updates would not reach them.
+_freezes_weights(::Union{ADTypes.AutoSymbolics, ADTypes.AutoFastDifferentiation}) = true
+_freezes_weights(adtype::ADTypes.AutoSparse) = _freezes_weights(adtype.dense_ad)
+_freezes_weights(adtype) = false
+
 function _adaptive_context(prob)
     of = prob.f
     obj = of isa SciMLBase.OptimizationFunction ? of.f : nothing
@@ -165,6 +176,14 @@ function _adaptive_context(prob)
         ArgumentError(
             "adaptive-weight rules apply to a problem scalarized by `weighted_sum`; " *
                 "build it with `weighted_sum(prob)` first and pass the returned problem."
+        )
+    )
+    _freezes_weights(of.adtype) && throw(
+        ArgumentError(
+            "adaptive-weight rules update the weights during the solve, but " *
+                "$(nameof(typeof(of.adtype))) compiles the initial weights into the " *
+                "prepared derivatives; scalarize with a non-symbolic `adtype` such as " *
+                "`AutoForwardDiff()`, or with `NoAD()` and a `jac`."
         )
     )
     return (
@@ -258,7 +277,7 @@ function GradientScale(prob; every = 1, inertia = 0.9, epsilon = 1.0e-11)
     )
     return GradientScale(
         ctx.objectives, ctx.jac, ctx.iip_jac, ctx.adtype, ctx.weights,
-        _check_update_period(every), inertia, epsilon, -1, -1
+        _check_update_period(every), promote(inertia, epsilon)..., -1, -1
     )
 end
 
@@ -347,8 +366,8 @@ end
 function SoftAdapt(prob; every = 1, α = 0.1, epsilon = 1.0e-8)
     ctx = _adaptive_context(prob)
     return SoftAdapt(
-        ctx.objectives, ctx.weights, _check_update_period(every), α, epsilon,
-        nothing, -1, -1
+        ctx.objectives, ctx.weights, _check_update_period(every),
+        promote(α, epsilon)..., nothing, -1, -1
     )
 end
 
@@ -403,8 +422,8 @@ function ReLoBRaLo(
     temperature > 0 || throw(ArgumentError("`temperature` must be positive."))
     ctx = _adaptive_context(prob)
     return ReLoBRaLo(
-        ctx.objectives, ctx.weights, _check_update_period(every), α, β,
-        temperature, epsilon, rng, nothing, nothing, nothing, -1, -1
+        ctx.objectives, ctx.weights, _check_update_period(every),
+        promote(α, β, temperature, epsilon)..., rng, nothing, nothing, nothing, -1, -1
     )
 end
 
