@@ -11,7 +11,8 @@ import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,
     hvp, jacobian
 using ADTypes: ADTypes, AbstractADType
 using SparseConnectivityTracer: SparseConnectivityTracer, TracerSparsityDetector
-using SparseMatrixColorings: SparseMatrixColorings, GreedyColoringAlgorithm
+using SparseMatrixColorings: SparseMatrixColorings, GreedyColoringAlgorithm,
+    sparsity_pattern
 
 function instantiate_function(
         f::OptimizationFunction{true}, x, adtype::ADTypes.AutoSparse{<:AbstractADType},
