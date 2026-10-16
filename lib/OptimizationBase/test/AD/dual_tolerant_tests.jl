@@ -12,7 +12,7 @@
 #   5. Any other off-construction eltype (`Float32`, `BigFloat`, …) routes through
 #      the prep-free fallback instead of erroring on the prep built at the construction types.
 
-using OptimizationBase, Test, ForwardDiff, FiniteDiff
+using OptimizationBase, Test, ForwardDiff, FiniteDiff, ReverseDiff
 using ADTypes, Enzyme, StaticArrays
 import SciMLBase
 using OptimizationBase: _prep_valid
@@ -312,4 +312,60 @@ end
     )
     Hlag_oop_b = fresh_oop_lag.lag_h(Float32.(xt), Float32(1), Float32[0.5])
     @test Hlag_oop ≈ Hlag_oop_b
+end
+
+@testset "lag_h at the call-time p, σ = 0, and foreign σ/λ types" begin
+    # Both constraints depend on `p`, so a constraint term evaluated at the construction `p`
+    # gives a different Hessian.
+    lcons!(res, x, p) = (res[1] = p[1] * x[1]^2 + x[2]^2; res[2] = p[2] * x[1] * x[2]; nothing)
+    lcons(x, p) = [p[1] * x[1]^2 + x[2]^2, p[2] * x[1] * x[2]]
+    lag_ref(θ, σ, λ, p) = ForwardDiff.hessian(
+        xx -> σ * objp(xx, Float64.(p)) + sum(Float64.(λ) .* lcons(xx, Float64.(p))),
+        Float64.(θ)
+    )
+    packed(H) = [H[i, j] for i in 1:size(H, 1) for j in 1:i]
+    λ = [0.5, -1.5]
+    xf, λf, p1f = Float32.(xt), Float32.(λ), Float32.(p1)
+    cases = (
+        (xt, 1.0, λ, (p1,)),
+        (xt, 1.0, λ, (p1f,)),
+        (xf, 1.0f0, λf, (p1f,)),
+        (xt, 0.0, λ, ()),
+        (xt, 0.0, λ, (p1,)),
+        (xf, 0.0f0, λf, ()),
+        (xf, 0.0f0, λf, (p1f,)),
+        (xt, 2, λ, ()),
+        (xt, 1.0, λf, ()),
+        (xt, 1.0, view([λ; 9.0], 1:2), ()),
+    )
+    for ad in (ADTypes.AutoForwardDiff(), ADTypes.AutoReverseDiff())
+        fi = OptimizationBase.instantiate_function(
+            OptimizationFunction(objp, ad; cons = lcons!), x0, ad, p0, 2; lag_h = true
+        )
+        oop = OptimizationBase.instantiate_function(
+            OptimizationFunction{false}(objp, ad; cons = lcons), x0, ad, p0, 2; lag_h = true
+        )
+        for (θ, σ, λc, pargs) in cases
+            ref = lag_ref(θ, σ, λc, isempty(pargs) ? p0 : only(pargs))
+            rtol = eltype(θ) == Float32 ? 1.0e-5 : 1.0e-10
+            H = zeros(eltype(θ), 2, 2)
+            fi.lag_h(H, θ, σ, λc, pargs...)
+            @test H ≈ ref rtol = rtol
+            h = zeros(eltype(θ), 3)
+            fi.lag_h(h, θ, σ, λc, pargs...)
+            @test h ≈ packed(ref) rtol = rtol
+            @test oop.lag_h(θ, σ, λc, pargs...) ≈ ref rtol = rtol
+        end
+    end
+
+    # σ = 0 with a user-supplied `cons_h` (no AD constraint-Hessian preparation).
+    ad = ADTypes.AutoForwardDiff()
+    user_cons_h!(H, x, p) = (H[1] .= [2p[1] 0; 0 2]; H[2] .= [0 p[2]; p[2] 0]; nothing)
+    fi = OptimizationBase.instantiate_function(
+        OptimizationFunction(objp, ad; cons = lcons!, cons_h = user_cons_h!), x0, ad, p0, 2;
+        lag_h = true
+    )
+    H = zeros(2, 2)
+    fi.lag_h(H, xt, 0.0, λ)
+    @test H ≈ lag_ref(xt, 0.0, λ, p0) rtol = 1.0e-10
 end
