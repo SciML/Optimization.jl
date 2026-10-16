@@ -7,6 +7,7 @@ using ManifoldsBase, ManifoldDiff
 import SciMLBase
 using SciMLBase: ReturnCode
 using Dates: Millisecond
+using LinearAlgebra: mul!
 
 """
     abstract type AbstractManoptOptimizer end
@@ -422,20 +423,34 @@ function build_gradF(f::OptimizationBase.OptimizationFunction{true})
     return g
 end
 
-function build_hessF(f::OptimizationBase.OptimizationFunction{true})
-    function h(M::AbstractManifold, H1, θ, X)
-        H = zeros(eltype(θ), length(θ))
-        f.hv(H, θ, X)
-        G = zeros(eltype(θ), length(θ))
+# Riemannian Hessian from `f.hv`, else from the dense `f.hess`; `nothing` lets Manopt use
+# its own approximation. Buffers use `zero(θ)` so matrix-valued points keep their shape.
+function build_hessF(f::OptimizationBase.OptimizationFunction{true}, u0)
+    euclidean_hvp! = if f.hv !== nothing
+        (H, θ, X) -> f.hv(H, θ, X)
+    elseif f.hess !== nothing
+        # tCG takes many products at one point, so only reassemble when θ moves
+        Hmat = zeros(eltype(u0), length(u0), length(u0))
+        θH = fill!(similar(u0), NaN)
+        function (H, θ, X)
+            if θ != θH
+                f.hess(Hmat, θ)
+                copyto!(θH, θ)
+            end
+            return mul!(vec(H), Hmat, vec(X))
+        end
+    else
+        return nothing
+    end
+    function h(M::AbstractManifold, Y, θ, X)
+        H = zero(θ)
+        euclidean_hvp!(H, θ, X)
+        G = zero(θ)
         f.grad(G, θ)
-        return riemannian_Hessian!(M, H1, θ, G, H, X)
+        return riemannian_Hessian!(M, Y, θ, G, H, X)
     end
     function h(M::AbstractManifold, θ, X)
-        H = zeros(eltype(θ), length(θ))
-        f.hv(H, θ, X)
-        G = zeros(eltype(θ), length(θ))
-        f.grad(G, θ)
-        return riemannian_Hessian(M, θ, G, H, X)
+        return h(M, zero_vector(M, θ), θ, X)
     end
     return h
 end
@@ -482,7 +497,7 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{O}) where {
     end
 
     if hessF === nothing
-        hessF = build_hessF(cache.f)
+        hessF = build_hessF(cache.f, cache.u0)
     end
 
     stopping_kwarg = if haskey(solver_kwarg, :stopping_criterion)
