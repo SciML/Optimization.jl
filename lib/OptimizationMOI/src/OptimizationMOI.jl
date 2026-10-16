@@ -1,11 +1,9 @@
 module OptimizationMOI
 
-# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
-# which the user loads directly. This package's public surface is its own solvers.
 using OptimizationBase: OptimizationBase
 using MathOptInterface: MathOptInterface
-using SciMLBase: SciMLBase, OptimizationFunction, OptimizationProblem, ReturnCode, remake,
-    reinit!
+using SciMLBase: SciMLBase, OptimizationFunction, OptimizationProblem, ReturnCode, init,
+    reinit!, remake, solve, solve!
 import ADTypes
 using SciMLLogging: @SciMLMessage
 using SymbolicIndexingInterface: SymbolicIndexingInterface, parameter_index,
