@@ -32,6 +32,11 @@ limit set through the solver's own option, as a keyword argument or in
 | SCS        | `max_iters`                      |
 | COSMO      | `max_iter`                       |
 
+The Gurobi and CPLEX options limit only simplex iterations, and the MOSEK option limits
+only interior-point iterations. Other algorithms of those solvers, such as the barrier
+method of Gurobi and CPLEX, are not limited by `maxiters`; set their limits through the
+solver's own options.
+
 `OptimizationMOI` supports an argument `mtkize` which takes a boolean (default to `false`)
 that allows automatic symbolic expression generation, this allows using any AD backend with
 solvers or interfaces such as AmplNLWriter that require the expression graph of the objective

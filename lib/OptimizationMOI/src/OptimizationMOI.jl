@@ -104,9 +104,10 @@ const MAXITERS_ATTRIBUTES = (
 """
     _set_maxiters!(optimizer, opt, maxiters, opt_verbose)
 
-Set the iteration limit of `optimizer`, created from `opt`, to `maxiters` through the
-solver attribute that `MAXITERS_ATTRIBUTES` lists for the solver's type name. A value for
-that attribute given in a `MOI.OptimizerWithAttributes` takes precedence over `maxiters`.
+Set the iteration limit of `optimizer`, created from `opt`, to `maxiters` rounded to the
+nearest integer, through the solver attribute that `MAXITERS_ATTRIBUTES` lists for the
+solver's type name. A value for that attribute given in a `MOI.OptimizerWithAttributes`
+takes precedence over `maxiters`.
 Solvers without a listed attribute emit an `:unsupported_kwargs` message instead.
 """
 function _set_maxiters!(optimizer, opt, maxiters::Number, opt_verbose)
@@ -121,7 +122,7 @@ function _set_maxiters!(optimizer, opt, maxiters::Number, opt_verbose)
     end
     attr = MOI.RawOptimizerAttribute(last(MAXITERS_ATTRIBUTES[i]))
     if !(opt isa MOI.OptimizerWithAttributes && !isnothing(MOI.get(opt, attr)))
-        MOI.set(optimizer, attr, Int(maxiters))
+        MOI.set(optimizer, attr, round(Int, maxiters))
     end
     return nothing
 end

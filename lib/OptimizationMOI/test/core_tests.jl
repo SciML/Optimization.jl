@@ -473,6 +473,10 @@ MathOptInterface.supports_incremental_interface(::MockOptimizer) = true
     @test sol.stats.iterations == 5
     @test sol.retcode == ReturnCode.MaxIters
 
+    sol = solve(prob, Ipopt.Optimizer(); maxiters = 5.2, print_level = 0)
+    @test sol.stats.iterations == 5
+    @test sol.retcode == ReturnCode.MaxIters
+
     cache = init(prob, Ipopt.Optimizer(); maxiters = 3, print_level = 0)
     sol = solve!(cache)
     @test sol.stats.iterations == 3
