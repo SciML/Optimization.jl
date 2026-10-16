@@ -95,4 +95,15 @@ import SciMLBase
         @test res_safe.u[1] < 0.0
         @test res_safe.u[1] > -0.5
     end
+
+    # Regression: unconstrained LBFGSB path must not box `x` / dual-branch
+    # `iter_count`/`_loss` into Core.Box (dynamic dispatch on every eval).
+    @testset "no Core.Box in unconstrained LBFGSB __solve" begin
+        optf_box = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
+        prob_box = OptimizationProblem(optf_box, zeros(2))
+        cache_box = init(prob_box, OptimizationLBFGSB.LBFGSB())
+        src = only(code_typed(SciMLBase.__solve, (typeof(cache_box),)))[1]
+        nboxes = count(t -> t === Core.Box, something(src.ssavaluetypes, []))
+        @test nboxes == 0
+    end
 end
