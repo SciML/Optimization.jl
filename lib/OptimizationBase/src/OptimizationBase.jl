@@ -20,7 +20,7 @@ using SciMLLogging: SciMLLogging, @SciMLMessage, @verbosity_specifier,
     InfoLevel, MessageLevel, Silent, WarnLevel
 
 using ArrayInterface: ArrayInterface
-using SparseArrays: SparseArrays, SparseMatrixCSC, findnz
+using SparseArrays: SparseArrays, SparseMatrixCSC, findnz, nonzeros
 using LinearAlgebra: LinearAlgebra, dot
 import SciMLBase: solve, init, solve!, __init, __solve,
     OptimizationProblem, OptimizationFunction,
