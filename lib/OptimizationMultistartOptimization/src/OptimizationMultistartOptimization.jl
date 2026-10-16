@@ -1,11 +1,12 @@
 module OptimizationMultistartOptimization
 
-using Reexport
-@reexport using MultistartOptimization
+using Reexport: @reexport
+@reexport using MultistartOptimization: MultistartOptimization, MinimizationProblem,
+    NLopt_local_method, TikTak, local_minimization, multistart_minimization
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
-using OptimizationBase
-using SciMLBase
+using OptimizationBase: OptimizationBase, OptimizationCache
+using SciMLBase: SciMLBase, remake, solve
 
 SciMLBase.requiresbounds(opt::MultistartOptimization.TikTak) = true
 SciMLBase.allowsbounds(opt::MultistartOptimization.TikTak) = true
