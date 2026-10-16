@@ -1,17 +1,13 @@
 module OptimizationLBFGSB
 
-using Reexport
 # Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
 # which the user loads directly. This package's public surface is its own solvers.
-using OptimizationBase
-import SciMLBase
+using OptimizationBase: OptimizationBase, OptimizationCache, deduce_retcode
 using SciMLLogging: @SciMLMessage
-using DocStringExtensions
+using DocStringExtensions: TYPEDEF
 import LBFGSB as LBFGSBJL
-using SciMLBase: OptimizationStats
-using SciMLBase: ReturnCode
+using SciMLBase: SciMLBase, OptimizationStats, ReturnCode
 using OptimizationBase.LinearAlgebra: norm
-using OptimizationBase: deduce_retcode
 
 """
 $(TYPEDEF)
@@ -89,8 +85,6 @@ end
 
 function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
-
-    local x
 
     solver_kwargs = __map_optimizer_args(cache, cache.opt; maxiters, cache.solver_args...)
 
@@ -220,12 +214,12 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
             stats = stats, retcode = opt_ret
         )
     else
-        iter_count = Ref(0)
+        ub_iter_count = Ref(0)
         encountered_inf_nan = Ref(false)
 
-        _loss = function (θ)
+        ub_loss = function (θ)
             x = cache.f(θ, cache.p)
-            iter_count[] += 1
+            ub_iter_count[] += 1
             # Track if we encounter Inf/NaN values in the objective
             if !isfinite(x[1])
                 encountered_inf_nan[] = true
@@ -267,7 +261,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
         t0 = time()
 
         res = optimizer(
-            _loss, _grad!, cache.u0, bounds; m = cache.opt.m, solver_kwargs...
+            ub_loss, _grad!, cache.u0, bounds; m = cache.opt.m, solver_kwargs...
         )
 
         # Extract the task message from the result

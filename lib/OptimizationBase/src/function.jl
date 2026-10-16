@@ -10,6 +10,24 @@ function symbolify(e)
     return e
 end
 
+# A lazily built `cons_expr` (e.g. ModelingToolkit's) is only read when an
+# expression-graph consumer indexes it, so symbolify its elements on access instead of
+# forcing every row while instantiating the function.
+struct SymbolifiedExprs{T, V <: AbstractVector{T}} <: AbstractVector{T}
+    exprs::V
+end
+Base.size(s::SymbolifiedExprs) = size(s.exprs)
+Base.IndexStyle(::Type{<:SymbolifiedExprs}) = IndexLinear()
+Base.getindex(s::SymbolifiedExprs, i::Int) = symbolify(s.exprs[i])
+
+# Only `AbstractVector{Expr}` can be wrapped lazily: `SymbolifiedExprs` inherits the
+# input eltype, and MOI's NLP evaluator stores `AbstractVector{Expr}`. Other containers
+# (e.g. `AbstractVector{Any}` holding `Expr`s) must be eagerly symbolified to
+# `Vector{Expr}`, matching the pre-lazy behavior.
+symbolify_exprs(exprs::Vector) = symbolify.(exprs)
+symbolify_exprs(exprs::AbstractVector{Expr}) = SymbolifiedExprs(exprs)
+symbolify_exprs(exprs) = symbolify.(exprs)
+
 function rep_pars_vals!(e::Expr, p)
     rep_pars_vals!.(e.args, Ref(p))
     return replace!(e.args, p...)
@@ -55,9 +73,9 @@ function OptimizationBase.instantiate_function(
     cons_j = f.cons_j === nothing ? nothing :
         (res, x, p_call = p) -> f.cons_j(res, x, p_call)
     cons_jvp = f.cons_jvp === nothing ? nothing :
-        (res, x, p_call = p) -> f.cons_jvp(res, x, p_call)
+        (res, x, v, p_call = p) -> f.cons_jvp(res, x, v, p_call)
     cons_vjp = f.cons_vjp === nothing ? nothing :
-        (res, x, p_call = p) -> f.cons_vjp(res, x, p_call)
+        (res, x, v, p_call = p) -> f.cons_vjp(res, x, v, p_call)
     cons_h = f.cons_h === nothing ? nothing :
         (res, x, p_call = p) -> f.cons_h(res, x, p_call)
     hess_prototype = f.hess_prototype === nothing ? nothing :
@@ -70,7 +88,7 @@ function OptimizationBase.instantiate_function(
             for i in 1:num_cons
         ]
     expr = symbolify(f.expr)
-    cons_expr = symbolify.(f.cons_expr)
+    cons_expr = symbolify_exprs(f.cons_expr)
 
     return MultiObjectiveOptimizationFunction{true}(
         f.f, SciMLBase.NoAD(); jac = jac, hess = hess,
@@ -98,9 +116,9 @@ function OptimizationBase.instantiate_function(
     cons_j = f.cons_j === nothing ? nothing :
         (res, x, p_call = cache.p) -> f.cons_j(res, x, p_call)
     cons_jvp = f.cons_jvp === nothing ? nothing :
-        (res, x, p_call = cache.p) -> f.cons_jvp(res, x, p_call)
+        (res, x, v, p_call = cache.p) -> f.cons_jvp(res, x, v, p_call)
     cons_vjp = f.cons_vjp === nothing ? nothing :
-        (res, x, p_call = cache.p) -> f.cons_vjp(res, x, p_call)
+        (res, x, v, p_call = cache.p) -> f.cons_vjp(res, x, v, p_call)
     cons_h = f.cons_h === nothing ? nothing :
         (res, x, p_call = cache.p) -> f.cons_h(res, x, p_call)
     hess_prototype = f.hess_prototype === nothing ? nothing :
@@ -113,7 +131,7 @@ function OptimizationBase.instantiate_function(
             for i in 1:num_cons
         ]
     expr = symbolify(f.expr)
-    cons_expr = symbolify.(f.cons_expr)
+    cons_expr = symbolify_exprs(f.cons_expr)
 
     return MultiObjectiveOptimizationFunction{true}(
         f.f, SciMLBase.NoAD(); jac = jac, hess = hess,
@@ -199,10 +217,22 @@ function OptimizationBase.instantiate_function(
         (res, x, p_call = p) -> f.cons(res, x, p_call)
     cons_j = f.cons_j === nothing ? nothing :
         (res, x, p_call = p) -> f.cons_j(res, x, p_call)
-    cons_vjp = f.cons_vjp === nothing ? nothing :
-        (res, x, p_call = p) -> f.cons_vjp(res, x, p_call)
-    cons_jvp = f.cons_jvp === nothing ? nothing :
-        (res, x, p_call = p) -> f.cons_jvp(res, x, p_call)
+    # A requested product the user did not supply is built from their `cons_j`: only a solver
+    # that requires it asks for one it cannot get matrix-free (see cons_products.jl).
+    cons_vjp = if f.cons_vjp !== nothing
+        (res, x, v, p_call = p) -> f.cons_vjp(res, x, v, p_call)
+    elseif get(kwargs, :cons_vjp, false) == true && f.cons_j !== nothing
+        _user_cons_vjp(f, x, p, num_cons)
+    else
+        nothing
+    end
+    cons_jvp = if f.cons_jvp !== nothing
+        (res, x, v, p_call = p) -> f.cons_jvp(res, x, v, p_call)
+    elseif get(kwargs, :cons_jvp, false) == true && f.cons_j !== nothing
+        _user_cons_jvp(f, x, p, num_cons)
+    else
+        nothing
+    end
     cons_h = f.cons_h === nothing ? nothing :
         (res, x, p_call = p) -> f.cons_h(res, x, p_call)
 
@@ -228,7 +258,7 @@ function OptimizationBase.instantiate_function(
             for i in 1:num_cons
         ]
     expr = symbolify(f.expr)
-    cons_expr = symbolify.(f.cons_expr)
+    cons_expr = symbolify_exprs(f.cons_expr)
 
     return OptimizationFunction{true}(
         f.f, SciMLBase.NoAD();
