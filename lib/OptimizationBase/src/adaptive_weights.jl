@@ -221,6 +221,19 @@ end
 
 _meanabs(g) = sum(abs, g) / length(g)
 
+# Per-objective Jacobians are first-order: a `SecondOrder` contributes its inner backend.
+function _first_order_adtype(adtype::DifferentiationInterface.SecondOrder)
+    return _first_order_adtype(DifferentiationInterface.inner(adtype))
+end
+function _first_order_adtype(adtype::ADTypes.AutoSparse)
+    return ADTypes.AutoSparse(
+        _first_order_adtype(ADTypes.dense_ad(adtype));
+        sparsity_detector = ADTypes.sparsity_detector(adtype),
+        coloring_algorithm = ADTypes.coloring_algorithm(adtype)
+    )
+end
+_first_order_adtype(adtype) = adtype
+
 function _objective_jacobian(objectives, jac, iip_jac, adtype, u, p, nobj)
     if jac !== nothing
         if iip_jac
@@ -280,7 +293,7 @@ function GradientScale(prob; every = 1, inertia = 0.9, epsilon = 1.0e-11)
         )
     )
     return GradientScale(
-        ctx.objectives, ctx.jac, ctx.iip_jac, ctx.adtype, ctx.weights,
+        ctx.objectives, ctx.jac, ctx.iip_jac, _first_order_adtype(ctx.adtype), ctx.weights,
         _check_update_period(every), promote(inertia, epsilon)..., -1, -1
     )
 end

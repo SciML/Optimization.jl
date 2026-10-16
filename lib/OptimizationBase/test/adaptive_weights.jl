@@ -192,6 +192,21 @@ end
     @test H ≈ [1.5 * 2 + 2.5 * 6;;]
 end
 
+@testset "GradientScale differentiates objectives through $adtype" for adtype in (
+        AutoForwardDiff(), AutoSparse(AutoForwardDiff()),
+        SecondOrder(AutoForwardDiff(), AutoForwardDiff()),
+        AutoSparse(SecondOrder(AutoForwardDiff(), AutoForwardDiff())),
+    )
+    mof = MultiObjectiveOptimizationFunction(
+        (u, p) -> [(u[1] - 1)^2, 3 * (u[1] + 1)^2], adtype
+    )
+    prob = weighted_sum(OptimizationProblem(mof, [0.0]))
+    callback = GradientScale(prob; inertia = 0)
+    callback(adaptive_state(prob, 1, 0.0), 0.0)
+    # J = [-2; 6] at z = 0: max |J| = 6 over mean |∇Lᵢ| = [2, 6]
+    @test callback.weights ≈ [3, 1]
+end
+
 @testset "Symbolic backends are rejected" begin
     rules = (GradientScale, MiniMax, SoftAdapt, ReLoBRaLo)
     symbolic = (
