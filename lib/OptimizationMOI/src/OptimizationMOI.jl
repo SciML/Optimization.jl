@@ -1,20 +1,19 @@
 module OptimizationMOI
 
-using Reexport
-# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
-# which the user loads directly. This package's public surface is its own solvers.
-using OptimizationBase
-using MathOptInterface
-using SciMLBase
+using OptimizationBase: OptimizationBase
+using MathOptInterface: MathOptInterface
+using SciMLBase: SciMLBase, OptimizationFunction, OptimizationProblem, ReturnCode, init,
+    reinit!, remake, solve, solve!
 import ADTypes
 using SciMLLogging: @SciMLMessage
-using SymbolicIndexingInterface
-using SparseArrays
+using SymbolicIndexingInterface: SymbolicIndexingInterface, parameter_index,
+    parameter_symbols, parameter_values, variable_index, variable_symbols
+using SparseArrays: SparseArrays, SparseMatrixCSC, findnz, nonzeros
 import ModelingToolkitBase
 const MTK = ModelingToolkitBase
-using Symbolics
+using Symbolics: Symbolics, @variables, Num
 import SymbolicUtils as SU
-using LinearAlgebra
+using LinearAlgebra: LinearAlgebra, mul!
 
 const MOI = MathOptInterface
 

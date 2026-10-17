@@ -267,6 +267,17 @@ end
     end
 end
 
+@testset "common interface through the OptimizationMOI namespace" begin
+    @variables x
+    @parameters a = 1.0
+    @named sys = OptimizationSystem((x - a)^2, [x], [a])
+    prob = OptimizationProblem(complete(sys), [x => 0.0]; grad = true, hess = true)
+    @test OptimizationMOI.solve(prob, Ipopt.Optimizer(); print_level = 0).u ≈ [1.0]
+    cache = OptimizationMOI.init(prob, Ipopt.Optimizer(); print_level = 0)
+    @test OptimizationMOI.solve!(cache).u ≈ [1.0]
+    @test isdefined(OptimizationMOI, :reinit!)
+end
+
 @testset "verbose kwarg" begin
     rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
     optprob = OptimizationFunction(rosenbrock, AutoZygote())
