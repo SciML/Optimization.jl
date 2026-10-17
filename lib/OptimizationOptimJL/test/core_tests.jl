@@ -391,6 +391,27 @@ end
         @test sol isa Any  # just test it doesn't throw
     end
 
+    @testset "extended_trace defaults to false" begin
+        x0 = zeros(2)
+        _p = [1.0, 100.0]
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
+        prob = OptimizationProblem(optprob, x0, _p)
+
+        sol = solve(prob, Optim.BFGS(); store_trace = true, maxiters = 5)
+        @test !isempty(sol.original.trace)
+        @test !haskey(sol.original.trace[end].metadata, "x")
+        @test !haskey(sol.original.trace[end].metadata, "g(x)")
+        @test !haskey(sol.original.trace[end].metadata, "~inv(H)")
+
+        sol_ext = solve(
+            prob, Optim.BFGS(); store_trace = true, extended_trace = true, maxiters = 5
+        )
+        @test !isempty(sol_ext.original.trace)
+        @test haskey(sol_ext.original.trace[end].metadata, "x")
+        @test haskey(sol_ext.original.trace[end].metadata, "g(x)")
+        @test haskey(sol_ext.original.trace[end].metadata, "~inv(H)")
+    end
+
     @testset "Issue #1187 retcode is SciMLBase.ReturnCode.T" begin
         # Ensure the returned retcode is a `SciMLBase.ReturnCode.T` and not a Symbol.
         # Regression test for https://github.com/SciML/Optimization.jl/issues/1187
