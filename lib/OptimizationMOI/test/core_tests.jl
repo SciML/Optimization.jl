@@ -1,6 +1,6 @@
 using OptimizationMOI, OptimizationBase, Ipopt, NLopt, Zygote, ModelingToolkitBase, ReverseDiff
 using AmplNLWriter, Ipopt_jll, Juniper, HiGHS, MathOptInterface
-using Test, SparseArrays
+using SafeTestsets, Test, SparseArrays
 
 import MathOptInterface
 
@@ -469,13 +469,11 @@ MathOptInterface.supports_incremental_interface(::MockOptimizer) = true
     # Ipopt takes 14 iterations and NLopt's LD_LBFGS more than 5 evaluations here.
     prob = OptimizationProblem(optprob, zeros(2), [1.0, 100.0])
 
-    sol = solve(prob, Ipopt.Optimizer(); maxiters = 5, print_level = 0)
-    @test sol.stats.iterations == 5
-    @test sol.retcode == ReturnCode.MaxIters
-
-    sol = solve(prob, Ipopt.Optimizer(); maxiters = 5.2, print_level = 0)
-    @test sol.stats.iterations == 5
-    @test sol.retcode == ReturnCode.MaxIters
+    for maxiters in (5, 5.2)
+        sol = solve(prob, Ipopt.Optimizer(); maxiters, print_level = 0)
+        @test sol.stats.iterations == 5
+        @test sol.retcode == ReturnCode.MaxIters
+    end
 
     cache = init(prob, Ipopt.Optimizer(); maxiters = 3, print_level = 0)
     sol = solve!(cache)
@@ -503,3 +501,5 @@ MathOptInterface.supports_incremental_interface(::MockOptimizer) = true
         )
     end
 end
+
+@safetestset "despecialization" include("despecialize_tests.jl")
