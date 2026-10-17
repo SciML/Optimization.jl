@@ -82,6 +82,18 @@ res_sophia = solve(prob_sophia, OptimizationSophia.Sophia(η = 0.01, k = 5), max
 @test res_sophia.objective < rosenbrock_comp(x0_comp)  # Test optimization progress
 @test res_sophia.retcode == SciMLBase.ReturnCode.Success
 
+@testset "Sophia callback stops the solve" begin
+    rb = (x, p) -> (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+    optf = OptimizationFunction(rb, AutoForwardDiff())
+    prob = OptimizationProblem(optf, zeros(2), [1.0, 100.0])
+    callback_calls = Ref(0)
+    callback = (state, loss...) -> (callback_calls[] += 1; callback_calls[] >= 5)
+
+    solve(prob, Sophia(η = 0.01, k = 5); callback, maxiters = 50)
+
+    @test callback_calls[] == 5
+end
+
 # Default callback must be a stable const so init with/without kwargs share a cache type.
 @testset "DEFAULT_CALLBACK type stability across kwargs" begin
     rb(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
