@@ -14,8 +14,28 @@ Pkg.add("OptimizationMOI");
 
 ## Details
 
-As of now, the `Optimization` interface to `MathOptInterface` implements only
-the `maxtime` common keyword argument.
+The `Optimization` interface to `MathOptInterface` implements the `maxtime` and
+`maxiters` common keyword arguments. `maxiters` sets the solver's own iteration
+limit, for the solvers listed below; other solvers ignore it with a message. A
+limit set through the solver's own option, as a keyword argument or in
+`OptimizerWithAttributes`, takes precedence over `maxiters`.
+
+| Solver     | Option set by `maxiters`         |
+|:---------- |:-------------------------------- |
+| Ipopt      | `max_iter`                       |
+| NLopt      | `maxeval`                        |
+| Gurobi     | `IterationLimit`                 |
+| CPLEX      | `CPX_PARAM_ITLIM`                |
+| MOSEK      | `MSK_IPAR_INTPNT_MAX_ITERATIONS` |
+| OSQP       | `max_iter`                       |
+| ECOS       | `maxit`                          |
+| SCS        | `max_iters`                      |
+| COSMO      | `max_iter`                       |
+
+The Gurobi and CPLEX options limit only simplex iterations, and the MOSEK option limits
+only interior-point iterations. Other algorithms of those solvers, such as the barrier
+method of Gurobi and CPLEX, are not limited by `maxiters`; set their limits through the
+solver's own options.
 
 `OptimizationMOI` supports an argument `mtkize` which takes a boolean (default to `false`)
 that allows automatic symbolic expression generation, this allows using any AD backend with
