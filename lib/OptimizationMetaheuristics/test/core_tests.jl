@@ -161,4 +161,15 @@ Random.seed!(42)
             end
         end
     end
+
+    # Default callback must be a stable const so init with/without kwargs share a cache type.
+    @testset "DEFAULT_CALLBACK type stability across kwargs" begin
+        rb(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+        optf = OptimizationFunction(rb)
+        prob = OptimizationProblem(
+            optf, zeros(2), [1.0, 100.0], lb = [-1.0, -1.0], ub = [1.0, 1.0]
+        )
+        @test typeof(OptimizationBase.init(prob, Metaheuristics.ECA())) ==
+            typeof(OptimizationBase.init(prob, Metaheuristics.ECA(); maxiters = 100))
+    end
 end

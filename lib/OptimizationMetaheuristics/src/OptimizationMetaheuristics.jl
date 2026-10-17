@@ -96,7 +96,7 @@ end
 function SciMLBase.__init(
         prob::SciMLBase.OptimizationProblem,
         opt::Metaheuristics.AbstractAlgorithm; use_initial = false,
-        callback = (args...) -> (false),
+        callback = OptimizationBase.DEFAULT_CALLBACK,
         progress = false, kwargs...
     )
     return OptimizationCache(
