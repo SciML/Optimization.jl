@@ -66,6 +66,7 @@ const LIB_DIR = joinpath(dirname(@__DIR__), "lib")
                 # @safetestset "DiffEqFlux" include("diffeqfluxtests.jl")
                 @safetestset "Interface Compatibility" include("interface_tests.jl")
                 @safetestset "Sense Handling" include("sense_tests.jl")
+                @safetestset "Adaptive Weights" include("adaptive_weights.jl")
             end,
             groups = Dict(
                 # The AD tests are their own group with their own environment
