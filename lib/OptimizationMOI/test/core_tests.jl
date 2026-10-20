@@ -460,4 +460,48 @@ end
     sol = solve(prob, Ipopt.Optimizer())
 end
 
+# Its type name matches no entry of `OptimizationMOI.MAXITERS_ATTRIBUTES`.
+struct MockOptimizer <: MathOptInterface.AbstractOptimizer end
+MathOptInterface.is_empty(::MockOptimizer) = true
+MathOptInterface.supports_incremental_interface(::MockOptimizer) = true
+
+@testset "common maxiters interface" begin
+    rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+    optprob = OptimizationFunction(rosenbrock, AutoZygote())
+    # Ipopt takes 14 iterations and NLopt's LD_LBFGS more than 5 evaluations here.
+    prob = OptimizationProblem(optprob, zeros(2), [1.0, 100.0])
+
+    for maxiters in (5, 5.2)
+        sol = solve(prob, Ipopt.Optimizer(); maxiters, print_level = 0)
+        @test sol.stats.iterations == 5
+        @test sol.retcode == ReturnCode.MaxIters
+    end
+
+    cache = init(prob, Ipopt.Optimizer(); maxiters = 3, print_level = 0)
+    sol = solve!(cache)
+    @test sol.stats.iterations == 3
+
+    sol = solve(prob, NLopt.Optimizer(); algorithm = :LD_LBFGS, maxiters = 5)
+    @test sol.retcode == ReturnCode.MaxIters
+
+    @testset "solver-specific limits take precedence" begin
+        sol = solve(prob, Ipopt.Optimizer(); maxiters = 100, max_iter = 2, print_level = 0)
+        @test sol.stats.iterations == 2
+        opt = MathOptInterface.OptimizerWithAttributes(
+            Ipopt.Optimizer, "max_iter" => 2, "print_level" => 0
+        )
+        sol = solve(prob, opt; maxiters = 100)
+        @test sol.stats.iterations == 2
+    end
+
+    @testset "unmapped solver" begin
+        @test_logs (:info, r"maxiters argument is currently not used") OptimizationMOI.__map_optimizer_args(
+            MockOptimizer(); maxiters = 10
+        )
+        @test_logs OptimizationMOI.__map_optimizer_args(
+            MockOptimizer(); maxiters = 10, verbose = false
+        )
+    end
+end
+
 @safetestset "despecialization" include("despecialize_tests.jl")
