@@ -4,6 +4,8 @@ using SafeTestsets, Test, SparseArrays
 
 import MathOptInterface
 
+include("integer_power_tests.jl")
+
 function _test_sparse_derivatives_hs071(backend, optimizer)
     function objective(x, ::Any)
         return x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3]
