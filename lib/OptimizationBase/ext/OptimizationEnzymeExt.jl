@@ -676,7 +676,7 @@ function OptimizationBase.instantiate_function(
         batch_width_value = Val(batch_width)
 
         function hess(θ, p = p)
-            H = Matrix{eltype(θ)}(undef, length(θ), length(θ))
+            local H = Matrix{eltype(θ)}(undef, length(θ), length(θ))
             for first_index in _batch_starts(vdθ, batch_width_value)
                 vdθ_batch = _cache_batch(vdθ, first_index, batch_width_value)
                 vdbθ_batch = _cache_batch(vdbθ, first_index, batch_width_value)
