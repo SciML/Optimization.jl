@@ -81,11 +81,12 @@ function OptimizationCache(
         verbose = OptimizationVerbosity(),
         kwargs...
     )
-    if isa_dataiterator(prob.p)
-        reinit_cache = OptimizationBase.ReInitCache(prob.u0, iterate(prob.p)[1])
-        reinit_cache_passedon = OptimizationBase.ReInitCache(prob.u0, prob.p)
+    prob_f, prob_p = despecialize(prob.f, prob.p)
+    if isa_dataiterator(prob_p)
+        reinit_cache = OptimizationBase.ReInitCache(prob.u0, iterate(prob_p)[1])
+        reinit_cache_passedon = OptimizationBase.ReInitCache(prob.u0, prob_p)
     else
-        reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p)
+        reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob_p)
         reinit_cache_passedon = reinit_cache
     end
 
@@ -129,9 +130,9 @@ function OptimizationCache(
     end
 
     f_base = if prob.sense === SciMLBase.MaxSense && !supports_sense(opt)
-        apply_sense(prob.f, prob.sense)
+        apply_sense(prob_f, prob.sense)
     else
-        prob.f
+        prob_f
     end
 
     f = OptimizationBase.instantiate_function(
@@ -153,7 +154,8 @@ function OptimizationCache(
     return OptimizationCache(
         opt, f, reinit_cache_passedon, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
-        progress, callback, manifold, AnalysisResults(obj_res, cons_res),
+        progress, despecialize_callback(prob.f, callback), manifold,
+        AnalysisResults(obj_res, cons_res),
         merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs)),
         processed_verbose
     )

@@ -127,7 +127,10 @@ function MOIOptimizationNLPCache(
         callback = nothing,
         kwargs...
     )
-    reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p) # everything that can be changed via `reinit`
+    # `AutoSpecialize`/`AutoDespecialize`: hide the types of the functions (and of `p`)
+    f_prob, p_prob = OptimizationBase.despecialize(prob.f, prob.p)
+    callback = OptimizationBase.despecialize_callback(prob.f, callback)
+    reinit_cache = OptimizationBase.ReInitCache(prob.u0, p_prob) # everything that can be changed via `reinit`
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
     if prob.f.adtype isa ADTypes.AutoSymbolics || (
@@ -143,7 +146,7 @@ function MOIOptimizationNLPCache(
         # `eval_constraint_jacobian_transpose_product` falls back to `cons_j`, so only ask
         # for a `cons_vjp` that does not materialize the Jacobian.
         f = OptimizationBase.instantiate_function(
-            prob.f, reinit_cache, prob.f.adtype, num_cons;
+            f_prob, reinit_cache, prob.f.adtype, num_cons;
             g = true, h = true, cons_j = true, lag_h = true,
             cons_vjp = OptimizationBase._matrixfree_cons_vjp(prob.f, prob.f.adtype)
         )
@@ -498,6 +501,7 @@ function MOI.objective_expr(evaluator::MOIOptimizationNLPEvaluator)
     expr = deepcopy(evaluator.obj_expr)
     repl_getindex!(expr)
     _replace_parameter_indices!(expr, evaluator.p)
+    expr = _normalize_integer_powers!(expr)
     _replace_variable_indices!(expr)
     return expr
 end
@@ -511,6 +515,7 @@ function MOI.constraint_expr(evaluator::MOIOptimizationNLPEvaluator, i)
     end
     repl_getindex!(cons_expr)
     _replace_parameter_indices!(cons_expr, evaluator.p)
+    cons_expr = _normalize_integer_powers!(cons_expr)
     _replace_variable_indices!(cons_expr)
     lb, ub = Float64(evaluator.lcons[i]), Float64(evaluator.ucons[i])
     if lb == ub

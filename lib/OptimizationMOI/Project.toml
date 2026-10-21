@@ -1,6 +1,6 @@
 name = "OptimizationMOI"
 uuid = "fd9f6733-72f4-499f-8506-86b2bdd0dea1"
-version = "1.5.0"
+version = "1.6.0"
 authors = ["Vaibhav Dixit <vaibhavyashdixit@gmail.com> and contributors"]
 
 [deps]
@@ -35,7 +35,7 @@ MathOptInterface = "1.45"
 ModelingToolkit = "11.32"
 ModelingToolkitBase = "1.77"
 NLopt = "1"
-OptimizationBase = "5.8.0"
+OptimizationBase = "5.10"
 Pkg = "1"
 ReverseDiff = "1"
 SafeTestsets = "0.1"
