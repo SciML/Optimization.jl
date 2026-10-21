@@ -13,7 +13,7 @@ import ModelingToolkitBase
 const MTK = ModelingToolkitBase
 using Symbolics: Symbolics, @variables, Num
 import SymbolicUtils as SU
-using LinearAlgebra: LinearAlgebra, mul!
+using LinearAlgebra: LinearAlgebra, mul!, opnorm
 
 const MOI = MathOptInterface
 

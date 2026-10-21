@@ -472,3 +472,5 @@ end
 end
 
 @safetestset "despecialization" include("despecialize_tests.jl")
+
+include("dynamic_coefficients_tests.jl")
