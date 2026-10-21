@@ -12,8 +12,13 @@ using SparseArrays: SparseArrays, SparseMatrixCSC, findnz, nonzeros
 import ModelingToolkitBase
 const MTK = ModelingToolkitBase
 using Symbolics: Symbolics, @variables, Num
-import SymbolicUtils as SU
+import SymbolicUtils
+const SU = SymbolicUtils
 using LinearAlgebra: LinearAlgebra, mul!, opnorm
+
+# Runtime coefficient expressions resolve calls through these exported namespaces.
+using OptimizationBase, MathOptInterface, SciMLBase, SymbolicIndexingInterface,
+    SparseArrays, Symbolics, LinearAlgebra
 
 const MOI = MathOptInterface
 
