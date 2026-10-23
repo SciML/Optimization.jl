@@ -11,7 +11,7 @@ using Random
 export Sophia
 
 """
-    Sophia(; η = 1e-3, βs = (0.9, 0.999), ϵ = 1e-8, λ = 1e-1, k = 10, ρ = 0.04)
+    Sophia(; η = 1.0e-3, βs = (0.9, 0.999), ϵ = 1.0e-8, λ = 1.0e-1, k = 10, ρ = 0.04)
 
 A second-order optimizer that incorporates diagonal Hessian information for faster convergence.
 

@@ -57,21 +57,26 @@ using OptimizationBase, OptimizationMOI, ModelingToolkit, HiGHS, LinearAlgebra, 
     m = 300.0, [bounds = (0.0, Inf)]
 end
 
-cons = [u1 + v1 - w1 ~ 150 # January
-        u2 + v2 - w2 - 1.01u1 + 1.003w1 ~ 100 # February
-        u3 + v3 - w3 - 1.01u2 + 1.003w2 ~ -200 # March
-        u4 - w4 - 1.02v1 - 1.01u3 + 1.003w3 ~ 200 # April
-        u5 - w5 - 1.02v2 - 1.01u4 + 1.003w4 ~ -50 # May
-        -m - 1.02v3 - 1.01u5 + 1.003w5 ~ -300]
+cons = [
+    u1 + v1 - w1 ~ 150 # January
+    u2 + v2 - w2 - 1.01u1 + 1.003w1 ~ 100 # February
+    u3 + v3 - w3 - 1.01u2 + 1.003w2 ~ -200 # March
+    u4 - w4 - 1.02v1 - 1.01u3 + 1.003w3 ~ 200 # April
+    u5 - w5 - 1.02v2 - 1.01u4 + 1.003w4 ~ -50 # May
+    -m - 1.02v3 - 1.01u5 + 1.003w5 ~ -300
+]
 
 @named optsys = OptimizationSystem(
-    m, [u1, u2, u3, u4, u5, v1, v2, v3, w1, w2, w3, w4, w5, m], [], constraints = cons)
+    m, [u1, u2, u3, u4, u5, v1, v2, v3, w1, w2, w3, w4, w5, m], [], constraints = cons
+)
 optsys = complete(optsys)
 
-optprob = OptimizationProblem(optsys, [];
+optprob = OptimizationProblem(
+    optsys, [];
     grad = true,
     hess = true,
-    sense = SciMLBase.MaxSense)
+    sense = SciMLBase.MaxSense
+)
 sol = solve(optprob, HiGHS.Optimizer())
 ```
 
@@ -107,7 +112,8 @@ objective = (u, p) -> (v = p[1:5]; dot(v, u))
 cons = (res, u, p) -> (w = p[6:10]; res .= [sum(w[i] * u[i]^2 for i in 1:5)])
 
 optf = OptimizationFunction(objective, ADTypes.AutoSymbolics(), cons = cons)
-optprob = OptimizationProblem(optf,
+optprob = OptimizationProblem(
+    optf,
     zeros(5),
     vcat(v, w);
     sense = SciMLBase.MaxSense,
@@ -115,12 +121,17 @@ optprob = OptimizationProblem(optf,
     ub = ones(5),
     lcons = [-Inf],
     ucons = [45.0],
-    int = fill(true, 5))
+    int = fill(true, 5)
+)
 
-nl_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Ipopt.Optimizer,
-    "print_level" => 0)
-minlp_solver = OptimizationMOI.MOI.OptimizerWithAttributes(Juniper.Optimizer,
-    "nl_solver" => nl_solver)
+nl_solver = OptimizationMOI.MOI.OptimizerWithAttributes(
+    Ipopt.Optimizer,
+    "print_level" => 0
+)
+minlp_solver = OptimizationMOI.MOI.OptimizerWithAttributes(
+    Juniper.Optimizer,
+    "nl_solver" => nl_solver
+)
 
 sol = solve(optprob, minlp_solver)
 ```
