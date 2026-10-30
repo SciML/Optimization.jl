@@ -100,12 +100,16 @@ sol = solve(prob, IPNewton()) # Note that -Inf < x[1]^2 + x[2]^2 < Inf is always
 prob = SciMLBase.OptimizationProblem(optf, x0, _p, lcons = [-5.0], ucons = [10.0])
 sol = solve(prob, IPNewton()) # Again, -5.0 < x[1]^2 + x[2]^2 < 10.0
 
-prob = SciMLBase.OptimizationProblem(optf, x0, _p, lcons = [-Inf], ucons = [Inf],
-    lb = [-500.0, -500.0], ub = [50.0, 50.0])
+prob = SciMLBase.OptimizationProblem(
+    optf, x0, _p, lcons = [-Inf], ucons = [Inf],
+    lb = [-500.0, -500.0], ub = [50.0, 50.0]
+)
 sol = solve(prob, IPNewton())
 
-prob = SciMLBase.OptimizationProblem(optf, x0, _p, lcons = [0.5], ucons = [0.5],
-    lb = [-500.0, -500.0], ub = [50.0, 50.0])
+prob = SciMLBase.OptimizationProblem(
+    optf, x0, _p, lcons = [0.5], ucons = [0.5],
+    lb = [-500.0, -500.0], ub = [50.0, 50.0]
+)
 sol = solve(prob, IPNewton())
 
 # Notice now that x[1]^2 + x[2]^2 ≈ 0.5:
@@ -116,7 +120,7 @@ println(res)
 
 ```@example rosenbrock
 function con_c(res, x, p)
-    res .= [x[1]^2 + x[2]^2]
+    return res .= [x[1]^2 + x[2]^2]
 end
 
 optf = SciMLBase.OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff(); cons = con_c)
@@ -128,7 +132,7 @@ sol = solve(prob, IPNewton()) # -Inf < cons_circ(sol.u, _p) = 0.25^2
 
 ```@example rosenbrock
 using OptimizationEvolutionary
-sol = solve(prob, CMAES(μ = 40, λ = 100), abstol = 1e-15) # -Inf < cons_circ(sol.u, _p) = 0.25^2
+sol = solve(prob, CMAES(μ = 40, λ = 100), abstol = 1.0e-15) # -Inf < cons_circ(sol.u, _p) = 0.25^2
 ```
 
 ## IPOPT through OptimizationMOI
@@ -137,7 +141,7 @@ sol = solve(prob, CMAES(μ = 40, λ = 100), abstol = 1e-15) # -Inf < cons_circ(s
 using OptimizationMOI, Ipopt
 
 function con2_c(res, x, p)
-    res .= [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
+    return res .= [x[1]^2 + x[2]^2, x[2] * sin(x[1]) - x[1]]
 end
 
 optf = SciMLBase.OptimizationFunction(rosenbrock, ADTypes.AutoZygote(); cons = con2_c)
@@ -184,8 +188,9 @@ sol = solve(prob, Opt(:G_MLSL_LDS, 2), local_method = Opt(:LD_LBFGS, 2), maxiter
 
 ```@example rosenbrock
 using OptimizationBBO
-prob = SciMLBase.OptimizationProblem(rosenbrock, [0.0, 0.3], _p, lb = [-1.0, 0.2],
-    ub = [0.8, 0.43])
+prob = SciMLBase.OptimizationProblem(
+    rosenbrock, [0.0, 0.3], _p, lb = [-1.0, 0.2], ub = [0.8, 0.43]
+)
 sol = solve(prob, BBO_adaptive_de_rand_1_bin()) # -1.0 ≤ x[1] ≤ 0.8, 0.2 ≤ x[2] ≤ 0.43
 ```
 

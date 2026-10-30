@@ -41,12 +41,13 @@ sol = solve(prob, LBFGSB())
 
 ```@example LBFGSB
 function con2_c(res, x, p)
-    res .= [x[1]^2 + x[2]^2, (x[2] * sin(x[1]) + x[1]) - 5]
+    return res .= [x[1]^2 + x[2]^2, (x[2] * sin(x[1]) + x[1]) - 5]
 end
 
 optf = OptimizationFunction(rosenbrock, ADTypes.AutoZygote(), cons = con2_c)
-prob = OptimizationProblem(optf, x0, p, lcons = [1.0, -Inf],
-    ucons = [1.0, 0.0], lb = [-1.0, -1.0],
-    ub = [1.0, 1.0])
+prob = OptimizationProblem(
+    optf, x0, p, lcons = [1.0, -Inf], ucons = [1.0, 0.0],
+    lb = [-1.0, -1.0], ub = [1.0, 1.0]
+)
 res = solve(prob, LBFGSB(), maxiters = 100)
 ```

@@ -31,8 +31,10 @@ function classify_constraints(lcons, ucons)
 end
 
 """
-    generate_auglag(cache, eq_inds, ineq_upper_inds, ineq_lower_inds,
-                    λ, μ_upper, μ_lower, ρ_ref)
+    generate_auglag(
+        cache, eq_inds, ineq_upper_inds, ineq_lower_inds,
+        λ, μ_upper, μ_lower, ρ_ref
+    )
 
 Build the augmented-Lagrangian subproblem function as an `OptimizationFunction`
 with analytical value, gradient, and `fg!` derived from the user's loss and
