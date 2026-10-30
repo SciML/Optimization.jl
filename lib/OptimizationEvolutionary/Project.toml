@@ -23,7 +23,7 @@ OptimizationBase = {path = "../OptimizationBase"}
 
 [compat]
 SciMLTesting = "2.8"
-Evolutionary = "0.11, 0.12"
+Evolutionary = "0.11, 0.12.0 - 0.12.1, 0.12.3"
 LogExpFunctions = "1"
 OptimizationBase = "5.5.0"
 Pkg = "1"
