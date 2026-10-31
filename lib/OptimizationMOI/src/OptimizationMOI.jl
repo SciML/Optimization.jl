@@ -241,6 +241,37 @@ function symbolify!(e::Expr)
     return e
 end
 
+_val_parameter(::Val{N}) where {N} = N
+_val_parameter(expr) = nothing
+function _val_parameter(expr::Expr)
+    if expr.head == :call && length(expr.args) == 2 && expr.args[1] in (Val, :Val)
+        return expr.args[2]
+    end
+    return nothing
+end
+
+_is_literal_pow(op) = op === :literal_pow ||
+    (op isa Function && nameof(op) === :literal_pow && parentmodule(op) === Base)
+
+_normalize_integer_powers!(expr) = expr
+function _normalize_integer_powers!(expr::Expr)
+    for i in eachindex(expr.args)
+        expr.args[i] = _normalize_integer_powers!(expr.args[i])
+    end
+    if expr.head == :call && length(expr.args) == 4 &&
+            _is_literal_pow(expr.args[1]) &&
+            expr.args[2] in (^, :^)
+        exponent = _val_parameter(expr.args[4])
+        if exponent isa Integer
+            base = expr.args[3]
+            # Literal syntax preserves Julia's types and domains for constant bases.
+            base isa Number && return eval(Expr(:call, :^, QuoteNode(base), exponent))
+            return Expr(:call, :^, base, exponent)
+        end
+    end
+    return expr
+end
+
 """
     convert_to_expr(eq, sys; expand_expr = false, pairs_arr = expr_map(sys))
 

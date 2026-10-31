@@ -99,6 +99,7 @@ include("OptimizationDISparseExt.jl")
 include("function.jl")
 include("utils.jl")
 include("state.jl")
+include("despecialize.jl")
 
 export solve, OptimizationCache, DEFAULT_CALLBACK, DEFAULT_DATA
 export IncompatibleOptimizerError, OptimizerMissingError

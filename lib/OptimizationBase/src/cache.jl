@@ -81,11 +81,12 @@ function OptimizationCache(
         verbose = OptimizationVerbosity(),
         kwargs...
     )
-    if isa_dataiterator(prob.p)
-        reinit_cache = OptimizationBase.ReInitCache(prob.u0, iterate(prob.p)[1])
-        reinit_cache_passedon = OptimizationBase.ReInitCache(prob.u0, prob.p)
+    prob_f, prob_p = despecialize(prob.f, prob.p)
+    if isa_dataiterator(prob_p)
+        reinit_cache = OptimizationBase.ReInitCache(prob.u0, iterate(prob_p)[1])
+        reinit_cache_passedon = OptimizationBase.ReInitCache(prob.u0, prob_p)
     else
-        reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p)
+        reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob_p)
         reinit_cache_passedon = reinit_cache
     end
 
@@ -104,24 +105,22 @@ function OptimizationCache(
         processed_verbose = _process_verbose_param(verbose)
     end
 
+    needs_second_order_ad =
+        (SciMLBase.requireshessian(opt) && prob.f.hess === nothing) ||
+        (SciMLBase.requiresconshess(opt) && prob.f.cons_h === nothing) ||
+        (SciMLBase.requireslagh(opt) && prob.f.lag_h === nothing)
+
     if !(
             prob.f.adtype isa DifferentiationInterface.SecondOrder ||
                 prob.f.adtype isa AutoSparse{<:DifferentiationInterface.SecondOrder} ||
                 prob.f.adtype isa AutoZygote || prob.f.adtype isa AutoReactant
         ) &&
-            (
-            SciMLBase.requireshessian(opt) || SciMLBase.requiresconshess(opt) ||
-                SciMLBase.requireslagh(opt)
-        )
+            needs_second_order_ad
         @SciMLMessage(
             lazy"The selected optimization algorithm requires second order derivatives, but `SecondOrder` ADtype was not provided. So a `SecondOrder` with $(prob.f.adtype) for both inner and outer will be created, this can be suboptimal and not work in some cases so an explicit `SecondOrder` ADtype is recommended.",
             processed_verbose, :missing_second_order_ad
         )
-    elseif prob.f.adtype isa AutoZygote &&
-            (
-            SciMLBase.requiresconshess(opt) || SciMLBase.requireslagh(opt) ||
-                SciMLBase.requireshessian(opt)
-        )
+    elseif prob.f.adtype isa AutoZygote && needs_second_order_ad
         @SciMLMessage(
             lazy"The selected optimization algorithm requires second order derivatives, but `AutoZygote` ADtype was provided. So a `SecondOrder` with `AutoZygote` for inner and `AutoForwardDiff` for outer will be created, for choosing another pair an explicit `SecondOrder` ADtype is recommended.",
             processed_verbose, :incompatible_ad_backend
@@ -129,9 +128,9 @@ function OptimizationCache(
     end
 
     f_base = if prob.sense === SciMLBase.MaxSense && !supports_sense(opt)
-        apply_sense(prob.f, prob.sense)
+        apply_sense(prob_f, prob.sense)
     else
-        prob.f
+        prob_f
     end
 
     f = OptimizationBase.instantiate_function(
@@ -153,7 +152,8 @@ function OptimizationCache(
     return OptimizationCache(
         opt, f, reinit_cache_passedon, prob.lb, prob.ub, prob.lcons,
         prob.ucons, prob.sense,
-        progress, callback, manifold, AnalysisResults(obj_res, cons_res),
+        progress, despecialize_callback(prob.f, callback), manifold,
+        AnalysisResults(obj_res, cons_res),
         merge((; maxiters, maxtime, abstol, reltol), NamedTuple(kwargs)),
         processed_verbose
     )
