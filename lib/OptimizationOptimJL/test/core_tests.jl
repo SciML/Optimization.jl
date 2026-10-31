@@ -451,6 +451,33 @@ end
         @test sol_c.retcode isa SciMLBase.ReturnCode.T
     end
 
+    # Regression test for https://github.com/SciML/Optimization.jl/issues/893: the
+    # unconstrained path used to wrap every Optim method in a `TwiceDifferentiable`,
+    # whose default Hessian buffer is a dense `n × n` matrix (allocated and copied once)
+    # that a first-order method never reads.
+    @testset "Issue #893: no dense Hessian buffer for first-order methods" begin
+        n = 2000
+        dense_hessian_bytes = n^2 * sizeof(Float64)
+        sumsq(x, p) = sum(abs2, x)
+        sumsq_grad(G, x, p) = (G .= 2 .* x; nothing)
+        optf = OptimizationFunction(sumsq; grad = sumsq_grad)
+        prob = OptimizationProblem(optf, fill(1.0, n))
+        for opt in (LBFGS(), ConjugateGradient(), GradientDescent())
+            sol = solve(prob, opt; maxiters = 20)
+            @test sol.objective < 1.0e-6
+            @test sol.stats.hevals == 0
+            bytes = @allocated solve(prob, opt; maxiters = 20)
+            @test bytes < dense_hessian_bytes
+        end
+        # A second-order method still gets its Hessian buffer and uses it.
+        optf2 = OptimizationFunction(
+            rosenbrock, OptimizationBase.AutoForwardDiff()
+        )
+        sol2 = solve(OptimizationProblem(optf2, zeros(2), [1.0, 100.0]), Newton())
+        @test sol2.stats.hevals > 0
+        @test sol2.u ≈ [1.0, 1.0] atol = 1.0e-3
+    end
+
     # Default callback must be a stable const so init with/without kwargs share a cache type.
     @testset "DEFAULT_CALLBACK type stability across kwargs" begin
         rb(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
