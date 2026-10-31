@@ -57,7 +57,7 @@ opt = IpoptOptimizer()
 
 # Or configure Ipopt-specific options
 opt = IpoptOptimizer(
-    acceptable_tol = 1e-8,
+    acceptable_tol = 1.0e-8,
     mu_strategy = "adaptive"
 )
 
@@ -138,7 +138,7 @@ opt = IpoptOptimizer(
     linear_solver = "ma57",
     additional_options = Dict(
         "derivative_test" => "first-order",
-        "derivative_test_tol" => 1e-4,
+        "derivative_test_tol" => 1.0e-4,
         "fixed_variable_treatment" => "make_parameter",
         "alpha_for_y" => "primal"
     )
@@ -158,7 +158,7 @@ Example with multiple option sources:
 
 ```julia
 opt = IpoptOptimizer(
-    acceptable_tol = 1e-6,           # Struct field
+    acceptable_tol = 1.0e-6,         # Struct field
     mu_strategy = "adaptive",        # Struct field
     linear_solver = "ma57",          # Struct field (needs HSL)
     print_timing_statistics = "yes", # Struct field
@@ -168,9 +168,10 @@ opt = IpoptOptimizer(
     )
 )
 
-sol = solve(prob, opt;
+sol = solve(
+    prob, opt;
     maxiters = 1000,  # Overrides max_iter in additional_options
-    reltol = 1e-8     # Sets Ipopt's tol
+    reltol = 1.0e-8   # Sets Ipopt's tol
 )
 ```
 
@@ -207,9 +208,11 @@ x0 = zeros(2)
 p = [1.0, 100.0]
 
 optfunc = OptimizationFunction(rosenbrock, AutoZygote())
-prob = OptimizationProblem(optfunc, x0, p;
-                          lb = [-1.0, -1.0],
-                          ub = [1.5, 1.5])
+prob = OptimizationProblem(
+    optfunc, x0, p;
+    lb = [-1.0, -1.0],
+    ub = [1.5, 1.5]
+)
 sol = solve(prob, IpoptOptimizer())
 ```
 
@@ -227,8 +230,9 @@ objective(x, p) = x[1]^2 + x[2]^2
 # Constraint: x[1]^2 + x[2]^2 - 2*x[1] = 0 (equality)
 # and x[1] + x[2] >= 1 (inequality)
 function constraints(res, x, p)
-    res[1] = x[1]^2 + x[2]^2 - 2*x[1]  # equality constraint
-    res[2] = x[1] + x[2]                # inequality constraint
+    res[1] = x[1]^2 + x[2]^2 - 2 * x[1]  # equality constraint
+    res[2] = x[1] + x[2]                 # inequality constraint
+    return
 end
 
 x0 = [0.5, 0.5]
@@ -236,9 +240,7 @@ optfunc = OptimizationFunction(objective, AutoZygote(); cons = constraints)
 
 # First constraint is equality (lcons = ucons = 0)
 # Second constraint is inequality (lcons = 1, ucons = Inf)
-prob = OptimizationProblem(optfunc, x0;
-                          lcons = [0.0, 1.0],
-                          ucons = [0.0, Inf])
+prob = OptimizationProblem(optfunc, x0; lcons = [0.0, 1.0], ucons = [0.0, Inf])
 
 sol = solve(prob, IpoptOptimizer())
 ```
@@ -253,7 +255,7 @@ using Zygote
 
 # Large-scale problem
 n = 100
-rosenbrock_nd(x, p) = sum(p[2] * (x[i+1] - x[i]^2)^2 + (p[1] - x[i])^2 for i in 1:n-1)
+rosenbrock_nd(x, p) = sum(p[2] * (x[i + 1] - x[i]^2)^2 + (p[1] - x[i])^2 for i in 1:(n - 1))
 
 x0 = zeros(n)
 p = [1.0, 100.0]
@@ -263,10 +265,13 @@ optfunc = OptimizationFunction(rosenbrock_nd, AutoZygote())
 prob = OptimizationProblem(optfunc, x0, p)
 
 # Use L-BFGS approximation for Hessian
-sol = solve(prob, IpoptOptimizer(
-           hessian_approximation = "limited-memory",
-           limited_memory_max_history = 10);
-           maxiters = 1000)
+sol = solve(
+    prob, IpoptOptimizer(
+        hessian_approximation = "limited-memory",
+        limited_memory_max_history = 10
+    );
+    maxiters = 1000
+)
 ```
 
 ### Portfolio Optimization Example
@@ -280,14 +285,16 @@ using LinearAlgebra
 
 # Portfolio optimization: minimize risk subject to return constraint
 n_assets = 5
-μ = [0.05, 0.10, 0.15, 0.08, 0.12]  # Expected returns
-Σ = [0.05 0.01 0.02 0.01 0.00;      # Covariance matrix
-     0.01 0.10 0.03 0.02 0.01;
-     0.02 0.03 0.15 0.02 0.03;
-     0.01 0.02 0.02 0.08 0.02;
-     0.00 0.01 0.03 0.02 0.06]
+μ = [0.05, 0.1, 0.15, 0.08, 0.12]  # Expected returns
+Σ = [                              # Covariance matrix
+    0.05 0.01 0.02 0.01 0.0;
+    0.01 0.1 0.03 0.02 0.01;
+    0.02 0.03 0.15 0.02 0.03;
+    0.01 0.02 0.02 0.08 0.02;
+    0.0 0.01 0.03 0.02 0.06
+]
 
-target_return = 0.10
+target_return = 0.1
 
 # Objective: minimize portfolio variance
 portfolio_risk(w, p) = dot(w, Σ * w)
@@ -296,21 +303,23 @@ portfolio_risk(w, p) = dot(w, Σ * w)
 function portfolio_constraints(res, w, p)
     res[1] = sum(w) - 1.0                    # Sum to 1 (equality)
     res[2] = dot(μ, w) - target_return       # Minimum return (inequality)
+    return
 end
 
-optfunc = OptimizationFunction(portfolio_risk, AutoZygote();
-                              cons = portfolio_constraints)
-w0 = fill(1.0/n_assets, n_assets)
+optfunc = OptimizationFunction(
+    portfolio_risk, AutoZygote(); cons = portfolio_constraints
+)
+w0 = fill(1.0 / n_assets, n_assets)
 
-prob = OptimizationProblem(optfunc, w0;
-                          lb = zeros(n_assets),     # No short selling
-                          ub = ones(n_assets),      # No single asset > 100%
-                          lcons = [0.0, 0.0],       # Equality and inequality constraints
-                          ucons = [0.0, Inf])
+prob = OptimizationProblem(
+    optfunc, w0;
+    lb = zeros(n_assets),     # No short selling
+    ub = ones(n_assets),      # No single asset > 100%
+    lcons = [0.0, 0.0],       # Equality and inequality constraints
+    ucons = [0.0, Inf]
+)
 
-sol = solve(prob, IpoptOptimizer();
-           reltol = 1e-8,
-           verbose = 5)
+sol = solve(prob, IpoptOptimizer(); reltol = 1.0e-8, verbose = 5)
 
 println("Optimal weights: ", sol.u)
 println("Expected return: ", dot(μ, sol.u))

@@ -100,7 +100,8 @@ opt = OptimizationManopt.GradientDescentOptimizer()
 optf = OptimizationFunction(rosenbrock, ADTypes.AutoZygote())
 
 prob = OptimizationProblem(
-    optf, x0, p; manifold = R2, stepsize = stepsize, maxiters = 25000)
+    optf, x0, p; manifold = R2, stepsize, maxiters = 25000
+)
 
 sol = OptimizationBase.solve(prob, opt)
 ```
@@ -147,7 +148,8 @@ prob = OptimizationProblem(optf, U; manifold = M, maxiters = 5000)
 opt = OptimizationManopt.FrankWolfeOptimizer()
 sol = OptimizationBase.solve(
     prob, opt, sub_problem = (M, q, p, X) -> closed_form_solution!(M, q, L, U, p, X),
-    evaluation = Manopt.InplaceEvaluation())
+    evaluation = Manopt.InplaceEvaluation()
+)
 ```
 
 This example is based on the [example](https://juliamanifolds.github.io/ManoptExamples.jl/stable/examples/Riemannian-mean/) in the Manopt and [Weber and Sra'22](https://doi.org/10.1007/s10107-022-01840-5).
