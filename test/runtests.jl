@@ -61,9 +61,7 @@ const LIB_DIR = joinpath(dirname(@__DIR__), "lib")
                 @safetestset "Verbosity Tests" include("verbosity.jl")
                 @safetestset "Optimization" include("native.jl")
                 @safetestset "Mini batching" include("minibatch.jl")
-                # DiffEqFlux test temporarily skipped due to ForwardDiff gradient dispatch
-                # issue with Float32 ComponentArrays. See GitHub issue for tracking.
-                # @safetestset "DiffEqFlux" include("diffeqfluxtests.jl")
+                @safetestset "DiffEqFlux" include("diffeqfluxtests.jl")
                 @safetestset "Interface Compatibility" include("interface_tests.jl")
                 @safetestset "Sense Handling" include("sense_tests.jl")
             end,
