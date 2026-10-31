@@ -1,7 +1,8 @@
 module OptimizationEnzymeExt
 
 import OptimizationBase, OptimizationBase.ArrayInterface
-import SciMLBase: OptimizationFunction
+using OptimizationBase: _despecialized_value
+import SciMLBase: OptimizationFunction, unwrapped_f, unwrap_parameters
 import SciMLBase
 import OptimizationBase.LinearAlgebra: I
 import OptimizationBase.ADTypes: AutoEnzyme
@@ -42,10 +43,7 @@ function hv_f2_alloc(mode::Mode, xdup, f, p) where {Mode}
     return xdup
 end
 
-function inner_cons(
-        x, fcons::Function, p::Union{SciMLBase.NullParameters, Nothing},
-        num_cons::Int, i::Int
-    )
+function inner_cons(x, fcons, p, num_cons::Int, i::Int)
     res = zeros(eltype(x), num_cons)
     fcons(res, x, p)
     return res[i]
@@ -59,10 +57,7 @@ function cons_f2(mode, x, dx, fcons, p, num_cons, i)
     return nothing
 end
 
-function inner_cons_oop(
-        x::Vector{T}, fcons::Function, p::Union{SciMLBase.NullParameters, Nothing},
-        i::Int
-    ) where {T}
+function inner_cons_oop(x::Vector{T}, fcons, p, i::Int) where {T}
     return fcons(x, p)[i]
 end
 
@@ -168,6 +163,73 @@ function _copy_hessian_row!(dest, src, transfer_cache)
     return nothing
 end
 
+# Function barriers: the closures in `instantiate_function` capture only the despecialized
+# `f` and `p` and pass the unwrapped ones here, so Enzyme differentiates the concrete
+# functions while the closure types stay problem-independent.
+
+function grad_with_primal!(mode::Mode, θ, bθ, f, p) where {Mode}
+    return Enzyme.autodiff(
+        WithPrimal(mode),
+        Const(firstapply),
+        Active,
+        Const(f),
+        Enzyme.Duplicated(θ, bθ),
+        Const(p)
+    )[2]
+end
+
+# Forward over reverse (`inner_grad`, `cons_f2`) for Hessians and Hessian-vector products.
+function forward_over!(fmode, inner, rmode, x, dx, f, p, args...)
+    Enzyme.autodiff(
+        fmode, inner, Const(rmode), x, dx, Const(f), Const(p), map(Const, args)...
+    )
+    return nothing
+end
+
+# The `function_annotation` of the concrete constraint function, built behind the barrier.
+annotate_cons(::Val{A}, fcons, shadows) where {A <: Enzyme.Const} = Enzyme.Const(fcons)
+function annotate_cons(
+        ::Val{A}, fcons, shadows
+    ) where {A <: Union{Enzyme.Duplicated, Enzyme.BatchDuplicated}}
+    foreach(Enzyme.make_zero!, shadows)
+    return Enzyme.BatchDuplicated(fcons, shadows)
+end
+function annotate_cons(
+        ::Val{A}, fcons, shadows
+    ) where {A <: Union{Enzyme.DuplicatedNoNeed, Enzyme.BatchDuplicatedNoNeed}}
+    foreach(Enzyme.make_zero!, shadows)
+    return Enzyme.BatchDuplicatedNoNeed(fcons, shadows)
+end
+annotate_cons(::Val, fcons, shadows) = fcons
+
+function cons_jacobian!(fmode, annot, fcons, shadows, y, Jaccache, θ, seeds, p)
+    Enzyme.autodiff(
+        fmode, annotate_cons(annot, fcons, shadows), BatchDuplicated(y, Jaccache),
+        BatchDuplicated(θ, seeds), Const(p)
+    )
+    return nothing
+end
+
+# `dθ .= J' * dy` (reverse mode) and `dy .= J * dθ` (forward mode) of the constraints.
+function cons_pullback!(rmode, fcons, y, dy, θ, dθ, p)
+    Enzyme.autodiff(rmode, fcons, Const, Duplicated(y, dy), Duplicated(θ, dθ), Const(p))
+    return nothing
+end
+
+function cons_pushforward!(fmode, fcons, y, dy, θ, dθ, p)
+    Enzyme.autodiff(fmode, fcons, Duplicated(y, dy), Duplicated(θ, dθ), Const(p))
+    return nothing
+end
+
+# The Lagrangian closure over the concrete functions is built behind the barrier.
+function lagrangian_hessian!(θ, f, cons, p, μ, σ, fmode, rmode, vdθ, bθ, vdbθ, batch_width)
+    lag = x -> lagrangian(x, f, cons, p, μ, σ)
+    return lag_hessian!(θ, lag, fmode, rmode, vdθ, bθ, vdbθ, batch_width)
+end
+
+_shadow_storage(::Nothing) = nothing
+_shadow_storage(r::Base.RefValue) = r[]
+
 function OptimizationBase.instantiate_function(
         f::OptimizationFunction{true}, x,
         adtype::AutoEnzyme, p, num_cons = 0;
@@ -192,14 +254,8 @@ function OptimizationBase.instantiate_function(
     if g == true && f.grad === nothing
         function grad(res, θ, p = p)
             Enzyme.make_zero!(res)
-            return Enzyme.autodiff(
-                rmode,
-                Const(firstapply),
-                Active,
-                Const(f.f),
-                Enzyme.Duplicated(θ, res),
-                Const(p)
-            )
+            # Function barrier so that we don't capture f.f and Enzyme compiles against the underlying objective
+            return inner_grad(rmode, θ, res, unwrapped_f(f.f), unwrap_parameters(p))
         end
     elseif g == true
         grad = (G, θ, p = p) -> f.grad(G, θ, p)
@@ -214,15 +270,9 @@ function OptimizationBase.instantiate_function(
     elseif fg == true && f.fg === nothing
         function fg!(res, θ, p = p)
             Enzyme.make_zero!(res)
-            y = Enzyme.autodiff(
-                WithPrimal(rmode),
-                Const(firstapply),
-                Active,
-                Const(f.f),
-                Enzyme.Duplicated(θ, res),
-                Const(p)
-            )[2]
-            return y
+            y = grad_with_primal!(rmode, θ, res, unwrapped_f(f.f), unwrap_parameters(p))
+            # The value comes back from a dynamic call when `f` is despecialized
+            return OptimizationBase.despecializes(f) ? _despecialized_value(y, θ) : y
         end
     elseif fg == true
         fg! = (res, θ, p = p) -> f.fg(res, θ, p)
@@ -270,14 +320,11 @@ function OptimizationBase.instantiate_function(
                     _zero_cache!(dbθ)
                 end
 
-                Enzyme.autodiff(
-                    fmode,
-                    inner_grad,
-                    Const(rmode),
+                forward_over!(
+                    fmode, inner_grad, rmode,
                     Enzyme.BatchDuplicated(θ, vdθ_batch),
                     Enzyme.BatchDuplicatedNoNeed(bθ, vdbθ_batch),
-                    Const(f.f),
-                    Const(p)
+                    unwrapped_f(f.f), unwrap_parameters(p)
                 )
 
                 for lane in 1:_valid_batch_width(
@@ -315,14 +362,11 @@ function OptimizationBase.instantiate_function(
                     _zero_cache!(dbθ)
                 end
 
-                Enzyme.autodiff(
-                    fmode,
-                    inner_grad,
-                    Const(rmode),
+                forward_over!(
+                    fmode, inner_grad, rmode,
                     Enzyme.BatchDuplicated(θ, vdθ_batch),
                     Enzyme.BatchDuplicatedNoNeed(G, vdbθ_batch),
-                    Const(f.f),
-                    Const(p)
+                    unwrapped_f(f.f), unwrap_parameters(p)
                 )
 
                 for lane in 1:_valid_batch_width(
@@ -346,14 +390,9 @@ function OptimizationBase.instantiate_function(
         function hv!(H, θ, v, p = p)
             dθ = zero(θ)
             Enzyme.make_zero!(H)
-            return Enzyme.autodiff(
-                fmode,
-                inner_grad,
-                Const(rmode),
-                Duplicated(θ, v),
-                Duplicated(dθ, H),
-                Const(f.f),
-                Const(p)
+            return forward_over!(
+                fmode, inner_grad, rmode, Duplicated(θ, v), Duplicated(dθ, H),
+                unwrapped_f(f.f), unwrap_parameters(p)
             )
         end
     elseif hv == true
@@ -372,58 +411,33 @@ function OptimizationBase.instantiate_function(
         # if num_cons > length(x)
         seeds = Enzyme.onehot(x)
         Jaccache = Tuple(zeros(eltype(x), num_cons) for i in 1:length(x))
-        basefunc = f.cons
-        if func_annot <: Enzyme.Const
-            basefunc = Enzyme.Const(basefunc)
-        elseif func_annot <: Enzyme.Duplicated || func_annot <: Enzyme.BatchDuplicated
-            basefunc = Enzyme.BatchDuplicated(
-                basefunc, Tuple(
-                    make_zero(basefunc)
-                        for i in 1:length(x)
-                )
-            )
-        elseif func_annot <: Enzyme.DuplicatedNoNeed ||
-                func_annot <: Enzyme.BatchDuplicatedNoNeed
-            basefunc = Enzyme.BatchDuplicatedNoNeed(
-                basefunc, Tuple(
-                    make_zero(basefunc)
-                        for i in 1:length(x)
-                )
-            )
-        end
-        # else
-        #     seeds = Enzyme.onehot(zeros(eltype(x), num_cons))
-        #     Jaccache = Tuple(zero(x) for i in 1:num_cons)
-        # end
-
         y = zeros(eltype(x), num_cons)
+        # A `Val`, since a type-valued closure field breaks nested Enzyme differentiation.
+        annot = Val(func_annot)
 
-        # Precompute the duplicated-annotation check as a Bool. Capturing this (rather than the
-        # type-valued `func_annot::DataType`) keeps the closure free of type-valued fields, which
-        # Enzyme's shadow-layout pass cannot reconcile when an outer Enzyme pass differentiates
-        # this closure.
-        dup_annot = func_annot <: Enzyme.Duplicated || func_annot <: Enzyme.BatchDuplicated ||
-            func_annot <: Enzyme.DuplicatedNoNeed || func_annot <: Enzyme.BatchDuplicatedNoNeed
+        dup_annot = func_annot <: Union{
+            Enzyme.Duplicated, Enzyme.BatchDuplicated,
+            Enzyme.DuplicatedNoNeed, Enzyme.BatchDuplicatedNoNeed,
+        }
+        shadows = if !dup_annot
+            nothing
+        elseif OptimizationBase.despecializes(f)
+            Ref{Any}(ntuple(_ -> make_zero(unwrapped_f(f.cons)), length(x)))
+        else
+            Ref(ntuple(_ -> make_zero(f.cons), length(x)))
+        end
 
-        # `let` so the closure captures stable bindings rather than `Core.Box`es: `basefunc`
-        # is reassigned in the branch above and `y` is captured alongside it, so without this
-        # both get boxed — which defeats specialization in the solve hot loop. The same
-        # `let`-capture idiom is used for the DI-built closures.
-        cons_j! = let basefunc = basefunc, y = y, Jaccache = Jaccache, seeds = seeds,
-                dup_annot = dup_annot, fmode = fmode, p = p
+        # `let` to avoid capturing `Core.Box`es.
+        cons_j! = let y = y, Jaccache = Jaccache, seeds = seeds, annot = annot,
+                fmode = fmode, p = p
             function (J, θ, p = p)
                 for jc in Jaccache
                     Enzyme.make_zero!(jc)
                 end
                 Enzyme.make_zero!(y)
-                if dup_annot
-                    for bf in basefunc.dval
-                        Enzyme.make_zero!(bf)
-                    end
-                end
-                Enzyme.autodiff(
-                    fmode, basefunc, BatchDuplicated(y, Jaccache),
-                    BatchDuplicated(θ, seeds), Const(p)
+                cons_jacobian!(
+                    fmode, annot, unwrapped_f(f.cons), _shadow_storage(shadows), y, Jaccache, θ, seeds,
+                    unwrap_parameters(p)
                 )
                 for i in eachindex(θ)
                     if J isa Vector
@@ -442,19 +456,20 @@ function OptimizationBase.instantiate_function(
     end
 
     if cons !== nothing && cons_vjp == true && f.cons_vjp === nothing
-        cons_res = zeros(eltype(x), num_cons)
+        cons_vjp_res = zeros(eltype(x), num_cons)
+        # The reverse pass consumes the seed of the output, so `v` is copied first.
+        cons_vjp_seed = zeros(eltype(x), num_cons)
+
         function cons_vjp!(res, θ, v)
             Enzyme.make_zero!(res)
-            Enzyme.make_zero!(cons_res)
+            Enzyme.make_zero!(cons_vjp_res)
+            copyto!(cons_vjp_seed, v)
 
-            return Enzyme.autodiff(
-                rmode,
-                f.cons,
-                Const,
-                Duplicated(cons_res, v),
-                Duplicated(θ, res),
-                Const(p)
+            cons_pullback!(
+                rmode, unwrapped_f(f.cons), cons_vjp_res, cons_vjp_seed, θ, res,
+                unwrap_parameters(p)
             )
+            return
         end
     elseif cons_vjp == true && cons !== nothing
         cons_vjp! = (Jv, θ, σ) -> f.cons_vjp(Jv, θ, σ, p)
@@ -463,19 +478,16 @@ function OptimizationBase.instantiate_function(
     end
 
     if cons !== nothing && cons_jvp == true && f.cons_jvp === nothing
-        cons_res = zeros(eltype(x), num_cons)
+        cons_jvp_res = zeros(eltype(x), num_cons)
 
         function cons_jvp!(res, θ, v)
             Enzyme.make_zero!(res)
-            Enzyme.make_zero!(cons_res)
+            Enzyme.make_zero!(cons_jvp_res)
 
-            return Enzyme.autodiff(
-                fmode,
-                f.cons,
-                Duplicated(cons_res, res),
-                Duplicated(θ, v),
-                Const(p)
+            cons_pushforward!(
+                fmode, unwrapped_f(f.cons), cons_jvp_res, res, θ, v, unwrap_parameters(p)
             )
+            return
         end
     elseif cons_jvp == true && cons !== nothing
         cons_jvp! = (Jv, θ, v) -> f.cons_jvp(Jv, θ, v, p)
@@ -492,16 +504,11 @@ function OptimizationBase.instantiate_function(
             for i in 1:num_cons
                 Enzyme.make_zero!(cons_bθ)
                 Enzyme.make_zero!.(cons_vdbθ)
-                Enzyme.autodiff(
-                    fmode,
-                    cons_f2,
-                    Const(rmode),
+                forward_over!(
+                    fmode, cons_f2, rmode,
                     Enzyme.BatchDuplicated(θ, cons_vdθ),
                     Enzyme.BatchDuplicated(cons_bθ, cons_vdbθ),
-                    Const(f.cons),
-                    Const(p),
-                    Const(num_cons),
-                    Const(i)
+                    unwrapped_f(f.cons), unwrap_parameters(p), num_cons, i
                 )
 
                 for j in eachindex(θ)
@@ -533,9 +540,9 @@ function OptimizationBase.instantiate_function(
         end
 
         function fill_lag_hessian!(θ, σ, μ, p)
-            lag = x -> lagrangian(x, f.f, f.cons, p, μ, σ)
-            lag_hessian!(
-                θ, lag, fmode, rmode, lag_vdθ, lag_bθ, lag_vdbθ, lag_batch_width_value
+            lagrangian_hessian!(
+                θ, unwrapped_f(f.f), unwrapped_f(f.cons), unwrap_parameters(p), μ, σ,
+                fmode, rmode, lag_vdθ, lag_bθ, lag_vdbθ, lag_batch_width_value
             )
             return nothing
         end
@@ -669,7 +676,7 @@ function OptimizationBase.instantiate_function(
         batch_width_value = Val(batch_width)
 
         function hess(θ, p = p)
-            H = Matrix{eltype(θ)}(undef, length(θ), length(θ))
+            local H = Matrix{eltype(θ)}(undef, length(θ), length(θ))
             for first_index in _batch_starts(vdθ, batch_width_value)
                 vdθ_batch = _cache_batch(vdθ, first_index, batch_width_value)
                 vdbθ_batch = _cache_batch(vdbθ, first_index, batch_width_value)

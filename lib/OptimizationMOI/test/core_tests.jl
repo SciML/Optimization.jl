@@ -1,8 +1,10 @@
 using OptimizationMOI, OptimizationBase, Ipopt, NLopt, Zygote, ModelingToolkitBase, ReverseDiff
 using AmplNLWriter, Ipopt_jll, Juniper, HiGHS, MathOptInterface
-using Test, SparseArrays
+using SafeTestsets, Test, SparseArrays
 
 import MathOptInterface
+
+include("integer_power_tests.jl")
 
 function _test_sparse_derivatives_hs071(backend, optimizer)
     function objective(x, ::Any)
@@ -457,3 +459,5 @@ end
     prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, 0.5])
     sol = solve(prob, Ipopt.Optimizer())
 end
+
+@safetestset "despecialization" include("despecialize_tests.jl")
