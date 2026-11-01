@@ -170,7 +170,7 @@ include("problem_types.jl")
 
     optprob = OptimizationFunction(
         rosenbrock, OptimizationBase.AutoForwardDiff();
-        cons = cons, lag_h = lagh, lag_hess_prototype
+        cons, lag_h = lagh, lag_hess_prototype
     )
     prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, 0.5])
     sol = solve(prob, IpoptOptimizer())
@@ -305,7 +305,7 @@ end
 
         # Test verbose levels
         for verbose in [false, true, 0, 3, 5]
-            sol = solve(prob, IpoptOptimizer(); verbose = verbose, maxiters = 10)
+            sol = solve(prob, IpoptOptimizer(); verbose, maxiters = 10)
             @test sol isa SciMLBase.OptimizationSolution
         end
 

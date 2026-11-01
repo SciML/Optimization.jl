@@ -136,7 +136,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: BBO}
             opt_state = OptimizationBase.OptimizationState(;
                 iter = n_steps,
                 u = curr_u,
-                p = cache.p,
+                cache.p,
                 objective,
                 original = trace
             )
@@ -165,8 +165,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: BBO}
         callback = cache.callback === OptimizationBase.DEFAULT_CALLBACK ?
             nothing : _cb,
         cache.solver_args...,
-        maxiters = maxiters,
-        maxtime = maxtime
+        maxiters,
+        maxtime
     )
 
     opt_setup = BlackBoxOptim.bbsetup(_loss; opt_args...)
@@ -185,7 +185,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: BBO}
     # Use the improved convert function
     opt_ret = OptimizationBase.deduce_retcode(opt_res.stop_reason, cache.verbose)
     stats = OptimizationBase.OptimizationStats(;
-        iterations = opt_res.iterations,
+        opt_res.iterations,
         time = opt_res.elapsed_time,
         fevals = opt_res.f_calls
     )
@@ -195,7 +195,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: BBO}
         BlackBoxOptim.best_fitness(opt_res);
         original = opt_res,
         retcode = opt_ret,
-        stats = stats
+        stats
     )
 end
 

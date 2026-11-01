@@ -171,8 +171,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: PRIMASolvers
     _loss = function (θ)
         x = cache.f(θ, cache.p)
         iter += 1
-        opt_state = OptimizationBase.OptimizationState(
-            u = θ, p = cache.p, objective = x[1], iter = iter
+        opt_state = OptimizationBase.OptimizationState(;
+            u = θ, cache.p, objective = x[1], iter
         )
         if cache.callback(opt_state, x...)
             error("Optimization halted by callback.")
@@ -186,9 +186,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: PRIMASolvers
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     kws = __map_optimizer_args!(
-        cache, cache.opt; callback = cache.callback,
-        maxiters = maxiters,
-        maxtime = maxtime,
+        cache, cache.opt; cache.callback,
+        maxiters,
+        maxtime,
         cache.solver_args...
     )
 
@@ -244,8 +244,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: PRIMASolvers
     stats = OptimizationBase.OptimizationStats(; time = t1 - t0, fevals = inf.nf)
     return SciMLBase.build_solution(
         cache, cache.opt, minx,
-        inf.fx; retcode = retcode,
-        stats = stats, original = inf
+        inf.fx; retcode,
+        stats, original = inf
     )
 end
 

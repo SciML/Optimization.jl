@@ -96,7 +96,7 @@ function check_oop_quadratic(n)
     x = collect(range(0.1; step = 0.05, length = n))
     p = [0.3, -0.2]
     μ = [1.25, -0.75]
-    f = OptimizationFunction{false}(objective, AutoEnzyme(); cons = cons)
+    f = OptimizationFunction{false}(objective, AutoEnzyme(); cons)
     instantiated = OptimizationBase.instantiate_function(
         f, x, AutoEnzyme(), p, 2; lag_h = true
     )

@@ -137,7 +137,7 @@ end
         sol = solve(prob_bounded, ScipyCOBYQA())
         @test sol.retcode == ReturnCode.Success
         cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2 - 1.0]
-        optf_cons = OptimizationFunction(rosenbrock; cons = cons)
+        optf_cons = OptimizationFunction(rosenbrock; cons)
         prob_cons = OptimizationProblem(
             optf_cons, [0.5, 0.5], _p, lcons = [-0.01], ucons = [0.01]
         )
@@ -315,7 +315,7 @@ end
             res[1, 2] = 2 * x[2]
         end
         x0 = zeros(2)
-        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff(); cons = cons, cons_j = cons_j)
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff(); cons, cons_j)
         prob_cobyla = OptimizationProblem(optprob, x0, _p, lcons = [-1.0e-6], ucons = [1.0e-6])
         sol = solve(prob_cobyla, ScipyCOBYLA(), maxiters = 10000)
         @test sol.retcode == ReturnCode.Success
@@ -430,7 +430,7 @@ end
 
     @testset "constraint satisfaction" begin
         cons = (res, x, p) -> res .= [x[1]^2 + x[2]^2 - 1.0]
-        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff(); cons = cons)
+        optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff(); cons)
         prob = OptimizationProblem(optprob, [0.5, 0.5], _p, lcons = [-0.01], ucons = [0.01])
         sol = solve(prob, ScipySLSQP())
         @test sol.retcode == ReturnCode.Success
@@ -485,8 +485,8 @@ end
         A_ub = [1.0 1.0]               # x1 + x2 <= 5
         b_ub = [5.0]
         sol = solve(
-            prob_lp, ScipyLinprog("highs"),
-            A_ub = A_ub, b_ub = b_ub,
+            prob_lp, ScipyLinprog("highs");
+            A_ub, b_ub,
             lb = [0.0, 0.0], ub = [10.0, 10.0]
         )
         @test sol.retcode == ReturnCode.Success
@@ -507,8 +507,8 @@ end
 
         sol = solve(
             prob_milp, ScipyMilp();
-            A = A, lb_con = lb_con, ub_con = ub_con,
-            integrality = integrality,
+            A, lb_con, ub_con,
+            integrality,
             lb = [0.0, 0.0], ub = [1.0, 10.0]
         )
         @test sol.retcode in (ReturnCode.Success, ReturnCode.Failure)

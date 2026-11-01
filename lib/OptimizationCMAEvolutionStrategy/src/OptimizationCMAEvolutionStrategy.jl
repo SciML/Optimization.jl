@@ -71,7 +71,7 @@ function __map_optimizer_args(
         logger = CMAEvolutionStrategy.BasicLogger(
             prob.u0;
             verbosity = verbose ? 1 : 0,
-            callback = callback
+            callback
         ),
     )
 
@@ -80,7 +80,7 @@ function __map_optimizer_args(
     end
 
     if !isnothing(maxtime)
-        mapped_args = (; mapped_args..., maxtime = maxtime)
+        mapped_args = (; mapped_args..., maxtime)
     end
 
     if !isnothing(abstol)
@@ -98,7 +98,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: CMAEvolution
         opt_state = OptimizationBase.OptimizationState(;
             iter = length(opt.logger.fmedian),
             u = curr_u,
-            p = cache.p,
+            cache.p,
             objective = fbest(opt),
             original = opt.logger
         )
@@ -120,8 +120,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: CMAEvolution
 
     opt_args = __map_optimizer_args(
         cache, cache.opt; callback = _cb, cache.solver_args...,
-        maxiters = maxiters,
-        maxtime = maxtime
+        maxiters,
+        maxtime
     )
 
     sigma0 = get(cache.solver_args, :sigma0, 0.1)
@@ -141,7 +141,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: CMAEvolution
         xbest(opt_res),
         fbest(opt_res); original = opt_res,
         retcode = opt_ret,
-        stats = stats
+        stats
     )
 end
 

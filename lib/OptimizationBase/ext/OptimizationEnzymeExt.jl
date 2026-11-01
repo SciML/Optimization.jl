@@ -578,19 +578,19 @@ function OptimizationBase.instantiate_function(
 
     return OptimizationFunction{true}(
         f.f, adtype;
-        grad = grad, fg = fg!, fgh = fgh!,
-        hess = hess, hv = hv!,
-        cons = cons, cons_j = cons_j!,
+        grad, fg = fg!, fgh = fgh!,
+        hess, hv = hv!,
+        cons, cons_j = cons_j!,
         cons_jvp = cons_jvp!, cons_vjp = cons_vjp!,
         cons_h = cons_h!,
-        hess_prototype = f.hess_prototype,
-        cons_jac_prototype = f.cons_jac_prototype,
-        cons_hess_prototype = f.cons_hess_prototype,
+        f.hess_prototype,
+        f.cons_jac_prototype,
+        f.cons_hess_prototype,
         lag_h = lag_h!,
-        lag_hess_prototype = f.lag_hess_prototype,
-        sys = f.sys,
-        expr = f.expr,
-        cons_expr = f.cons_expr
+        f.lag_hess_prototype,
+        f.sys,
+        f.expr,
+        f.cons_expr
     )
 end
 
@@ -916,20 +916,20 @@ function OptimizationBase.instantiate_function(
     end
 
     return OptimizationFunction{false}(
-        f.f, adtype; grad = grad,
+        f.f, adtype; grad,
         fg = fg!, fgh = fgh!,
-        hess = hess, hv = hv!,
-        cons = cons, cons_j = cons_j!,
+        hess, hv = hv!,
+        cons, cons_j = cons_j!,
         cons_jvp = cons_jvp!, cons_vjp = cons_vjp!,
         cons_h = cons_h!,
-        hess_prototype = f.hess_prototype,
-        cons_jac_prototype = f.cons_jac_prototype,
-        cons_hess_prototype = f.cons_hess_prototype,
+        f.hess_prototype,
+        f.cons_jac_prototype,
+        f.cons_hess_prototype,
         lag_h = lag_h!,
-        lag_hess_prototype = f.lag_hess_prototype,
-        sys = f.sys,
-        expr = f.expr,
-        cons_expr = f.cons_expr
+        f.lag_hess_prototype,
+        f.sys,
+        f.expr,
+        f.cons_expr
     )
 end
 

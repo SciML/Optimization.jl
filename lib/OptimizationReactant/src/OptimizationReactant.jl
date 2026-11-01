@@ -469,22 +469,22 @@ function instantiate_function(
 
     return OptimizationFunction{true}(
         fnew, adtype;
-        grad = grad, fg = fg!, hess = hess, hv = hv!, fgh = fgh!,
-        cons = cons, cons_j = cons_j!, cons_h = cons_h!,
+        grad, fg = fg!, hess, hv = hv!, fgh = fgh!,
+        cons, cons_j = cons_j!, cons_h = cons_h!,
         cons_vjp = cons_vjp!, cons_jvp = cons_jvp!,
-        hess_prototype = f.hess_prototype,
-        hess_colorvec = f.hess_colorvec,
-        cons_jac_prototype = f.cons_jac_prototype,
-        cons_jac_colorvec = f.cons_jac_colorvec,
-        cons_hess_prototype = f.cons_hess_prototype,
-        cons_hess_colorvec = f.cons_hess_colorvec,
+        f.hess_prototype,
+        f.hess_colorvec,
+        f.cons_jac_prototype,
+        f.cons_jac_colorvec,
+        f.cons_hess_prototype,
+        f.cons_hess_colorvec,
         lag_h = lag_h!,
         lag_hess_prototype = lag_h! === nothing ? f.lag_hess_prototype :
             something(f.lag_hess_prototype, zeros(Bool, length(x), length(x))),
-        sys = f.sys,
-        expr = f.expr,
-        cons_expr = f.cons_expr,
-        observed = f.observed
+        f.sys,
+        f.expr,
+        f.cons_expr,
+        f.observed
     )
 end
 
@@ -693,22 +693,22 @@ function instantiate_function(
 
     return OptimizationFunction{false}(
         fnew, adtype;
-        grad = grad, fg = fg!, hess = hess, hv = hv!, fgh = fgh!,
-        cons = cons, cons_j = cons_j!, cons_h = cons_h!,
+        grad, fg = fg!, hess, hv = hv!, fgh = fgh!,
+        cons, cons_j = cons_j!, cons_h = cons_h!,
         cons_vjp = cons_vjp!, cons_jvp = cons_jvp!,
-        hess_prototype = f.hess_prototype,
-        hess_colorvec = f.hess_colorvec,
-        cons_jac_prototype = f.cons_jac_prototype,
-        cons_jac_colorvec = f.cons_jac_colorvec,
-        cons_hess_prototype = f.cons_hess_prototype,
-        cons_hess_colorvec = f.cons_hess_colorvec,
+        f.hess_prototype,
+        f.hess_colorvec,
+        f.cons_jac_prototype,
+        f.cons_jac_colorvec,
+        f.cons_hess_prototype,
+        f.cons_hess_colorvec,
         lag_h = lag_h!,
         lag_hess_prototype = lag_h! === nothing ? f.lag_hess_prototype :
             something(f.lag_hess_prototype, zeros(Bool, length(x), length(x))),
-        sys = f.sys,
-        expr = f.expr,
-        cons_expr = f.cons_expr,
-        observed = f.observed
+        f.sys,
+        f.expr,
+        f.cons_expr,
+        f.observed
     )
 end
 

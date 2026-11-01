@@ -40,13 +40,13 @@ R2 = Euclidean(2)
 
         optprob_forwarddiff = OptimizationFunction(rosenbrock, OptimizationBase.AutoEnzyme())
         prob_forwarddiff = OptimizationProblem(
-            optprob_forwarddiff, x0, p; manifold = R2, stepsize = stepsize
+            optprob_forwarddiff, x0, p; manifold = R2, stepsize
         )
         sol = OptimizationBase.solve(prob_forwarddiff, opt)
         @test sol.objective < 0.2
 
         optprob_grad = OptimizationFunction(rosenbrock; grad = rosenbrock_grad!)
-        prob_grad = OptimizationProblem(optprob_grad, x0, p; manifold = R2, stepsize = stepsize)
+        prob_grad = OptimizationProblem(optprob_grad, x0, p; manifold = R2, stepsize)
         sol = OptimizationBase.solve(prob_grad, opt)
         @test sol.objective < 0.2
     end
@@ -66,7 +66,7 @@ R2 = Euclidean(2)
 
         optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
         prob = OptimizationProblem(
-            optprob, x0, p; manifold = R2, stepsize = stepsize, maxiters = 25_000
+            optprob, x0, p; manifold = R2, stepsize, maxiters = 25_000
         )
         sol = OptimizationBase.solve(prob, opt)
         @test sol.objective < 1.0e-10
@@ -84,7 +84,7 @@ R2 = Euclidean(2)
 
         optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
         prob = OptimizationProblem(
-            optprob, x0, p; manifold = R2, stepsize = stepsize, maxiters = 25_000
+            optprob, x0, p; manifold = R2, stepsize, maxiters = 25_000
         )
         user_sc = Manopt.StopWhenGradientNormLess(1.0e-3)
         sol = OptimizationBase.solve(prob, opt; stopping_criterion = user_sc)
@@ -118,7 +118,7 @@ R2 = Euclidean(2)
         optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
-        sol = OptimizationBase.solve(prob, opt, stepsize = stepsize)
+        sol = OptimizationBase.solve(prob, opt; stepsize)
         @test sol.objective < 0.5
     end
 
@@ -135,7 +135,7 @@ R2 = Euclidean(2)
         optprob = OptimizationFunction(rosenbrock, OptimizationBase.AutoForwardDiff())
         prob = OptimizationProblem(optprob, x0, p; manifold = R2)
 
-        sol = OptimizationBase.solve(prob, opt, callback = callback, maxiters = 30)
+        sol = OptimizationBase.solve(prob, opt; callback, maxiters = 30)
         # With `maxiters` given, Manopt's default `StopWhenGradientNormLess(1e-6)` stays
         # active, so the run stops (converged) slightly earlier than the old
         # `StopAfterIteration`-only criterion, which ran the budget down to < 1e-14.
@@ -243,7 +243,7 @@ R2 = Euclidean(2)
         p = [1.0, 100.0]
         opt = OptimizationManopt.GradientDescentOptimizer()
 
-        optprob_cons = OptimizationFunction(rosenbrock; grad = rosenbrock_grad!, cons = cons)
+        optprob_cons = OptimizationFunction(rosenbrock; grad = rosenbrock_grad!, cons)
         prob_cons = OptimizationProblem(optprob_cons, x0, p)
         #TODO: What is this?
         @test_throws OptimizationBase.IncompatibleOptimizerError OptimizationBase.solve(prob_cons, opt)

@@ -43,7 +43,7 @@ function eqls_fixture(;
     end
 
     p = if data_iterator
-        MLUtils.DataLoader((X, y); batchsize = batchsize, shuffle = shuffle)
+        MLUtils.DataLoader((X, y); batchsize, shuffle)
     else
         (X, y)
     end
@@ -218,7 +218,7 @@ end
             fx.prob,
             AugLag(;
                 inner = Optimisers.Adam(0.02), inner_kwargs = (; maxiters = 10),
-                γ = 1.0, ρ_init = ρ_init
+                γ = 1.0, ρ_init
             );
             maxiters = 5, callback = cb
         )
@@ -356,10 +356,10 @@ end
             fx.prob,
             AugLag(;
                 inner = Optimisers.Adam(0.05), inner_kwargs = (; maxiters = 500),
-                γ = 1.0, ρ_init = ρ_init,
+                γ = 1.0, ρ_init,
                 λmin = 0.0, λmax = 0.0,
                 μmin = 0.0, μmax = 0.0,
-                ϵ_primal = ϵ_primal, ϵ_dual = ϵ_primal * ρ_init
+                ϵ_primal, ϵ_dual = ϵ_primal * ρ_init
             );
             maxiters = 50
         )
