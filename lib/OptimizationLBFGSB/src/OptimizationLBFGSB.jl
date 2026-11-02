@@ -83,7 +83,22 @@ function __map_optimizer_args(
     return mapped_args
 end
 
+# The backend objective has no stop flag, so callback termination unwinds its call.
+struct CallbackTermination{U, F} <: Exception
+    u::U
+    objective::F
+    fevals::Int
+end
+
+function callback_solution(cache, halt::CallbackTermination, t0)
+    stats = OptimizationStats(; time = time() - t0, fevals = halt.fevals)
+    return SciMLBase.build_solution(
+        cache, cache.opt, halt.u, halt.objective; stats, retcode = ReturnCode.Terminated
+    )
+end
+
 function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
+    start_time = time()
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
 
     solver_kwargs = __map_optimizer_args(cache, cache.opt; maxiters, cache.solver_args...)
@@ -119,7 +134,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
                 u = θ, objective = x[1]
             )
             if cache.callback(opt_state, x...)
-                error("Optimization halted by callback.")
+                throw(CallbackTermination(copy(θ), x[1], iter_count[]))
             end
             return x[1] + sum(@. λ * cons_tmp[eq_inds] + ρ / 2 * (cons_tmp[eq_inds] .^ 2)) +
                 1 / (2 * ρ) * sum((max.(Ref(0.0), μ .+ (ρ .* cons_tmp[ineq_inds]))) .^ 2)
@@ -179,10 +194,15 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
             prev_eqcons .= cons_tmp[eq_inds] .- cache.lcons[eq_inds]
             prevβ .= copy(β)
 
-            res = optimizer(
-                _loss, aug_grad, θ, bounds; solver_kwargs...,
-                m = cache.opt.m, pgtol = sqrt(ϵ), maxiter = maxiters / 100
-            )
+            res = try
+                optimizer(
+                    _loss, aug_grad, θ, bounds; solver_kwargs...,
+                    m = cache.opt.m, pgtol = sqrt(ϵ), maxiter = maxiters / 100
+                )
+            catch err
+                err isa CallbackTermination || rethrow()
+                return callback_solution(cache, err, start_time)
+            end
 
             θ = res[2]
             cons_tmp .= 0.0
@@ -228,7 +248,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
                 u = θ, objective = x[1]
             )
             if cache.callback(opt_state, x...)
-                error("Optimization halted by callback.")
+                throw(CallbackTermination(copy(θ), x[1], ub_iter_count[]))
             end
             return x[1]
         end
@@ -260,9 +280,14 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: LBFGSB}
 
         t0 = time()
 
-        res = optimizer(
-            ub_loss, _grad!, cache.u0, bounds; m = cache.opt.m, solver_kwargs...
-        )
+        res = try
+            optimizer(
+                ub_loss, _grad!, cache.u0, bounds; m = cache.opt.m, solver_kwargs...
+            )
+        catch err
+            err isa CallbackTermination || rethrow()
+            return callback_solution(cache, err, start_time)
+        end
 
         # Extract the task message from the result
         stop_reason = task_message_to_string(optimizer.task)
