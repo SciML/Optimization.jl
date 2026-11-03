@@ -70,11 +70,18 @@ function constraint_violations(cache)
     eq = findall(lcons .== ucons)
     upper = findall(i -> lcons[i] != ucons[i] && isfinite(ucons[i]), eachindex(ucons))
     lower = findall(i -> lcons[i] != ucons[i] && isfinite(lcons[i]), eachindex(lcons))
-    res = zeros(eltype(cache.u0), length(lcons))
+    T = eltype(cache.u0)
+    res = zeros(T, length(lcons))
+    # The buffers are reused between evaluations, since Metaheuristics.jl copies `g` and `h`
+    # into the solution it creates.
+    g = zeros(T, length(upper) + length(lower))
+    h = zeros(T, length(eq))
+    nu = length(upper)
     return function (θ)
         cache.f.cons(res, θ)
-        g = [res[upper] .- ucons[upper]; lcons[lower] .- res[lower]]
-        h = res[eq] .- ucons[eq]
+        @views g[1:nu] .= res[upper] .- ucons[upper]
+        @views g[(nu + 1):end] .= lcons[lower] .- res[lower]
+        @views h .= res[eq] .- ucons[eq]
         return g, h
     end
 end
