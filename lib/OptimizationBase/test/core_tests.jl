@@ -10,4 +10,5 @@ using SafeTestsets, Test
     include("cons_bounds_safety_test.jl")
     include("lazy_cons_expr_test.jl")
     @safetestset "despecialize" include("despecialize_tests.jl")
+    include("live_params_test.jl")
 end
