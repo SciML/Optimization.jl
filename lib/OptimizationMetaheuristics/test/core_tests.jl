@@ -162,6 +162,78 @@ Random.seed!(42)
         end
     end
 
+    @testset "Nonlinear constraints" begin
+        rb(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+        p = [1.0, 100.0]
+        # The unconstrained minimizer [1, 1] is outside the disk, so the constrained minimizer
+        # is on its boundary.
+        r = sqrt(0.5)
+        f_ref = minimum(rb(r .* [cos(φ), sin(φ)], p) for φ in range(0, 2π, length = 100_000))
+        disk(res, x, p) = (res .= [x[1]^2 + x[2]^2])
+        optf = OptimizationFunction(rb; cons = disk)
+        prob = OptimizationProblem(
+            optf, zeros(2), p; lb = [-1.0, -1.0], ub = [1.0, 1.0],
+            lcons = [-Inf], ucons = [0.5]
+        )
+        @testset "Upper bound with $(nameof(typeof(alg).parameters[1]))" for alg in (
+                DE(), PSO(), SHADE(), εDE(),
+            )
+            Random.seed!(1)
+            sol = solve(prob, alg)
+            @test sol.u[1]^2 + sol.u[2]^2 <= 0.5
+            @test sol.objective <= f_ref + 1.0e-2
+        end
+        # ECA terminates before reaching the minimizer of this problem also when called
+        # through Metaheuristics.optimize directly, so only feasibility is tested.
+        Random.seed!(1)
+        sol = solve(prob, ECA())
+        @test sol.u[1]^2 + sol.u[2]^2 <= 0.5
+
+        # A lower bound excluding the unconstrained minimizer and an upper bound in a
+        # second constraint
+        Random.seed!(1)
+        cons2(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1]])
+        prob = OptimizationProblem(
+            OptimizationFunction(rb; cons = cons2), zeros(2), p;
+            lb = [-2.0, -2.0], ub = [2.0, 2.0], lcons = [2.5, -Inf], ucons = [Inf, 1.0]
+        )
+        sol = solve(prob, DE())
+        @test sol.u[1]^2 + sol.u[2]^2 >= 2.5
+        @test sol.u[1] <= 1.0
+
+        # Equality constraint, satisfied to within the tolerance `h_tol`
+        Random.seed!(1)
+        line(res, x, p) = (res .= [x[1] + x[2]])
+        prob = OptimizationProblem(
+            OptimizationFunction(rb; cons = line), zeros(2), p;
+            lb = [-2.0, -2.0], ub = [2.0, 2.0], lcons = [1.0], ucons = [1.0]
+        )
+        sol = solve(prob, DE(options = Metaheuristics.Options(h_tol = 1.0e-4)))
+        @test abs(sol.u[1] + sol.u[2] - 1) <= 1.0e-4 + 1.0e-12
+        # The minimizer of rb on the line x[2] = 1 - x[1]
+        φ = range(-2, 2, length = 400_001)
+        @test sol.objective <= minimum(x -> rb([x, 1 - x], p), φ) + 1.0e-2
+
+        # Algorithms without constraint handling reject constrained problems
+        prob = OptimizationProblem(
+            optf, zeros(2), p; lb = [-1.0, -1.0], ub = [1.0, 1.0],
+            lcons = [-Inf], ucons = [0.5]
+        )
+        @test_throws OptimizationBase.IncompatibleOptimizerError solve(prob, ABC())
+
+        # Constraints of the problem are appended to those returned by a multi-objective
+        # function
+        Random.seed!(1)
+        biobj(x, p) = ([sum(abs2, x), sum(abs2, x .- 2)], [0.0], [0.0])
+        mof = MultiObjectiveOptimizationFunction(biobj; cons = (res, x, p) -> (res .= [x[1]]))
+        prob = OptimizationProblem(
+            mof, zeros(2), nothing; lb = [-1.0, -1.0], ub = [3.0, 3.0],
+            lcons = [-Inf], ucons = [0.5]
+        )
+        sol = solve(prob, NSGA2())
+        @test all(<=(0.5), Metaheuristics.positions(sol.original)[:, 1])
+    end
+
     # Default callback must be a stable const so init with/without kwargs share a cache type.
     @testset "DEFAULT_CALLBACK type stability across kwargs" begin
         rb(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
