@@ -82,7 +82,7 @@ function SciMLBase.OptimizationProblem(
     # nlpmodel was created.
 
     return OptimizationProblem(
-        f, u0; lb = lb, ub = ub, lcons = lcons, ucons = ucons, sense = sense, kwargs...
+        f, u0; lb, ub, lcons, ucons, sense, kwargs...
     )
 end
 

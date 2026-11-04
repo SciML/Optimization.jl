@@ -48,5 +48,5 @@ end
 optf = OptimizationFunction(loss, ADTypes.AutoZygote())
 prob = OptimizationProblem(optf, ps_ca, data)
 
-res = solve(prob, OptimizationSophia.Sophia(), callback = callback, epochs = 100)
+res = solve(prob, OptimizationSophia.Sophia(); callback, epochs = 100)
 ```

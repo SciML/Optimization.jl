@@ -41,7 +41,7 @@ import SciMLBase
             res[2] = x[1]^2 + x[2]^2 - 2.0
         end
 
-        optfunc = OptimizationFunction(obj, OptimizationBase.AutoZygote(); cons = cons)
+        optfunc = OptimizationFunction(obj, OptimizationBase.AutoZygote(); cons)
         prob = OptimizationProblem(
             optfunc, [0.5, 0.5], nothing;
             lcons = [0.0, 0.0],

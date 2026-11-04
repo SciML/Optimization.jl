@@ -120,7 +120,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: PyCMAOpt}
         opt_state = OptimizationBase.OptimizationState(;
             iter = pyconvert(Int, es.countiter),
             u = pyconvert(Vector{Float64}, es.best.x),
-            p = cache.p,
+            cache.p,
             objective = pyconvert(Float64, es.best.f),
             original = es
         )
@@ -141,8 +141,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: PyCMAOpt}
     # converting the OptimizationBase.jl Args to PyCMA format
     opt_args = __map_optimizer_args(
         cache, cache.opt; cache.solver_args...,
-        maxiters = maxiters,
-        maxtime = maxtime
+        maxiters,
+        maxtime
     )
 
     # init the CMAopt class
@@ -168,8 +168,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: PyCMAOpt}
         cache, cache.opt,
         pyconvert(Vector{Float64}, opt_res.result.xbest),
         pyconvert(Float64, opt_res.result.fbest); original = opt_res,
-        retcode = retcode,
-        stats = stats
+        retcode,
+        stats
     )
 end
 

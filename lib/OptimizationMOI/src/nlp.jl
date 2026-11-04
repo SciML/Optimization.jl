@@ -269,10 +269,10 @@ function MOI.eval_objective(evaluator::MOIOptimizationNLPEvaluator, x)
     else
         l = evaluator.f(x, evaluator.p)
         evaluator.iteration += 1
-        state = OptimizationBase.OptimizationState(
+        state = OptimizationBase.OptimizationState(;
             iter = evaluator.iteration,
             u = x,
-            p = evaluator.p,
+            evaluator.p,
             objective = l[1]
         )
         evaluator.callback(state, l)
@@ -576,10 +576,10 @@ function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
     opt_setup = __map_optimizer_args(
         cache.opt;
-        abstol = cache.solver_args.abstol,
-        reltol = cache.solver_args.reltol,
-        maxiters = maxiters,
-        maxtime = maxtime,
+        cache.solver_args.abstol,
+        cache.solver_args.reltol,
+        maxiters,
+        maxtime,
         cache.solver_args...
     )
 
@@ -641,6 +641,6 @@ function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
         minimum;
         original = opt_setup,
         retcode = opt_ret,
-        stats = stats
+        stats
     )
 end
