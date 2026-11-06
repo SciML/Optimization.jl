@@ -102,15 +102,11 @@ function SciMLBase.__solve(
         end
         opt_setup = NOMAD.NomadProblem(length(prob.u0), 1, ["OBJ"], bb; bounds...)
     else
-        eqinds = findall(i -> prob.lcons[i] == prob.ucons[i], 1:length(prob.ucons))
         bbcons = function (x)
             l = _loss(x)
             c = zeros(eltype(x), length(prob.ucons))
             prob.f.cons(c, x, prob.p)
-            c -= prob.ucons
-            if !isempty(eqinds)
-                c[eqinds] = abs.(c[eqinds])
-            end
+            c .= max.(prob.lcons .- c, c .- prob.ucons)
             success = !isnan(l) && !isinf(l)
             count_eval = true
             return (success, count_eval, vcat(l, c))

@@ -125,8 +125,9 @@ cons(res, x, p) = (res .= [x[1]^2 + x[2]^2 - 1.0])
 
 x0 = [0.5, 0.5]
 prob = OptimizationProblem(
-    OptimizationFunction(obj; cons = cons),
-    x0, nothing, lcons = [-1e-6], ucons = [1e-6])  # Small tolerance instead of exact equality
+    OptimizationFunction(obj; cons),
+    x0, nothing, lcons = [-1.0e-6], ucons = [1.0e-6]
+)  # Small tolerance instead of exact equality
 
 sol = solve(prob, ScipyCOBYLA())
 @show sol.u, sol.objective
@@ -138,7 +139,7 @@ sol = solve(prob, ScipyCOBYLA())
 using OptimizationBase, OptimizationSciPy, Random, Statistics
 Random.seed!(123)
 
-ackley(x, p) = -20exp(-0.2*sqrt(mean(x .^ 2))) - exp(mean(cos.(2π .* x))) + 20 + ℯ
+ackley(x, p) = -20exp(-0.2 * sqrt(mean(x .^ 2))) - exp(mean(cos.(2π .* x))) + 20 + ℯ
 x0 = zeros(2)                    # initial guess is ignored by DE
 prob = OptimizationProblem(ackley, x0; lb = [-5.0, -5.0], ub = [5.0, 5.0])
 

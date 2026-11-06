@@ -501,6 +501,7 @@ function MOI.objective_expr(evaluator::MOIOptimizationNLPEvaluator)
     expr = deepcopy(evaluator.obj_expr)
     repl_getindex!(expr)
     _replace_parameter_indices!(expr, evaluator.p)
+    expr = _normalize_integer_powers!(expr)
     _replace_variable_indices!(expr)
     return expr
 end
@@ -514,6 +515,7 @@ function MOI.constraint_expr(evaluator::MOIOptimizationNLPEvaluator, i)
     end
     repl_getindex!(cons_expr)
     _replace_parameter_indices!(cons_expr, evaluator.p)
+    cons_expr = _normalize_integer_powers!(cons_expr)
     _replace_variable_indices!(cons_expr)
     lb, ub = Float64(evaluator.lcons[i]), Float64(evaluator.ucons[i])
     if lb == ub

@@ -28,12 +28,14 @@ This results is compared to a multistart approach with 4 random initial points:
 ```@example ensemble
 x0s = [x0, x0 .+ rand(2), x0 .+ rand(2), x0 .+ rand(2)]
 function prob_func(prob, ctx)
-    remake(prob, u0 = x0s[ctx.sim_id])
+    return remake(prob, u0 = x0s[ctx.sim_id])
 end
 
 ensembleprob = EnsembleProblem(prob; prob_func)
-@time sol = solve(ensembleprob, BFGS(),
-    EnsembleThreads(), trajectories = 4, maxiters = 5)
+@time sol = solve(
+    ensembleprob, BFGS(),
+    EnsembleThreads(), trajectories = 4, maxiters = 5
+)
 @show minimum(s.objective for s in sol.u)
 ```
 

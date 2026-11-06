@@ -31,4 +31,12 @@ using Test
     prob = OptimizationProblem(f, x0, _p; lcons = [-Inf, -Inf], ucons = [0.5, 0.0])
     sol = OptimizationBase.solve(prob, NOMADOpt(), maxiters = 5000)
     @test sol.objective < l1
+
+    lower_cons = (res, x, p) -> (res[1] = x[1]; nothing)
+    lower_f = OptimizationFunction((x, p) -> x[1]^2, cons = lower_cons)
+    lower_prob = OptimizationProblem(
+        lower_f, [1.5]; lb = [-2.0], ub = [2.0], lcons = [1.0], ucons = [Inf]
+    )
+    lower_sol = OptimizationBase.solve(lower_prob, NOMADOpt(), maxiters = 500)
+    @test lower_sol.u[1] >= 1.0 - 1.0e-6
 end

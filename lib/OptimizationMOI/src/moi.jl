@@ -119,7 +119,7 @@ function SciMLBase.__solve(cache::MOIOptimizationCache)
     if !isnothing(cache.cons_expr)
         for cons_expr in cache.cons_expr
             expr = _replace_parameter_indices!(
-                deepcopy(cons_expr.args[2]), # f(x) == 0 or f(x) <= 0
+                repl_getindex!(deepcopy(cons_expr.args[2])), # f(x) == 0 or f(x) <= 0
                 cache.p
             )
             expr = fixpoint_simplify_and_expand!(expr)
@@ -144,7 +144,7 @@ function SciMLBase.__solve(cache::MOIOptimizationCache)
     end
 
     # objective
-    expr = _replace_parameter_indices!(deepcopy(cache.expr), cache.p)
+    expr = _replace_parameter_indices!(repl_getindex!(deepcopy(cache.expr)), cache.p)
     expr = fixpoint_simplify_and_expand!(expr)
     func, c = try
         get_moi_function(expr)
@@ -321,6 +321,7 @@ Simplifies the given expression until a fixed-point is reached and the expressio
 Will not terminate if a cycle occurs!
 """
 function fixpoint_simplify_and_expand!(expr; iter_max = typemax(Int) - 1)
+    expr = _normalize_integer_powers!(expr)
     i = 0
     iter_max >= 0 || throw(ArgumentError("Expected `iter_max` to be positive."))
     while i <= iter_max
@@ -389,6 +390,8 @@ function collect_moi_terms!(expr::Expr, affine_terms, quadratic_terms, constant)
             else
                 throw(MalformedExprException("$expr"))
             end
+        elseif expr.args[1] == :^
+            throw(MalformedExprException("$expr"))
         end
     elseif expr.head == :ref # x[i]
         expr.args[1] == :x || throw(MalformedExprException("$expr"))

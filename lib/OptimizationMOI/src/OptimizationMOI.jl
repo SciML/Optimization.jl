@@ -1,20 +1,24 @@
 module OptimizationMOI
 
-using Reexport
-# Not re-exported: the optimization API comes from `Optimization`/`OptimizationBase`,
-# which the user loads directly. This package's public surface is its own solvers.
-using OptimizationBase
-using MathOptInterface
-using SciMLBase
+using OptimizationBase: OptimizationBase
+using MathOptInterface: MathOptInterface
+using SciMLBase: SciMLBase, OptimizationFunction, OptimizationProblem, ReturnCode, init,
+    reinit!, remake, solve, solve!
 import ADTypes
 using SciMLLogging: @SciMLMessage
-using SymbolicIndexingInterface
-using SparseArrays
+using SymbolicIndexingInterface: SymbolicIndexingInterface, parameter_index,
+    parameter_symbols, parameter_values, variable_index, variable_symbols
+using SparseArrays: SparseArrays, SparseMatrixCSC, findnz, nonzeros
 import ModelingToolkitBase
 const MTK = ModelingToolkitBase
-using Symbolics
-import SymbolicUtils as SU
-using LinearAlgebra
+using Symbolics: Symbolics, @variables, Num
+import SymbolicUtils
+const SU = SymbolicUtils
+using LinearAlgebra: LinearAlgebra, mul!, opnorm
+
+# Runtime coefficient expressions resolve calls through these exported namespaces.
+using OptimizationBase, MathOptInterface, SciMLBase, SymbolicIndexingInterface,
+    SparseArrays, Symbolics, LinearAlgebra
 
 const MOI = MathOptInterface
 
@@ -239,6 +243,37 @@ function symbolify!(e::Expr)
     end
     symbolify!.(e.args)
     return e
+end
+
+_val_parameter(::Val{N}) where {N} = N
+_val_parameter(expr) = nothing
+function _val_parameter(expr::Expr)
+    if expr.head == :call && length(expr.args) == 2 && expr.args[1] in (Val, :Val)
+        return expr.args[2]
+    end
+    return nothing
+end
+
+_is_literal_pow(op) = op === :literal_pow ||
+    (op isa Function && nameof(op) === :literal_pow && parentmodule(op) === Base)
+
+_normalize_integer_powers!(expr) = expr
+function _normalize_integer_powers!(expr::Expr)
+    for i in eachindex(expr.args)
+        expr.args[i] = _normalize_integer_powers!(expr.args[i])
+    end
+    if expr.head == :call && length(expr.args) == 4 &&
+            _is_literal_pow(expr.args[1]) &&
+            expr.args[2] in (^, :^)
+        exponent = _val_parameter(expr.args[4])
+        if exponent isa Integer
+            base = expr.args[3]
+            # Literal syntax preserves Julia's types and domains for constant bases.
+            base isa Number && return eval(Expr(:call, :^, QuoteNode(base), exponent))
+            return Expr(:call, :^, base, exponent)
+        end
+    end
+    return expr
 end
 
 """

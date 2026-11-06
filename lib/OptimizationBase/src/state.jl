@@ -1,6 +1,8 @@
 """
-    OptimizationState(; iter=0, u=nothing, objective=nothing, grad=nothing,
-        hess=nothing, original=nothing, p=nothing)
+    OptimizationState(;
+        iter = 0, u = nothing, objective = nothing, grad = nothing,
+        hess = nothing, original = nothing, p = nothing
+    )
 
 State passed to an optimization callback after a solver step.
 

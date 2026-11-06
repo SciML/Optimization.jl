@@ -676,7 +676,7 @@ function OptimizationBase.instantiate_function(
         batch_width_value = Val(batch_width)
 
         function hess(θ, p = p)
-            H = Matrix{eltype(θ)}(undef, length(θ), length(θ))
+            local H = Matrix{eltype(θ)}(undef, length(θ), length(θ))
             for first_index in _batch_starts(vdθ, batch_width_value)
                 vdθ_batch = _cache_batch(vdθ, first_index, batch_width_value)
                 vdbθ_batch = _cache_batch(vdbθ, first_index, batch_width_value)
@@ -964,7 +964,15 @@ end
 
 Enzyme.EnzymeRules.inactive_kwarg(::typeof(OptimizationBase.solve_up), prob, sensealg::Union{Nothing, SciMLBase.AbstractSensitivityAlgorithm}, u0, p, args...; kwargs...) = nothing
 
-Enzyme.EnzymeRules.has_easy_rule(::typeof(OptimizationBase.solve_up), prob, sensealg::Union{Nothing, SciMLBase.AbstractSensitivityAlgorithm}, u0, p, args...; kwargs...) = nothing
+# `has_easy_rule` was split into `has_readonly_rule` and
+# `has_attribute_preserving_rule` (EnzymeAD/Enzyme.jl#3898). Only the former is
+# safe here, since the rule may read memory of `prob` that the body of
+# `solve_up` does not.
+if isdefined(Enzyme.EnzymeRules, :has_readonly_rule)
+    Enzyme.EnzymeRules.has_readonly_rule(::typeof(OptimizationBase.solve_up), prob, sensealg::Union{Nothing, SciMLBase.AbstractSensitivityAlgorithm}, u0, p, args...; kwargs...) = nothing
+elseif isdefined(Enzyme.EnzymeRules, :has_easy_rule) && pkgversion(Enzyme) < v"0.13.209"
+    Enzyme.EnzymeRules.has_easy_rule(::typeof(OptimizationBase.solve_up), prob, sensealg::Union{Nothing, SciMLBase.AbstractSensitivityAlgorithm}, u0, p, args...; kwargs...) = nothing
+end
 
 function Enzyme.EnzymeRules.augmented_primal(
         config::Enzyme.EnzymeRules.RevConfigWidth{1},

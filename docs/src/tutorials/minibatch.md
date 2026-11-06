@@ -10,17 +10,18 @@ It is possible to solve an optimization problem with batches using a `MLUtils.Da
 ```@example minibatch
 
 using Lux, OptimizationBase, OptimizationOptimisers, OrdinaryDiffEq, SciMLSensitivity, MLUtils,
-      Random, ComponentArrays, ADTypes, Zygote
+    Random, ComponentArrays, ADTypes, Zygote
 
 function newtons_cooling(du, u, p, t)
     temp = u[1]
     k, temp_m = p
     du[1] = dT = -k * (temp - temp_m)
+    return
 end
 
 function true_sol(du, u, p, t)
     true_p = [log(2) / 8.0, 100.0]
-    newtons_cooling(du, u, true_p, t)
+    return newtons_cooling(du, u, true_p, t)
 end
 
 model = Chain(Dense(1, 32, tanh), Dense(32, 1))
@@ -28,9 +29,7 @@ ps, st = Lux.setup(Random.default_rng(), model)
 ps_ca = ComponentArray(ps)
 smodel = StatefulLuxLayer{true}(model, nothing, st)
 
-function dudt_(u, p, t)
-    smodel(u, p) .* u
-end
+dudt_(u, p, t) = smodel(u, p) .* u
 
 function callback(state, l) #callback function to observe training
     display(l)
@@ -48,13 +47,13 @@ ode_data = Array(solve(true_prob, Tsit5(), saveat = t))
 prob = ODEProblem{false}(dudt_, u0, tspan, ps_ca)
 
 function predict_adjoint(fullp, time_batch)
-    Array(solve(prob, Tsit5(), p = fullp, saveat = time_batch))
+    return Array(solve(prob, Tsit5(), p = fullp, saveat = time_batch))
 end
 
 function loss_adjoint(fullp, data)
     batch, time_batch = data
     pred = predict_adjoint(fullp, time_batch)
-    sum(abs2, batch .- pred)
+    return sum(abs2, batch .- pred)
 end
 
 k = 10
@@ -64,11 +63,8 @@ train_loader = MLUtils.DataLoader((ode_data, t), batchsize = k)
 numEpochs = 300
 l1 = loss_adjoint(ps_ca, train_loader.data)[1]
 
-optfun = OptimizationFunction(
-    loss_adjoint,
-    ADTypes.AutoZygote())
+optfun = OptimizationFunction(loss_adjoint, ADTypes.AutoZygote())
 optprob = OptimizationProblem(optfun, ps_ca, train_loader)
 using IterTools: ncycle
-res1 = solve(
-    optprob, Optimisers.Adam(0.05); callback = callback, epochs = 1000)
+res1 = solve(optprob, Optimisers.Adam(0.05); callback, epochs = 1000)
 ```
