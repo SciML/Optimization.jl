@@ -90,3 +90,25 @@ res_sophia = solve(prob_sophia, OptimizationSophia.Sophia(η = 0.01, k = 5), max
     @test typeof(OptimizationBase.init(prob, Sophia())) ==
         typeof(OptimizationBase.init(prob, Sophia(); maxiters = 100))
 end
+
+@testset "Callback returning true halts the solve" begin
+    rb(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+    optf = OptimizationFunction(rb, OptimizationBase.AutoForwardDiff())
+    prob = OptimizationProblem(optf, zeros(2), [1.0, 100.0])
+    counter = Ref(0)
+    halting_callback = (st, l...) -> (counter[] += 1; counter[] >= 5)
+    sol = solve(
+        prob, Sophia(η = 0.01, k = 5);
+        callback = halting_callback, maxiters = 50
+    )
+    @test counter[] == 5
+    @test sol.retcode == SciMLBase.ReturnCode.Terminated
+    counter2 = Ref(0)
+    keep_going = (st, l...) -> (counter2[] += 1; false)
+    sol2 = solve(
+        prob, Sophia(η = 0.01, k = 5);
+        callback = keep_going, maxiters = 10
+    )
+    @test counter2[] == 10
+    @test sol2.retcode == SciMLBase.ReturnCode.Success
+end
