@@ -23,13 +23,13 @@ packed(H) = [H[i, j] for i in axes(H, 1) for j in 1:i]
 function check_rosenbrock(ad)
     of = OptimizationFunction{true}(rosenbrock, ad; cons = rosenbrock_cons!)
     fi = OptimizationBase.instantiate_function(of, copy(X0), ad, P0, 2; lag_h = true)
-    for (σ, μ) in ((Σ, Μ), (2.5, -Μ), (Σ, Μ))
-        expected = reference_derivatives(; σ, μ).lag_h
+    for (x, σ, μ) in ((X0, Σ, Μ), (X0, 2.5, -Μ), (X0, Σ, Μ), (zeros(2), Σ, Μ), (X0, 0.0, Μ))
+        expected = reference_derivatives(; x, σ, μ).lag_h
         H = fill(NaN, 2, 2)
-        fi.lag_h(H, X0, σ, μ)
+        fi.lag_h(H, x, σ, μ)
         @test H ≈ expected
         h = fill(NaN, 3)
-        fi.lag_h(h, X0, σ, μ)
+        fi.lag_h(h, x, σ, μ)
         @test h ≈ packed(expected)
     end
 
