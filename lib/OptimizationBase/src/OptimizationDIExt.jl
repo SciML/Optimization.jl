@@ -234,9 +234,18 @@ function instantiate_function(
         nothing
     end
 
+    # The Lagrangian allocates its own constraint buffer and fills it at the call-time `p`,
+    # the `p` the objective sees. `cons_oop(θ)` would use the construction `p`, and it returns
+    # the buffer from a callee that is not always inlined: Enzyme reverse-over-reverse
+    # (`SecondOrder` of two reverse-mode `AutoEnzyme`s) loses the second derivative through
+    # such a returned array, so `lag_h` silently dropped the constraint term.
     lagrangian = if f.cons !== nothing
-        let f = f, cons_oop = cons_oop
-            (θ, σ, λ, p) -> σ * f.f(θ, p) + dot(λ, cons_oop(θ))
+        let f = f, num_cons = num_cons
+            function (θ, σ, λ, p)
+                c = zeros(eltype(θ), num_cons)
+                f.cons(c, θ, p)
+                return σ * f.f(θ, p) + dot(λ, c)
+            end
         end
     else
         nothing

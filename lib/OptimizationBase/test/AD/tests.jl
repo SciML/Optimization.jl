@@ -3,6 +3,7 @@ using SafeTestsets, Test
 @testset "OptimizationBase AD" begin
     include("enzyme_lagrangian_hessian.jl")
     include("enzyme_oop_hessian_products.jl")
+    @safetestset "Lagrangian Hessian through DI" include("di_lagrangian_hessian.jl")
     @safetestset "despecialize: Enzyme" include("despecialize_enzyme.jl")
     @safetestset "despecialize: fallbacks" include("despecialize_fallbacks.jl")
     include("adtests.jl")

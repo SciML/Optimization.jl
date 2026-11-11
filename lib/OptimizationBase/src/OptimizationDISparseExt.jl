@@ -158,23 +158,33 @@ function instantiate_function(
         end
     end
 
-    function cons_oop(x)
-        _res = zeros(eltype(x), num_cons)
-        f.cons(_res, x, p)
-        return _res
+    # `let`-bound so that neither closure is a `Core.Box`: a boxed `cons_oop` read inside the
+    # differentiated `lagrangian` made Enzyme throw `EnzymeMutabilityException`.
+    cons_oop = let f = f, p = p, num_cons = num_cons
+        function _cons_oop(x)
+            _res = zeros(eltype(x), num_cons)
+            f.cons(_res, x, p)
+            return _res
+        end
+        function _cons_oop(x, i)
+            _res = zeros(eltype(x), num_cons)
+            f.cons(_res, x, p)
+            return _res[i]
+        end
+        _cons_oop
     end
 
-    function cons_oop(x, i)
-        _res = zeros(eltype(x), num_cons)
-        f.cons(_res, x, p)
-        return _res[i]
-    end
-
-    function lagrangian(θ, σ, λ, p)
-        if eltype(θ) <: SparseConnectivityTracer.AbstractTracer || !iszero(θ)
-            return σ * f.f(θ, p) + dot(λ, cons_oop(θ))
-        else
-            return dot(λ, cons_oop(θ))
+    # Owns its constraint buffer and uses the call-time `p`; see the dense `instantiate_function`
+    # (OptimizationDIExt.jl) for why it does not call `cons_oop(θ)`.
+    lagrangian = let f = f, num_cons = num_cons
+        function (θ, σ, λ, p)
+            c = zeros(eltype(θ), num_cons)
+            f.cons(c, θ, p)
+            if eltype(θ) <: SparseConnectivityTracer.AbstractTracer || !iszero(θ)
+                return σ * f.f(θ, p) + dot(λ, c)
+            else
+                return dot(λ, c)
+            end
         end
     end
 
