@@ -39,7 +39,10 @@ run_qa(
         # SparseConnectivityTracer's AbstractTracer) that remain non-public in their
         # source pkg on the registered releases (SciMLBase 3.27.0). The fix belongs
         # upstream via `public` declarations there, not a local change.
-        all_qualified_accesses_are_public = (; ignore = (:AbstractOptimizationCache, :AbstractOptimizationFunction, :AbstractOptimizationSolution, :AbstractTracer, :ChainRulesOriginator, :IsInfinite, :IteratorSize, :MaxSense, :MinSense, :NoAD, :NonConcreteEltypeError, :ObjSense, :SizeUnknown, :__init, :allowsconsjvp, :allowsconsvjp, :allowsfg, :allowsfgh, :requiresconshess, :requiresconsjac, :requiresconsjvp, :requiresconsvjp, :requiresgradient, :requireshessian, :requireslagh)),
+        # `Base.inferencebarrier` keeps the inference of `instantiate_function` out of the
+        # derivative builders until the requested derivatives are known (see
+        # `_instantiate_requested`); Base has no public equivalent.
+        all_qualified_accesses_are_public = (; ignore = (:AbstractOptimizationCache, :AbstractOptimizationFunction, :AbstractOptimizationSolution, :AbstractTracer, :ChainRulesOriginator, :IsInfinite, :IteratorSize, :MaxSense, :MinSense, :NoAD, :NonConcreteEltypeError, :ObjSense, :SizeUnknown, :__init, :allowsconsjvp, :allowsconsvjp, :allowsfg, :allowsfgh, :inferencebarrier, :requiresconshess, :requiresconsjac, :requiresconsjvp, :requiresconsvjp, :requiresgradient, :requireshessian, :requireslagh)),
         all_explicit_imports_are_public = (; ignore = (:KeywordArgError, :MaxSense, :MinSense, :NoAD, :ObjSense, :OptimizationStats, :__init, :__solve, :_concrete_solve_adjoint, :_concrete_solve_forward, :allowscallback, :extract_alg, :get_concrete_p, :get_concrete_u0, :get_root_indp, :get_updated_symbolic_problem, :has_kwargs, :promote_u0, :requiresbounds, :requiresconshess, :requiresconsjac, :requiresconstraints, :requiresgradient, :requireshessian, :wrap_sol)),
     ),
     reexports_allow = OPTIMIZATION_CURATED_REEXPORTS,

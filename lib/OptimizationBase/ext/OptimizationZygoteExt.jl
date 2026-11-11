@@ -31,6 +31,23 @@ function OptimizationBase.instantiate_function(
         cons_j = false, cons_vjp = false, cons_jvp = false, cons_h = false,
         lag_h = false
     )
+    return OptimizationBase._instantiate_requested(
+        _instantiate_function, f, x, adtype, p, num_cons,
+        (; g, h, hv, fg, fgh, cons_j, cons_vjp, cons_jvp, cons_h, lag_h)
+    )
+end
+
+function _instantiate_function(
+        f::OptimizationFunction{true}, x,
+        adtype::Union{
+            ADTypes.AutoZygote,
+            DifferentiationInterface.SecondOrder{
+                <:ADTypes.AbstractADType, <:ADTypes.AutoZygote,
+            },
+        },
+        p, num_cons, ::Val{flags}
+    ) where {flags}
+    (; g, h, hv, fg, fgh, cons_j, cons_vjp, cons_jvp, cons_h, lag_h) = flags
     adtype, soadtype = OptimizationBase.generate_adtype(adtype)
 
     if g == true && f.grad === nothing
@@ -388,6 +405,25 @@ function OptimizationBase.instantiate_function(
         cons_j = false, cons_vjp = false, cons_jvp = false, cons_h = false,
         lag_h = false
     )
+    return OptimizationBase._instantiate_requested(
+        _instantiate_function, f, x, adtype, p, num_cons,
+        (; g, h, hv, fg, fgh, cons_j, cons_vjp, cons_jvp, cons_h, lag_h)
+    )
+end
+
+function _instantiate_function(
+        f::OptimizationFunction{true}, x,
+        adtype::ADTypes.AutoSparse{
+            <:Union{
+                ADTypes.AutoZygote,
+                DifferentiationInterface.SecondOrder{
+                    <:ADTypes.AbstractADType, <:ADTypes.AutoZygote,
+                },
+            },
+        },
+        p, num_cons, ::Val{flags}
+    ) where {flags}
+    (; g, h, hv, fg, fgh, cons_j, cons_vjp, cons_jvp, cons_h, lag_h) = flags
     adtype, soadtype = OptimizationBase.generate_sparse_adtype(adtype)
 
     if g == true && f.grad === nothing
