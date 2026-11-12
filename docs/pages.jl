@@ -54,6 +54,7 @@ pages = [
         "QuadDIRECT.jl" => "optimization_packages/quaddirect.md",
         "Reactant.jl" => "optimization_packages/reactant.md",
         "Sophia.jl" => "optimization_packages/sophia.md",
+        "SPGBox.jl" => "optimization_packages/spgbox.md",
         "SpeedMapping.jl" => "optimization_packages/speedmapping.md",
         "SciPy.jl" => "optimization_packages/scipy.md",
         "SimpleOptimization.jl" => "optimization_packages/simpleoptimization.md",
