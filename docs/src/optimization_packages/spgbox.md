@@ -14,13 +14,13 @@ history. It does not store or update a Hessian approximation.
 
 ## Installation
 
-Install `SPGBox` and `Optimization`. An automatic differentiation package is
-also needed unless the gradient is provided explicitly. The example below uses
-ForwardDiff:
+Install `SPGBox` (version 0.7.4 or later, which provides `SPGBoxOpt`) and
+`Optimization`. An automatic differentiation package is also needed unless the
+gradient is provided explicitly. The example below uses ForwardDiff:
 
 ```julia
 using Pkg
-Pkg.add(["SPGBox", "Optimization", "ADTypes", "ForwardDiff"])
+Pkg.add(["SPGBox", "Optimization", "ForwardDiff"])
 ```
 
 ## Methods
@@ -45,15 +45,15 @@ The solver options accepted by `SPGBoxOpt` are:
 - `iprint`: print level (`nothing`, `0`, `1`, or `2`; default `nothing`).
 
 The common Optimization.jl options `maxiters`, `maxtime`, and `callback` are
-also supported. `maxiters` sets SPGBox's iteration limit; `maxtime` is checked
-at the end of each iteration; and `callback` receives `(state, objective)` and
-can stop the solve by returning `true`. `abstol` and `reltol` are not used; set
-`eps` to control the projected-gradient tolerance.
+also supported. `maxiters` sets the maximum number of iterations; `maxtime` is
+checked at the end of each iteration; and `callback` receives
+`(state, objective)` and can stop the solve by returning `true`. `abstol` and
+`reltol` are not used; set `eps` to control the projected-gradient tolerance.
 
 ## Example
 
 ```julia
-using Optimization, SPGBox, ADTypes, ForwardDiff
+using Optimization, SPGBox, ForwardDiff
 
 objective(x, p) = (x[1] - p[1])^2 + (x[2] - 1)^2
 optf = OptimizationFunction(objective, AutoForwardDiff())
