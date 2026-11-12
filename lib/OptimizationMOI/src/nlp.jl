@@ -237,22 +237,30 @@ function _instantiate_nlp_function(f, reinit_cache, num_cons, cons_vjp)
     if adtype isa ADTypes.AutoSymbolics ||
             (adtype isa ADTypes.AutoSparse && adtype.dense_ad isa ADTypes.AutoSymbolics)
         return OptimizationBase.instantiate_function(
-            f, reinit_cache, adtype, num_cons; g = true, h = true, cons_j = true, cons_h = true)
+            f, reinit_cache, adtype, num_cons; g = true, h = true, cons_j = true, cons_h = true
+        )
     end
     return OptimizationBase.instantiate_function(
         f, reinit_cache, adtype, num_cons; g = true, h = true, cons_j = true,
-        lag_h = true, cons_vjp)
+        lag_h = true, cons_vjp
+    )
 end
 
 function _set_dual_start!(cache::MOIOptimizationNLPCache, values)
     if values !== nothing
         values isa NamedTuple || throw(ArgumentError("dual_values must be a NamedTuple or nothing"))
-        all(key -> key in (:constraints, :lower, :upper, :lower_primal, :upper_primal,
-                :reduced_costs, :dual_objective, :constraint_primal), keys(values)) ||
+        all(
+            key -> key in (
+                :constraints, :lower, :upper, :lower_primal, :upper_primal,
+                :reduced_costs, :dual_objective, :constraint_primal,
+            ), keys(values)
+        ) ||
             throw(ArgumentError("unrecognized dual_values field"))
-        for (key, n) in ((:constraints, length(cache.lcons)), (:lower, length(cache.u0)),
+        for (key, n) in (
+                (:constraints, length(cache.lcons)), (:lower, length(cache.u0)),
                 (:upper, length(cache.u0)), (:lower_primal, length(cache.u0)),
-                (:upper_primal, length(cache.u0)))
+                (:upper_primal, length(cache.u0)),
+            )
             value = get(values, key, nothing)
             value === nothing && continue
             value isa AbstractVector && length(value) == n ||
@@ -263,8 +271,10 @@ function _set_dual_start!(cache::MOIOptimizationNLPCache, values)
     return cache
 end
 
-function SciMLBase.reinit!(cache::MOIOptimizationNLPCache; p = missing, u0 = missing,
-        dual_values = missing, interpret_symbolicmap = true)
+function SciMLBase.reinit!(
+        cache::MOIOptimizationNLPCache; p = missing, u0 = missing,
+        dual_values = missing, interpret_symbolicmap = true
+    )
     evaluator = cache.evaluator
     old_p, old_u0, old_start = cache.p, cache.u0, cache.dual_start
     try
@@ -272,14 +282,20 @@ function SciMLBase.reinit!(cache::MOIOptimizationNLPCache; p = missing, u0 = mis
             length(u0) == length(old_u0) || throw(ArgumentError("u0 must keep the original number of variables"))
         end
         dual_values === missing || _set_dual_start!(cache, dual_values)
-        invoke(SciMLBase.reinit!, Tuple{SciMLBase.AbstractOptimizationCache}, cache;
-            p, u0, interpret_symbolicmap)
+        invoke(
+            SciMLBase.reinit!, Tuple{SciMLBase.AbstractOptimizationCache}, cache;
+            p, u0, interpret_symbolicmap
+        )
         if p !== missing
-            f = _instantiate_nlp_function(evaluator.source_f, evaluator.reinit_cache,
-                length(evaluator.lcons), evaluator.source_cons_vjp)
+            f = _instantiate_nlp_function(
+                evaluator.source_f, evaluator.reinit_cache,
+                length(evaluator.lcons), evaluator.source_cons_vjp
+            )
             J, H, cons_H = _nlp_buffers(f, eltype(evaluator.u0), length(evaluator.u0), length(evaluator.lcons))
-            (f isa typeof(evaluator.f) && J isa typeof(evaluator.J) &&
-                H isa typeof(evaluator.H) && cons_H isa typeof(evaluator.cons_H)) ||
+            (
+                f isa typeof(evaluator.f) && J isa typeof(evaluator.J) &&
+                    H isa typeof(evaluator.H) && cons_H isa typeof(evaluator.cons_H)
+            ) ||
                 throw(ArgumentError("reinitializing changed the derivative types; create a new cache instead"))
             setfield!(evaluator, :f, f)
             setfield!(evaluator, :J, J)
@@ -666,10 +682,12 @@ function _add_moi_variables!(opt_setup, evaluator::MOIOptimizationNLPEvaluator)
         end
     end
     if evaluator.dual_start !== nothing
-        for (key, indices, attr) in ((:lower, lower, MOI.ConstraintDualStart()),
+        for (key, indices, attr) in (
+                (:lower, lower, MOI.ConstraintDualStart()),
                 (:upper, upper, MOI.ConstraintDualStart()),
                 (:lower_primal, lower, MOI.ConstraintPrimalStart()),
-                (:upper_primal, upper, MOI.ConstraintPrimalStart()))
+                (:upper_primal, upper, MOI.ConstraintPrimalStart()),
+            )
             values = get(evaluator.dual_start, key, nothing)
             values === nothing && continue
             for (i, ci) in enumerate(indices)
@@ -728,15 +746,19 @@ function _nlp_results(opt, evaluator, minimizer, θ, lower, upper, has_primal, h
     else
         nothing
     end
-    values = (; constraints, lower = lower_values, upper = upper_values,
-        reduced_costs, dual_objective, constraint_primal)
+    values = (;
+        constraints, lower = lower_values, upper = upper_values,
+        reduced_costs, dual_objective, constraint_primal,
+    )
     variables = Dict(index => i for (i, index) in enumerate(θ))
     return (; values, bounds, variables)
 end
 
-_is_point(status) = status ∉ (MOI.NO_SOLUTION, MOI.INFEASIBILITY_CERTIFICATE,
+_is_point(status) = status ∉ (
+    MOI.NO_SOLUTION, MOI.INFEASIBILITY_CERTIFICATE,
     MOI.NEARLY_INFEASIBILITY_CERTIFICATE, MOI.REDUCTION_CERTIFICATE,
-    MOI.NEARLY_REDUCTION_CERTIFICATE)
+    MOI.NEARLY_REDUCTION_CERTIFICATE,
+)
 
 function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)

@@ -32,9 +32,11 @@ MathOptInterface.supports(::AffineStartMock, ::MathOptInterface.NLPBlock) = fals
         (x, p) -> x[1] + 2x[2] - 3x[3] + 7, AutoSymbolics();
         cons = (out, x, p) -> (out .= [x[1] + x[2] + 3, x[1] + 5])
     )
-    prob = OptimizationProblem(f, [1.0, 1.0, 0.0];
+    prob = OptimizationProblem(
+        f, [1.0, 1.0, 0.0];
         lb = [0.0, 0.0, -5.0], ub = [5.0, 5.0, 1.0],
-        lcons = [5.0, -Inf], ucons = [Inf, 8.0])
+        lcons = [5.0, -Inf], ucons = [Inf, 8.0]
+    )
 
     @testset "LP solution, indices and snapshots" begin
         optimizer = HiGHS.Optimizer()
@@ -84,7 +86,8 @@ MathOptInterface.supports(::AffineStartMock, ::MathOptInterface.NLPBlock) = fals
         # A new solve with the same live optimizer must not mutate sol's snapshot.
         other = OptimizationProblem(
             OptimizationFunction((x, p) -> 4x[1], AutoSymbolics()), [0.5];
-            lb = [1.0], ub = [2.0])
+            lb = [1.0], ub = [2.0]
+        )
         sol3 = solve(other, optimizer)
         @test sol3.u ≈ [1.0] atol = 1.0e-7
         @test getdual(sol3).lower ≈ [4.0] atol = 1.0e-7
@@ -94,10 +97,14 @@ MathOptInterface.supports(::AffineStartMock, ::MathOptInterface.NLPBlock) = fals
     end
 
     @testset "Maximization and equality signs" begin
-        mf = OptimizationFunction((x, p) -> 2x[1] + x[2] + 3, AutoSymbolics();
-            cons = (out, x, p) -> (out[1] = x[1] + x[2]))
-        mp = OptimizationProblem(mf, [1.0, 2.0]; sense = OptimizationBase.MaxSense,
-            lb = [0.0, 0.0], ub = [2.0, Inf], lcons = [3.0], ucons = [3.0])
+        mf = OptimizationFunction(
+            (x, p) -> 2x[1] + x[2] + 3, AutoSymbolics();
+            cons = (out, x, p) -> (out[1] = x[1] + x[2])
+        )
+        mp = OptimizationProblem(
+            mf, [1.0, 2.0]; sense = OptimizationBase.MaxSense,
+            lb = [0.0, 0.0], ub = [2.0, Inf], lcons = [3.0], ucons = [3.0]
+        )
         sol = solve(mp, HiGHS.Optimizer())
         @test sol.u ≈ [2.0, 1.0] atol = 1.0e-7
         @test sol.objective ≈ 8.0 atol = 1.0e-7
@@ -114,10 +121,14 @@ MathOptInterface.supports(::AffineStartMock, ::MathOptInterface.NLPBlock) = fals
     end
 
     @testset "Quadratic and ranged AutoSymbolics constraints" begin
-        qf = OptimizationFunction((x, p) -> (x[1] - 3)^2 + 4, AutoSymbolics();
-            cons = (out, x, p) -> (out[1] = x[1] + 2))
-        qp = OptimizationProblem(qf, [0.5]; lb = [-2.0], ub = [4.0],
-            lcons = [-Inf], ucons = [3.0])
+        qf = OptimizationFunction(
+            (x, p) -> (x[1] - 3)^2 + 4, AutoSymbolics();
+            cons = (out, x, p) -> (out[1] = x[1] + 2)
+        )
+        qp = OptimizationProblem(
+            qf, [0.5]; lb = [-2.0], ub = [4.0],
+            lcons = [-Inf], ucons = [3.0]
+        )
         sol = solve(qp, HiGHS.Optimizer())
         @test sol.retcode == ReturnCode.Success
         @test sol.u ≈ [1.0] atol = 1.0e-5
@@ -132,8 +143,10 @@ MathOptInterface.supports(::AffineStartMock, ::MathOptInterface.NLPBlock) = fals
             @test d.dual_objective ≈ MOI.get(sol.original, MOI.DualObjectiveValue())
         end
         # A finite lower and upper bound generates a comparison expression.
-        ranged = OptimizationProblem(qf, [0.5]; lb = [-2.0], ub = [4.0],
-            lcons = [2.0], ucons = [3.0])
+        ranged = OptimizationProblem(
+            qf, [0.5]; lb = [-2.0], ub = [4.0],
+            lcons = [2.0], ucons = [3.0]
+        )
         ranged_sol = solve(ranged, HiGHS.Optimizer())
         @test ranged_sol.u ≈ [1.0] atol = 1.0e-5
         @test ranged_sol.objective ≈ 8.0 atol = 1.0e-5
@@ -144,20 +157,30 @@ MathOptInterface.supports(::AffineStartMock, ::MathOptInterface.NLPBlock) = fals
     @testset "MTK system and parameter update" begin
         @variables z
         @parameters a
-        sys = complete(OptimizationSystem(a * z + 5, [z], [a];
-            constraints = [z ≳ 2.0], name = :affine_dual_system))
-        p = OptimizationProblem(sys, [z => 0.0, a => 2.0];
-            lb = [-1.0], ub = [4.0], grad = false, hess = false)
+        sys = complete(
+            OptimizationSystem(
+                a * z + 5, [z], [a];
+                constraints = [z ≳ 2.0], name = :affine_dual_system
+            )
+        )
+        p = OptimizationProblem(
+            sys, [z => 0.0, a => 2.0];
+            lb = [-1.0], ub = [4.0], grad = false, hess = false
+        )
         sol = solve(p, HiGHS.Optimizer())
         @test sol.u ≈ [2.0] atol = 1.0e-7
         @test sol.objective ≈ 9.0 atol = 1.0e-7
         @test abs(only(getdual(sol).constraints)) ≈ 2.0 atol = 1.0e-7
 
         # A vector parameter avoids MTKParameters-specific reinitialization.
-        pf = OptimizationFunction((x, p) -> p[1] * x[1] + 5, AutoSymbolics();
-            cons = (out, x, p) -> (out[1] = x[1] + p[2]))
-        pp = OptimizationProblem(pf, [1.0], [2.0, 1.0];
-            lb = [0.0], ub = [5.0], lcons = [3.0], ucons = [Inf])
+        pf = OptimizationFunction(
+            (x, p) -> p[1] * x[1] + 5, AutoSymbolics();
+            cons = (out, x, p) -> (out[1] = x[1] + p[2])
+        )
+        pp = OptimizationProblem(
+            pf, [1.0], [2.0, 1.0];
+            lb = [0.0], ub = [5.0], lcons = [3.0], ucons = [Inf]
+        )
         cache = init(pp, HiGHS.Optimizer())
         before = solve!(cache)
         saved = deepcopy(getdual(before))
@@ -173,7 +196,8 @@ MathOptInterface.supports(::AffineStartMock, ::MathOptInterface.NLPBlock) = fals
     @testset "Unavailable duals" begin
         mip = OptimizationProblem(
             OptimizationFunction((x, p) -> x[1], AutoSymbolics()), [0.0];
-            lb = [0.0], ub = [1.0], int = [true])
+            lb = [0.0], ub = [1.0], int = [true]
+        )
         sol = solve(mip, HiGHS.Optimizer())
         @test sol.retcode == ReturnCode.Success
         @test getdual(sol).constraints === nothing
@@ -188,9 +212,12 @@ MathOptInterface.supports(::AffineStartMock, ::MathOptInterface.NLPBlock) = fals
         @test getdual(sol, lower) === nothing
 
         infeasible = OptimizationProblem(
-            OptimizationFunction((x, p) -> x[1], AutoSymbolics();
-                cons = (out, x, p) -> (out[1] = x[1])), [0.0];
-            lb = [0.0], ub = [1.0], lcons = [2.0], ucons = [Inf])
+            OptimizationFunction(
+                (x, p) -> x[1], AutoSymbolics();
+                cons = (out, x, p) -> (out[1] = x[1])
+            ), [0.0];
+            lb = [0.0], ub = [1.0], lcons = [2.0], ucons = [Inf]
+        )
         bad = solve(infeasible, HiGHS.Optimizer())
         @test MOI.get(bad.original, MOI.TerminationStatus()) == MOI.INFEASIBLE
         # A dual infeasibility certificate is not an optimal dual solution.
@@ -200,9 +227,11 @@ MathOptInterface.supports(::AffineStartMock, ::MathOptInterface.NLPBlock) = fals
     end
 
     @testset "All starts propagate through init, solve and reinit" begin
-        starts = (constraints = [1.25, -0.5], lower = [0.1, 0.2, 0.3],
+        starts = (
+            constraints = [1.25, -0.5], lower = [0.1, 0.2, 0.3],
             upper = [-0.1, -0.2, -0.3], lower_primal = [0.4, 0.5, 0.6],
-            upper_primal = [0.7, 0.8, 0.9])
+            upper_primal = [0.7, 0.8, 0.9],
+        )
         row_starts = [2.5, 1.5]
         function check_starts(model, x0, d, rows)
             vars = MOI.get(model, MOI.ListOfVariableIndices())
@@ -222,13 +251,17 @@ MathOptInterface.supports(::AffineStartMock, ::MathOptInterface.NLPBlock) = fals
         cache = init(prob, new_mock(); dual_values = (; starts..., constraint_primal_start = row_starts))
         sol = solve!(cache)
         check_starts(sol.original, prob.u0, starts, row_starts)
-        newstarts = (constraints = [2.0, -1.0], lower = [0.4, 0.5, 0.6],
+        newstarts = (
+            constraints = [2.0, -1.0], lower = [0.4, 0.5, 0.6],
             upper = [-0.4, -0.5, -0.6], lower_primal = [1.0, 1.1, 1.2],
-            upper_primal = [1.3, 1.4, 1.5])
+            upper_primal = [1.3, 1.4, 1.5],
+        )
         x0 = [2.0, 0.5, 0.8]
         newrows = [1.0, 2.0]
-        OptimizationMOI.reinit!(cache; u0 = x0,
-            dual_values = (; newstarts..., constraint_primal_start = newrows))
+        OptimizationMOI.reinit!(
+            cache; u0 = x0,
+            dual_values = (; newstarts..., constraint_primal_start = newrows)
+        )
         sol2 = solve!(cache)
         check_starts(sol2.original, x0, newstarts, newrows)
         OptimizationMOI.reinit!(cache; u0 = prob.u0)

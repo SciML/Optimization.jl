@@ -25,10 +25,12 @@
         @test sol.u ≈ [1.0, 1.0, 0.0, 1.0] atol = 1.0e-5
         dual = getdual(sol)
         @test dual isa NamedTuple
-        @test all(k -> hasproperty(dual, k), (
-            :constraints, :lower, :upper, :reduced_costs,
-            :dual_objective, :constraint_primal
-        ))
+        @test all(
+            k -> hasproperty(dual, k), (
+                :constraints, :lower, :upper, :reduced_costs,
+                :dual_objective, :constraint_primal,
+            )
+        )
         # MOI uses a positive sign for a lower bound and negative for an upper.
         @test dual.constraints ≈ [-2.0, 0.0] atol = 1.0e-5
         @test dual.lower ≈ [0.0, 0.0, 2.0, 0.0] atol = 1.0e-5
@@ -50,7 +52,7 @@
         starts = (
             constraints = [-1.5, -0.25],
             lower = [0.1, 0.2, 1.5, 0.4],
-            upper = [-0.1, -0.2, -0.3, -3.5]
+            upper = [-0.1, -0.2, -0.3, -3.5],
         )
         cache = init(
             prob, Ipopt.Optimizer(); dual_values = starts,
@@ -84,21 +86,27 @@
         @test MOI.get(sol3.original, MOI.NLPBlockDualStart()) == [-2.0, 0.0]
         @test getdual(sol) == saved
 
-        OptimizationMOI.reinit!(cache; p = [1.0, 1.0, -2.0, 4.0], u0 = sol3.u,
-            dual_values = getdual(sol3))
+        OptimizationMOI.reinit!(
+            cache; p = [1.0, 1.0, -2.0, 4.0], u0 = sol3.u,
+            dual_values = getdual(sol3)
+        )
         sol4 = solve!(cache)
         @test sol4.u ≈ [1.0, 1.0, 0.0, 1.0] atol = 1.0e-5
         @test getdual(sol4).lower[3] ≈ 4.0 atol = 1.0e-5
         @test getdual(sol) == saved
 
-        sol5 = solve(prob, Ipopt.Optimizer(); dual_values = (constraints = [-2.0, 0.0],),
-            print_level = 0, warm_start_init_point = "yes")
+        sol5 = solve(
+            prob, Ipopt.Optimizer(); dual_values = (constraints = [-2.0, 0.0],),
+            print_level = 0, warm_start_init_point = "yes"
+        )
         @test MOI.get(sol5.original, MOI.NLPBlockDualStart()) == [-2.0, 0.0]
     end
 
     @testset "bound constraint primal starts" begin
-        starts = (lower_primal = [0.6, 1.4, 0.1, 0.8],
-            upper_primal = [0.7, 1.3, 0.2, 0.9])
+        starts = (
+            lower_primal = [0.6, 1.4, 0.1, 0.8],
+            upper_primal = [0.7, 1.3, 0.2, 0.9],
+        )
         cache = init(prob, Ipopt.Optimizer(); dual_values = starts, print_level = 0)
         model = MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}())
         _, lo, hi = OptimizationMOI._add_moi_variables!(model, cache.evaluator)
@@ -110,26 +118,34 @@
     end
 
     @testset "dual objective snapshot" begin
-        mock = MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}();
-            eval_dual_objective_value = false)
+        mock = MOI.Utilities.MockOptimizer(
+            MOI.Utilities.Model{Float64}();
+            eval_dual_objective_value = false
+        )
         MOI.set(mock, MOI.ResultCount(), 1)
         MOI.set(mock, MOI.NLPBlockDual(), [1.0, 2.0])
         MOI.set(mock, MOI.DualObjectiveValue(), 3.0)
         cache = init(prob, Ipopt.Optimizer(); print_level = 0)
-        results = OptimizationMOI._nlp_results(mock, cache.evaluator, prob.u0,
-            MOI.VariableIndex.([3, 7, 11, 15]), fill(nothing, 4), fill(nothing, 4), false, true)
+        results = OptimizationMOI._nlp_results(
+            mock, cache.evaluator, prob.u0,
+            MOI.VariableIndex.([3, 7, 11, 15]), fill(nothing, 4), fill(nothing, 4), false, true
+        )
         @test results.values.constraints == [1.0, 2.0]
         @test results.values.dual_objective == 3.0
         @test results.variables[MOI.VariableIndex(11)] == 3
         MOI.set(mock, MOI.NLPBlockDual(), [4.0, 5.0])
         @test results.values.constraints == [1.0, 2.0]
 
-        badf = OptimizationFunction((x, p) -> sum(abs2, x), NoAD();
-            cons = (out, x, p) -> error("constraint unavailable"))
+        badf = OptimizationFunction(
+            (x, p) -> sum(abs2, x), NoAD();
+            cons = (out, x, p) -> error("constraint unavailable")
+        )
         badprob = OptimizationProblem(badf, [1.0]; lcons = [0.0], ucons = [1.0])
         badcache = init(badprob, Ipopt.Optimizer(); print_level = 0)
-        results = OptimizationMOI._nlp_results(mock, badcache.evaluator, [1.0],
-            [MOI.VariableIndex(7)], [nothing], [nothing], true, true)
+        results = OptimizationMOI._nlp_results(
+            mock, badcache.evaluator, [1.0],
+            [MOI.VariableIndex(7)], [nothing], [nothing], true, true
+        )
         @test results.values.constraint_primal === nothing
         @test OptimizationMOI._is_point(MOI.FEASIBLE_POINT)
         @test !OptimizationMOI._is_point(MOI.INFEASIBILITY_CERTIFICATE)
@@ -153,8 +169,10 @@
 
     @testset "parameter-dependent constraints after reinit" begin
         for ad in (AutoForwardDiff(), AutoZygote())
-            param_f = OptimizationFunction((x, p) -> (x[1] - 2)^2, ad;
-                cons = (res, x, p) -> (res[1] = p[1] * x[1]^2))
+            param_f = OptimizationFunction(
+                (x, p) -> (x[1] - 2)^2, ad;
+                cons = (res, x, p) -> (res[1] = p[1] * x[1]^2)
+            )
             param_prob = OptimizationProblem(param_f, [1.0], [1.0]; lcons = [-Inf], ucons = [4.0])
             param_cache = init(param_prob, Ipopt.Optimizer(); print_level = 0)
             new_p = [4.0]
@@ -224,7 +242,7 @@
         cache = init(
             prob, opt; dual_values = (
                 constraints = [-2.0, 0.0], lower = [0.0, 0.0, 2.0, 0.0],
-                upper = [0.0, 0.0, 0.0, -4.0]
+                upper = [0.0, 0.0, 0.0, -4.0],
             )
         )
         @test_throws MOI.UnsupportedAttribute solve!(cache)

@@ -78,13 +78,19 @@ end
 function _set_dual_start!(cache::MOIOptimizationCache, values)
     if values !== nothing
         values isa NamedTuple || throw(ArgumentError("dual_values must be a NamedTuple or nothing"))
-        all(key -> key in (:constraints, :lower, :upper, :lower_primal, :upper_primal,
-                :constraint_primal_start, :reduced_costs, :dual_objective, :constraint_primal), keys(values)) ||
+        all(
+            key -> key in (
+                :constraints, :lower, :upper, :lower_primal, :upper_primal,
+                :constraint_primal_start, :reduced_costs, :dual_objective, :constraint_primal,
+            ), keys(values)
+        ) ||
             throw(ArgumentError("unrecognized dual_values field"))
         ncons = cache.cons_expr === nothing ? 0 : length(cache.cons_expr)
-        for (key, n) in ((:constraints, ncons), (:constraint_primal_start, ncons),
+        for (key, n) in (
+                (:constraints, ncons), (:constraint_primal_start, ncons),
                 (:lower, length(cache.u0)), (:upper, length(cache.u0)),
-                (:lower_primal, length(cache.u0)), (:upper_primal, length(cache.u0)))
+                (:lower_primal, length(cache.u0)), (:upper_primal, length(cache.u0)),
+            )
             value = get(values, key, nothing)
             value === nothing && continue
             value isa AbstractVector && length(value) == n ||
@@ -95,16 +101,20 @@ function _set_dual_start!(cache::MOIOptimizationCache, values)
     return cache
 end
 
-function SciMLBase.reinit!(cache::MOIOptimizationCache; p = missing, u0 = missing,
-        dual_values = missing, interpret_symbolicmap = true)
+function SciMLBase.reinit!(
+        cache::MOIOptimizationCache; p = missing, u0 = missing,
+        dual_values = missing, interpret_symbolicmap = true
+    )
     old_p, old_u0, old_start = cache.p, cache.u0, cache.dual_start[]
     try
         if u0 !== missing && !(eltype(u0) <: Pair)
             length(u0) == length(old_u0) || throw(ArgumentError("u0 must keep the original number of variables"))
         end
         dual_values === missing || _set_dual_start!(cache, dual_values)
-        invoke(SciMLBase.reinit!, Tuple{SciMLBase.AbstractOptimizationCache}, cache;
-            p, u0, interpret_symbolicmap)
+        invoke(
+            SciMLBase.reinit!, Tuple{SciMLBase.AbstractOptimizationCache}, cache;
+            p, u0, interpret_symbolicmap
+        )
     catch
         cache.reinit_cache.p = old_p
         cache.reinit_cache.u0 = old_u0
@@ -161,10 +171,12 @@ function _add_moi_variables!(opt_setup, cache::MOIOptimizationCache)
     end
     starts = cache.dual_start[]
     if starts !== nothing
-        for (key, indices, attr) in ((:lower, lower, MOI.ConstraintDualStart()),
+        for (key, indices, attr) in (
+                (:lower, lower, MOI.ConstraintDualStart()),
                 (:upper, upper, MOI.ConstraintDualStart()),
                 (:lower_primal, lower, MOI.ConstraintPrimalStart()),
-                (:upper_primal, upper, MOI.ConstraintPrimalStart()))
+                (:upper_primal, upper, MOI.ConstraintPrimalStart()),
+            )
             _set_constraint_starts!(opt_setup, indices, get(starts, key, nothing), attr)
         end
     end
@@ -236,8 +248,10 @@ function _affine_results(opt, θ, lower, upper, rows, offsets, has_primal, has_d
         nothing
     end
     dual_objective = has_dual ? _moi_result(opt, MOI.DualObjectiveValue()) : nothing
-    values = (; constraints, lower = lower_values, upper = upper_values,
-        reduced_costs, dual_objective, constraint_primal)
+    values = (;
+        constraints, lower = lower_values, upper = upper_values,
+        reduced_costs, dual_objective, constraint_primal,
+    )
     variables = Dict(index => i for (i, index) in enumerate(θ))
     return (; values, bounds, variables)
 end
@@ -294,8 +308,10 @@ function SciMLBase.__solve(cache::MOIOptimizationCache)
     starts = cache.dual_start[]
     if starts !== nothing
         _set_constraint_starts!(opt_setup, rows, get(starts, :constraints, nothing), MOI.ConstraintDualStart())
-        _set_constraint_starts!(opt_setup, rows, get(starts, :constraint_primal_start, nothing),
-            MOI.ConstraintPrimalStart(), offsets)
+        _set_constraint_starts!(
+            opt_setup, rows, get(starts, :constraint_primal_start, nothing),
+            MOI.ConstraintPrimalStart(), offsets
+        )
     end
 
     # objective
@@ -329,9 +345,11 @@ function SciMLBase.__solve(cache::MOIOptimizationCache)
     results = _affine_results(opt_setup, Theta, lower, upper, rows, offsets, has_primal, has_dual)
     stats = OptimizationBase.OptimizationStats()
     return SciMLBase.build_solution(
-        MOIOptimizationCache(cache.f, cache.reinit_cache, cache.lb, cache.ub, cache.int,
+        MOIOptimizationCache(
+            cache.f, cache.reinit_cache, cache.lb, cache.ub, cache.int,
             cache.sense, cache.expr, cache.cons_expr, cache.opt, cache.solver_args,
-            cache.dual_start, results),
+            cache.dual_start, results
+        ),
         cache.opt,
         minimizer,
         minimum;
