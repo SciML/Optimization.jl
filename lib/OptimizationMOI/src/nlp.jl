@@ -298,38 +298,25 @@ end
 """
     get_dual(sol[, index])
 
-For an NLP solution, return a snapshot of MOI results as a named tuple. `constraints`
-contains NLP-block multipliers in constraint order; `lower` and `upper` contain bound
+Return a snapshot of MOI results as a named tuple. `constraints` contains problem
+constraint multipliers in order; `lower` and `upper` contain bound
 multipliers in variable order (zero for absent bounds), and `reduced_costs` is their
 sum. `dual_objective` and `constraint_primal` are also included. Unavailable values
-are `nothing`. `get_dual(sol, i::Integer)` selects an NLP constraint,
+are `nothing`. `get_dual(sol, i::Integer)` selects a problem constraint,
 `get_dual(sol, MOI.VariableIndex(i))` selects a reduced cost, and
-`get_dual(sol, ci::MOI.ConstraintIndex)` selects a variable-bound multiplier.
+`get_dual(sol, ci::MOI.ConstraintIndex)` selects a variable-bound or algebraic multiplier.
 Multipliers follow MOI's sign convention. Results remain snapshots when a cache or
 optimizer is reused; `sol.original` itself remains the live optimizer.
 
 Pass this tuple as `dual_values` to `init`, `solve`, or `reinit!` to reuse available
 dual starts. Alternatively provide a named tuple with `constraints`, `lower`, and/or
 `upper` vectors. Optional `lower_primal` and `upper_primal` vectors set MOI bound
-constraint primal starts. Explicit starts require solver support; NLPBlock has no
-constraint-primal-start attribute. Solver-specific options such as Ipopt's
+constraint primal starts. For affine/quadratic problems, `constraint_primal_start`
+supplies primal starts in constraint order. Explicit starts require solver support;
+NLPBlock has no constraint-primal-start attribute. Solver-specific options such as Ipopt's
 `warm_start_init_point = "yes"` must be supplied separately.
 """
-function get_dual(sol::SciMLBase.OptimizationSolution{T, N, U, C}) where {T, N, U, C <: MOIOptimizationNLPCache}
-    return sol.cache.dual_results.values
-end
-function get_dual(sol::SciMLBase.OptimizationSolution{T, N, U, C}, i::Integer) where {T, N, U, C <: MOIOptimizationNLPCache}
-    values = get_dual(sol).constraints
-    return values === nothing ? nothing : values[i]
-end
-function get_dual(sol::SciMLBase.OptimizationSolution{T, N, U, C}, i::MOI.VariableIndex) where {T, N, U, C <: MOIOptimizationNLPCache}
-    values = get_dual(sol).reduced_costs
-    index = sol.cache.dual_results.variables[i]
-    return values === nothing ? nothing : values[index]
-end
-function get_dual(sol::SciMLBase.OptimizationSolution{T, N, U, C}, i::MOI.ConstraintIndex) where {T, N, U, C <: MOIOptimizationNLPCache}
-    return sol.cache.dual_results.bounds[i]
-end
+function get_dual end
 
 function MOI.features_available(evaluator::MOIOptimizationNLPEvaluator)
     features = [:Grad, :Hess, :Jac, :JacVec]

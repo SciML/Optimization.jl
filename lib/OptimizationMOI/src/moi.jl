@@ -1,6 +1,6 @@
 struct MOIOptimizationCache{
         F <: OptimizationFunction, RC, LB, UB, I, S, EX,
-        CEX, O,
+        CEX, O, R,
     } <: SciMLBase.AbstractOptimizationCache
     f::F
     reinit_cache::RC
@@ -12,9 +12,11 @@ struct MOIOptimizationCache{
     cons_expr::CEX
     opt::O
     solver_args::NamedTuple
+    dual_start::Ref{Union{Nothing, NamedTuple}}
+    dual_results::R
 end
 
-function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
+function MOIOptimizationCache(prob::OptimizationProblem, opt; dual_values = nothing, kwargs...)
     f = prob.f
     reinit_cache = OptimizationBase.ReInitCache(prob.u0, prob.p)
     if isnothing(f.sys)
@@ -37,7 +39,7 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
         expr, cons_expr = process_system_exprs(prob, f)
         f = remake(f; expr, cons_expr)
     end
-    return MOIOptimizationCache(
+    cache = MOIOptimizationCache(
         f,
         reinit_cache,
         prob.lb,
@@ -47,8 +49,69 @@ function MOIOptimizationCache(prob::OptimizationProblem, opt; kwargs...)
         f.expr,
         f.cons_expr,
         opt,
-        NamedTuple(kwargs)
+        NamedTuple(kwargs),
+        Ref{Union{Nothing, NamedTuple}}(nothing),
+        nothing
     )
+    _set_dual_start!(cache, dual_values)
+    return cache
+end
+
+const MOIResultCache = Union{MOIOptimizationNLPCache, MOIOptimizationCache}
+
+function get_dual(sol::SciMLBase.OptimizationSolution{T, N, U, C}) where {T, N, U, C <: MOIResultCache}
+    return sol.cache.dual_results.values
+end
+function get_dual(sol::SciMLBase.OptimizationSolution{T, N, U, C}, i::Integer) where {T, N, U, C <: MOIResultCache}
+    values = get_dual(sol).constraints
+    return values === nothing ? nothing : values[i]
+end
+function get_dual(sol::SciMLBase.OptimizationSolution{T, N, U, C}, i::MOI.VariableIndex) where {T, N, U, C <: MOIResultCache}
+    values = get_dual(sol).reduced_costs
+    index = sol.cache.dual_results.variables[i]
+    return values === nothing ? nothing : values[index]
+end
+function get_dual(sol::SciMLBase.OptimizationSolution{T, N, U, C}, i::MOI.ConstraintIndex) where {T, N, U, C <: MOIResultCache}
+    return sol.cache.dual_results.bounds[i]
+end
+
+function _set_dual_start!(cache::MOIOptimizationCache, values)
+    if values !== nothing
+        values isa NamedTuple || throw(ArgumentError("dual_values must be a NamedTuple or nothing"))
+        all(key -> key in (:constraints, :lower, :upper, :lower_primal, :upper_primal,
+                :constraint_primal_start, :reduced_costs, :dual_objective, :constraint_primal), keys(values)) ||
+            throw(ArgumentError("unrecognized dual_values field"))
+        ncons = cache.cons_expr === nothing ? 0 : length(cache.cons_expr)
+        for (key, n) in ((:constraints, ncons), (:constraint_primal_start, ncons),
+                (:lower, length(cache.u0)), (:upper, length(cache.u0)),
+                (:lower_primal, length(cache.u0)), (:upper_primal, length(cache.u0)))
+            value = get(values, key, nothing)
+            value === nothing && continue
+            value isa AbstractVector && length(value) == n ||
+                throw(ArgumentError("dual_values.$key must be a vector of length $n"))
+        end
+    end
+    cache.dual_start[] = deepcopy(values)
+    return cache
+end
+
+function SciMLBase.reinit!(cache::MOIOptimizationCache; p = missing, u0 = missing,
+        dual_values = missing, interpret_symbolicmap = true)
+    old_p, old_u0, old_start = cache.p, cache.u0, cache.dual_start[]
+    try
+        if u0 !== missing && !(eltype(u0) <: Pair)
+            length(u0) == length(old_u0) || throw(ArgumentError("u0 must keep the original number of variables"))
+        end
+        dual_values === missing || _set_dual_start!(cache, dual_values)
+        invoke(SciMLBase.reinit!, Tuple{SciMLBase.AbstractOptimizationCache}, cache;
+            p, u0, interpret_symbolicmap)
+    catch
+        cache.reinit_cache.p = old_p
+        cache.reinit_cache.u0 = old_u0
+        cache.dual_start[] = old_start
+        rethrow()
+    end
+    return cache
 end
 
 struct MalformedExprException <: Exception
@@ -61,6 +124,8 @@ end
 function _add_moi_variables!(opt_setup, cache::MOIOptimizationCache)
     num_variables = length(cache.u0)
     θ = MOI.add_variables(opt_setup, num_variables)
+    lower = fill!(Vector{Any}(undef, num_variables), nothing)
+    upper = fill!(Vector{Any}(undef, num_variables), nothing)
     if cache.lb !== nothing
         eachindex(cache.lb) == Base.OneTo(num_variables) ||
             throw(ArgumentError("Expected `cache.lb` to be of the same length as the number of variables."))
@@ -72,10 +137,10 @@ function _add_moi_variables!(opt_setup, cache::MOIOptimizationCache)
 
     for i in 1:num_variables
         if cache.lb !== nothing && cache.lb[i] > -Inf
-            MOI.add_constraint(opt_setup, θ[i], MOI.GreaterThan(Float64(cache.lb[i])))
+            lower[i] = MOI.add_constraint(opt_setup, θ[i], MOI.GreaterThan(Float64(cache.lb[i])))
         end
         if cache.ub !== nothing && cache.ub[i] < Inf
-            MOI.add_constraint(opt_setup, θ[i], MOI.LessThan(Float64(cache.ub[i])))
+            upper[i] = MOI.add_constraint(opt_setup, θ[i], MOI.LessThan(Float64(cache.ub[i])))
         end
         if cache.int !== nothing && cache.int[i]
             if cache.lb !== nothing && cache.lb[i] == 0 && cache.ub !== nothing &&
@@ -94,7 +159,87 @@ function _add_moi_variables!(opt_setup, cache::MOIOptimizationCache)
             MOI.set(opt_setup, MOI.VariablePrimalStart(), θ[i], Float64(cache.u0[i]))
         end
     end
-    return θ
+    starts = cache.dual_start[]
+    if starts !== nothing
+        for (key, indices, attr) in ((:lower, lower, MOI.ConstraintDualStart()),
+                (:upper, upper, MOI.ConstraintDualStart()),
+                (:lower_primal, lower, MOI.ConstraintPrimalStart()),
+                (:upper_primal, upper, MOI.ConstraintPrimalStart()))
+            _set_constraint_starts!(opt_setup, indices, get(starts, key, nothing), attr)
+        end
+    end
+    return θ, lower, upper
+end
+
+function _set_constraint_starts!(opt, indices, values, attr, offsets = nothing)
+    values === nothing && return
+    for (i, ci) in enumerate(indices)
+        (ci === nothing || values[i] === nothing) && continue
+        MOI.supports(opt, attr, typeof(ci)) || throw(MOI.UnsupportedAttribute(attr))
+        value = offsets === nothing ? values[i] : values[i] - offsets[i]
+        MOI.set(opt, attr, ci, value)
+    end
+    return
+end
+
+function _constraint_parts(expr::Expr, p)
+    if expr.head === :comparison && length(expr.args) == 5 && expr.args[2] === :(<=) && expr.args[4] === :(<=)
+        lower, lhs, upper = expr.args[1], expr.args[3], expr.args[5]
+    elseif expr.head === :call && length(expr.args) == 3
+        op, lhs, rhs = expr.args
+        if op in (:(==), :(=))
+            lower = upper = rhs
+        elseif op === :(<=)
+            lower, upper = -Inf, rhs
+        elseif op === :(>=)
+            lower, upper = rhs, Inf
+        else
+            throw(MalformedExprException("$expr"))
+        end
+    else
+        throw(MalformedExprException("$expr"))
+    end
+    function bound(x)
+        value = fixpoint_simplify_and_expand!(_replace_parameter_indices!(repl_getindex!(deepcopy(x)), p))
+        # Symbolification of a comparison can turn its leading numeric bound into a Symbol.
+        value isa Symbol && (value = tryparse(Float64, String(value)))
+        value isa Real || throw(ArgumentError("constraint bound must evaluate to a real number"))
+        return Float64(value)
+    end
+    lhs = _replace_parameter_indices!(repl_getindex!(deepcopy(lhs)), p)
+    return fixpoint_simplify_and_expand!(lhs), bound(lower), bound(upper)
+end
+
+function _affine_results(opt, θ, lower, upper, rows, offsets, has_primal, has_dual)
+    bounds = Dict{Any, Any}()
+    function duals(indices)
+        values = zeros(Float64, length(indices))
+        available = has_dual
+        for (i, ci) in enumerate(indices)
+            ci === nothing && continue
+            value = has_dual ? _moi_result(opt, MOI.ConstraintDual(), ci) : nothing
+            bounds[ci] = value
+            if value === nothing
+                available = false
+            else
+                values[i] = value
+            end
+        end
+        return available ? values : nothing
+    end
+    constraints, lower_values, upper_values = duals(rows), duals(lower), duals(upper)
+    reduced_costs = lower_values === nothing || upper_values === nothing ? nothing : lower_values + upper_values
+    constraint_primal = if has_primal
+        values = [_moi_result(opt, MOI.ConstraintPrimal(), ci) for ci in rows]
+        any(isnothing, values) ? nothing : values .+ offsets
+    else
+        nothing
+    end
+    dual_objective = has_dual ? _moi_result(opt, MOI.DualObjectiveValue()) : nothing
+    values = (; constraints, lower = lower_values, upper = upper_values,
+        reduced_costs, dual_objective, constraint_primal)
+    variables = Dict(index => i for (i, index) in enumerate(θ))
+    return (; values, bounds, variables)
 end
 
 function SciMLBase.__solve(cache::MOIOptimizationCache)
@@ -109,22 +254,20 @@ function SciMLBase.__solve(cache::MOIOptimizationCache)
         cache.solver_args...
     )
 
-    Theta = _add_moi_variables!(opt_setup, cache)
+    Theta, lower, upper = _add_moi_variables!(opt_setup, cache)
     MOI.set(
         opt_setup,
         MOI.ObjectiveSense(),
         cache.sense === OptimizationBase.MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE
     )
 
+    rows = Any[]
+    offsets = Float64[]
     if !isnothing(cache.cons_expr)
         for cons_expr in cache.cons_expr
-            expr = _replace_parameter_indices!(
-                repl_getindex!(deepcopy(cons_expr.args[2])), # f(x) == 0 or f(x) <= 0
-                cache.p
-            )
-            expr = fixpoint_simplify_and_expand!(expr)
+            expr, lb, ub = _constraint_parts(cons_expr, cache.p)
             func, c = try
-                get_moi_function(expr) # find: f(x) + c == 0 or f(x) + c <= 0
+                get_moi_function(expr)
             catch e
                 if e isa MalformedExprException
                     rethrow(e)
@@ -133,14 +276,26 @@ function SciMLBase.__solve(cache::MOIOptimizationCache)
                     rethrow(e)
                 end
             end
-            if is_eq(cons_expr)
-                MOI.add_constraint(opt_setup, func, MOI.EqualTo(Float64(-c)))
-            elseif is_leq(cons_expr)
-                MOI.add_constraint(opt_setup, func, MOI.LessThan(Float64(-c)))
+            func = MOI.Utilities.map_indices(i -> Theta[i.value], func)
+            set = if lb == ub
+                MOI.EqualTo(lb - c)
+            elseif lb == -Inf
+                MOI.LessThan(ub - c)
+            elseif ub == Inf
+                MOI.GreaterThan(lb - c)
             else
-                throw(MalformedExprException("$expr"))
+                MOI.Interval(lb - c, ub - c)
             end
+            push!(rows, MOI.add_constraint(opt_setup, func, set))
+            push!(offsets, c)
         end
+    end
+
+    starts = cache.dual_start[]
+    if starts !== nothing
+        _set_constraint_starts!(opt_setup, rows, get(starts, :constraints, nothing), MOI.ConstraintDualStart())
+        _set_constraint_starts!(opt_setup, rows, get(starts, :constraint_primal_start, nothing),
+            MOI.ConstraintPrimalStart(), offsets)
     end
 
     # objective
@@ -155,21 +310,28 @@ function SciMLBase.__solve(cache::MOIOptimizationCache)
             rethrow(e)
         end
     end
+    func = MOI.Utilities.map_indices(i -> Theta[i.value], func)
+    func = MOI.Utilities.operate(+, Float64, func, c)
     MOI.set(opt_setup, MOI.ObjectiveFunction{typeof(func)}(), func)
 
     MOI.optimize!(opt_setup)
-    if MOI.get(opt_setup, MOI.ResultCount()) >= 1
+    has_result = MOI.get(opt_setup, MOI.ResultCount()) >= 1
+    has_primal = has_result && _is_point(MOI.get(opt_setup, MOI.PrimalStatus()))
+    has_dual = has_result && _is_point(MOI.get(opt_setup, MOI.DualStatus()))
+    if has_primal
         minimizer = MOI.get(opt_setup, MOI.VariablePrimal(), Theta)
         minimum = MOI.get(opt_setup, MOI.ObjectiveValue())
-        opt_ret = __moi_status_to_ReturnCode(MOI.get(opt_setup, MOI.TerminationStatus()))
     else
         minimizer = fill(NaN, length(Theta))
         minimum = NaN
-        opt_ret = SciMLBase.ReturnCode.Default
     end
+    opt_ret = __moi_status_to_ReturnCode(MOI.get(opt_setup, MOI.TerminationStatus()))
+    results = _affine_results(opt_setup, Theta, lower, upper, rows, offsets, has_primal, has_dual)
     stats = OptimizationBase.OptimizationStats()
     return SciMLBase.build_solution(
-        cache,
+        MOIOptimizationCache(cache.f, cache.reinit_cache, cache.lb, cache.ub, cache.int,
+            cache.sense, cache.expr, cache.cons_expr, cache.opt, cache.solver_args,
+            cache.dual_start, results),
         cache.opt,
         minimizer,
         minimum;

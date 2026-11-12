@@ -520,8 +520,7 @@ function SciMLBase.__init(
             kwargs...
         )
     else
-        dual_values === nothing || throw(ArgumentError("dual_values is only supported for NLPBlock optimizers"))
-        MOIOptimizationCache(prob, opt; maxiters, maxtime, abstol, reltol, kwargs...)
+        MOIOptimizationCache(prob, opt; maxiters, maxtime, abstol, reltol, dual_values, kwargs...)
     end
     return cache
 end
