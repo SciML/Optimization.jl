@@ -62,15 +62,27 @@ is evaluated from the constraint function at the returned primal point, and is
 `nothing` if that evaluation fails. Results marked as certificates are not returned
 as point values or reusable multipliers.
 
-To reuse a solution as a warm start:
+For example, minimize `(x - p)^2` subject to `x ≤ 1`. After solving with `p = 2`,
+reuse both the primal solution and dual multipliers to solve again with `p = 3`:
 
-```julia
-using OptimizationBase, OptimizationMOI, Ipopt
+```@example IpoptWarmStart
+using OptimizationBase, OptimizationMOI, Ipopt, ADTypes, ForwardDiff
+
+cons!(res, x, p) = (res[1] = x[1]; nothing)
+f = OptimizationFunction((x, p) -> (x[1] - p[1])^2, ADTypes.AutoForwardDiff(); cons = cons!)
+prob = OptimizationProblem(f, [0.5], [2.0];
+    lb = [0.0], ub = [3.0], lcons = [-Inf], ucons = [1.0])
+
 cache = init(prob, Ipopt.Optimizer(); print_level = 0, warm_start_init_point = "yes")
 sol = solve!(cache)
-OptimizationMOI.reinit!(cache; u0 = sol.u, dual_values = get_dual(sol))
+duals = get_dual(sol)
+OptimizationMOI.reinit!(cache; u0 = sol.u, p = [3.0], dual_values = duals)
 sol2 = solve!(cache)
+(; x = round(sol2.u[1]; digits = 4), constraint_dual = round(get_dual(sol2, 1); digits = 4))
 ```
+
+The second solution has `x ≈ 1` and a constraint multiplier of approximately
+`-4` in MOI's sign convention.
 
 Changing `p` with `reinit!` rebuilds parameter-bound derivative callbacks. If
 the rebuilt callback or derivative-buffer types change, create a new cache instead.
