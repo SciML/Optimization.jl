@@ -12,8 +12,8 @@
 #   5. Any other off-construction eltype (`Float32`, `BigFloat`, …) routes through
 #      the prep-free fallback instead of erroring on the prep built at the construction types.
 
-using OptimizationBase, Test, ForwardDiff, FiniteDiff
-using ADTypes, Enzyme
+using OptimizationBase, Test, ForwardDiff, FiniteDiff, ReverseDiff
+using ADTypes, Enzyme, StaticArrays
 import SciMLBase
 using OptimizationBase: _prep_valid
 
@@ -181,4 +181,191 @@ end
     @test J ≈ vec(consjac(xt, p0)) rtol = 1.0e-6
     optprob.cons_j(J, xt, p1)                       # explicit different p
     @test J ≈ vec(consjac(xt, p1)) rtol = 1.0e-6
+end
+
+# Second-order / combined DI preps (hess, hv, fgh, fg, lag_h) gate on construction
+# types and fall back to prep-free DI when θ/p/v types differ. Each call must match
+# a fresh-prep result. Matching-type fgh uses value_gradient_and_hessian(!).
+Hess_ref(x, p) = ForwardDiff.hessian(xx -> objp(xx, p), x)
+Hv_ref(x, p, v) = Hess_ref(x, p) * v
+
+@testset "matching-type fgh! (IIP/OOP)" begin
+    ad = ADTypes.AutoForwardDiff()
+    fi = OptimizationBase.instantiate_function(
+        OptimizationFunction(objp, ad), x0, ad, p0, 0; fgh = true
+    )
+    G = zeros(2)
+    H = zeros(2, 2)
+    y = fi.fgh(G, H, xt)
+    @test y ≈ objp(xt, p0) rtol = 1.0e-6
+    @test G ≈ ∇xf(xt, p0) rtol = 1.0e-6
+    @test H ≈ Hess_ref(xt, p0) rtol = 1.0e-6
+
+    oop = OptimizationBase.instantiate_function(
+        OptimizationFunction{false}(objp, ad), x0, ad, p0, 0; fgh = true
+    )
+    yo, Go, Ho = oop.fgh(xt)
+    @test yo ≈ objp(xt, p0) rtol = 1.0e-6
+    @test Go ≈ ∇xf(xt, p0) rtol = 1.0e-6
+    @test Ho ≈ Hess_ref(xt, p0) rtol = 1.0e-6
+end
+
+@testset "foreign types through hess!/hv!/fg!/fgh!/lag_h! (DI prep fallback)" begin
+    ad = ADTypes.AutoForwardDiff()
+    optf = OptimizationFunction(objp, ad; cons = consp!)
+    fi = OptimizationBase.instantiate_function(
+        optf, x0, ad, p0, 1; g = true, h = true, hv = true, fg = true, fgh = true, lag_h = true
+    )
+    oop = OptimizationBase.instantiate_function(
+        OptimizationFunction{false}(objp, ad), x0, ad, p0, 0;
+        g = true, h = true, hv = true, fg = true, fgh = true
+    )
+
+    # --- hess!(H, x::Float32) ---
+    H32 = zeros(Float32, 2, 2)
+    fi.hess(H32, Float32.(xt))
+    @test Float64.(H32) ≈ Hess_ref(xt, p0) rtol = 1.0e-3
+    fresh_h = OptimizationBase.instantiate_function(
+        optf, Float32.(x0), ad, Float32.(p0), 1; h = true
+    )
+    H32b = zeros(Float32, 2, 2)
+    fresh_h.hess(H32b, Float32.(xt))
+    @test H32 ≈ H32b
+
+    # Dual `p` through second-order AutoForwardDiff is a ForwardDiff tag-nesting
+    # limitation (fresh prep at Dual `p` throws the same DualMismatchError), so it
+    # is not asserted here. See first-order Dual `p` above.
+
+    # --- hv!(Hv, x::BigFloat, v) ---
+    xB = big.(xt)
+    vB = BigFloat[1, 0]
+    HvB = zeros(BigFloat, 2)
+    fi.hv(HvB, xB, vB)
+    @test Float64.(HvB) ≈ Hv_ref(xt, p0, Float64.(vB)) rtol = 1.0e-3
+    fresh_hv = OptimizationBase.instantiate_function(
+        optf, big.(x0), ad, big.(p0), 1; hv = true
+    )
+    HvBb = zeros(BigFloat, 2)
+    fresh_hv.hv(HvBb, xB, vB)
+    @test HvB ≈ HvBb
+
+    # --- hv! with Float64 x and Float32 v (tangent type in the gate) ---
+    Hv32 = zeros(Float32, 2)
+    fi.hv(Hv32, Float32.(xt), Float32[1, 0])
+    @test Float64.(Hv32) ≈ Hv_ref(xt, p0, [1.0, 0.0]) rtol = 1.0e-3
+    Hv_mix = zeros(2)
+    fi.hv(Hv_mix, xt, Float32[1, 0])
+    @test Hv_mix ≈ Hv_ref(xt, p0, [1.0, 0.0]) rtol = 1.0e-3
+
+    # --- OOP fg! / hess / fgh! / hv with SVector (different array type) ---
+    xs = SVector{2}(xt)
+    y, g = oop.fg(xs)
+    @test y ≈ objp(xt, p0) rtol = 1.0e-6
+    @test Vector(g) ≈ ∇xf(xt, p0) rtol = 1.0e-6
+    fresh_fg = OptimizationBase.instantiate_function(
+        OptimizationFunction{false}(objp, ad), xs, ad, p0, 0; fg = true
+    )
+    yb, gb = fresh_fg.fg(xs)
+    @test y ≈ yb && g ≈ gb
+
+    @test Matrix(oop.hess(xs)) ≈ Hess_ref(xt, p0) rtol = 1.0e-6
+    y2, G2, H2 = oop.fgh(xs)
+    @test y2 ≈ objp(xt, p0) rtol = 1.0e-6
+    @test Vector(G2) ≈ ∇xf(xt, p0) rtol = 1.0e-6
+    @test Matrix(H2) ≈ Hess_ref(xt, p0) rtol = 1.0e-6
+    @test Vector(oop.hv(xs, SVector(1.0, 0.0))) ≈ Hv_ref(xt, p0, [1.0, 0.0]) rtol = 1.0e-6
+
+    # --- IIP fgh! / fg! Float32 ---
+    G32 = zeros(Float32, 2)
+    H32c = zeros(Float32, 2, 2)
+    y32 = fi.fgh(G32, H32c, Float32.(xt))
+    @test Float64(y32) ≈ objp(xt, p0) rtol = 1.0e-3
+    @test Float64.(G32) ≈ ∇xf(xt, p0) rtol = 1.0e-3
+    @test Float64.(H32c) ≈ Hess_ref(xt, p0) rtol = 1.0e-3
+    G32b = zeros(Float32, 2)
+    fi.fg(G32b, Float32.(xt))
+    @test Float64.(G32b) ≈ ∇xf(xt, p0) rtol = 1.0e-3
+
+    # --- lag_h! with Float32 θ (matrix and packed-vector IIP forms) ---
+    Hlag = zeros(Float32, 2, 2)
+    fi.lag_h(Hlag, Float32.(xt), Float32(1), Float32[0.5])
+    fresh_lag = OptimizationBase.instantiate_function(
+        optf, Float32.(x0), ad, Float32.(p0), 1; lag_h = true
+    )
+    Hlagb = zeros(Float32, 2, 2)
+    fresh_lag.lag_h(Hlagb, Float32.(xt), Float32(1), Float32[0.5])
+    @test Hlag ≈ Hlagb
+    hlag = zeros(Float32, 3)
+    fi.lag_h(hlag, Float32.(xt), Float32(1), Float32[0.5])
+    hlagb = zeros(Float32, 3)
+    fresh_lag.lag_h(hlagb, Float32.(xt), Float32(1), Float32[0.5])
+    @test hlag ≈ hlagb
+
+    # --- OOP lag_h with Float32 θ ---
+    oop_lag = OptimizationBase.instantiate_function(
+        OptimizationFunction{false}(objp, ad; cons = consp), x0, ad, p0, 1; lag_h = true
+    )
+    Hlag_oop = oop_lag.lag_h(Float32.(xt), Float32(1), Float32[0.5])
+    fresh_oop_lag = OptimizationBase.instantiate_function(
+        OptimizationFunction{false}(objp, ad; cons = consp), Float32.(x0), ad, Float32.(p0), 1;
+        lag_h = true
+    )
+    Hlag_oop_b = fresh_oop_lag.lag_h(Float32.(xt), Float32(1), Float32[0.5])
+    @test Hlag_oop ≈ Hlag_oop_b
+end
+
+@testset "lag_h at the call-time p, σ = 0, and foreign σ/λ types" begin
+    # Both constraints depend on `p`, so a constraint term evaluated at the construction `p`
+    # gives a different Hessian.
+    lcons!(res, x, p) = (res[1] = p[1] * x[1]^2 + x[2]^2; res[2] = p[2] * x[1] * x[2]; nothing)
+    lcons(x, p) = [p[1] * x[1]^2 + x[2]^2, p[2] * x[1] * x[2]]
+    lag_ref(θ, σ, λ, p) = ForwardDiff.hessian(
+        xx -> σ * objp(xx, Float64.(p)) + sum(Float64.(λ) .* lcons(xx, Float64.(p))),
+        Float64.(θ)
+    )
+    packed(H) = [H[i, j] for i in 1:size(H, 1) for j in 1:i]
+    λ = [0.5, -1.5]
+    xf, λf, p1f = Float32.(xt), Float32.(λ), Float32.(p1)
+    cases = (
+        (xt, 1.0, λ, (p1,)),
+        (xt, 1.0, λ, (p1f,)),
+        (xf, 1.0f0, λf, (p1f,)),
+        (xt, 0.0, λ, ()),
+        (xt, 0.0, λ, (p1,)),
+        (xf, 0.0f0, λf, ()),
+        (xf, 0.0f0, λf, (p1f,)),
+        (xt, 2, λ, ()),
+        (xt, 1.0, λf, ()),
+        (xt, 1.0, view([λ; 9.0], 1:2), ()),
+    )
+    for ad in (ADTypes.AutoForwardDiff(), ADTypes.AutoReverseDiff())
+        fi = OptimizationBase.instantiate_function(
+            OptimizationFunction(objp, ad; cons = lcons!), x0, ad, p0, 2; lag_h = true
+        )
+        oop = OptimizationBase.instantiate_function(
+            OptimizationFunction{false}(objp, ad; cons = lcons), x0, ad, p0, 2; lag_h = true
+        )
+        for (θ, σ, λc, pargs) in cases
+            ref = lag_ref(θ, σ, λc, isempty(pargs) ? p0 : only(pargs))
+            rtol = eltype(θ) == Float32 ? 1.0e-5 : 1.0e-10
+            H = zeros(eltype(θ), 2, 2)
+            fi.lag_h(H, θ, σ, λc, pargs...)
+            @test H ≈ ref rtol = rtol
+            h = zeros(eltype(θ), 3)
+            fi.lag_h(h, θ, σ, λc, pargs...)
+            @test h ≈ packed(ref) rtol = rtol
+            @test oop.lag_h(θ, σ, λc, pargs...) ≈ ref rtol = rtol
+        end
+    end
+
+    # σ = 0 with a user-supplied `cons_h` (no AD constraint-Hessian preparation).
+    ad = ADTypes.AutoForwardDiff()
+    user_cons_h!(H, x, p) = (H[1] .= [2p[1] 0; 0 2]; H[2] .= [0 p[2]; p[2] 0]; nothing)
+    fi = OptimizationBase.instantiate_function(
+        OptimizationFunction(objp, ad; cons = lcons!, cons_h = user_cons_h!), x0, ad, p0, 2;
+        lag_h = true
+    )
+    H = zeros(2, 2)
+    fi.lag_h(H, xt, 0.0, λ)
+    @test H ≈ lag_ref(xt, 0.0, λ, p0) rtol = 1.0e-10
 end
