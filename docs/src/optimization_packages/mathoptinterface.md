@@ -48,6 +48,53 @@ sol = solve(prob, opt)
 sol = solve(prob, Ipopt.Optimizer(); option_name = option_value, ...)
 ```
 
+## NLP multipliers and warm starts
+
+For solvers using MOI's NLP block, `get_dual(sol)` returns a snapshot with
+`constraints` (in problem constraint order), `lower` and `upper` (variable-bound
+multipliers), `reduced_costs` (the sum of bound multipliers), `dual_objective`,
+and `constraint_primal`. An unavailable result is `nothing`; bound multipliers
+are zero where no bound exists. Values use MOI's dual sign convention. Use
+`get_dual(sol, i)` for the `i`th NLP constraint, or
+`get_dual(sol, OptimizationMOI.MOI.VariableIndex(i))` for a reduced cost.
+Since the NLP block has no constraint-primal result attribute, `constraint_primal`
+is evaluated from the constraint function at the returned primal point, and is
+`nothing` if that evaluation fails. Results marked as certificates are not returned
+as point values or reusable multipliers.
+
+To reuse a solution as a warm start:
+
+```julia
+using OptimizationBase, OptimizationMOI, Ipopt
+cache = init(prob, Ipopt.Optimizer(); print_level = 0, warm_start_init_point = "yes")
+sol = solve!(cache)
+OptimizationMOI.reinit!(cache; u0 = sol.u, dual_values = get_dual(sol))
+sol2 = solve!(cache)
+```
+
+Changing `p` with `reinit!` rebuilds parameter-bound derivative callbacks. If
+the rebuilt callback or derivative-buffer types change, create a new cache instead.
+Pass `p` explicitly even after mutating a parameter object in place. A previous
+solution's dual results remain snapshots, but its cache still shares the current
+parameter object.
+
+Alternatively, pass `dual_values = (constraints = [...], lower = [...], upper = [...])`
+to `init`, `solve`, or `reinit!`, omitting any starts not needed. Constraint and
+bound dual starts require support from the optimizer. `lower_primal` and
+`upper_primal` can supply bound constraint primal starts when supported; MOI's
+NLP block has no constraint-primal-start attribute. Entries for absent variable
+bounds are ignored. Optimizers may require their
+own options to actually use starts, as Ipopt does above. This interface applies
+only to the NLP path, not affine/quadratic models such as those sent to HiGHS.
+`get_dual` snapshots remain valid after reuse, but `sol.original` may be emptied
+when an optimizer instance is reused. Ipopt may not compute fixed-variable bound
+multipliers with its default `fixed_variable_treatment`; consult its options when
+those multipliers are needed.
+
+```@docs
+OptimizationMOI.get_dual
+```
+
 ## Optimizers
 
 #### Ipopt.jl (MathOptInterface)

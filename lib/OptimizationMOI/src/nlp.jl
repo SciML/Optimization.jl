@@ -3,7 +3,9 @@ mutable struct MOIOptimizationNLPEvaluator{
         I, JT <: AbstractMatrix{T}, HT <: AbstractMatrix{T}, CHT <: AbstractMatrix{T}, S, CB,
     } <:
     MOI.AbstractNLPEvaluator
-    const f::F
+    f::F
+    const source_f::OptimizationFunction
+    const source_cons_vjp::Bool
     reinit_cache::RC
     lb::LB
     ub::UB
@@ -21,6 +23,7 @@ mutable struct MOIOptimizationNLPEvaluator{
     # For a system-based problem `obj_expr`/`cons_expr` are only built by `MOI.initialize`
     # when the solver requests `:ExprGraph`; numeric-only solvers never pay for them.
     system_exprs_pending::Bool
+    dual_start::Union{Nothing, NamedTuple}
 end
 
 function Base.getproperty(evaluator::MOIOptimizationNLPEvaluator, x::Symbol)
@@ -30,15 +33,18 @@ function Base.getproperty(evaluator::MOIOptimizationNLPEvaluator, x::Symbol)
     return getfield(evaluator, x)
 end
 
-struct MOIOptimizationNLPCache{E <: MOIOptimizationNLPEvaluator, O} <:
+struct MOIOptimizationNLPCache{E <: MOIOptimizationNLPEvaluator, O, R} <:
     SciMLBase.AbstractOptimizationCache
     evaluator::E
     opt::O
     solver_args::NamedTuple
+    dual_results::R
 end
 
 function Base.getproperty(cache::MOIOptimizationNLPCache{E}, name::Symbol) where {E}
-    if name in fieldnames(E)
+    if name === :reinit_cache || name === :dual_start
+        return getfield(getfield(cache, :evaluator), name)
+    elseif name in fieldnames(E)
         return getfield(cache.evaluator, name)
     elseif name in fieldnames(OptimizationBase.ReInitCache)
         return getfield(cache.evaluator.reinit_cache, name)
@@ -125,6 +131,7 @@ function MOIOptimizationNLPCache(
         opt;
         mtkize = false,
         callback = nothing,
+        dual_values = nothing,
         kwargs...
     )
     # `AutoSpecialize`/`AutoDespecialize`: hide the types of the functions (and of `p`)
@@ -133,47 +140,14 @@ function MOIOptimizationNLPCache(
     reinit_cache = OptimizationBase.ReInitCache(prob.u0, p_prob) # everything that can be changed via `reinit`
 
     num_cons = prob.ucons === nothing ? 0 : length(prob.ucons)
-    if prob.f.adtype isa ADTypes.AutoSymbolics || (
-            prob.f.adtype isa ADTypes.AutoSparse &&
-                prob.f.adtype.dense_ad isa ADTypes.AutoSymbolics
-        )
-        f = generate_exprs(prob)
-        f = OptimizationBase.instantiate_function(
-            f, reinit_cache, prob.f.adtype, num_cons;
-            g = true, h = true, cons_j = true, cons_h = true
-        )
-    else
-        # `eval_constraint_jacobian_transpose_product` falls back to `cons_j`, so only ask
-        # for a `cons_vjp` that does not materialize the Jacobian.
-        f = OptimizationBase.instantiate_function(
-            f_prob, reinit_cache, prob.f.adtype, num_cons;
-            g = true, h = true, cons_j = true, lag_h = true,
-            cons_vjp = OptimizationBase._matrixfree_cons_vjp(prob.f, prob.f.adtype)
-        )
-    end
+    adtype = prob.f.adtype
+    symbolic = adtype isa ADTypes.AutoSymbolics ||
+        (adtype isa ADTypes.AutoSparse && adtype.dense_ad isa ADTypes.AutoSymbolics)
+    source_f = symbolic ? generate_exprs(prob) : f_prob
+    source_cons_vjp = OptimizationBase._matrixfree_cons_vjp(prob.f, adtype)
+    f = _instantiate_nlp_function(source_f, reinit_cache, num_cons, source_cons_vjp)
     T = eltype(prob.u0)
-    n = length(prob.u0)
-    J = if isnothing(f.cons_jac_prototype)
-        zeros(T, num_cons, n)
-    else
-        similar(f.cons_jac_prototype, T)
-    end
-    lagh = !isnothing(f.lag_hess_prototype)
-
-    H = if lagh # lag hessian takes precedence
-        similar(f.lag_hess_prototype, T)
-    elseif !isnothing(f.hess_prototype)
-        similar(f.hess_prototype, T)
-    else
-        zeros(T, n, n)
-    end
-    cons_H = if lagh
-        Matrix{T}[zeros(T, 0, 0) for i in 1:num_cons] # No need to allocate this up if using lag hessian
-    elseif isnothing(f.cons_hess_prototype)
-        Matrix{T}[zeros(T, n, n) for i in 1:num_cons]
-    else
-        [similar(f.cons_hess_prototype[i], T) for i in 1:num_cons]
-    end
+    J, H, cons_H = _nlp_buffers(f, T, length(prob.u0), num_cons)
     lcons = prob.lcons === nothing ? fill(T(-Inf), num_cons) : prob.lcons
     ucons = prob.ucons === nothing ? fill(T(Inf), num_cons) : prob.ucons
 
@@ -214,6 +188,8 @@ function MOIOptimizationNLPCache(
 
     evaluator = MOIOptimizationNLPEvaluator(
         f,
+        source_f,
+        source_cons_vjp,
         reinit_cache,
         prob.lb,
         prob.ub,
@@ -228,9 +204,131 @@ function MOIOptimizationNLPCache(
         0,
         expr,
         _cons_expr,
-        sys !== nothing
+        sys !== nothing,
+        nothing
     )
-    return MOIOptimizationNLPCache(evaluator, opt, NamedTuple(kwargs))
+    cache = MOIOptimizationNLPCache(evaluator, opt, NamedTuple(kwargs), nothing)
+    _set_dual_start!(cache, dual_values)
+    return cache
+end
+
+function _nlp_buffers(f, T, n, num_cons)
+    J = isnothing(f.cons_jac_prototype) ? zeros(T, num_cons, n) : similar(f.cons_jac_prototype, T)
+    lagh = !isnothing(f.lag_hess_prototype)
+    H = if lagh
+        similar(f.lag_hess_prototype, T)
+    elseif !isnothing(f.hess_prototype)
+        similar(f.hess_prototype, T)
+    else
+        zeros(T, n, n)
+    end
+    cons_H = if lagh
+        Matrix{T}[zeros(T, 0, 0) for _ in 1:num_cons]
+    elseif isnothing(f.cons_hess_prototype)
+        Matrix{T}[zeros(T, n, n) for _ in 1:num_cons]
+    else
+        [similar(f.cons_hess_prototype[i], T) for i in 1:num_cons]
+    end
+    return J, H, cons_H
+end
+
+function _instantiate_nlp_function(f, reinit_cache, num_cons, cons_vjp)
+    adtype = f.adtype
+    if adtype isa ADTypes.AutoSymbolics ||
+            (adtype isa ADTypes.AutoSparse && adtype.dense_ad isa ADTypes.AutoSymbolics)
+        return OptimizationBase.instantiate_function(
+            f, reinit_cache, adtype, num_cons; g = true, h = true, cons_j = true, cons_h = true)
+    end
+    return OptimizationBase.instantiate_function(
+        f, reinit_cache, adtype, num_cons; g = true, h = true, cons_j = true,
+        lag_h = true, cons_vjp)
+end
+
+function _set_dual_start!(cache::MOIOptimizationNLPCache, values)
+    if values !== nothing
+        values isa NamedTuple || throw(ArgumentError("dual_values must be a NamedTuple or nothing"))
+        all(key -> key in (:constraints, :lower, :upper, :lower_primal, :upper_primal,
+                :reduced_costs, :dual_objective, :constraint_primal), keys(values)) ||
+            throw(ArgumentError("unrecognized dual_values field"))
+        for (key, n) in ((:constraints, length(cache.lcons)), (:lower, length(cache.u0)),
+                (:upper, length(cache.u0)), (:lower_primal, length(cache.u0)),
+                (:upper_primal, length(cache.u0)))
+            value = get(values, key, nothing)
+            value === nothing && continue
+            value isa AbstractVector && length(value) == n ||
+                throw(ArgumentError("dual_values.$key must be a vector of length $n"))
+        end
+    end
+    cache.dual_start = deepcopy(values)
+    return cache
+end
+
+function SciMLBase.reinit!(cache::MOIOptimizationNLPCache; p = missing, u0 = missing,
+        dual_values = missing, interpret_symbolicmap = true)
+    evaluator = cache.evaluator
+    old_p, old_u0, old_start = cache.p, cache.u0, cache.dual_start
+    try
+        if u0 !== missing && !(eltype(u0) <: Pair)
+            length(u0) == length(old_u0) || throw(ArgumentError("u0 must keep the original number of variables"))
+        end
+        dual_values === missing || _set_dual_start!(cache, dual_values)
+        invoke(SciMLBase.reinit!, Tuple{SciMLBase.AbstractOptimizationCache}, cache;
+            p, u0, interpret_symbolicmap)
+        if p !== missing
+            f = _instantiate_nlp_function(evaluator.source_f, evaluator.reinit_cache,
+                length(evaluator.lcons), evaluator.source_cons_vjp)
+            J, H, cons_H = _nlp_buffers(f, eltype(evaluator.u0), length(evaluator.u0), length(evaluator.lcons))
+            (f isa typeof(evaluator.f) && J isa typeof(evaluator.J) &&
+                H isa typeof(evaluator.H) && cons_H isa typeof(evaluator.cons_H)) ||
+                throw(ArgumentError("reinitializing changed the derivative types; create a new cache instead"))
+            setfield!(evaluator, :f, f)
+            setfield!(evaluator, :J, J)
+            setfield!(evaluator, :H, H)
+            setfield!(evaluator, :cons_H, cons_H)
+        end
+    catch
+        evaluator.reinit_cache.p = old_p
+        evaluator.reinit_cache.u0 = old_u0
+        evaluator.dual_start = old_start
+        rethrow()
+    end
+    return cache
+end
+
+"""
+    get_dual(sol[, index])
+
+For an NLP solution, return a snapshot of MOI results as a named tuple. `constraints`
+contains NLP-block multipliers in constraint order; `lower` and `upper` contain bound
+multipliers in variable order (zero for absent bounds), and `reduced_costs` is their
+sum. `dual_objective` and `constraint_primal` are also included. Unavailable values
+are `nothing`. `get_dual(sol, i::Integer)` selects an NLP constraint,
+`get_dual(sol, MOI.VariableIndex(i))` selects a reduced cost, and
+`get_dual(sol, ci::MOI.ConstraintIndex)` selects a variable-bound multiplier.
+Multipliers follow MOI's sign convention. Results remain snapshots when a cache or
+optimizer is reused; `sol.original` itself remains the live optimizer.
+
+Pass this tuple as `dual_values` to `init`, `solve`, or `reinit!` to reuse available
+dual starts. Alternatively provide a named tuple with `constraints`, `lower`, and/or
+`upper` vectors. Optional `lower_primal` and `upper_primal` vectors set MOI bound
+constraint primal starts. Explicit starts require solver support; NLPBlock has no
+constraint-primal-start attribute. Solver-specific options such as Ipopt's
+`warm_start_init_point = "yes"` must be supplied separately.
+"""
+function get_dual(sol::SciMLBase.OptimizationSolution{T, N, U, C}) where {T, N, U, C <: MOIOptimizationNLPCache}
+    return sol.cache.dual_results.values
+end
+function get_dual(sol::SciMLBase.OptimizationSolution{T, N, U, C}, i::Integer) where {T, N, U, C <: MOIOptimizationNLPCache}
+    values = get_dual(sol).constraints
+    return values === nothing ? nothing : values[i]
+end
+function get_dual(sol::SciMLBase.OptimizationSolution{T, N, U, C}, i::MOI.VariableIndex) where {T, N, U, C <: MOIOptimizationNLPCache}
+    values = get_dual(sol).reduced_costs
+    index = sol.cache.dual_results.variables[i]
+    return values === nothing ? nothing : values[index]
+end
+function get_dual(sol::SciMLBase.OptimizationSolution{T, N, U, C}, i::MOI.ConstraintIndex) where {T, N, U, C <: MOIOptimizationNLPCache}
+    return sol.cache.dual_results.bounds[i]
 end
 
 function MOI.features_available(evaluator::MOIOptimizationNLPEvaluator)
@@ -280,8 +378,18 @@ function MOI.eval_objective(evaluator::MOIOptimizationNLPEvaluator, x)
     end
 end
 
+# Symbolic wrappers already bind their own parameter object, including variadic
+# gradient wrappers for which `applicable` cannot distinguish an extra parameter.
+function _eval_with_p(evaluator, f, args...)
+    ad = evaluator.f.adtype
+    symbolic = ad isa ADTypes.AutoSymbolics ||
+        (ad isa ADTypes.AutoSparse && ad.dense_ad isa ADTypes.AutoSymbolics)
+    return !symbolic && applicable(f, args..., evaluator.p) ?
+        f(args..., evaluator.p) : f(args...)
+end
+
 function MOI.eval_constraint(evaluator::MOIOptimizationNLPEvaluator, g, x)
-    evaluator.f.cons(g, x)
+    _eval_with_p(evaluator, evaluator.f.cons, g, x)
     return
 end
 
@@ -293,7 +401,7 @@ function MOI.eval_objective_gradient(evaluator::MOIOptimizationNLPEvaluator, G, 
                 "If you are using the ModelingToolkit symbolic interface, pass the `grad` kwarg set to `true` in `OptimizationProblem`."
         )
     end
-    evaluator.f.grad(G, x)
+    _eval_with_p(evaluator, evaluator.f.grad, G, x)
     return
 end
 
@@ -322,7 +430,7 @@ function MOI.eval_constraint_jacobian(evaluator::MOIOptimizationNLPEvaluator, j,
     # Get and cache the Jacobian object here once. `evaluator.J` calls
     # `getproperty`, which is expensive because it calls `fieldnames`.
     J = evaluator.J
-    evaluator.f.cons_j(J, x)
+    _eval_with_p(evaluator, evaluator.f.cons_j, J, x)
     if J isa SparseMatrixCSC
         nnz = nonzeros(J)
         @assert length(j) == length(nnz)
@@ -339,10 +447,10 @@ function MOI.eval_constraint_jacobian_product(
         evaluator::MOIOptimizationNLPEvaluator, y, x, w
     )
     if evaluator.f.cons_jvp !== nothing
-        evaluator.f.cons_jvp(y, x, w)
+        _eval_with_p(evaluator, evaluator.f.cons_jvp, y, x, w)
     elseif evaluator.f.cons_j !== nothing
         J = evaluator.J
-        evaluator.f.cons_j(J, x)
+        _eval_with_p(evaluator, evaluator.f.cons_j, J, x)
         mul!(y, J, w)
     else
         error("Thou shalt provide the v'J of the constraint jacobian, not doing so is associated with great misfortune and also no ice cream for you.")
@@ -357,10 +465,10 @@ function MOI.eval_constraint_jacobian_transpose_product(
         w
     )
     if evaluator.f.cons_vjp !== nothing
-        evaluator.f.cons_vjp(y, x, w)
+        _eval_with_p(evaluator, evaluator.f.cons_vjp, y, x, w)
     elseif evaluator.f.cons_j !== nothing
         J = evaluator.J
-        evaluator.f.cons_j(J, x)
+        _eval_with_p(evaluator, evaluator.f.cons_j, J, x)
         mul!(y, J', w)
     else
         error("Thou shalt provide the v'J of the constraint jacobian, not doing so is associated with great misfortune and also no ice cream for you.")
@@ -416,7 +524,7 @@ function MOI.eval_hessian_lagrangian(
         μ
     ) where {T}
     if evaluator.f.lag_h !== nothing
-        evaluator.f.lag_h(h, x, σ, Vector(μ))
+        _eval_with_p(evaluator, evaluator.f.lag_h, h, x, σ, Vector(μ))
         return
     end
     if evaluator.f.hess === nothing
@@ -431,7 +539,7 @@ function MOI.eval_hessian_lagrangian(
     H = evaluator.H
     fill!(h, zero(T))
     k = 0
-    evaluator.f.hess(H, x)
+    _eval_with_p(evaluator, evaluator.f.hess, H, x)
     sparse_objective = H isa SparseMatrixCSC
     if sparse_objective
         rows, cols, _ = findnz(H)
@@ -459,7 +567,7 @@ function MOI.eval_hessian_lagrangian(
                     "If you are using the ModelingToolkit symbolic interface, pass the `cons_h` kwarg set to `true` in `OptimizationProblem`."
             )
         end
-        evaluator.f.cons_h(evaluator.cons_H, x)
+        _eval_with_p(evaluator, evaluator.f.cons_h, evaluator.cons_H, x)
         for (μi, Hi) in zip(μ, evaluator.cons_H)
             if Hi isa SparseMatrixCSC
                 rows, cols, _ = findnz(Hi)
@@ -534,6 +642,8 @@ end
 function _add_moi_variables!(opt_setup, evaluator::MOIOptimizationNLPEvaluator)
     num_variables = length(evaluator.u0)
     θ = MOI.add_variables(opt_setup, num_variables)
+    lower = fill!(Vector{Any}(undef, num_variables), nothing)
+    upper = fill!(Vector{Any}(undef, num_variables), nothing)
     if evaluator.lb !== nothing
         eachindex(evaluator.lb) == Base.OneTo(num_variables) ||
             throw(ArgumentError("Expected `cache.lb` to be of the same length as the number of variables."))
@@ -545,10 +655,10 @@ function _add_moi_variables!(opt_setup, evaluator::MOIOptimizationNLPEvaluator)
 
     for i in 1:num_variables
         if evaluator.lb !== nothing && evaluator.lb[i] > -Inf
-            MOI.add_constraint(opt_setup, θ[i], MOI.GreaterThan(Float64(evaluator.lb[i])))
+            lower[i] = MOI.add_constraint(opt_setup, θ[i], MOI.GreaterThan(Float64(evaluator.lb[i])))
         end
         if evaluator.ub !== nothing && evaluator.ub[i] < Inf
-            MOI.add_constraint(opt_setup, θ[i], MOI.LessThan(Float64(evaluator.ub[i])))
+            upper[i] = MOI.add_constraint(opt_setup, θ[i], MOI.LessThan(Float64(evaluator.ub[i])))
         end
         if evaluator.int !== nothing && evaluator.int[i]
             if evaluator.lb !== nothing && evaluator.lb[i] == 0 &&
@@ -568,8 +678,78 @@ function _add_moi_variables!(opt_setup, evaluator::MOIOptimizationNLPEvaluator)
             MOI.set(opt_setup, MOI.VariablePrimalStart(), θ[i], evaluator.u0[i])
         end
     end
-    return θ
+    if evaluator.dual_start !== nothing
+        for (key, indices, attr) in ((:lower, lower, MOI.ConstraintDualStart()),
+                (:upper, upper, MOI.ConstraintDualStart()),
+                (:lower_primal, lower, MOI.ConstraintPrimalStart()),
+                (:upper_primal, upper, MOI.ConstraintPrimalStart()))
+            values = get(evaluator.dual_start, key, nothing)
+            values === nothing && continue
+            for (i, ci) in enumerate(indices)
+                ci === nothing && continue
+                values[i] === nothing && continue
+                MOI.supports(opt_setup, attr, typeof(ci)) || throw(MOI.UnsupportedAttribute(attr))
+                MOI.set(opt_setup, attr, ci, values[i])
+            end
+        end
+    end
+    return θ, lower, upper
 end
+
+# Result attributes do not have a `supports` query; unavailable results must not
+# turn an otherwise successful solve into an error.
+function _moi_result(opt, attr, indices...)
+    try
+        return MOI.get(opt, attr, indices...)
+    catch e
+        (e isa MOI.UnsupportedAttribute || e isa MOI.GetAttributeNotAllowed) || rethrow()
+        return nothing
+    end
+end
+
+function _nlp_results(opt, evaluator, minimizer, θ, lower, upper, has_primal, has_dual)
+    constraints = has_dual ? _moi_result(opt, MOI.NLPBlockDual()) : nothing
+    constraints === nothing || (constraints = copy(constraints))
+    dual_objective = has_dual ? _moi_result(opt, MOI.DualObjectiveValue()) : nothing
+    bounds = Dict{Any, Any}()
+    function bound_duals(indices)
+        values = zeros(Float64, length(indices))
+        available = has_dual
+        for (i, ci) in enumerate(indices)
+            ci === nothing && continue
+            value = has_dual ? _moi_result(opt, MOI.ConstraintDual(), ci) : nothing
+            bounds[ci] = value
+            if value === nothing
+                available = false
+            else
+                values[i] = value
+            end
+        end
+        return available ? values : nothing
+    end
+    lower_values, upper_values = bound_duals(lower), bound_duals(upper)
+    reduced_costs = lower_values === nothing || upper_values === nothing ? nothing : lower_values + upper_values
+    constraint_primal = if has_primal
+        values = zeros(Float64, length(evaluator.lcons))
+        try
+            isempty(values) || MOI.eval_constraint(evaluator, values, minimizer)
+            values
+        catch e
+            e isa InterruptException && rethrow()
+            nothing
+        end
+    else
+        nothing
+    end
+    values = (; constraints, lower = lower_values, upper = upper_values,
+        reduced_costs, dual_objective, constraint_primal)
+    variables = Dict(index => i for (i, index) in enumerate(θ))
+    return (; values, bounds, variables)
+end
+
+_is_point(status) = status ∉ (MOI.NO_SOLUTION, MOI.INFEASIBILITY_CERTIFICATE,
+    MOI.NEARLY_INFEASIBILITY_CERTIFICATE, MOI.REDUCTION_CERTIFICATE,
+    MOI.NEARLY_REDUCTION_CERTIFICATE)
 
 function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
     maxiters = OptimizationBase._check_and_convert_maxiters(cache.solver_args.maxiters)
@@ -583,12 +763,13 @@ function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
         cache.solver_args...
     )
 
-    θ = _add_moi_variables!(opt_setup, cache.evaluator)
+    θ, lower, upper = _add_moi_variables!(opt_setup, cache.evaluator)
     MOI.set(
         opt_setup,
         MOI.ObjectiveSense(),
         cache.evaluator.sense === OptimizationBase.MaxSense ? MOI.MAX_SENSE : MOI.MIN_SENSE
     )
+
     xor(isnothing(cache.evaluator.lcons), isnothing(cache.evaluator.ucons)) &&
         throw(ArgumentError("Expected `cache.evaluator.lcons` and `cache.evaluator.lcons` to be supplied both or none."))
     if isnothing(cache.evaluator.lcons) && isnothing(cache.evaluator.ucons)
@@ -604,21 +785,33 @@ function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
         MOI.NLPBlock(),
         MOI.NLPBlockData(con_bounds, cache.evaluator, true)
     )
+    if cache.dual_start !== nothing
+        values = get(cache.dual_start, :constraints, nothing)
+        if values !== nothing
+            MOI.supports(opt_setup, MOI.NLPBlockDualStart()) ||
+                throw(MOI.UnsupportedAttribute(MOI.NLPBlockDualStart()))
+            MOI.set(opt_setup, MOI.NLPBlockDualStart(), Float64.(values))
+        end
+    end
 
     if cache.evaluator.callback !== nothing
         MOI.set(opt_setup, MOI.Silent(), true)
     end
 
     MOI.optimize!(opt_setup)
-    if MOI.get(opt_setup, MOI.ResultCount()) >= 1
+    has_result = MOI.get(opt_setup, MOI.ResultCount()) >= 1
+    has_primal = has_result && _is_point(MOI.get(opt_setup, MOI.PrimalStatus()))
+    has_dual = has_result && _is_point(MOI.get(opt_setup, MOI.DualStatus()))
+    if has_primal
         minimizer = MOI.get(opt_setup, MOI.VariablePrimal(), θ)
         minimum = MOI.get(opt_setup, MOI.ObjectiveValue())
-        opt_ret = __moi_status_to_ReturnCode(MOI.get(opt_setup, MOI.TerminationStatus()))
     else
         minimizer = fill(NaN, length(θ))
         minimum = NaN
-        opt_ret = SciMLBase.ReturnCode.Default
     end
+    opt_ret = __moi_status_to_ReturnCode(MOI.get(opt_setup, MOI.TerminationStatus()))
+
+    results = _nlp_results(opt_setup, cache.evaluator, minimizer, θ, lower, upper, has_primal, has_dual)
 
     # check if the solver supports BarrierIterations
     iterations = try
@@ -635,7 +828,7 @@ function SciMLBase.__solve(cache::MOIOptimizationNLPCache)
         iterations
     )
     return SciMLBase.build_solution(
-        cache,
+        MOIOptimizationNLPCache(cache.evaluator, cache.opt, cache.solver_args, results),
         cache.opt,
         minimizer,
         minimum;
