@@ -22,6 +22,8 @@ using OptimizationBase, MathOptInterface, SciMLBase, SymbolicIndexingInterface,
 
 const MOI = MathOptInterface
 
+export get_dual
+
 function SciMLBase.requiresgradient(
         opt::Union{
             MOI.AbstractOptimizer, MOI.OptimizerWithAttributes,
@@ -502,6 +504,7 @@ function SciMLBase.__init(
         abstol::Union{Number, Nothing} = nothing,
         reltol::Union{Number, Nothing} = nothing,
         mtkize = false,
+        dual_values = nothing,
         kwargs...
     )
     cache = if MOI.supports(_create_new_optimizer(opt), MOI.NLPBlock())
@@ -513,10 +516,11 @@ function SciMLBase.__init(
             abstol,
             reltol,
             mtkize,
+            dual_values,
             kwargs...
         )
     else
-        MOIOptimizationCache(prob, opt; maxiters, maxtime, abstol, reltol, kwargs...)
+        MOIOptimizationCache(prob, opt; maxiters, maxtime, abstol, reltol, dual_values, kwargs...)
     end
     return cache
 end
