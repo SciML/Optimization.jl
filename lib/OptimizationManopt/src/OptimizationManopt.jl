@@ -106,7 +106,7 @@ function call_manopt_optimizer(
         kwargs...
     )
     minimizer = Manopt.get_solver_result(opts)
-    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
+    return (; minimizer, minimum = loss(M, minimizer), options = opts)
 end
 
 ## Nelder-Mead
@@ -127,7 +127,7 @@ function call_manopt_optimizer(
     )
     opts = NelderMead(M, loss; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opts)
-    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
+    return (; minimizer, minimum = loss(M, minimizer), options = opts)
 end
 
 ## conjugate gradient descent
@@ -156,7 +156,7 @@ function call_manopt_optimizer(
         kwargs...
     )
     minimizer = Manopt.get_solver_result(opts)
-    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
+    return (; minimizer, minimum = loss(M, minimizer), options = opts)
 end
 
 ## particle swarm
@@ -180,7 +180,7 @@ function call_manopt_optimizer(
     swarm = [x0, [rand(M) for _ in 1:(population_size - 1)]...]
     opts = particle_swarm(M, loss, swarm; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opts)
-    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
+    return (; minimizer, minimum = loss(M, minimizer), options = opts)
 end
 
 ## quasi Newton
@@ -203,7 +203,7 @@ function call_manopt_optimizer(
     )
     opts = quasi_Newton(M, loss, gradF, x0; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opts)
-    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opts)
+    return (; minimizer, minimum = loss(M, minimizer), options = opts)
 end
 
 """
@@ -224,7 +224,7 @@ function call_manopt_optimizer(
     )
     opt = cma_es(M, loss, x0; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opt)
-    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
+    return (; minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
 """
@@ -245,7 +245,7 @@ function call_manopt_optimizer(
     )
     opt = convex_bundle_method(M, loss, gradF, x0; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opt)
-    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
+    return (; minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
 """
@@ -275,7 +275,7 @@ function call_manopt_optimizer(
         )
     end
     minimizer = Manopt.get_solver_result(opt)
-    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
+    return (; minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
 """
@@ -301,7 +301,7 @@ function call_manopt_optimizer(
         trust_regions(M, loss, gradF, hessF, x0; return_state = true, kwargs...)
     end
     minimizer = Manopt.get_solver_result(opt)
-    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
+    return (; minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
 """
@@ -322,7 +322,7 @@ function call_manopt_optimizer(
     )
     opt = Frank_Wolfe_method(M, loss, gradF, x0; return_state = true, kwargs...)
     minimizer = Manopt.get_solver_result(opt)
-    return (; minimizer = minimizer, minimum = loss(M, minimizer), options = opt)
+    return (; minimizer, minimum = loss(M, minimizer), options = opt)
 end
 
 ## OptimizationBase.jl stuff
@@ -454,10 +454,10 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{O}) where {
     end
 
     function _cb(x, θ)
-        opt_state = OptimizationBase.OptimizationState(
+        opt_state = OptimizationBase.OptimizationState(;
             iter = 0,
             u = θ,
-            p = cache.p,
+            cache.p,
             objective = x[1]
         )
         cb_call = cache.callback(opt_state, x...)
@@ -468,10 +468,10 @@ function SciMLBase.__solve(cache::OptimizationBase.OptimizationCache{O}) where {
     end
     solver_kwarg = __map_optimizer_args!(
         cache, cache.opt, manifold; callback = _cb,
-        maxiters = cache.solver_args.maxiters,
-        maxtime = cache.solver_args.maxtime,
-        abstol = cache.solver_args.abstol,
-        reltol = cache.solver_args.reltol,
+        cache.solver_args.maxiters,
+        cache.solver_args.maxtime,
+        cache.solver_args.abstol,
+        cache.solver_args.reltol,
         cache.solver_args...
     )
 

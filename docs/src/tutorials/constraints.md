@@ -34,7 +34,7 @@ cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[2]])
 We'll use the `IPNewton` solver from Optim to solve the problem.
 
 ```@example constraints
-optprob = OptimizationFunction(rosenbrock, DifferentiationInterface.SecondOrder(ADTypes.AutoForwardDiff(), ADTypes.AutoForwardDiff()), cons = cons)
+optprob = OptimizationFunction(rosenbrock, DifferentiationInterface.SecondOrder(ADTypes.AutoForwardDiff(), ADTypes.AutoForwardDiff()); cons)
 prob = OptimizationProblem(optprob, x0, _p, lcons = [-Inf, -1.0], ucons = [0.8, 2.0])
 sol = solve(prob, IPNewton())
 ```
@@ -82,7 +82,7 @@ x_1 * x_2 = 0.5
 ```
 
 ```@example constraints
-optprob = OptimizationFunction(rosenbrock, ADTypes.AutoSymbolics(), cons = cons)
+optprob = OptimizationFunction(rosenbrock, ADTypes.AutoSymbolics(); cons)
 prob = OptimizationProblem(optprob, x0, _p, lcons = [1.0, 0.5], ucons = [1.0, 0.5])
 ```
 

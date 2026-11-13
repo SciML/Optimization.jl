@@ -114,10 +114,10 @@ import SciMLBase
         end
         sol = solve(
             prob,
-            Optimisers.Adam(0.1),
+            Optimisers.Adam(0.1);
             maxiters = 1000,
             progress = false,
-            callback = callback
+            callback
         )
     end
 
@@ -207,7 +207,7 @@ end
     @test res.stats.fevals == 50 * length(data)
     @test res.stats.gevals == 50 * length(data)
 
-    res = OptimizationBase.solve(prob, Optimisers.Adam(), callback = callback, epochs = 100)
+    res = OptimizationBase.solve(prob, Optimisers.Adam(); callback, epochs = 100)
 
     @test res.objective < 1.0e-3
 
@@ -215,7 +215,7 @@ end
     optf = OptimizationFunction(loss, AutoZygote())
     prob = OptimizationProblem(optf, ps_ca, data)
 
-    res = OptimizationBase.solve(prob, Optimisers.Adam(), callback = callback, epochs = 10000)
+    res = OptimizationBase.solve(prob, Optimisers.Adam(); callback, epochs = 10000)
 
     @test res.objective < 1.0e-4
 end

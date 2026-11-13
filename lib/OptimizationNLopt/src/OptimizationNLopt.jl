@@ -191,7 +191,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
 
     _loss = function (θ)
         x = cache.f(θ, cache.p)
-        opt_state = OptimizationBase.OptimizationState(u = θ, p = cache.p, objective = x[1])
+        opt_state = OptimizationBase.OptimizationState(; u = θ, cache.p, objective = x[1])
         if cache.callback(opt_state, x...)
             NLopt.force_stop!(opt_setup)
         end
@@ -271,8 +271,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     __map_optimizer_args!(
-        cache, opt_setup; callback = cache.callback, maxiters = maxiters,
-        maxtime = maxtime,
+        cache, opt_setup; cache.callback, maxiters,
+        maxtime,
         cache.solver_args...
     )
 
@@ -287,8 +287,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     stats = OptimizationBase.OptimizationStats(; time = t1 - t0)
     return SciMLBase.build_solution(
         cache, cache.opt, minx,
-        minf; original = opt_setup, retcode = retcode,
-        stats = stats
+        minf; original = opt_setup, retcode,
+        stats
     )
 end
 

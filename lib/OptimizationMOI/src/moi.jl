@@ -102,10 +102,10 @@ function SciMLBase.__solve(cache::MOIOptimizationCache)
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
     opt_setup = __map_optimizer_args(
         cache.opt;
-        abstol = cache.solver_args.abstol,
-        reltol = cache.solver_args.reltol,
-        maxiters = maxiters,
-        maxtime = maxtime,
+        cache.solver_args.abstol,
+        cache.solver_args.reltol,
+        maxiters,
+        maxtime,
         cache.solver_args...
     )
 
@@ -175,7 +175,7 @@ function SciMLBase.__solve(cache::MOIOptimizationCache)
         minimum;
         original = opt_setup,
         retcode = opt_ret,
-        stats = stats
+        stats
     )
 end
 

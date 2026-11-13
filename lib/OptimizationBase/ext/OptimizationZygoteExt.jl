@@ -329,20 +329,20 @@ function OptimizationBase.instantiate_function(
 
     return OptimizationFunction{true}(
         f.f, adtype;
-        grad = grad, fg = fg!, hess = hess, hv = hv!, fgh = fgh!,
-        cons = cons, cons_j = cons_j!, cons_h = cons_h!,
+        grad, fg = fg!, hess, hv = hv!, fgh = fgh!,
+        cons, cons_j = cons_j!, cons_h = cons_h!,
         cons_vjp = cons_vjp!, cons_jvp = cons_jvp!,
         hess_prototype = hess_sparsity,
         hess_colorvec = hess_colors,
-        cons_jac_prototype = cons_jac_prototype,
-        cons_jac_colorvec = cons_jac_colorvec,
+        cons_jac_prototype,
+        cons_jac_colorvec,
         cons_hess_prototype = conshess_sparsity,
         cons_hess_colorvec = conshess_colors,
         lag_h = lag_h!,
-        lag_hess_prototype = lag_hess_prototype,
-        sys = f.sys,
-        expr = f.expr,
-        cons_expr = f.cons_expr
+        lag_hess_prototype,
+        f.sys,
+        f.expr,
+        f.cons_expr
     )
 end
 
@@ -678,20 +678,20 @@ function OptimizationBase.instantiate_function(
     end
     return OptimizationFunction{true}(
         f.f, adtype;
-        grad = grad, fg = fg!, hess = hess, hv = hv!, fgh = fgh!,
-        cons = cons, cons_j = cons_j!, cons_h = cons_h!,
+        grad, fg = fg!, hess, hv = hv!, fgh = fgh!,
+        cons, cons_j = cons_j!, cons_h = cons_h!,
         hess_prototype = hess_sparsity,
         hess_colorvec = hess_colors,
-        cons_jac_prototype = cons_jac_prototype,
-        cons_jac_colorvec = cons_jac_colorvec,
+        cons_jac_prototype,
+        cons_jac_colorvec,
         cons_hess_prototype = conshess_sparsity,
         cons_hess_colorvec = conshess_colors,
         lag_h = lag_h!,
-        lag_hess_prototype = lag_hess_prototype,
+        lag_hess_prototype,
         lag_hess_colorvec = lag_hess_colors,
-        sys = f.sys,
-        expr = f.expr,
-        cons_expr = f.cons_expr
+        f.sys,
+        f.expr,
+        f.cons_expr
     )
 end
 
