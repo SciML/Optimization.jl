@@ -9,14 +9,16 @@ l1 = rosenbrock(x0)
 
 function g!(G, x, p = nothing)
     G[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]
-    return G[2] = 200.0 * (x[2] - x[1]^2)
+    G[2] = 200.0 * (x[2] - x[1]^2)
+    return
 end
 
 function h!(H, x, p = nothing)
     H[1, 1] = 2.0 - 400.0 * x[2] + 1200.0 * x[1]^2
     H[1, 2] = -400.0 * x[1]
     H[2, 1] = -400.0 * x[1]
-    return H[2, 2] = 200.0
+    H[2, 2] = 200.0
+    return
 end
 
 @testset "No AD" begin
