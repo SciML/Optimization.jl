@@ -32,7 +32,8 @@ end
 function reset_mock!()
     _mock_ncalls[] = 0
     _mock_kwargs[] = (;)
-    return _mock_u0[] = Float64[]
+    _mock_u0[] = Float64[]
+    return
 end
 
 # Helper: build a simple unconstrained problem

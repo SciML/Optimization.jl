@@ -7,7 +7,8 @@ function lotka_volterra!(du, u, p, t)
     x, y = u
     α, β, δ, γ = p
     du[1] = dx = α * x - β * x * y
-    return du[2] = dy = -δ * y + γ * x * y
+    du[2] = dy = -δ * y + γ * x * y
+    return
 end
 
 # Initial condition

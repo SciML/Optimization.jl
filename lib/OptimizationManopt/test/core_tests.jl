@@ -12,7 +12,8 @@ rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
 
 function rosenbrock_grad!(storage, x, p)
     storage[1] = -2.0 * (p[1] - x[1]) - 4.0 * p[2] * (x[2] - x[1]^2) * x[1]
-    return storage[2] = 2.0 * p[2] * (x[2] - x[1]^2)
+    storage[2] = 2.0 * p[2] * (x[2] - x[1]^2)
+    return
 end
 
 R2 = Euclidean(2)
