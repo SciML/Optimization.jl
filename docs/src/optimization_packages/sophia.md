@@ -36,7 +36,7 @@ smodel = StatefulLuxLayer{true}(model, nothing, st)
 
 function callback(state, l)
     state.iter % 25 == 1 && @show "Iteration: $(state.iter), Loss: $l"
-    return l < 1e-1 ## Terminate if loss is small
+    return l < 1.0e-1 ## Terminate if loss is small
 end
 
 function loss(ps, data)

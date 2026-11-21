@@ -223,4 +223,13 @@ using Test, Random
         @test sol.retcode == ReturnCode.Success
         @test sol.objective < 1.0
     end
+
+    # Default callback must be a stable const so init with/without kwargs share a cache type.
+    @testset "DEFAULT_CALLBACK type stability across kwargs" begin
+        rb(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+        optf = OptimizationFunction(rb, OptimizationBase.AutoForwardDiff())
+        prob = OptimizationProblem(optf, zeros(2), [1.0, 100.0])
+        @test typeof(OptimizationBase.init(prob, NLopt.LN_NELDERMEAD())) ==
+            typeof(OptimizationBase.init(prob, NLopt.LN_NELDERMEAD(); maxiters = 100))
+    end
 end

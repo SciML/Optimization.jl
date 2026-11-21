@@ -52,6 +52,7 @@ function sweep(cache, p_values)
         sol = OptimizationBase.solve!(cache)
         push!(results, (p = p, u = sol.u, objective = sol.objective))
     end
+    return
 end
 
 sweep(cache, p_values)

@@ -1,6 +1,6 @@
 name = "OptimizationMadNLP"
 uuid = "5d9c809f-c847-4062-9fba-1793bbfef577"
-version = "2.3.2"
+version = "2.3.3"
 authors = ["Sebastian Micluța-Câmpeanu <sebastian.mc95@proton.me> and contributors"]
 
 [deps]
@@ -20,7 +20,7 @@ DifferentiationInterface = "0.7.13"
 ForwardDiff = "1.2.1"
 julia = "1.10"
 LinearAlgebra = "1.10.0"
-MadNLP = "0.9.1, 0.10"
+MadNLP = "0.9.1, 0.10, 0.11"
 ModelingToolkit = "11.32"
 NLPModels = "0.21.5"
 OptimizationBase = "5.5.0"

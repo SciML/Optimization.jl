@@ -51,7 +51,7 @@ sol = solve(prob, BOBYQA(), maxiters = 1000)
 sol = solve(prob, LINCOA(), maxiters = 1000)
 
 function con2_c(res, x, p)
-    res .= [x[1] + x[2], x[2] * sin(x[1]) - x[1]]
+    return res .= [x[1] + x[2], x[2] * sin(x[1]) - x[1]]
 end
 optprob = OptimizationFunction(rosenbrock, AutoForwardDiff(), cons = con2_c)
 prob = OptimizationProblem(optprob, x0, _p, lcons = [1, -100], ucons = [1, 100])

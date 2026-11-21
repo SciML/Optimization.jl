@@ -492,7 +492,7 @@ SciMLBase.allowsbounds(::ScipyRoot) = false
 function SciMLBase.__init(
         prob::SciMLBase.OptimizationProblem, opt::ScipyOptimizer;
         cons_tol = 1.0e-6,
-        callback = (args...) -> (false),
+        callback = OptimizationBase.DEFAULT_CALLBACK,
         progress = false,
         kwargs...
     )

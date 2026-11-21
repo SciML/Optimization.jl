@@ -28,7 +28,8 @@ optf = OptimizationFunction(f_schwefel, ADTypes.AutoReverseDiff(compile = true))
 
 x0 = ones(10) .* 200.0
 prob = OptimizationProblem(
-    optf, x0, [418.9829], lb = fill(-500.0, 10), ub = fill(500.0, 10))
+    optf, x0, [418.9829], lb = fill(-500.0, 10), ub = fill(500.0, 10)
+)
 
 @show f_schwefel(x0)
 ```

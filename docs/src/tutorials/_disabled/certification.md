@@ -35,7 +35,7 @@ We'll look at the Riemannian center of mass of SPD matrices which is known to be
 
 ```@example symanalysis
 using OptimizationBase, OptimizationManopt, Symbolics, Manifolds, Random, LinearAlgebra,
-      SymbolicAnalysis, ADTypes
+    SymbolicAnalysis, ADTypes
 
 M = SymmetricPositiveDefinite(5)
 m = 100

@@ -11,7 +11,7 @@ using Random
 export Sophia
 
 """
-    Sophia(; η = 1e-3, βs = (0.9, 0.999), ϵ = 1e-8, λ = 1e-1, k = 10, ρ = 0.04)
+    Sophia(; η = 1.0e-3, βs = (0.9, 0.999), ϵ = 1.0e-8, λ = 1.0e-1, k = 10, ρ = 0.04)
 
 A second-order optimizer that incorporates diagonal Hessian information for faster convergence.
 
@@ -83,7 +83,7 @@ clip(z, ρ) = max(min(z, ρ), -ρ)
 
 function SciMLBase.__init(
         prob::OptimizationProblem, opt::Sophia;
-        maxiters::Number = 1000, callback = (args...) -> (false),
+        maxiters::Number = 1000, callback = OptimizationBase.DEFAULT_CALLBACK,
         progress = false, save_best = true, kwargs...
     )
     return OptimizationCache(
@@ -128,7 +128,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Sophia}
                 x = cache.f.fg(gₜ, θ)
             else
                 cache.f.grad(gₜ, θ)
-                x = cache.f(θ)
+                x = cache.f(θ, d)
             end
             opt_state = OptimizationBase.OptimizationState(;
                 iter = i + (epoch - 1) * length(data),

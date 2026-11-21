@@ -9,8 +9,10 @@ import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,
     value_and_gradient, value_derivative_and_second_derivative,
     gradient!, hessian!, hvp!, jacobian!, gradient, hessian,
     hvp, jacobian
-using ADTypes
-using SparseConnectivityTracer, SparseMatrixColorings
+using ADTypes: ADTypes, AbstractADType
+using SparseConnectivityTracer: SparseConnectivityTracer, TracerSparsityDetector
+using SparseMatrixColorings: SparseMatrixColorings, GreedyColoringAlgorithm,
+    sparsity_pattern
 
 function instantiate_function(
         f::OptimizationFunction{true}, x, adtype::ADTypes.AutoSparse{<:AbstractADType},
@@ -191,7 +193,7 @@ function instantiate_function(
     cons_oop_p = if _any_ad_jac
         let f = f, num_cons = num_cons
             function (x, p)
-                res = Vector{_cons_out_eltype(x, p)}(undef, num_cons)
+                res = zeros(_cons_out_eltype(x, p), num_cons)
                 f.cons(res, x, p)
                 return res
             end

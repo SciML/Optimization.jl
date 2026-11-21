@@ -206,8 +206,10 @@ x0 = zeros(2)
 p = [1.0, 100.0]
 f = OptimizationFunction(rosenbrock, ADTypes.AutoForwardDiff())
 prob = OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0])
-sol = solve(prob, NLopt.G_MLSL_LDS(), local_method = NLopt.LD_LBFGS(), maxtime = 10.0,
-    local_maxiters = 10)
+sol = solve(
+    prob, NLopt.G_MLSL_LDS(), local_method = NLopt.LD_LBFGS(), maxtime = 10.0,
+    local_maxiters = 10
+)
 ```
 
 ### With Constraint Equations

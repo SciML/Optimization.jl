@@ -71,8 +71,8 @@ Anything else from Metaheuristics.jl must be imported from Metaheuristics direct
 
 ## Notes
 
-The algorithms in [`Metaheuristics`](https://github.com/jmejia8/Metaheuristics.jl) are performing global optimization on problems without
-constraint equations. However, lower and upper constraints set by `lb` and `ub` in the `OptimizationProblem` are required.
+The algorithms in [`Metaheuristics`](https://github.com/jmejia8/Metaheuristics.jl) perform global optimization. Lower and upper bounds set by
+`lb` and `ub` in the `OptimizationProblem` are required. Constraint equations are supported by the algorithms listed below.
 
 ## Examples
 
@@ -96,4 +96,22 @@ sol = solve(prob, ECA(), use_initial = true, maxiters = 100000, maxtime = 1000.0
 
 ### With Constraint Equations
 
-While `Metaheuristics.jl` supports such constraints, `Optimization.jl` currently does not relay these constraints.
+Constraints `lcons ≤ cons(x) ≤ ucons` are passed to the algorithms that support constraints
+according to the algorithm table of the Metaheuristics.jl documentation: `ECA`, `DE`, `PSO`,
+`SA`, `GA` (including `BRKGA`), `SHADE`, `εDE` and `CSO`, as well as the multi-objective
+`NSGA2`, `NSGA3`, `SMS_EMOA`, `SPEA2` and `CCMO`. A constraint with `lcons[i] == ucons[i]` is
+an equality constraint, and every finite bound of the other constraints is an inequality
+constraint. The algorithms prefer solutions with a lower sum of constraint violations and compare
+the objective of solutions with equal violation sums. Equality constraints are considered
+satisfied within the tolerance `h_tol` of `Metaheuristics.Options`, which defaults to zero.
+
+```@example Metaheuristics
+cons(res, x, p) = (res .= [x[1]^2 + x[2]^2])
+f = OptimizationFunction(rosenbrock; cons)
+prob = OptimizationProblem(f, x0, p, lb = [-1.0, -1.0], ub = [1.0, 1.0],
+    lcons = [-Inf], ucons = [0.5])
+sol = solve(prob, DE())
+```
+
+For a multi-objective function, which returns the objective values together with its own
+constraint values `(F, g, h)`, the constraints given by `cons` are appended to `g` and `h`.

@@ -77,7 +77,7 @@ end
 function SciMLBase.__init(
         prob::SciMLBase.OptimizationProblem, opt::NLopt.Algorithm,
         ; cons_tol = 1.0e-6,
-        callback = (args...) -> (false),
+        callback = OptimizationBase.DEFAULT_CALLBACK,
         progress = false, kwargs...
     )
     return OptimizationCache(

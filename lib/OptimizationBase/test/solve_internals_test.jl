@@ -280,6 +280,39 @@ end
     prob_ok = OptimizationProblem(f_cons, [1.0, 2.0]; lcons = [-Inf], ucons = [1.0])
     sol = solve_call(prob_ok, MockAlgWithCons())
     @test SciMLBase.successful_retcode(sol)
+
+    # mismatched lengths when both are provided → ArgumentError
+    f_cons2 = OptimizationFunction(
+        (x, p) -> sum(x), SciMLBase.NoAD();
+        cons = (res, x, p) -> (res[1] = x[1]^2 + x[2]^2; res[2] = x[1] * x[2]; nothing)
+    )
+    prob_len_mismatch = OptimizationProblem(
+        f_cons2, [1.0, 2.0]; lcons = [-Inf], ucons = [1.0, 1.0]
+    )
+    err = try
+        solve_call(prob_len_mismatch, MockAlgWithCons())
+        nothing
+    catch e
+        e
+    end
+    @test err isa ArgumentError
+    @test occursin("lcons", sprint(showerror, err))
+    @test occursin("ucons", sprint(showerror, err))
+    @test_throws ArgumentError solve_call(
+        OptimizationProblem(
+            f_cons2, [1.0, 2.0]; lcons = [-Inf, -Inf], ucons = [1.0]
+        ),
+        MockAlgWithCons()
+    )
+
+    # matching lengths still work
+    sol_ok2 = solve_call(
+        OptimizationProblem(
+            f_cons2, [1.0, 2.0]; lcons = [-Inf, -Inf], ucons = [1.0, 1.0]
+        ),
+        MockAlgWithCons()
+    )
+    @test SciMLBase.successful_retcode(sol_ok2)
 end
 
 # ============================================================

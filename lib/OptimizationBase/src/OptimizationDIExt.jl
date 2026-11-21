@@ -12,7 +12,8 @@ import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,
     value_derivative_and_second_derivative,
     gradient!, hessian!, hvp!, jacobian!, gradient, hessian,
     hvp, jacobian, Constant
-using ADTypes, SciMLBase
+using ADTypes: ADTypes
+using SciMLBase: SciMLBase
 using OptimizationBase.FastClosures
 
 # A DI preparation is built for the exact construction types (`x` and `Constant(p)`) and only
@@ -263,7 +264,7 @@ function instantiate_function(
     _cons_oop_p = if _any_ad_jac
         let f = f, num_cons = num_cons
             function (x, p)
-                res = Vector{_cons_out_eltype(x, p)}(undef, num_cons)
+                res = zeros(_cons_out_eltype(x, p), num_cons)
                 f.cons(res, x, p)
                 return res
             end
