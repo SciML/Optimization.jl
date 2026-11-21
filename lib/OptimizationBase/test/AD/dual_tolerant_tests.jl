@@ -28,7 +28,11 @@ xt = [0.7, -0.3]          # evaluation point, distinct from x0
 p0 = [2.0, 3.0]           # construction parameters
 p1 = [5.0, 7.0]           # a different parameter value
 
-∇xf(x, p) = ForwardDiff.gradient(xx -> objp(xx, p), x)
+function ∇xf(x, p)
+    a, b = x
+    q = p[2] * (b - a^2)
+    return [2 * (a - p[1]) - 4a * q, 2q]
+end
 consjac(x, p) = ForwardDiff.jacobian(xx -> consp(xx, p), x)
 
 @testset "_prep_valid type-match gating" begin
@@ -183,10 +187,11 @@ end
     @test J ≈ vec(consjac(xt, p1)) rtol = 1.0e-6
 end
 
-# Second-order / combined DI preps (hess, hv, fgh, fg, lag_h) gate on construction
-# types and fall back to prep-free DI when θ/p/v types differ. Each call must match
-# a fresh-prep result. Matching-type fgh uses value_gradient_and_hessian(!).
-Hess_ref(x, p) = ForwardDiff.hessian(xx -> objp(xx, p), x)
+function Hess_ref(x, p)
+    a, b = x
+    q = p[2]
+    return [2 + 4q * (3a^2 - b) -4q * a; -4q * a 2q]
+end
 Hv_ref(x, p, v) = Hess_ref(x, p) * v
 
 @testset "matching-type fgh! (IIP/OOP)" begin
@@ -208,6 +213,28 @@ Hv_ref(x, p, v) = Hess_ref(x, p) * v
     @test yo ≈ objp(xt, p0) rtol = 1.0e-6
     @test Go ≈ ∇xf(xt, p0) rtol = 1.0e-6
     @test Ho ≈ Hess_ref(xt, p0) rtol = 1.0e-6
+end
+
+@testset "FiniteDiff fgh with prepared and call-time parameter types" begin
+    objective(x, p) = p[1] * x[1]^2 + p[2] * x[1] * x[2]
+    ad = ADTypes.AutoFiniteDiff()
+    x, p = [1.0, 2.0], Float32[5, 7]
+    fi = OptimizationBase.instantiate_function(
+        OptimizationFunction(objective, ad), x, ad, p, 0; fgh = true
+    )
+    oop = OptimizationBase.instantiate_function(
+        OptimizationFunction{false}(objective, ad), x, ad, p, 0; fgh = true
+    )
+    for params in (p, view(p, :))
+        g, H = zeros(2), zeros(2, 2)
+        fval = fi.fgh(g, H, x, params)
+        fval_oop, g_oop, H_oop = oop.fgh(x, params)
+        for (val, grad, hess) in ((fval, g, H), (fval_oop, g_oop, H_oop))
+            @test val == 19
+            @test grad ≈ [24, 7] rtol = 1.0e-5
+            @test hess ≈ [10 7; 7 0] rtol = 1.0e-5
+        end
+    end
 end
 
 @testset "foreign types through hess!/hv!/fg!/fgh!/lag_h! (DI prep fallback)" begin
@@ -319,10 +346,8 @@ end
     # gives a different Hessian.
     lcons!(res, x, p) = (res[1] = p[1] * x[1]^2 + x[2]^2; res[2] = p[2] * x[1] * x[2]; nothing)
     lcons(x, p) = [p[1] * x[1]^2 + x[2]^2, p[2] * x[1] * x[2]]
-    lag_ref(θ, σ, λ, p) = ForwardDiff.hessian(
-        xx -> σ * objp(xx, Float64.(p)) + sum(Float64.(λ) .* lcons(xx, Float64.(p))),
-        Float64.(θ)
-    )
+    lag_ref(θ, σ, λ, p) = σ * Hess_ref(Float64.(θ), p) +
+        [2λ[1] * p[1] λ[2] * p[2]; λ[2] * p[2] 2λ[1]]
     packed(H) = [H[i, j] for i in 1:size(H, 1) for j in 1:i]
     λ = [0.5, -1.5]
     xf, λf, p1f = Float32.(xt), Float32.(λ), Float32.(p1)
@@ -358,14 +383,59 @@ end
         end
     end
 
-    # σ = 0 with a user-supplied `cons_h` (no AD constraint-Hessian preparation).
+    @testset "Constraint AD fallback without per-constraint preparations" begin
+        ad = ADTypes.AutoForwardDiff()
+        user_cons_h!(H, x, p) = (H[1] .= [2p[1] 0; 0 2]; H[2] .= [0 p[2]; p[2] 0]; nothing)
+        fi = OptimizationBase.instantiate_function(
+            OptimizationFunction(objp, ad; cons = lcons!, cons_h = user_cons_h!), x0, ad, p0, 2;
+            lag_h = true
+        )
+        H = zeros(2, 2)
+        fi.lag_h(H, xt, 0.0, λ)
+        @test H ≈ lag_ref(xt, 0.0, λ, p0) rtol = 1.0e-10
+    end
+end
+
+@testset "Lagrangian constraints use the state element type" begin
     ad = ADTypes.AutoForwardDiff()
-    user_cons_h!(H, x, p) = (H[1] .= [2p[1] 0; 0 2]; H[2] .= [0 p[2]; p[2] 0]; nothing)
+    objective(x, p) = sum(abs2, x)
+    function constraint!(res, x, p)
+        res[1] = abs2(p[1]) * x[1]^2
+        return nothing
+    end
+    function same_type_constraint!(res::AbstractVector{T}, x::AbstractVector{T}, p) where {T}
+        return constraint!(res, x, p)
+    end
+    for (cons!, x, p, diagonal) in (
+            (constraint!, [1.0, 2.0], [2.0 + im], 12),
+            (same_type_constraint!, Float32[1, 2], [2.0], 10),
+        )
+        @testset "Parameters of type $(eltype(p))" begin
+            fi = OptimizationBase.instantiate_function(
+                OptimizationFunction(objective, ad; cons = cons!), x, ad, p, 1; lag_h = true
+            )
+            H, packed = zeros(eltype(x), 2, 2), zeros(eltype(x), 3)
+            σ, λ = one(eltype(x)), ones(eltype(x), 1)
+            fi.lag_h(H, x, σ, λ)
+            fi.lag_h(packed, x, σ, λ)
+            @test H == [diagonal 0; 0 2]
+            @test packed == [diagonal, 0, 2]
+        end
+    end
+end
+
+@testset "Zero-weight Lagrangian skips the objective" begin
+    objective(x, p) = log(x[1]) + x[2]^2
+    ad = ADTypes.AutoForwardDiff()
+    x = [-1.0, 2.0]
     fi = OptimizationBase.instantiate_function(
-        OptimizationFunction(objp, ad; cons = lcons!, cons_h = user_cons_h!), x0, ad, p0, 2;
-        lag_h = true
+        OptimizationFunction(objective, ad; cons = consp!), [1.0, 2.0], ad, p0, 1; lag_h = true
     )
-    H = zeros(2, 2)
-    fi.lag_h(H, xt, 0.0, λ)
-    @test H ≈ lag_ref(xt, 0.0, λ, p0) rtol = 1.0e-10
+    for p in (p0, p1)
+        H, packed = zeros(2, 2), zeros(3)
+        fi.lag_h(H, x, 0.0, [1.0], p)
+        fi.lag_h(packed, x, 0.0, [1.0], p)
+        @test H == [2p[1] 0; 0 2]
+        @test packed == [2p[1], 0, 2]
+    end
 end

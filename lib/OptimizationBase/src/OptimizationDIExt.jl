@@ -150,9 +150,12 @@ end
         lagrangian, cons_lagrangian, _lag_prep, soadtype, cons_h_weighted!, p,
         ::Type{Tx0}, ::Type{Tp0}, ::Type{Tσ0}, ::Type{Tλ0}
     ) where {Tx0, Tp0, Tσ0, Tλ0}
+    packed_hessian = _oop_lag_h_clos(
+        lagrangian, cons_lagrangian, _lag_prep, soadtype, p, Tx0, Tp0, Tσ0, Tλ0
+    )
     return let lagrangian = lagrangian, cons_lagrangian = cons_lagrangian,
             _lag_prep = _lag_prep, soadtype = soadtype,
-            cons_h_weighted! = cons_h_weighted!, p0 = p
+            cons_h_weighted! = cons_h_weighted!, packed_hessian = packed_hessian, p0 = p
         function _lag_h!(H::AbstractMatrix, θ, σ, λ, p = p0)
             return if σ == zero(eltype(θ))
                 # `cons_h_weighted!` differentiates constraints closed over the construction `p`.
@@ -175,17 +178,7 @@ end
             end
         end
         function _lag_h!(h::AbstractVector, θ, σ, λ, p = p0)
-            H = if _prep_valid(Tx0, θ) && _prep_valid(Tσ0, σ) && _prep_valid(Tλ0, λ) &&
-                    _prep_valid(Tp0, p)
-                hessian(
-                    lagrangian, _lag_prep, soadtype, θ,
-                    Constant(σ), Constant(λ), Constant(p)
-                )
-            else
-                hessian(
-                    lagrangian, soadtype, θ, Constant(σ), Constant(λ), Constant(p)
-                )
-            end
+            H = packed_hessian(θ, σ, λ, p)
             k = 0
             for i in 1:length(θ)
                 for j in 1:i
@@ -274,22 +267,14 @@ end
     end
 end
 
-# Output-buffer eltype for the `p`-accepting constraint wrapper: the type `f.cons` produces,
-# including the *nested* dual when both `x` (DI's seeds) and `p` (the sensitivity layer) carry
-# duals with different tags (`promote_type` nests them). Deliberately uses plain `eltype(p)`
-# rather than `SciMLBase.anyeltypedual`: this runs *inside* the DI-differentiated wrapper, and
-# Enzyme's forward mode corrupts the derivative shadow (DataType-valued entries) when the
-# allocation type flows through `anyeltypedual` — in either its value or its type-level form,
-# and even with an `EnzymeRules.inactive` mark on this helper. A structured `p` (non-`Number`
-# eltype) therefore falls back to `eltype(x)`; duals nested inside such a `p` are the one
-# unsupported case. (`_prep_valid` above runs in the outer closure, outside anything a backend
-# differentiates, so its type comparison is safe there.)
+# Enzyme differentiates this wrapper, so inspect element types without a recursive dual search.
 @inline function _cons_out_eltype(x, p)
     Tu = eltype(x)
     p isa Union{SciMLBase.NullParameters, Nothing} && return Tu
-    Tp = eltype(p)
-    return Tp <: Number ? promote_type(Tu, Tp) : Tu
+    return _cons_out_eltype(Tu, eltype(p))
 end
+
+@inline _cons_out_eltype(::Type{T}, ::Type) where {T} = T
 
 function instantiate_function(
         f::OptimizationFunction{true}, x, ::ADTypes.AutoSparse{<:ADTypes.AutoSymbolics},
@@ -307,13 +292,14 @@ function instantiate_function(
     return instantiate_function(f, x, ADTypes.AutoSymbolics(), p, args...; kwargs...)
 end
 function instantiate_function(
-        f::OptimizationFunction{true}, x, adtype::ADTypes.AbstractADType,
+        f::OptimizationFunction{true}, x, backend::ADTypes.AbstractADType,
         p = SciMLBase.NullParameters(), num_cons = 0;
         g = false, h = false, hv = false, fg = false, fgh = false,
         cons_j = false, cons_vjp = false, cons_jvp = false, cons_h = false,
         lag_h = false
     )
-    adtype, soadtype = generate_adtype(adtype)
+    adtype, soadtype = generate_adtype(backend)
+    hess_adtype = backend isa ADTypes.AutoFiniteDiff ? backend : soadtype
 
     # Construction types the DI preps are built at; `_prep_valid` gates the prepared fast path
     # vs the prep-free fallback (see the note above the imports).
@@ -360,13 +346,13 @@ function instantiate_function(
 
     # Create hessian closures with proper type stability
     _prep_hess = if (h == true && f.hess === nothing) || (fgh == true && f.fgh === nothing)
-        prepare_hessian(f.f, soadtype, x, Constant(p))
+        prepare_hessian(f.f, hess_adtype, x, Constant(p))
     else
         nothing
     end
 
     hess = if h == true && f.hess === nothing
-        _iip_hess_clos(_prep_hess, f, soadtype, p, Tx0, Tp0)
+        _iip_hess_clos(_prep_hess, f, hess_adtype, p, Tx0, Tp0)
     elseif h == true
         (H, θ, p = p) -> f.hess(H, θ, p)
     else
@@ -374,7 +360,7 @@ function instantiate_function(
     end
 
     fgh! = if fgh == true && f.fgh === nothing
-        _iip_fgh_clos(_prep_hess, f, soadtype, p, Tx0, Tp0)
+        _iip_fgh_clos(_prep_hess, f, hess_adtype, p, Tx0, Tp0)
     elseif fgh == true
         (G, H, θ, p = p) -> f.fgh(G, H, θ, p)
     else
@@ -646,13 +632,14 @@ function instantiate_function(
 end
 
 function instantiate_function(
-        f::OptimizationFunction{false}, x, adtype::ADTypes.AbstractADType,
+        f::OptimizationFunction{false}, x, backend::ADTypes.AbstractADType,
         p = SciMLBase.NullParameters(), num_cons = 0;
         g = false, h = false, hv = false, fg = false, fgh = false,
         cons_j = false, cons_vjp = false, cons_jvp = false, cons_h = false,
         lag_h = false
     )
-    adtype, soadtype = generate_adtype(adtype)
+    adtype, soadtype = generate_adtype(backend)
+    hess_adtype = backend isa ADTypes.AutoFiniteDiff ? backend : soadtype
 
     # Construction types the DI preps are built at; `_prep_valid` gates the prepared fast path
     # vs the prep-free fallback (see the note above the imports).
@@ -688,13 +675,13 @@ function instantiate_function(
 
     # Create hessian closures
     _prep_hess = if (h == true && f.hess === nothing) || (fgh == true && f.fgh === nothing)
-        prepare_hessian(f.f, soadtype, x, Constant(p))
+        prepare_hessian(f.f, hess_adtype, x, Constant(p))
     else
         nothing
     end
 
     hess = if h == true && f.hess === nothing
-        _oop_hess_clos(_prep_hess, f, soadtype, p, Tx0, Tp0)
+        _oop_hess_clos(_prep_hess, f, hess_adtype, p, Tx0, Tp0)
     elseif h == true
         (θ, p = p) -> f.hess(θ, p)
     else
@@ -702,7 +689,7 @@ function instantiate_function(
     end
 
     fgh! = if fgh == true && f.fgh === nothing
-        _oop_fgh_clos(_prep_hess, f, soadtype, p, Tx0, Tp0)
+        _oop_fgh_clos(_prep_hess, f, hess_adtype, p, Tx0, Tp0)
     elseif fgh == true
         (θ, p = p) -> f.fgh(θ, p)
     else
