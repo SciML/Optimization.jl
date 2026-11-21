@@ -26,6 +26,17 @@ export ABC, BRKGA, CCMO, CGSA, CSO, DE, ECA, GA, GRASP, MCCGA,
 SciMLBase.requiresbounds(opt::Metaheuristics.AbstractAlgorithm) = true
 SciMLBase.allowsbounds(opt::Metaheuristics.AbstractAlgorithm) = true
 SciMLBase.allowscallback(opt::Metaheuristics.AbstractAlgorithm) = false
+# Algorithms marked as supporting constraints in the algorithm table of the Metaheuristics.jl
+# documentation. The others ignore the constraint violations returned by the objective.
+# `BRKGA()` constructs a `GA`.
+const ConstrainedAlgorithm = Metaheuristics.Algorithm{
+    <:Union{
+        CCMO, CSO, DE, ECA, GA, NSGA2, NSGA3, PSO, SA, SHADE, SMS_EMOA, SPEA2, εDE,
+    },
+}
+SciMLBase.allowsconstraints(opt::ConstrainedAlgorithm) = true
+SciMLBase.requiresconsjac(opt::Metaheuristics.AbstractAlgorithm) = false
+SciMLBase.requiresconshess(opt::Metaheuristics.AbstractAlgorithm) = false
 SciMLBase.has_init(opt::Metaheuristics.AbstractAlgorithm) = true
 
 function initial_population!(opt, cache, bounds, f)
@@ -48,6 +59,31 @@ function initial_population!(opt, cache, bounds, f)
     opt.parameters.N = pop_size
     opt.status = prev_status
     return nothing
+end
+
+# Return a function mapping `θ` to the constraint values `(g, h)` in the form expected by
+# Metaheuristics.jl, i.e., `g(θ) ≤ 0` and `h(θ) = 0`, from `lcons ≤ cons(θ) ≤ ucons`. A
+# constraint with `lcons[i] == ucons[i]` is an equality constraint, and every finite bound of
+# the remaining constraints is an inequality constraint.
+function constraint_violations(cache)
+    lcons, ucons = cache.lcons, cache.ucons
+    eq = findall(lcons .== ucons)
+    upper = findall(i -> lcons[i] != ucons[i] && isfinite(ucons[i]), eachindex(ucons))
+    lower = findall(i -> lcons[i] != ucons[i] && isfinite(lcons[i]), eachindex(lcons))
+    T = eltype(cache.u0)
+    res = zeros(T, length(lcons))
+    # The buffers are reused between evaluations, since Metaheuristics.jl copies `g` and `h`
+    # into the solution it creates.
+    g = zeros(T, length(upper) + length(lower))
+    h = zeros(T, length(eq))
+    nu = length(upper)
+    return function (θ)
+        cache.f.cons(res, θ)
+        @views g[1:nu] .= res[upper] .- ucons[upper]
+        @views g[(nu + 1):end] .= lcons[lower] .- res[lower]
+        @views h .= res[eq] .- ucons[eq]
+        return g, h
+    end
 end
 
 function __map_optimizer_args!(
@@ -117,39 +153,27 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
 
     f = cache.f
+    violations = isnothing(f.cons) ? nothing : constraint_violations(cache)
     _loss = function (θ)
         if isa(f, MultiObjectiveOptimizationFunction)
-            return cache.f(θ, cache.p)
+            fx = cache.f(θ, cache.p)
+            isnothing(violations) && return fx
+            # The objective returns the objective values and its own constraint values
+            # `(F, g, h)`, to which the constraints of the problem are appended.
+            F, g, h = fx
+            gc, hc = violations(θ)
+            return F, [g; gc], [h; hc]
         else
-            x = cache.f(θ, cache.p)
-            return first(x)
+            fx = first(cache.f(θ, cache.p))
+            isnothing(violations) && return fx
+            g, h = violations(θ)
+            return fx, g, h
         end
     end
 
     opt_bounds = nothing
     if !isnothing(cache.lb) & !isnothing(cache.ub)
         opt_bounds = [cache.lb cache.ub]'
-    end
-
-    if !isnothing(cache.f.cons)
-        @SciMLMessage(
-            "Equality constraints are current not passed on by Optimization",
-            cache.verbose, :equality_constraints_ignored
-        )
-    end
-
-    if !isnothing(cache.lcons)
-        @SciMLMessage(
-            "Inequality constraints are current not passed on by Optimization",
-            cache.verbose, :inequality_constraints_ignored
-        )
-    end
-
-    if !isnothing(cache.ucons)
-        @SciMLMessage(
-            "Inequality constraints are current not passed on by Optimization",
-            cache.verbose, :inequality_constraints_ignored
-        )
     end
 
     __map_optimizer_args!(
