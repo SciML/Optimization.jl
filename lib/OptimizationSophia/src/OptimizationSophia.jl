@@ -117,6 +117,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Sophia}
     mₜ = zero(θ)
     hₜ = zero(θ)
     x = cache.f(θ, first(data))
+    halted = false
     for epoch in 1:maxiters
         for (i, d) in enumerate(data)
             if cache.f.fg !== nothing && dataiterate
@@ -142,6 +143,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Sophia}
             if !(cb_call isa Bool)
                 error("The callback should return a boolean `halt` for whether to stop the optimization process. Please see the sciml_train documentation for information.")
             elseif cb_call
+                halted = true
                 break
             end
             mₜ = βs[1] .* mₜ + (1 - βs[1]) .* gₜ
@@ -157,6 +159,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Sophia}
             θ = θ .-
                 η .* clip.(mₜ ./ max.(hₜ, Ref(ϵ)), Ref(ρ))
         end
+        halted && break
     end
 
     return SciMLBase.build_solution(
