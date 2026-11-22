@@ -237,6 +237,57 @@ end
     end
 end
 
+@testset "FiniteDiff Hessian at a domain boundary" begin
+    function objective(x, p)
+        x[1] < 0 && throw(DomainError(x[1]))
+        return (x[1] - 1)^2 + (x[2] - 1)^2
+    end
+    x = zeros(2)
+    ad = ADTypes.AutoFiniteDiff()
+    @testset "in-place = $iip" for iip in (true, false)
+        optf = OptimizationBase.instantiate_function(
+            OptimizationFunction{iip}(objective, ad), x, ad, nothing, 0; h = true
+        )
+        for p in (nothing, ())
+            H = zeros(2, 2)
+            if iip
+                optf.hess(H, x, p)
+            else
+                H = optf.hess(x, p)
+            end
+            @test H ≈ [2.0 0.0; 0.0 2.0]
+        end
+    end
+end
+
+@testset "FiniteDiff gradient with an explicit backward step" begin
+    objective(x, p) = sum(abs2, x)
+    x = [1.0, 2.0]
+    ad = ADTypes.AutoFiniteDiff(; dir = -1, relstep = 0.0, absstep = 0.25)
+    @testset "in-place = $iip" for iip in (true, false)
+        optf = OptimizationBase.instantiate_function(
+            OptimizationFunction{iip}(objective, ad), x, ad, nothing, 0;
+            g = true, fg = true, fgh = true
+        )
+        for p in (nothing, ())
+            G, G_fg, G_fgh, H = zeros(2), zeros(2), zeros(2), zeros(2, 2)
+            if iip
+                optf.grad(G, x, p)
+                value_fg = optf.fg(G_fg, x, p)
+                value_fgh = optf.fgh(G_fgh, H, x, p)
+            else
+                G = optf.grad(x, p)
+                value_fg, G_fg = optf.fg(x, p)
+                value_fgh, G_fgh, H = optf.fgh(x, p)
+            end
+            @test G == G_fg == [1.75, 3.75]
+            @test G_fgh == [1.75, 3.75]
+            @test value_fgh == value_fg == 5.0
+            @test H ≈ [2.0 0.0; 0.0 2.0]
+        end
+    end
+end
+
 @testset "foreign types through hess!/hv!/fg!/fgh!/lag_h! (DI prep fallback)" begin
     ad = ADTypes.AutoForwardDiff()
     optf = OptimizationFunction(objp, ad; cons = consp!)

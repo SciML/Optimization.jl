@@ -299,7 +299,8 @@ function instantiate_function(
         lag_h = false
     )
     adtype, soadtype = generate_adtype(backend)
-    hess_adtype = backend isa ADTypes.AutoFiniteDiff ? backend : soadtype
+    generate_fgh = fgh == true && f.fgh === nothing
+    finite_diff_fgh = generate_fgh && backend isa ADTypes.AutoFiniteDiff
 
     # Construction types the DI preps are built at; `_prep_valid` gates the prepared fast path
     # vs the prep-free fallback (see the note above the imports).
@@ -344,23 +345,34 @@ function instantiate_function(
     hess_sparsity = f.hess_prototype
     hess_colors = f.hess_colorvec
 
-    # Create hessian closures with proper type stability
-    _prep_hess = if (h == true && f.hess === nothing) || (fgh == true && f.fgh === nothing)
-        prepare_hessian(f.f, hess_adtype, x, Constant(p))
+    # FiniteDiff's standalone Hessian uses the gradient stencil at domain boundaries.
+    _prep_hess = if (h == true && f.hess === nothing) || (generate_fgh && !finite_diff_fgh)
+        prepare_hessian(f.f, soadtype, x, Constant(p))
     else
         nothing
     end
 
     hess = if h == true && f.hess === nothing
-        _iip_hess_clos(_prep_hess, f, hess_adtype, p, Tx0, Tp0)
+        _iip_hess_clos(_prep_hess, f, soadtype, p, Tx0, Tp0)
     elseif h == true
         (H, θ, p = p) -> f.hess(H, θ, p)
     else
         nothing
     end
 
-    fgh! = if fgh == true && f.fgh === nothing
-        _iip_fgh_clos(_prep_hess, f, hess_adtype, p, Tx0, Tp0)
+    fgh! = if finite_diff_fgh
+        _prep_grad_fgh = _prep_grad === nothing ?
+            prepare_gradient(f.f, adtype, x, Constant(p)) : _prep_grad
+        _prep_hess_fgh = prepare_hessian(f.f, backend, x, Constant(p))
+        value_grad = _iip_fg_clos(_prep_grad_fgh, f, adtype, p, Tx0, Tp0)
+        native_hess = _iip_hess_clos(_prep_hess_fgh, f, backend, p, Tx0, Tp0)
+        function (G, H, θ, p = p)
+            y = value_grad(G, θ, p)
+            native_hess(H, θ, p)
+            return y
+        end
+    elseif generate_fgh
+        _iip_fgh_clos(_prep_hess, f, soadtype, p, Tx0, Tp0)
     elseif fgh == true
         (G, H, θ, p = p) -> f.fgh(G, H, θ, p)
     else
@@ -639,7 +651,8 @@ function instantiate_function(
         lag_h = false
     )
     adtype, soadtype = generate_adtype(backend)
-    hess_adtype = backend isa ADTypes.AutoFiniteDiff ? backend : soadtype
+    generate_fgh = fgh == true && f.fgh === nothing
+    finite_diff_fgh = generate_fgh && backend isa ADTypes.AutoFiniteDiff
 
     # Construction types the DI preps are built at; `_prep_valid` gates the prepared fast path
     # vs the prep-free fallback (see the note above the imports).
@@ -647,6 +660,7 @@ function instantiate_function(
     Tp0 = typeof(p)
 
     # Create gradient closures with proper type stability using let blocks.
+    _prep_grad = nothing
     grad = if g == true && f.grad === nothing
         _prep_grad = prepare_gradient(f.f, adtype, x, Constant(p))
         _oop_grad_clos(_prep_grad, f, adtype, p, Tx0, Tp0)
@@ -674,22 +688,32 @@ function instantiate_function(
     hess_colors = f.hess_colorvec
 
     # Create hessian closures
-    _prep_hess = if (h == true && f.hess === nothing) || (fgh == true && f.fgh === nothing)
-        prepare_hessian(f.f, hess_adtype, x, Constant(p))
+    _prep_hess = if (h == true && f.hess === nothing) || (generate_fgh && !finite_diff_fgh)
+        prepare_hessian(f.f, soadtype, x, Constant(p))
     else
         nothing
     end
 
     hess = if h == true && f.hess === nothing
-        _oop_hess_clos(_prep_hess, f, hess_adtype, p, Tx0, Tp0)
+        _oop_hess_clos(_prep_hess, f, soadtype, p, Tx0, Tp0)
     elseif h == true
         (θ, p = p) -> f.hess(θ, p)
     else
         nothing
     end
 
-    fgh! = if fgh == true && f.fgh === nothing
-        _oop_fgh_clos(_prep_hess, f, hess_adtype, p, Tx0, Tp0)
+    fgh! = if finite_diff_fgh
+        _prep_grad_fgh = _prep_grad === nothing ?
+            prepare_gradient(f.f, adtype, x, Constant(p)) : _prep_grad
+        _prep_hess_fgh = prepare_hessian(f.f, backend, x, Constant(p))
+        value_grad = _oop_fg_clos(_prep_grad_fgh, f, adtype, p, Tx0, Tp0)
+        native_hess = _oop_hess_clos(_prep_hess_fgh, f, backend, p, Tx0, Tp0)
+        function (θ, p = p)
+            y, G = value_grad(θ, p)
+            return y, G, native_hess(θ, p)
+        end
+    elseif generate_fgh
+        _oop_fgh_clos(_prep_hess, f, soadtype, p, Tx0, Tp0)
     elseif fgh == true
         (θ, p = p) -> f.fgh(θ, p)
     else

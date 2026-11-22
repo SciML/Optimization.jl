@@ -33,6 +33,17 @@ end
     @test sol.retcode == ReturnCode.Success
 end
 
+@testset "Newton with FiniteDiff at a domain boundary" begin
+    function objective(x, p)
+        x[1] < 0 && throw(DomainError(x[1]))
+        return (x[1] - 1)^2 + (x[2] - 1)^2
+    end
+    prob = OptimizationProblem(OptimizationFunction(objective, AutoFiniteDiff()), zeros(2))
+    sol = solve(prob, Optim.Newton())
+    @test sol.retcode == ReturnCode.Success
+    @test sol.u ≈ [1.0, 1.0]
+end
+
 @testset "No constraint" begin
     @testset "$adtype" for adtype in [
             AutoEnzyme(), AutoForwardDiff(), AutoZygote(), AutoReverseDiff(),
