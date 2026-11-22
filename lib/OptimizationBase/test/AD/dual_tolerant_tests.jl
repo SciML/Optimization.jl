@@ -142,6 +142,33 @@ end
     @test _prep_valid(typeof(x0), xt) && _prep_valid(typeof(pt), pt)
 end
 
+@testset "FiniteDiff constraint derivatives preserve mixed precision" begin
+    objective(x, p) = sum(abs2, x)
+    function constraint!(res, x, p)
+        res[1] = p[1] + x[1]
+        return nothing
+    end
+    ad = ADTypes.AutoFiniteDiff()
+    for (x, p) in ((Float32[1, 2], [1.0e5]), ([1.0, 2.0], BigFloat[1.0e16]))
+        @testset "Parameters of type $(eltype(p))" begin
+            optf = OptimizationBase.instantiate_function(
+                OptimizationFunction(objective, ad; cons = constraint!), x, ad, p, 1;
+                cons_j = true, cons_vjp = true, cons_jvp = true
+            )
+            J = zeros(eltype(p), 1, 2)
+            for params in (p, view(p, :))
+                optf.cons_j(J, x, params)
+                @test J ≈ [1 0] rtol = 2.0e-4
+            end
+            jvp, vjp = zeros(eltype(p), 1), zeros(eltype(p), 2)
+            optf.cons_jvp(jvp, x, eltype(x)[2, 3])
+            optf.cons_vjp(vjp, x, eltype(p)[2])
+            @test jvp ≈ [2] rtol = 2.0e-4
+            @test vjp ≈ [2, 0] rtol = 2.0e-4
+        end
+    end
+end
+
 @testset "foreign θ eltype routes through the fallback (no PreparationMismatchError)" begin
     # A non-dual off-construction eltype (Float32, BigFloat) used to hit the Float64 prep and
     # throw; the type-match gate routes it to the prep-free fallback instead.
@@ -238,24 +265,33 @@ end
 end
 
 @testset "FiniteDiff Hessian at a domain boundary" begin
-    function objective(x, p)
+    function lower_objective(x, p)
         x[1] < 0 && throw(DomainError(x[1]))
         return (x[1] - 1)^2 + (x[2] - 1)^2
     end
-    x = zeros(2)
-    ad = ADTypes.AutoFiniteDiff()
-    @testset "in-place = $iip" for iip in (true, false)
-        optf = OptimizationBase.instantiate_function(
-            OptimizationFunction{iip}(objective, ad), x, ad, nothing, 0; h = true
+    function upper_objective(x, p)
+        x[1] > 1 && throw(DomainError(x[1]))
+        return sum(abs2, x)
+    end
+    for (objective, x, ad) in (
+            (lower_objective, zeros(2), ADTypes.AutoFiniteDiff()),
+            (upper_objective, [1.0, 2.0], ADTypes.AutoFiniteDiff(; dir = -1, relstep = 0.0, absstep = 0.25)),
         )
-        for p in (nothing, ())
-            H = zeros(2, 2)
+        @testset "$(objective), in-place = $iip, parameters = $p" for iip in (true, false), p in (nothing, ())
+            optf = OptimizationBase.instantiate_function(
+                OptimizationFunction{iip}(objective, ad), x, ad, nothing, 0; h = true, fgh = true
+            )
+            G, H, H_fgh = zeros(2), zeros(2, 2), zeros(2, 2)
             if iip
                 optf.hess(H, x, p)
+                value = optf.fgh(G, H_fgh, x, p)
             else
                 H = optf.hess(x, p)
+                value, G, H_fgh = optf.fgh(x, p)
             end
             @test H ≈ [2.0 0.0; 0.0 2.0]
+            @test H_fgh ≈ [2.0 0.0; 0.0 2.0]
+            @test value == objective(x, p)
         end
     end
 end
