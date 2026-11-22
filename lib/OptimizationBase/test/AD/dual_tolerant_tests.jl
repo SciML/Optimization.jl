@@ -14,6 +14,7 @@
 
 using OptimizationBase, Test, ForwardDiff, FiniteDiff, ReverseDiff
 using ADTypes, Enzyme, StaticArrays
+using LinearAlgebra: I, Symmetric, isposdef
 import SciMLBase
 using OptimizationBase: _prep_valid
 
@@ -261,6 +262,66 @@ end
             @test grad ≈ [24, 7] rtol = 1.0e-5
             @test hess ≈ [10 7; 7 0] rtol = 1.0e-5
         end
+    end
+end
+
+@testset "FiniteDiff fgh on a shifted Float32 quadratic" begin
+    objective(x, p) = p + sum(t -> t * t, x)
+    x, p = Float32[0.5, 0.25], 512.0f0
+    ad = ADTypes.AutoFiniteDiff()
+    @testset "in-place = $iip" for iip in (true, false)
+        optf = OptimizationBase.instantiate_function(
+            OptimizationFunction{iip}(objective, ad), x, ad, p, 0; fgh = true
+        )
+        if iip
+            H = zeros(Float32, 2, 2)
+            optf.fgh(similar(x), H, x)
+        else
+            _, _, H = optf.fgh(x)
+        end
+        @test H ≈ 2I rtol = 0.03
+        @test isposdef(Symmetric(H))
+    end
+end
+
+@testset "FiniteDiff fgh with a complex-step gradient" begin
+    objective(x, p) = sum(t -> t * t, x)
+    x = [1.0, 2.0]
+    ad = ADTypes.AutoFiniteDiff(; fdtype = Val(:complex))
+    @testset "in-place = $iip" for iip in (true, false)
+        optf = OptimizationBase.instantiate_function(
+            OptimizationFunction{iip}(objective, ad), x, ad, nothing, 0; fgh = true
+        )
+        if iip
+            G, H = zeros(2), zeros(2, 2)
+            y = optf.fgh(G, H, x)
+        else
+            y, G, H = optf.fgh(x)
+        end
+        @test y == 5
+        @test G ≈ [2, 4]
+        @test H ≈ 2I
+    end
+end
+
+@testset "FiniteDiff standalone Hessian on a narrow interval" begin
+    function objective(x, p)
+        0 <= x[1] <= 1.0e-5 || throw(DomainError(x[1]))
+        return sum(abs2, x)
+    end
+    x = zeros(2)
+    ad = ADTypes.AutoFiniteDiff()
+    @testset "in-place = $iip" for iip in (true, false)
+        optf = OptimizationBase.instantiate_function(
+            OptimizationFunction{iip}(objective, ad), x, ad, nothing, 0; h = true
+        )
+        if iip
+            H = zeros(2, 2)
+            optf.hess(H, x)
+        else
+            H = optf.hess(x)
+        end
+        @test H ≈ 2I
     end
 end
 

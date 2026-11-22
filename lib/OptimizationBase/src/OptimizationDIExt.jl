@@ -70,51 +70,72 @@ end
         end
     end
 end
-@inline function _iip_hess_clos(_prep_hess, f, hess_adtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
-    return let _prep_hess = _prep_hess, f = f, hess_adtype = hess_adtype, p = p
+@inline function _iip_hess_clos(_prep_hess, f, adtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
+    return let _prep_hess = _prep_hess, f = f, adtype = adtype, p = p
         function (res, θ, p = p)
-            ad = hess_adtype(θ)
             return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                hessian!(f.f, res, _prep_hess, ad, θ, Constant(p))
+                hessian!(f.f, res, _prep_hess, adtype, θ, Constant(p))
             else
-                hessian!(f.f, res, ad, θ, Constant(p))
+                hessian!(f.f, res, adtype, θ, Constant(p))
             end
         end
     end
 end
-@inline function _oop_hess_clos(_prep_hess, f, hess_adtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
-    return let _prep_hess = _prep_hess, f = f, hess_adtype = hess_adtype, p = p
+@inline function _oop_hess_clos(_prep_hess, f, adtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
+    return let _prep_hess = _prep_hess, f = f, adtype = adtype, p = p
         function (θ, p = p)
-            ad = hess_adtype(θ)
             return if _prep_valid(Tx0, θ) && _prep_valid(Tp0, p)
-                hessian(f.f, _prep_hess, ad, θ, Constant(p))
+                hessian(f.f, _prep_hess, adtype, θ, Constant(p))
             else
-                hessian(f.f, ad, θ, Constant(p))
+                hessian(f.f, adtype, θ, Constant(p))
             end
         end
     end
 end
 
-_extrapolate_hessian(backend) = false
-function _extrapolate_hessian(backend::ADTypes.AutoFiniteDiff)
+_uses_directional_hessian(backend) = false
+function _uses_directional_hessian(backend::ADTypes.AutoFiniteDiff)
     (; fdtype, relstep, absstep) = backend
     return (fdtype === Val(:forward) || fdtype === Val{:forward}) &&
         relstep === nothing && absstep === nothing
 end
 
-function _directional_hess_adtype(backend, x, divisor)
+_objective_hess_adtype(backend, soadtype) = soadtype
+function _objective_hess_adtype(backend::ADTypes.AutoFiniteDiff, soadtype)
+    fdtype = backend.fdtype
+    return fdtype === Val(:complex) || fdtype === Val{:complex} ? backend : soadtype
+end
+
+function _directional_hess_adtypes(backend, x, y)
     ε = eps(real(eltype(x)))
-    step = sqrt(sqrt(ε)) / divisor
-    dir = backend.dir
+    scale = y isa AbstractFloat && isfinite(y) ? abs(y) : one(ε)
+    gradient_step = cbrt(ε) / 2
+    # Balance second-difference roundoff against quadratic truncation error.
+    target = max(gradient_step, sqrt(sqrt(ε * scale)))
+    fraction, power = frexp(target)
+    step = ldexp(one(ε), power - (fraction == 0.5))
+    return (
+        _directional_hess_adtype(backend.dir, step, gradient_step),
+        _directional_hess_adtype(backend.dir, step / 2, gradient_step / 2),
+    )
+end
+
+function _directional_hess_adtype(dir, step, gradient_step)
     outer = ADTypes.AutoFiniteDiff(; relstep = step, dir)
-    inner = ADTypes.AutoFiniteDiff(; relstep = cbrt(ε) / divisor, absstep = step, dir)
+    inner = ADTypes.AutoFiniteDiff(; relstep = gradient_step, absstep = step, dir)
     return DifferentiationInterface.SecondOrder(outer, inner)
 end
 
-function _directional_hess_clos(f, backend, x, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
-    adtype = θ -> _directional_hess_adtype(backend, θ, 1)
-    prep = prepare_hessian(f.f, adtype(x), x, Constant(p))
-    return _oop_hess_clos(prep, f, adtype, p, Tx0, Tp0)
+function _directional_hess!(f, H, backend, x, p, y)
+    coarse, fine = _directional_hess_adtypes(backend, x, y)
+    H_coarse = hessian(f, coarse, x, Constant(p))
+    hessian!(f, H, fine, x, Constant(p))
+    return @. H = 2 * H - H_coarse
+end
+
+function _directional_hess(f, backend, x, p, y)
+    coarse, fine = _directional_hess_adtypes(backend, x, y)
+    return 2 .* hessian(f, fine, x, Constant(p)) .- hessian(f, coarse, x, Constant(p))
 end
 
 @inline function _iip_fgh_clos(_prep_hess, f, soadtype, p, ::Type{Tx0}, ::Type{Tp0}) where {Tx0, Tp0}
@@ -377,28 +398,21 @@ function instantiate_function(
     hess_sparsity = f.hess_prototype
     hess_colors = f.hess_colorvec
 
-    extrapolate_hessian = _extrapolate_hessian(backend)
-    hess_adtype = extrapolate_hessian ? θ -> _directional_hess_adtype(backend, θ, 2) : Returns(soadtype)
-    _prep_hess = if (h == true && f.hess === nothing) || generate_fgh
-        prepare_hessian(f.f, hess_adtype(x), x, Constant(p))
+    directional_hessian = _uses_directional_hessian(backend)
+    hess_adtype = _objective_hess_adtype(backend, soadtype)
+    _prep_hess = if !directional_hessian && ((h == true && f.hess === nothing) || generate_fgh)
+        prepare_hessian(f.f, hess_adtype, x, Constant(p))
     else
         nothing
     end
-    fine_hess = _iip_hess_clos(_prep_hess, f, hess_adtype, p, Tx0, Tp0)
-    ad_hess = if extrapolate_hessian && _prep_hess !== nothing
-        coarse_hess = _directional_hess_clos(f, backend, x, p, Tx0, Tp0)
-        function (H, θ, p = p)
-            H_coarse = coarse_hess(θ, p)
-            fine_hess(H, θ, p)
-            # Extrapolation cancels the first-order error of the directional stencil.
-            return @. H = 2 * H - H_coarse
-        end
+    ad_hess = if directional_hessian
+        (H, θ, p, y = f.f(θ, p)) -> _directional_hess!(f.f, H, backend, θ, p, y)
     else
-        fine_hess
+        _iip_hess_clos(_prep_hess, f, hess_adtype, p, Tx0, Tp0)
     end
 
     hess = if h == true && f.hess === nothing
-        ad_hess
+        (H, θ, p = p) -> ad_hess(H, θ, p)
     elseif h == true
         (H, θ, p = p) -> f.hess(H, θ, p)
     else
@@ -411,7 +425,7 @@ function instantiate_function(
         value_grad = _iip_fg_clos(_prep_grad_fgh, f, adtype, p, Tx0, Tp0)
         function (G, H, θ, p = p)
             y = value_grad(G, θ, p)
-            ad_hess(H, θ, p)
+            directional_hessian ? ad_hess(H, θ, p, y) : ad_hess(H, θ, p)
             return y
         end
     elseif generate_fgh
@@ -729,23 +743,21 @@ function instantiate_function(
     hess_sparsity = f.hess_prototype
     hess_colors = f.hess_colorvec
 
-    extrapolate_hessian = _extrapolate_hessian(backend)
-    hess_adtype = extrapolate_hessian ? θ -> _directional_hess_adtype(backend, θ, 2) : Returns(soadtype)
-    _prep_hess = if (h == true && f.hess === nothing) || generate_fgh
-        prepare_hessian(f.f, hess_adtype(x), x, Constant(p))
+    directional_hessian = _uses_directional_hessian(backend)
+    hess_adtype = _objective_hess_adtype(backend, soadtype)
+    _prep_hess = if !directional_hessian && ((h == true && f.hess === nothing) || generate_fgh)
+        prepare_hessian(f.f, hess_adtype, x, Constant(p))
     else
         nothing
     end
-    fine_hess = _oop_hess_clos(_prep_hess, f, hess_adtype, p, Tx0, Tp0)
-    ad_hess = if extrapolate_hessian && _prep_hess !== nothing
-        coarse_hess = _directional_hess_clos(f, backend, x, p, Tx0, Tp0)
-        (θ, p = p) -> 2 .* fine_hess(θ, p) .- coarse_hess(θ, p)
+    ad_hess = if directional_hessian
+        (θ, p, y = f.f(θ, p)) -> _directional_hess(f.f, backend, θ, p, y)
     else
-        fine_hess
+        _oop_hess_clos(_prep_hess, f, hess_adtype, p, Tx0, Tp0)
     end
 
     hess = if h == true && f.hess === nothing
-        ad_hess
+        (θ, p = p) -> ad_hess(θ, p)
     elseif h == true
         (θ, p = p) -> f.hess(θ, p)
     else
@@ -758,7 +770,8 @@ function instantiate_function(
         value_grad = _oop_fg_clos(_prep_grad_fgh, f, adtype, p, Tx0, Tp0)
         function (θ, p = p)
             y, G = value_grad(θ, p)
-            return y, G, ad_hess(θ, p)
+            H = directional_hessian ? ad_hess(θ, p, y) : ad_hess(θ, p)
+            return y, G, H
         end
     elseif generate_fgh
         _oop_fgh_clos(_prep_hess, f, soadtype, p, Tx0, Tp0)
