@@ -125,7 +125,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: AbstractRule
             gevals += 1
         else
             cache.f.grad(G, θ)
-            x = cache.f(θ)
+            x = cache.f(θ, d)
             iterations += 1
             fevals += 2
             gevals += 1
