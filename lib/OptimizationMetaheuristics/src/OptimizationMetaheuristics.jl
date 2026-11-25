@@ -182,6 +182,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         maxtime = maxtime
     )
 
+    # `optimize` resumes from `opt.status`, which can lie outside this problem.
+    cache.opt.status = Metaheuristics.State(nothing, [])
+
     if cache.solver_args.use_initial
         initial_population!(cache.opt, cache, opt_bounds, _loss)
     end
