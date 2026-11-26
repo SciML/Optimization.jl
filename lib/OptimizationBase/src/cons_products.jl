@@ -61,13 +61,25 @@ end
     return T === eltype(Jbuf) ? Jbuf : similar(Jbuf, T)
 end
 
+# The constraint Jacobian as a `num_cons × length(θ)` operator. A single constraint's Jacobian
+# may be stored as a vector, its one row; other operators (matrices, `I`, ...) are used as is.
+_jac_matrix(J, num_cons) = J
+_jac_matrix(J::AbstractVector, num_cons) = num_cons == 1 ? reshape(J, 1, :) : reshape(J, :, 1)
+
+# Out-of-place `Jᵀv`, in the shape of `θ`, and `Jv` for a `v` in the shape of `θ`.
+_oop_vjp_through_jacobian(J, θ, v, num_cons) = reshape(transpose(_jac_matrix(J, num_cons)) * v, size(θ))
+_oop_jvp_through_jacobian(J, v, num_cons) = _jac_matrix(J, num_cons) * vec(v)
+
 # In-place `res = Jᵀv` / `res = Jv` through a materialized Jacobian, `jac!(J, θ)` filling `J`.
+# `res` (for `Jᵀv`) and `v` (for `Jv`) have the shape of `θ`, which may be an array of any
+# shape; the products use them flattened.
 function _cons_vjp_through_jacobian(jac!, Jbuf)
     return let jac! = jac!, Jbuf = Jbuf
         function (res, θ, v)
             J = _jac_buffer(Jbuf, θ)
             jac!(J, θ)
-            return mul!(res, transpose(J), v)
+            mul!(vec(res), transpose(_jac_matrix(J, length(v))), v)
+            return res
         end
     end
 end
@@ -76,7 +88,7 @@ function _cons_jvp_through_jacobian(jac!, Jbuf)
         function (res, θ, v)
             J = _jac_buffer(Jbuf, θ)
             jac!(J, θ)
-            return mul!(res, J, v)
+            return mul!(res, _jac_matrix(J, length(res)), vec(v))
         end
     end
 end
@@ -104,12 +116,12 @@ function _user_cons_jvp(f::OptimizationFunction{true}, x, p, num_cons)
     return _cons_jvp_through_jacobian(jac!, _user_cons_jac_buffer(f, x, num_cons))
 end
 function _user_cons_vjp(f::OptimizationFunction{false}, x, p, num_cons)
-    return let f = f, p = p
-        (θ, v) -> transpose(f.cons_j(θ, p)) * v
+    return let f = f, p = p, num_cons = num_cons
+        (θ, v) -> _oop_vjp_through_jacobian(f.cons_j(θ, p), θ, v, num_cons)
     end
 end
 function _user_cons_jvp(f::OptimizationFunction{false}, x, p, num_cons)
-    return let f = f, p = p
-        (θ, v) -> f.cons_j(θ, p) * v
+    return let f = f, p = p, num_cons = num_cons
+        (θ, v) -> _oop_jvp_through_jacobian(f.cons_j(θ, p), v, num_cons)
     end
 end

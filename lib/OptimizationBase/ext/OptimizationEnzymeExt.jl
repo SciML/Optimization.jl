@@ -612,7 +612,9 @@ function OptimizationBase.instantiate_function(
     return OptimizationBase.instantiate_function(f, x, adtype, p, num_cons; kwargs...)
 end
 
-# In-place form of an out-of-place constraint function, so reverse mode can seed its output.
+# In-place form of an out-of-place constraint function, so that Enzyme differentiates into an
+# output buffer: reverse mode seeds it, and forward mode gives its tangent. A constraint that
+# returns a constant, such as `p`, then has a zero tangent instead of an alias of the constant.
 function _oop_cons!(res, cons, θ, p)
     copyto!(res, cons(θ, p))
     return nothing
@@ -842,7 +844,7 @@ function OptimizationBase.instantiate_function(
                 Duplicated(θ, res_vjp),
                 Const(p)
             )
-            return res_vjp
+            return copy(res_vjp)
         end
     else
         cons_vjp! = nothing
@@ -853,8 +855,21 @@ function OptimizationBase.instantiate_function(
     elseif cons_jvp == true && cons !== nothing && f.cons_j !== nothing
         cons_jvp! = OptimizationBase._user_cons_jvp(f, x, p, num_cons)
     elseif cons_jvp == true && cons !== nothing
+        cons_jvp_res = zeros(eltype(x), num_cons)
+        cons_jvp_tangent = zeros(eltype(x), num_cons)
+
         function cons_jvp!(θ, v)
-            return only(Enzyme.autodiff(fmode, f.cons, Duplicated, Duplicated(θ, v), Const(p)))
+            Enzyme.make_zero!(cons_jvp_tangent)
+            Enzyme.autodiff(
+                fmode,
+                Const(_oop_cons!),
+                Const,
+                Duplicated(cons_jvp_res, cons_jvp_tangent),
+                Const(f.cons),
+                Duplicated(θ, v),
+                Const(p)
+            )
+            return copy(cons_jvp_tangent)
         end
     else
         cons_jvp! = nothing

@@ -1016,6 +1016,125 @@ end
     @test Jv == user_J * [0.5, 0.5]
 end
 
+@testset "AutoEnzyme constraint products" begin
+    @test Base.get_extension(OptimizationBase, :OptimizationEnzymeExt) !== nothing
+
+    # Three constraints of two variables, against their analytic Jacobian
+    cons_rect = (x, p) -> [x[1]^2 * x[2], sin(x[1]) + x[2], p[1] * x[2]^3]
+    jac_rect = (x, p) -> [2x[1] * x[2] x[1]^2; cos(x[1]) 1.0; 0.0 3p[1] * x[2]^2]
+    p = [2.0]
+    θ = [0.5, -1.5]
+    w = [1.0, -2.0, 0.5]
+    v = [0.3, 0.7]
+    @testset "$name" for (name, ad) in (
+            ("AutoEnzyme()", AutoEnzyme()),
+            ("runtime activity", AutoEnzyme(; mode = Enzyme.set_runtime_activity(Enzyme.Forward))),
+        )
+        optf = OptimizationFunction{false}(rosenbrock, ad; cons = cons_rect)
+        optprob = OptimizationBase.instantiate_function(
+            optf, θ, ad, p, 3; cons_vjp = true, cons_jvp = true
+        )
+        vjp = optprob.cons_vjp(θ, w)
+        @test vjp ≈ jac_rect(θ, p)' * [1.0, -2.0, 0.5]
+        @test w == [1.0, -2.0, 0.5]
+        @test optprob.cons_jvp(θ, v) ≈ jac_rect(θ, p) * [0.3, 0.7]
+        @test v == [0.3, 0.7]
+        # each call returns a new array
+        optprob.cons_vjp(2θ, w)
+        @test vjp ≈ jac_rect(θ, p)' * w
+
+        # A constraint that returns `p` has zero products, not an alias of `p`
+        p_cons = [3.0, -2.0]
+        optf = OptimizationFunction{false}(rosenbrock, ad; cons = (x, p) -> p)
+        optprob = OptimizationBase.instantiate_function(
+            optf, θ, ad, p_cons, 2; cons_vjp = true, cons_jvp = true
+        )
+        @test optprob.cons_jvp(θ, v) == zeros(2)
+        @test optprob.cons_vjp(θ, [1.0, 1.0]) == zeros(2)
+        @test p_cons == [3.0, -2.0]
+    end
+
+    # A user `cons_j` of a single constraint, stored as a vector
+    J1 = [-9.0, 6.0, 1.0]
+    optf = OptimizationFunction{true}(
+        rosenbrock, AutoEnzyme();
+        cons = (res, x, p) -> (res[1] = dot(J1, x); nothing),
+        cons_j = (J, x, p) -> (J .= J1; nothing), cons_jac_prototype = zeros(3)
+    )
+    optprob = OptimizationBase.instantiate_function(
+        optf, zeros(3), AutoEnzyme(), nothing, 1; cons_vjp = true, cons_jvp = true
+    )
+    res = zeros(3)
+    optprob.cons_vjp(res, zeros(3), [-2.0])
+    @test res == -2J1
+    res = zeros(1)
+    optprob.cons_jvp(res, zeros(3), [1.0, 1.0, 1.0])
+    @test res == [sum(J1)]
+    optf = OptimizationFunction{false}(
+        rosenbrock, AutoEnzyme();
+        cons = (x, p) -> [dot(J1, x)], cons_j = (x, p) -> copy(J1),
+        cons_jac_prototype = zeros(3)
+    )
+    optprob = OptimizationBase.instantiate_function(
+        optf, zeros(3), AutoEnzyme(), nothing, 1; cons_vjp = true, cons_jvp = true
+    )
+    @test optprob.cons_vjp(zeros(3), [-2.0]) == -2J1
+    @test optprob.cons_jvp(zeros(3), [1.0, 1.0, 1.0]) == [sum(J1)]
+
+    # A user `cons_j` with a matrix-shaped decision variable
+    A = [1.0 2.0 3.0 4.0; -1.0 0.0 5.0 2.0]
+    X = [1.0 0.0; 2.0 -1.0]
+    optf = OptimizationFunction{true}(
+        (x, p) -> sum(abs2, x), AutoEnzyme();
+        cons = (res, x, p) -> (res .= A * vec(x); nothing), cons_j = (J, x, p) -> (J .= A; nothing)
+    )
+    optprob = OptimizationBase.instantiate_function(
+        optf, zeros(2, 2), AutoEnzyme(), nothing, 2; cons_vjp = true, cons_jvp = true
+    )
+    res = zeros(2, 2)
+    optprob.cons_vjp(res, zeros(2, 2), [1.0, -1.0])
+    @test res == reshape(A' * [1.0, -1.0], 2, 2)
+    res = zeros(2)
+    optprob.cons_jvp(res, zeros(2, 2), X)
+    @test res == A * vec(X)
+    optf = OptimizationFunction{false}(
+        (x, p) -> sum(abs2, x), AutoEnzyme();
+        cons = (x, p) -> A * vec(x), cons_j = (x, p) -> A
+    )
+    optprob = OptimizationBase.instantiate_function(
+        optf, zeros(2, 2), AutoEnzyme(), nothing, 2; cons_vjp = true, cons_jvp = true
+    )
+    @test optprob.cons_vjp(zeros(2, 2), [1.0, -1.0]) == reshape(A' * [1.0, -1.0], 2, 2)
+    @test optprob.cons_jvp(zeros(2, 2), X) == A * vec(X)
+
+    # A user `cons_j` that is not an array
+    optf = OptimizationFunction{false}(
+        rosenbrock, AutoEnzyme(); cons = (x, p) -> copy(x), cons_j = (x, p) -> I
+    )
+    optprob = OptimizationBase.instantiate_function(
+        optf, zeros(2), AutoEnzyme(), nothing, 2; cons_vjp = true, cons_jvp = true
+    )
+    @test optprob.cons_vjp(zeros(2), [1.0, 2.0]) == [1.0, 2.0]
+    @test optprob.cons_jvp(zeros(2), [1.0, 2.0]) == [1.0, 2.0]
+end
+
+@testset "out-of-place products through an AD Jacobian, matrix-shaped x" begin
+    # ForwardDiff builds `cons_vjp`, and ReverseDiff `cons_jvp`, from the Jacobian
+    cons = (x, p) -> [sum(x), x[1, 2]]
+    obj = (x, p) -> sum(abs2, x)
+    optf = OptimizationFunction{false}(obj, AutoForwardDiff(); cons = cons)
+    optprob = OptimizationBase.instantiate_function(
+        optf, zeros(2, 2), AutoForwardDiff(), nothing, 2; cons_vjp = true
+    )
+    @test optprob.cons_vjp(zeros(2, 2), [1.0, 2.0]) ≈ [1.0 3.0; 1.0 1.0]
+    optf = OptimizationFunction{false}(obj, AutoReverseDiff(); cons = cons)
+    optprob = OptimizationBase.instantiate_function(
+        optf, zeros(2, 2), AutoReverseDiff(), nothing, 2; cons_jvp = true
+    )
+    X = [1.0 0.0; 2.0 -1.0]
+    @test optprob.cons_jvp(zeros(2, 2), X) ≈ [sum(X), X[1, 2]]
+end
+
 @testset "OOP" begin
     cons = (x, p) -> [x[1]^2 + x[2]^2]
     optf = OptimizationFunction{false}(
@@ -1053,17 +1172,6 @@ end
     @test optprob.cons(x0) == [0.0, 0.0]
     @test optprob.cons_j([5.0, 3.0]) ≈ [10.0 6.0; -0.149013 -0.958924] rtol = 1.0e-6
     @test optprob.cons_h(x0) == [[2.0 0.0; 0.0 2.0], [-0.0 1.0; 1.0 0.0]]
-
-    # Enzyme-generated constraint products (#1410)
-    optprob = OptimizationBase.instantiate_function(
-        optf, x0, OptimizationBase.AutoEnzyme(),
-        nothing, 2, cons_j = true, cons_vjp = true, cons_jvp = true
-    )
-    J = optprob.cons_j([5.0, 3.0])
-    v = [1.0, 2.0]
-    @test optprob.cons_vjp([5.0, 3.0], v) ≈ J' * [1.0, 2.0]
-    @test v == [1.0, 2.0]
-    @test optprob.cons_jvp([5.0, 3.0], [0.5, 0.5]) ≈ J * [0.5, 0.5]
 
     # A user `cons_j` is used for the products instead of differentiating `cons`
     user_J = [1.0 2.0; 3.0 4.0]
