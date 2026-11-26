@@ -1,7 +1,7 @@
 name = "OptimizationReactant"
 uuid = "b4ab1876-06ab-4488-8836-d3361eb886f2"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com> and contributors"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
