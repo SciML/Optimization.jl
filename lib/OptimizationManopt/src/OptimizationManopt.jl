@@ -256,6 +256,14 @@ Manopt adaptive regularization with cubics optimizer. Uses the Hessian when the
 """
 struct AdaptiveRegularizationCubicOptimizer <: AbstractManoptOptimizer end
 
+# Manopt's default stopping criterion for ARC without `StopWhenAllLanczosVectorsUsed`, on
+# every supported Manopt version. Since Manopt 0.6.7 that criterion stops ARC as soon as the
+# Lanczos subsolver has used `maxIterLanczos - 1` vectors, and with the default
+# `maxIterLanczos = min(300, manifold_dimension(M))` that happens on ordinary problems, far
+# from a critical point.
+_arc_default_stopping_criterion() =
+    Manopt.StopAfterIteration(40) | Manopt.StopWhenGradientNormLess(1.0e-9)
+
 function call_manopt_optimizer(
         M::ManifoldsBase.AbstractManifold,
         opt::AdaptiveRegularizationCubicOptimizer,
@@ -263,8 +271,10 @@ function call_manopt_optimizer(
         gradF,
         x0;
         hessF = nothing,
+        stopping_criterion = _arc_default_stopping_criterion(),
         kwargs...
     )
+    kwargs = (; kwargs..., stopping_criterion)
     opt = if isnothing(hessF)
         adaptive_regularization_with_cubics(
             M, loss, gradF, x0; return_state = true, kwargs...
@@ -384,9 +394,9 @@ function _manopt_default_convergence_criterion(::TrustRegionsOptimizer, M)
     return Manopt.StopWhenGradientNormLess(1.0e-6)
 end
 function _manopt_default_convergence_criterion(::AdaptiveRegularizationCubicOptimizer, M)
-    # Manopt's default also contains `StopWhenAllLanczosVectorsUsed`, a safeguard rather
-    # than a convergence test; it is not constructible independently of the sub-state, and
-    # the always-present `StopAfterIteration` bounds the run in its stead.
+    # Manopt's default also contains `StopWhenAllLanczosVectorsUsed`, which is left out (see
+    # `_arc_default_stopping_criterion`); the always-present `StopAfterIteration` bounds the
+    # run.
     return Manopt.StopWhenGradientNormLess(1.0e-9)
 end
 function _manopt_default_convergence_criterion(::FrankWolfeOptimizer, M)
