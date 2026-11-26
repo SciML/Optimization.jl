@@ -184,4 +184,51 @@ using ADTypes, ForwardDiff, ReverseDiff, Zygote
         optprob.lag_h(H_lag, x0, σ, λ)
         @test H_lag ≈ [4.0 0.0; 0.0 4.0]  # Only first constraint contributes
     end
+
+    # At σ = 0 the objective is not evaluated (here it is undefined at `x[1] < 0`), and the
+    # constraints see the `p` passed to `lag_h`, also with a user-supplied `cons_h`.
+    @testset "σ = 0 with a call-time p: $name" for (name, ad, user_cons_h) in [
+            ("ForwardDiff", AutoForwardDiff(), false),
+            ("ForwardDiff, user cons_h", AutoForwardDiff(), true),
+            ("ForwardDiff/ReverseDiff", SecondOrder(AutoForwardDiff(), AutoReverseDiff()), false),
+        ]
+        log_obj(x, p) = log(x[1]) + x[2]^2
+        cons_p!(res, x, p) = (res[1] = p[1] * x[1]^2 + x[2]^2; nothing)
+        cons_p_h!(H, x, p) = (H[1] .= [2p[1] 0; 0 2]; nothing)
+        optf = if user_cons_h
+            OptimizationFunction(log_obj, ad; cons = cons_p!, cons_h = cons_p_h!)
+        else
+            OptimizationFunction(log_obj, ad; cons = cons_p!)
+        end
+        optprob = OptimizationBase.instantiate_function(
+            optf, x0, ad, [1.0], 1; lag_h = true
+        )
+        expected = 3.0 * [4.0 0.0; 0.0 2.0] # λ = 3, p = 2
+        for x in (x0, [-0.5, 0.5])
+            H_lag = fill(NaN, 2, 2)
+            optprob.lag_h(H_lag, x, 0.0, [3.0], [2.0])
+            @test H_lag ≈ expected
+            h = fill(NaN, 3)
+            optprob.lag_h(h, x, 0.0, [3.0], [2.0])
+            @test h ≈ [expected[i, j] for i in 1:2 for j in 1:i]
+        end
+    end
+
+    # The out-of-place `lag_h` at σ = 0 returns the weighted sum of the constraint Hessians.
+    @testset "out-of-place, σ = 0: $name" for (name, ad) in [
+            ("ForwardDiff", AutoForwardDiff()),
+            ("AutoSparse(ForwardDiff)", AutoSparse(AutoForwardDiff())),
+        ]
+        log_obj(x, p) = log(x[1]) + x[2]^2
+        cons_p(x, p) = [p[1] * x[1]^2 + x[2]^2, x[1] * x[2]]
+        optf = OptimizationFunction{false}(log_obj, ad; cons = cons_p)
+        optprob = OptimizationBase.instantiate_function(
+            optf, x0, ad, [1.0], 2; lag_h = true
+        )
+        λ = [3.0, 0.5]
+        expected = λ[1] * [4.0 0.0; 0.0 2.0] + λ[2] * [0.0 1.0; 1.0 0.0] # p = 2
+        @test Matrix(optprob.lag_h(x0, 0.0, λ, [2.0])) ≈ expected
+        @test Matrix(optprob.lag_h([-0.5, 0.5], 0.0, λ, [2.0])) ≈ expected
+        @test Matrix(optprob.lag_h(x0, 1.0, λ, [2.0])) ≈ expected + [-4.0 0.0; 0.0 2.0]
+    end
 end
