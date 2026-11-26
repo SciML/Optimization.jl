@@ -69,14 +69,20 @@ function cons_f2_oop(mode, x, dx, fcons, p, i)
     return nothing
 end
 
-function lagrangian(x, _f::Function, cons::Function, p, λ, σ = one(eltype(x)))
+# σ f(x, p) + Σᵢ λᵢ cᵢ(x, p). At σ = 0 the objective is not evaluated, as it may be undefined
+# at x.
+# The objective and constraints may be any callable. The type parameters make Julia
+# specialize on them, so that Enzyme sees static calls.
+function lagrangian(x, _f::F, cons::C, p, λ, σ = one(eltype(x))) where {F, C}
     res = zeros(eltype(x), length(λ))
     cons(res, x, p)
-    return σ * _f(x, p) + lagrangian_constraints(λ, res)
+    value = lagrangian_constraints(λ, res)
+    return iszero(σ) ? value : σ * _f(x, p) + value
 end
 
-function lagrangian_oop(x, _f::Function, cons::Function, p, λ, σ = one(eltype(x)))
-    return σ * _f(x, p) + lagrangian_constraints(λ, cons(x, p))
+function lagrangian_oop(x, _f::F, cons::C, p, λ, σ = one(eltype(x))) where {F, C}
+    value = lagrangian_constraints(λ, cons(x, p))
+    return iszero(σ) ? value : σ * _f(x, p) + value
 end
 
 # Keep the constraint contraction in Julia for nested Enzyme differentiation.
@@ -571,7 +577,7 @@ function OptimizationBase.instantiate_function(
             return
         end
     elseif lag_h == true && cons !== nothing
-        lag_h! = (θ, σ, μ, p = p) -> f.lag_h(θ, σ, μ, p)
+        lag_h! = (res, θ, σ, μ, p = p) -> f.lag_h(res, θ, σ, μ, p)
     else
         lag_h! = nothing
     end

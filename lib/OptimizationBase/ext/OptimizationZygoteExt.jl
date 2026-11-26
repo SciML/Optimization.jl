@@ -18,6 +18,41 @@ import DifferentiationInterface: prepare_gradient, prepare_hessian, prepare_hvp,
 using ADTypes, SciMLBase
 import Zygote, Zygote.ForwardDiff
 
+# σ f(θ, p) + Σᵢ λᵢ cᵢ(θ, p). At σ = 0 the objective is not evaluated, as it may be undefined
+# at θ. Zygote returns `nothing` as the gradient of a function that does not depend on θ (at
+# σ = 0 with constraints constant in θ); the zero-weighted `sum(θ)` keeps it an array.
+function lagrangian_value(f, num_cons, θ, σ, λ, p)
+    c = Zygote.Buffer(θ, num_cons)
+    f.cons(c, θ, p)
+    value = dot(λ, copy(c)) + zero(eltype(θ)) * sum(θ)
+    return iszero(σ) ? value : σ * f.f(θ, p) + value
+end
+
+function make_lagrangian(f, num_cons)
+    return let f = f, num_cons = num_cons
+        (θ, σ, λ, p) -> lagrangian_value(f, num_cons, θ, σ, λ, p)
+    end
+end
+
+# The vector form of a dense `lag_h`: the lower triangle of `H`, row by row.
+function pack_lower_triangle!(h, H)
+    k = 0
+    for i in axes(H, 1), j in 1:i
+        k += 1
+        h[k] = H[i, j]
+    end
+    return nothing
+end
+
+# The coordinates the vector form of a sparse `lag_h` writes, in order. Solvers read them from
+# `lag_hess_prototype`: `lag_hess_structure` of a sparse prototype, the lower triangle row by
+# row of a dense one, which a known sparsity pattern given as a dense matrix makes it.
+lag_hess_coordinates(prototype::SparseMatrixCSC) = OptimizationBase.lag_hess_structure(prototype)
+function lag_hess_coordinates(prototype::AbstractMatrix)
+    n = size(prototype, 1)
+    return [i for i in 1:n for j in 1:i], [j for i in 1:n for j in 1:i]
+end
+
 function OptimizationBase.instantiate_function(
         f::OptimizationFunction{true}, x,
         adtype::Union{
@@ -170,10 +205,6 @@ function _instantiate_function(
             f.cons(_res, x, p)
             return _res[i]
         end
-
-        function lagrangian(θ, σ, λ, p)
-            return σ * f.f(θ, p) + dot(λ, cons_oop(θ))
-        end
     end
 
     cons_jac_prototype = f.cons_jac_prototype
@@ -221,122 +252,51 @@ function _instantiate_function(
     conshess_sparsity = f.cons_hess_prototype
     conshess_colors = f.cons_hess_colorvec
 
-    # Prepare constraint Hessian preparations if needed by lag_h or cons_h
-    if cons !== nothing && f.cons_h === nothing && (cons_h == true || lag_h == true)
+    if cons !== nothing && f.cons_h === nothing && cons_h == true
         prep_cons_hess = [
             prepare_hessian(
                 cons_oop, soadtype, x, Constant(i), strict = Val(false)
             )
                 for i in 1:num_cons
         ]
-    else
-        prep_cons_hess = nothing
-    end
-
-    # Generate cons_h! functions
-    if cons !== nothing && f.cons_h === nothing && prep_cons_hess !== nothing
-        # Standard cons_h! that returns array of matrices
-        if cons_h == true
-            cons_h! = function (H, θ)
-                for i in 1:num_cons
-                    hessian!(cons_oop, H[i], prep_cons_hess[i], soadtype, θ, Constant(i))
-                end
-                return
-            end
-        else
-            cons_h! = nothing
-        end
-
-        # Weighted sum dispatch for cons_h! (always created if prep_cons_hess exists)
-        # This is used by lag_h! when σ=0
-        cons_h_weighted! = function (H::AbstractMatrix, θ, λ)
-            # Compute weighted sum: H = Σᵢ λᵢ∇²cᵢ
-            H .= zero(eltype(H))
-
-            # Create a single temporary matrix to reuse for all constraints
-            Hi = similar(H)
-
+        cons_h! = function (H, θ)
             for i in 1:num_cons
-                if λ[i] != zero(eltype(λ))
-                    # Compute constraint's Hessian into temporary matrix
-                    hessian!(cons_oop, Hi, prep_cons_hess[i], soadtype, θ, Constant(i))
-                    # Add weighted Hessian to result using in-place operation
-                    # H += λ[i] * Hi
-                    @. H += λ[i] * Hi
-                end
+                hessian!(cons_oop, H[i], prep_cons_hess[i], soadtype, θ, Constant(i))
             end
             return
         end
     elseif cons !== nothing && cons_h == true
         cons_h! = (res, θ) -> f.cons_h(res, θ, p)
-        cons_h_weighted! = nothing
     else
         cons_h! = nothing
-        cons_h_weighted! = nothing
     end
 
     lag_hess_prototype = f.lag_hess_prototype
 
     if f.lag_h === nothing && cons !== nothing && lag_h == true
+        lagrangian = make_lagrangian(f, num_cons)
         lag_extras = prepare_hessian(
             lagrangian, soadtype, x, Constant(one(eltype(x))),
             Constant(ones(eltype(x), num_cons)), Constant(p), strict = Val(false)
         )
         lag_hess_prototype = zeros(Bool, length(x), length(x))
 
-        function lag_h!(H::AbstractMatrix, θ, σ, λ)
-            return if σ == zero(eltype(θ))
-                # When σ=0, use the weighted sum function
-                cons_h_weighted!(H, θ, λ)
-            else
-                hessian!(
+        lag_h! = let lagrangian = lagrangian, lag_extras = lag_extras,
+                soadtype = soadtype, p = p
+            function _lag_h!(H::AbstractMatrix, θ, σ, λ, p = p)
+                return hessian!(
                     lagrangian, H, lag_extras, soadtype, θ,
                     Constant(σ), Constant(λ), Constant(p)
                 )
             end
-        end
-
-        function lag_h!(h::AbstractVector, θ, σ, λ)
-            H = hessian(
-                lagrangian, lag_extras, soadtype, θ, Constant(σ), Constant(λ), Constant(p)
-            )
-            k = 0
-            for i in 1:length(θ)
-                for j in 1:i
-                    k += 1
-                    h[k] = H[i, j]
-                end
-            end
-            return
-        end
-
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function lag_h!(H::AbstractMatrix, θ, σ, λ, p)
-                return if σ == zero(eltype(θ))
-                    cons_h(H, θ)
-                    H *= λ
-                else
-                    hessian!(
-                        lagrangian, H, lag_extras, soadtype, θ,
-                        Constant(σ), Constant(λ), Constant(p)
-                    )
-                end
-            end
-
-            function lag_h!(h::AbstractVector, θ, σ, λ, p)
+            function _lag_h!(h::AbstractVector, θ, σ, λ, p = p)
                 H = hessian(
                     lagrangian, lag_extras, soadtype, θ,
                     Constant(σ), Constant(λ), Constant(p)
                 )
-                k = 0
-                for i in 1:length(θ)
-                    for j in 1:i
-                        k += 1
-                        h[k] = H[i, j]
-                    end
-                end
-                return
+                return pack_lower_triangle!(h, H)
             end
+            _lag_h!
         end
     elseif cons !== nothing && lag_h == true
         lag_h! = (res, θ, σ, μ, p = p) -> f.lag_h(res, θ, σ, μ, p)
@@ -564,10 +524,6 @@ function _instantiate_function(
             f.cons(_res, x, p)
             return _res[i]
         end
-
-        function lagrangian(θ, σ, λ, p)
-            return σ * f.f(θ, p) + dot(λ, cons_oop(θ))
-        end
     end
 
     cons_jac_prototype = f.cons_jac_prototype
@@ -645,69 +601,40 @@ function _instantiate_function(
     lag_hess_prototype = f.lag_hess_prototype
     lag_hess_colors = f.lag_hess_colorvec
     if cons !== nothing && f.lag_h === nothing && lag_h == true
+        lagrangian = make_lagrangian(f, num_cons)
+        # Prepared at σ = 1, so the pattern also holds the entries of the objective; at σ = 0
+        # they are zero.
         lag_extras = prepare_hessian(
             lagrangian, soadtype, x, Constant(one(eltype(x))),
             Constant(ones(eltype(x), num_cons)), Constant(p), strict = Val(false)
         )
         lag_hess_prototype = lag_extras.coloring_result.A
         lag_hess_colors = lag_extras.coloring_result.color
+        lag_rows, lag_cols = lag_hess_coordinates(lag_hess_prototype)
 
-        function lag_h!(H::AbstractMatrix, θ, σ, λ)
-            return if σ == zero(eltype(θ))
-                # When σ=0, use the weighted sum function
-                cons_h_weighted!(H, θ, λ)
-            else
-                hessian!(
+        lag_h! = let lagrangian = lagrangian, lag_extras = lag_extras,
+                soadtype = soadtype, p = p, prototype = lag_hess_prototype,
+                lag_rows = lag_rows, lag_cols = lag_cols
+            function _lag_h!(H::AbstractMatrix, θ, σ, λ, p = p)
+                return hessian!(
                     lagrangian, H, lag_extras, soadtype, θ,
                     Constant(σ), Constant(λ), Constant(p)
                 )
             end
-        end
-
-        function lag_h!(h, θ, σ, λ)
-            H = hessian(
-                lagrangian, lag_extras, soadtype, θ, Constant(σ), Constant(λ), Constant(p)
-            )
-            k = 0
-            rows, cols, _ = findnz(H)
-            for (i, j) in zip(rows, cols)
-                if i <= j
-                    k += 1
-                    h[k] = H[i, j]
-                end
-            end
-            return
-        end
-
-        if p !== SciMLBase.NullParameters() && p !== nothing
-            function lag_h!(H::AbstractMatrix, θ, σ, λ, p)
-                return if σ == zero(eltype(θ))
-                    cons_h!(H, θ)
-                    H *= λ
-                else
-                    hessian!(
-                        lagrangian, H, lag_extras, soadtype, θ,
-                        Constant(σ), Constant(λ), Constant(p)
-                    )
-                end
-            end
-
-            function lag_h!(h::AbstractVector, θ, σ, λ, p)
-                H = hessian(
-                    lagrangian, lag_extras, soadtype, θ,
+            function _lag_h!(h::AbstractVector, θ, σ, λ, p = p)
+                H = similar(prototype, promote_type(eltype(θ), eltype(h)))
+                hessian!(
+                    lagrangian, H, lag_extras, soadtype, θ,
                     Constant(σ), Constant(λ), Constant(p)
                 )
-                k = 0
-                for i in 1:length(θ)
-                    for j in 1:i
-                        k += 1
-                        h[k] = H[i, j]
-                    end
+                for k in eachindex(lag_rows, lag_cols)
+                    h[k] = H[lag_rows[k], lag_cols[k]]
                 end
-                return
+                return nothing
             end
+            _lag_h!
         end
-    elseif cons !== nothing && cons_h == true
+    elseif cons !== nothing && lag_h == true
         lag_h! = (res, θ, σ, μ, p = p) -> f.lag_h(res, θ, σ, μ, p)
     else
         lag_h! = nothing
