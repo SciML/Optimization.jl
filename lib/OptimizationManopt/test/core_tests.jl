@@ -232,7 +232,7 @@ R2 = Euclidean(2)
         @test SciMLBase.successful_retcode(sol)
     end
 
-    # Second-order solvers on a manifold with matrix-valued points (#1036).
+    # Second-order solvers on a manifold with matrix-valued points.
     @testset "Hessian on matrix manifolds" begin
         A = [
             4.0 1.0 0.0 0.0 0.0
@@ -307,6 +307,43 @@ R2 = Euclidean(2)
             OptimizationManopt.TrustRegionsOptimizer()
         )
         @test OptimizationManopt.build_hessF(cache_g.f, X0) === nothing
+
+        # A dense Hessian that depends on the point is reassembled when the point moves or
+        # is changed in place, and only then
+        quartic(X, p) = sum(X .^ 4)
+        quartic_grad!(G, X, p) = (G .= 4 .* X .^ 3; nothing)
+        hess_calls = Ref(0)
+        function quartic_hess!(H, X, p)
+            hess_calls[] += 1
+            H .= Diagonal(vec(12 .* X .^ 2))
+            return nothing
+        end
+        cache_q = OptimizationBase.init(
+            OptimizationProblem(
+                OptimizationFunction(quartic; grad = quartic_grad!, hess = quartic_hess!),
+                X0, nothing; manifold = St
+            ),
+            OptimizationManopt.TrustRegionsOptimizer()
+        )
+        hess_calls[] = 0
+        hessF_q = OptimizationManopt.build_hessF(cache_q.f, X0)
+        quartic_ref(X, V) = ManifoldDiff.riemannian_Hessian(
+            St, X, 4 .* X .^ 3, 12 .* X .^ 2 .* V, V
+        )
+        V0 = project(St, X0, [1.0 0.0; 0.0 -1.0; 0.5 0.5; 0.0 0.0; -1.0 1.0])
+        @test hessF_q(St, X0, V0) ≈ quartic_ref(X0, V0)
+        @test hessF_q(St, X0, 2V0) ≈ quartic_ref(X0, 2V0)
+        @test hess_calls[] == 1
+        X1 = retract(St, X0, 0.3V0)
+        V1 = project(St, X1, V0)
+        @test hessF_q(St, X1, V1) ≈ quartic_ref(X1, V1)
+        @test hess_calls[] == 2
+        Xm = copy(X1)
+        @test hessF_q(St, Xm, V1) ≈ quartic_ref(X1, V1)
+        @test hess_calls[] == 2
+        copyto!(Xm, X0)
+        @test hessF_q(St, Xm, V0) ≈ quartic_ref(X0, V0)
+        @test hess_calls[] == 3
     end
 
     @testset "Custom constraints" begin
