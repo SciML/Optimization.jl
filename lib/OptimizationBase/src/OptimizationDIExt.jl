@@ -23,6 +23,27 @@ using OptimizationBase.FastClosures
 # away.
 @inline _prep_valid(::Type{T}, v) where {T} = typeof(v) === T
 
+# `instantiate_function` builds each derivative in a branch selected by a request flag (`g`,
+# `h`, `cons_j`, ...). With the flags as runtime values, inferring it analyses every branch,
+# including the ones a call does not request, and a DifferentiationInterface preparation that
+# evaluates a derivative (e.g. `prepare_hvp` evaluates the gradient) makes inference compile
+# that derivative; with Enzyme, whose `autodiff` expands a `@generated` thunk, that took minutes
+# for an objective that solves an ODE, for derivatives that are never built. So each
+# `instantiate_function` method only collects the flags and calls the builder through this
+# function: the flags become a type parameter, which makes the unrequested branches dead code,
+# and the barrier keeps the caller's inference from reaching the builder before the flags are
+# known. The builder is then inferred once per combination of requested derivatives, with
+# exactly the code that combination runs. The caller's inference only learns that the result
+# is an `OptimizationFunction{iip}`, so code that evaluates its derivatives should do so
+# behind a function barrier, as `OptimizationCache` does by storing it.
+function _instantiate_requested(
+        build, f::OptimizationFunction{iip}, x, adtype, p, num_cons, flags::NamedTuple
+    ) where {iip}
+    requested = map(==(true), flags)
+    result = Base.inferencebarrier(build)(f, x, adtype, p, num_cons, Val(requested))
+    return result::OptimizationFunction{iip}
+end
+
 # Output-buffer eltype for the `p`-accepting constraint wrapper: the type `f.cons` produces,
 # including the *nested* dual when both `x` (DI's seeds) and `p` (the sensitivity layer) carry
 # duals with different tags (`promote_type` nests them). Deliberately uses plain `eltype(p)`
@@ -62,6 +83,16 @@ function instantiate_function(
         cons_j = false, cons_vjp = false, cons_jvp = false, cons_h = false,
         lag_h = false
     )
+    return _instantiate_requested(
+        _instantiate_function, f, x, adtype, p, num_cons,
+        (; g, h, hv, fg, fgh, cons_j, cons_vjp, cons_jvp, cons_h, lag_h)
+    )
+end
+
+function _instantiate_function(
+        f::OptimizationFunction{true}, x, adtype::ADTypes.AbstractADType, p, num_cons, ::Val{flags}
+    ) where {flags}
+    (; g, h, hv, fg, fgh, cons_j, cons_vjp, cons_jvp, cons_h, lag_h) = flags
     adtype, soadtype = generate_adtype(adtype)
 
     # Construction types the DI preps are built at; `_prep_valid` gates the prepared fast path
@@ -535,6 +566,16 @@ function instantiate_function(
         cons_j = false, cons_vjp = false, cons_jvp = false, cons_h = false,
         lag_h = false
     )
+    return _instantiate_requested(
+        _instantiate_function, f, x, adtype, p, num_cons,
+        (; g, h, hv, fg, fgh, cons_j, cons_vjp, cons_jvp, cons_h, lag_h)
+    )
+end
+
+function _instantiate_function(
+        f::OptimizationFunction{false}, x, adtype::ADTypes.AbstractADType, p, num_cons, ::Val{flags}
+    ) where {flags}
+    (; g, h, hv, fg, fgh, cons_j, cons_vjp, cons_jvp, cons_h, lag_h) = flags
     adtype, soadtype = generate_adtype(adtype)
 
     # Construction types the DI preps are built at; `_prep_valid` gates the prepared fast path
