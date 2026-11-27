@@ -218,6 +218,25 @@ R2 = Euclidean(2)
         sol = OptimizationBase.solve(prob, opt)
         @test sol.objective < 0.1
         @test SciMLBase.successful_retcode(sol)
+        # Manopt's default criterion, without `StopWhenAllLanczosVectorsUsed`
+        sc = Manopt.get_stopping_criterion(sol.original)
+        @test length(sc.criteria) == 2
+        @test any(c -> c isa Manopt.StopAfterIteration, sc.criteria)
+        @test any(c -> c isa Manopt.StopWhenGradientNormLess, sc.criteria)
+
+        # A user `stopping_criterion` replaces it
+        user_sc = Manopt.StopAfterIteration(2)
+        sol = OptimizationBase.solve(prob, opt; stopping_criterion = user_sc)
+        sc = Manopt.get_stopping_criterion(sol.original)
+        @test any(c -> c === user_sc, sc.criteria)
+        @test !any(c -> c isa Manopt.StopWhenGradientNormLess, sc.criteria)
+        @test sol.retcode == SciMLBase.ReturnCode.MaxIters
+
+        # `maxiters` keeps the convergence test and has no Lanczos criterion either
+        sol = OptimizationBase.solve(prob, opt; maxiters = 100)
+        sc = Manopt.get_stopping_criterion(sol.original)
+        @test !any(c -> c isa Manopt.StopWhenAllLanczosVectorsUsed, sc.criteria)
+        @test SciMLBase.successful_retcode(sol)
     end
 
     @testset "TrustRegions" begin
