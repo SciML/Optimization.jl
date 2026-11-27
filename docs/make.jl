@@ -6,7 +6,7 @@ using SciMLBase
 using OptimizationAuglag, OptimizationBBO, OptimizationBase
 using OptimizationCMAEvolutionStrategy, OptimizationGCMAES, OptimizationIpopt
 using OptimizationLBFGSB, OptimizationMadNLP, OptimizationManopt
-using OptimizationNLPModels, OptimizationNOMAD, OptimizationODE
+using OptimizationMOI, OptimizationNLPModels, OptimizationNOMAD, OptimizationODE
 using OptimizationPolyalgorithms, OptimizationPRIMA, OptimizationPyCMA
 using OptimizationQuadDIRECT, OptimizationSciPy, OptimizationSophia
 using OptimizationSpeedMapping, SimpleOptimization
