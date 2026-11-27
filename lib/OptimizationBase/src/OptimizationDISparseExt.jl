@@ -608,8 +608,8 @@ function _instantiate_function(
     elseif f.cons_j !== nothing
         _user_cons_vjp(f, x, p, num_cons)
     elseif _ad_jac_vjp
-        let ad_cons_jac = ad_cons_jac
-            (θ, v) -> transpose(ad_cons_jac(θ)) * v
+        let ad_cons_jac = ad_cons_jac, num_cons = num_cons
+            (θ, v) -> _oop_vjp_through_jacobian(ad_cons_jac(θ), θ, v, num_cons)
         end
     else
         prep_pullback = prepare_pullback(
@@ -629,8 +629,8 @@ function _instantiate_function(
     elseif f.cons_j !== nothing
         _user_cons_jvp(f, x, p, num_cons)
     elseif _ad_jac_jvp
-        let ad_cons_jac = ad_cons_jac
-            (θ, v) -> ad_cons_jac(θ) * v
+        let ad_cons_jac = ad_cons_jac, num_cons = num_cons
+            (θ, v) -> _oop_jvp_through_jacobian(ad_cons_jac(θ), v, num_cons)
         end
     else
         prep_pushforward = prepare_pushforward(
