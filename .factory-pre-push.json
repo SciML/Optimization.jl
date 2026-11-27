@@ -1,0 +1,5 @@
+{
+  "formatters": {
+    ".jl": ["julia", "--startup-file=no", "-e", "using Runic; exit(Runic.main(ARGS))", "--", "--check", "{files}"]
+  }
+}

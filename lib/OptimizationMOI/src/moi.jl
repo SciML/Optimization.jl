@@ -390,7 +390,7 @@ function collect_moi_terms!(expr::Expr, affine_terms, quadratic_terms, constant)
             else
                 throw(MalformedExprException("$expr"))
             end
-        elseif expr.args[1] == :^
+        else
             throw(MalformedExprException("$expr"))
         end
     elseif expr.head == :ref # x[i]

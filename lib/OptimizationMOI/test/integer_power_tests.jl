@@ -86,3 +86,18 @@ end
     expr = OptimizationMOI.fixpoint_simplify_and_expand!(expr)
     @test_throws OptimizationMOI.MalformedExprException OptimizationMOI.get_moi_function(expr)
 end
+
+@testset "Reject unsupported nonlinear MOI expressions" begin
+    @variables x
+    sys = complete(OptimizationSystem(x^2 + x^-1, [x], []; name = :reciprocal_one))
+    prob = OptimizationProblem(sys, [x => 2.0]; lb = [0.25], ub = [4.0], grad = false, hess = false)
+    @test_throws OptimizationMOI.MalformedExprException solve(prob, HiGHS.Optimizer(); output_flag = false)
+
+    sys = complete(OptimizationSystem(x^2 + x^-2, [x], []; name = :reciprocal_boundary))
+    prob = OptimizationProblem(sys, [x => 2.0]; lb = [0.25], ub = [4.0], grad = false, hess = false)
+    @test_throws OptimizationMOI.MalformedExprException solve(prob, HiGHS.Optimizer(); output_flag = false)
+
+    for expr in (:(1 / x[1] + x[1] * x[1]), :(x[1] / x[1]), :(x[1] - x[1]), :(rem(x[1], 2.0)), :(x[1] // x[1]))
+        @test_throws OptimizationMOI.MalformedExprException OptimizationMOI.get_moi_function(expr)
+    end
+end
