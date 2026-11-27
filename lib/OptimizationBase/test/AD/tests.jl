@@ -5,6 +5,7 @@ using SafeTestsets, Test
     include("enzyme_oop_hessian_products.jl")
     @safetestset "despecialize: Enzyme" include("despecialize_enzyme.jl")
     @safetestset "despecialize: fallbacks" include("despecialize_fallbacks.jl")
+    @safetestset "unused preparations" include("unused_preparations.jl")
     include("adtests.jl")
     include("dual_tolerant_tests.jl")
     include("cvxtest.jl")
