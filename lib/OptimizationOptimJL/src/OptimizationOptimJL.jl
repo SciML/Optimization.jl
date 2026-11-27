@@ -286,20 +286,34 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: Optim.Abstra
             end
         end
         u0_type = eltype(cache.u0)
-        optim_f = Optim.TwiceDifferentiable(
-            _loss, gg, fg!, hh, cache.u0,
-            real(zero(u0_type)),
-            Optim.NLSolversBase.alloc_DF(
-                cache.u0,
-                real(zero(u0_type))
-            ),
-            isnothing(cache.f.hess_prototype) ?
-                Optim.NLSolversBase.alloc_H(
+        # Only a method that needs the Hessian gets a `TwiceDifferentiable`: its Hessian
+        # buffer is dense `alloc_H(u0) = u0 * u0'` without a `hess_prototype`, which a
+        # first-order or zeroth-order method never reads (issue #893).
+        optim_f = if SciMLBase.requireshessian(cache.opt)
+            Optim.TwiceDifferentiable(
+                _loss, gg, fg!, hh, cache.u0,
+                real(zero(u0_type)),
+                Optim.NLSolversBase.alloc_DF(
                     cache.u0,
                     real(zero(u0_type))
-                ) :
-                similar(cache.f.hess_prototype, u0_type)
-        )
+                ),
+                isnothing(cache.f.hess_prototype) ?
+                    Optim.NLSolversBase.alloc_H(
+                        cache.u0,
+                        real(zero(u0_type))
+                    ) :
+                    similar(cache.f.hess_prototype, u0_type)
+            )
+        else
+            Optim.OnceDifferentiable(
+                _loss, gg, fg!, cache.u0,
+                real(zero(u0_type)),
+                Optim.NLSolversBase.alloc_DF(
+                    cache.u0,
+                    real(zero(u0_type))
+                )
+            )
+        end
     end
 
     opt_args = __map_optimizer_args(
