@@ -328,6 +328,13 @@ Lagrangian Hessian prototype, enumerated in `findnz` (CSC, column-major)
 order. This order is part of the public API contract of `lag_h` and is
 frozen: changing it silently breaks every consumer that declared a
 structure against it.
+
+The structure is detected at the `p` the function was instantiated with. Calling `lag_h`
+with a `p` whose Lagrangian Hessian has an entry outside it throws an `ArgumentError`;
+instantiate the function again at that `p`, or give the `AutoSparse` backend a sparsity
+detector whose pattern holds for every `p` (e.g. `ADTypes.KnownHessianSparsityDetector`).
+The check runs when `lag_h` gets a `p` object other than the one it last checked, so a
+change to `p` in place that adds an entry is not caught.
 """
 function lag_hess_structure(prototype::SparseMatrixCSC)
     rows, cols, _ = findnz(prototype)

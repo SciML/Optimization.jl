@@ -14,6 +14,72 @@ using SparseConnectivityTracer: SparseConnectivityTracer, TracerSparsityDetector
 using SparseMatrixColorings: SparseMatrixColorings, GreedyColoringAlgorithm,
     sparsity_pattern
 
+# The coloring of a sparse `lag_h` and the coordinates its vector form writes
+# (`lag_hess_structure`) are fixed by the Hessian pattern detected at the construction `p`.
+# The decompression would alias an entry outside that pattern into other entries, so the
+# methods that take a call-time `p` check the pattern at that `p` first.
+mutable struct LagHessPatternGuard{F, X, L, D}
+    const lagrangian::F
+    const x::X # the point the pattern was detected at
+    const λ::L # the weights it was detected with, `ones(num_cons)`
+    const detector::D
+    const pattern::SparseMatrixCSC{Bool, Int} # the entries the coloring can represent
+    checked_p::Any # the last `p` object found to fit the pattern
+    checked_objective::Bool # whether that check included the objective
+end
+
+# The structural entries of the coloring's pattern: the stored entries of a sparse matrix
+# (stored zeros included, as the coloring counts them), the nonzeros of a dense one.
+function structural_pattern(A::SparseMatrixCSC)
+    rows, cols, _ = findnz(A)
+    return SparseArrays.sparse(rows, cols, true, size(A)...)
+end
+structural_pattern(A::AbstractMatrix) = SparseArrays.sparse(map(!iszero, A))
+
+function lag_hess_pattern_guard(lagrangian, x, num_cons, soadtype, lag_prep, p)
+    return LagHessPatternGuard(
+        lagrangian, copy(x), ones(eltype(x), num_cons), ADTypes.sparsity_detector(soadtype),
+        structural_pattern(lag_prep.coloring_result.A), p, true
+    )
+end
+
+# The Lagrangian Hessian pattern at `p`, detected like the declared one (σ = 1, λ = ones),
+# without the objective when `objective` is false.
+function detect_lag_pattern(g::LagHessPatternGuard, p, objective::Bool)
+    σ = objective ? one(eltype(g.x)) : zero(eltype(g.x))
+    return ADTypes.hessian_sparsity(θ -> g.lagrangian(θ, σ, g.λ, p), g.x, g.detector)
+end
+
+# Throws an `ArgumentError`, before anything is written, if the Lagrangian Hessian at `p`
+# and objective weight `σ` has an entry outside `g.pattern`. A pattern inside the declared
+# one keeps the coloring valid. At σ = 0 the objective is left out of the check, as it is
+# left out of the evaluation, so it is not evaluated at a `p` where it may be undefined.
+# Called on every live-`p` evaluation, it detects only for a `p` that is not the object last
+# checked (`===`), or for σ ≠ 0 after a check without the objective. Comparing values instead
+# would detect again on every call for a `p` that holds caches written during evaluation, and
+# would need a copy of `p` to compare against. A `p` mutated in place is therefore not
+# checked again.
+function check_lag_pattern!(g::LagHessPatternGuard, p, σ)
+    objective = !iszero(σ)
+    g.checked_p === p && (g.checked_objective || !objective) && return nothing
+    for I in findall(!iszero, detect_lag_pattern(g, p, objective))
+        i, j = Tuple(I)
+        g.pattern[i, j] || throw(
+            ArgumentError(
+                "The Lagrangian Hessian at this `p` has a nonzero entry at ($i, $j), outside \
+                the sparsity pattern detected when the function was instantiated. Its \
+                coloring and the coordinates of `lag_h`'s vector form (`lag_hess_structure`) \
+                cannot represent that entry. Instantiate the problem again at this `p`, or \
+                declare a pattern that holds for every `p` with \
+                `AutoSparse(ad; sparsity_detector = ADTypes.KnownHessianSparsityDetector(H))`."
+            )
+        )
+    end
+    g.checked_p = p
+    g.checked_objective = objective
+    return nothing
+end
+
 function instantiate_function(
         f::OptimizationFunction{true}, x, adtype::ADTypes.AutoSparse{<:AbstractADType},
         p = SciMLBase.NullParameters(), num_cons = 0;
@@ -168,23 +234,32 @@ function _instantiate_function(
         end
     end
 
-    function cons_oop(x)
-        _res = zeros(eltype(x), num_cons)
-        f.cons(_res, x, p)
-        return _res
+    cons_oop = let f = f, p = p, num_cons = num_cons
+        function _cons_oop(x)
+            _res = zeros(eltype(x), num_cons)
+            f.cons(_res, x, p)
+            return _res
+        end
+        function _cons_oop(x, i)
+            _res = zeros(eltype(x), num_cons)
+            f.cons(_res, x, p)
+            return _res[i]
+        end
+        _cons_oop
     end
 
-    function cons_oop(x, i)
-        _res = zeros(eltype(x), num_cons)
-        f.cons(_res, x, p)
-        return _res[i]
-    end
-
-    function lagrangian(θ, σ, λ, p)
-        if eltype(θ) <: SparseConnectivityTracer.AbstractTracer || !iszero(θ)
-            return σ * f.f(θ, p) + dot(λ, cons_oop(θ))
-        else
-            return dot(λ, cons_oop(θ))
+    # Keep the constraint buffer local so Enzyme can differentiate through its writes. At σ = 0
+    # the objective is left out; the Hessian is prepared at σ = 1, so its entries are in the
+    # sparsity pattern.
+    lagrangian = let f = f, num_cons = num_cons
+        function (θ, σ, λ, p)
+            c = zeros(eltype(θ), num_cons)
+            f.cons(c, θ, p)
+            if !iszero(σ)
+                return σ * f.f(θ, p) + dot(λ, c)
+            else
+                return dot(λ, c)
+            end
         end
     end
 
@@ -321,17 +396,13 @@ function _instantiate_function(
         )
         lag_hess_prototype = lag_prep.coloring_result.A
         lag_hess_colors = lag_prep.coloring_result.color
+        lag_guard = lag_hess_pattern_guard(lagrangian, x, num_cons, soadtype, lag_prep, p)
 
+        # Also for σ = 0: the Lagrangian then leaves out the objective.
         function lag_h!(H::AbstractMatrix, θ, σ, λ)
-            return if σ == zero(eltype(θ))
-                cons_h!(H, θ)
-                H *= λ
-            else
-                hessian!(
-                    lagrangian, H, lag_prep, soadtype, θ,
-                    Constant(σ), Constant(λ), Constant(p)
-                )
-            end
+            return hessian!(
+                lagrangian, H, lag_prep, soadtype, θ, Constant(σ), Constant(λ), Constant(p)
+            )
         end
 
         function lag_h!(h, θ, σ, λ)
@@ -351,18 +422,15 @@ function _instantiate_function(
 
         if p !== SciMLBase.NullParameters() && p !== nothing
             function lag_h!(H::AbstractMatrix, θ, σ, λ, p)
-                return if σ == zero(eltype(θ))
-                    cons_h(H, θ)
-                    H *= λ
-                else
-                    hessian!(
-                        lagrangian, H, lag_prep, soadtype, θ,
-                        Constant(σ), Constant(λ), Constant(p)
-                    )
-                end
+                check_lag_pattern!(lag_guard, p, σ)
+                return hessian!(
+                    lagrangian, H, lag_prep, soadtype, θ,
+                    Constant(σ), Constant(λ), Constant(p)
+                )
             end
 
             function lag_h!(h, θ, σ, λ, p)
+                check_lag_pattern!(lag_guard, p, σ)
                 H = hessian(
                     lagrangian, lag_prep, soadtype, θ,
                     Constant(σ), Constant(λ), Constant(p)
@@ -553,8 +621,15 @@ function _instantiate_function(
         end
     end
 
-    function lagrangian(θ, σ, λ, p)
-        return σ * f.f(θ, p) + dot(λ, f.cons(θ, p))
+    # At σ = 0 the objective is left out, as in the in-place method above.
+    lagrangian = let f = f
+        function (θ, σ, λ, p)
+            if !iszero(σ)
+                return σ * f.f(θ, p) + dot(λ, f.cons(θ, p))
+            else
+                return dot(λ, f.cons(θ, p))
+            end
+        end
     end
 
     cons_jac_prototype = f.cons_jac_prototype
@@ -676,29 +751,20 @@ function _instantiate_function(
             Constant(ones(eltype(x), num_cons)), Constant(p)
         )
         function lag_h!(θ, σ, λ)
-            if σ == zero(eltype(θ))
-                return λ .* cons_h!(θ)
-            else
-                hess = hessian(
-                    lagrangian, lag_prep, soadtype, θ,
-                    Constant(σ), Constant(λ), Constant(p)
-                )
-                return hess
-            end
+            return hessian(
+                lagrangian, lag_prep, soadtype, θ, Constant(σ), Constant(λ), Constant(p)
+            )
         end
         lag_hess_prototype = lag_prep.coloring_result.A
         lag_hess_colors = lag_prep.coloring_result.color
+        lag_guard = lag_hess_pattern_guard(lagrangian, x, num_cons, soadtype, lag_prep, p)
 
         if p !== SciMLBase.NullParameters() && p !== nothing
             function lag_h!(θ, σ, λ, p)
-                if σ == zero(eltype(θ))
-                    return λ .* cons_h!(θ)
-                else
-                    hess = hessian(
-                        lagrangian, lag_prep, θ, Constant(σ), Constant(λ), Constant(p)
-                    )
-                    return hess
-                end
+                check_lag_pattern!(lag_guard, p, σ)
+                return hessian(
+                    lagrangian, lag_prep, soadtype, θ, Constant(σ), Constant(λ), Constant(p)
+                )
             end
         end
     elseif lag_h == true && f.cons !== nothing
