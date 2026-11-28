@@ -8,7 +8,7 @@
     DespecializedFunction{K}(f)
 
 A function of an `OptimizationFunction` stored with its type hidden, created when a
-problem with [`SciMLBase.AutoSpecialize`](@ref) or [`SciMLBase.AutoDespecialize`](@ref)
+problem with `SciMLBase.AutoSpecialize` or `SciMLBase.AutoDespecialize`
 is solved. A `SciMLBase.DespecializedParameters` argument is unwrapped before `f` is
 called. `K` is the calling convention, which says what the call returns:
 
@@ -64,7 +64,7 @@ end
     DespecializedDataIterator(data)
 
 A data iterator passed as the `p` of an `OptimizationProblem` with
-[`SciMLBase.AutoDespecialize`](@ref), with its type hidden. It yields each batch in a
+`SciMLBase.AutoDespecialize`, with its type hidden. It yields each batch in a
 `SciMLBase.DespecializedParameters`, so the `p` of every solver step is erased as well.
 `SciMLBase.unwrap_parameters` returns the original iterator.
 """
@@ -95,7 +95,7 @@ end
 """
     DespecializedCallback(callback)
 
-The user callback of a problem with [`SciMLBase.AutoDespecialize`](@ref). The solvers
+The user callback of a problem with `SciMLBase.AutoDespecialize`. The solvers
 pass the callback an [`OptimizationState`](@ref) holding the despecialized `p`; this
 wrapper replaces it by the parameters the problem was given (or the current batch of a
 data iterator) before calling `callback`. The call dispatches at runtime on the type of
@@ -118,7 +118,7 @@ end
     despecialize_callback(f, callback)
 
 `callback` wrapped in a [`DespecializedCallback`](@ref) when `f` has the
-[`SciMLBase.AutoDespecialize`](@ref) marker and is despecialized (see
+`SciMLBase.AutoDespecialize` marker and is despecialized (see
 [`despecializes`](@ref)), otherwise `callback` itself. The default callback and `nothing`
 are never wrapped, since solvers compare against them.
 """
@@ -136,7 +136,7 @@ despecialize_callback(f::OptimizationFunction, callback::DespecializedCallback) 
     despecializes(f::OptimizationFunction) -> Bool
 
 Whether solving with `f` hides the types of its functions (and, for
-[`SciMLBase.AutoDespecialize`](@ref), of `p`), see [`despecialize`](@ref). This is the
+`SciMLBase.AutoDespecialize`, of `p`), see [`despecialize`](@ref). This is the
 case for in-place functions with an `AutoSpecialize` or `AutoDespecialize` marker. Most AD
 backends differentiate through the dynamic dispatch of the [`DespecializedFunction`](@ref)s;
 the Enzyme extension instead unwraps them behind a function barrier and differentiates the
@@ -180,7 +180,7 @@ end
     despecialize(f::OptimizationFunction, p) -> (f, p)
 
 Hide the types of the functions of `f` behind [`DespecializedFunction`](@ref)s and, for
-[`SciMLBase.AutoDespecialize`](@ref), of `p` behind a `SciMLBase.DespecializedParameters`
+`SciMLBase.AutoDespecialize`, of `p` behind a `SciMLBase.DespecializedParameters`
 (or a [`DespecializedDataIterator`](@ref) for a data iterator). Returns `f` and `p`
 unchanged when [`despecializes`](@ref) is false. Cache constructors call this before
 `instantiate_function`, so that the AD preparations are built for the erased types.

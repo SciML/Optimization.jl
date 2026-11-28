@@ -162,6 +162,31 @@ Random.seed!(42)
         end
     end
 
+    @testset "reused optimizer starts inside the new bounds" begin
+        biobj(x, p) = ([sum(abs2, x), sum(abs2, x .- 1)], [0.0], [0.0])
+        mof = MultiObjectiveOptimizationFunction(biobj)
+        prob_a = OptimizationProblem(mof, fill(0.5, 3); lb = zeros(3), ub = ones(3))
+        prob_b = OptimizationProblem(
+            mof, fill(2.5, 3); lb = fill(2.0, 3), ub = fill(3.0, 3)
+        )
+        Random.seed!(1)
+        alg = NSGA2()
+        sol = solve(prob_a, alg; maxiters = 5, use_initial = true)
+        @test !isempty(sol.u)
+        sol = solve(prob_b, alg; maxiters = 5, use_initial = true)
+        @test all(2.0 .<= sol.u .<= 3.0)
+
+        alg = NSGA2()
+        solve(prob_a, alg; maxiters = 5)
+        sol = solve(prob_b, alg; maxiters = 5)
+        @test all(2.0 .<= sol.u .<= 3.0)
+
+        alg = CCMO(NSGA2(N = 20, p_m = 0.001))
+        solve(prob_a, alg; maxiters = 5)
+        sol = solve(prob_b, alg; maxiters = 5)
+        @test all(2.0 .<= sol.u .<= 3.0)
+    end
+
     @testset "Nonlinear constraints" begin
         rb(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
         p = [1.0, 100.0]

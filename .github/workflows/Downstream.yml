@@ -18,7 +18,7 @@ jobs:
           - {user: SciML, repo: DiffEqFlux.jl, group: All, subdirs: ".,lib/OptimizationOptimJL,lib/OptimizationOptimisers"}
           - {user: SciML, repo: NeuralPDE.jl, group: NNPDE1, subdirs: ".,lib/OptimizationOptimJL,lib/OptimizationOptimisers"}
           - {user: SciML, repo: NeuralPDE.jl, group: NNPDE2, subdirs: ".,lib/OptimizationOptimJL,lib/OptimizationOptimisers"}
-          - {user: SciML, repo: ModelingToolkit.jl, group: Optimization, subdirs: ".,lib/*"}
+          - {user: SciML, repo: ModelingToolkit.jl, group: Optimization, subdirs: ".,lib/OptimizationBase,lib/OptimizationMOI,lib/OptimizationOptimJL"}
     uses: "SciML/.github/.github/workflows/downstream.yml@v1"
     with:
       owner: "${{ matrix.package.user }}"

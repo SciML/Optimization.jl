@@ -124,8 +124,8 @@ data2 = [exp(M, q, σ * rand(M; vector_at = q)) for i in 1:m]
 f(x, p = nothing) = sum(distance(M, x, data2[i])^2 for i in 1:m)
 
 function closed_form_solution!(M::SymmetricPositiveDefinite, q, L, U, p, X)
-    # extract p^1/2 and p^{-1/2}
-    (p_sqrt_inv, p_sqrt) = Manifolds.spd_sqrt_and_sqrt_inv(p)
+    p_sqrt = sqrt(Symmetric(p))
+    p_sqrt_inv = inv(p_sqrt)
     # Compute D & Q
     e2 = eigen(p_sqrt_inv * X * p_sqrt_inv) # decompose Sk  = QDQ'
     D = Diagonal(1.0 .* (e2.values .< 0))

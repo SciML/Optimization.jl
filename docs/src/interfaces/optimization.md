@@ -42,3 +42,17 @@ documented methods for reinitialization, stopping, or inspecting progress, but
 users should not depend on undocumented concrete cache fields. A solver that
 does not support initialization can instead implement
 `SciMLBase.__solve(prob, alg; kwargs...)` directly.
+
+## Specialization Internals
+
+The cache uses these internal helpers to prepare in-place problems with
+`SciMLBase.AutoSpecialize` or `SciMLBase.AutoDespecialize`.
+
+```@docs
+OptimizationBase.despecializes
+OptimizationBase.despecialize
+OptimizationBase.DespecializedFunction
+OptimizationBase.DespecializedDataIterator
+OptimizationBase.DespecializedCallback
+OptimizationBase.despecialize_callback
+```
