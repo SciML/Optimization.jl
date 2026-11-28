@@ -107,3 +107,40 @@ import SciMLBase
         @test nboxes == 0
     end
 end
+
+@testset "LBFGSB callback termination" begin
+    loss(u, p) = sum(abs2, u)
+    grad!(g, u, p) = (g .= 2 .* u)
+    cons!(c, u, p) = (c[1] = sum(u))
+    jac!(j, u, p) = (j .= 1)
+    for mode in (:unconstrained, :bounded, :constrained), stop_at in (1, 3)
+        constrained = mode == :constrained
+        f = constrained ? OptimizationFunction(loss; grad = grad!, cons = cons!, cons_j = jac!) :
+            OptimizationFunction(loss; grad = grad!)
+        prob = constrained ? OptimizationProblem(f, [2.0, 1.0]; lcons = [0.0], ucons = [0.0]) :
+            OptimizationProblem(
+                f, [2.0, 1.0];
+                lb = mode == :bounded ? [-3.0, -3.0] : nothing,
+                ub = mode == :bounded ? [3.0, 3.0] : nothing
+            )
+        calls = Ref(0)
+        stopped_u = Ref(zeros(2))
+        stopped_loss = Ref(0.0)
+        callback = function (state, l)
+            calls[] += 1
+            stopped_u[] = copy(state.u)
+            stopped_loss[] = l
+            return calls[] == stop_at
+        end
+        sol = solve(prob, OptimizationLBFGSB.LBFGSB(); callback, maxiters = 100)
+        @test sol.retcode == ReturnCode.Terminated
+        @test calls[] == stop_at
+        @test sol.u == stopped_u[]
+        @test sol.objective == stopped_loss[] == loss(sol.u, nothing)
+        @test sol.stats.fevals == stop_at
+        @test_throws ErrorException("user callback error") solve(
+            prob, OptimizationLBFGSB.LBFGSB(); maxiters = 100,
+            callback = (state, l) -> error("user callback error")
+        )
+    end
+end
