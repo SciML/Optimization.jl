@@ -15,7 +15,8 @@ end
 function newtons_cooling(du, u, p, t)
     temp = u[1]
     k, temp_m = p
-    return du[1] = dT = -k * (temp - temp_m)
+    du[1] = dT = -k * (temp - temp_m)
+    return dT
 end
 
 function true_sol(du, u, p, t)

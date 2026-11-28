@@ -11,7 +11,8 @@ end
 
 function rosenbrock_grad!(grad, x, p)
     grad[1] = -2.0 * (p[1] - x[1]) - 4.0 * p[2] * (x[2] - x[1]^2) * x[1]
-    return grad[2] = 2.0 * p[2] * (x[2] - x[1]^2)
+    grad[2] = 2.0 * p[2] * (x[2] - x[1]^2)
+    return
 end
 
 function quadratic(x, p)
@@ -20,7 +21,8 @@ end
 
 function quadratic_grad!(grad, x, p)
     grad[1] = 2.0 * (x[1] - p[1])
-    return grad[2] = 2.0 * (x[2] - p[2])
+    grad[2] = 2.0 * (x[2] - p[2])
+    return
 end
 
 # Constrained optimization problem
@@ -30,16 +32,19 @@ end
 
 function constrained_objective_grad!(grad, x, p)
     grad[1] = 2.0 * x[1]
-    return grad[2] = 2.0 * x[2]
+    grad[2] = 2.0 * x[2]
+    return
 end
 
 function constraint_func(res, x, p)
-    return res[1] = x[1] + x[2] - 1.0  # x[1] + x[2] = 1
+    res[1] = x[1] + x[2] - 1.0  # x[1] + x[2] = 1
+    return
 end
 
 function constraint_jac!(jac, x, p)
     jac[1, 1] = 1.0
-    return jac[1, 2] = -1.0
+    jac[1, 2] = -1.0
+    return
 end
 
 @testset "OptimizationODE.jl Tests" begin
