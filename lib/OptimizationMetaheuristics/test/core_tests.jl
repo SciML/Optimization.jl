@@ -144,7 +144,7 @@ Random.seed!(42)
                             x, p,
                         ) -> prob_func(x)
                     )
-                    prob = OptimizationProblem(multi_obj_fun, lb; lb = lb, ub = ub)
+                    prob = OptimizationProblem(multi_obj_fun, lb; lb, ub)
                     # CCMO wraps a base algorithm and has no `N` on its own
                     # parameters, so the `use_initial` seeding path does not apply.
                     # Detect it by type rather than a stringified type name, which

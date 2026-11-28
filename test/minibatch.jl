@@ -67,8 +67,8 @@ optfun = OptimizationFunction(
 optprob = OptimizationProblem(optfun, pp, train_loader)
 
 res1 = Optimization.solve(
-    optprob, Optimisers.Adam(0.05),
-    callback = callback, maxiters = numEpochs
+    optprob, Optimisers.Adam(0.05);
+    callback, maxiters = numEpochs
 )
 @test 10res1.objective < l1
 
@@ -83,8 +83,8 @@ optprob = OptimizationProblem(optfun, pp)
 using IterTools: ncycle
 @test_broken Optimization.solve(
     optprob, Optimisers.Adam(0.05),
-    ncycle(train_loader, numEpochs),
-    callback = callback, maxiters = numEpochs
+    ncycle(train_loader, numEpochs);
+    callback, maxiters = numEpochs
 ) !== nothing
 # @test 10res1.objective < l1
 
@@ -123,7 +123,7 @@ optfun = OptimizationFunction(
 optprob = OptimizationProblem(optfun, pp, train_loader)
 
 res1 = Optimization.solve(
-    optprob, Optimisers.Adam(0.05),
-    callback = callback, maxiters = numEpochs
+    optprob, Optimisers.Adam(0.05);
+    callback, maxiters = numEpochs
 )
 @test 10res1.objective < l1

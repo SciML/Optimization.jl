@@ -44,7 +44,7 @@ function __map_optimizer_args(
     end
 
     if !(isnothing(maxtime))
-        mapped_args = (; mapped_args..., maxtime = maxtime)
+        mapped_args = (; mapped_args..., maxtime)
     end
 
     if !isnothing(abstol)
@@ -68,7 +68,7 @@ function SciMLBase.__init(
         prob::SciMLBase.OptimizationProblem,
         opt::GCMAESOpt; σ0 = 0.2, kwargs...
     )
-    return OptimizationCache(prob, opt; σ0 = σ0, kwargs...)
+    return OptimizationCache(prob, opt; σ0, kwargs...)
 end
 
 function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: GCMAESOpt}
@@ -90,8 +90,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: GCMAESOpt}
 
     opt_args = __map_optimizer_args(
         cache, cache.opt; cache.solver_args...,
-        maxiters = maxiters,
-        maxtime = maxtime
+        maxiters,
+        maxtime
     )
 
     t0 = time()
@@ -122,7 +122,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: GCMAESOpt}
         opt_xmin, opt_fmin;
         retcode = Bool(opt_ret) ? SciMLBase.ReturnCode.Success :
             SciMLBase.ReturnCode.Failure,
-        stats = stats
+        stats
     )
 end
 

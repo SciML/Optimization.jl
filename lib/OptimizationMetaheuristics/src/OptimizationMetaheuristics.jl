@@ -136,9 +136,9 @@ function SciMLBase.__init(
         progress = false, kwargs...
     )
     return OptimizationCache(
-        prob, opt; use_initial = use_initial,
-        callback = callback,
-        progress = progress,
+        prob, opt; use_initial,
+        callback,
+        progress,
         kwargs...
     )
 end
@@ -177,9 +177,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
     end
 
     __map_optimizer_args!(
-        cache, cache.opt; callback = cache.callback, cache.solver_args...,
-        maxiters = maxiters,
-        maxtime = maxtime
+        cache, cache.opt; cache.callback, cache.solver_args...,
+        maxiters,
+        maxtime
     )
 
     # `optimize` resumes from `opt.status`, which can lie outside this problem.
@@ -197,7 +197,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         cache, cache.opt,
         Metaheuristics.minimizer(opt_res),
         Metaheuristics.minimum(opt_res); original = opt_res,
-        stats = stats
+        stats
     )
 end
 

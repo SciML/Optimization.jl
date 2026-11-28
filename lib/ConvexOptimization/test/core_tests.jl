@@ -12,14 +12,14 @@ using Test
 function solve_checked(prob, alg; atol = 1.0e-5)
     sol = solve(prob, alg)
     SciMLBase.successful_retcode(sol.retcode) &&
-        @test isapprox(prob.f.f(sol.u, prob.p), sol.objective; atol = atol)
+        @test isapprox(prob.f.f(sol.u, prob.p), sol.objective; atol)
     return sol
 end
 
 function solve!_checked(cache; atol = 1.0e-5)
     sol = solve!(cache)
     SciMLBase.successful_retcode(sol.retcode) &&
-        @test isapprox(cache.f.f(sol.u, cache.p), sol.objective; atol = atol)
+        @test isapprox(cache.f.f(sol.u, cache.p), sol.objective; atol)
     return sol
 end
 

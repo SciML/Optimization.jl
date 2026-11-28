@@ -366,10 +366,10 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleLBFGS}
     ls isa StrongWolfeLineSearch ||
         throw(ArgumentError("SimpleLBFGS requires a StrongWolfeLineSearch"))
     typed_linesearch = StrongWolfeLineSearch(;
-        autodiff = ls.autodiff,
+        ls.autodiff,
         c1 = T(ls.c1), c2 = T(ls.c2),
         α_init = T(ls.α_init), α_max = T(ls.α_max),
-        maxiters = ls.maxiters, zoom_maxiters = ls.zoom_maxiters
+        ls.maxiters, ls.zoom_maxiters
     )
 
     lb = cache.lb === nothing ? nothing : convert(U, cache.lb)
@@ -382,7 +382,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleLBFGS}
     )
     return SciMLBase.build_solution(
         cache, cache.opt, u, objective;
-        retcode = retcode,
+        retcode,
         stats = OptimizationBase.OptimizationStats(; iterations = iters, time = time() - t0)
     )
 end
@@ -406,9 +406,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleBFGS}
     nlsol = solve(
         nlprob,
         SimpleBroyden(; linesearch = nothing);
-        maxiters = maxiters,
-        abstol = abstol,
-        reltol = reltol
+        maxiters,
+        abstol,
+        reltol
     )
     θ = nlsol.u
 
@@ -422,8 +422,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleBFGS}
         θ,
         cache.f(θ, cache.p);
         original = nlsol,
-        retcode = nlsol.retcode,
-        stats = stats
+        nlsol.retcode,
+        stats
     )
 end
 
@@ -466,8 +466,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleGradie
         cache, cache.opt,
         θ,
         cache.f(θ, cache.p);
-        retcode = retcode,
-        stats = stats
+        retcode,
+        stats
     )
 end
 
@@ -490,9 +490,9 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleNewton
     nlsol = solve(
         nlprob,
         SimpleNewtonRaphson();
-        maxiters = maxiters,
-        abstol = abstol,
-        reltol = reltol
+        maxiters,
+        abstol,
+        reltol
     )
     θ = nlsol.u
 
@@ -506,8 +506,8 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleNewton
         θ,
         cache.f(θ, cache.p);
         original = nlsol,
-        retcode = nlsol.retcode,
-        stats = stats
+        nlsol.retcode,
+        stats
     )
 end
 
@@ -597,7 +597,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SimpleSOAP}
         θ,
         cache.f(θ, cache.p);
         retcode = SciMLBase.ReturnCode.MaxIters,
-        stats = stats
+        stats
     )
 end
 

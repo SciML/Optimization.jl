@@ -21,8 +21,8 @@ function SciMLBase.__init(
         kwargs...
     )
     return OptimizationCache(
-        prob, opt; local_opt = local_opt, prob = prob,
-        use_threads = use_threads,
+        prob, opt; local_opt, prob,
+        use_threads,
         kwargs...
     )
 end
@@ -61,7 +61,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {
         cache,
         (cache.opt, cache.solver_args.local_opt), opt_res.location,
         opt_res.value;
-        stats = stats,
+        stats,
         (
             isnothing(opt_ret) ? (; original = opt_res) :
                 (; original = opt_res, retcode = opt_ret)

@@ -143,8 +143,8 @@ end
     # throw; the type-match gate routes it to the prep-free fallback instead.
     for (inplace, cons) in ((true, consp!), (false, consp))
         optf = inplace ?
-            OptimizationFunction(objp, ADTypes.AutoForwardDiff(); cons = cons) :
-            OptimizationFunction{false}(objp, ADTypes.AutoForwardDiff(); cons = cons)
+            OptimizationFunction(objp, ADTypes.AutoForwardDiff(); cons) :
+            OptimizationFunction{false}(objp, ADTypes.AutoForwardDiff(); cons)
         optprob = OptimizationBase.instantiate_function(
             optf, x0, ADTypes.AutoForwardDiff(), p0, 1; g = true, cons_j = true
         )

@@ -48,9 +48,9 @@ cache = OptimizationBase.init(prob, Optim.BFGS())
 
 function sweep(cache, p_values)
     for p in p_values
-        cache = OptimizationBase.reinit!(cache; p = p)
+        cache = OptimizationBase.reinit!(cache; p)
         sol = OptimizationBase.solve!(cache)
-        push!(results, (p = p, u = sol.u, objective = sol.objective))
+        push!(results, (; p, sol.u, sol.objective))
     end
     return
 end
@@ -66,7 +66,7 @@ u0_values = [[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]]
 
 for u0 in u0_values
     local cache
-    cache = OptimizationBase.reinit!(cache; u0 = u0)
+    cache = OptimizationBase.reinit!(cache; u0)
     sol = OptimizationBase.solve!(cache)
     println("Starting from ", u0, " converged to ", sol.u)
 end

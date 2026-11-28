@@ -86,11 +86,11 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SpeedMapping
     maxtime = OptimizationBase._check_and_convert_maxtime(cache.solver_args.maxtime)
     opt_args = __map_optimizer_args(
         cache,
-        cache.opt,
-        maxiters = maxiters,
-        maxtime = maxtime,
-        abstol = cache.solver_args.abstol,
-        reltol = cache.solver_args.reltol;
+        cache.opt;
+        maxiters,
+        maxtime,
+        cache.solver_args.abstol,
+        cache.solver_args.reltol,
         cache.solver_args...,
     )
 
@@ -113,7 +113,7 @@ function SciMLBase.__solve(cache::OptimizationCache{O}) where {O <: SpeedMapping
         _loss(opt_res.minimizer);
         original = opt_res,
         retcode = opt_ret,
-        stats = stats,
+        stats,
     )
 end
 
